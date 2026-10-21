@@ -1,0 +1,346 @@
+import { useLiveQuery } from 'dexie-react-hooks'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Empty, TagInput, VisibilityBadge, VisibilityToggle } from '../components'
+import { db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, type Entity, type EntityType } from '../db'
+import { saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
+import { findBacklinks, Markdown } from '../Markdown'
+import { useViewMode } from '../viewMode'
+
+export default function EntityPage() {
+  const { worldId } = useWorld()
+  const { entityId = '' } = useParams()
+  const [params, setParams] = useSearchParams()
+  const { isGM, canSee } = useViewMode()
+  const entity = useLiveQuery(() => db.entities.get(entityId), [entityId])
+  const editing = isGM && params.get('edit') === '1'
+
+  if (entity === undefined) return null
+  if (entity === null || entity.worldId !== worldId || !canSee(entity.visibility))
+    return <Empty>This page doesn't exist or hasn't been revealed.</Empty>
+
+  return editing ? (
+    <EntityEditor key={entity.id} entity={entity} onDone={() => setParams({})} />
+  ) : (
+    <EntityView entity={entity} onEdit={() => setParams({ edit: '1' })} />
+  )
+}
+
+function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void }) {
+  const { worldId } = useWorld()
+  const { isGM, canSee } = useViewMode()
+  const entities = useVisibleEntities(worldId)
+  const image = useAssetUrl(e.imageId)
+  const pins =
+    useLiveQuery(
+      async () => {
+        const ps = (await db.pins.where({ entityId: e.id }).toArray()).filter((p) => canSee(p.visibility))
+        const maps = await db.maps.bulkGet(ps.map((p) => p.mapId))
+        return ps.flatMap((p, i) => (maps[i] && canSee(maps[i]!.visibility) ? [{ pin: p, map: maps[i]! }] : []))
+      },
+      [e.id, isGM],
+    ) ?? []
+  const ownMaps =
+    useLiveQuery(() => db.maps.where({ locationId: e.id }).filter((m) => canSee(m.visibility)).toArray(), [e.id, isGM]) ??
+    []
+
+  const byId = new Map(entities.map((x) => [x.id, x]))
+  const ancestors: Entity[] = []
+  for (let p = e.parentId && byId.get(e.parentId); p && ancestors.length < 12; p = p.parentId ? byId.get(p.parentId) : undefined)
+    ancestors.unshift(p)
+  const inside = entities.filter((x) => x.parentId === e.id)
+  const backlinks = findBacklinks(e, entities)
+  const groups = ENTITY_TYPES.map((t) => [t, inside.filter((x) => x.type === t)] as const).filter(([, xs]) => xs.length)
+
+  return (
+    <div className="page entity-page">
+      {ancestors.length > 0 && (
+        <nav className="breadcrumbs">
+          {ancestors.map((a) => (
+            <span key={a.id}>
+              <Link to={`/w/${worldId}/e/${a.id}`}>{a.name}</Link> ›{' '}
+            </span>
+          ))}
+        </nav>
+      )}
+      <header className="page-header">
+        <div>
+          <div className="muted">
+            {ENTITY_LABELS[e.type].icon} {ENTITY_LABELS[e.type].one}
+            {e.type === 'event' && e.eventDate && ` · ${e.eventDate}`}
+            {e.type === 'event' && ` · ${e.eventEra === 'campaign' ? 'during the campaign' : 'before the campaign'}`}
+            {e.questStatus && ` · ${e.questStatus}`}
+          </div>
+          <h1>
+            {e.name} <VisibilityBadge value={e.visibility} />
+          </h1>
+          {e.summary && <p className="lead">{e.summary}</p>}
+        </div>
+        {isGM && <button onClick={onEdit}>✏️ Edit</button>}
+      </header>
+
+      <div className="entity-layout">
+        <div className="entity-main">
+          {e.body ? (
+            <Markdown text={e.body} entities={entities} worldId={worldId} showSecrets={isGM} />
+          ) : (
+            <p className="muted">No description yet.</p>
+          )}
+          {isGM && e.gmNotes && (
+            <div className="secret">
+              <strong>GM notes</strong>
+              <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
+            </div>
+          )}
+          {groups.map(([t, xs]) => (
+            <section key={t}>
+              <h2>
+                {ENTITY_LABELS[t].icon} {ENTITY_LABELS[t].many} here
+              </h2>
+              <ul className="entity-list">
+                {xs.map((x) => (
+                  <li key={x.id}>
+                    <Link to={`/w/${worldId}/e/${x.id}`}>{x.name}</Link> <VisibilityBadge value={x.visibility} />
+                    {x.summary && <span className="muted"> · {x.summary}</span>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+          {backlinks.length > 0 && (
+            <section>
+              <h2>Mentioned in</h2>
+              <ul className="entity-list">
+                {backlinks.map((x) => (
+                  <li key={x.id}>
+                    <Link to={`/w/${worldId}/e/${x.id}`}>
+                      {ENTITY_LABELS[x.type].icon} {x.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+        <aside className="entity-side">
+          {image && <img className="portrait" src={image} alt={e.name} />}
+          {(ownMaps.length > 0 || pins.length > 0) && (
+            <div className="side-box">
+              <h3>Maps</h3>
+              {ownMaps.map((m) => (
+                <Link key={m.id} className="button block" to={`/w/${worldId}/maps/${m.id}`}>
+                  🗺️ Open {m.name}
+                </Link>
+              ))}
+              {pins.map(({ pin, map }) => (
+                <Link key={pin.id} className="block" to={`/w/${worldId}/maps/${map.id}?pin=${pin.id}`}>
+                  📍 On {map.name}
+                </Link>
+              ))}
+            </div>
+          )}
+          {e.fields.length > 0 && (
+            <div className="side-box">
+              <h3>Details</h3>
+              <dl className="fields">
+                {e.fields.map((f, i) => (
+                  <div key={i}>
+                    <dt>{f.key}</dt>
+                    <dd>{f.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
+          {e.tags.length > 0 && (
+            <div className="tags">
+              {e.tags.map((t) => (
+                <span key={t} className="tag">
+                  {t}
+                </span>
+              ))}
+            </div>
+          )}
+        </aside>
+      </div>
+    </div>
+  )
+}
+
+function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }) {
+  const { worldId } = useWorld()
+  const navigate = useNavigate()
+  const [d, setD] = useState<Entity>(entity)
+  const entities = useVisibleEntities(worldId)
+  const image = useAssetUrl(d.imageId)
+  const set = <K extends keyof Entity>(k: K, v: Entity[K]) => setD((x) => ({ ...x, [k]: v }))
+  const dirty = JSON.stringify(d) !== JSON.stringify(entity)
+
+  useEffect(() => {
+    if (!dirty) return
+    const warn = (ev: BeforeUnloadEvent) => ev.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [dirty])
+
+  const save = async () => {
+    await db.entities.put({ ...d, name: d.name.trim() || 'Untitled', updatedAt: Date.now() })
+    onDone()
+  }
+  // Anything can sit "inside" a location, and locations can nest.
+  const parents = entities.filter((x) => x.type === 'location' && x.id !== d.id)
+
+  return (
+    <div className="page">
+      <form
+        className="form editor"
+        onSubmit={(ev) => {
+          ev.preventDefault()
+          save()
+        }}
+      >
+        <header className="page-header">
+          <input className="title-input" value={d.name} onChange={(ev) => set('name', ev.target.value)} placeholder="Name" />
+          <div className="row">
+            <VisibilityToggle value={d.visibility} onChange={(v) => set('visibility', v)} />
+            <button type="button" onClick={onDone}>
+              Cancel
+            </button>
+            <button className="primary">Save</button>
+          </div>
+        </header>
+        <div className="grid-2">
+          <label>
+            Type
+            <select value={d.type} onChange={(ev) => set('type', ev.target.value as EntityType)}>
+              {ENTITY_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {ENTITY_LABELS[t].one}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {d.type === 'event' ? 'Where it happened' : d.type === 'location' ? 'Inside' : 'Located in'}
+            <select value={d.parentId ?? ''} onChange={(ev) => set('parentId', ev.target.value || undefined)}>
+              <option value="">(none)</option>
+              {parents.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          {d.type === 'event' && (
+            <>
+              <label>
+                In-world date
+                <input value={d.eventDate ?? ''} onChange={(ev) => set('eventDate', ev.target.value)} placeholder="e.g. 1492 DR, Year of Three Ships" />
+              </label>
+              <label>
+                When
+                <select value={d.eventEra ?? 'pre'} onChange={(ev) => set('eventEra', ev.target.value as Entity['eventEra'])}>
+                  <option value="pre">Before the campaign (history)</option>
+                  <option value="campaign">During the campaign</option>
+                </select>
+              </label>
+            </>
+          )}
+          {d.type === 'quest' && (
+            <label>
+              Status
+              <select value={d.questStatus ?? 'open'} onChange={(ev) => set('questStatus', ev.target.value as Entity['questStatus'])}>
+                <option value="open">Open (not taken)</option>
+                <option value="active">Active</option>
+                <option value="done">Done</option>
+                <option value="failed">Failed</option>
+              </select>
+            </label>
+          )}
+        </div>
+        <label>
+          Summary
+          <input value={d.summary} onChange={(ev) => set('summary', ev.target.value)} placeholder="One line shown in lists and on map pins" />
+        </label>
+        <label>
+          Description
+          <textarea rows={12} value={d.body} onChange={(ev) => set('body', ev.target.value)} />
+          <small className="muted">
+            Markdown. Link pages with [[Name]]. Hide a passage from players by wrapping it in a line with :::gm and a
+            line with :::
+          </small>
+        </label>
+        <label>
+          GM notes (never shown to players)
+          <textarea rows={5} value={d.gmNotes} onChange={(ev) => set('gmNotes', ev.target.value)} />
+        </label>
+        <div className="grid-2">
+          <div>
+            <div className="label">Details</div>
+            {d.fields.map((f, i) => (
+              <div key={i} className="row field-row">
+                <input
+                  value={f.key}
+                  placeholder="Field"
+                  onChange={(ev) => set('fields', d.fields.map((x, j) => (j === i ? { ...x, key: ev.target.value } : x)))}
+                />
+                <input
+                  value={f.value}
+                  placeholder="Value"
+                  onChange={(ev) => set('fields', d.fields.map((x, j) => (j === i ? { ...x, value: ev.target.value } : x)))}
+                />
+                <button type="button" className="ghost" onClick={() => set('fields', d.fields.filter((_, j) => j !== i))}>
+                  ×
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={() => set('fields', [...d.fields, { key: '', value: '' }])}>
+              + Field
+            </button>
+          </div>
+          <div>
+            <div className="label">Image</div>
+            {image && <img className="portrait" src={image} alt="" />}
+            <div className="row">
+              <label className="button">
+                {d.imageId ? 'Replace image' : 'Upload image'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={async (ev) => {
+                    const f = ev.target.files?.[0]
+                    if (f) set('imageId', await saveFileAsAsset(worldId, f, f.name, [d.name]))
+                  }}
+                />
+              </label>
+              {d.imageId && (
+                <button type="button" onClick={() => set('imageId', undefined)}>
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        <div>
+          <div className="label">Tags</div>
+          <TagInput tags={d.tags} onChange={(t) => set('tags', t)} />
+        </div>
+        <div className="row spread">
+          <button
+            type="button"
+            className="danger"
+            onClick={async () => {
+              if (!confirm(`Delete "${entity.name}"? This can't be undone.`)) return
+              await deleteEntity(entity.id)
+              navigate(`/w/${worldId}/type/${entity.type}`)
+            }}
+          >
+            Delete
+          </button>
+          <button className="primary">Save</button>
+        </div>
+      </form>
+    </div>
+  )
+}

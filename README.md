@@ -1,0 +1,56 @@
+# ⚔️ Campaign Codex
+
+A GM-first campaign and world manager for tabletop RPGs: D&D, Pathfinder, Starfinder, Call of Cthulhu, Daggerheart and anything else. Build your world, click around your maps, track NPCs and sessions, and show players only what you've revealed.
+
+Runs in the browser, installs as an offline web app, and packages as a desktop app (Windows, macOS, Linux). Phone apps can be built from the same code later.
+
+## What it does today
+
+- **Worlds and campaigns.** One world can host several campaigns.
+- **Codex.** Pages for locations, NPCs, player characters, factions, items, events, quests, shops and taverns, deities and lore. Link pages by writing `[[Name]]`. Every page shows what's inside it (NPCs, shops and events in a town) and which pages mention it.
+- **GM secrets.** Every page, pin, map and session is either 🔒 GM only or 👁 revealed. You can also hide one passage inside a page:
+
+  ```
+  :::gm
+  The innkeeper is a spy.
+  :::
+  ```
+
+  GM notes on a page are never shown to players.
+- **Interactive maps.** Upload any map image, drop pins or draw regions, and link them to pages. Clicking a pin shows the place, who and what is there, and an "Enter" button to open a more detailed map (region → city → building).
+- **Timeline.** History (before the campaign) and in-campaign events, filterable by place.
+- **Sessions.** GM notes and a separate player recap. You can record audio from one microphone for in-person games, or from the microphone plus your Discord or Zoom audio for online games. While recording, you can add timestamped bookmarks, and clicking one later jumps the playback to that moment.
+- **Generators.** Taverns (menu, patrons, rumours), shops (blacksmith, general store, alchemist, magic shop) and NPCs, saved into your world in one click.
+- **Assets.** A library for handouts, portraits, maps, audio and PDFs.
+- **Player view.** Switch "Viewing as" to Player to see exactly what players would see.
+- **Backups.** Download a whole world as one file and import it on another device.
+
+Everything is stored on your device, so it works with no internet. Sync and player accounts come later (see [the roadmap](docs/ROADMAP.md)).
+
+## Using it
+
+- **Web:** once GitHub Pages is switched on, the app lives at `https://braydenm32.github.io/ttrpg-campaign-manager/`. In Chrome or Edge, use "Install app" in the address bar to get a desktop-style app that works offline.
+- **Desktop installers:** open the **Actions** tab, choose **Desktop**, then **Run workflow**. About 15 minutes later, a draft release with Windows, macOS and Linux installers appears under **Releases**. These installers are unsigned, so Windows and macOS will warn you the first time you open them.
+
+## For developers
+
+You'll need Node 22 or newer. The desktop app also needs Rust and the [Tauri prerequisites](https://tauri.app/start/prerequisites/).
+
+```bash
+npm install
+npm run dev        # web app at http://localhost:5173
+npm run desktop    # desktop app window (needs Rust)
+npm run build      # production web build in dist/
+npm run lint
+```
+
+| Piece | Choice |
+|---|---|
+| UI | React 19 + TypeScript, Vite |
+| Storage | IndexedDB via Dexie (local-first) |
+| Maps | Leaflet (`CRS.Simple` over an uploaded image) |
+| Text | Markdown (marked + DOMPurify) with `[[wiki links]]` |
+| Desktop / mobile | Tauri 2 (`src-tauri/`) |
+| Web hosting | GitHub Pages, with a PWA service worker for offline use |
+
+Main files: `src/db.ts` (data model), `src/pages/` (screens), `src/Markdown.tsx` (links and secrets), `src/generators.ts` (random tables), `src/recorder.ts` (session audio), `src/sample.ts` (sample world).
