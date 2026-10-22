@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { AiSettingsSection } from '../ai/AiSettingsSection'
 import { exportWorld } from '../backup'
 import { db, deleteWorld, GAME_SYSTEMS, type World } from '../db'
 import { useWorld } from '../hooks'
@@ -35,6 +36,8 @@ export default function WorldSettings() {
       </div>
 
       <CloudSettings world={world} />
+
+      <AiSettingsSection />
 
       <section>
         <h2>Backup</h2>

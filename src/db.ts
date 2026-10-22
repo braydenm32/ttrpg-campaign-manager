@@ -155,6 +155,42 @@ export interface Bookmark {
   text: string
 }
 
+export interface TranscriptLine {
+  /** Seconds into the recording. */
+  start: number
+  end: number
+  text: string
+  /** Speaker label from the transcription service ("A", "B"…); renamed via Transcript.speakers. */
+  speaker?: string
+}
+
+export interface Transcript {
+  /** "device": made on this device, free and private. "cloud": AssemblyAI, with speaker labels. */
+  engine: 'device' | 'cloud'
+  model?: string
+  lines: TranscriptLine[]
+  /** Names the GM gave to speaker labels, e.g. { A: 'Brayden (GM)' }. */
+  speakers?: Record<string, string>
+  /** Set while a transcript is still being made, so it can carry on after a reload. */
+  pending?: { doneUntil?: number; jobId?: string; duration?: number }
+  createdAt: number
+}
+
+export interface Recording {
+  assetId: string
+  startedAt: number
+  bookmarks: Bookmark[]
+  transcript?: Transcript
+}
+
+export interface RecapDraft {
+  gm: string
+  players: string
+  /** "claude-api" when made in the app, "pasted" when pasted back from claude.ai. */
+  source: 'claude-api' | 'pasted'
+  createdAt: number
+}
+
 export interface Session {
   id: string
   worldId: string
@@ -168,7 +204,9 @@ export interface Session {
   recap: string
   visibility: Visibility
   entityIds: string[]
-  recordings: { assetId: string; startedAt: number; bookmarks: Bookmark[] }[]
+  recordings: Recording[]
+  /** The last AI recap draft, kept until the GM uses or discards it. Always GM-only. */
+  recapDraft?: RecapDraft
   /** The Lectern: live state while running this session at the table. Always GM-only. */
   lectern?: LecternState
   createdAt: number

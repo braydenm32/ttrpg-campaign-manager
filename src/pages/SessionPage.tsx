@@ -1,8 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { RecapPanel } from '../ai/RecapPanel'
+import { TranscriptPanel } from '../ai/TranscriptPanel'
 import { Empty, VisibilityToggle } from '../components'
-import { db, ENTITY_LABELS, newId, type Bookmark, type Entity, type Session } from '../db'
+import { db, ENTITY_LABELS, newId, type Bookmark, type Entity, type Recording, type Session } from '../db'
 import { formatBytes, saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import {
@@ -18,7 +20,7 @@ import { newThread, useWorldSessions } from '../threads'
 import { useViewMode } from '../viewMode'
 
 export default function SessionPage() {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const { sessionId = '' } = useParams()
   const { isGM, canSee } = useViewMode()
   const navigate = useNavigate()
@@ -74,6 +76,7 @@ export default function SessionPage() {
       </header>
 
       <Recorder session={session} />
+      {world && <RecapPanel world={world} session={session} entities={entities} />}
 
       <div className="segmented tabs">
         <button className={tab === 'notes' ? 'on' : ''} onClick={() => setTab('notes')}>
@@ -294,16 +297,23 @@ function Recorder({ session }: { session: Session }) {
       )}
       {error && <p className="error">{error}</p>}
       {session.recordings.map((r) => (
-        <Playback key={r.assetId} assetId={r.assetId} bookmarks={r.bookmarks} startedAt={r.startedAt} />
+        <Playback key={r.assetId} sessionId={session.id} recording={r} />
       ))}
     </section>
   )
 }
 
-function Playback({ assetId, bookmarks, startedAt }: { assetId: string; bookmarks: Bookmark[]; startedAt: number }) {
+function Playback({ sessionId, recording }: { sessionId: string; recording: Recording }) {
+  const { worldId } = useWorld()
+  const { assetId, bookmarks, startedAt } = recording
   const url = useAssetUrl(assetId)
   const audio = useRef<HTMLAudioElement>(null)
   if (!url) return null
+  const seek = (t: number) => {
+    if (!audio.current) return
+    audio.current.currentTime = t
+    audio.current.play()
+  }
   return (
     <div className="playback">
       <div className="muted small">Recorded {new Date(startedAt).toLocaleString()}</div>
@@ -328,11 +338,7 @@ function Playback({ assetId, bookmarks, startedAt }: { assetId: string; bookmark
             <li key={b.id}>
               <button
                 className="link"
-                onClick={() => {
-                  if (!audio.current) return
-                  audio.current.currentTime = b.t
-                  audio.current.play()
-                }}
+                onClick={() => seek(b.t)}
               >
                 <code>{formatTime(b.t)}</code>
               </button>{' '}
@@ -341,6 +347,7 @@ function Playback({ assetId, bookmarks, startedAt }: { assetId: string; bookmark
           ))}
         </ul>
       )}
+      <TranscriptPanel sessionId={sessionId} recording={recording} worldId={worldId} seek={seek} />
     </div>
   )
 }
