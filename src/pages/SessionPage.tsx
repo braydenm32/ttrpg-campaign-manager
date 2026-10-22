@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Help } from '../help'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { RecapPanel } from '../ai/RecapPanel'
@@ -7,6 +8,7 @@ import { Empty, VisibilityToggle } from '../components'
 import { db, ENTITY_LABELS, newId, type Bookmark, type Entity, type Recording, type Session } from '../db'
 import { formatBytes, saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
+import { SecretTextarea } from '../SecretTextarea'
 import {
   formatTime,
   recordingSupported,
@@ -86,6 +88,7 @@ export default function SessionPage() {
           👁 Player recap
         </button>
       </div>
+      <Help topic="session" />
       {tab === 'notes' ? (
         <textarea
           rows={14}
@@ -94,16 +97,17 @@ export default function SessionPage() {
           onChange={(e) => update({ notes: e.target.value })}
         />
       ) : (
-        <textarea
+        <SecretTextarea
+          worldId={worldId}
           rows={14}
           value={session.recap}
           placeholder="What the players get to read. Shown in the player view once this session is revealed."
-          onChange={(e) => update({ recap: e.target.value })}
+          onChange={(v) => update({ recap: v })}
         />
       )}
       <details>
         <summary>Preview</summary>
-        <Markdown text={tab === 'notes' ? session.notes : session.recap} entities={entities} worldId={worldId} showSecrets={tab === 'notes'} />
+        <Markdown text={tab === 'notes' ? session.notes : session.recap} entities={entities} worldId={worldId} showSecrets />
       </details>
 
       <section>
@@ -247,7 +251,9 @@ function Recorder({ session }: { session: Session }) {
 
   return (
     <section className="recorder">
-      <h2>🎙️ Recording</h2>
+      <h2>
+        🎙️ Recording <Help topic="recording" />
+      </h2>
       {!recordingSupported() ? (
         <p className="muted">Recording isn't supported on this device or browser.</p>
       ) : active ? (

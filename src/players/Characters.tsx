@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Help } from '../help'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { claimCharacter, releaseCharacter, savePlayerNotes } from '../cloud/players'
@@ -31,7 +32,9 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
 
   return (
     <div className="side-box owner-box">
-      <h3>🎭 Player</h3>
+      <h3>
+        🎭 Player <Help topic="character" />
+      </h3>
       {owner ? (
         <p>
           {owner.mine ? <strong>This is your character.</strong> : <>Played by <strong>{owner.name}</strong>.</>}

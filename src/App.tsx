@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { HashRouter, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
+import { Help } from './help'
 import { useWorld } from './hooks'
 import { WorldNav } from './Sidebar'
 import { ForcePlayerView, useViewMode, ViewModeProvider } from './viewMode'
@@ -184,7 +185,9 @@ function WorldShell() {
           </div>
         ) : (
         <div className="mode-switch">
-          <span>Viewing as</span>
+          <span>
+            Viewing as <Help topic="viewingAs" />
+          </span>
           <div className="segmented">
             <button className={isGM ? 'on' : ''} onClick={() => setMode('gm')}>GM</button>
             <button className={!isGM ? 'on' : ''} onClick={() => setMode('player')}>Player</button>

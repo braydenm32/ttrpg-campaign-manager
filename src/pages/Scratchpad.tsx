@@ -1,4 +1,5 @@
 import { Empty } from '../components'
+import { Help } from '../help'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { PlayerNotesBox } from '../players/Notes'
 
@@ -14,7 +15,9 @@ export default function Scratchpad() {
     <div className="page">
       <header className="page-header">
         <div>
-          <h1>📝 Scratchpad</h1>
+          <h1>
+            📝 Scratchpad <Help topic={player ? 'scratchpad' : 'gmPlayerNotes'} />
+          </h1>
           <p className="lead">
             {player
               ? 'Notes that aren’t about any one page: keep your own, or add to the party’s shared notebook.'

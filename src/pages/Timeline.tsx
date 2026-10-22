@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Help } from '../help'
 import { Link, useNavigate } from 'react-router-dom'
 import { Empty, VisibilityBadge } from '../components'
 import { blankEntity, db, type Entity } from '../db'
@@ -51,7 +52,9 @@ export default function Timeline() {
   return (
     <div className="page">
       <header className="page-header">
-        <h1>⏳ Timeline</h1>
+        <h1>
+          ⏳ Timeline <Help topic="timeline" />
+        </h1>
         <select value={place} onChange={(e) => setPlace(e.target.value)}>
           <option value="">Everywhere</option>
           {entities

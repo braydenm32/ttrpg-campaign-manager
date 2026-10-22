@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Help } from '../help'
 import { useAuthSession } from '../cloud/auth'
 import { listPlayers } from '../cloud/players'
 import type { Entity, World } from '../db'
@@ -57,7 +58,9 @@ export function RevealToPicker({
   const gone = value.filter((id) => !players.some((p) => p.userId === id))
   return (
     <div className="reveal-picker">
-      <span className="small">🤫 Reveal just to:</span>
+      <span className="small">
+        🤫 Reveal just to: <Help topic="revealTo" />
+      </span>
       {players.length === 0 && <span className="muted small">No players have joined yet. Invite them from World settings.</span>}
       {players.map((p) => (
         <label key={p.userId}>

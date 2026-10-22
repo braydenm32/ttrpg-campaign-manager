@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Help } from '../help'
 import { useNavigate } from 'react-router-dom'
 import { Empty } from '../components'
 import { db, ENTITY_LABELS, THREAD_STATUS, type Entity, type ThreadStatus } from '../db'
@@ -57,7 +58,9 @@ export default function Threads() {
     <div className="page wide">
       <header className="page-header">
         <div>
-          <h1>🧵 {isGM ? 'Loose threads' : 'Leads and rumours'}</h1>
+          <h1>
+            🧵 {isGM ? 'Loose threads' : 'Leads and rumours'} <Help topic={isGM ? 'threads' : 'leads'} />
+          </h1>
           <p className="muted">
             {isGM
               ? 'Hooks you’ve planted, mysteries the players noticed, promises and grudges. Keep them here so nothing gets forgotten.'

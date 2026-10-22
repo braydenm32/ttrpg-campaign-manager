@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { Help } from '../help'
 import { useAuthSession } from '../cloud/auth'
 import { listGroupNotes, savePlayerNote } from '../cloud/players'
 import type { Entity, PlayerNote, World } from '../db'
@@ -35,7 +36,11 @@ function MemberNotes({ world, memberOf, entityId, big }: { world: World; memberO
 
   return (
     <section className={`player-notes ${big ? 'scratchpad' : ''}`}>
-      {!big && <h2>📝 Notes</h2>}
+      {!big && (
+        <h2>
+          📝 Notes <Help topic="playerNotes" />
+        </h2>
+      )}
       <div className="tabs segmented">
         <button className={tab === 'mine' ? 'on' : ''} onClick={() => setTab('mine')}>
           My notes
@@ -145,7 +150,11 @@ function GmGroupNotes({ world, entityId, entities, big }: { world: World; entity
   if (!big && !note?.body) return null
   return (
     <section className="player-notes">
-      {!big && <h2>📝 Your players’ notes</h2>}
+      {!big && (
+        <h2>
+          📝 Your players’ notes <Help topic="gmPlayerNotes" />
+        </h2>
+      )}
       <span className="note-meta">
         What your players have written here together. Only they can edit it, and their private notes stay private.{' '}
         <button className="link" onClick={load}>

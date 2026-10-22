@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Help } from '../help'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, TagInput, VisibilityBadge, VisibilityToggle } from '../components'
@@ -6,6 +7,7 @@ import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, THREAD_STAT
 import { URGENCY, useWorldSessions } from '../threads'
 import { saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
+import { SecretTextarea } from '../SecretTextarea'
 import { CharacterOwnerBox } from '../players/Characters'
 import { PlayerNotesBox } from '../players/Notes'
 import { RevealedToBadge, RevealToPicker } from '../players/Secrets'
@@ -212,6 +214,7 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
           <input className="title-input" value={d.name} onChange={(ev) => set('name', ev.target.value)} placeholder="Name" />
           <div className="row">
             <VisibilityToggle value={d.visibility} onChange={(v) => set('visibility', v)} />
+            <Help topic="visibility" />
             <button type="button" onClick={onDone}>
               Cancel
             </button>
@@ -276,21 +279,26 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
           <input value={d.summary} onChange={(ev) => set('summary', ev.target.value)} placeholder="One line shown in lists and on map pins" />
         </label>
         <label>
-          Description
-          <textarea rows={12} value={d.body} onChange={(ev) => set('body', ev.target.value)} />
+          <span>
+            Description <Help topic="secrets" />
+          </span>
+          <SecretTextarea worldId={worldId} rows={12} value={d.body} onChange={(v) => set('body', v)} />
           <small className="muted">
-            Markdown. Link pages with [[Name]]. Hide a passage from players by wrapping it in a line with :::gm and a
-            line with :::. For a secret only some players should read, start it with :::for and their characters’ names
-            instead, like :::for Wren, Kael
+            Markdown. Link pages with [[Name]]. Use the buttons to hide a passage from every player, or to keep it for
+            some characters only (:::for Wren and Silas). Names are suggested as you type.
           </small>
         </label>
         <label>
-          GM notes (never shown to players)
+          <span>
+            GM notes (never shown to players) <Help topic="gmNotes" />
+          </span>
           <textarea rows={5} value={d.gmNotes} onChange={(ev) => set('gmNotes', ev.target.value)} />
         </label>
         <div className="grid-2">
           <div>
-            <div className="label">Details</div>
+            <div className="label">
+              Details <Help topic="fields" />
+            </div>
             {d.fields.map((f, i) => (
               <div key={i} className="row field-row">
                 <input

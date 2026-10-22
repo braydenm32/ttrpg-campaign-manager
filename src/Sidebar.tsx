@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { HELP } from './help'
 import { useState, type ReactNode } from 'react'
 import { matchPath, NavLink, useLocation } from 'react-router-dom'
 import { db, ENTITY_LABELS, ENTITY_TYPES, type Entity, type EntityType } from './db'
@@ -108,10 +109,10 @@ export function WorldNav({ worldId }: { worldId: string }) {
 
   return (
     <nav>
-      <NavLink end to={`/w/${worldId}`}>🏠 Overview</NavLink>
+      <NavLink end to={`/w/${worldId}`} title={HELP.overview}>🏠 Overview</NavLink>
       <div className="nav-row">
         {maps.length > 0 ? caret('maps', inMaps, 'maps') : <span className="nav-caret-space" />}
-        <NavLink end to={`/w/${worldId}/maps`}>🗺️ Maps</NavLink>
+        <NavLink end to={`/w/${worldId}/maps`} title={HELP.maps}>🗺️ Maps</NavLink>
       </div>
       {open('maps', inMaps) && maps.length > 0 && (
         <div className="nav-children">
@@ -124,16 +125,16 @@ export function WorldNav({ worldId }: { worldId: string }) {
             ))}
         </div>
       )}
-      <NavLink to={`/w/${worldId}/timeline`}>⏳ Timeline</NavLink>
-      <NavLink to={`/w/${worldId}/threads`}>
+      <NavLink to={`/w/${worldId}/timeline`} title={HELP.timeline}>⏳ Timeline</NavLink>
+      <NavLink to={`/w/${worldId}/threads`} title={isGM ? HELP.threads : HELP.leads}>
         🧵 {isGM ? 'Loose threads' : 'Leads'}
         {openThreads ? <span className="count">{openThreads}</span> : null}
       </NavLink>
       {(world?.shared?.memberOf || (!world?.shared && world?.cloud?.enabled)) && (
-        <NavLink to={`/w/${worldId}/scratchpad`}>📝 {world.shared ? 'Scratchpad' : 'Players’ scratchpad'}</NavLink>
+        <NavLink to={`/w/${worldId}/scratchpad`} title={world.shared ? HELP.scratchpad : HELP.gmPlayerNotes}>📝 {world.shared ? 'Scratchpad' : 'Players’ scratchpad'}</NavLink>
       )}
 
-      <div className="nav-heading">Campaigns</div>
+      <div className="nav-heading" title={HELP.campaign}>Campaigns</div>
       {campaigns.map((c) => {
         const own = sessions.filter((s) => s.campaignId === c.id).sort((a, b) => a.number - b.number)
         const key = `camp:${c.id}`
@@ -153,7 +154,7 @@ export function WorldNav({ worldId }: { worldId: string }) {
                     </NavLink>
                     {isGM && s.id === sessionId && (
                       <div className="nav-children">
-                        <NavLink to={`/w/${worldId}/s/${s.id}/lectern`}>📖 The Lectern</NavLink>
+                        <NavLink to={`/w/${worldId}/s/${s.id}/lectern`} title={HELP.lectern}>📖 The Lectern</NavLink>
                       </div>
                     )}
                   </div>
@@ -164,7 +165,7 @@ export function WorldNav({ worldId }: { worldId: string }) {
         )
       })}
 
-      <div className="nav-heading">Codex</div>
+      <div className="nav-heading" title={HELP.codex}>Codex</div>
       {ENTITY_TYPES.filter((t) => t !== 'thread').map((t) => {
         const n = countOf(t)
         const key = `type:${t}`
@@ -186,8 +187,8 @@ export function WorldNav({ worldId }: { worldId: string }) {
       {isGM && (
         <>
           <div className="nav-heading">GM tools</div>
-          <NavLink to={`/w/${worldId}/generators`}>🎰 Generators</NavLink>
-          <NavLink to={`/w/${worldId}/assets`}>📁 Assets</NavLink>
+          <NavLink to={`/w/${worldId}/generators`} title={HELP.generators}>🎰 Generators</NavLink>
+          <NavLink to={`/w/${worldId}/assets`} title={HELP.assets}>📁 Assets</NavLink>
           <NavLink to={`/w/${worldId}/settings`}>⚙️ World settings</NavLink>
         </>
       )}

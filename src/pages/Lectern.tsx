@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Help } from '../help'
 import { useState, type InputHTMLAttributes } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Empty } from '../components'
@@ -55,7 +56,7 @@ export default function Lectern() {
         <div>
           <Link to={`/w/${worldId}/s/${session.id}`}>← Session notes</Link>
           <h1>
-            📖 The Lectern <span className="muted">· #{session.number} {session.title}</span>
+            📖 The Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
           </h1>
         </div>
       </header>
@@ -324,7 +325,9 @@ function Initiative({ lectern, edit, entities }: PanelProps & { entities: Entity
   return (
     <section className="card lectern-panel">
       <div className="row spread">
-        <h2>⚔️ Initiative</h2>
+        <h2>
+          ⚔️ Initiative <Help topic="initiative" />
+        </h2>
         <span className="muted">{round > 0 ? `Round ${round}` : 'Not started'}</span>
       </div>
       <div className="row wrap">
@@ -560,7 +563,9 @@ function Dice({ lectern, edit }: PanelProps) {
   const last = lectern.rolls[0]
   return (
     <section className="card lectern-panel">
-      <h2>🎲 Dice</h2>
+      <h2>
+        🎲 Dice <Help topic="dice" />
+      </h2>
       <div className="row wrap dice-buttons">
         {QUICK_DICE.map((d) => (
           <button key={d} onClick={() => doRoll(d)}>
@@ -626,7 +631,9 @@ function QuickNote({ sessionId }: { sessionId: string }) {
   const [saved, setSaved] = useState('')
   return (
     <section className="card lectern-panel">
-      <h2>✒️ Quick note</h2>
+      <h2>
+        ✒️ Quick note <Help topic="quickNote" />
+      </h2>
       <form
         className="row"
         onSubmit={async (e) => {
@@ -683,7 +690,9 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
   }
   return (
     <section className="card lectern-panel">
-      <h2>🎰 Improvise</h2>
+      <h2>
+        🎰 Improvise <Help topic="improvise" />
+      </h2>
       <div className="row wrap">
         <div className="segmented">
           {(['npc', 'tavern', 'shop'] as const).map((k) => (

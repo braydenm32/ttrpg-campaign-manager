@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Help } from '../help'
 import { useState } from 'react'
 import { Empty, TagInput, VisibilityToggle } from '../components'
 import { db, type Asset } from '../db'
@@ -16,7 +17,9 @@ export default function Assets() {
     <div className="page">
       <header className="page-header">
         <div>
-          <h1>📁 Assets</h1>
+          <h1>
+            📁 Assets <Help topic="assets" />
+          </h1>
           <div className="muted">
             {assets.length} files · {formatBytes(total)} stored on this device
           </div>

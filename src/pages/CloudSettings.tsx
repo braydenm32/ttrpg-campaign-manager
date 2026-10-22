@@ -1,4 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
+import { Help } from '../help'
 import { AccountModal, useAuthSession } from '../cloud/auth'
 import { createShareLink, getShareToken, revokeShareLink, shareUrl } from '../cloud/share'
 import { deleteCloudCopy, disableCloud, enableCloud, syncNow, syncStore } from '../cloud/sync'
@@ -34,7 +35,9 @@ export default function CloudSettings({ world }: { world: World }) {
 
   return (
     <section>
-      <h2>☁️ Cloud sync, sharing and players</h2>
+      <h2>
+        ☁️ Cloud sync, sharing and players <Help topic="cloudSync" />
+      </h2>
       {!user ? (
         <>
           <p className="muted">Sign in to back this world up to the cloud, use it on several devices, and share a player view with a link.</p>
@@ -81,7 +84,9 @@ export default function CloudSettings({ world }: { world: World }) {
             </button>
           </div>
 
-          <h3 className="share-heading">📜 Player share link</h3>
+          <h3 className="share-heading">
+            📜 Player share link <Help topic="shareLink" />
+          </h3>
           <p className="muted">
             Anyone with the link sees only what you've revealed: GM-only pages, pins, maps, sessions, secret passages and GM notes are
             removed on the server before anything is sent. It updates live as you sync.
