@@ -19,6 +19,7 @@ import {
 import { useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { plainLinks } from '../text'
+import { TablesPanel } from '../tables'
 import { ThreadCard } from '../ThreadCard'
 import { newThread, threadLinks, useWorldSessions } from '../threads'
 import { useViewMode } from '../viewMode'
@@ -71,6 +72,7 @@ export default function Lectern() {
         </div>
         <div className="lectern-col">
           <Dice lectern={lectern} edit={edit} />
+          <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
           <QuickNote sessionId={session.id} />
           <QuickGenerators lectern={lectern} edit={edit} worldId={worldId} parentId={lectern.sceneId} />
         </div>

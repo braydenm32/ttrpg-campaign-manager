@@ -102,7 +102,7 @@ export async function storePlayerCopy(
     await db.assets.bulkPut(assets)
     await db.campaigns.bulkPut(p.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))
     await db.entities.bulkPut(
-      p.entities.map((e) => ({ ...e, id: id(e.id), worldId, parentId: opt(e.parentId), imageId: opt(e.imageId), raisedIn: opt(e.raisedIn), tiedOffIn: opt(e.tiedOffIn), gmNotes: '' })),
+      p.entities.map((e) => ({ ...e, id: id(e.id), worldId, parentId: opt(e.parentId), imageId: opt(e.imageId), raisedIn: opt(e.raisedIn), tiedOffIn: opt(e.tiedOffIn), heldBy: e.heldBy === 'party' ? 'party' : opt(e.heldBy), gmNotes: '' })),
     )
     await db.maps.bulkPut(p.maps.map((m) => ({ ...m, id: id(m.id), worldId, imageId: id(m.imageId), locationId: opt(m.locationId), drawing: undefined })))
     await db.pins.bulkPut(

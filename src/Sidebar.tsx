@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { HELP } from './help'
 import { useState, type ReactNode } from 'react'
 import { matchPath, NavLink, useLocation } from 'react-router-dom'
-import { db, ENTITY_LABELS, ENTITY_TYPES, type Entity, type EntityType } from './db'
+import { db, ENTITY_LABELS, ENTITY_TYPES, type CustomType, type Entity, type EntityType } from './db'
 import { useVisibleEntities, useWorld } from './hooks'
 import { useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
@@ -56,6 +56,8 @@ export function WorldNav({ worldId }: { worldId: string }) {
   )
 
   const countOf = (t: EntityType) => entities.filter((e) => e.type === t).length
+  const kind = at('type/custom/:kind')?.kind ?? (currentEntity?.type === 'custom' ? currentEntity.customType : undefined)
+  const hasLoot = entities.some((e) => e.type === 'item' && e.heldBy) || !!world?.partyCoin?.length
   const openThreads = entities.filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active')).length
 
   /** Locations as a tree: everything at the top, and the children of each place on the way to the current page. */
@@ -86,8 +88,8 @@ export function WorldNav({ worldId }: { worldId: string }) {
     )
   }
 
-  const pageList = (t: EntityType) => {
-    const list = entities.filter((e) => e.type === t)
+  const pageList = (t: EntityType, custom?: CustomType) => {
+    const list = entities.filter((e) => e.type === t && (!custom || e.customType === custom.id))
     // Keep the current page in view even if the list is long.
     const shown = list.slice(0, MAX_CHILDREN)
     if (currentEntity?.type === t && !shown.includes(currentEntity)) shown.push(currentEntity)
@@ -99,8 +101,8 @@ export function WorldNav({ worldId }: { worldId: string }) {
           </NavLink>
         ))}
         {list.length > shown.length && (
-          <NavLink end to={`/w/${worldId}/type/${t}`} className="nav-more">
-            All {list.length} {ENTITY_LABELS[t].many.toLowerCase()}…
+          <NavLink end to={`/w/${worldId}/type/${t}${custom ? `/${custom.id}` : ''}`} className="nav-more">
+            All {list.length} {(custom ?? ENTITY_LABELS[t]).many.toLowerCase()}…
           </NavLink>
         )}
       </div>
@@ -130,6 +132,9 @@ export function WorldNav({ worldId }: { worldId: string }) {
         🧵 {isGM ? 'Loose threads' : 'Leads'}
         {openThreads ? <span className="count">{openThreads}</span> : null}
       </NavLink>
+      {(isGM || hasLoot) && (
+        <NavLink to={`/w/${worldId}/loot`} title={HELP.loot}>🎒 Party loot</NavLink>
+      )}
       {(world?.shared?.memberOf || (!world?.shared && world?.cloud?.enabled)) && (
         <NavLink to={`/w/${worldId}/scratchpad`} title={world.shared ? HELP.scratchpad : HELP.gmPlayerNotes}>📝 {world.shared ? 'Scratchpad' : 'Players’ scratchpad'}</NavLink>
       )}
@@ -166,7 +171,7 @@ export function WorldNav({ worldId }: { worldId: string }) {
       })}
 
       <div className="nav-heading" title={HELP.codex}>Codex</div>
-      {ENTITY_TYPES.filter((t) => t !== 'thread').map((t) => {
+      {ENTITY_TYPES.filter((t) => t !== 'thread' && t !== 'table' && t !== 'custom').map((t) => {
         const n = countOf(t)
         const key = `type:${t}`
         const auto = t === type
@@ -183,11 +188,30 @@ export function WorldNav({ worldId }: { worldId: string }) {
           </div>
         )
       })}
+      {world?.customTypes?.map((c) => {
+        const n = entities.filter((e) => e.type === 'custom' && e.customType === c.id).length
+        if (!n && !isGM) return null
+        const key = `custom:${c.id}`
+        const auto = type === 'custom' && kind === c.id
+        return (
+          <div key={c.id}>
+            <div className="nav-row">
+              {n > 0 ? caret(key, auto, c.many.toLowerCase()) : <span className="nav-caret-space" />}
+              <NavLink end to={`/w/${worldId}/type/custom/${c.id}`}>
+                {c.icon} {c.many}
+                {n ? <span className="count">{n}</span> : null}
+              </NavLink>
+            </div>
+            {n > 0 && open(key, auto) && pageList('custom', c)}
+          </div>
+        )
+      })}
 
       {isGM && (
         <>
           <div className="nav-heading">GM tools</div>
           <NavLink to={`/w/${worldId}/generators`} title={HELP.generators}>🎰 Generators</NavLink>
+          <NavLink to={`/w/${worldId}/type/table`} title={HELP.randomTables}>🎲 Random tables</NavLink>
           <NavLink to={`/w/${worldId}/assets`} title={HELP.assets}>📁 Assets</NavLink>
           <NavLink to={`/w/${worldId}/settings`}>⚙️ World settings</NavLink>
         </>

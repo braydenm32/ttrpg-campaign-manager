@@ -104,7 +104,7 @@ function PlayerNotes({ initial, onSave }: { initial: string; onSave: (notes: str
 /** In a world you've joined: a nudge to pick your character until you have one. */
 export function ChooseCharacterBanner({ world }: { world: World }) {
   const { owners, memberOf } = useCharacterOwners(world)
-  const pcs = useLiveQuery(() => db.entities.where({ worldId: world.id }).filter((e) => e.type === 'pc').toArray(), [world.id])
+  const pcs = useLiveQuery(() => db.entities.where({ worldId: world.id }).filter((e) => e.type === 'pc' && !e.template).toArray(), [world.id])
   const [hidden, setHidden] = useState(false)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')

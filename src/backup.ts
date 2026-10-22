@@ -62,7 +62,16 @@ export async function importWorld(file: File): Promise<string> {
     )
     await db.campaigns.bulkAdd(b.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))
     await db.entities.bulkAdd(
-      b.entities.map((e) => ({ ...e, id: id(e.id), worldId, parentId: opt(e.parentId), imageId: opt(e.imageId) })),
+      b.entities.map((e) => ({
+        ...e,
+        id: id(e.id),
+        worldId,
+        parentId: opt(e.parentId),
+        imageId: opt(e.imageId),
+        raisedIn: opt(e.raisedIn),
+        tiedOffIn: opt(e.tiedOffIn),
+        heldBy: e.heldBy === 'party' ? 'party' : opt(e.heldBy),
+      })),
     )
     await db.maps.bulkAdd(
       b.maps.map((m) => ({ ...m, id: id(m.id), worldId, imageId: id(m.imageId), locationId: opt(m.locationId) })),

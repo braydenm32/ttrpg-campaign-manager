@@ -3,7 +3,8 @@ import { Help } from '../help'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Empty, Modal } from '../components'
-import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, GAME_SYSTEMS, newId, type EntityType } from '../db'
+import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel } from '../db'
+import { useCreatePage } from '../NewPage'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { plainLinks } from '../text'
 import { URGENCY } from '../threads'
@@ -34,11 +35,7 @@ export default function Dashboard() {
     .sort((a, b) => urgencyRank[a.threadUrgency ?? 'normal'] - urgencyRank[b.threadUrgency ?? 'normal'] || b.updatedAt - a.updatedAt)
   const openQuests = entities.filter((e) => e.type === 'quest' && (e.questStatus === 'open' || e.questStatus === 'active'))
 
-  const quickCreate = async (type: EntityType) => {
-    const e = blankEntity(worldId, type, `New ${ENTITY_LABELS[type].one}`)
-    await db.entities.add(e)
-    navigate(`/w/${worldId}/e/${e.id}?edit=1`)
-  }
+  const quickCreate = useCreatePage(world)
 
   if (!world) return null
   return (
@@ -64,7 +61,7 @@ export default function Dashboard() {
           {results.map((e) => (
             <li key={e.id}>
               <Link to={`/w/${worldId}/e/${e.id}`}>
-                {ENTITY_LABELS[e.type].icon} {e.name}
+                {typeLabel(e, world).icon} {e.name}
               </Link>
               <span className="muted"> · {e.summary}</span>
             </li>
@@ -79,9 +76,14 @@ export default function Dashboard() {
             Quick add <Help topic="quickAdd" />
           </h2>
           <div className="row wrap">
-            {ENTITY_TYPES.map((t) => (
+            {PICKER_TYPES.map((t) => (
               <button key={t} onClick={() => quickCreate(t)}>
                 {ENTITY_LABELS[t].icon} {ENTITY_LABELS[t].one}
+              </button>
+            ))}
+            {world.customTypes?.map((c) => (
+              <button key={c.id} onClick={() => quickCreate('custom', c.id)}>
+                {c.icon} {c.one}
               </button>
             ))}
           </div>
@@ -153,7 +155,7 @@ export default function Dashboard() {
               {recent.map((e) => (
                 <li key={e.id}>
                   <Link to={`/w/${worldId}/e/${e.id}`}>
-                    {ENTITY_LABELS[e.type].icon} {e.name}
+                    {typeLabel(e, world).icon} {e.name}
                   </Link>
                   {e.summary && <span className="muted"> · {plainLinks(e.summary)}</span>}
                 </li>

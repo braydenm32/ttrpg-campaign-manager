@@ -13,7 +13,7 @@ export function PlayersSettings({ world }: { world: World }) {
   const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const pcs = useLiveQuery(() => db.entities.where({ worldId: world.id }).filter((e) => e.type === 'pc').toArray(), [world.id]) ?? []
+  const pcs = useLiveQuery(() => db.entities.where({ worldId: world.id }).filter((e) => e.type === 'pc' && !e.template).toArray(), [world.id]) ?? []
   const hiddenPcs = pcs.filter((e) => e.visibility !== 'players')
 
   const load = useCallback(async () => {

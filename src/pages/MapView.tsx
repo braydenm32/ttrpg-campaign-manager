@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ImageOverlay, MapContainer, Marker, Polygon, Polyline, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, VisibilityBadge, VisibilityToggle } from '../components'
-import { blankEntity, db, deleteMap, ENTITY_LABELS, ENTITY_TYPES, newId, type Entity, type EntityType, type Pin, type WorldMap } from '../db'
+import { blankEntity, db, deleteMap, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type Pin, type WorldMap } from '../db'
 import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
@@ -356,7 +356,7 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
       {!pin.entityId && (
         <div className="row">
           <select value={newType} onChange={(e) => setNewType(e.target.value as EntityType)}>
-            {ENTITY_TYPES.map((t) => (
+            {PICKER_TYPES.map((t) => (
               <option key={t} value={t}>
                 {ENTITY_LABELS[t].one}
               </option>

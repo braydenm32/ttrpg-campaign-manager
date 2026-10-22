@@ -1,6 +1,6 @@
 import Dexie from 'dexie'
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import { db, type Asset, type SyncMeta, type World } from '../db'
+import { db, keepVersion, type Asset, type Entity, type SyncMeta, type World } from '../db'
 import { supabase } from './client'
 
 /**
@@ -143,6 +143,8 @@ async function applyRemote(worldId: string, table: SyncedTable, id: string, data
   // Edited here since the last sync: keep this device's version; it will be pushed next.
   const dirty = local ? !meta || meta.deleted || meta.hash !== localHash : !!meta && !meta.deleted
   if (dirty) return
+  // Keep this device's copy of a page before another device's change replaces it.
+  if (table === 'entities' && local) await keepVersion(local as unknown as Entity, deleted || !data ? 'deleted' : 'synced')
 
   if (deleted || !data) {
     if (local) await tableOf(table).delete(id)

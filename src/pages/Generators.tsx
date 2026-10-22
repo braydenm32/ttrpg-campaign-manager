@@ -17,6 +17,7 @@ import {
 } from '../generators'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
+import { TablesPanel } from '../tables'
 
 type Kind = 'tavern' | 'shop' | 'npc'
 
@@ -104,6 +105,7 @@ export default function Generators() {
           Save to world
         </button>
       </div>
+      <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
     </div>
   )
 }

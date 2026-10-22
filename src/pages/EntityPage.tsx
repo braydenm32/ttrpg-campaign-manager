@@ -3,7 +3,9 @@ import { Help } from '../help'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, TagInput, VisibilityBadge, VisibilityToggle } from '../components'
-import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, THREAD_STATUS, type Entity, type EntityType, type ThreadStatus } from '../db'
+import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, saveEntity, THREAD_STATUS, typeLabel, type Entity, type EntityType, type ThreadStatus } from '../db'
+import { HistoryButton } from '../History'
+import { TableRoller } from '../tables'
 import { URGENCY, useWorldSessions } from '../threads'
 import { saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
@@ -72,7 +74,9 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
       <header className="page-header">
         <div>
           <div className="muted">
-            {ENTITY_LABELS[e.type].icon} {ENTITY_LABELS[e.type].one}
+            {typeLabel(e, world).icon} {typeLabel(e, world).one}
+            {e.type === 'item' && e.quantity != null && e.quantity !== 1 && ` · ×${e.quantity}`}
+            {e.type === 'item' && e.heldBy && ` · carried by ${e.heldBy === 'party' ? 'the party' : (entities.find((x) => x.id === e.heldBy)?.name ?? 'someone')}`}
             {e.type === 'event' && e.eventDate && ` · ${e.eventDate}`}
             {e.type === 'event' && ` · ${e.eventEra === 'campaign' ? 'during the campaign' : 'before the campaign'}`}
             {e.questStatus && ` · ${e.questStatus}`}
@@ -84,11 +88,32 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           </h1>
           {e.summary && <p className="lead">{e.summary}</p>}
         </div>
-        {isGM && <button onClick={onEdit}>✏️ Edit</button>}
+        {isGM && (
+          <div className="row">
+            <HistoryButton entity={e} />
+            <button onClick={onEdit}>✏️ Edit</button>
+          </div>
+        )}
       </header>
+      {e.template && (
+        <p className="notice">
+          📐 This is a template <Help topic="templates" />: a starting point for new {typeLabel(e, world).many.toLowerCase()}. It’s
+          GM only and doesn’t show up in lists.
+        </p>
+      )}
 
       <div className="entity-layout">
         <div className="entity-main">
+          {e.type === 'table' && (
+            <div className="card">
+              <TableRoller tables={[e, ...entities.filter((x) => x.type === 'table' && x.id !== e.id)]} fixed={e} worldId={worldId} entities={entities} showSecrets={isGM} />
+              <ol className="table-entries">
+                {(e.entries ?? []).filter((x) => x.trim() && !x.trim().startsWith('#')).map((x, i) => (
+                  <li key={i}>{x}</li>
+                ))}
+              </ol>
+            </div>
+          )}
           {e.body ? (
             <Markdown text={e.body} entities={entities} worldId={worldId} showSecrets={isGM} />
           ) : (
@@ -195,8 +220,15 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
   }, [dirty])
 
   const save = async () => {
-    await db.entities.put({ ...d, name: d.name.trim() || 'Untitled', updatedAt: Date.now() })
+    await saveEntity({ ...d, name: d.name.trim() || 'Untitled', updatedAt: Date.now() })
     onDone()
+  }
+  const saveAsTemplate = async () => {
+    const now = Date.now()
+    const { revealedTo: _r, ...rest } = d
+    const t: Entity = { ...rest, id: newId(), name: d.name.trim() || 'Untitled', template: true, visibility: 'gm', createdAt: now, updatedAt: now }
+    await db.entities.add(t)
+    alert(`Saved “${t.name}” as a template. Choose it next time you make a new ${typeLabel(d, world).one.toLowerCase()}. Templates are listed in World settings.`)
   }
   // Anything can sit "inside" a location, and locations can nest.
   const parents = entities.filter((x) => x.type === 'location' && x.id !== d.id)
@@ -213,26 +245,44 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
         <header className="page-header">
           <input className="title-input" value={d.name} onChange={(ev) => set('name', ev.target.value)} placeholder="Name" />
           <div className="row">
-            <VisibilityToggle value={d.visibility} onChange={(v) => set('visibility', v)} />
-            <Help topic="visibility" />
+            {d.template ? (
+              <span className="muted small">📐 Template <Help topic="templates" /></span>
+            ) : (
+              <>
+                <VisibilityToggle value={d.visibility} onChange={(v) => set('visibility', v)} />
+                <Help topic="visibility" />
+              </>
+            )}
             <button type="button" onClick={onDone}>
               Cancel
             </button>
             <button className="primary">Save</button>
           </div>
         </header>
-        {d.visibility === 'gm' && world && (
+        {d.visibility === 'gm' && !d.template && world && (
           <RevealToPicker world={world} entities={entities} value={d.revealedTo ?? []} onChange={(ids) => set('revealedTo', ids.length ? ids : undefined)} />
         )}
         <div className="grid-2">
           <label>
             Type
-            <select value={d.type} onChange={(ev) => set('type', ev.target.value as EntityType)}>
-              {ENTITY_TYPES.map((t) => (
+            <select
+              value={d.type === 'custom' ? `custom:${d.customType}` : d.type}
+              onChange={(ev) => {
+                const v = ev.target.value
+                setD((x) => (v.startsWith('custom:') ? { ...x, type: 'custom', customType: v.slice(7) } : { ...x, type: v as EntityType, customType: undefined }))
+              }}
+            >
+              {PICKER_TYPES.map((t) => (
                 <option key={t} value={t}>
                   {ENTITY_LABELS[t].one}
                 </option>
               ))}
+              {world?.customTypes?.map((c) => (
+                <option key={c.id} value={`custom:${c.id}`}>
+                  {c.icon} {c.one}
+                </option>
+              ))}
+              {d.type === 'custom' && !world?.customTypes?.some((c) => c.id === d.customType) && <option value={`custom:${d.customType}`}>(removed type)</option>}
             </select>
           </label>
           <label>
@@ -262,6 +312,30 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
             </>
           )}
           {d.type === 'thread' && <ThreadFields d={d} set={set} />}
+          {d.type === 'item' && (
+            <>
+              <label>
+                <span>
+                  Carried by <Help topic="loot" />
+                </span>
+                <select value={d.heldBy ?? ''} onChange={(ev) => set('heldBy', ev.target.value || undefined)}>
+                  <option value="">(nobody: not in the party’s hands)</option>
+                  <option value="party">🎒 The party stash</option>
+                  {entities
+                    .filter((x) => x.type === 'pc' || x.type === 'npc')
+                    .map((x) => (
+                      <option key={x.id} value={x.id}>
+                        {ENTITY_LABELS[x.type].icon} {x.name}
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <label>
+                How many
+                <input type="number" min={0} value={d.quantity ?? 1} onChange={(ev) => set('quantity', ev.target.value === '' ? undefined : Math.max(0, Number(ev.target.value)))} />
+              </label>
+            </>
+          )}
           {d.type === 'quest' && (
             <label>
               Status
@@ -274,6 +348,20 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
             </label>
           )}
         </div>
+        {d.type === 'table' && (
+          <label>
+            <span>
+              Entries, one per line <Help topic="randomTables" />
+            </span>
+            <textarea
+              rows={10}
+              value={(d.entries ?? []).join('\n')}
+              onChange={(ev) => set('entries', ev.target.value.split('\n'))}
+              placeholder={'A rat the size of a dog\n3x Nothing but the smell\n{1d6} goblins arguing over a boot\nA door to {Dungeon rooms}'}
+            />
+            <small className="muted">“3x” makes an entry three times as likely. {'{2d6}'} rolls dice; {'{Another table}'} rolls on your other table.</small>
+          </label>
+        )}
         <label>
           Summary
           <input value={d.summary} onChange={(ev) => set('summary', ev.target.value)} placeholder="One line shown in lists and on map pins" />
@@ -349,17 +437,24 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
           <TagInput tags={d.tags} onChange={(t) => set('tags', t)} />
         </div>
         <div className="row spread">
-          <button
-            type="button"
-            className="danger"
-            onClick={async () => {
-              if (!confirm(`Delete "${entity.name}"? This can't be undone.`)) return
-              await deleteEntity(entity.id)
-              navigate(`/w/${worldId}/type/${entity.type}`)
-            }}
-          >
-            Delete
-          </button>
+          <div className="row">
+            <button
+              type="button"
+              className="danger"
+              onClick={async () => {
+                if (!confirm(`Delete "${entity.name}"? You can bring it back from World settings → Recently deleted, on this device.`)) return
+                await deleteEntity(entity.id)
+                navigate(entity.template ? `/w/${worldId}/settings` : `/w/${worldId}/type/${entity.type}${entity.type === 'custom' ? `/${entity.customType}` : ''}`)
+              }}
+            >
+              Delete
+            </button>
+            {!d.template && (
+              <button type="button" title="Keep a copy of this page as a starting point for new ones" onClick={saveAsTemplate}>
+                📐 Save as template
+              </button>
+            )}
+          </div>
           <button className="primary">Save</button>
         </div>
       </form>
