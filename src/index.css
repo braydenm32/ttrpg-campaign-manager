@@ -131,6 +131,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid color-mix(in srgb
 /* Home */
 .home { max-width: 1000px; margin: 0 auto; padding: 3em 1.5em; }
 .home-header h1 { font-size: 2.6rem; }
+.brand-title { display: flex; align-items: center; gap: .35em; }
+.brand-mark { width: 1.6em; height: 1.6em; flex: none; }
 .home .row { margin: 1.5em 0; flex-wrap: wrap; }
 
 /* Cards and lists */

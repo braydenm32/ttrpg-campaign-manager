@@ -1,3 +1,4 @@
+import logo from '../assets/logo.svg'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AccountModal, useAuthSession } from '../cloud/auth'
@@ -38,7 +39,7 @@ export default function JoinWorld() {
 
   return (
     <div className="home join-page">
-      <h1>⚔️ Campaign Codex</h1>
+      <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />Campaign Codex</h1>
       <div className="card join-card">
         <h2>🎭 You’re invited to a world</h2>
         <p className="muted">
