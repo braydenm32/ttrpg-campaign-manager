@@ -9,6 +9,7 @@ import EntityList from './pages/EntityList'
 import EntityPage from './pages/EntityPage'
 import MapList from './pages/MapList'
 import MapView from './pages/MapView'
+import MapBuilder from './pages/MapBuilder'
 import Timeline from './pages/Timeline'
 import CampaignPage from './pages/CampaignPage'
 import SessionPage from './pages/SessionPage'
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="e/:entityId" element={<EntityPage />} />
             <Route path="maps" element={<MapList />} />
             <Route path="maps/:mapId" element={<MapView />} />
+            <Route path="maps/:mapId/draw" element={<MapBuilder />} />
             <Route path="timeline" element={<Timeline />} />
             <Route path="c/:campaignId" element={<CampaignPage />} />
             <Route path="s/:sessionId" element={<SessionPage />} />

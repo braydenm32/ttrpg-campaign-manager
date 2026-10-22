@@ -229,3 +229,30 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
   .map-panel { width: 100%; max-height: 45%; border-left: none; border-top: 1px solid var(--border); }
   .player-banner { padding: .6em 1em; }
 }
+
+/* Map builder */
+.builder .map-body { background: #0e0d11; }
+.builder-tools { display: flex; flex-direction: column; gap: 2px; padding: .5em; background: var(--panel); border-right: 1px solid var(--border); overflow-y: auto; }
+.builder-tools button { flex-direction: column; gap: 0; padding: .4em .3em; font-size: .72rem; min-width: 64px; border-color: transparent; background: transparent; }
+.builder-tools button.on { background: var(--accent); color: var(--accent-ink); }
+.tool-icon { font-size: 1.3rem; line-height: 1.2; }
+.builder-canvas { flex: 1; min-width: 0; height: 100%; touch-action: none; user-select: none; cursor: crosshair; display: block; }
+.builder-canvas.tool-hand, .builder-canvas.tool-select { cursor: grab; }
+.builder-canvas.tool-erase { cursor: not-allowed; }
+.builder-panel h2 { margin: 0; }
+.swatch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.swatch-grid button { justify-content: flex-start; font-size: .85rem; padding: .35em .5em; }
+.swatch-grid button.on, .stamp-grid button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, var(--panel-2)); }
+.chip { border-radius: 4px; border: 1px solid var(--border); flex: none; }
+.stamp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.stamp-grid button { flex-direction: column; padding: .3em; font-size: .68rem; white-space: normal; text-align: center; line-height: 1.1; }
+.map-settings { margin-top: 1.5em; border-top: 1px solid var(--border); padding-top: .5em; }
+.form label.check { flex-direction: row; align-items: center; gap: .5em; color: var(--text); }
+.form label.check input { width: auto; }
+input[type=range] { padding: 0; }
+input[type=color] { width: 3em; height: 2.2em; padding: 2px; }
+@media (max-width: 800px) {
+  .builder .map-body { flex-direction: column; }
+  .builder-tools { flex-direction: row; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; }
+  .builder-canvas { min-height: 50vh; }
+}
