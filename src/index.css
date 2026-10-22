@@ -424,3 +424,40 @@ input[type=color] { width: 3em; height: 2.2em; padding: 2px; }
 .help-off { align-self: flex-end; font-size: .75rem; }
 .help-toggle { gap: .5em; align-items: center; margin: 0 0 1em; }
 .help-toggle input { width: auto; }
+
+/* New page menu (blank or from a template) */
+.menu-wrap { position: relative; display: inline-block; }
+.menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; display: flex; flex-direction: column; min-width: 220px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: .3em; box-shadow: 0 8px 24px rgb(0 0 0 / .3); }
+.menu button { border: none; background: transparent; text-align: left; }
+.menu button:hover { background: var(--panel-2); }
+
+/* Random tables */
+.table-roller { display: flex; flex-direction: column; gap: .5em; }
+.table-result { border-left: 3px solid var(--accent); padding: .2em .7em; background: var(--panel-2); border-radius: 0 8px 8px 0; }
+.table-result.old { opacity: .6; border-left-color: var(--border); }
+.table-result p { margin: .2em 0; color: var(--text); }
+.table-entries { margin: .5em 0 0; padding-left: 1.6em; color: var(--muted); }
+
+/* Page history */
+.history-list { list-style: none; padding: 0; margin: .5em 0; display: flex; flex-direction: column; gap: .5em; max-height: 60vh; overflow: auto; }
+.history-list li { border-bottom: 1px solid var(--border); padding-bottom: .5em; }
+.history-peek { white-space: pre-wrap; background: var(--panel-2); border-radius: 8px; padding: .6em; font-size: .85em; max-height: 240px; overflow: auto; }
+
+/* Party loot */
+.loot-list li { gap: .6em; flex-wrap: wrap; }
+.qty { width: 4.2em; display: inline-block; }
+.coin-purse .coin { display: inline-flex; align-items: center; gap: .3em; }
+.coin-purse .coin input { width: 6em; }
+.coin-purse .coin span { font-weight: 600; }
+
+/* Custom page types */
+.custom-types { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .4em; }
+.icon-input { width: 3.2em; text-align: center; }
+
+/* Session scheduling */
+.scheduler { margin: 1em 0; }
+.date-options { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .6em; }
+.date-options li { border-bottom: 1px solid var(--border); padding-bottom: .5em; }
+.answers { display: flex; flex-wrap: wrap; gap: .3em .8em; margin-top: .3em; color: var(--muted); }
+.answer.yes { color: var(--text); }
+.table-roller select { flex: 1; min-width: 0; }

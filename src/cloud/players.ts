@@ -1,4 +1,4 @@
-import { db, type PlayerNote, type SharedInfo } from '../db'
+import { db, type Availability, type PlayerNote, type SharedInfo } from '../db'
 import { appUrl, supabase, SUPABASE_URL } from './client'
 import { storePlayerCopy, tellOtherPlayers, type SharedPayload } from './share'
 
@@ -133,12 +133,12 @@ export async function loadMemberWorld(cloudId: string): Promise<string> {
     fetch(`${SUPABASE_URL}/functions/v1/shared-asset?world=${encodeURIComponent(cloudId)}&id=${encodeURIComponent(assetId)}`, {
       headers: access ? { Authorization: `Bearer ${access}` } : {},
     })
-  const p = data as SharedPayload & Pick<SharedInfo, 'me' | 'members' | 'claims' | 'notes'>
+  const p = data as SharedPayload & Pick<SharedInfo, 'me' | 'members' | 'claims' | 'notes' | 'availability'>
   return storePlayerCopy(
     p,
     memberWorldId(cloudId),
     `@m${cloudId.slice(0, 8)}`,
-    { memberOf: cloudId, me: p.me, members: p.members, claims: p.claims, notes: p.notes },
+    { memberOf: cloudId, me: p.me, members: p.members, claims: p.claims, notes: p.notes, availability: p.availability },
     fetchAsset,
   )
 }
@@ -194,6 +194,29 @@ export async function listGroupNotes(worldId: string): Promise<PlayerNote[]> {
   const { data, error } = await supabase.from('player_notes').select('entity_id, body, updated_by, updated_at').eq('world_id', worldId).eq('scope', 'group')
   if (error) throw error
   return data.map((r) => ({ entityId: r.entity_id, shared: true, body: r.body, updatedBy: r.updated_by, updatedAt: r.updated_at }))
+}
+
+/** Everyone's answers to proposed session dates (for the GM). */
+export async function listAvailability(worldId: string): Promise<NonNullable<SharedInfo['availability']>> {
+  const { data, error } = await supabase.from('availability').select('option_id, user_id, answer').eq('world_id', worldId)
+  if (error) throw error
+  return data.map((r) => ({ optionId: r.option_id, userId: r.user_id, answer: r.answer }))
+}
+
+/** A player says whether they can make a proposed date (null takes the answer back). */
+export async function setAvailability(cloudId: string, optionId: string, answer: Availability | null) {
+  const { error } = await supabase.rpc('set_availability', { wid: cloudId, option_id: optionId, answer })
+  if (error) throw error
+  await db.worlds
+    .where('id')
+    .equals(memberWorldId(cloudId))
+    .modify((w) => {
+      if (!w.shared?.me) return
+      const me = w.shared.me
+      const rest = (w.shared.availability ?? []).filter((a) => !(a.optionId === optionId && a.userId === me))
+      w.shared.availability = answer ? [...rest, { optionId, userId: me, answer }] : rest
+    })
+  tellOtherPlayers(cloudId)
 }
 
 export async function leaveWorld(cloudId: string) {
