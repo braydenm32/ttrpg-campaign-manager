@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
+import type { Drawing } from './mapDrawing'
 
 /** Who can see a piece of content. GM-only content never appears in the player view. */
 export type Visibility = 'gm' | 'players'
@@ -105,6 +106,8 @@ export interface WorldMap {
   visibility: Visibility
   /** The location this map depicts, so a location page can open its map. */
   locationId?: string
+  /** Set for maps made with the in-app map builder; the image is re-rendered from it on every edit. */
+  drawing?: Drawing
   createdAt: number
 }
 

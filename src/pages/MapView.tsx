@@ -109,6 +109,11 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                 </button>
               </>
             )}
+            {map.drawing && (
+              <Link className="button" to={`/w/${worldId}/maps/${map.id}/draw`}>
+                ✏️ Draw
+              </Link>
+            )}
             <button onClick={() => setShowSettings((s) => !s)}>⚙️ Map settings</button>
           </div>
         )}
