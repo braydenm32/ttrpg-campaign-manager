@@ -25,6 +25,7 @@ import CampaignPage from './pages/CampaignPage'
 import SessionPage from './pages/SessionPage'
 import Lectern from './pages/Lectern'
 import Threads from './pages/Threads'
+import Scratchpad from './pages/Scratchpad'
 import Assets from './pages/Assets'
 import Generators from './pages/Generators'
 import WorldSettings from './pages/WorldSettings'
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="maps/:mapId/draw" element={<MapBuilder />} />
             <Route path="timeline" element={<Timeline />} />
             <Route path="threads" element={<Threads />} />
+            <Route path="scratchpad" element={<Scratchpad />} />
             <Route path="c/:campaignId" element={<CampaignPage />} />
             <Route path="s/:sessionId" element={<SessionPage />} />
             <Route path="s/:sessionId/lectern" element={<Lectern />} />

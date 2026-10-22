@@ -7,6 +7,8 @@ import { URGENCY, useWorldSessions } from '../threads'
 import { saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
 import { CharacterOwnerBox } from '../players/Characters'
+import { PlayerNotesBox } from '../players/Notes'
+import { RevealedToBadge, RevealToPicker } from '../players/Secrets'
 import { useViewMode } from '../viewMode'
 
 export default function EntityPage() {
@@ -76,7 +78,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             {e.type === 'thread' && e.threadUrgency && e.threadUrgency !== 'normal' && ` · ${URGENCY[e.threadUrgency].icon} ${URGENCY[e.threadUrgency].label}`}
           </div>
           <h1>
-            {e.name} <VisibilityBadge value={e.visibility} />
+            {e.name} <VisibilityBadge value={e.visibility} /> <RevealedToBadge entity={e} world={world} entities={entities} isGM={isGM} />
           </h1>
           {e.summary && <p className="lead">{e.summary}</p>}
         </div>
@@ -96,6 +98,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
             </div>
           )}
+          {world && <PlayerNotesBox world={world} entityId={e.id} entities={entities} />}
           {isGM && e.type === 'location' && <AddInside parent={e} />}
           {groups.map(([t, xs]) => (
             <section key={t}>
@@ -174,7 +177,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
 }
 
 function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }) {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const navigate = useNavigate()
   const [d, setD] = useState<Entity>(entity)
   const entities = useVisibleEntities(worldId)
@@ -215,6 +218,9 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
             <button className="primary">Save</button>
           </div>
         </header>
+        {d.visibility === 'gm' && world && (
+          <RevealToPicker world={world} entities={entities} value={d.revealedTo ?? []} onChange={(ids) => set('revealedTo', ids.length ? ids : undefined)} />
+        )}
         <div className="grid-2">
           <label>
             Type
@@ -274,7 +280,8 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
           <textarea rows={12} value={d.body} onChange={(ev) => set('body', ev.target.value)} />
           <small className="muted">
             Markdown. Link pages with [[Name]]. Hide a passage from players by wrapping it in a line with :::gm and a
-            line with :::
+            line with :::. For a secret only some players should read, start it with :::for and their characters’ names
+            instead, like :::for Wren, Kael
           </small>
         </label>
         <label>

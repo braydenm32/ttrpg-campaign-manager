@@ -12,9 +12,17 @@ import type { Entity } from './db'
 export const GM_BLOCK = /^:::gm[ \t]*((?:\n.*)*?)(?:\n:::[ \t]*$|$(?![\s\S]))/gm
 
 /**
+ * ":::for Wren, Kael" ... ":::" is a secret for the players of those characters only. The server
+ * (public.player_text) keeps it for them, relabelled ":::foryou", and drops it for everyone else.
+ */
+export const FOR_BLOCK = /^:::for[ \t]+(\S[^\n]*)((?:\n.*)*?)(?:\n:::[ \t]*$|$(?![\s\S]))/gm
+const FOR_YOU_BLOCK = /^:::foryou[ \t]*((?:\n.*)*?)(?:\n:::[ \t]*$|$(?![\s\S]))/gm
+
+/**
  * Renders GM-authored Markdown with two extras:
  *  - [[Entity Name]] or [[Entity Name|label]] links to that entity's page
  *  - :::gm ... ::: blocks are secrets, shown only to the GM
+ *  - :::for Name ... ::: blocks are secrets for particular players' characters
  */
 export function Markdown({
   text,
@@ -32,6 +40,10 @@ export function Markdown({
     const byName = new Map(entities.map((e) => [e.name.trim().toLowerCase(), e]))
     let src = text.replace(GM_BLOCK, (_m, inner: string) =>
       showSecrets ? `<div class="secret">\n\n${inner}\n\n</div>` : '',
+    )
+    src = src.replace(FOR_YOU_BLOCK, (_m, inner: string) => `<div class="secret for-you">\n\n${inner}\n\n</div>`)
+    src = src.replace(FOR_BLOCK, (_m, names: string, inner: string) =>
+      showSecrets ? `<div class="secret for-some" data-for="${escapeHtml(names.trim())}">\n\n${inner}\n\n</div>` : '',
     )
     src = src.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, name: string, label?: string) => {
       const target = byName.get(name.trim().toLowerCase())
@@ -74,5 +86,5 @@ export function findBacklinks(target: Entity, entities: Entity[]) {
 
 /** Hidden parts of an entity are removed for players; used for previews and exports. */
 export function stripSecrets(text: string) {
-  return text.replace(GM_BLOCK, '')
+  return text.replace(GM_BLOCK, '').replace(FOR_BLOCK, '')
 }

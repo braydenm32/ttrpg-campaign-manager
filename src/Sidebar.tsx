@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState, type ReactNode } from 'react'
 import { matchPath, NavLink, useLocation } from 'react-router-dom'
 import { db, ENTITY_LABELS, ENTITY_TYPES, type Entity, type EntityType } from './db'
-import { useVisibleEntities } from './hooks'
+import { useVisibleEntities, useWorld } from './hooks'
 import { useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
 
@@ -16,6 +16,7 @@ const MAX_CHILDREN = 25
  */
 export function WorldNav({ worldId }: { worldId: string }) {
   const { isGM, canSee } = useViewMode()
+  const { world } = useWorld()
   const { pathname } = useLocation()
   const entities = useVisibleEntities(worldId)
   const sessions = useWorldSessions(worldId)
@@ -128,6 +129,9 @@ export function WorldNav({ worldId }: { worldId: string }) {
         🧵 {isGM ? 'Loose threads' : 'Leads'}
         {openThreads ? <span className="count">{openThreads}</span> : null}
       </NavLink>
+      {(world?.shared?.memberOf || (!world?.shared && world?.cloud?.enabled)) && (
+        <NavLink to={`/w/${worldId}/scratchpad`}>📝 {world.shared ? 'Scratchpad' : 'Players’ scratchpad'}</NavLink>
+      )}
 
       <div className="nav-heading">Campaigns</div>
       {campaigns.map((c) => {

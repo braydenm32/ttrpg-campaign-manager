@@ -1,6 +1,6 @@
-import { db, type SharedInfo } from '../db'
+import { db, type PlayerNote, type SharedInfo } from '../db'
 import { appUrl, supabase, SUPABASE_URL } from './client'
-import { storePlayerCopy, type SharedPayload } from './share'
+import { storePlayerCopy, tellOtherPlayers, type SharedPayload } from './share'
 
 /**
  * Players joining a world. The GM makes an invite link; a player opens it, signs in, and gets a
@@ -100,8 +100,14 @@ export async function loadMemberWorld(cloudId: string): Promise<string> {
     fetch(`${SUPABASE_URL}/functions/v1/shared-asset?world=${encodeURIComponent(cloudId)}&id=${encodeURIComponent(assetId)}`, {
       headers: access ? { Authorization: `Bearer ${access}` } : {},
     })
-  const p = data as SharedPayload & Pick<SharedInfo, 'me' | 'members' | 'claims'>
-  return storePlayerCopy(p, memberWorldId(cloudId), `@m${cloudId.slice(0, 8)}`, { memberOf: cloudId, me: p.me, members: p.members, claims: p.claims }, fetchAsset)
+  const p = data as SharedPayload & Pick<SharedInfo, 'me' | 'members' | 'claims' | 'notes'>
+  return storePlayerCopy(
+    p,
+    memberWorldId(cloudId),
+    `@m${cloudId.slice(0, 8)}`,
+    { memberOf: cloudId, me: p.me, members: p.members, claims: p.claims, notes: p.notes },
+    fetchAsset,
+  )
 }
 
 /** The GM's id for a character in a joined world (local ids carry a suffix). */
@@ -132,6 +138,29 @@ export async function savePlayerNotes(cloudId: string, localEntityId: string, no
       const c = w.shared?.claims?.find((x) => x.entityId === localEntityId)
       if (c) c.notes = notes
     })
+}
+
+/** Saves a player's note on a page ('' for the scratchpad), private or for the whole group. */
+export async function savePlayerNote(cloudId: string, localEntityId: string, shared: boolean, body: string) {
+  const { error } = await supabase.rpc('save_player_note', { wid: cloudId, eid: localEntityId ? cloudEntityId(localEntityId) : '', shared, body })
+  if (error) throw error
+  await db.worlds
+    .where('id')
+    .equals(memberWorldId(cloudId))
+    .modify((w) => {
+      if (!w.shared) return
+      const notes = (w.shared.notes ?? []).filter((n) => !(n.entityId === localEntityId && n.shared === shared))
+      notes.push({ entityId: localEntityId, shared, body, updatedBy: w.shared.me, updatedAt: new Date().toISOString() })
+      w.shared.notes = notes
+    })
+  if (shared) tellOtherPlayers(cloudId)
+}
+
+/** The group's notes in a world (for the GM). entityId is the GM's own page id, or '' for the scratchpad. */
+export async function listGroupNotes(worldId: string): Promise<PlayerNote[]> {
+  const { data, error } = await supabase.from('player_notes').select('entity_id, body, updated_by, updated_at').eq('world_id', worldId).eq('scope', 'group')
+  if (error) throw error
+  return data.map((r) => ({ entityId: r.entity_id, shared: true, body: r.body, updatedBy: r.updated_by, updatedAt: r.updated_at }))
 }
 
 export async function leaveWorld(cloudId: string) {

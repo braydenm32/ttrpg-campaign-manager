@@ -66,6 +66,16 @@ export interface CharacterClaim {
   notes: string
 }
 
+/** A player's note on a page (entityId '' is the world's scratchpad), private or shared with the group. */
+export interface PlayerNote {
+  /** Local id of the page, or '' for the scratchpad. */
+  entityId: string
+  shared: boolean
+  body: string
+  updatedBy?: string
+  updatedAt?: string
+}
+
 export interface SharedInfo {
   token?: string
   memberOf?: string
@@ -74,6 +84,8 @@ export interface SharedInfo {
   me?: string
   members?: { userId: string; name: string; role: string }[]
   claims?: CharacterClaim[]
+  /** For joined worlds: the group's notes and your own. */
+  notes?: PlayerNote[]
 }
 
 export interface World {
@@ -114,6 +126,10 @@ export interface Entity {
   /** Always GM-only, regardless of visibility. */
   gmNotes: string
   visibility: Visibility
+  /** GM-only pages can still be revealed to chosen players (their account ids). Needs cloud sync. */
+  revealedTo?: string[]
+  /** Player copies only: this page was revealed to you alone, not to the whole table. */
+  secretForYou?: boolean
   tags: string[]
   /** For locations: the containing location (city inside a region, etc). */
   parentId?: string
