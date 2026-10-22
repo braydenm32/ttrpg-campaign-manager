@@ -1,3 +1,4 @@
+import logo from '../assets/logo.svg'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { loadSharedWorld } from '../cloud/share'
@@ -20,7 +21,7 @@ export default function SharedWorld() {
 
   return (
     <div className="home">
-      <h1>⚔️ Campaign Codex</h1>
+      <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />Campaign Codex</h1>
       {error ? (
         <>
           <p className="error">{error}</p>

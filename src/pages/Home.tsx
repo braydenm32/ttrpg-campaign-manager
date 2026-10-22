@@ -1,3 +1,4 @@
+import logo from '../assets/logo.svg'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -40,7 +41,7 @@ export default function Home() {
         <button className="account-button" onClick={() => setAccount(true)}>
           {user ? `☁️ ${user.email}` : '☁️ Sign in to sync'}
         </button>
-        <h1>⚔️ Campaign Codex</h1>
+        <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />Campaign Codex</h1>
         <p>Your worlds, maps, NPCs and sessions, all in one place. Everything is saved on this device.</p>
       </header>
       <div className="row">
