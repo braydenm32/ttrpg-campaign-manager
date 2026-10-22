@@ -154,8 +154,36 @@ export interface Session {
   visibility: Visibility
   entityIds: string[]
   recordings: { assetId: string; startedAt: number; bookmarks: Bookmark[] }[]
+  /** The Lectern: live state while running this session at the table. Always GM-only. */
+  lectern?: LecternState
   createdAt: number
 }
+
+export interface Combatant {
+  id: string
+  name: string
+  /** Initiative result; null until rolled or typed in. */
+  init: number | null
+  hp?: number | null
+  maxHp?: number | null
+  ac?: string
+  side: 'pc' | 'ally' | 'foe'
+  conditions: string[]
+  entityId?: string
+}
+
+export interface LecternState {
+  /** The location the party is in right now. */
+  sceneId?: string
+  /** GM scene notes: read-aloud text, what's here, what happens next. */
+  sceneText: string
+  /** NPCs and others present in the scene. */
+  presentIds: string[]
+  combat: { round: number; activeId?: string; combatants: Combatant[] }
+  rolls: { id: string; expr: string; total: number; detail: string; crit?: 'high' | 'low'; at: number }[]
+}
+
+export const blankLectern = (): LecternState => ({ sceneText: '', presentIds: [], combat: { round: 0, combatants: [] }, rolls: [] })
 
 export interface Asset {
   id: string

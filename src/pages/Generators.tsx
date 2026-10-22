@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { blankEntity, db, type Entity } from '../db'
+import { db } from '../db'
 import {
   generateNpc,
   generateShop,
   generateTavern,
   npcGreeting,
   npcMarkdown,
+  npcToEntity,
+  placeToEntities,
   SHOP_KIND_NAMES,
   type GeneratedNpc,
   type GeneratedPlace,
@@ -33,35 +35,10 @@ export default function Generators() {
     else setNpc(generateNpc())
   }
 
-  const npcEntity = (n: GeneratedNpc, parent?: string): Entity => {
-    const e = blankEntity(worldId, 'npc', n.name)
-    e.summary = `${n.manner} ${n.ancestry} ${n.role}`
-    e.body = npcMarkdown(n)
-    e.parentId = parent
-    e.tags = ['generated']
-    e.fields = [
-      { key: 'Ancestry', value: n.ancestry },
-      { key: 'Role', value: n.role },
-    ]
-    return e
-  }
-
   const save = async () => {
-    if (kind === 'npc') {
-      const e = npcEntity(npc, parentId || undefined)
-      await db.entities.add(e)
-      return navigate(`/w/${worldId}/e/${e.id}`)
-    }
-    const p = blankEntity(worldId, 'shop', place.name)
-    p.summary = place.summary
-    p.body = place.body
-    p.fields = place.fields
-    p.parentId = parentId || undefined
-    p.tags = ['generated', place.type]
-    // The keeper and patrons live inside the new place, so they show up when it's clicked on a map.
-    const people = [place.keeper, ...place.patrons].map((n) => npcEntity(n, p.id))
-    await db.entities.bulkAdd([p, ...people])
-    navigate(`/w/${worldId}/e/${p.id}`)
+    const created = kind === 'npc' ? [npcToEntity(worldId, npc, parentId || undefined)] : placeToEntities(worldId, place, parentId || undefined)
+    await db.entities.bulkAdd(created)
+    navigate(`/w/${worldId}/e/${created[0].id}`)
   }
 
   const preview =

@@ -65,6 +65,9 @@ export default function SessionPage() {
         <div className="row">
           <input type="date" value={session.date} onChange={(e) => update({ date: e.target.value })} />
           <VisibilityToggle value={session.visibility} onChange={(v) => update({ visibility: v })} />
+          <Link className="button primary" to={`/w/${worldId}/s/${session.id}/lectern`}>
+            📖 Run at the Lectern
+          </Link>
         </div>
       </header>
 

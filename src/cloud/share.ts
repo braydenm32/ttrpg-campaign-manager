@@ -94,7 +94,7 @@ export async function loadSharedWorld(token: string): Promise<string> {
       p.pins.map((pin) => ({ ...pin, id: id(pin.id), worldId, mapId: id(pin.mapId), entityId: opt(pin.entityId), childMapId: opt(pin.childMapId) })),
     )
     await db.sessions.bulkPut(
-      p.sessions.map((s) => ({ ...s, id: id(s.id), worldId, campaignId: id(s.campaignId), entityIds: s.entityIds.map(id), notes: '', recordings: [] })),
+      p.sessions.map((s) => ({ ...s, id: id(s.id), worldId, campaignId: id(s.campaignId), entityIds: s.entityIds.map(id), notes: '', recordings: [], lectern: undefined })),
     )
   })
   return worldId

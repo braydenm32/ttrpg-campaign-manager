@@ -20,6 +20,7 @@ import MapBuilder from './pages/MapBuilder'
 import Timeline from './pages/Timeline'
 import CampaignPage from './pages/CampaignPage'
 import SessionPage from './pages/SessionPage'
+import Lectern from './pages/Lectern'
 import Assets from './pages/Assets'
 import Generators from './pages/Generators'
 import WorldSettings from './pages/WorldSettings'
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="timeline" element={<Timeline />} />
             <Route path="c/:campaignId" element={<CampaignPage />} />
             <Route path="s/:sessionId" element={<SessionPage />} />
+            <Route path="s/:sessionId/lectern" element={<Lectern />} />
             <Route path="assets" element={<Assets />} />
             <Route path="generators" element={<Generators />} />
             <Route path="settings" element={<WorldSettings />} />

@@ -264,3 +264,50 @@ input[type=color] { width: 3em; height: 2.2em; padding: 2px; }
 .notice { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); border-radius: 8px; padding: .5em .8em; }
 .share-heading { margin-top: 1.5em; }
 @media (max-width: 800px) { .account-button { position: static; margin-bottom: 1em; } }
+
+/* The Lectern */
+.page.wide { max-width: 1500px; }
+.lectern { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr); gap: 1em; align-items: start; }
+.lectern-col { display: flex; flex-direction: column; gap: 1em; min-width: 0; }
+.lectern-panel h2 { margin: 0 0 .2em; font-size: 1.15rem; }
+.lectern-panel .secret { margin: .4em 0; }
+.lectern-panel blockquote { margin: .3em 0; padding-left: .8em; border-left: 3px solid var(--border); font-style: italic; }
+.present { border-top: 1px solid var(--border); padding-top: .5em; display: flex; flex-direction: column; gap: .25em; }
+.present .row { gap: 0; }
+.field-chip { display: inline-block; background: var(--panel-2); border-radius: 6px; padding: 0 .45em; margin: 0 .3em .2em 0; font-size: .85em; white-space: nowrap; }
+.initiative { list-style: none; padding: 0; margin: .4em 0; display: flex; flex-direction: column; gap: .4em; }
+.combatant { border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 8px; padding: .4em .5em; display: flex; flex-direction: column; gap: .3em; background: var(--panel-2); }
+.combatant.side-pc { border-left-color: #5b9bd5; }
+.combatant.side-ally { border-left-color: #6bbf73; }
+.combatant.side-foe { border-left-color: var(--danger); }
+.combatant.active { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+.combatant.active .combatant-name::before { content: '▶ '; color: var(--accent); }
+.combatant.down { opacity: .55; }
+.combatant.down .combatant-name { text-decoration: line-through; }
+.combatant-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row > input.init-input, .init-input { width: 3.4em; flex: none; text-align: center; font-weight: 700; padding: .3em .2em; }
+.init-input, .hp-input { -moz-appearance: textfield; appearance: textfield; }
+.init-input::-webkit-inner-spin-button, .hp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.row > select.side-select, .side-select, .row > select.condition-select, .condition-select { width: auto; flex: none; padding: .15em .3em; font-size: .85em; }
+.hp { display: inline-flex; align-items: center; gap: .25em; }
+.hp-input { width: 3.4em; padding: .15em .3em; text-align: center; }
+.hp-bar { width: 3.5em; height: .5em; background: var(--border); border-radius: 999px; overflow: hidden; display: inline-block; }
+.hp-bar span { display: block; height: 100%; background: #6bbf73; }
+.hp-bar span.mid { background: #e0b354; }
+.hp-bar span.low { background: var(--danger); }
+.add-combatant input { padding-left: .5em; padding-right: .3em; }
+.add-combatant { display: grid; grid-template-columns: minmax(0, 3fr) minmax(3.2em, 1fr) minmax(3em, 1fr) minmax(2.6em, .8fr) auto; gap: .35em; margin-top: .3em; }
+.dice-buttons button { min-width: 3.2em; justify-content: center; }
+.roll-result { display: flex; align-items: baseline; gap: .6em; padding: .4em .2em; }
+.roll-total { font-family: var(--font-display); font-size: 2.4rem; font-weight: 700; line-height: 1; }
+.roll-result.high .roll-total { color: #6bbf73; }
+.roll-result.low .roll-total { color: var(--danger); }
+.roll-log { list-style: none; padding: 0; margin: .3em 0; max-height: 12em; overflow: auto; }
+@media (max-width: 1200px) {
+  .lectern { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .lectern-col:last-child { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+}
+@media (max-width: 800px) {
+  .lectern, .lectern-col:last-child { grid-template-columns: minmax(0, 1fr); }
+  .lectern-col:last-child { grid-column: auto; }
+}

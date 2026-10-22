@@ -2,6 +2,7 @@
  * Random-table generators for improvising at the table. No AI: just curated tables.
  * Everything is system-agnostic; prices are in generic "gp" so they read naturally for most fantasy games.
  */
+import { blankEntity, type Entity } from './db'
 
 const pick = <T>(xs: readonly T[]): T => xs[Math.floor(Math.random() * xs.length)]
 const pickN = <T>(xs: readonly T[], n: number): T[] => [...xs].sort(() => Math.random() - 0.5).slice(0, n)
@@ -176,4 +177,30 @@ export function npcGreeting(n: GeneratedNpc) {
     `“If you’re here about the noise last night, I didn’t see anything.”`,
     `“Ah! Customers! Come in, come in, mind the cat.”`,
   ])
+}
+
+/** A generated NPC as a codex page (GM only to start with). */
+export function npcToEntity(worldId: string, n: GeneratedNpc, parentId?: string): Entity {
+  const e = blankEntity(worldId, 'npc', n.name)
+  e.summary = `${n.manner} ${n.ancestry} ${n.role}`
+  e.body = npcMarkdown(n)
+  e.parentId = parentId
+  e.tags = ['generated']
+  e.fields = [
+    { key: 'Ancestry', value: n.ancestry },
+    { key: 'Role', value: n.role },
+  ]
+  return e
+}
+
+/** A generated tavern or shop as codex pages: the place first, then its keeper and patrons inside it. */
+export function placeToEntities(worldId: string, place: GeneratedPlace, parentId?: string): Entity[] {
+  const p = blankEntity(worldId, 'shop', place.name)
+  p.summary = place.summary
+  p.body = place.body
+  p.fields = place.fields
+  p.parentId = parentId
+  p.tags = ['generated', place.type]
+  // The keeper and patrons live inside the new place, so they show up when it's clicked on a map.
+  return [p, ...[place.keeper, ...place.patrons].map((n) => npcToEntity(worldId, n, p.id))]
 }
