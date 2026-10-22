@@ -148,12 +148,16 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) 
   const name = info.token ? `share:${info.token}` : `members:${info.memberOf}`
   const ch = supabase.channel(name).on('broadcast', { event: 'changed' }, refresh).subscribe()
   openChannels.set(name, ch)
-  const poll = setInterval(refresh, 60_000)
+  // The GM's broadcast is the main signal; this slow check only covers a missed one, and skips hidden tabs.
+  const poll = setInterval(() => !document.hidden && refresh(), 5 * 60_000)
+  const onVisible = () => !document.hidden && refresh()
   window.addEventListener('online', refresh)
+  document.addEventListener('visibilitychange', onVisible)
   return () => {
     openChannels.delete(name)
     supabase.removeChannel(ch)
     clearInterval(poll)
     window.removeEventListener('online', refresh)
+    document.removeEventListener('visibilitychange', onVisible)
   }
 }

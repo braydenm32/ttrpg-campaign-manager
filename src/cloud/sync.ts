@@ -14,7 +14,16 @@ import { supabase } from './client'
  *  - Deletes are uploaded as tombstones so other devices remove the row too.
  *  - Files (assets) go to Supabase Storage at <world id>/<asset id>.
  * Other devices hear about changes instantly via Realtime, with a slow poll as a safety net.
+ *
+ * Cost: a sync only downloads rows changed since the last one, and only uploads rows whose
+ * fingerprint changed, so a quiet world costs almost nothing. The safety-net poll runs every few
+ * minutes and skips hidden tabs; edits wait for a short pause in typing before syncing.
  */
+
+/** How long after the last local edit to sync (typing keeps pushing it back). */
+const EDIT_DELAY = 3000
+/** The safety-net check, in case a Realtime message was missed. Paused while the app is hidden. */
+const POLL_EVERY = 5 * 60_000
 
 export const SYNCED_TABLES = ['worlds', 'campaigns', 'entities', 'maps', 'pins', 'sessions', 'assets'] as const
 type SyncedTable = (typeof SYNCED_TABLES)[number]
@@ -90,6 +99,9 @@ async function localRows(worldId: string): Promise<Row[]> {
 }
 
 const storagePath = (worldId: string, assetId: string) => `${worldId}/${assetId}`
+
+/** Rows this device just uploaded, so their Realtime echoes don't trigger another sync. */
+const justPushed = new Map<string, number>()
 
 // ---------- pull / push ----------
 
@@ -192,6 +204,9 @@ async function pushWorld(worldId: string): Promise<number> {
     if (error) throw error
   }
   await db.syncMeta.bulkPut(newMetas)
+  const now = Date.now()
+  for (const [k, t] of justPushed) if (now - t > 15_000) justPushed.delete(k)
+  for (const u of upserts) justPushed.set(metaKey(u.table_name, u.id), now)
   // Keep the name shown in "your cloud" lists up to date.
   const worldRow = upserts.find((u) => u.table_name === 'worlds' && !u.deleted)
   if (worldRow) await supabase.from('cloud_worlds').update({ name: (worldRow.data as World).name }).eq('id', worldId)
@@ -249,7 +264,7 @@ export async function syncNow() {
   }
 }
 
-export function schedule(delay = 1500) {
+export function schedule(delay = EDIT_DELAY) {
   clearTimeout(timer)
   timer = setTimeout(syncNow, delay)
 }
@@ -264,7 +279,13 @@ async function subscribeRealtime(worldIds: string[]) {
     if (channels.has(id)) continue
     const ch = supabase
       .channel(`records:${id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'records', filter: `world_id=eq.${id}` }, () => schedule(800))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'records', filter: `world_id=eq.${id}` }, (payload) => {
+        // Our own uploads come straight back; only changes from another device or a co-GM need a pull.
+        const row = payload.new as { table_name?: string; id?: string } | undefined
+        const at = row?.table_name && justPushed.get(metaKey(row.table_name, row.id ?? ''))
+        if (at && Date.now() - at < 15_000) return
+        schedule(800)
+      })
       .subscribe()
     channels.set(id, ch)
   }
@@ -300,7 +321,9 @@ export function startSync() {
     stopMutationListener = () => Dexie.on('storagemutated').unsubscribe(onChange)
     window.addEventListener('online', () => schedule(200))
     window.addEventListener('offline', () => setState({ status: 'offline' }))
-    poll = setInterval(() => schedule(0), 60_000)
+    poll = setInterval(() => !document.hidden && schedule(0), POLL_EVERY)
+    // Catch up straight away when the app comes back to the front.
+    document.addEventListener('visibilitychange', () => !document.hidden && schedule(200))
   }
   schedule(200)
 }
