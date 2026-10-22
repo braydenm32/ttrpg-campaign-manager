@@ -119,7 +119,24 @@ export async function loadSampleWorld(): Promise<string> {
     ],
   })
 
-  const entities = [coast, saltmere, keep, wood, lighthouse, docks, temple, tavern, smith, marta, dorn, corvin, wardens, choir, thalassa, sundering, founding, relit, arrival, quest, pc]
+  const sessionId = newId()
+  const ring = E('thread', 'Corvin’s coral ring', {
+    raisedIn: sessionId,
+    threadStatus: 'active',
+    threadUrgency: 'high',
+    summary: 'Wren spotted [[Corvin Vane]] wearing a ring of living coral.',
+    body: 'The players are suspicious and want to know where it came from.\n\n:::gm\nIt marks him as a member of [[Choir of the Deep]]. If they press him, he’ll lie and say it was a gift from [[Thalassa]]’s temple.\n:::',
+  })
+  const brother = E('thread', 'Wren’s missing brother', {
+    threadUrgency: 'low',
+    summary: '[[Wren Thistle]] is looking for her brother, last seen near [[Whisperwood]].',
+  })
+  const tremors = E('thread', 'Why are the tremors getting worse?', {
+    visibility: 'players',
+    raisedIn: sessionId,
+    summary: 'Townsfolk in [[Saltmere]] keep mentioning small earthquakes.',
+  })
+  const entities = [ring, brother, tremors, coast, saltmere, keep, wood, lighthouse, docks, temple, tavern, smith, marta, dorn, corvin, wardens, choir, thalassa, sundering, founding, relit, arrival, quest, pc]
 
   const regionImg = newId()
   const townImg = newId()
@@ -182,7 +199,7 @@ export async function loadSampleWorld(): Promise<string> {
     const campaignId = newId()
     await db.campaigns.add({ id: campaignId, worldId, name: 'Tides of the Choir', description: 'Something stirs beneath Saltmere.', system: 'System agnostic', status: 'active', createdAt: now })
     await db.sessions.add({
-      id: newId(),
+      id: sessionId,
       worldId,
       campaignId,
       number: 1,

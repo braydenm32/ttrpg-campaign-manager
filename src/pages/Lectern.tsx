@@ -17,6 +17,9 @@ import {
 } from '../generators'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
+import { plainLinks } from '../text'
+import { ThreadCard } from '../ThreadCard'
+import { newThread, threadLinks, useWorldSessions } from '../threads'
 import { useViewMode } from '../viewMode'
 
 /**
@@ -60,6 +63,7 @@ export default function Lectern() {
         <div className="lectern-col">
           <Scene lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
           <Present lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
+          <LecternThreads lectern={lectern} entities={entities} worldId={worldId} sessionId={session.id} />
         </div>
         <div className="lectern-col">
           <Initiative lectern={lectern} edit={edit} entities={entities} />
@@ -175,7 +179,7 @@ function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: 
               ))}
             </div>
           )}
-          {e.gmNotes && <div className="secret small">{e.gmNotes}</div>}
+          {e.gmNotes && <div className="secret small">{plainLinks(e.gmNotes)}</div>}
         </div>
       ))}
       <select
@@ -194,6 +198,52 @@ function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: 
             </option>
           ))}
       </select>
+    </section>
+  )
+}
+
+/** Open threads, with the ones touching this scene first, and a quick way to note a new one. */
+function LecternThreads({ lectern, entities, worldId, sessionId }: { lectern: LecternState; entities: Entity[]; worldId: string; sessionId: string }) {
+  const sessions = useWorldSessions(worldId)
+  const [name, setName] = useState('')
+  const inScene = new Set([lectern.sceneId, ...lectern.presentIds].filter(Boolean))
+  const open = entities.filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active'))
+  const touching = (t: Entity) => threadLinks(t, entities, true).filter((e) => inScene.has(e.id))
+  const here = open.filter((t) => touching(t).length > 0)
+  const rest = open.filter((t) => touching(t).length === 0)
+  const card = (t: Entity, highlight?: string) => (
+    <ThreadCard key={t.id} thread={t} entities={entities} sessions={sessions} worldId={worldId} currentSessionId={sessionId} highlight={highlight} />
+  )
+  return (
+    <section className="card lectern-panel">
+      <div className="row spread">
+        <h2>🧵 Loose threads</h2>
+        <Link className="small" to={`/w/${worldId}/threads`}>
+          All threads
+        </Link>
+      </div>
+      <form
+        className="row"
+        onSubmit={async (e) => {
+          e.preventDefault()
+          if (!name.trim()) return
+          await db.entities.add(newThread(worldId, name.trim(), sessionId))
+          setName('')
+        }}
+      >
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Something left hanging… (Enter to add)" />
+        <button disabled={!name.trim()}>Add</button>
+      </form>
+      {here.map((t) => card(t, `Here: ${touching(t).map((e) => e.name).join(', ')}`))}
+      {open.length === 0 && <p className="muted small">No open threads. Add one when the players leave something unresolved.</p>}
+      {rest.length > 0 && (
+        <details open={here.length === 0}>
+          <summary className="small">
+            {here.length ? 'Other open threads' : 'Open threads'} ({rest.length})
+          </summary>
+          {rest.map((t) => card(t))}
+        </details>
+      )}
     </section>
   )
 }

@@ -15,6 +15,7 @@ export const ENTITY_TYPES = [
   'shop',
   'deity',
   'lore',
+  'thread',
 ] as const
 export type EntityType = (typeof ENTITY_TYPES)[number]
 
@@ -29,6 +30,7 @@ export const ENTITY_LABELS: Record<EntityType, { one: string; many: string; icon
   shop: { one: 'Shop / Tavern', many: 'Shops & Taverns', icon: '🍺' },
   deity: { one: 'Deity', many: 'Deities', icon: '✨' },
   lore: { one: 'Lore', many: 'Lore', icon: '📚' },
+  thread: { one: 'Loose thread', many: 'Loose threads', icon: '🧵' },
 }
 
 export const GAME_SYSTEMS = [
@@ -47,6 +49,14 @@ export const GAME_SYSTEMS = [
   'Blades in the Dark',
   'Other',
 ]
+
+export type ThreadStatus = 'open' | 'active' | 'resolved' | 'dropped'
+export const THREAD_STATUS: Record<ThreadStatus, { label: string; hint: string }> = {
+  open: { label: 'Dangling', hint: 'Set up, but the players haven’t picked it up yet' },
+  active: { label: 'In play', hint: 'The players are pulling on it' },
+  resolved: { label: 'Tied off', hint: 'Paid off or answered' },
+  dropped: { label: 'Dropped', hint: 'Abandoned or no longer relevant' },
+}
 
 export interface World {
   id: string
@@ -96,6 +106,11 @@ export interface Entity {
   eventOrder?: number
   /** Quests: status. */
   questStatus?: 'open' | 'active' | 'done' | 'failed'
+  /** Loose threads: where the thread stands, how pressing it is, and the sessions that raised and tied it off. */
+  threadStatus?: ThreadStatus
+  threadUrgency?: 'low' | 'normal' | 'high'
+  raisedIn?: string
+  tiedOffIn?: string
   createdAt: number
   updatedAt: number
 }
@@ -267,6 +282,7 @@ export function blankEntity(worldId: string, type: EntityType, name = ''): Entit
     updatedAt: now,
     ...(type === 'event' ? { eventEra: 'pre' as const, eventOrder: now } : {}),
     ...(type === 'quest' ? { questStatus: 'open' as const } : {}),
+    ...(type === 'thread' ? { threadStatus: 'open' as const, threadUrgency: 'normal' as const } : {}),
   }
 }
 

@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Empty, VisibilityToggle } from '../components'
-import { db, ENTITY_LABELS, newId, type Bookmark, type Session } from '../db'
+import { db, ENTITY_LABELS, newId, type Bookmark, type Entity, type Session } from '../db'
 import { formatBytes, saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import {
@@ -13,6 +13,8 @@ import {
   type ActiveRecording,
   type RecordSource,
 } from '../recorder'
+import { ThreadCard } from '../ThreadCard'
+import { newThread, useWorldSessions } from '../threads'
 import { useViewMode } from '../viewMode'
 
 export default function SessionPage() {
@@ -122,6 +124,8 @@ export default function SessionPage() {
             ))}
         </select>
       </section>
+
+      <SessionThreads sessionId={session.id} entities={entities} worldId={worldId} />
 
       <div className="row end">
         <button
@@ -338,5 +342,35 @@ function Playback({ assetId, bookmarks, startedAt }: { assetId: string; bookmark
         </ul>
       )}
     </div>
+  )
+}
+
+/** Threads this session raised or tied off, plus a quick way to add one. */
+function SessionThreads({ sessionId, entities, worldId }: { sessionId: string; entities: Entity[]; worldId: string }) {
+  const sessions = useWorldSessions(worldId)
+  const [name, setName] = useState('')
+  const threads = entities.filter((e) => e.type === 'thread' && (e.raisedIn === sessionId || e.tiedOffIn === sessionId))
+  return (
+    <section>
+      <h2>🧵 Loose threads from this session</h2>
+      {threads.map((t) => (
+        <ThreadCard key={t.id} thread={t} entities={entities} sessions={sessions} worldId={worldId} currentSessionId={sessionId} />
+      ))}
+      <form
+        className="row"
+        onSubmit={async (e) => {
+          e.preventDefault()
+          if (!name.trim()) return
+          await db.entities.add(newThread(worldId, name.trim(), sessionId))
+          setName('')
+        }}
+      >
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Add a thread this session left hanging" />
+        <button disabled={!name.trim()}>Add</button>
+      </form>
+      <Link className="small" to={`/w/${worldId}/threads`}>
+        See all loose threads
+      </Link>
+    </section>
   )
 }

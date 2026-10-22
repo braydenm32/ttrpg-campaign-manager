@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Empty, Modal } from '../components'
 import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, GAME_SYSTEMS, newId, type EntityType } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
+import { plainLinks } from '../text'
+import { URGENCY } from '../threads'
 import { useViewMode } from '../viewMode'
 
 export default function Dashboard() {
@@ -25,6 +27,10 @@ export default function Dashboard() {
       )
     : []
   const recent = [...entities].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 8)
+  const urgencyRank = { high: 0, normal: 1, low: 2 }
+  const openThreads = entities
+    .filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active'))
+    .sort((a, b) => urgencyRank[a.threadUrgency ?? 'normal'] - urgencyRank[b.threadUrgency ?? 'normal'] || b.updatedAt - a.updatedAt)
   const openQuests = entities.filter((e) => e.type === 'quest' && (e.questStatus === 'open' || e.questStatus === 'active'))
 
   const quickCreate = async (type: EntityType) => {
@@ -108,6 +114,28 @@ export default function Dashboard() {
               ))}
             </ul>
           )}
+          <h2>
+            <Link to={`/w/${worldId}/threads`}>🧵 Loose threads</Link>
+          </h2>
+          {openThreads.length === 0 ? (
+            <Empty>No loose threads.</Empty>
+          ) : (
+            <ul className="entity-list">
+              {openThreads.slice(0, 6).map((e) => (
+                <li key={e.id}>
+                  <Link to={`/w/${worldId}/e/${e.id}`}>
+                    {e.threadUrgency && URGENCY[e.threadUrgency].icon} {e.name}
+                  </Link>
+                  {e.summary && <span className="muted"> · {plainLinks(e.summary)}</span>}
+                </li>
+              ))}
+              {openThreads.length > 6 && (
+                <li>
+                  <Link to={`/w/${worldId}/threads`}>…and {openThreads.length - 6} more</Link>
+                </li>
+              )}
+            </ul>
+          )}
         </section>
         <section>
           <h2>Recently updated</h2>
@@ -120,7 +148,7 @@ export default function Dashboard() {
                   <Link to={`/w/${worldId}/e/${e.id}`}>
                     {ENTITY_LABELS[e.type].icon} {e.name}
                   </Link>
-                  {e.summary && <span className="muted"> · {e.summary}</span>}
+                  {e.summary && <span className="muted"> · {plainLinks(e.summary)}</span>}
                 </li>
               ))}
             </ul>

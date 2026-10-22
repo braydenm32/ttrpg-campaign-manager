@@ -21,6 +21,7 @@ import Timeline from './pages/Timeline'
 import CampaignPage from './pages/CampaignPage'
 import SessionPage from './pages/SessionPage'
 import Lectern from './pages/Lectern'
+import Threads from './pages/Threads'
 import Assets from './pages/Assets'
 import Generators from './pages/Generators'
 import WorldSettings from './pages/WorldSettings'
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="maps/:mapId" element={<MapView />} />
             <Route path="maps/:mapId/draw" element={<MapBuilder />} />
             <Route path="timeline" element={<Timeline />} />
+            <Route path="threads" element={<Threads />} />
             <Route path="c/:campaignId" element={<CampaignPage />} />
             <Route path="s/:sessionId" element={<SessionPage />} />
             <Route path="s/:sessionId/lectern" element={<Lectern />} />
@@ -127,7 +129,11 @@ function WorldShell() {
     useLiveQuery(async () => {
       const all = await db.entities.where({ worldId }).toArray()
       const c: Record<string, number> = {}
-      for (const e of all) if (isGM || e.visibility === 'players') c[e.type] = (c[e.type] ?? 0) + 1
+      for (const e of all)
+        if (isGM || e.visibility === 'players') {
+          c[e.type] = (c[e.type] ?? 0) + 1
+          if (e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active')) c.openThreads = (c.openThreads ?? 0) + 1
+        }
       return c
     }, [worldId, isGM]) ?? {}
 
@@ -144,6 +150,10 @@ function WorldShell() {
           <NavLink end to={`/w/${worldId}`}>🏠 Overview</NavLink>
           <NavLink to={`/w/${worldId}/maps`}>🗺️ Maps</NavLink>
           <NavLink to={`/w/${worldId}/timeline`}>⏳ Timeline</NavLink>
+          <NavLink to={`/w/${worldId}/threads`}>
+            🧵 {isGM ? 'Loose threads' : 'Leads'}
+            {counts.openThreads ? <span className="count">{counts.openThreads}</span> : null}
+          </NavLink>
           <div className="nav-heading">Campaigns</div>
           {campaigns.map((c) => (
             <NavLink key={c.id} to={`/w/${worldId}/c/${c.id}`}>
@@ -151,7 +161,7 @@ function WorldShell() {
             </NavLink>
           ))}
           <div className="nav-heading">Codex</div>
-          {ENTITY_TYPES.map((t) => (
+          {ENTITY_TYPES.filter((t) => t !== 'thread').map((t) => (
             <NavLink key={t} to={`/w/${worldId}/type/${t}`}>
               {ENTITY_LABELS[t].icon} {ENTITY_LABELS[t].many}
               {counts[t] ? <span className="count">{counts[t]}</span> : null}
