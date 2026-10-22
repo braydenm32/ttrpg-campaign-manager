@@ -1,19 +1,34 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { importWorld } from '../backup'
 import { Empty, Modal } from '../components'
 import { db, GAME_SYSTEMS, newId } from '../db'
 import { loadSampleWorld } from '../sample'
+import { AccountModal, useAuthSession } from '../cloud/auth'
+import { downloadCloudWorld, listCloudWorlds, type CloudWorld } from '../cloud/sync'
 
 export default function Home() {
   const worlds = useLiveQuery(() => db.worlds.orderBy('updatedAt').reverse().toArray()) ?? []
   const [creating, setCreating] = useState(false)
+  const [account, setAccount] = useState(false)
+  const { user } = useAuthSession()
+  const [cloudWorlds, setCloudWorlds] = useState<CloudWorld[]>([])
+  const [downloading, setDownloading] = useState('')
   const navigate = useNavigate()
+  const localIds = new Set(worlds.map((w) => w.id))
+  const notHere = user ? cloudWorlds.filter((c) => !localIds.has(c.id)) : []
+
+  useEffect(() => {
+    if (user) listCloudWorlds().then(setCloudWorlds, () => setCloudWorlds([]))
+  }, [user])
 
   return (
     <div className="home">
       <header className="home-header">
+        <button className="account-button" onClick={() => setAccount(true)}>
+          {user ? `☁️ ${user.email}` : '☁️ Sign in to sync'}
+        </button>
         <h1>⚔️ Campaign Codex</h1>
         <p>Your worlds, maps, NPCs and sessions, all in one place. Everything is saved on this device.</p>
       </header>
@@ -45,12 +60,45 @@ export default function Home() {
           {worlds.map((w) => (
             <button key={w.id} className="card world-card" onClick={() => navigate(`/w/${w.id}`)}>
               <h3>{w.name}</h3>
-              <div className="muted">{w.system}</div>
+              <div className="muted">
+                {w.shared ? '📜 Shared with you (read only)' : w.system}
+                {w.cloud?.enabled && ' · ☁️ synced'}
+              </div>
               <p>{w.description}</p>
             </button>
           ))}
         </div>
       )}
+      {notHere.length > 0 && (
+        <section>
+          <h2>In your cloud, not on this device</h2>
+          <div className="card-grid">
+            {notHere.map((c) => (
+              <div key={c.id} className="card">
+                <h3>{c.name || 'Untitled world'}</h3>
+                <button
+                  className="primary"
+                  disabled={!!downloading}
+                  onClick={async () => {
+                    setDownloading(c.id)
+                    try {
+                      await downloadCloudWorld(c)
+                      navigate(`/w/${c.id}`)
+                    } catch (err) {
+                      alert(`Download failed: ${(err as Error).message}`)
+                    } finally {
+                      setDownloading('')
+                    }
+                  }}
+                >
+                  {downloading === c.id ? 'Downloading…' : '⬇ Open on this device'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      {account && <AccountModal onClose={() => setAccount(false)} />}
       {creating && <NewWorld onClose={() => setCreating(false)} onCreated={(id) => navigate(`/w/${id}`)} />}
     </div>
   )

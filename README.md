@@ -23,9 +23,12 @@ Runs in the browser, installs as an offline web app, and packages as a desktop a
 - **Generators.** Taverns (menu, patrons, rumours), shops (blacksmith, general store, alchemist, magic shop) and NPCs, saved into your world in one click.
 - **Assets.** A library for handouts, portraits, maps, audio and PDFs.
 - **Player view.** Switch "Viewing as" to Player to see exactly what players would see.
+- **Map builder.** Draw maps in the app: paint land, forest, mountains and water, add roads, rivers, rooms, symbols, labels and a square or hex grid.
+- **Cloud sync (optional).** Sign in and turn on sync for a world to keep it backed up and in step across your devices, with changes appearing within seconds.
+- **Player share links.** A read-only link to the revealed parts of a world. Everything GM-only is removed on the server before it's sent, and the link updates live as you work.
 - **Backups.** Download a whole world as one file and import it on another device.
 
-Everything is stored on your device, so it works with no internet. Sync and player accounts come later (see [the roadmap](docs/ROADMAP.md)).
+Everything is stored on your device first, so it works with no internet. Sync catches up when you're back online.
 
 ## Using it
 
@@ -52,5 +55,6 @@ npm run lint
 | Text | Markdown (marked + DOMPurify) with `[[wiki links]]` |
 | Desktop / mobile | Tauri 2 (`src-tauri/`) |
 | Web hosting | GitHub Pages, with a PWA service worker for offline use |
+| Cloud | Supabase (Postgres + row-level security, Storage, Realtime, one edge function). Schema in `supabase/` |
 
-Main files: `src/db.ts` (data model), `src/pages/` (screens), `src/Markdown.tsx` (links and secrets), `src/generators.ts` (random tables), `src/recorder.ts` (session audio), `src/sample.ts` (sample world).
+Main files: `src/db.ts` (data model), `src/pages/` (screens), `src/Markdown.tsx` (links and secrets), `src/generators.ts` (random tables), `src/recorder.ts` (session audio), `src/sample.ts` (sample world), `src/mapDrawing.ts` + `src/pages/MapBuilder.tsx` (map builder), `src/cloud/` (sign-in, sync, share links).

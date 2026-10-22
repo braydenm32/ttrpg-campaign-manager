@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { exportWorld } from '../backup'
 import { db, deleteWorld, GAME_SYSTEMS, type World } from '../db'
 import { useWorld } from '../hooks'
+import CloudSettings from './CloudSettings'
 
 export default function WorldSettings() {
   const { worldId, world } = useWorld()
@@ -33,11 +34,13 @@ export default function WorldSettings() {
         </label>
       </div>
 
+      <CloudSettings world={world} />
+
       <section>
         <h2>Backup</h2>
         <p className="muted">
-          Your world is stored on this device only. Download a backup file regularly. You can import it on another device from
-          the home screen.
+          A backup is a single file with the whole world in it, including uploaded files. Keep one even if sync is on; you can
+          import it from the home screen on any device.
         </p>
         <button onClick={() => exportWorld(worldId)}>⬇ Download backup</button>
       </section>

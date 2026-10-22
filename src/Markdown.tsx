@@ -5,6 +5,13 @@ import { useNavigate } from 'react-router-dom'
 import type { Entity } from './db'
 
 /**
+ * A secret block runs from a ":::gm" line to the next ":::" line. If the closing line is missing,
+ * everything after ":::gm" stays secret, so a typo never leaks. Keep in step with
+ * public.strip_gm_blocks in supabase/migrations, which applies the same rule to share links.
+ */
+export const GM_BLOCK = /^:::gm[ \t]*((?:\n.*)*?)(?:\n:::[ \t]*$|$(?![\s\S]))/gm
+
+/**
  * Renders GM-authored Markdown with two extras:
  *  - [[Entity Name]] or [[Entity Name|label]] links to that entity's page
  *  - :::gm ... ::: blocks are secrets, shown only to the GM
@@ -23,7 +30,7 @@ export function Markdown({
   const navigate = useNavigate()
   const html = useMemo(() => {
     const byName = new Map(entities.map((e) => [e.name.trim().toLowerCase(), e]))
-    let src = text.replace(/^:::gm\s*\n([\s\S]*?)\n:::\s*$/gm, (_m, inner: string) =>
+    let src = text.replace(GM_BLOCK, (_m, inner: string) =>
       showSecrets ? `<div class="secret">\n\n${inner}\n\n</div>` : '',
     )
     src = src.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, name: string, label?: string) => {
@@ -67,5 +74,5 @@ export function findBacklinks(target: Entity, entities: Entity[]) {
 
 /** Hidden parts of an entity are removed for players; used for previews and exports. */
 export function stripSecrets(text: string) {
-  return text.replace(/^:::gm\s*\n[\s\S]*?\n:::\s*$/gm, '')
+  return text.replace(GM_BLOCK, '')
 }

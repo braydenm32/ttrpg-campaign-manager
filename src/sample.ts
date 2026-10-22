@@ -126,8 +126,9 @@ export async function loadSampleWorld(): Promise<string> {
   const regionMap = newId()
   const townMap = newId()
   const svgBlob = (s: string) => new Blob([s], { type: 'image/svg+xml' })
-  const pin = (p: Omit<Pin, 'id' | 'note' | 'color' | 'visibility'> & Partial<Pin>): Pin => ({
+  const pin = (p: Omit<Pin, 'id' | 'worldId' | 'note' | 'color' | 'visibility'> & Partial<Pin>): Pin => ({
     id: newId(),
+    worldId,
     note: '',
     color: '#e0b354',
     visibility: 'players',
@@ -182,6 +183,7 @@ export async function loadSampleWorld(): Promise<string> {
     await db.campaigns.add({ id: campaignId, worldId, name: 'Tides of the Choir', description: 'Something stirs beneath Saltmere.', system: 'System agnostic', status: 'active', createdAt: now })
     await db.sessions.add({
       id: newId(),
+      worldId,
       campaignId,
       number: 1,
       title: 'Arrival in Saltmere',

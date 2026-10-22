@@ -4,12 +4,11 @@ The order of these items is a starting point and will change as we see what matt
 
 ## Next up
 
-- **Share link and live sync.** An optional free cloud backend (likely Supabase) so a GM's changes appear live on other devices, and players can open a read-only link to the revealed content.
 - **Players join a campaign**, similar to D&D Beyond: invite links, player accounts, per-player reveals ("only Wren knows this"), and player journals.
-- **In-app map builder.** Draw coastlines, terrain, roads and labels, and stamp icons, instead of uploading an image.
+- **Map builder extras:** draw on top of an uploaded map, merge adjoining rooms, more symbols, custom colours.
 - **Fog of war / reveal areas** on maps for the player view.
 - **Rich text editor** with `@`-mention autocomplete for links.
-- **Session cockpit.** One screen for running a session: current scene, NPCs present, initiative tracker, dice roller and quick generators.
+- **The Lectern.** One screen for running a session: current scene, NPCs present, initiative tracker, dice roller and quick generators.
 - **Loose threads tracker**, faction clocks, and a safety tools record (lines and veils).
 - **Custom calendars** (Harptos, Golarion and others) for the timeline.
 - **Relationship graph** between NPCs and factions.

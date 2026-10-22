@@ -55,6 +55,10 @@ export interface World {
   system: string
   createdAt: number
   updatedAt: number
+  /** Device-only: cloud sync settings for this world. Never uploaded. */
+  cloud?: { enabled: boolean; lastPulledAt?: string }
+  /** Device-only: set when this world is a read-only copy opened from a player share link. */
+  shared?: { token: string; fetchedAt: number }
 }
 
 export interface Campaign {
@@ -113,6 +117,7 @@ export interface WorldMap {
 
 export interface Pin {
   id: string
+  worldId: string
   mapId: string
   label: string
   kind: 'point' | 'region'
@@ -137,6 +142,7 @@ export interface Bookmark {
 
 export interface Session {
   id: string
+  worldId: string
   campaignId: string
   number: number
   title: string
@@ -161,6 +167,18 @@ export interface Asset {
   tags: string[]
   visibility: Visibility
   createdAt: number
+  /** Bumped when the file itself changes (e.g. a drawn map is re-rendered), so sync re-uploads it. */
+  updatedAt?: number
+}
+
+/** What was last synced for each row, so only real changes are uploaded. */
+export interface SyncMeta {
+  key: string
+  worldId: string
+  hash: string
+  deleted?: boolean
+  /** Upload failed (e.g. file too large); not retried until the row changes. */
+  failed?: string
 }
 
 export const db = new Dexie('ttrpg-campaign-manager') as Dexie & {
@@ -171,6 +189,7 @@ export const db = new Dexie('ttrpg-campaign-manager') as Dexie & {
   pins: EntityTable<Pin, 'id'>
   sessions: EntityTable<Session, 'id'>
   assets: EntityTable<Asset, 'id'>
+  syncMeta: EntityTable<SyncMeta, 'key'>
 }
 
 db.version(1).stores({
@@ -182,6 +201,24 @@ db.version(1).stores({
   sessions: 'id, campaignId, number',
   assets: 'id, worldId',
 })
+
+// v2: pins and sessions carry their worldId (needed for sync), plus the sync bookkeeping table.
+db.version(2)
+  .stores({
+    pins: 'id, mapId, entityId, worldId',
+    sessions: 'id, campaignId, number, worldId',
+    syncMeta: 'key, worldId',
+  })
+  .upgrade(async (tx) => {
+    const mapWorld = new Map((await tx.table('maps').toArray()).map((m: WorldMap) => [m.id, m.worldId]))
+    const campaignWorld = new Map((await tx.table('campaigns').toArray()).map((c: Campaign) => [c.id, c.worldId]))
+    await tx.table('pins').toCollection().modify((p: Pin) => {
+      p.worldId = mapWorld.get(p.mapId) ?? ''
+    })
+    await tx.table('sessions').toCollection().modify((s: Session) => {
+      s.worldId = campaignWorld.get(s.campaignId) ?? ''
+    })
+  })
 
 export const newId = () => crypto.randomUUID()
 
@@ -206,11 +243,10 @@ export function blankEntity(worldId: string, type: EntityType, name = ''): Entit
 }
 
 export async function deleteWorld(worldId: string) {
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
-    const campaigns = await db.campaigns.where({ worldId }).primaryKeys()
-    await db.sessions.where('campaignId').anyOf(campaigns).delete()
-    const maps = await db.maps.where({ worldId }).primaryKeys()
-    await db.pins.where('mapId').anyOf(maps).delete()
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta], async () => {
+    await db.sessions.where({ worldId }).delete()
+    await db.pins.where({ worldId }).delete()
+    await db.syncMeta.where({ worldId }).delete()
     await db.maps.where({ worldId }).delete()
     await db.campaigns.where({ worldId }).delete()
     await db.entities.where({ worldId }).delete()

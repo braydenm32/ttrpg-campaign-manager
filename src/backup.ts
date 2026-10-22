@@ -19,16 +19,17 @@ export async function exportWorld(worldId: string) {
   if (!world) throw new Error('World not found')
   const campaigns = await db.campaigns.where({ worldId }).toArray()
   const maps = await db.maps.where({ worldId }).toArray()
+  const { cloud: _cloud, shared: _shared, ...plainWorld } = world
   const backup: WorldBackup = {
     format: 'campaign-codex-world',
     version: 1,
     exportedAt: new Date().toISOString(),
-    world,
+    world: plainWorld,
     campaigns,
     entities: await db.entities.where({ worldId }).toArray(),
     maps,
-    pins: await db.pins.where('mapId').anyOf(maps.map((m) => m.id)).toArray(),
-    sessions: await db.sessions.where('campaignId').anyOf(campaigns.map((c) => c.id)).toArray(),
+    pins: await db.pins.where({ worldId }).toArray(),
+    sessions: await db.sessions.where({ worldId }).toArray(),
     assets: await Promise.all(
       (await db.assets.where({ worldId }).toArray()).map(async ({ blob, ...a }) => ({ ...a, data: await blobToBase64(blob) })),
     ),
@@ -55,7 +56,7 @@ export async function importWorld(file: File): Promise<string> {
   const now = Date.now()
 
   await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
-    await db.worlds.add({ ...b.world, id: worldId, name: b.world.name, updatedAt: now })
+    await db.worlds.add({ ...b.world, id: worldId, name: b.world.name, updatedAt: now, cloud: undefined, shared: undefined })
     await db.assets.bulkAdd(
       b.assets.map(({ data, ...a }) => ({ ...a, id: id(a.id), worldId, blob: base64ToBlob(data, a.mime) })),
     )
@@ -67,12 +68,13 @@ export async function importWorld(file: File): Promise<string> {
       b.maps.map((m) => ({ ...m, id: id(m.id), worldId, imageId: id(m.imageId), locationId: opt(m.locationId) })),
     )
     await db.pins.bulkAdd(
-      b.pins.map((p) => ({ ...p, id: id(p.id), mapId: id(p.mapId), entityId: opt(p.entityId), childMapId: opt(p.childMapId) })),
+      b.pins.map((p) => ({ ...p, id: id(p.id), worldId, mapId: id(p.mapId), entityId: opt(p.entityId), childMapId: opt(p.childMapId) })),
     )
     await db.sessions.bulkAdd(
       b.sessions.map((s) => ({
         ...s,
         id: id(s.id),
+        worldId,
         campaignId: id(s.campaignId),
         entityIds: s.entityIds.map(id),
         recordings: s.recordings.map((r) => ({ ...r, assetId: id(r.assetId) })),

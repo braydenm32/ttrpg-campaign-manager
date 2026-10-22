@@ -256,3 +256,11 @@ input[type=color] { width: 3em; height: 2.2em; padding: 2px; }
   .builder-tools { flex-direction: row; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; }
   .builder-canvas { min-height: 50vh; }
 }
+
+/* Cloud */
+.home-header { position: relative; }
+.account-button { position: absolute; right: 0; top: 0; }
+.sync-badge { font-size: .8rem; color: var(--muted); justify-content: flex-start; }
+.notice { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); border-radius: 8px; padding: .5em .8em; }
+.share-heading { margin-top: 1.5em; }
+@media (max-width: 800px) { .account-button { position: static; margin-bottom: 1em; } }
