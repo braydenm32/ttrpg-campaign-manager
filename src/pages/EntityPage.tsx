@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, TagInput, VisibilityBadge, VisibilityToggle } from '../components'
-import { db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, THREAD_STATUS, type Entity, type EntityType, type ThreadStatus } from '../db'
+import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, THREAD_STATUS, type Entity, type EntityType, type ThreadStatus } from '../db'
 import { URGENCY, useWorldSessions } from '../threads'
 import { saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
@@ -95,6 +95,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
             </div>
           )}
+          {isGM && e.type === 'location' && <AddInside parent={e} />}
           {groups.map(([t, xs]) => (
             <section key={t}>
               <h2>
@@ -389,5 +390,27 @@ function ThreadFields({ d, set }: { d: Entity; set: <K extends keyof Entity>(k: 
       {sessionSelect('raisedIn', 'Raised in session')}
       {sessionSelect('tiedOffIn', 'Tied off in session')}
     </>
+  )
+}
+
+/** Quick way to make a new place inside this one (a district in a city, a room in a building). */
+function AddInside({ parent }: { parent: Entity }) {
+  const navigate = useNavigate()
+  const [name, setName] = useState('')
+  return (
+    <form
+      className="row add-inside"
+      onSubmit={async (ev) => {
+        ev.preventDefault()
+        if (!name.trim()) return
+        const child = { ...blankEntity(parent.worldId, 'location', name.trim()), parentId: parent.id }
+        await db.entities.add(child)
+        setName('')
+        navigate(`/w/${parent.worldId}/e/${child.id}`)
+      }}
+    >
+      <input value={name} onChange={(ev) => setName(ev.target.value)} placeholder={`Add a place inside ${parent.name}, e.g. a district or building`} />
+      <button disabled={!name.trim()}>+ Add place inside</button>
+    </form>
   )
 }

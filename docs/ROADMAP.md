@@ -20,12 +20,13 @@ The order of these items is a starting point and will change as we see what matt
 
 The core stays system-agnostic: stats are free-form "Details" fields. Later we'll add system packs (D&D 5e, PF2e, Starfinder, Call of Cthulhu 7e, Daggerheart) with stat block templates, character sheets and initiative rules.
 
-## AI features (parked until the core is solid)
+## AI features
 
-Each of these needs an AI provider (for example Claude for text, plus a speech-to-text service):
+Built: session transcripts (on-device with Whisper, or AssemblyAI in the cloud with speaker labels) and recaps (GM summary plus player recap, via "Copy for Claude" or the GM's own Anthropic API key, always reviewed before saving).
 
-- Transcribing session recordings, with labels for who is speaking (in person and online)
-- Recap generation: a GM version and a player-safe version
+Still parked (each needs an AI provider):
+
+- Speaker names for on-device transcripts
 - Suggested updates to pages from a transcript (new NPCs, places, items, quest progress), approved by the GM
 - AI flavour for generators, and improvised NPC dialogue in character
 - "Ask your world": chat that answers only from your own notes
