@@ -114,7 +114,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       const blob = new Blob([svg], { type: 'image/svg+xml' })
       await db.transaction('rw', [db.maps, db.assets], async () => {
         await db.maps.update(map.id, { drawing })
-        await db.assets.update(map.imageId, { blob, size: blob.size, mime: 'image/svg+xml' })
+        await db.assets.update(map.imageId, { blob, size: blob.size, mime: 'image/svg+xml', updatedAt: Date.now() })
       })
       lastSaved.current = drawing
       setSaved(true)

@@ -29,6 +29,7 @@ export default function CampaignPage() {
     const number = (sessions.at(-1)?.number ?? 0) + 1
     await db.sessions.add({
       id,
+      worldId,
       campaignId,
       number,
       title: `Session ${number}`,

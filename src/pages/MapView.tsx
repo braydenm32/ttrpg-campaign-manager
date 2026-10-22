@@ -60,14 +60,14 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
 
   const addPin = async (pos: [number, number]) => {
     const id = newId()
-    await db.pins.add({ id, mapId: map.id, label: 'New pin', kind: 'point', position: pos, color: COLORS[0], visibility: 'gm', note: '' })
+    await db.pins.add({ id, worldId, mapId: map.id, label: 'New pin', kind: 'point', position: pos, color: COLORS[0], visibility: 'gm', note: '' })
     setTool('select')
     select(id)
   }
   const finishRegion = async () => {
     if (draft.length < 3) return
     const id = newId()
-    await db.pins.add({ id, mapId: map.id, label: 'New region', kind: 'region', points: draft, color: COLORS[2], visibility: 'gm', note: '' })
+    await db.pins.add({ id, worldId, mapId: map.id, label: 'New region', kind: 'region', points: draft, color: COLORS[2], visibility: 'gm', note: '' })
     setDraft([])
     setTool('select')
     select(id)

@@ -38,3 +38,8 @@ export function useViewMode() {
   const canSee = (v: Visibility | undefined) => isGM || v === 'players'
   return { mode, setMode, isGM, canSee }
 }
+
+/** Locks everything inside it to the player view (used for read-only worlds opened from a share link). */
+export function ForcePlayerView({ children }: { children: ReactNode }) {
+  return <ViewModeContext.Provider value={{ mode: 'player', setMode: () => {} }}>{children}</ViewModeContext.Provider>
+}
