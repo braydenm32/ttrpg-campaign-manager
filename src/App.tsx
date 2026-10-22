@@ -1,8 +1,7 @@
-import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import { HashRouter, NavLink, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
-import { db, ENTITY_LABELS, ENTITY_TYPES } from './db'
+import { HashRouter, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
 import { useWorld } from './hooks'
+import { WorldNav } from './Sidebar'
 import { ForcePlayerView, useViewMode, ViewModeProvider } from './viewMode'
 import { useAuthSession } from './cloud/auth'
 import { supabase } from './cloud/client'
@@ -124,18 +123,6 @@ function WorldShell() {
   const [shareError, setShareError] = useState('')
   useEffect(() => (shared ? watchSharedWorld(shared.token, (e) => setShareError(e.message)) : undefined), [shared?.token])
   const navigate = useNavigate()
-  const campaigns = useLiveQuery(() => db.campaigns.where({ worldId }).toArray(), [worldId]) ?? []
-  const counts =
-    useLiveQuery(async () => {
-      const all = await db.entities.where({ worldId }).toArray()
-      const c: Record<string, number> = {}
-      for (const e of all)
-        if (isGM || e.visibility === 'players') {
-          c[e.type] = (c[e.type] ?? 0) + 1
-          if (e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active')) c.openThreads = (c.openThreads ?? 0) + 1
-        }
-      return c
-    }, [worldId, isGM]) ?? {}
 
   if (world === undefined) return <div className="loading">Loading…</div>
   if (world === null) return <div className="loading">World not found.</div>
@@ -146,36 +133,7 @@ function WorldShell() {
         <button className="world-name" onClick={() => navigate('/')} title="All worlds">
           ← {world.name}
         </button>
-        <nav>
-          <NavLink end to={`/w/${worldId}`}>🏠 Overview</NavLink>
-          <NavLink to={`/w/${worldId}/maps`}>🗺️ Maps</NavLink>
-          <NavLink to={`/w/${worldId}/timeline`}>⏳ Timeline</NavLink>
-          <NavLink to={`/w/${worldId}/threads`}>
-            🧵 {isGM ? 'Loose threads' : 'Leads'}
-            {counts.openThreads ? <span className="count">{counts.openThreads}</span> : null}
-          </NavLink>
-          <div className="nav-heading">Campaigns</div>
-          {campaigns.map((c) => (
-            <NavLink key={c.id} to={`/w/${worldId}/c/${c.id}`}>
-              🎲 {c.name}
-            </NavLink>
-          ))}
-          <div className="nav-heading">Codex</div>
-          {ENTITY_TYPES.filter((t) => t !== 'thread').map((t) => (
-            <NavLink key={t} to={`/w/${worldId}/type/${t}`}>
-              {ENTITY_LABELS[t].icon} {ENTITY_LABELS[t].many}
-              {counts[t] ? <span className="count">{counts[t]}</span> : null}
-            </NavLink>
-          ))}
-          {isGM && (
-            <>
-              <div className="nav-heading">GM tools</div>
-              <NavLink to={`/w/${worldId}/generators`}>🎰 Generators</NavLink>
-              <NavLink to={`/w/${worldId}/assets`}>📁 Assets</NavLink>
-              <NavLink to={`/w/${worldId}/settings`}>⚙️ World settings</NavLink>
-            </>
-          )}
-        </nav>
+        <WorldNav worldId={worldId} />
         {world.cloud?.enabled && <SyncBadge />}
         {shared ? (
           <div className="mode-switch">

@@ -102,6 +102,17 @@ input:focus, select:focus, textarea:focus { outline: 2px solid color-mix(in srgb
 .sidebar nav a { color: var(--text); padding: .35em .6em; border-radius: 6px; display: flex; align-items: center; gap: .4em; }
 .sidebar nav a:hover { background: var(--panel-2); text-decoration: none; }
 .sidebar nav a.active { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--link); }
+.nav-row { display: flex; align-items: center; }
+.nav-row > a { flex: 1; min-width: 0; }
+.nav-caret { background: none; border: none; padding: 0; width: 1.2em; flex: none; color: var(--muted); font-size: .8em; justify-content: center; }
+.nav-caret:hover { color: var(--text); }
+.nav-caret-space { width: 1.2em; flex: none; }
+.nav-children { display: flex; flex-direction: column; gap: 1px; margin-left: 1.2em; padding-left: .35em; border-left: 1px solid var(--border); }
+.sidebar .nav-children a { font-size: .9em; padding: .2em .5em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.sidebar .nav-children .nav-row > a { display: block; }
+.sidebar .nav-children .nav-more { color: var(--muted); font-style: italic; }
+.add-inside { flex-wrap: wrap; }
+.add-inside > input { flex: 1 1 220px; }
 .nav-heading { font-size: .75em; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 1em .6em .3em; }
 .count { margin-left: auto; font-size: .8em; color: var(--muted); }
 .mode-switch { border-top: 1px solid var(--border); padding-top: .75em; display: flex; flex-direction: column; gap: .4em; font-size: .85em; color: var(--muted); }
@@ -222,6 +233,10 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
   .sidebar { position: static; height: auto; max-height: none; border-right: none; border-bottom: 1px solid var(--border); }
   .sidebar nav { flex-direction: row; flex-wrap: wrap; gap: .25em; }
   .nav-heading { width: 100%; margin: .5em .3em 0; }
+  /* On phones the menu is a compact row of links; the nested lists live on the pages themselves. */
+  .sidebar nav > div:not(.nav-heading), .sidebar nav > div > .nav-row { display: contents; }
+  .sidebar .nav-caret, .sidebar .nav-caret-space, .sidebar .nav-children { display: none; }
+  .sidebar .nav-row > a { flex: none; }
   .page { padding: 1.25em 1em 3em; }
   .two-col, .entity-layout { grid-template-columns: 1fr; }
   .map-page { height: 80vh; }
