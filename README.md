@@ -21,6 +21,7 @@ Runs in the browser, installs as an offline web app, and packages as a desktop a
 - **Timeline.** History (before the campaign) and in-campaign events, filterable by place.
 - **Sessions.** GM notes and a separate player recap. You can record audio from one microphone for in-person games, or from the microphone plus your Discord or Zoom audio for online games. While recording, you can add timestamped bookmarks, and clicking one later jumps the playback to that moment.
 - **The Lectern.** One screen for running a session at the table: where the party is, who's present (with their GM notes), an initiative tracker with hit points and conditions, a dice roller (`2d6+3`, advantage, `4d6kh3`), quick notes that land in the session log, and NPC, tavern and shop generators. Open it from any session with "📖 Run at the Lectern".
+- **Loose threads.** A board of every hook, mystery, promise and grudge: dangling, in play, tied off or dropped. Threads link to the NPCs and places they involve, remember which session raised and resolved them, and warn you when one hasn't moved in three sessions. They also show up in the Lectern (the ones touching the current scene first), on session pages and on the overview. Reveal a thread and players see it under "Leads".
 - **Generators.** Taverns (menu, patrons, rumours), shops (blacksmith, general store, alchemist, magic shop) and NPCs, saved into your world in one click.
 - **Assets.** A library for handouts, portraits, maps, audio and PDFs.
 - **Player view.** Switch "Viewing as" to Player to see exactly what players would see.
@@ -58,4 +59,4 @@ npm run lint
 | Web hosting | GitHub Pages, with a PWA service worker for offline use |
 | Cloud | Supabase (Postgres + row-level security, Storage, Realtime, one edge function). Schema in `supabase/` |
 
-Main files: `src/db.ts` (data model), `src/pages/` (screens), `src/Markdown.tsx` (links and secrets), `src/generators.ts` (random tables), `src/recorder.ts` (session audio), `src/sample.ts` (sample world), `src/mapDrawing.ts` + `src/pages/MapBuilder.tsx` (map builder), `src/cloud/` (sign-in, sync, share links), `src/pages/Lectern.tsx` + `src/dice.ts` (the Lectern).
+Main files: `src/db.ts` (data model), `src/pages/` (screens), `src/Markdown.tsx` (links and secrets), `src/generators.ts` (random tables), `src/recorder.ts` (session audio), `src/sample.ts` (sample world), `src/mapDrawing.ts` + `src/pages/MapBuilder.tsx` (map builder), `src/cloud/` (sign-in, sync, share links), `src/pages/Lectern.tsx` + `src/dice.ts` (the Lectern), `src/pages/Threads.tsx` + `src/threads.ts` (loose threads).

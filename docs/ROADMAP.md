@@ -9,7 +9,7 @@ The order of these items is a starting point and will change as we see what matt
 - **Fog of war / reveal areas** on maps for the player view.
 - **Rich text editor** with `@`-mention autocomplete for links.
 - **Lectern extras:** a players' screen (show a handout or the current scene to the table), timers, and system-specific initiative rules once game systems arrive.
-- **Loose threads tracker**, faction clocks, and a safety tools record (lines and veils).
+- **Faction clocks** (progress clocks for villains' plans, tied to loose threads) and a **safety tools record** (lines and veils).
 - **Custom calendars** (Harptos, Golarion and others) for the timeline.
 - **Relationship graph** between NPCs and factions.
 - **Mobile apps** (iOS and Android) built from the Tauri project.

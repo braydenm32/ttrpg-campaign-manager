@@ -2,7 +2,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, TagInput, VisibilityBadge, VisibilityToggle } from '../components'
-import { db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, type Entity, type EntityType } from '../db'
+import { db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, THREAD_STATUS, type Entity, type EntityType, type ThreadStatus } from '../db'
+import { URGENCY, useWorldSessions } from '../threads'
 import { saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
 import { useViewMode } from '../viewMode'
@@ -70,6 +71,8 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             {e.type === 'event' && e.eventDate && ` · ${e.eventDate}`}
             {e.type === 'event' && ` · ${e.eventEra === 'campaign' ? 'during the campaign' : 'before the campaign'}`}
             {e.questStatus && ` · ${e.questStatus}`}
+            {e.type === 'thread' && ` · ${THREAD_STATUS[e.threadStatus ?? 'open'].label}`}
+            {e.type === 'thread' && e.threadUrgency && e.threadUrgency !== 'normal' && ` · ${URGENCY[e.threadUrgency].icon} ${URGENCY[e.threadUrgency].label}`}
           </div>
           <h1>
             {e.name} <VisibilityBadge value={e.visibility} />
@@ -246,6 +249,7 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
               </label>
             </>
           )}
+          {d.type === 'thread' && <ThreadFields d={d} set={set} />}
           {d.type === 'quest' && (
             <label>
               Status
@@ -342,5 +346,48 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
         </div>
       </form>
     </div>
+  )
+}
+
+function ThreadFields({ d, set }: { d: Entity; set: <K extends keyof Entity>(k: K, v: Entity[K]) => void }) {
+  const sessions = useWorldSessions(d.worldId)
+  const sessionSelect = (key: 'raisedIn' | 'tiedOffIn', label: string) => (
+    <label>
+      {label}
+      <select value={d[key] ?? ''} onChange={(ev) => set(key, ev.target.value || undefined)}>
+        <option value="">(none)</option>
+        {sessions.map((s) => (
+          <option key={s.id} value={s.id}>
+            #{s.number} {s.title}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+  return (
+    <>
+      <label>
+        Status
+        <select value={d.threadStatus ?? 'open'} onChange={(ev) => set('threadStatus', ev.target.value as ThreadStatus)}>
+          {(Object.keys(THREAD_STATUS) as ThreadStatus[]).map((k) => (
+            <option key={k} value={k}>
+              {THREAD_STATUS[k].label}: {THREAD_STATUS[k].hint.toLowerCase()}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Urgency
+        <select value={d.threadUrgency ?? 'normal'} onChange={(ev) => set('threadUrgency', ev.target.value as Entity['threadUrgency'])}>
+          {(['high', 'normal', 'low'] as const).map((u) => (
+            <option key={u} value={u}>
+              {URGENCY[u].icon} {URGENCY[u].label}
+            </option>
+          ))}
+        </select>
+      </label>
+      {sessionSelect('raisedIn', 'Raised in session')}
+      {sessionSelect('tiedOffIn', 'Tied off in session')}
+    </>
   )
 }
