@@ -378,16 +378,16 @@ export interface CloudWorld {
 }
 
 export async function listCloudWorlds(): Promise<CloudWorld[]> {
-  // Only your own worlds: worlds you joined as a player are opened as read-only copies instead.
+  // Worlds you own or are a co-GM of: worlds you joined as a player are opened as read-only copies instead.
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return []
-  const { data, error } = await supabase
-    .from('cloud_worlds')
-    .select('id, name, share_token, updated_at')
-    .eq('owner', auth.user.id)
-    .order('updated_at', { ascending: false })
-  if (error) throw error
-  return data as CloudWorld[]
+  const [own, gm] = await Promise.all([
+    supabase.from('cloud_worlds').select('id, name, share_token, updated_at').eq('owner', auth.user.id),
+    supabase.from('world_members').select('world_id, cloud_worlds(id, name, share_token, updated_at)').eq('user_id', auth.user.id).eq('role', 'gm'),
+  ])
+  if (own.error) throw own.error
+  const coGm = ((gm.data ?? []) as unknown as { cloud_worlds: CloudWorld | null }[]).flatMap((r) => (r.cloud_worlds ? [r.cloud_worlds] : []))
+  return [...(own.data as CloudWorld[]), ...coGm].sort((a, b) => b.updated_at.localeCompare(a.updated_at))
 }
 
 /** Brings a cloud world onto this device (e.g. a second computer or a tablet). */

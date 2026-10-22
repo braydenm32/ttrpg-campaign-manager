@@ -14,6 +14,8 @@ function newToken() {
 }
 
 export const inviteUrl = (token: string) => `${appUrl()}#/join/${token}`
+/** The co-GM link opens the same join page; the server decides the role from the token. */
+export const gmInviteUrl = (token: string) => `${appUrl()}#/join/${token}?as=gm`
 
 /** Local id of a joined world's copy on a player's device. */
 export const memberWorldId = (cloudWorldId: string) => `member-${cloudWorldId}`
@@ -37,6 +39,37 @@ export async function createInviteLink(worldId: string) {
 export async function revokeInviteLink(worldId: string) {
   const { error } = await supabase.from('cloud_worlds').update({ invite_token: null }).eq('id', worldId)
   if (error) throw error
+}
+
+// ---- Co-GMs (owner only) ----
+
+export async function getGmInviteToken(worldId: string): Promise<string | null> {
+  const { data, error } = await supabase.from('gm_invites').select('token').eq('world_id', worldId).maybeSingle()
+  if (error) throw error
+  return (data?.token as string | null) ?? null
+}
+
+/** Creates a new co-GM link, replacing any old one. Co-GMs who already joined stay in. */
+export async function createGmInviteLink(worldId: string) {
+  const token = newToken()
+  const { error } = await supabase.from('gm_invites').upsert({ world_id: worldId, token }, { onConflict: 'world_id' })
+  if (error) throw error
+  return token
+}
+
+export async function revokeGmInviteLink(worldId: string) {
+  const { error } = await supabase.from('gm_invites').delete().eq('world_id', worldId)
+  if (error) throw error
+}
+
+/** Your part in a cloud world: its owner, a co-GM, a player, or nothing. */
+export async function myRole(worldId: string): Promise<'owner' | 'gm' | 'player' | null> {
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return null
+  const { data: w } = await supabase.from('cloud_worlds').select('owner').eq('id', worldId).maybeSingle()
+  if (w?.owner === auth.user.id) return 'owner'
+  const { data: m } = await supabase.from('world_members').select('role').eq('world_id', worldId).eq('user_id', auth.user.id).maybeSingle()
+  return (m?.role as 'gm' | 'player' | undefined) ?? null
 }
 
 export interface Member {
@@ -73,15 +106,15 @@ export async function removePlayer(worldId: string, userId: string) {
 
 // ---- Player side ----
 
-/** Joins with an invite link. Returns the cloud world id, and whether you're actually its GM. */
+/** Joins with an invite link. Returns the cloud world id, and whether you're one of its GMs (its owner, or a co-GM link). */
 export async function joinWorld(token: string, name: string) {
   const { data, error } = await supabase.rpc('join_world', { token, name })
   if (error) throw error
   if (!data) throw new Error('This invite link has been turned off or replaced. Ask your GM for a new one.')
   const cloudId = data as string
-  const { data: own } = await supabase.from('cloud_worlds').select('owner').eq('id', cloudId).maybeSingle()
-  const { data: auth } = await supabase.auth.getUser()
-  return { cloudId, isGM: !!own && own.owner === auth.user?.id }
+  const role = await myRole(cloudId)
+  const { data: w } = await supabase.from('cloud_worlds').select('name').eq('id', cloudId).maybeSingle()
+  return { cloudId, isGM: role === 'owner' || role === 'gm', name: (w?.name as string | undefined) ?? '' }
 }
 
 /** Fetches (or refreshes) a joined world onto this device. Returns the local world id. */
