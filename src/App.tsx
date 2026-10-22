@@ -5,10 +5,14 @@ import { WorldNav } from './Sidebar'
 import { ForcePlayerView, useViewMode, ViewModeProvider } from './viewMode'
 import { useAuthSession } from './cloud/auth'
 import { supabase } from './cloud/client'
-import { watchSharedWorld } from './cloud/share'
+import { leaveWorld } from './cloud/players'
+import { watchPlayerCopy } from './cloud/share'
 import { startSync, stopSync, syncNow, syncStore } from './cloud/sync'
 import { Modal } from './components'
 import SharedWorld from './pages/SharedWorld'
+import JoinWorld from './pages/JoinWorld'
+import { ChooseCharacterBanner } from './players/Characters'
+import { useCharacterOwners } from './players/owners'
 import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 import EntityList from './pages/EntityList'
@@ -33,6 +37,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/shared/:token" element={<SharedWorld />} />
+          <Route path="/join/:token" element={<JoinWorld />} />
           <Route path="/w/:worldId" element={<WorldLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="type/:type" element={<EntityList />} />
@@ -121,11 +126,28 @@ function WorldShell() {
   const { isGM, setMode } = useViewMode()
   const shared = world?.shared
   const [shareError, setShareError] = useState('')
-  useEffect(() => (shared ? watchSharedWorld(shared.token, (e) => setShareError(e.message)) : undefined), [shared?.token])
+  const token = shared?.token
+  const memberOf = shared?.memberOf
+  useEffect(
+    () => (token || memberOf ? watchPlayerCopy({ token, memberOf, fetchedAt: 0 }, (e) => setShareError(e.message)) : undefined),
+    [token, memberOf],
+  )
+  const { owners } = useCharacterOwners(world)
+  const myCharacters = [...owners.entries()].filter(([, o]) => o.mine).map(([id]) => id)
   const navigate = useNavigate()
 
   if (world === undefined) return <div className="loading">Loading…</div>
-  if (world === null) return <div className="loading">World not found.</div>
+  if (world === null)
+    return (
+      <div className="loading">
+        <p>
+          {worldId.startsWith('member-')
+            ? 'You’re no longer a player in this world. Ask your GM for a new invite if that’s a mistake.'
+            : 'World not found.'}
+        </p>
+        <button onClick={() => navigate('/')}>Go to your worlds</button>
+      </div>
+    )
 
   return (
     <div className={`layout ${isGM ? '' : 'player-mode'}`}>
@@ -135,7 +157,26 @@ function WorldShell() {
         </button>
         <WorldNav worldId={worldId} />
         {world.cloud?.enabled && <SyncBadge />}
-        {shared ? (
+        {memberOf ? (
+          <div className="mode-switch">
+            {myCharacters.map((id) => (
+              <button key={id} className="button block" onClick={() => navigate(`/w/${worldId}/e/${id}`)}>
+                🛡️ My character
+              </button>
+            ))}
+            <span>🎭 You’re a player in this world. It updates as your GM adds to it.</span>
+            <button
+              className="link small"
+              onClick={async () => {
+                if (!confirm('Leave this world? It will be removed from this device, and you’ll need a new invite to come back.')) return
+                await leaveWorld(memberOf)
+                navigate('/')
+              }}
+            >
+              Leave this world
+            </button>
+          </div>
+        ) : shared ? (
           <div className="mode-switch">
             <span>📜 Shared by your GM. Read only, updates automatically.</span>
           </div>
@@ -151,6 +192,7 @@ function WorldShell() {
       </aside>
       <main className="content">
         {shareError && <div className="player-banner">Couldn't refresh: {shareError}</div>}
+        {memberOf && <ChooseCharacterBanner world={world} />}
         {!isGM && !shared && (
           <div className="player-banner">
             Player view: you're seeing only what's been revealed to players.

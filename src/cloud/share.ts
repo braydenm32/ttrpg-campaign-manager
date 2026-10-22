@@ -1,4 +1,4 @@
-import { db, type Asset, type Campaign, type Entity, type Pin, type Session, type World, type WorldMap } from '../db'
+import { db, type Asset, type Campaign, type Entity, type Pin, type Session, type SharedInfo, type World, type WorldMap } from '../db'
 import { appUrl, supabase, SUPABASE_URL } from './client'
 
 /**
@@ -34,7 +34,7 @@ export async function revokeShareLink(worldId: string) {
   if (error) throw error
 }
 
-interface SharedPayload {
+export interface SharedPayload {
   worldId: string
   world: World
   campaigns: Campaign[]
@@ -53,9 +53,22 @@ export async function loadSharedWorld(token: string): Promise<string> {
   const { data, error } = await supabase.rpc('shared_world', { token })
   if (error) throw error
   if (!data) throw new Error('This share link has been turned off or replaced. Ask your GM for a new one.')
-  const p = data as SharedPayload
-  const worldId = sharedWorldId(token)
-  const suffix = `@${token.slice(0, 8)}`
+  const fetchAsset = (assetId: string) =>
+    fetch(`${SUPABASE_URL}/functions/v1/shared-asset?token=${encodeURIComponent(token)}&id=${encodeURIComponent(assetId)}`)
+  return storePlayerCopy(data as SharedPayload, sharedWorldId(token), `@${token.slice(0, 8)}`, { token }, fetchAsset)
+}
+
+/**
+ * Stores a player-safe world on this device as a read-only copy. Ids get a suffix so the copy
+ * never collides with the GM's own world when both are on one device.
+ */
+export async function storePlayerCopy(
+  p: SharedPayload,
+  worldId: string,
+  suffix: string,
+  info: Omit<SharedInfo, 'fetchedAt'>,
+  fetchAsset: (assetId: string) => Promise<Response>,
+) {
   const id = (x: string) => x + suffix
   const opt = (x?: string | null) => (x ? id(x) : undefined)
 
@@ -69,11 +82,12 @@ export async function loadSharedWorld(token: string): Promise<string> {
       assets.push({ ...have, ...a, id: localId, worldId })
       continue
     }
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/shared-asset?token=${encodeURIComponent(token)}&id=${encodeURIComponent(a.id)}`)
+    const res = await fetchAsset(a.id)
     if (!res.ok) continue
     assets.push({ ...a, id: localId, worldId, blob: await res.blob() } as Asset)
   }
   const now = Date.now()
+  const claims = info.claims?.map((c) => ({ ...c, entityId: id(c.entityId) }))
 
   await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
     for (const t of [db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets] as const) await t.where({ worldId }).delete()
@@ -82,7 +96,7 @@ export async function loadSharedWorld(token: string): Promise<string> {
       id: worldId,
       updatedAt: now,
       cloud: undefined,
-      shared: { token, fetchedAt: now },
+      shared: { ...info, claims, fetchedAt: now },
     } as World)
     await db.assets.bulkPut(assets)
     await db.campaigns.bulkPut(p.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))
@@ -100,21 +114,31 @@ export async function loadSharedWorld(token: string): Promise<string> {
   return worldId
 }
 
-/** Keeps a shared copy fresh while it's open: instant refresh when the GM syncs, plus a slow poll. */
-export function watchSharedWorld(token: string, onError?: (e: Error) => void) {
+/** Re-fetches a read-only copy from wherever it came from. */
+export async function refreshPlayerCopy(info: SharedInfo) {
+  if (info.token) return loadSharedWorld(info.token)
+  if (info.memberOf) {
+    const { loadMemberWorld } = await import('./players')
+    return loadMemberWorld(info.memberOf)
+  }
+}
+
+/** Keeps a read-only copy fresh while it's open: instant refresh when the GM syncs, plus a slow poll. */
+export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) {
   let busy = false
   const refresh = async () => {
     if (busy || !navigator.onLine) return
     busy = true
     try {
-      await loadSharedWorld(token)
+      await refreshPlayerCopy(info)
     } catch (e) {
       onError?.(e as Error)
     } finally {
       busy = false
     }
   }
-  const ch = supabase.channel(`share:${token}`).on('broadcast', { event: 'changed' }, refresh).subscribe()
+  const name = info.token ? `share:${info.token}` : `members:${info.memberOf}`
+  const ch = supabase.channel(name).on('broadcast', { event: 'changed' }, refresh).subscribe()
   const poll = setInterval(refresh, 60_000)
   window.addEventListener('online', refresh)
   return () => {

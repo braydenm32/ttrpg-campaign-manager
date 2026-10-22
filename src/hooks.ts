@@ -23,7 +23,8 @@ export function useBlobUrl(asset: Asset | undefined) {
 
 export function useWorld() {
   const { worldId = '' } = useParams()
-  const world = useLiveQuery(() => db.worlds.get(worldId), [worldId])
+  // null once we know the world isn't on this device (undefined means still loading).
+  const world = useLiveQuery(async () => (await db.worlds.get(worldId)) ?? null, [worldId])
   return { worldId, world }
 }
 

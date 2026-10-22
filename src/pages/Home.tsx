@@ -6,6 +6,7 @@ import { Empty, Modal } from '../components'
 import { db, GAME_SYSTEMS, newId } from '../db'
 import { loadSampleWorld } from '../sample'
 import { AccountModal, useAuthSession } from '../cloud/auth'
+import { listMyMemberships, loadMemberWorld, memberWorldId, pendingInvite } from '../cloud/players'
 import { downloadCloudWorld, listCloudWorlds, type CloudWorld } from '../cloud/sync'
 
 export default function Home() {
@@ -14,14 +15,24 @@ export default function Home() {
   const [account, setAccount] = useState(false)
   const { user } = useAuthSession()
   const [cloudWorlds, setCloudWorlds] = useState<CloudWorld[]>([])
+  const [memberships, setMemberships] = useState<{ cloudId: string; name: string }[]>([])
   const [downloading, setDownloading] = useState('')
   const navigate = useNavigate()
   const localIds = new Set(worlds.map((w) => w.id))
   const notHere = user ? cloudWorlds.filter((c) => !localIds.has(c.id)) : []
+  const joinedNotHere = user ? memberships.filter((m) => !localIds.has(memberWorldId(m.cloudId))) : []
 
   useEffect(() => {
-    if (user) listCloudWorlds().then(setCloudWorlds, () => setCloudWorlds([]))
-  }, [user])
+    if (!user) return
+    // Back from confirming an email address in the middle of accepting an invite: carry on.
+    const invite = pendingInvite.get()
+    if (invite) {
+      navigate(`/join/${invite}`)
+      return
+    }
+    listCloudWorlds().then(setCloudWorlds, () => setCloudWorlds([]))
+    listMyMemberships().then(setMemberships, () => setMemberships([]))
+  }, [user, navigate])
 
   return (
     <div className="home">
@@ -61,7 +72,7 @@ export default function Home() {
             <button key={w.id} className="card world-card" onClick={() => navigate(`/w/${w.id}`)}>
               <h3>{w.name}</h3>
               <div className="muted">
-                {w.shared ? '📜 Shared with you (read only)' : w.system}
+                {w.shared?.memberOf ? '🎭 You’re a player' : w.shared ? '📜 Shared with you (read only)' : w.system}
                 {w.cloud?.enabled && ' · ☁️ synced'}
               </div>
               <p>{w.description}</p>
@@ -92,6 +103,34 @@ export default function Home() {
                   }}
                 >
                   {downloading === c.id ? 'Downloading…' : '⬇ Open on this device'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      {joinedNotHere.length > 0 && (
+        <section>
+          <h2>Worlds you play in, not on this device</h2>
+          <div className="card-grid">
+            {joinedNotHere.map((m) => (
+              <div key={m.cloudId} className="card">
+                <h3>{m.name || 'A world'}</h3>
+                <button
+                  className="primary"
+                  disabled={!!downloading}
+                  onClick={async () => {
+                    setDownloading(m.cloudId)
+                    try {
+                      navigate(`/w/${await loadMemberWorld(m.cloudId)}`)
+                    } catch (err) {
+                      alert((err as Error).message)
+                    } finally {
+                      setDownloading('')
+                    }
+                  }}
+                >
+                  {downloading === m.cloudId ? 'Opening…' : '🎭 Open on this device'}
                 </button>
               </div>
             ))}

@@ -270,12 +270,16 @@ async function subscribeRealtime(worldIds: string[]) {
   }
 }
 
-/** Tells anyone viewing this world's share link to refresh. */
+/** Tells anyone viewing this world's share link, and any players who joined it, to refresh. */
 async function notifyShareViewers(worldId: string) {
   const { data } = await supabase.from('cloud_worlds').select('share_token').eq('id', worldId).maybeSingle()
   const token = data?.share_token as string | undefined
-  if (!token) return
-  const ch = supabase.channel(`share:${token}`)
+  const names = [`members:${worldId}`, ...(token ? [`share:${token}`] : [])]
+  await Promise.all(names.map(broadcastChanged))
+}
+
+async function broadcastChanged(name: string) {
+  const ch = supabase.channel(name)
   await new Promise<void>((resolve) => {
     ch.subscribe((status) => {
       if (status === 'SUBSCRIBED') ch.send({ type: 'broadcast', event: 'changed', payload: {} }).finally(() => resolve())
@@ -349,7 +353,14 @@ export interface CloudWorld {
 }
 
 export async function listCloudWorlds(): Promise<CloudWorld[]> {
-  const { data, error } = await supabase.from('cloud_worlds').select('id, name, share_token, updated_at').order('updated_at', { ascending: false })
+  // Only your own worlds: worlds you joined as a player are opened as read-only copies instead.
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return []
+  const { data, error } = await supabase
+    .from('cloud_worlds')
+    .select('id, name, share_token, updated_at')
+    .eq('owner', auth.user.id)
+    .order('updated_at', { ascending: false })
   if (error) throw error
   return data as CloudWorld[]
 }

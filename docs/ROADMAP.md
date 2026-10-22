@@ -4,7 +4,7 @@ The order of these items is a starting point and will change as we see what matt
 
 ## Next up
 
-- **Players join a campaign**, similar to D&D Beyond: invite links, player accounts, per-player reveals ("only Wren knows this"), and player journals.
+- **Players, next steps:** invite links, player accounts and claiming a character are built. Still to come: per-player reveals ("only Wren knows this"), player journals, and players editing their own character sheet.
 - **Map builder extras:** draw on top of an uploaded map, merge adjoining rooms, more symbols, custom colours.
 - **Fog of war / reveal areas** on maps for the player view.
 - **Rich text editor** with `@`-mention autocomplete for links.

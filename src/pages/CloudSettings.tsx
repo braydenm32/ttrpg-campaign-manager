@@ -3,6 +3,7 @@ import { AccountModal, useAuthSession } from '../cloud/auth'
 import { createShareLink, getShareToken, revokeShareLink, shareUrl } from '../cloud/share'
 import { deleteCloudCopy, disableCloud, enableCloud, syncNow, syncStore } from '../cloud/sync'
 import type { World } from '../db'
+import { PlayersSettings } from '../players/PlayersSettings'
 
 /** World settings section: turn on sync, and manage the player share link. */
 export default function CloudSettings({ world }: { world: World }) {
@@ -33,7 +34,7 @@ export default function CloudSettings({ world }: { world: World }) {
 
   return (
     <section>
-      <h2>☁️ Cloud sync and sharing</h2>
+      <h2>☁️ Cloud sync, sharing and players</h2>
       {!user ? (
         <>
           <p className="muted">Sign in to back this world up to the cloud, use it on several devices, and share a player view with a link.</p>
@@ -114,6 +115,8 @@ export default function CloudSettings({ world }: { world: World }) {
               Create share link
             </button>
           )}
+
+          <PlayersSettings world={world} />
         </>
       )}
       {error && <p className="error">{error}</p>}
