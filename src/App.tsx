@@ -29,6 +29,7 @@ import Threads from './pages/Threads'
 import Scratchpad from './pages/Scratchpad'
 import Assets from './pages/Assets'
 import Generators from './pages/Generators'
+import PartyLoot from './pages/PartyLoot'
 import WorldSettings from './pages/WorldSettings'
 
 export default function App() {
@@ -43,6 +44,8 @@ export default function App() {
           <Route path="/w/:worldId" element={<WorldLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="type/:type" element={<EntityList />} />
+            <Route path="type/:type/:kind" element={<EntityList />} />
+            <Route path="loot" element={<PartyLoot />} />
             <Route path="e/:entityId" element={<EntityPage />} />
             <Route path="maps" element={<MapList />} />
             <Route path="maps/:mapId" element={<MapView />} />

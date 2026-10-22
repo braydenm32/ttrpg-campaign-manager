@@ -2,7 +2,21 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { createInviteLink, getInviteToken, inviteUrl, listPlayers, releaseCharacter, removePlayer, revokeInviteLink, type Claim, type Member } from '../cloud/players'
+import {
+  createGmInviteLink,
+  createInviteLink,
+  getGmInviteToken,
+  getInviteToken,
+  gmInviteUrl,
+  inviteUrl,
+  listPlayers,
+  releaseCharacter,
+  removePlayer,
+  revokeGmInviteLink,
+  revokeInviteLink,
+  type Claim,
+  type Member,
+} from '../cloud/players'
 import { db, type World } from '../db'
 
 /** World settings: invite players with a link, and see who has joined and which character each plays. */
@@ -13,7 +27,7 @@ export function PlayersSettings({ world }: { world: World }) {
   const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const pcs = useLiveQuery(() => db.entities.where({ worldId: world.id }).filter((e) => e.type === 'pc').toArray(), [world.id]) ?? []
+  const pcs = useLiveQuery(() => db.entities.where({ worldId: world.id }).filter((e) => e.type === 'pc' && !e.template).toArray(), [world.id]) ?? []
   const hiddenPcs = pcs.filter((e) => e.visibility !== 'players')
 
   const load = useCallback(async () => {
@@ -137,6 +151,99 @@ export function PlayersSettings({ world }: { world: World }) {
               </li>
             )
           })}
+        </ul>
+      )}
+      {error && <p className="error">{error}</p>}
+    </>
+  )
+}
+
+/** World settings: invite a co-GM, who gets the whole world (secrets included) on their own account. */
+export function CoGmSettings({ world }: { world: World }) {
+  const [token, setToken] = useState<string | null>(null)
+  const [gms, setGms] = useState<Member[]>([])
+  const [copied, setCopied] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  const load = useCallback(async () => {
+    try {
+      const [t, p] = await Promise.all([getGmInviteToken(world.id), listPlayers(world.id)])
+      setToken(t)
+      setGms(p.members.filter((m) => m.role === 'gm'))
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }, [world.id])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load()
+  }, [load])
+
+  const run = async (fn: () => Promise<unknown>) => {
+    setBusy(true)
+    setError('')
+    try {
+      await fn()
+      await load()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <h3 className="share-heading">
+        📖 Co-GMs <Help topic="coGM" />
+      </h3>
+      <p className="muted">
+        A co-GM sees and edits everything, secrets included. Only send this link to someone you’d trust with your GM notes.
+      </p>
+      {token ? (
+        <>
+          <div className="row">
+            <input readOnly value={gmInviteUrl(token)} onFocus={(e) => e.target.select()} />
+            <button
+              className="primary"
+              onClick={async () => {
+                await navigator.clipboard.writeText(gmInviteUrl(token))
+                setCopied(true)
+                setTimeout(() => setCopied(false), 2000)
+              }}
+            >
+              {copied ? 'Copied!' : 'Copy co-GM link'}
+            </button>
+          </div>
+          <div className="row wrap">
+            <button className="danger" disabled={busy} onClick={() => run(() => revokeGmInviteLink(world.id))}>
+              Turn off co-GM link
+            </button>
+          </div>
+        </>
+      ) : (
+        <button disabled={busy} onClick={() => run(() => createGmInviteLink(world.id))}>
+          Create co-GM link
+        </button>
+      )}
+      {gms.length > 0 && (
+        <ul className="player-list">
+          {gms.map((m) => (
+            <li key={m.userId}>
+              <strong>{m.name}</strong>
+              <button
+                className="ghost small"
+                disabled={busy}
+                onClick={() =>
+                  confirm(`Remove ${m.name} as co-GM? They lose access straight away, though the copy already on their device stays there.`) &&
+                  run(() => removePlayer(world.id, m.userId))
+                }
+              >
+                Remove
+              </button>
+            </li>
+          ))}
         </ul>
       )}
       {error && <p className="error">{error}</p>}

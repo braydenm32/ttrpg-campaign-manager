@@ -16,6 +16,8 @@ export const ENTITY_TYPES = [
   'deity',
   'lore',
   'thread',
+  'table',
+  'custom',
 ] as const
 export type EntityType = (typeof ENTITY_TYPES)[number]
 
@@ -31,6 +33,28 @@ export const ENTITY_LABELS: Record<EntityType, { one: string; many: string; icon
   deity: { one: 'Deity', many: 'Deities', icon: '✨' },
   lore: { one: 'Lore', many: 'Lore', icon: '📚' },
   thread: { one: 'Loose thread', many: 'Loose threads', icon: '🧵' },
+  table: { one: 'Random table', many: 'Random tables', icon: '🎲' },
+  custom: { one: 'Page', many: 'Other pages', icon: '📄' },
+}
+
+/** Types offered when making or changing a page. Custom types are offered separately, from the world's own list. */
+export const PICKER_TYPES = ENTITY_TYPES.filter((t) => t !== 'custom')
+
+/** A page type the GM made up, like Ships or Spells. Its pages have type 'custom' and customType set to its id. */
+export interface CustomType {
+  id: string
+  one: string
+  many: string
+  icon: string
+}
+
+/** The label and icon for a page's type, including the world's custom types. */
+export function typeLabel(e: { type: EntityType; customType?: string }, world?: { customTypes?: CustomType[] } | null) {
+  if (e.type === 'custom') {
+    const c = world?.customTypes?.find((x) => x.id === e.customType)
+    if (c) return c
+  }
+  return ENTITY_LABELS[e.type]
 }
 
 export const GAME_SYSTEMS = [
@@ -76,6 +100,9 @@ export interface PlayerNote {
   updatedAt?: string
 }
 
+/** A player's answer to "can you make this date?". */
+export type Availability = 'yes' | 'maybe' | 'no'
+
 export interface SharedInfo {
   token?: string
   memberOf?: string
@@ -86,6 +113,8 @@ export interface SharedInfo {
   claims?: CharacterClaim[]
   /** For joined worlds: the group's notes and your own. */
   notes?: PlayerNote[]
+  /** For joined worlds: everyone's answers to the GM's proposed session dates. */
+  availability?: { optionId: string; userId: string; answer: Availability }[]
 }
 
 export interface World {
@@ -95,6 +124,10 @@ export interface World {
   system: string
   createdAt: number
   updatedAt: number
+  /** Page types the GM added, like Ships or Spells. */
+  customTypes?: CustomType[]
+  /** The party's money, e.g. [{ name: 'gp', amount: 120 }]. Shown on the party loot page. */
+  partyCoin?: { name: string; amount: number }[]
   /** Device-only: cloud sync settings for this world. Never uploaded. */
   cloud?: { enabled: boolean; lastPulledAt?: string }
   /**
@@ -111,13 +144,26 @@ export interface Campaign {
   description: string
   system: string
   status: 'planning' | 'active' | 'paused' | 'finished'
+  /** Dates the GM has proposed for the next session; players say whether they can make each one. */
+  schedule?: DateOption[]
   createdAt: number
+}
+
+export interface DateOption {
+  id: string
+  /** Local date and time, "2026-11-02T19:00". */
+  at: string
+  note?: string
 }
 
 export interface Entity {
   id: string
   worldId: string
   type: EntityType
+  /** For type 'custom': the id of one of the world's custom types. */
+  customType?: string
+  /** A template: a starting point for new pages, never shown in lists or to players. */
+  template?: boolean
   name: string
   /** One-line description shown in lists and map popups. */
   summary: string
@@ -148,8 +194,24 @@ export interface Entity {
   threadUrgency?: 'low' | 'normal' | 'high'
   raisedIn?: string
   tiedOffIn?: string
+  /** Random tables: one entry per line. Entries can roll dice ({1d6}) or roll on another table ({Table name}). */
+  entries?: string[]
+  /** Items: who carries it (a character's page id, or 'party' for the shared stash), and how many. */
+  heldBy?: string
+  quantity?: number
   createdAt: number
   updatedAt: number
+}
+
+/** An earlier version of a page, kept on this device so a bad edit or delete can be undone. */
+export interface PageVersion {
+  id: string
+  entityId: string
+  worldId: string
+  at: number
+  /** Why it was kept: before an edit here, before a change from another device, or when deleted. */
+  reason: 'edit' | 'synced' | 'deleted'
+  entity: Entity
 }
 
 export interface WorldMap {
@@ -308,6 +370,7 @@ export const db = new Dexie('ttrpg-campaign-manager') as Dexie & {
   sessions: EntityTable<Session, 'id'>
   assets: EntityTable<Asset, 'id'>
   syncMeta: EntityTable<SyncMeta, 'key'>
+  history: EntityTable<PageVersion, 'id'>
 }
 
 db.version(1).stores({
@@ -338,7 +401,29 @@ db.version(2)
     })
   })
 
+// v3: page history (device-only, never synced).
+db.version(3).stores({
+  history: 'id, entityId, worldId, at',
+})
+
 export const newId = () => crypto.randomUUID()
+
+/** Versions kept per page; older ones are dropped. */
+const HISTORY_PER_PAGE = 40
+
+/** Keeps a copy of a page as it was, so it can be restored later. */
+export async function keepVersion(entity: Entity, reason: PageVersion['reason']) {
+  await db.history.add({ id: newId(), entityId: entity.id, worldId: entity.worldId, at: Date.now(), reason, entity })
+  const old = await db.history.where({ entityId: entity.id }).sortBy('at')
+  if (old.length > HISTORY_PER_PAGE) await db.history.bulkDelete(old.slice(0, old.length - HISTORY_PER_PAGE).map((v) => v.id))
+}
+
+/** Saves a page, keeping the version it replaces. */
+export async function saveEntity(next: Entity) {
+  const before = await db.entities.get(next.id)
+  if (before && JSON.stringify(before) !== JSON.stringify(next)) await keepVersion(before, 'edit')
+  await db.entities.put(next)
+}
 
 export function blankEntity(worldId: string, type: EntityType, name = ''): Entity {
   const now = Date.now()
@@ -358,11 +443,20 @@ export function blankEntity(worldId: string, type: EntityType, name = ''): Entit
     ...(type === 'event' ? { eventEra: 'pre' as const, eventOrder: now } : {}),
     ...(type === 'quest' ? { questStatus: 'open' as const } : {}),
     ...(type === 'thread' ? { threadStatus: 'open' as const, threadUrgency: 'normal' as const } : {}),
+    ...(type === 'table' ? { entries: [] } : {}),
   }
 }
 
+/** A new page that starts as a copy of a template. */
+export function fromTemplate(t: Entity, name = `New ${t.name}`): Entity {
+  const now = Date.now()
+  const { template: _t, revealedTo: _r, ...rest } = structuredClone(t)
+  return { ...rest, id: newId(), name, visibility: 'gm', createdAt: now, updatedAt: now }
+}
+
 export async function deleteWorld(worldId: string) {
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta], async () => {
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history], async () => {
+    await db.history.where({ worldId }).delete()
     await db.sessions.where({ worldId }).delete()
     await db.pins.where({ worldId }).delete()
     await db.syncMeta.where({ worldId }).delete()
@@ -375,7 +469,10 @@ export async function deleteWorld(worldId: string) {
 }
 
 export async function deleteEntity(id: string) {
-  await db.transaction('rw', [db.entities, db.pins, db.maps], async () => {
+  await db.transaction('rw', [db.entities, db.pins, db.maps, db.history], async () => {
+    const e = await db.entities.get(id)
+    if (e) await keepVersion(e, 'deleted')
+    await db.entities.filter((x) => x.heldBy === id).modify({ heldBy: undefined })
     await db.pins.where({ entityId: id }).modify({ entityId: undefined })
     await db.maps.where({ locationId: id }).modify({ locationId: undefined })
     await db.entities.where({ parentId: id }).modify({ parentId: undefined })

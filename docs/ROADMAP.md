@@ -2,6 +2,10 @@
 
 The order of these items is a starting point and will change as we see what matters at the table.
 
+## Recently built
+
+- Random tables, page history and recently deleted pages, page templates and custom page types, party loot and coin purse, co-GMs, and session scheduling.
+
 ## Next up
 
 - **Players, next steps:** invite links, claiming a character, per-player reveals (pages and `:::for` passages), and private or group notes plus a party scratchpad are built. Still to come: players editing their own character sheet, per-player map pins, and the GM replying in the group notes.

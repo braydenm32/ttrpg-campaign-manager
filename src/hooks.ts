@@ -28,7 +28,7 @@ export function useWorld() {
   return { worldId, world }
 }
 
-/** All entities in the world the current viewer is allowed to see. */
+/** All entities in the world the current viewer is allowed to see (templates aren't real pages, so they're left out). */
 export function useVisibleEntities(worldId: string) {
   const { isGM } = useViewMode()
   return (
@@ -36,11 +36,16 @@ export function useVisibleEntities(worldId: string) {
       () =>
         db.entities
           .where({ worldId })
-          .filter((e) => isGM || e.visibility === 'players')
+          .filter((e) => !e.template && (isGM || e.visibility === 'players'))
           .sortBy('name'),
       [worldId, isGM],
     ) ?? []
   )
+}
+
+/** The world's page templates (GM only). */
+export function useTemplates(worldId: string) {
+  return useLiveQuery(() => db.entities.where({ worldId }).filter((e) => !!e.template).sortBy('name'), [worldId]) ?? []
 }
 
 export async function saveFileAsAsset(worldId: string, file: File | Blob, name: string, tags: string[] = []) {

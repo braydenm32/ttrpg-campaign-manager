@@ -25,6 +25,12 @@ export const HELP = {
     'This page is GM only, but you can still let particular players see it. Tick their names and only they get it, marked "Just for you". Needs cloud sync and players who have joined.',
   gmNotes: 'Notes for you alone. They are never sent to players, not even on revealed pages.',
   fields: 'Free-form details like stats, prices or alignment. Add whatever your game needs.',
+  history:
+    'Every time you save a page, the version before is kept on this device (the last 40). Look at an old version or restore it; restoring keeps today’s version too.',
+  recentlyDeleted: 'Pages deleted on this device, or deleted on another device and synced here. Restore brings the page back as it was.',
+  templates:
+    'A template is a starting point for new pages, like a "Dungeon room" with the headings and details you always fill in. Templates are always GM only and never appear in lists. Make one with "Save as template" on any page.',
+  customTypes: 'Add your own kinds of page, such as Ships, Spells or Gods of the Deep. Each gets its own section in the codex.',
 
   // Maps
   maps: 'Upload a map image or draw one in the map builder. Then drop pins and draw regions, and link them to pages so clicking them shows what is there.',
@@ -53,11 +59,15 @@ export const HELP = {
   initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go.',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',
   quickNote: 'Jot something down mid-session. It is added to this session’s GM notes with the time.',
+  randomTables:
+    'Your own tables to roll on: one entry per line. "3x Goblins" makes an entry three times as likely, {2d6} rolls dice inside an entry, and {Weather} rolls on your table called Weather.',
   improvise: 'Need a name or a tavern right now? Roll one here and save it into your world if it sticks.',
 
   // Tools
   generators: 'Roll up taverns, shops and NPCs without any AI. Save the ones you like; they start as GM only.',
   assets: 'Every file in this world: map images, portraits and handouts. Mark a file revealed to let players see it.',
+  loot:
+    'Who carries what. Set "Carried by" on any item page to a character or the party stash, and keep the party’s coin here. Players see revealed items and the purse.',
   backup: 'Save the whole world, uploaded files included, as one file. Keep a backup even if sync is on.',
 
   // Sharing and players
@@ -70,6 +80,10 @@ export const HELP = {
     '"My notes" are private to you. "Group notes" are shared with the whole party, and your GM can read them. Both save when you click away.',
   scratchpad: 'A notebook for anything that isn’t about one page: plans, names, clues. Keep your own notes or write in the party’s shared one.',
   gmPlayerNotes: 'What your players have written together. Only they can edit it, and their private notes stay private.',
+  coGM:
+    'A co-GM sees and edits everything in this world, secrets included, from their own account. Only you can invite or remove co-GMs, manage players and links, or delete the cloud copy.',
+  schedule:
+    'Suggest a few dates for the next session. Players who joined mark each one yes, maybe or no, and you book the one that works. Booking makes the session with that date.',
   character: 'Who plays this character. Players claim their own character from here; you can release a claim from World settings.',
   aiTools: 'Keys for transcription and recaps. They stay on this device only: never synced and never in backups.',
 } as const

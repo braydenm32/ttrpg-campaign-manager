@@ -15,7 +15,7 @@ export function SecretTextarea({
 }: { worldId: string; value: string; onChange: (v: string) => void } & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'>) {
   const ref = useRef<HTMLTextAreaElement>(null)
   const [caret, setCaret] = useState<number | null>(null)
-  const pcs = useLiveQuery(() => db.entities.where({ worldId }).filter((e) => e.type === 'pc').sortBy('name'), [worldId]) ?? []
+  const pcs = useLiveQuery(() => db.entities.where({ worldId }).filter((e) => e.type === 'pc' && !e.template).sortBy('name'), [worldId]) ?? []
 
   // Use first names ("Wren") unless two characters share one.
   const firsts = pcs.map((p) => p.name.trim().split(/\s+/)[0])

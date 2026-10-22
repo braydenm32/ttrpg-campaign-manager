@@ -1,24 +1,26 @@
 import { useState, type ReactNode } from 'react'
 import { Help } from '../help'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { Empty, VisibilityBadge } from '../components'
-import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, type Entity, type EntityType } from '../db'
+import { ENTITY_TYPES, typeLabel, type Entity, type EntityType } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
+import { NewPageButton } from '../NewPage'
+import { TableRoller } from '../tables'
 import { useViewMode } from '../viewMode'
 
 export default function EntityList() {
-  const { worldId } = useWorld()
-  const { type = '' } = useParams()
+  const { worldId, world } = useWorld()
+  const { type = '', kind } = useParams()
   const { isGM } = useViewMode()
-  const navigate = useNavigate()
   const all = useVisibleEntities(worldId)
   const [query, setQuery] = useState('')
   const [tag, setTag] = useState('')
 
   if (!ENTITY_TYPES.includes(type as EntityType)) return <Empty>Unknown category.</Empty>
+  if (type === 'custom' && world && !world.customTypes?.some((c) => c.id === kind)) return <Empty>This page type has been removed.</Empty>
   const t = type as EntityType
-  const label = ENTITY_LABELS[t]
-  const ofType = all.filter((e) => e.type === t)
+  const label = typeLabel({ type: t, customType: kind }, world)
+  const ofType = all.filter((e) => e.type === t && (t !== 'custom' || e.customType === kind))
   const tags = [...new Set(ofType.flatMap((e) => e.tags))].sort()
   const q = query.trim().toLowerCase()
   const filtered = ofType.filter(
@@ -27,12 +29,6 @@ export default function EntityList() {
       (!tag || e.tags.includes(tag)),
   )
 
-  const create = async () => {
-    const e = blankEntity(worldId, t, `New ${label.one}`)
-    await db.entities.add(e)
-    navigate(`/w/${worldId}/e/${e.id}?edit=1`)
-  }
-
   // Locations read best as a tree (region > city > district > building).
   const showTree = t === 'location' && !q && !tag
 
@@ -40,14 +36,15 @@ export default function EntityList() {
     <div className="page">
       <header className="page-header">
         <h1>
-          {label.icon} {label.many} <Help topic="codex" />
+          {label.icon} {label.many} <Help topic={t === 'table' ? 'randomTables' : t === 'custom' ? 'customTypes' : 'codex'} />
         </h1>
-        {isGM && (
-          <button className="primary" onClick={create}>
-            + New {label.one}
-          </button>
-        )}
+        {isGM && world && <NewPageButton world={world} type={t} customType={kind} />}
       </header>
+      {t === 'table' && ofType.length > 0 && (
+        <div className="card">
+          <TableRoller tables={ofType} worldId={worldId} entities={all} showSecrets={isGM} />
+        </div>
+      )}
       <div className="row wrap">
         <input className="search" placeholder="Filter…" value={query} onChange={(e) => setQuery(e.target.value)} />
         {tags.length > 0 && (
@@ -83,6 +80,7 @@ function EntityCard({ worldId, entity: e }: { worldId: string; entity: Entity })
       {e.summary && <p>{e.summary}</p>}
       <div className="tags">
         {e.questStatus && <span className={`tag status-${e.questStatus}`}>{e.questStatus}</span>}
+        {e.type === 'table' && <span className="tag">{e.entries?.filter((x) => x.trim()).length ?? 0} entries</span>}
         {e.tags.map((t) => (
           <span key={t} className="tag">
             {t}

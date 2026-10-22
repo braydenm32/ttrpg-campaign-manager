@@ -4,7 +4,8 @@ import { AccountModal, useAuthSession } from '../cloud/auth'
 import { createShareLink, getShareToken, revokeShareLink, shareUrl } from '../cloud/share'
 import { deleteCloudCopy, disableCloud, enableCloud, syncNow, syncStore } from '../cloud/sync'
 import type { World } from '../db'
-import { PlayersSettings } from '../players/PlayersSettings'
+import { myRole } from '../cloud/players'
+import { CoGmSettings, PlayersSettings } from '../players/PlayersSettings'
 
 /** World settings section: turn on sync, and manage the player share link. */
 export default function CloudSettings({ world }: { world: World }) {
@@ -15,10 +16,13 @@ export default function CloudSettings({ world }: { world: World }) {
   const [error, setError] = useState('')
   const [token, setToken] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [role, setRole] = useState<Awaited<ReturnType<typeof myRole>>>('owner')
   const enabled = !!world.cloud?.enabled
+  const coGM = role === 'gm'
 
   useEffect(() => {
     if (user && enabled) getShareToken(world.id).then(setToken, () => setToken(null))
+    if (user && enabled) myRole(world.id).then(setRole, () => setRole('owner'))
   }, [user, enabled, world.id])
 
   const run = async (fn: () => Promise<unknown>) => {
@@ -70,9 +74,16 @@ export default function CloudSettings({ world }: { world: World }) {
             </span>
           </p>
           {sync.message && <p className="notice small">{sync.message}</p>}
+          {coGM && (
+            <p className="notice small">
+              📖 You’re a co-GM of this world <Help topic="coGM" />. Everything you change syncs to the other GM. Share links, players and
+              the cloud copy are managed by the world’s owner.
+            </p>
+          )}
           <div className="row wrap">
             <button onClick={() => syncNow()}>Sync now</button>
             <button onClick={() => run(() => disableCloud(world.id))}>Stop syncing on this device</button>
+            {!coGM && (
             <button
               className="danger"
               onClick={() =>
@@ -82,7 +93,10 @@ export default function CloudSettings({ world }: { world: World }) {
             >
               Delete cloud copy
             </button>
+            )}
           </div>
+          {!coGM && (
+          <>
 
           <h3 className="share-heading">
             📜 Player share link <Help topic="shareLink" />
@@ -122,6 +136,9 @@ export default function CloudSettings({ world }: { world: World }) {
           )}
 
           <PlayersSettings world={world} />
+          <CoGmSettings world={world} />
+          </>
+          )}
         </>
       )}
       {error && <p className="error">{error}</p>}

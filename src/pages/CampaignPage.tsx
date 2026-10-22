@@ -4,10 +4,11 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Empty, VisibilityBadge } from '../components'
 import { db, GAME_SYSTEMS, newId, type Campaign } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
+import { SessionScheduler } from '../players/Schedule'
 import { useViewMode } from '../viewMode'
 
 export default function CampaignPage() {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const { campaignId = '' } = useParams()
   const { isGM, canSee } = useViewMode()
   const navigate = useNavigate()
@@ -25,7 +26,7 @@ export default function CampaignPage() {
   if (campaign === null || campaign.worldId !== worldId) return <Empty>Campaign not found.</Empty>
   const update = (patch: Partial<Campaign>) => db.campaigns.update(campaign.id, patch)
 
-  const newSession = async () => {
+  const newSession = async (date = new Date().toISOString().slice(0, 10)) => {
     const id = newId()
     const number = (sessions.at(-1)?.number ?? 0) + 1
     await db.sessions.add({
@@ -34,7 +35,7 @@ export default function CampaignPage() {
       campaignId,
       number,
       title: `Session ${number}`,
-      date: new Date().toISOString().slice(0, 10),
+      date,
       notes: '',
       recap: '',
       visibility: 'gm',
@@ -77,7 +78,7 @@ export default function CampaignPage() {
           )}
         </div>
         {isGM && (
-          <button className="primary" onClick={newSession}>
+          <button className="primary" onClick={() => newSession()}>
             + New session
           </button>
         )}
@@ -92,6 +93,8 @@ export default function CampaignPage() {
       ) : (
         campaign.description && <p className="lead">{campaign.description}</p>
       )}
+
+      {world && <SessionScheduler world={world} campaign={campaign} isGM={isGM} onBook={newSession} />}
 
       <div className="two-col">
         <section>
