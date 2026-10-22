@@ -6,6 +6,7 @@ import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, THREAD_STAT
 import { URGENCY, useWorldSessions } from '../threads'
 import { saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
+import { CharacterOwnerBox } from '../players/Characters'
 import { useViewMode } from '../viewMode'
 
 export default function EntityPage() {
@@ -28,7 +29,7 @@ export default function EntityPage() {
 }
 
 function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void }) {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const { isGM, canSee } = useViewMode()
   const entities = useVisibleEntities(worldId)
   const image = useAssetUrl(e.imageId)
@@ -128,6 +129,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
         </div>
         <aside className="entity-side">
           {image && <img className="portrait" src={image} alt={e.name} />}
+          {e.type === 'pc' && world && <CharacterOwnerBox entity={e} world={world} />}
           {(ownMaps.length > 0 || pins.length > 0) && (
             <div className="side-box">
               <h3>Maps</h3>

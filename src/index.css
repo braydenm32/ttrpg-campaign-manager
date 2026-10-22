@@ -379,3 +379,16 @@ input[type=color] { width: 3em; height: 2.2em; padding: 2px; }
 .recap-paste { display: flex; flex-direction: column; gap: .5em; }
 .recap-stream { white-space: pre-wrap; max-height: 18em; overflow-y: auto; font-family: inherit; font-size: .92em; margin: 0; }
 @media (max-width: 700px) { .speaker-names label { flex-wrap: wrap; } .speaker-names .muted { max-width: 100%; } }
+
+/* Players and character ownership */
+.join-page { max-width: 560px; }
+.join-card { display: flex; flex-direction: column; gap: .6em; text-align: left; }
+.join-card h2 { margin: 0; }
+.owner-box { display: flex; flex-direction: column; gap: .5em; }
+.owner-box p { margin: 0; }
+.player-notes { display: flex; flex-direction: column; gap: .3em; }
+.pre-wrap { white-space: pre-wrap; }
+.choose-character { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: .8em 1em; margin-bottom: 1em; display: flex; flex-direction: column; gap: .5em; }
+.player-list { list-style: none; padding: 0; margin: .5em 0; display: flex; flex-direction: column; gap: .4em; }
+.player-list li { display: flex; justify-content: space-between; align-items: center; gap: .6em; border-bottom: 1px solid var(--border); padding: .35em 0; }
+.mode-switch .button.block { text-align: center; }

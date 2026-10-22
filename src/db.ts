@@ -58,6 +58,24 @@ export const THREAD_STATUS: Record<ThreadStatus, { label: string; hint: string }
   dropped: { label: 'Dropped', hint: 'Abandoned or no longer relevant' },
 }
 
+export interface CharacterClaim {
+  /** Local id of the player character. */
+  entityId: string
+  userId: string
+  /** The player's own notes on their character. */
+  notes: string
+}
+
+export interface SharedInfo {
+  token?: string
+  memberOf?: string
+  fetchedAt: number
+  /** For joined worlds: who you are, who else is playing, and who plays which character. */
+  me?: string
+  members?: { userId: string; name: string; role: string }[]
+  claims?: CharacterClaim[]
+}
+
 export interface World {
   id: string
   name: string
@@ -67,8 +85,11 @@ export interface World {
   updatedAt: number
   /** Device-only: cloud sync settings for this world. Never uploaded. */
   cloud?: { enabled: boolean; lastPulledAt?: string }
-  /** Device-only: set when this world is a read-only copy opened from a player share link. */
-  shared?: { token: string; fetchedAt: number }
+  /**
+   * Device-only: set when this world is a read-only player copy, either opened from a share link
+   * (token) or joined with an invite (memberOf, the GM's cloud world id).
+   */
+  shared?: SharedInfo
 }
 
 export interface Campaign {

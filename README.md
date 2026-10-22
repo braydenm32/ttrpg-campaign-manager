@@ -29,6 +29,7 @@ Runs in the browser, installs as an offline web app, and packages as a desktop a
 - **Map builder.** Draw maps in the app: paint land, forest, mountains and water, add roads, rivers, rooms, symbols, labels and a square or hex grid.
 - **Cloud sync (optional).** Sign in and turn on sync for a world to keep it backed up and in step across your devices, with changes appearing within seconds.
 - **Player share links.** A read-only link to the revealed parts of a world. Everything GM-only is removed on the server before it's sent, and the link updates live as you work.
+- **Players.** Invite your players with a link from World settings. They sign in, join, and see everything you've revealed (GM-only content is removed on the server), kept up to date as you sync. Each player can claim their player character and keep their own notes on it, which you can read on the character's page. You can see who plays whom, release a character, or remove a player.
 - **Backups.** Download a whole world as one file and import it on another device.
 
 Everything is stored on your device first, so it works with no internet. Sync catches up when you're back online.
