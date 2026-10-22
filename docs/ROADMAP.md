@@ -4,7 +4,7 @@ The order of these items is a starting point and will change as we see what matt
 
 ## Next up
 
-- **Players, next steps:** invite links, player accounts and claiming a character are built. Still to come: per-player reveals ("only Wren knows this"), player journals, and players editing their own character sheet.
+- **Players, next steps:** invite links, claiming a character, per-player reveals (pages and `:::for` passages), and private or group notes plus a party scratchpad are built. Still to come: players editing their own character sheet, per-player map pins, and the GM replying in the group notes.
 - **Map builder extras:** draw on top of an uploaded map, merge adjoining rooms, more symbols, custom colours.
 - **Fog of war / reveal areas** on maps for the player view.
 - **Rich text editor** with `@`-mention autocomplete for links.

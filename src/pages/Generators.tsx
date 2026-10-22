@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Help } from '../help'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../db'
 import {
@@ -49,7 +50,9 @@ export default function Generators() {
   return (
     <div className="page">
       <header className="page-header">
-        <h1>🎰 Generators</h1>
+        <h1>
+          🎰 Generators <Help topic="generators" />
+        </h1>
       </header>
       <p className="muted">Roll up a place or person on the fly, then save it into your world. Saved results start as GM only.</p>
       <div className="row wrap">

@@ -17,6 +17,15 @@ Runs in the browser, installs as an offline web app, and packages as a desktop a
   ```
 
   GM notes on a page are never shown to players.
+- **Secrets for particular players.** In a world your players have joined, a GM-only page can be revealed to just the players you tick ("🤫 Reveal just to"). A passage can be meant for certain characters only, by first or full name:
+
+  ```
+  :::for Wren and Silas
+  The letter in your pack is a forgery.
+  :::
+  ```
+
+  Separate names with commas, "&" or "and". A short one fits on one line: `:::for Silas::: You recognise the crest. :::` (the same works for `:::gm::: ... :::`). The "🔒 GM-only passage" and "🤫 Secret for…" buttons under the text box write these for you, and character names are suggested as you type. Only the players of those characters ever receive the passage; everyone else's copy never contains it.
 - **Interactive maps.** Upload any map image, drop pins or draw regions, and link them to pages. Clicking a pin shows the place, who and what is there, and an "Enter" button to open a more detailed map (region → city → building).
 - **Timeline.** History (before the campaign) and in-campaign events, filterable by place.
 - **Sessions.** GM notes and a separate player recap. You can record audio from one microphone for in-person games, or from the microphone plus your Discord or Zoom audio for online games. While recording, you can add timestamped bookmarks, and clicking one later jumps the playback to that moment.
@@ -25,11 +34,13 @@ Runs in the browser, installs as an offline web app, and packages as a desktop a
 - **Loose threads.** A board of every hook, mystery, promise and grudge: dangling, in play, tied off or dropped. Threads link to the NPCs and places they involve, remember which session raised and resolved them, and warn you when one hasn't moved in three sessions. They also show up in the Lectern (the ones touching the current scene first), on session pages and on the overview. Reveal a thread and players see it under "Leads".
 - **Generators.** Taverns (menu, patrons, rumours), shops (blacksmith, general store, alchemist, magic shop) and NPCs, saved into your world in one click.
 - **Assets.** A library for handouts, portraits, maps, audio and PDFs.
+- **Help tips.** A small ? next to each feature explains it. Hover or tap to read; turn them off (and back on) in World settings.
 - **Player view.** Switch "Viewing as" to Player to see exactly what players would see.
 - **Map builder.** Draw maps in the app: paint land, forest, mountains and water, add roads, rivers, rooms, symbols, labels and a square or hex grid.
 - **Cloud sync (optional).** Sign in and turn on sync for a world to keep it backed up and in step across your devices, with changes appearing within seconds.
 - **Player share links.** A read-only link to the revealed parts of a world. Everything GM-only is removed on the server before it's sent, and the link updates live as you work.
 - **Players.** Invite your players with a link from World settings. They sign in, join, and see everything you've revealed (GM-only content is removed on the server), kept up to date as you sync. Each player can claim their player character and keep their own notes on it, which you can read on the character's page. You can see who plays whom, release a character, or remove a player.
+- **Player notes and the scratchpad.** On every page they can see, players keep private notes (only them) and group notes (the whole party edits them together). The 📝 Scratchpad is the same for notes that aren't about any one page. You can read the group notes, never the private ones.
 - **Backups.** Download a whole world as one file and import it on another device.
 
 Everything is stored on your device first, so it works with no internet. Sync catches up when you're back online.

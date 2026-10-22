@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { Help } from '../help'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Empty, VisibilityBadge } from '../components'
 import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, type Entity, type EntityType } from '../db'
@@ -39,7 +40,7 @@ export default function EntityList() {
     <div className="page">
       <header className="page-header">
         <h1>
-          {label.icon} {label.many}
+          {label.icon} {label.many} <Help topic="codex" />
         </h1>
         {isGM && (
           <button className="primary" onClick={create}>

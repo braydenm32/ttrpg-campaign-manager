@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Help } from '../help'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useState } from 'react'
@@ -8,6 +9,7 @@ import { Empty, VisibilityBadge, VisibilityToggle } from '../components'
 import { blankEntity, db, deleteMap, ENTITY_LABELS, ENTITY_TYPES, newId, type Entity, type EntityType, type Pin, type WorldMap } from '../db'
 import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
+import { SecretTextarea } from '../SecretTextarea'
 import { useViewMode } from '../viewMode'
 
 type Tool = 'select' | 'pin' | 'region'
@@ -77,7 +79,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
     <div className="map-page">
       <div className="map-toolbar">
         <Link to={`/w/${worldId}/maps`}>← Maps</Link>
-        <strong>{map.name}</strong> <VisibilityBadge value={map.visibility} />
+        <strong>{map.name}</strong> <VisibilityBadge value={map.visibility} /> <Help topic="mapView" />
         {isGM && (
           <div className="row">
             <div className="segmented">
@@ -390,7 +392,7 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
       </label>
       <label>
         Note
-        <textarea rows={4} value={pin.note} onChange={(e) => update({ note: e.target.value })} placeholder="Shown when the pin is clicked. Markdown and [[links]] work." />
+        <SecretTextarea worldId={pin.worldId} rows={4} value={pin.note} onChange={(v) => update({ note: v })} placeholder="Shown when the pin is clicked. Markdown and [[links]] work." />
       </label>
       <div className="row spread">
         <button

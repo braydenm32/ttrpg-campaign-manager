@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Help } from '../help'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createInviteLink, getInviteToken, inviteUrl, listPlayers, releaseCharacter, removePlayer, revokeInviteLink, type Claim, type Member } from '../cloud/players'
@@ -46,7 +47,9 @@ export function PlayersSettings({ world }: { world: World }) {
 
   return (
     <>
-      <h3 className="share-heading">🎭 Players</h3>
+      <h3 className="share-heading">
+        🎭 Players <Help topic="players" />
+      </h3>
       <p className="muted">
         Send your players an invite link. They sign in, join, and see everything you’ve revealed (never anything GM-only), kept up
         to date as you sync. Each player can claim their player character and keep their own notes on it.

@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Help } from '../help'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Empty, VisibilityBadge } from '../components'
 import { db, GAME_SYSTEMS, newId, type Campaign } from '../db'
@@ -51,7 +52,9 @@ export default function CampaignPage() {
           {isGM ? (
             <input className="title-input" value={campaign.name} onChange={(e) => update({ name: e.target.value })} />
           ) : (
-            <h1>{campaign.name}</h1>
+            <h1>
+              {campaign.name} <Help topic="campaign" />
+            </h1>
           )}
           {isGM ? (
             <div className="row">
@@ -92,7 +95,9 @@ export default function CampaignPage() {
 
       <div className="two-col">
         <section>
-          <h2>Sessions</h2>
+          <h2>
+            Sessions <Help topic="session" />
+          </h2>
           {sessions.length === 0 ? (
             <Empty>No sessions yet.</Empty>
           ) : (

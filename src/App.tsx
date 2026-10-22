@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { HashRouter, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
+import { Help } from './help'
 import { useWorld } from './hooks'
 import { WorldNav } from './Sidebar'
 import { ForcePlayerView, useViewMode, ViewModeProvider } from './viewMode'
@@ -25,6 +26,7 @@ import CampaignPage from './pages/CampaignPage'
 import SessionPage from './pages/SessionPage'
 import Lectern from './pages/Lectern'
 import Threads from './pages/Threads'
+import Scratchpad from './pages/Scratchpad'
 import Assets from './pages/Assets'
 import Generators from './pages/Generators'
 import WorldSettings from './pages/WorldSettings'
@@ -47,6 +49,7 @@ export default function App() {
             <Route path="maps/:mapId/draw" element={<MapBuilder />} />
             <Route path="timeline" element={<Timeline />} />
             <Route path="threads" element={<Threads />} />
+            <Route path="scratchpad" element={<Scratchpad />} />
             <Route path="c/:campaignId" element={<CampaignPage />} />
             <Route path="s/:sessionId" element={<SessionPage />} />
             <Route path="s/:sessionId/lectern" element={<Lectern />} />
@@ -182,7 +185,9 @@ function WorldShell() {
           </div>
         ) : (
         <div className="mode-switch">
-          <span>Viewing as</span>
+          <span>
+            Viewing as <Help topic="viewingAs" />
+          </span>
           <div className="segmented">
             <button className={isGM ? 'on' : ''} onClick={() => setMode('gm')}>GM</button>
             <button className={!isGM ? 'on' : ''} onClick={() => setMode('player')}>Player</button>

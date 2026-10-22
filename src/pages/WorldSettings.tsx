@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { Help, HelpTipsToggle } from '../help'
 import { AiSettingsSection } from '../ai/AiSettingsSection'
 import { exportWorld } from '../backup'
 import { db, deleteWorld, GAME_SYSTEMS, type World } from '../db'
@@ -16,6 +17,7 @@ export default function WorldSettings() {
       <header className="page-header">
         <h1>⚙️ World settings</h1>
       </header>
+      <HelpTipsToggle />
       <div className="form">
         <label>
           Name
@@ -40,7 +42,9 @@ export default function WorldSettings() {
       <AiSettingsSection />
 
       <section>
-        <h2>Backup</h2>
+        <h2>
+          Backup <Help topic="backup" />
+        </h2>
         <p className="muted">
           A backup is a single file with the whole world in it, including uploaded files. Keep one even if sync is on; you can
           import it from the home screen on any device.

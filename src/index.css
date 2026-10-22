@@ -158,6 +158,7 @@ a.card:hover, button.card:hover { border-color: var(--accent); text-decoration: 
 .tag-input { display: flex; flex-wrap: wrap; gap: .35em; align-items: center; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: .3em; }
 .tag-input input { border: none; background: transparent; flex: 1; min-width: 100px; padding: .2em; }
 .badge.gm { font-size: .7em; vertical-align: middle; opacity: .8; }
+.badge.for-you, .badge.reveal { font-size: .45em; vertical-align: middle; font-weight: normal; padding: .15em .55em; border-radius: 999px; background: color-mix(in srgb, var(--accent) 15%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); white-space: nowrap; }
 .vis-toggle.gm { border-color: var(--secret-border); background: var(--secret-bg); }
 .vis-toggle.players { border-color: #4f8f5b; background: color-mix(in srgb, #4f8f5b 20%, var(--panel-2)); }
 
@@ -177,6 +178,9 @@ a.card:hover, button.card:hover { border-color: var(--accent); text-decoration: 
 .markdown blockquote { border-left: 3px solid var(--accent); margin: 1em 0; padding: .2em 1em; color: var(--muted); font-style: italic; }
 .secret { background: var(--secret-bg); border: 1px solid var(--secret-border); border-radius: var(--radius); padding: .6em 1em; margin: 1em 0; position: relative; }
 .secret::before { content: '🔒 GM only'; display: block; font-size: .75em; color: var(--muted); margin-bottom: .3em; }
+.secret.for-some::before { content: '🎭 Only for ' attr(data-for); }
+.secret.for-you { background: color-mix(in srgb, var(--accent) 10%, var(--panel)); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.secret.for-you::before { content: '🤫 Just for you'; }
 .wikilink { border-bottom: 1px dotted var(--link); }
 .wikilink.missing { color: var(--muted); border-bottom-style: dashed; border-color: var(--muted); }
 .player-mode .wikilink.missing { border: none; color: inherit; }
@@ -392,3 +396,29 @@ input[type=color] { width: 3em; height: 2.2em; padding: 2px; }
 .player-list { list-style: none; padding: 0; margin: .5em 0; display: flex; flex-direction: column; gap: .4em; }
 .player-list li { display: flex; justify-content: space-between; align-items: center; gap: .6em; border-bottom: 1px solid var(--border); padding: .35em 0; }
 .mode-switch .button.block { text-align: center; }
+
+/* Player notes and the scratchpad */
+.player-notes { display: flex; flex-direction: column; gap: .5em; }
+.player-notes .tabs { margin: 0; }
+.player-notes textarea { min-height: 8em; width: 100%; }
+.player-notes .note-meta { font-size: .8em; color: var(--muted); }
+.scratchpad textarea { min-height: 18em; }
+.reveal-picker { display: flex; flex-wrap: wrap; gap: .3em .9em; align-items: center; }
+.reveal-picker label { display: inline-flex; flex-direction: row; gap: .3em; align-items: center; font-size: .9em; color: inherit; }
+.reveal-picker input { width: auto; margin: 0; }
+
+/* Writing secrets: the buttons under a text box and character suggestions on a ":::for" line */
+.secret-textarea { display: flex; flex-direction: column; gap: .35em; }
+.secret-textarea textarea { width: 100%; }
+.secret-buttons { gap: .4em; }
+.name-suggestions { display: flex; flex-wrap: wrap; gap: .35em; align-items: center; padding: .4em .5em; border: 1px dashed color-mix(in srgb, var(--accent) 50%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
+.name-suggestions .chip { font-size: .85em; padding: .2em .6em; border-radius: 999px; }
+
+/* Help tips: a small "?" with a bubble on hover, focus or tap */
+.help { position: relative; display: inline-flex; vertical-align: middle; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-weight: normal; letter-spacing: normal; text-transform: none; }
+.help-button { width: 1.25rem; height: 1.25rem; min-width: 0; padding: 0; border-radius: 50%; font-size: .75rem; line-height: 1; font-weight: 700; color: var(--muted); background: var(--panel-2); border: 1px solid var(--border); cursor: help; }
+.help-button:hover, .help-button[aria-expanded='true'] { color: var(--text); border-color: var(--accent); }
+.help-bubble { position: fixed; z-index: 1000; padding: .6em .75em; border-radius: 8px; background: var(--panel); border: 1px solid var(--border); box-shadow: 0 6px 24px rgba(0, 0, 0, .25); font-size: .85rem; line-height: 1.4; color: var(--text); text-align: left; white-space: normal; display: flex; flex-direction: column; gap: .4em; }
+.help-off { align-self: flex-end; font-size: .75rem; }
+.help-toggle { gap: .5em; align-items: center; margin: 0 0 1em; }
+.help-toggle input { width: auto; }

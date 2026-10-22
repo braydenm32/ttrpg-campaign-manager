@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Help } from '../help'
 import { Link } from 'react-router-dom'
 import { db, type Recording, type Transcript, type TranscriptLine } from '../db'
 import { formatTime } from '../recorder'
@@ -143,6 +144,7 @@ export function TranscriptPanel({
           >
             ☁️ {t?.pending && t.engine === 'cloud' ? 'Check on cloud transcript' : 'Transcribe in the cloud'}
           </button>
+          <Help topic="transcript" />
           {t?.pending && (
             <button className="ghost small" onClick={() => saveTranscript(sessionId, recording.assetId, undefined)}>
               Start over

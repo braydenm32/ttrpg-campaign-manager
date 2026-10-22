@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Help } from '../help'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Empty, Modal, VisibilityBadge } from '../components'
@@ -42,7 +43,9 @@ export default function MapList() {
   return (
     <div className="page">
       <header className="page-header">
-        <h1>🗺️ Maps</h1>
+        <h1>
+          🗺️ Maps <Help topic="maps" />
+        </h1>
         {isGM && (
           <div className="row">
           <button onClick={() => setDrawing(true)}>✏️ Draw a new map</button>

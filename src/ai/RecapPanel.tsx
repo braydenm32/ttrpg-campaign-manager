@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Help } from '../help'
 import { Link } from 'react-router-dom'
 import { db, type Entity, type Session, type World } from '../db'
 import { Markdown } from '../Markdown'
@@ -62,7 +63,9 @@ export function RecapPanel({ world, session, entities }: { world: World; session
 
   return (
     <section className="recap-panel">
-      <h2>✨ Write up this session</h2>
+      <h2>
+        ✨ Write up this session <Help topic="recap" />
+      </h2>
       <p className="muted small">
         {transcribed
           ? `Claude reads the transcript${transcribed > 1 ? 's' : ''} and your GM notes, then drafts a GM summary and a player recap for you to check.`

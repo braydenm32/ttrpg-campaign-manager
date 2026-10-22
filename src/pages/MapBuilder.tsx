@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Help } from '../help'
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Empty } from '../components'
@@ -349,6 +350,9 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
           )}
         </svg>
         <aside className="map-panel builder-panel">
+          <div className="small muted">
+            Map builder <Help topic="mapBuilder" />
+          </div>
           {selected ? (
             <ShapeProps shape={selected} onChange={(patch) => updateShape(selected.id, patch)} onDelete={() => removeShape(selected.id)} onClose={() => setSelectedId(undefined)} />
           ) : (

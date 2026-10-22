@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Help } from '../help'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Empty, Modal } from '../components'
@@ -44,7 +45,9 @@ export default function Dashboard() {
     <div className="page">
       <header className="page-header">
         <div>
-          <h1>{world.name}</h1>
+          <h1>
+            {world.name} <Help topic="overview" />
+          </h1>
           <div className="muted">{world.system}</div>
         </div>
       </header>
@@ -72,7 +75,9 @@ export default function Dashboard() {
 
       {isGM && (
         <section>
-          <h2>Quick add</h2>
+          <h2>
+            Quick add <Help topic="quickAdd" />
+          </h2>
           <div className="row wrap">
             {ENTITY_TYPES.map((t) => (
               <button key={t} onClick={() => quickCreate(t)}>
@@ -86,7 +91,9 @@ export default function Dashboard() {
       <div className="two-col">
         <section>
           <div className="section-header">
-            <h2>Campaigns</h2>
+            <h2>
+              Campaigns <Help topic="campaign" />
+            </h2>
             {isGM && <button onClick={() => setNewCampaign(true)}>+ Campaign</button>}
           </div>
           {campaigns.length === 0 ? (

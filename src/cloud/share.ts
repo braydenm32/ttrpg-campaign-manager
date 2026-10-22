@@ -88,6 +88,7 @@ export async function storePlayerCopy(
   }
   const now = Date.now()
   const claims = info.claims?.map((c) => ({ ...c, entityId: id(c.entityId) }))
+  const notes = info.notes?.map((n) => ({ ...n, entityId: n.entityId ? id(n.entityId) : '' }))
 
   await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
     for (const t of [db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets] as const) await t.where({ worldId }).delete()
@@ -96,7 +97,7 @@ export async function storePlayerCopy(
       id: worldId,
       updatedAt: now,
       cloud: undefined,
-      shared: { ...info, claims, fetchedAt: now },
+      shared: { ...info, claims, notes, fetchedAt: now },
     } as World)
     await db.assets.bulkPut(assets)
     await db.campaigns.bulkPut(p.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))
@@ -123,6 +124,13 @@ export async function refreshPlayerCopy(info: SharedInfo) {
   }
 }
 
+const openChannels = new Map<string, ReturnType<typeof supabase.channel>>()
+
+/** Tells everyone else watching a joined world that something changed (a player saved a group note). */
+export function tellOtherPlayers(cloudId: string) {
+  openChannels.get(`members:${cloudId}`)?.send({ type: 'broadcast', event: 'changed', payload: {} })
+}
+
 /** Keeps a read-only copy fresh while it's open: instant refresh when the GM syncs, plus a slow poll. */
 export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) {
   let busy = false
@@ -139,9 +147,11 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) 
   }
   const name = info.token ? `share:${info.token}` : `members:${info.memberOf}`
   const ch = supabase.channel(name).on('broadcast', { event: 'changed' }, refresh).subscribe()
+  openChannels.set(name, ch)
   const poll = setInterval(refresh, 60_000)
   window.addEventListener('online', refresh)
   return () => {
+    openChannels.delete(name)
     supabase.removeChannel(ch)
     clearInterval(poll)
     window.removeEventListener('online', refresh)
