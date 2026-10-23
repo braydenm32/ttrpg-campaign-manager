@@ -24,7 +24,8 @@ export default defineConfig({
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml' },
         ],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,woff2}'], maximumFileSizeToCacheInBytes: 4 * 1024 * 1024 },
+      // The legal pages are their own pages, not routes inside the app, so the offline cache must not swap them for the app.
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,woff2}'], navigateFallbackDenylist: [/\.html$/], maximumFileSizeToCacheInBytes: 4 * 1024 * 1024 },
     }),
   ],
   server: { port: 5173, strictPort: true },
