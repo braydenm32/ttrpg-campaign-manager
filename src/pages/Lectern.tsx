@@ -27,6 +27,9 @@ import { useViewMode } from '../viewMode'
 import { LecternPrep } from '../prep'
 import { Soundboard } from '../sound/Soundboard'
 import { StatusBadge } from '../status'
+import { ShowPanel } from '../showing'
+import { WorldToday } from '../calendar'
+import { ClocksPanel } from '../clocks'
 
 /**
  * The Lectern: one screen for running a session at the table.
@@ -34,7 +37,7 @@ import { StatusBadge } from '../status'
  * Everything here is GM-only and saved on the session as you go.
  */
 export default function Lectern() {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const { sessionId = '' } = useParams()
   const { isGM } = useViewMode()
   const session = useLiveQuery(() => db.sessions.get(sessionId), [sessionId])
@@ -63,6 +66,14 @@ export default function Lectern() {
           <h1>
             📖 The Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
           </h1>
+          {world && <WorldToday world={world} isGM />}
+          {!!(world?.safety?.lines.length || world?.safety?.veils.length) && (
+            <details className="small safety-reminder">
+              <summary>🛡️ Lines and veils</summary>
+              {world!.safety!.lines.length > 0 && <div>⛔ Lines: {world!.safety!.lines.join(' · ')}</div>}
+              {world!.safety!.veils.length > 0 && <div>🌫️ Veils: {world!.safety!.veils.join(' · ')}</div>}
+            </details>
+          )}
         </div>
       </header>
       <div className="lectern">
@@ -74,8 +85,10 @@ export default function Lectern() {
         <div className="lectern-col">
           <LecternPrep session={session} worldId={worldId} />
           <Initiative lectern={lectern} edit={edit} entities={entities} />
+          <ClocksPanel worldId={worldId} entities={entities} />
         </div>
         <div className="lectern-col">
+          {world && <ShowPanel world={world} sceneText={lectern.sceneText} />}
           <Soundboard worldId={worldId} compact />
           <Dice lectern={lectern} edit={edit} />
           <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />

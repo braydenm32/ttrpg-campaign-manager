@@ -37,6 +37,10 @@ import Boards from './pages/Boards'
 import BoardView from './pages/BoardView'
 import Sounds from './pages/Sounds'
 import Questions from './pages/Questions'
+import RelationWeb from './pages/RelationWeb'
+import ClocksPage from './clocks'
+import SafetyPage, { XCardAlert, XCardButton } from './pages/Safety'
+import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
 
 export default function App() {
   return (
@@ -48,6 +52,7 @@ export default function App() {
           <Route path="/shared/:token" element={<SharedWorld />} />
           <Route path="/join/:token" element={<JoinWorld />} />
           <Route path="/w/:worldId/print/:kind/:id" element={<PrintPage />} />
+          <Route path="/screen/:worldId" element={<ScreenRoute />} />
           <Route path="/w/:worldId" element={<WorldLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="type/:type" element={<EntityList />} />
@@ -70,6 +75,9 @@ export default function App() {
             <Route path="boards/:boardId" element={<BoardView />} />
             <Route path="sounds" element={<Sounds />} />
             <Route path="questions" element={<Questions />} />
+            <Route path="web" element={<RelationWeb />} />
+            <Route path="clocks" element={<ClocksPage />} />
+            <Route path="safety" element={<SafetyPage />} />
           </Route>
           <Route path="*" element={<Home />} />
         </Routes>
@@ -127,6 +135,17 @@ function WorldLayout() {
   return <WorldShell />
 }
 
+/** The players' screen for a TV: always the player view, whoever opens it. */
+function ScreenRoute() {
+  const { world } = useWorld()
+  if (!world) return <div className="loading">{world === null ? 'World not found.' : 'Loading…'}</div>
+  return (
+    <ForcePlayerView>
+      <PlayersScreen world={world} />
+    </ForcePlayerView>
+  )
+}
+
 function SyncBadge() {
   const s = useSyncExternalStore(syncStore.subscribe, syncStore.get)
   const label = { off: '', idle: '☁️ Synced', syncing: '☁️ Syncing…', offline: '☁️ Offline, will sync later', error: '⚠️ Sync problem' }[s.status]
@@ -181,6 +200,7 @@ function WorldShell() {
                 🛡️ My character
               </button>
             ))}
+            {world.safety?.xcard && <XCardButton cloudId={memberOf} small />}
             <span>🎭 You’re a player in this world. It updates as your GM adds to it.</span>
             <button
               className="link small"
@@ -213,6 +233,9 @@ function WorldShell() {
       <main className="content">
         {shareError && <div className="player-banner">Couldn't refresh: {shareError}</div>}
         {memberOf && <ChooseCharacterBanner world={world} />}
+        {shared && <ShowingPopup world={world} />}
+        {isGM && !shared && <ShowingBanner world={world} />}
+        {!shared && <XCardAlert world={world} />}
         {!isGM && !shared && (
           <div className="player-banner">
             {previewAs

@@ -12,8 +12,9 @@ import { Markdown } from '../Markdown'
 import { StatusBadge, statusIcon } from '../status'
 import { SecretTextarea } from '../SecretTextarea'
 import { useViewMode } from '../viewMode'
+import { circleShape, fogOverlay, pinRevealed, rectShape, removeFog, renderPlayerFog } from '../fog'
 
-type Tool = 'select' | 'pin' | 'region'
+type Tool = 'select' | 'pin' | 'region' | 'fog-rect' | 'fog-shape' | 'fog-circle'
 const COLORS = ['#e0b354', '#d9534f', '#5bc0de', '#5cb85c', '#a678de', '#f0f0f0']
 
 export default function MapView() {
@@ -35,11 +36,21 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const entities = useVisibleEntities(worldId)
-  const pins = useLiveQuery(() => db.pins.where({ mapId: map.id }).filter((p) => canSee(p.visibility)).toArray(), [map.id, isGM]) ?? []
+  const fog = map.fog?.on ? map.fog : undefined
+  // Players never see pins under the fog (the server holds them back too).
+  const pins =
+    useLiveQuery(
+      () => db.pins.where({ mapId: map.id }).filter((p) => canSee(p.visibility) && (isGM || pinRevealed(fog, p))).toArray(),
+      [map.id, isGM, fog],
+    ) ?? []
   const allMaps = useLiveQuery(() => db.maps.where({ worldId }).filter((m) => canSee(m.visibility)).sortBy('name'), [worldId, isGM]) ?? []
   const [tool, setTool] = useState<Tool>('select')
   const [draft, setDraft] = useState<[number, number][]>([])
   const [showSettings, setShowSettings] = useState(false)
+  const [fogBar, setFogBar] = useState(false)
+  const [fogMode, setFogMode] = useState<'reveal' | 'hide'>('reveal')
+  const [fogCorner, setFogCorner] = useState<[number, number]>()
+  const [fogSize, setFogSize] = useState(0.06)
   const selectedId = params.get('pin')
   const selected = pins.find((p) => p.id === selectedId)
   const select = (id?: string) => setParams(id ? { pin: id } : {}, { replace: true })
@@ -50,10 +61,40 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
     if (!isGM) setTool('select')
   }, [isGM])
 
+  // Keep the players' fogged picture up to date, a moment after the GM stops changing the fog.
+  const fogShapes = fog?.shapes
+  useEffect(() => {
+    if (!isGM || !fog) return
+    const t = setTimeout(() => renderPlayerFog(map.id).catch(() => {}), 1500)
+    return () => clearTimeout(t)
+  }, [isGM, fog, fogShapes, map.id, map.imageId])
+
+  const addFog = (shape: ReturnType<typeof rectShape>) =>
+    db.maps
+      .where('id')
+      .equals(map.id)
+      .modify((m) => {
+        m.fog = { on: true, ...m.fog, shapes: [...(m.fog?.shapes ?? []), shape] }
+      })
+  const fogClick = (pos: [number, number]) => {
+    if (tool === 'fog-circle') addFog(circleShape(pos, Math.max(map.width, map.height) * fogSize, fogMode))
+    else if (tool === 'fog-rect') {
+      if (!fogCorner) return setFogCorner(pos)
+      addFog(rectShape(fogCorner, pos, fogMode))
+      setFogCorner(undefined)
+    } else if (tool === 'fog-shape') setDraft((d) => [...d, pos])
+  }
+  const finishFogShape = async () => {
+    if (draft.length < 3) return
+    await addFog({ ...rectShape([0, 0], [0, 0], fogMode), points: draft })
+    setDraft([])
+  }
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setDraft([])
+        setFogCorner(undefined)
         setTool('select')
       }
     }
@@ -117,10 +158,39 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                 ✏️ Draw
               </Link>
             )}
+            <button
+              className={fogBar ? 'on' : ''}
+              onClick={() => {
+                setFogBar((f) => !f)
+                setTool('select')
+                setDraft([])
+              }}
+            >
+              🌫️ Fog{fog ? ' (on)' : ''}
+            </button>
             <button onClick={() => setShowSettings((s) => !s)}>⚙️ Map settings</button>
           </div>
         )}
       </div>
+      {isGM && fogBar && (
+        <FogBar
+          map={map}
+          tool={tool}
+          setTool={(t) => {
+            setTool(t)
+            setDraft([])
+            setFogCorner(undefined)
+          }}
+          mode={fogMode}
+          setMode={setFogMode}
+          size={fogSize}
+          setSize={setFogSize}
+          corner={!!fogCorner}
+          draft={draft.length}
+          onFinish={finishFogShape}
+          onUndoPoint={() => setDraft((d) => d.slice(0, -1))}
+        />
+      )}
       <div className="map-body">
         <MapContainer
           className={`leaflet-map tool-${tool}`}
@@ -133,9 +203,11 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
           attributionControl={false}
         >
           <ImageOverlay url={url} bounds={bounds} />
+          {fog && <FogLayer map={map} bounds={bounds} opacity={isGM ? 0.6 : 1} />}
           <ClickHandler
             onClick={(pos) => {
-              if (tool === 'pin') addPin(pos)
+              if (tool.startsWith('fog')) fogClick(pos)
+              else if (tool === 'pin') addPin(pos)
               else if (tool === 'region') setDraft((d) => [...d, pos])
               else select()
             }}
@@ -190,6 +262,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
             )
           })}
           {draft.length > 0 && <Polyline positions={draft} pathOptions={{ color: '#fff', dashArray: '4 4' }} />}
+          {fogCorner && <Marker position={fogCorner} icon={cornerIcon} interactive={false} />}
         </MapContainer>
         {(selected || showSettings) && (
           <aside className="map-panel">
@@ -205,6 +278,136 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
           </aside>
         )}
       </div>
+    </div>
+  )
+}
+
+const cornerIcon = L.divIcon({ className: '', html: '<div class="fog-corner"></div>', iconSize: [14, 14], iconAnchor: [7, 7] })
+
+/** The fog as the GM sees it (see-through) or as players do (solid), drawn over the map. */
+function FogLayer({ map, bounds, opacity }: { map: WorldMap; bounds: L.LatLngBounds; opacity: number }) {
+  const [url, setUrl] = useState<string>()
+  const shapes = map.fog?.shapes
+  useEffect(() => {
+    let gone = false
+    let made: string | undefined
+    fogOverlay(map, shapes ?? []).then((blob) => {
+      if (gone) return
+      made = URL.createObjectURL(blob)
+      setUrl(made)
+    })
+    return () => {
+      gone = true
+      // The old picture stays up until the new one is ready, then goes.
+      if (made) setTimeout(() => URL.revokeObjectURL(made!), 2000)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shapes, map.width, map.height])
+  if (!url) return null
+  return <ImageOverlay url={url} bounds={bounds} opacity={opacity} className="fog-layer" />
+}
+
+/** The GM's fog tools: uncover or cover a box, a circle or a shape, and the big switches. */
+function FogBar({
+  map,
+  tool,
+  setTool,
+  mode,
+  setMode,
+  size,
+  setSize,
+  corner,
+  draft,
+  onFinish,
+  onUndoPoint,
+}: {
+  map: WorldMap
+  tool: Tool
+  setTool: (t: Tool) => void
+  mode: 'reveal' | 'hide'
+  setMode: (m: 'reveal' | 'hide') => void
+  size: number
+  setSize: (n: number) => void
+  corner: boolean
+  draft: number
+  onFinish: () => void
+  onUndoPoint: () => void
+}) {
+  const fog = map.fog
+  const setFog = (patch: Partial<NonNullable<WorldMap['fog']>>) =>
+    db.maps
+      .where('id')
+      .equals(map.id)
+      .modify((m) => {
+        m.fog = { on: true, shapes: [], ...m.fog, ...patch }
+      })
+  const all = { id: 'all', mode: 'reveal' as const, points: [[0, 0], [0, map.width], [map.height, map.width], [map.height, 0]] as [number, number][] }
+  return (
+    <div className="map-toolbar fog-bar">
+      <strong>
+        🌫️ Fog of war <Help topic="fog" />
+      </strong>
+      <label className="inline-check small">
+        <input type="checkbox" checked={!!fog?.on} onChange={(e) => setFog({ on: e.target.checked })} />
+        Players see only what you uncover
+      </label>
+      {fog?.on && (
+        <>
+          <div className="segmented">
+            <button className={mode === 'reveal' ? 'on' : ''} onClick={() => setMode('reveal')}>
+              ☀️ Uncover
+            </button>
+            <button className={mode === 'hide' ? 'on' : ''} onClick={() => setMode('hide')}>
+              🌫️ Cover
+            </button>
+          </div>
+          <div className="segmented">
+            <button className={tool === 'fog-circle' ? 'on' : ''} onClick={() => setTool(tool === 'fog-circle' ? 'select' : 'fog-circle')} title="Click the map">
+              ⬤ Circle
+            </button>
+            <button className={tool === 'fog-rect' ? 'on' : ''} onClick={() => setTool(tool === 'fog-rect' ? 'select' : 'fog-rect')} title="Click two corners">
+              ▭ Box
+            </button>
+            <button className={tool === 'fog-shape' ? 'on' : ''} onClick={() => setTool(tool === 'fog-shape' ? 'select' : 'fog-shape')} title="Click points round the area">
+              ⬠ Shape
+            </button>
+          </div>
+          {tool === 'fog-circle' && (
+            <label className="row small">
+              Size
+              <input type="range" min={0.01} max={0.25} step={0.01} value={size} onChange={(e) => setSize(Number(e.target.value))} />
+            </label>
+          )}
+          {tool === 'fog-rect' && <span className="muted small">{corner ? 'Now click the opposite corner' : 'Click one corner'}</span>}
+          {tool === 'fog-shape' && (
+            <>
+              <span className="muted small">{draft} points</span>
+              <button className="primary" disabled={draft < 3} onClick={onFinish}>
+                Finish
+              </button>
+              <button disabled={!draft} onClick={onUndoPoint}>
+                Undo point
+              </button>
+            </>
+          )}
+          <button disabled={!fog.shapes.length} onClick={() => setFog({ shapes: fog.shapes.slice(0, -1) })}>
+            ↶ Undo
+          </button>
+          <button onClick={() => setFog({ shapes: [...fog.shapes, { ...all, id: newId() }] })}>Uncover all</button>
+          <button onClick={() => confirm('Cover the whole map again?') && setFog({ shapes: [] })}>Cover all</button>
+          <button
+            className="ghost small"
+            onClick={async () => {
+              if (!confirm('Remove the fog from this map completely? Everything you uncovered is forgotten.')) return
+              setTool('select')
+              await removeFog(map)
+            }}
+          >
+            Remove fog
+          </button>
+          <span className="muted small">{fog.imageId && fog.renderedFrom ? '' : 'Preparing the players’ picture…'}</span>
+        </>
+      )}
     </div>
   )
 }

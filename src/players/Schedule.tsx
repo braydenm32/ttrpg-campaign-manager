@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { listAvailability, listPlayers, setAvailability, type Member } from '../cloud/players'
 import { db, newId, type Availability, type Campaign, type SharedInfo, type World } from '../db'
 import { Help } from '../help'
+import { DiscordButton, getWebhook, postToDiscord } from '../discord'
 
 /**
  * Picking the next session date. The GM proposes a few dates on the campaign; players who joined
@@ -93,6 +94,10 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
                         if (!confirm(`Book ${showDate(o.at)}? This makes the next session with that date and clears the other suggestions.`)) return
                         await onBook(o.at.slice(0, 10))
                         await save([])
+                        if (getWebhook(world.id) && confirm('Tell everyone on Discord?'))
+                          postToDiscord(world.id, `📅 Next session: ${showDate(o.at)}`, `${campaign.name}${o.note ? `\n${o.note}` : ''}`).catch((e) =>
+                            setError((e as Error).message),
+                          )
                       }}
                     >
                       Book it
@@ -134,6 +139,20 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
           )
         })}
       </ul>
+      {isGM && options.length > 0 && (
+        <DiscordButton
+          worldId={world.id}
+          title={`📅 When can you play? (${campaign.name})`}
+          label="💬 Ask on Discord"
+          text={() =>
+            [
+              ...options.map((o) => `• **${showDate(o.at)}**${o.note ? ` (${o.note})` : ''}`),
+              '',
+              synced ? 'Answer yes, maybe or no in Campaign Codex.' : 'Reply with the dates you can make.',
+            ].join('\n')
+          }
+        />
+      )}
       {isGM && (
         <form
           className="row wrap"

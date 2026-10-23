@@ -174,6 +174,20 @@ export async function savePlayerNotes(cloudId: string, localEntityId: string, no
     })
 }
 
+/** A player updates the character they play: summary, details and their own write-up. Never touches the GM's text or secrets. */
+export async function editMyCharacter(cloudId: string, localEntityId: string, sheet: { summary: string; fields: { key: string; value: string }[]; playerBody: string }) {
+  const { error } = await supabase.rpc('edit_my_character', {
+    wid: cloudId,
+    eid: cloudEntityId(localEntityId),
+    summary: sheet.summary,
+    fields: sheet.fields.filter((f) => f.key.trim() || f.value.trim()),
+    player_body: sheet.playerBody,
+  })
+  if (error) throw error
+  await loadMemberWorld(cloudId)
+  tellOtherPlayers(cloudId)
+}
+
 /** Saves a player's note on a page ('' for the scratchpad), private or for the whole group. */
 export async function savePlayerNote(cloudId: string, localEntityId: string, shared: boolean, body: string) {
   const { error } = await supabase.rpc('save_player_note', { wid: cloudId, eid: localEntityId ? cloudEntityId(localEntityId) : '', shared, body })

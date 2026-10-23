@@ -1,8 +1,11 @@
 import DOMPurify from 'dompurify'
 import { marked } from 'marked'
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { Entity } from './db'
+import { ENTITY_LABELS, type Entity } from './db'
+import { useAssetUrl } from './hooks'
+import { StatusBadge } from './status'
+import { plainLinks } from './text'
 import { characterNames, useViewMode } from './viewMode'
 
 type Segment = { kind: 'text' | 'gm' | 'foryou'; body: string } | { kind: 'for'; names: string[]; body: string }
@@ -99,23 +102,73 @@ export function Markdown({
       const target = byName.get(name.trim().toLowerCase())
       const shown = escapeHtml(label ?? name)
       if (!target) return `<span class="wikilink missing" title="No page yet">${shown}</span>`
-      return `<a class="wikilink" href="#/w/${worldId}/e/${target.id}" data-internal="1">${shown}</a>`
+      return `<a class="wikilink" href="#/w/${worldId}/e/${target.id}" data-internal="1" data-id="${target.id}">${shown}</a>`
     })
     return DOMPurify.sanitize(marked.parse(src, { async: false }) as string)
   }, [text, entities, worldId, showSecrets, forViewer])
 
+  // Hovering a link shows a peek at the page it goes to.
+  const [peek, setPeek] = useState<{ entity: Entity; left: number; top: number; below: boolean }>()
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const linkAt = (t: EventTarget) => (t as HTMLElement).closest?.('a.wikilink[data-id]') as HTMLAnchorElement | null
+
   return (
-    <div
-      className="markdown"
-      onClick={(ev) => {
-        const a = (ev.target as HTMLElement).closest('a[data-internal]') as HTMLAnchorElement | null
-        if (a) {
-          ev.preventDefault()
-          navigate(a.getAttribute('href')!.slice(1))
-        }
-      }}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <>
+      <div
+        className="markdown"
+        onClick={(ev) => {
+          const a = (ev.target as HTMLElement).closest('a[data-internal]') as HTMLAnchorElement | null
+          if (a) {
+            ev.preventDefault()
+            setPeek(undefined)
+            navigate(a.getAttribute('href')!.slice(1))
+          }
+        }}
+        onMouseOver={(ev) => {
+          const a = linkAt(ev.target)
+          if (!a) return
+          const entity = entities.find((e) => e.id === a.dataset.id)
+          if (!entity) return
+          clearTimeout(timer.current)
+          timer.current = setTimeout(() => {
+            const r = a.getBoundingClientRect()
+            const below = window.innerHeight - r.bottom > 260
+            const left = Math.max(12, Math.min(r.left, window.innerWidth - 332))
+            setPeek({ entity, left, top: below ? r.bottom + 6 : r.top - 6, below })
+          }, 350)
+        }}
+        onMouseOut={(ev) => {
+          if (!linkAt(ev.target)) return
+          clearTimeout(timer.current)
+          setPeek(undefined)
+        }}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+      {peek && <LinkPeek {...peek} />}
+    </>
+  )
+}
+
+/** The little card shown when hovering a [[link]]: picture, type, summary and the start of the page. */
+function LinkPeek({ entity: e, left, top, below }: { entity: Entity; left: number; top: number; below: boolean }) {
+  const image = useAssetUrl(e.imageId)
+  // Never secrets, even for the GM: the peek is a quick reminder, not the page.
+  const text = plainLinks(stripSecrets(e.body))
+    .replace(/[#>*_`~[\]()|-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return (
+    <div className="link-peek" style={below ? { left, top } : { left, top, transform: 'translateY(-100%)' }} role="tooltip">
+      {image && <img src={image} alt="" />}
+      <div>
+        <div className="muted small">
+          {ENTITY_LABELS[e.type].icon} {ENTITY_LABELS[e.type].one}
+        </div>
+        <strong>{e.name}</strong> {e.status && <StatusBadge entity={e} />}
+        {e.summary && <p className="small">{plainLinks(e.summary)}</p>}
+        {text && <p className="muted small">{text.length > 220 ? `${text.slice(0, 220)}…` : text}</p>}
+      </div>
+    </div>
   )
 }
 

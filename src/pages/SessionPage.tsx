@@ -22,6 +22,8 @@ import { newThread, useWorldSessions } from '../threads'
 import { useViewMode } from '../viewMode'
 import { PrepSheet } from '../prep'
 import { PrintButton } from '../print'
+import { CalDateInput, formatDate } from '../calendar'
+import { DiscordButton, forDiscord } from '../discord'
 
 export default function SessionPage() {
   const { worldId, world } = useWorld()
@@ -49,7 +51,10 @@ export default function SessionPage() {
           #{session.number} {session.title}
         </h1>
         <div className="row spread">
-          <div className="muted">{session.date}</div>
+          <div className="muted">
+            {session.date}
+            {session.worldDate && world?.calendar && ` · in the world: ${formatDate(world.calendar, session.worldDate)}`}
+          </div>
           <PrintButton to={`/w/${worldId}/print/s/${session.id}`} />
         </div>
         {session.recap ? (
@@ -85,6 +90,19 @@ export default function SessionPage() {
         </div>
       </header>
 
+      {world?.calendar && (
+        <div className="row wrap small">
+          <span>
+            📅 In the world <Help topic="worldToday" />
+          </span>
+          <CalDateInput calendar={world.calendar} value={session.worldDate} onChange={(worldDate) => update({ worldDate })} />
+          {world.calendar.today && (
+            <button className="small" onClick={() => update({ worldDate: world.calendar!.today })}>
+              Use today ({formatDate(world.calendar, world.calendar.today, false)})
+            </button>
+          )}
+        </div>
+      )}
       <Recorder session={session} />
       {world && <RecapPanel world={world} session={session} entities={entities} />}
 
@@ -116,6 +134,19 @@ export default function SessionPage() {
           value={session.recap}
           placeholder="What the players get to read. Shown in the player view once this session is revealed."
           onChange={(v) => update({ recap: v })}
+        />
+      )}
+      {tab === 'recap' && session.recap.trim() && (
+        <DiscordButton
+          worldId={worldId}
+          label="💬 Post recap to Discord"
+          title={`Session ${session.number}: ${session.title}`}
+          text={() => forDiscord(session.recap)}
+          confirmText={
+            session.visibility === 'players'
+              ? undefined
+              : 'This session is still GM only. Post the player recap to Discord anyway? Secret passages are left out.'
+          }
         />
       )}
       {tab !== 'prep' && (

@@ -142,6 +142,12 @@ export interface World {
   customTypes?: CustomType[]
   /** The party's money, e.g. [{ name: 'gp', amount: 120 }]. Shown on the party loot page. */
   partyCoin?: { name: string; amount: number }[]
+  /** The world's own calendar (months, weekdays, moons) and today's date in the world. */
+  calendar?: WorldCalendar
+  /** What the GM is showing every player right now (a handout, a page or some text). */
+  showing?: Showing | null
+  /** The table's safety tools: lines (never in the game) and veils (happens off screen). Everyone sees these. */
+  safety?: Safety
   /** Device-only: cloud sync settings for this world. Never uploaded. */
   cloud?: { enabled: boolean; lastPulledAt?: string }
   /**
@@ -149,6 +155,51 @@ export interface World {
    * (token) or joined with an invite (memberOf, the GM's cloud world id).
    */
   shared?: SharedInfo
+}
+
+/** A date on the world's calendar. month is the position in the calendar's list (from 0), day starts at 1. */
+export interface CalDate {
+  year: number
+  month: number
+  day: number
+}
+
+export interface WorldCalendar {
+  /** Which ready-made calendar this started from, if any. */
+  preset?: string
+  months: { name: string; days: number }[]
+  /** Day names, in order. Empty for calendars without named days (dates then show without one). */
+  weekdays: string[]
+  /** Written after the year, like "DR" or "AR". */
+  era: string
+  /** Moons and how many days each takes to go round; offset shifts which day is full. */
+  moons: { name: string; cycle: number; offset: number }[]
+  /** Which weekday the first day of year 0 falls on, so weekdays line up with a published calendar. */
+  weekdayOffset?: number
+  /** Today in the world. The GM moves it on as time passes in the game. */
+  today?: CalDate
+}
+
+/** Something the GM puts on every player's screen. */
+export interface Showing {
+  id: string
+  kind: 'image' | 'page' | 'text'
+  title: string
+  assetId?: string
+  entityId?: string
+  text?: string
+  at: number
+}
+
+export interface Safety {
+  /** Lines: things that never happen in the game. */
+  lines: string[]
+  /** Veils: things that can happen, but off screen ("fade to black"). */
+  veils: string[]
+  /** Anything else the table agreed, like the X-card or "open door". */
+  notes: string
+  /** Whether players get the anonymous X-card button. */
+  xcard?: boolean
 }
 
 export interface Campaign {
@@ -213,12 +264,40 @@ export interface Entity {
   /** Items: who carries it (a character's page id, or 'party' for the shared stash), and how many. */
   heldBy?: string
   quantity?: number
+  /** How this page relates to others: family, allies, enemies, who serves whom. */
+  relations?: Relation[]
+  /** Progress clocks, like a villain's plan filling up a slice at a time. */
+  clocks?: Clock[]
+  /** Events: the date on the world's calendar, when there is one. */
+  eventWhen?: CalDate
+  /** Player characters: written by the player who plays them. Never holds secrets. */
+  playerBody?: string
   /** Characters: alive, dead, missing or captured (unset means alive or not worth saying). */
   status?: LifeStatus | null
   /** Whether players may see the status. Unticked, it stays GM-only even on a revealed page. */
   statusKnown?: boolean
   createdAt: number
   updatedAt: number
+}
+
+export interface Relation {
+  id: string
+  /** The other page. */
+  to: string
+  /** "parent of", "ally of", "serves"… read as: this page <kind> the other page. */
+  kind: string
+  note?: string
+  /** Whether players may see this link. Unticked, it stays GM-only even on a revealed page. */
+  known?: boolean
+}
+
+export interface Clock {
+  id: string
+  name: string
+  segments: number
+  filled: number
+  /** Whether players may see this clock. */
+  known?: boolean
 }
 
 export type LifeStatus = 'alive' | 'dead' | 'missing' | 'captured'
@@ -254,7 +333,25 @@ export interface WorldMap {
   locationId?: string
   /** Set for maps made with the in-app map builder; the image is re-rendered from it on every edit. */
   drawing?: Drawing
+  /** Fog of war: players see only the areas the GM has uncovered. */
+  fog?: MapFog
   createdAt: number
+}
+
+/** An area uncovered (or covered again) on a map, in image coordinates [y, x] like pins. Later shapes win. */
+export interface FogShape {
+  id: string
+  mode: 'reveal' | 'hide'
+  points: [number, number][]
+}
+
+export interface MapFog {
+  on: boolean
+  shapes: FogShape[]
+  /** The picture players get: the map with the fog painted on, so hidden parts never leave the GM's device. */
+  imageId?: string
+  /** What that picture was made from (map image version and shapes), to know when to remake it. */
+  renderedFrom?: string
 }
 
 export interface Pin {
@@ -338,6 +435,8 @@ export interface Session {
   lectern?: LecternState
   /** The GM's plan for this session. Always GM-only. */
   prep?: SessionPrep
+  /** The in-world date when this session starts. */
+  worldDate?: CalDate
   createdAt: number
 }
 

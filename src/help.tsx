@@ -20,7 +20,7 @@ export const HELP = {
 
   // Pages
   entityPage:
-    'A page in your codex. Link other pages by writing [[Their Name]]. The sidebar shows the picture, maps it appears on, details and tags; below are the places and people inside it and every page that mentions it.',
+    'A page in your codex. Link other pages by writing [[Their Name]]; hover over a link to peek at that page. The sidebar shows the picture, maps it appears on, details and tags; below are the places and people inside it and every page that mentions it.',
   secrets:
     'Hide part of a page with the 🔒 GM-only passage button: players never see it. Use 🤫 Secret for… to keep a passage for certain characters only, like ":::for Wren and Silas". Names are suggested as you type.',
   revealTo:
@@ -41,6 +41,8 @@ export const HELP = {
   maps: 'Upload a map image or draw one in the map builder. Then drop pins and draw regions, and link them to pages so clicking them shows what is there.',
   mapView:
     'Click a pin or region to see what is there. "Enter" opens a more detailed map, such as a town inside a region. As GM, use the toolbar to add pins and regions.',
+  fog:
+    'Hide the map from players and uncover it as they explore. Uncover a circle, a box or any shape; switch to Cover to hide a part again. Players get a copy of the picture with the fog painted on, so covered areas and the pins in them can’t be peeked at.',
   mapBuilder: 'Draw a map from scratch: paint land and water, drag out rooms, draw roads, rivers and walls, stamp symbols and add labels. It then works like any uploaded map.',
 
   // Story
@@ -48,6 +50,19 @@ export const HELP = {
   threads:
     'Every hook, mystery, promise and grudge you’ve left dangling. Move them from dangling to in play to tied off. A thread that hasn’t moved in three sessions gets flagged so nothing is forgotten.',
   leads: 'The rumours, hooks and mysteries your GM has shared with the party.',
+  calendar:
+    'Your world’s own calendar: month and day names, the year’s name (like DR) and moons. Pick a ready-made one (Forgotten Realms, Golarion, Eberron, Greyhawk, Exandria) or make your own. Events can then have real dates.',
+  worldToday: 'Today’s date in your world. Move it on as time passes in the game; each session remembers the date it started on.',
+  relations:
+    'How this page connects to others: family, friends, enemies, who serves whom. Players only see a link when you tick “Players know”. Every link shows up on both pages.',
+  relationWeb:
+    'Everyone and how they’re connected, drawn as a web. Drag people about, click one to focus on them, or switch to the family tree. Add links from any page’s Relationships box.',
+  clocks:
+    'A progress clock is a circle cut into slices. Fill a slice when a villain’s plan moves on, a rival gets closer or danger grows; when it’s full, it happens. Players only see clocks you mark “Players know”.',
+  safety:
+    'Agree what’s off limits before you play. Lines never happen in the game; veils can happen, but off screen. Everyone in the world can read this page.',
+  xcard:
+    'Tap the X-card if something in the game isn’t OK for you. Your GM is told straight away, without your name, and moves the story on. No one asks why.',
   campaign: 'A campaign is one story in your world, with its sessions, party and active quests. A world can hold several.',
 
   // Sessions
@@ -72,6 +87,9 @@ export const HELP = {
     'Buttons for ambience, music and sound effects. Upload your own audio files, or add Syrinscape moods and elements. Tap to play, tap again to stop. Sounds keep playing as you move around the app.',
   syrinscape:
     'Control Syrinscape from here: keep its online player open, add your auth token once on this device, then paste the remote control link of any mood or element.',
+  showPlayers:
+    'Put a picture, a page or some text on every player’s screen right now, like handing round a letter or showing a monster. It pops up for players who joined; open the Players’ screen on a TV or second monitor for the table.',
+  playersScreen: 'A clean screen for a TV or second monitor at the table. It shows whatever you’re showing players, and nothing else.',
   initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go.',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',
   quickNote: 'Jot something down mid-session. It is added to this session’s GM notes with the time.',
@@ -86,6 +104,11 @@ export const HELP = {
   assets: 'Every file in this world: map images, portraits and handouts. Mark a file revealed to let players see it.',
   loot:
     'Who carries what. Set "Carried by" on any item page to a character or the party stash, and keep the party’s coin here. Players see revealed items and the purse.',
+  importPages:
+    'Bring pages in from Obsidian (or any Markdown notes), a Kanka export or a World Anvil export. Everything arrives as 🔒 GM only, so you can tidy up before revealing anything.',
+  exportMarkdown: 'Download every page as Markdown files in folders, ready to open in Obsidian or any notes app. GM notes and secrets are included, so keep it to yourself.',
+  discord:
+    'Post recaps and session dates to your group’s Discord channel. In Discord: Server settings, Integrations, Webhooks, New webhook, then copy its link here. The link is kept on this device only.',
   backup: 'Save the whole world, uploaded files included, as one file. Keep a backup even if sync is on.',
 
   // Sharing and players
@@ -106,6 +129,8 @@ export const HELP = {
     'Ask your GM something privately: about a page, or anything at all. Only your GM sees your question, and only you see the answer.',
   questionsGm:
     'Questions your players sent you, privately. Your answer goes only to the player who asked. If they asked about a hidden page, you can reveal it to just them from here.',
+  editCharacter:
+    'Keep your character’s details up to date: the one-line summary, stats and anything you want to write about them. Your GM sees your changes and can change them back.',
   character: 'Who plays this character. Players claim their own character from here; you can release a claim from World settings.',
   aiTools: 'Keys for transcription and recaps. They stay on this device only: never synced and never in backups.',
 } as const

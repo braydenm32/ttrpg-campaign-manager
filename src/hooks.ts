@@ -48,7 +48,7 @@ export function useVisibleEntities(worldId: string) {
 
 /**
  * A page as a player's copy has it, for the GM's player preview: GM notes gone, a page revealed to
- * one player flagged as theirs, and a status the players don't know left out. The server does the
+ * one player flagged as theirs, and a status, links and clocks the players don't know left out. The server does the
  * same in public.player_view; player copies already arrive this way.
  */
 export function asPlayerSees(e: Entity): Entity {
@@ -58,6 +58,9 @@ export function asPlayerSees(e: Entity): Entity {
     secretForYou: e.secretForYou || e.visibility !== 'players',
     visibility: 'players',
     status: e.statusKnown ? e.status : undefined,
+    // Links and clocks players haven't been told about (links to pages they can't see drop out where they're shown).
+    relations: e.relations?.filter((r) => r.known),
+    clocks: e.clocks?.filter((c) => c.known),
   }
 }
 
