@@ -1,3 +1,4 @@
+import { CALENDAR_PRESETS } from './calendar'
 import { blankEntity, db, newId, type Entity, type Pin } from './db'
 
 /** A small ready-made world so new users can click around before building their own. */
@@ -71,8 +72,14 @@ export async function loadSampleWorld(): Promise<string> {
     summary: 'Harbourmaster of Saltmere, smooth and ambitious',
     gmNotes: 'Secretly a member of the [[Choir of the Deep]]. Wants the vault opened.',
   })
+  // A few relationships and a clock, to show off the relationship web and progress clocks.
+  marta.relations = [{ id: newId(), to: corvin.id, kind: 'rival of', known: true, note: 'Old business quarrel' }]
   const wardens = E('faction', 'Tidewardens', { visibility: 'players', summary: 'The town guard and harbour militia of Saltmere.' })
-  const choir = E('faction', 'Choir of the Deep', { summary: 'A cult that worships something beneath the waves.' })
+  const choir = E('faction', 'Choir of the Deep', {
+    summary: 'A cult that worships something beneath the waves.',
+    clocks: [{ id: newId(), name: 'The vault beneath Saltmere is opened', segments: 6, filled: 2 }],
+  })
+  corvin.relations = [{ id: newId(), to: choir.id, kind: 'member of' }]
   const thalassa = E('deity', 'Thalassa', { visibility: 'players', summary: 'Goddess of the sea, storms and safe harbour.' })
   const sundering = E('event', 'The Sundering', {
     visibility: 'players',
@@ -160,6 +167,8 @@ export async function loadSampleWorld(): Promise<string> {
       system: 'System agnostic',
       createdAt: now,
       updatedAt: now,
+      calendar: { ...structuredClone(CALENDAR_PRESETS.custom.calendar), today: { year: 312, month: 3, day: 14 }, era: 'AS' },
+      safety: { lines: ['Harm to children'], veils: ['Torture'], notes: 'Anyone can call a break at any time.', xcard: true },
     })
     await db.entities.bulkAdd(entities)
     await db.assets.bulkAdd([

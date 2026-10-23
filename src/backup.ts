@@ -61,7 +61,16 @@ export async function importWorld(file: File): Promise<string> {
   const now = Date.now()
 
   await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.boards, db.sounds], async () => {
-    await db.worlds.add({ ...b.world, id: worldId, name: b.world.name, updatedAt: now, cloud: undefined, shared: undefined })
+    const showing = b.world.showing
+    await db.worlds.add({
+      ...b.world,
+      id: worldId,
+      name: b.world.name,
+      updatedAt: now,
+      cloud: undefined,
+      shared: undefined,
+      showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId) } : undefined,
+    })
     await db.assets.bulkAdd(
       b.assets.map(({ data, ...a }) => ({ ...a, id: id(a.id), worldId, blob: base64ToBlob(data, a.mime) })),
     )
@@ -76,10 +85,18 @@ export async function importWorld(file: File): Promise<string> {
         raisedIn: opt(e.raisedIn),
         tiedOffIn: opt(e.tiedOffIn),
         heldBy: e.heldBy === 'party' ? 'party' : opt(e.heldBy),
+        relations: e.relations?.map((r) => ({ ...r, to: id(r.to) })),
       })),
     )
     await db.maps.bulkAdd(
-      b.maps.map((m) => ({ ...m, id: id(m.id), worldId, imageId: id(m.imageId), locationId: opt(m.locationId) })),
+      b.maps.map((m) => ({
+        ...m,
+        id: id(m.id),
+        worldId,
+        imageId: id(m.imageId),
+        locationId: opt(m.locationId),
+        fog: m.fog && { ...m.fog, imageId: opt(m.fog.imageId), renderedFrom: undefined },
+      })),
     )
     await db.pins.bulkAdd(
       b.pins.map((p) => ({ ...p, id: id(p.id), worldId, mapId: id(p.mapId), entityId: opt(p.entityId), childMapId: opt(p.childMapId) })),

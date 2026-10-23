@@ -93,8 +93,10 @@ export async function storePlayerCopy(
 
   await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
     for (const t of [db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets] as const) await t.where({ worldId }).delete()
+    const showing = p.world?.showing
     await db.worlds.put({
       ...(p.world ?? { name: 'Shared world', description: '', system: '', createdAt: now }),
+      showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId) } : null,
       id: worldId,
       updatedAt: now,
       cloud: undefined,
@@ -103,7 +105,7 @@ export async function storePlayerCopy(
     await db.assets.bulkPut(assets)
     await db.campaigns.bulkPut(p.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))
     await db.entities.bulkPut(
-      p.entities.map((e) => ({ ...e, id: id(e.id), worldId, parentId: opt(e.parentId), imageId: opt(e.imageId), raisedIn: opt(e.raisedIn), tiedOffIn: opt(e.tiedOffIn), heldBy: e.heldBy === 'party' ? 'party' : opt(e.heldBy), gmNotes: '' })),
+      p.entities.map((e) => ({ ...e, id: id(e.id), worldId, parentId: opt(e.parentId), imageId: opt(e.imageId), raisedIn: opt(e.raisedIn), tiedOffIn: opt(e.tiedOffIn), heldBy: e.heldBy === 'party' ? 'party' : opt(e.heldBy), relations: e.relations?.map((r) => ({ ...r, to: id(r.to) })), gmNotes: '' })),
     )
     await db.maps.bulkPut(p.maps.map((m) => ({ ...m, id: id(m.id), worldId, imageId: id(m.imageId), locationId: opt(m.locationId), drawing: undefined })))
     await db.pins.bulkPut(

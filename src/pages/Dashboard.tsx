@@ -9,6 +9,7 @@ import { useVisibleEntities, useWorld } from '../hooks'
 import { plainLinks } from '../text'
 import { URGENCY } from '../threads'
 import { useViewMode } from '../viewMode'
+import { WorldToday } from '../calendar'
 
 export default function Dashboard() {
   const { worldId, world } = useWorld()
@@ -49,6 +50,7 @@ export default function Dashboard() {
         </div>
       </header>
       {world.description && <p className="lead">{world.description}</p>}
+      <WorldToday world={world} isGM={isGM} />
 
       <input
         className="search"

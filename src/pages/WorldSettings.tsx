@@ -8,6 +8,9 @@ import { exportWorld } from '../backup'
 import { db, deleteWorld, GAME_SYSTEMS, newId, typeLabel, type CustomType, type World } from '../db'
 import { useTemplates, useWorld } from '../hooks'
 import CloudSettings from './CloudSettings'
+import { CalendarEditor } from '../calendar'
+import { DiscordSettings } from '../discord'
+import { ImportPages } from '../ImportPages'
 
 export default function WorldSettings() {
   const { worldId, world } = useWorld()
@@ -40,11 +43,15 @@ export default function WorldSettings() {
         </label>
       </div>
 
+      <CalendarEditor world={world} />
+
       <CustomTypes world={world} update={update} />
 
       <Templates world={world} />
 
       <CloudSettings world={world} />
+
+      <DiscordSettings worldId={worldId} />
 
       <AiSettingsSection />
 
@@ -58,6 +65,8 @@ export default function WorldSettings() {
         </p>
         <button onClick={() => exportWorld(worldId)}>⬇ Download backup</button>
       </section>
+
+      <ImportPages worldId={worldId} />
 
       <RecentlyDeleted />
 

@@ -2,7 +2,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { claimCharacter, releaseCharacter, savePlayerNotes } from '../cloud/players'
+import { claimCharacter, editMyCharacter, releaseCharacter, savePlayerNotes } from '../cloud/players'
+import { Modal } from '../components'
 import { db, type Entity, type World } from '../db'
 import { useCharacterOwners } from './owners'
 
@@ -49,6 +50,7 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
         </button>
       )}
 
+      {owner?.mine && memberOf && <EditMyCharacter entity={entity} cloudId={memberOf} />}
       {owner?.mine ? (
         <PlayerNotes key={entity.id} initial={owner.notes} onSave={(notes) => savePlayerNotes(memberOf!, entity.id, notes)} />
       ) : (
@@ -74,6 +76,84 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
       )}
       {error && <p className="error small">{error}</p>}
     </div>
+  )
+}
+
+/** The player's own editor for their character: summary, details and a write-up in their words. */
+function EditMyCharacter({ entity, cloudId }: { entity: Entity; cloudId: string }) {
+  const [open, setOpen] = useState(false)
+  const [summary, setSummary] = useState(entity.summary)
+  const [fields, setFields] = useState(entity.fields)
+  const [playerBody, setPlayerBody] = useState(entity.playerBody ?? '')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const start = () => {
+    setSummary(entity.summary)
+    setFields(entity.fields.length ? entity.fields : [{ key: '', value: '' }])
+    setPlayerBody(entity.playerBody ?? '')
+    setError('')
+    setOpen(true)
+  }
+  return (
+    <>
+      <button className="block" onClick={start}>
+        ✏️ Edit my character
+      </button>
+      {open && (
+        <Modal title={`Edit ${entity.name}`} onClose={() => setOpen(false)}>
+          <form
+            className="form"
+            onSubmit={async (e) => {
+              e.preventDefault()
+              setBusy(true)
+              setError('')
+              try {
+                await editMyCharacter(cloudId, entity.id, { summary, fields, playerBody })
+                setOpen(false)
+              } catch (err) {
+                setError((err as Error).message)
+              } finally {
+                setBusy(false)
+              }
+            }}
+          >
+            <p className="muted small">
+              <Help topic="editCharacter" /> Your GM sees these changes. Their own description and secrets stay as they are.
+            </p>
+            <label>
+              One-line summary
+              <input value={summary} onChange={(e) => setSummary(e.target.value)} maxLength={500} placeholder="e.g. Half-elf bard with a stolen lute" />
+            </label>
+            <div className="label">Details (stats, class, level…)</div>
+            {fields.map((f, i) => (
+              <div key={i} className="row field-row">
+                <input value={f.key} placeholder="Field" onChange={(e) => setFields(fields.map((x, j) => (j === i ? { ...x, key: e.target.value } : x)))} />
+                <input value={f.value} placeholder="Value" onChange={(e) => setFields(fields.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} />
+                <button type="button" className="ghost" onClick={() => setFields(fields.filter((_, j) => j !== i))}>
+                  ×
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={() => setFields([...fields, { key: '', value: '' }])}>
+              + Field
+            </button>
+            <label>
+              In your own words
+              <textarea rows={8} value={playerBody} onChange={(e) => setPlayerBody(e.target.value)} placeholder="Appearance, personality, backstory. Markdown and [[links]] work." />
+            </label>
+            {error && <p className="error small">{error}</p>}
+            <div className="row end">
+              <button type="button" onClick={() => setOpen(false)}>
+                Cancel
+              </button>
+              <button className="primary" disabled={busy}>
+                {busy ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
   )
 }
 

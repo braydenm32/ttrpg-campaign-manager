@@ -540,3 +540,106 @@ label.check-item { display: flex; gap: .4em; align-items: flex-start; font-size:
 .check-item > input:not([type='checkbox']) { flex: 1; min-width: 0; }
 .encounter .encounter-name { flex: 1; font-weight: 600; }
 .row > input[type='checkbox'], .row > input[type='radio'] { flex: none; }
+
+/* Fog of war */
+.leaflet-map[class*='tool-fog'] { cursor: crosshair; }
+.fog-bar { gap: .6em; }
+.fog-bar > .row { margin-left: 0; }
+.fog-corner { width: 14px; height: 14px; border: 2px solid #fff; border-radius: 3px; background: rgba(0, 0, 0, .4); }
+.fog-layer { pointer-events: none; }
+.map-toolbar > .row > button.on { background: var(--accent); color: var(--accent-ink); }
+.grow { flex: 1; min-width: 12em; }
+
+/* Show to players */
+.showing-view { display: flex; flex-direction: column; gap: .75em; }
+.showing-view img { max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: var(--radius); align-self: center; }
+.showing-view.big img { max-height: 80vh; }
+.showing-modal { width: min(820px, 100%); max-height: 92vh; overflow: auto; }
+.showing-reopen { position: fixed; right: 1em; bottom: 1em; z-index: 1500; background: var(--accent); color: var(--accent-ink); border-radius: 999px; box-shadow: 0 4px 16px rgba(0, 0, 0, .35); }
+.showing-banner { justify-content: flex-start; flex-wrap: wrap; }
+.show-thumbs { display: flex; flex-wrap: wrap; gap: .4em; align-items: center; max-height: 220px; overflow: auto; }
+.show-thumb { padding: 0; width: 64px; height: 64px; overflow: hidden; border-radius: 6px; }
+.show-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.players-screen { min-height: 100vh; padding: 2em; display: flex; flex-direction: column; align-items: center; gap: 1em; font-size: 1.25rem; }
+.players-screen > h1 { font-size: 2.6rem; text-align: center; }
+.players-screen .showing-view { width: min(1200px, 100%); }
+.players-screen-idle { margin: auto; text-align: center; }
+
+/* Calendar */
+.world-today { display: flex; flex-wrap: wrap; gap: .5em 1em; align-items: center; margin: .5em 0 1em; }
+.cal-input { flex-wrap: wrap; }
+.year-input { width: 6.5em; }
+.calendar-editor details { margin: .25em 0; }
+.month-grid-wrap { margin: 1em 0; }
+.month-grid { display: grid; gap: 4px; margin-top: .5em; }
+.month-head { text-align: center; font-size: .75em; color: var(--muted); }
+.month-day { min-height: 4.5em; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: .2em .35em; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.month-day.today { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.month-num { font-size: .75em; color: var(--muted); }
+.month-item { font-size: .75em; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.month-item.session { color: var(--accent); }
+
+/* Relationships */
+.relation-list li { display: flex; flex-wrap: wrap; align-items: center; gap: .35em; }
+.relation-tools { margin-left: auto; }
+.relation-kind { width: 11em; }
+.tone-hostile > .muted:first-child { color: var(--danger); }
+.web-layout { display: flex; gap: 1em; align-items: flex-start; }
+.web-graph { flex: 1; min-width: 0; width: 100%; height: min(72vh, 900px); background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); touch-action: none; user-select: none; }
+.web-side { width: 280px; flex-shrink: 0; }
+.web-node rect { fill: var(--panel-2); stroke: var(--border); stroke-width: 1.5; }
+.web-node { cursor: pointer; }
+.web-node.focus rect { stroke: var(--accent); stroke-width: 3; }
+.web-node text { fill: var(--text); font-size: 13px; pointer-events: none; }
+.web-edge path { fill: none; stroke: var(--muted); stroke-width: 1.5; opacity: .8; }
+.web-edge.tone-hostile path { stroke: var(--danger); }
+.web-edge.tone-friendly path { stroke: #5cb85c; }
+.web-edge text { fill: var(--muted); font-size: 11px; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; }
+.web-arrow { fill: var(--muted); }
+.family-line, .family-partner { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+.family-partner { stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 6 3; }
+
+/* Clocks */
+.clock-list { display: flex; flex-wrap: wrap; gap: .75em 1.5em; }
+.clock-list.compact { gap: .5em 1em; }
+.clock-row { display: flex; gap: .6em; align-items: center; }
+.clock-row.done strong { text-decoration: line-through; }
+.clock-face path { fill: var(--panel-2); stroke: var(--border); stroke-width: 1.5; }
+.clock-face path.filled { fill: var(--danger); }
+.clock-face.full path.filled { fill: var(--accent); }
+.clock-info { display: flex; flex-direction: column; gap: .15em; }
+
+/* Link peeks */
+.link-peek { position: fixed; z-index: 3000; width: 320px; max-width: calc(100vw - 24px); background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0, 0, 0, .35); padding: .7em .8em; display: flex; gap: .7em; pointer-events: none; font-size: .9rem; }
+.link-peek img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+.link-peek p { margin: .3em 0 0; }
+
+/* Player-written character text */
+.player-written { border-left: 3px solid var(--accent); padding-left: 1em; }
+
+/* Safety tools */
+.safety-list { padding-left: 1.2em; }
+.safety-list li { margin: .2em 0; }
+.safety-reminder summary { margin: .25em 0; }
+.xcard { display: flex; align-items: center; gap: .6em; flex-wrap: wrap; margin: .5em 0 1em; }
+.xcard.small { margin: 0 0 .5em; }
+.xcard-button { background: var(--danger); color: #fff; border-color: var(--danger); font-weight: 700; }
+.xcard.small .xcard-button { width: 100%; justify-content: center; }
+.xcard-alert { position: fixed; top: 1em; left: 50%; transform: translateX(-50%); z-index: 2500; background: var(--danger); color: #fff; padding: .9em 1.2em; border-radius: var(--radius); box-shadow: 0 8px 30px rgba(0, 0, 0, .45); display: flex; gap: 1em; align-items: center; max-width: calc(100vw - 2em); flex-wrap: wrap; }
+
+/* Import */
+.import-sources { display: flex; flex-direction: column; gap: .5em; }
+
+@media (max-width: 800px) {
+  .web-layout { flex-direction: column; }
+  .web-side { width: 100%; }
+  .month-day { min-height: 3.2em; }
+}
+
+/* Small inline checkboxes ("Players know") */
+.inline-check, .form label.inline-check { display: inline-flex; flex-direction: row; align-items: center; gap: .3em; white-space: nowrap; color: inherit; }
+.inline-check input[type='checkbox'] { width: auto; }
+.add-extra { margin: 1em .5em 0 0; }
+/* The TV screen is for looking at: links there go nowhere, so nobody at the table wanders into the GM's view. */
+.players-screen .markdown a { pointer-events: none; color: inherit; text-decoration: none; border: none; }
+.players-screen .showing-view .markdown { font-size: 1.35rem; line-height: 1.6; }

@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Empty } from '../components'
 import { db, newId, type WorldMap } from '../db'
 import { useWorld } from '../hooks'
+import { renderPlayerFog } from '../fog'
 import {
   BACKGROUNDS,
   drawingInnerSvg,
@@ -104,6 +105,9 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     },
     [commit, drawing],
   )
+
+  // A fogged map's players' picture is remade once you're done drawing (not on every stroke).
+  useEffect(() => () => void renderPlayerFog(map.id).catch(() => {}), [map.id])
 
   // Autosave: the drawing is kept on the map, and the rendered picture replaces the map image.
   const lastSaved = useRef(map.drawing)

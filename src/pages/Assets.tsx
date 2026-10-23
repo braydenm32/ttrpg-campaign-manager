@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Empty, TagInput, VisibilityToggle } from '../components'
 import { db, type Asset } from '../db'
 import { formatBytes, saveFileAsAsset, useBlobUrl, useWorld } from '../hooks'
+import { ShowButton } from '../showing'
 
 export default function Assets() {
   const { worldId } = useWorld()
@@ -63,6 +64,9 @@ function AssetCard({ asset }: { asset: Asset }) {
       <input value={asset.name} onChange={(e) => update({ name: e.target.value })} />
       <div className="muted small">{formatBytes(asset.size)}</div>
       <TagInput tags={asset.tags} onChange={(tags) => update({ tags })} />
+      {kind === 'image' && !asset.tags.includes('fog') && (
+        <ShowButton worldId={asset.worldId} what={{ kind: 'image', title: asset.name.replace(/\.[^.]+$/, ''), assetId: asset.id }} />
+      )}
       <div className="row spread">
         <VisibilityToggle value={asset.visibility} onChange={(visibility) => update({ visibility })} />
         <div className="row">

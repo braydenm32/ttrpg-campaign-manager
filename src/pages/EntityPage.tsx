@@ -17,6 +17,10 @@ import { useViewMode } from '../viewMode'
 import { LastSeen, StatusBadge } from '../status'
 import { PrintButton } from '../print'
 import { AskGmBox } from '../players/Questions'
+import { ShowButton } from '../showing'
+import { CalDateInput, formatDate, toDays } from '../calendar'
+import { RelationsBox } from '../relations'
+import { ClocksBox } from '../clocks'
 
 export default function EntityPage() {
   const { worldId } = useWorld()
@@ -82,7 +86,8 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             {typeLabel(e, world).icon} {typeLabel(e, world).one}
             {e.type === 'item' && e.quantity != null && e.quantity !== 1 && ` · ×${e.quantity}`}
             {e.type === 'item' && e.heldBy && ` · carried by ${e.heldBy === 'party' ? 'the party' : (entities.find((x) => x.id === e.heldBy)?.name ?? 'someone')}`}
-            {e.type === 'event' && e.eventDate && ` · ${e.eventDate}`}
+            {e.type === 'event' &&
+              [formatDate(world?.calendar, e.eventWhen), e.eventDate].filter(Boolean).map((x) => ` · ${x}`)}
             {e.type === 'event' && ` · ${e.eventEra === 'campaign' ? 'during the campaign' : 'before the campaign'}`}
             {e.questStatus && ` · ${e.questStatus}`}
             {e.type === 'thread' && ` · ${THREAD_STATUS[e.threadStatus ?? 'open'].label}`}
@@ -102,6 +107,13 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
         {isGM ? (
           <div className="row">
             <PrintButton to={`/w/${worldId}/print/e/${e.id}`} />
+            {!e.template && (
+              <ShowButton
+                worldId={worldId}
+                what={{ kind: 'page', title: e.name, entityId: e.id }}
+                disabled={e.visibility === 'players' ? undefined : 'Reveal this page first: players can only be shown revealed pages'}
+              />
+            )}
             <HistoryButton entity={e} />
             <button onClick={onEdit}>✏️ Edit</button>
           </div>
@@ -135,12 +147,20 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           ) : (
             <p className="muted">No description yet.</p>
           )}
+          {e.playerBody && (
+            <section className="player-written">
+              <h2>✍️ In the player’s words</h2>
+              <Markdown text={e.playerBody} entities={entities} worldId={worldId} showSecrets={false} />
+            </section>
+          )}
           {isGM && e.gmNotes && (
             <div className="secret">
               <strong>GM notes</strong>
               <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
             </div>
           )}
+          {!e.template && <ClocksBox entity={e} isGM={isGM} worldId={worldId} />}
+          {!e.template && <RelationsBox entity={e} entities={entities} isGM={isGM} worldId={worldId} />}
           {world && <PlayerNotesBox world={world} entityId={e.id} entities={entities} />}
           {world && <AskGmBox world={world} entityId={e.id} />}
           {isGM && e.type === 'location' && <AddInside parent={e} />}
@@ -237,7 +257,9 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
   }, [dirty])
 
   const save = async () => {
-    await saveEntity({ ...d, name: d.name.trim() || 'Untitled', updatedAt: Date.now() })
+    // A calendar date puts the event in its place on the timeline.
+    const order = d.type === 'event' && d.eventWhen && world?.calendar ? { eventOrder: toDays(world.calendar, d.eventWhen) } : {}
+    await saveEntity({ ...d, ...order, name: d.name.trim() || 'Untitled', updatedAt: Date.now() })
     onDone()
   }
   const saveAsTemplate = async () => {
@@ -315,9 +337,21 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
           </label>
           {d.type === 'event' && (
             <>
+              {world?.calendar && (
+                <label>
+                  <span>
+                    Date on the calendar <Help topic="calendar" />
+                  </span>
+                  <CalDateInput calendar={world.calendar} value={d.eventWhen} onChange={(v) => set('eventWhen', v)} />
+                </label>
+              )}
               <label>
-                In-world date
-                <input value={d.eventDate ?? ''} onChange={(ev) => set('eventDate', ev.target.value)} placeholder="e.g. 1492 DR, Year of Three Ships" />
+                {world?.calendar ? 'Or describe when' : 'In-world date'}
+                <input
+                  value={d.eventDate ?? ''}
+                  onChange={(ev) => set('eventDate', ev.target.value)}
+                  placeholder={world?.calendar && d.eventWhen ? formatDate(world.calendar, d.eventWhen, false) : 'e.g. 1492 DR, Year of Three Ships'}
+                />
               </label>
               <label>
                 When
@@ -414,6 +448,15 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
             some characters only (:::for Wren and Silas). Names are suggested as you type.
           </small>
         </label>
+        {d.type === 'pc' && (
+          <label>
+            <span>
+              In the player’s words <Help topic="editCharacter" />
+            </span>
+            <textarea rows={4} value={d.playerBody ?? ''} onChange={(ev) => set('playerBody', ev.target.value || undefined)} />
+            <small className="muted">The player who claimed this character can write here themselves. Players can read it, so keep secrets out.</small>
+          </label>
+        )}
         <label>
           <span>
             GM notes (never shown to players) <Help topic="gmNotes" />

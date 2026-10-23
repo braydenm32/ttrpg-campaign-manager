@@ -5,10 +5,14 @@ import { Empty, VisibilityBadge } from '../components'
 import { blankEntity, db, type Entity } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
+import { formatDate, MonthGrid, WorldToday } from '../calendar'
+import { useWorldSessions } from '../threads'
 
 export default function Timeline() {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const { isGM } = useViewMode()
+  const sessions = useWorldSessions(worldId)
+  const [view, setView] = useState<'list' | 'month'>('list')
   const navigate = useNavigate()
   const entities = useVisibleEntities(worldId)
   const [place, setPlace] = useState('')
@@ -55,6 +59,17 @@ export default function Timeline() {
         <h1>
           ⏳ Timeline <Help topic="timeline" />
         </h1>
+        <div className="row">
+        {world?.calendar && (
+          <div className="segmented">
+            <button className={view === 'list' ? 'on' : ''} onClick={() => setView('list')}>
+              List
+            </button>
+            <button className={view === 'month' ? 'on' : ''} onClick={() => setView('month')}>
+              Month
+            </button>
+          </div>
+        )}
         <select value={place} onChange={(e) => setPlace(e.target.value)}>
           <option value="">Everywhere</option>
           {entities
@@ -65,8 +80,12 @@ export default function Timeline() {
               </option>
             ))}
         </select>
+        </div>
       </header>
-      {eras.map((era) => (
+      {world && <WorldToday world={world} isGM={isGM} />}
+      {view === 'month' && world?.calendar ? (
+        <MonthGrid world={world} events={events} sessions={sessions} />
+      ) : eras.map((era) => (
         <section key={era.key}>
           <div className="section-header">
             <h2>{era.title}</h2>
@@ -78,7 +97,7 @@ export default function Timeline() {
             <ol className="timeline">
               {era.items.map((e, i) => (
                 <li key={e.id}>
-                  <div className="when">{e.eventDate || '—'}</div>
+                  <div className="when">{formatDate(world?.calendar, e.eventWhen, false) || e.eventDate || '—'}</div>
                   <div className="what">
                     <Link to={`/w/${worldId}/e/${e.id}`}>{e.name}</Link> <VisibilityBadge value={e.visibility} />
                     {e.parentId && byId.get(e.parentId) && <span className="muted"> · {byId.get(e.parentId)!.name}</span>}

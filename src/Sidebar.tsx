@@ -61,6 +61,8 @@ export function WorldNav({ worldId }: { worldId: string }) {
   const hasLoot = entities.some((e) => e.type === 'item' && e.heldBy) || !!world?.partyCoin?.length
   const gmQuestions = useGmQuestions(isGM ? world : undefined)
   const waiting = gmQuestions.questions.filter((q) => !q.answer).length
+  const hasLinks = entities.some((e) => e.relations?.length)
+  const clockCount = entities.reduce((n, e) => n + (e.clocks ?? []).filter((c) => c.filled < c.segments).length, 0)
   const openThreads = entities.filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active')).length
 
   /** Locations as a tree: everything at the top, and the children of each place on the way to the current page. */
@@ -131,12 +133,24 @@ export function WorldNav({ worldId }: { worldId: string }) {
         </div>
       )}
       <NavLink to={`/w/${worldId}/timeline`} title={HELP.timeline}>⏳ Timeline</NavLink>
+      {(isGM || hasLinks) && (
+        <NavLink to={`/w/${worldId}/web`} title={HELP.relationWeb}>🕸️ Relationships</NavLink>
+      )}
+      {(isGM || clockCount > 0) && (
+        <NavLink to={`/w/${worldId}/clocks`} title={HELP.clocks}>
+          ⏱️ Clocks
+          {clockCount ? <span className="count">{clockCount}</span> : null}
+        </NavLink>
+      )}
       <NavLink to={`/w/${worldId}/threads`} title={isGM ? HELP.threads : HELP.leads}>
         🧵 {isGM ? 'Loose threads' : 'Leads'}
         {openThreads ? <span className="count">{openThreads}</span> : null}
       </NavLink>
       {(isGM || hasLoot) && (
         <NavLink to={`/w/${worldId}/loot`} title={HELP.loot}>🎒 Party loot</NavLink>
+      )}
+      {(isGM || !!world?.safety?.lines.length || !!world?.safety?.veils.length || !!world?.safety?.notes.trim() || !!world?.safety?.xcard) && (
+        <NavLink to={`/w/${worldId}/safety`} title={HELP.safety}>🛡️ Safety tools</NavLink>
       )}
       {(world?.shared?.memberOf || (!world?.shared && world?.cloud?.enabled)) && (
         <NavLink to={`/w/${worldId}/scratchpad`} title={world.shared ? HELP.scratchpad : HELP.gmPlayerNotes}>📝 {world.shared ? 'Scratchpad' : 'Players’ scratchpad'}</NavLink>
