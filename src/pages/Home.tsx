@@ -138,6 +138,17 @@ export default function Home() {
           </div>
         </section>
       )}
+      <footer className="legal-links muted small">
+        <a href="privacy.html" target="_blank" rel="noreferrer">
+          Privacy
+        </a>
+        <a href="terms.html" target="_blank" rel="noreferrer">
+          Terms
+        </a>
+        <a href="data-deletion.html" target="_blank" rel="noreferrer">
+          Delete your data
+        </a>
+      </footer>
       {account && <AccountModal onClose={() => setAccount(false)} />}
       {creating && <NewWorld onClose={() => setCreating(false)} onCreated={(id) => navigate(`/w/${id}`)} />}
     </div>

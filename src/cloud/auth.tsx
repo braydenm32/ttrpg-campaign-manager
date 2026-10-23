@@ -207,6 +207,19 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
         )}
         {error && <p className="error">{error}</p>}
         {message && <p className="notice">{message}</p>}
+        {mode !== 'reset' && (
+          <p className="muted small">
+            By continuing you agree to the{' '}
+            <a href="terms.html" target="_blank" rel="noreferrer">
+              terms of service
+            </a>{' '}
+            and{' '}
+            <a href="privacy.html" target="_blank" rel="noreferrer">
+              privacy policy
+            </a>
+            .
+          </p>
+        )}
         <div className="row spread">
           <div className="row small">
             {mode !== 'signin' && (

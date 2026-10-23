@@ -52,7 +52,8 @@ Afterwards, raise the email rate limit under **Authentication → Rate Limits** 
 1. Go to <https://console.cloud.google.com>, make a project called Campaign Codex.
 2. **APIs & Services → OAuth consent screen**: External, app name Campaign Codex, your email as
    support and developer contact, add the app address as the home page. Upload the sigil logo if you
-   like. Publish the app (otherwise only test users you list can sign in).
+   like. Under branding, add the privacy policy and terms links (see section 3). Publish the app
+   (otherwise only test users you list can sign in).
 3. **APIs & Services → Credentials → Create credentials → OAuth client ID**: type Web application.
    - Authorised JavaScript origins: `https://braydenm32.github.io`
    - Authorised redirect URIs: the callback address above.
@@ -64,8 +65,11 @@ Afterwards, raise the email rate limit under **Authentication → Rate Limits** 
 1. Go to <https://developers.facebook.com/apps>, **Create app**, choose "Authenticate and request data
    from users with Facebook Login", name it Campaign Codex.
 2. **Facebook Login → Settings**: add the callback address under Valid OAuth Redirect URIs.
-3. **App settings → Basic**: copy the App ID and App secret. Facebook also wants a privacy policy
-   URL and a data deletion instructions URL before the app can go Live.
+3. **App settings → Basic**: copy the App ID and App secret. Fill in:
+   - Privacy policy URL: `https://braydenm32.github.io/ttrpg-campaign-manager/privacy.html`
+   - Terms of service URL: `https://braydenm32.github.io/ttrpg-campaign-manager/terms.html`
+   - User data deletion: "Data deletion instructions URL",
+     `https://braydenm32.github.io/ttrpg-campaign-manager/data-deletion.html`
 4. Under **Use cases → Permissions**, make sure `email` and `public_profile` are added.
 5. Switch the app from Development to **Live** (top of the page).
 6. Supabase → **Authentication → Sign In / Providers → Facebook**: turn it on, paste both, save.

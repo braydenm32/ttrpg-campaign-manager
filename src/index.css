@@ -289,6 +289,7 @@ button.social { justify-content: center; font-weight: 600; padding: .55em 1em; }
 .social-icon { display: inline-grid; place-items: center; width: 1.3em; height: 1.3em; border-radius: 50%; font-family: Arial, sans-serif; font-weight: 700; color: #fff; }
 button.social.google .social-icon { background: #4285f4; }
 button.social.facebook .social-icon { background: #1877f2; }
+.legal-links { display: flex; gap: 1.2em; justify-content: center; margin-top: 3em; }
 .or-divider { text-align: center; margin: .2em 0; }
 @media (max-width: 800px) { .account-button { position: static; margin-bottom: 1em; } }
 
