@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<body style="margin:0;padding:0;background:#f4efe4;font-family:Georgia,'Times New Roman',serif;color:#2a2418;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4efe4;padding:32px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fbf8f1;border:1px solid #e2d6bd;border-radius:12px;">
+        <tr><td align="center" style="padding:32px 32px 8px;">
+          <img src="https://braydenm32.github.io/ttrpg-campaign-manager/icon-512.png" width="72" height="72" alt="Campaign Codex" style="display:block;border:0;">
+          <div style="font-size:22px;font-weight:bold;margin-top:12px;letter-spacing:.5px;">Campaign Codex</div>
+        </td></tr>
+        <tr><td style="padding:16px 32px 8px;font-size:16px;line-height:1.55;">
+          <h1 style="font-size:20px;margin:0 0 12px;">Your sign-in link</h1>
+          <p style="margin:0 0 20px;">Click below to sign in to Campaign Codex. The link works once and expires soon.</p>
+        </td></tr>
+        <tr><td align="center" style="padding:0 32px 24px;">
+          <a href="{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=magiclink" style="display:inline-block;background:#b8862b;color:#ffffff;text-decoration:none;font-weight:bold;font-family:Arial,sans-serif;font-size:16px;padding:12px 28px;border-radius:8px;">Sign in</a>
+        </td></tr>
+        <tr><td style="padding:0 32px 28px;font-size:13px;line-height:1.5;color:#6b604c;">
+          <p style="margin:0 0 8px;">If the button doesn’t work, copy this link into your browser:<br><a href="{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=magiclink" style="color:#8a5a12;word-break:break-all;">{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=magiclink</a></p>
+          <p style="margin:0;">If you didn’t ask to sign in, you can ignore this email.</p>
+        </td></tr>
+      </table>
+      <p style="font-size:12px;color:#8a7f69;margin:16px 0 0;font-family:Arial,sans-serif;">Campaign Codex · your worlds, kept safe</p>
+    </td></tr>
+  </table>
+</body>
+</html>

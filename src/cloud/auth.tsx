@@ -1,7 +1,70 @@
-import type { Session } from '@supabase/supabase-js'
+import type { EmailOtpType, Session } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
 import { Modal } from '../components'
-import { appUrl, supabase } from './client'
+import { Help } from '../help'
+import { appUrl, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
+
+type Provider = 'google' | 'facebook'
+const PROVIDERS: { id: Provider; label: string }[] = [
+  { id: 'google', label: 'Continue with Google' },
+  { id: 'facebook', label: 'Continue with Facebook' },
+]
+const RETURN_KEY = 'codex.returnTo'
+
+/** Which social logins are switched on in the Supabase dashboard, so buttons only appear once they work. */
+let providersPromise: Promise<Provider[]> | null = null
+function enabledProviders() {
+  providersPromise ??= fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_KEY } })
+    .then((r) => (r.ok ? r.json() : { external: {} }))
+    .then((s: { external?: Record<string, boolean> }) => PROVIDERS.map((p) => p.id).filter((id) => s.external?.[id]))
+    .catch(() => {
+      providersPromise = null
+      return []
+    })
+  return providersPromise
+}
+
+/**
+ * Social sign-in leaves the app and comes back to its front page, so remember where we were
+ * (an invite link, say) and go back there once signed in. See finishSignInRedirect.
+ */
+async function signInWith(provider: Provider) {
+  try {
+    sessionStorage.setItem(RETURN_KEY, JSON.stringify({ hash: window.location.hash, at: Date.now() }))
+  } catch {
+    // private window: we just land on the front page
+  }
+  const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: appUrl() } })
+  if (error) throw error
+}
+
+export function finishSignInRedirect() {
+  try {
+    const saved = sessionStorage.getItem(RETURN_KEY)
+    if (!saved) return
+    sessionStorage.removeItem(RETURN_KEY)
+    const { hash, at } = JSON.parse(saved) as { hash: string; at: number }
+    // Only a sign-in that just came back from Google or Facebook, not one abandoned earlier.
+    if (hash && Date.now() - at < 10 * 60_000 && hash !== window.location.hash) window.location.hash = hash
+  } catch {
+    // nothing to restore
+  }
+}
+
+/**
+ * Our own email templates link straight to the app (`?token_hash=…&type=…`) instead of a
+ * supabase.co address. Finish that here: returns the link type on success.
+ */
+export async function verifyEmailLink(): Promise<{ type?: EmailOtpType; error?: string } | null> {
+  const params = new URLSearchParams(window.location.search)
+  const token_hash = params.get('token_hash')
+  const type = params.get('type') as EmailOtpType | null
+  if (!token_hash || !type) return null
+  window.history.replaceState(null, '', window.location.pathname + window.location.hash)
+  const { error } = await supabase.auth.verifyOtp({ token_hash, type })
+  if (error) return { error: 'That link has expired or was already used. Sign in, or ask for a new email.' }
+  return { type }
+}
 
 export function useAuthSession() {
   const [session, setSession] = useState<Session | null>(null)
@@ -25,13 +88,19 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [providers, setProviders] = useState<Provider[]>([])
+  // The desktop app can't hand a Google or Facebook sign-in back to itself, so it keeps to email.
+  const desktop = '__TAURI_INTERNALS__' in window
+  useEffect(() => {
+    if (!desktop) enabledProviders().then(setProviders)
+  }, [desktop])
 
   if (user)
     return (
       <Modal title="Your account" onClose={onClose}>
         <div className="form">
           <p>
-            Signed in as <strong>{user.email}</strong>. Worlds you turn sync on for are backed up to the cloud and kept in step
+            Signed in as <strong>{user.email || user.user_metadata?.full_name || 'you'}</strong>. Worlds you turn sync on for are backed up to the cloud and kept in step
             across your devices.
           </p>
           <div className="row end">
@@ -87,6 +156,38 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
           An account lets you sync worlds between devices and share a read-only player view. Without one, everything still works on
           this device.
         </p>
+        {mode !== 'reset' && providers.length > 0 && (
+          <>
+            <div className="social-logins">
+              {PROVIDERS.filter((p) => providers.includes(p.id)).map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`social ${p.id}`}
+                  disabled={busy}
+                  onClick={async () => {
+                    setBusy(true)
+                    setError('')
+                    try {
+                      await signInWith(p.id)
+                    } catch (err) {
+                      setError((err as Error).message)
+                      setBusy(false)
+                    }
+                  }}
+                >
+                  <span className="social-icon" aria-hidden="true">
+                    {p.id === 'google' ? 'G' : 'f'}
+                  </span>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <p className="or-divider muted small">
+              or use your email <Help topic="socialLogin" />
+            </p>
+          </>
+        )}
         <label>
           Email
           <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -106,6 +207,19 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
         )}
         {error && <p className="error">{error}</p>}
         {message && <p className="notice">{message}</p>}
+        {mode !== 'reset' && (
+          <p className="muted small">
+            By continuing you agree to the{' '}
+            <a href="terms.html" target="_blank" rel="noreferrer">
+              terms of service
+            </a>{' '}
+            and{' '}
+            <a href="privacy.html" target="_blank" rel="noreferrer">
+              privacy policy
+            </a>
+            .
+          </p>
+        )}
         <div className="row spread">
           <div className="row small">
             {mode !== 'signin' && (

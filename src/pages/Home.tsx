@@ -39,7 +39,7 @@ export default function Home() {
     <div className="home">
       <header className="home-header">
         <button className="account-button" onClick={() => setAccount(true)}>
-          {user ? `☁️ ${user.email}` : '☁️ Sign in to sync'}
+          {user ? `☁️ ${user.email || user.user_metadata?.full_name || 'Signed in'}` : '☁️ Sign in to sync'}
         </button>
         <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />Campaign Codex</h1>
         <p>Your worlds, maps, NPCs and sessions, all in one place. Everything is saved on this device.</p>
@@ -138,6 +138,17 @@ export default function Home() {
           </div>
         </section>
       )}
+      <footer className="legal-links muted small">
+        <a href="privacy.html" target="_blank" rel="noreferrer">
+          Privacy
+        </a>
+        <a href="terms.html" target="_blank" rel="noreferrer">
+          Terms
+        </a>
+        <a href="data-deletion.html" target="_blank" rel="noreferrer">
+          Delete your data
+        </a>
+      </footer>
       {account && <AccountModal onClose={() => setAccount(false)} />}
       {creating && <NewWorld onClose={() => setCreating(false)} onCreated={(id) => navigate(`/w/${id}`)} />}
     </div>

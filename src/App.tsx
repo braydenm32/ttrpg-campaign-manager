@@ -4,7 +4,7 @@ import { Help } from './help'
 import { useWorld } from './hooks'
 import { WorldNav } from './Sidebar'
 import { ForcePlayerView, useViewMode, ViewModeProvider } from './viewMode'
-import { useAuthSession } from './cloud/auth'
+import { finishSignInRedirect, useAuthSession, verifyEmailLink } from './cloud/auth'
 import { supabase } from './cloud/client'
 import { leaveWorld } from './cloud/players'
 import { watchPlayerCopy } from './cloud/share'
@@ -92,14 +92,38 @@ function CloudBoot() {
   const [recovering, setRecovering] = useState(false)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [linkNotice, setLinkNotice] = useState('')
   useEffect(() => {
     if (user) startSync()
     else stopSync()
   }, [user])
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event) => event === 'PASSWORD_RECOVERY' && setRecovering(true))
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setRecovering(true)
+      if (event === 'SIGNED_IN') finishSignInRedirect()
+    })
+    verifyEmailLink().then((r) => {
+      if (!r) return
+      if (r.error) setLinkNotice(r.error)
+      else if (r.type === 'recovery') setRecovering(true)
+      else if (r.type === 'signup' || r.type === 'email') setLinkNotice('Your email is confirmed and you’re signed in. Welcome to Campaign Codex!')
+      else if (r.type === 'email_change') setLinkNotice('Your email address has been updated.')
+    })
     return () => data.subscription.unsubscribe()
   }, [])
+  if (linkNotice && !recovering)
+    return (
+      <Modal title="Campaign Codex account" onClose={() => setLinkNotice('')}>
+        <div className="form">
+          <p>{linkNotice}</p>
+          <div className="row end">
+            <button className="primary" onClick={() => setLinkNotice('')}>
+              OK
+            </button>
+          </div>
+        </div>
+      </Modal>
+    )
   if (!recovering) return null
   return (
     <Modal title="Choose a new password" onClose={() => setRecovering(false)}>

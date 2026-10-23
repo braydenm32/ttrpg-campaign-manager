@@ -114,6 +114,8 @@ export const HELP = {
   // Sharing and players
   cloudSync:
     'Sign in to keep this world in step across your devices. Your world is still saved on each device, so it works offline and catches up when you reconnect.',
+  socialLogin:
+    'Sign in with your Google or Facebook account instead of a password. If you already made an account with the same email, you’ll land in that same account. Not available in the desktop app yet, so use email there.',
   shareLink: 'A read-only link to everything you’ve revealed. No account needed. GM-only things are removed before anything is sent.',
   players:
     'Invite your players with a link. They sign in, join, claim their character and keep notes. They only ever receive what you’ve revealed to them.',
