@@ -1,10 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
-import { useState, type InputHTMLAttributes } from 'react'
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Empty } from '../components'
+import { DraftText, Empty } from '../components'
 import { blankLectern, db, ENTITY_LABELS, newId, type Combatant, type Entity, type LecternState } from '../db'
 import { modifierFrom, roll, rollDie } from '../dice'
+import { addCombatants, fieldOf, fromEntity, numberFrom } from '../encounters'
 import {
   generateNpc,
   generateShop,
@@ -23,6 +24,9 @@ import { TablesPanel } from '../tables'
 import { ThreadCard } from '../ThreadCard'
 import { newThread, threadLinks, useWorldSessions } from '../threads'
 import { useViewMode } from '../viewMode'
+import { LecternPrep } from '../prep'
+import { Soundboard } from '../sound/Soundboard'
+import { StatusBadge } from '../status'
 
 /**
  * The Lectern: one screen for running a session at the table.
@@ -68,9 +72,11 @@ export default function Lectern() {
           <LecternThreads lectern={lectern} entities={entities} worldId={worldId} sessionId={session.id} />
         </div>
         <div className="lectern-col">
+          <LecternPrep session={session} worldId={worldId} />
           <Initiative lectern={lectern} edit={edit} entities={entities} />
         </div>
         <div className="lectern-col">
+          <Soundboard worldId={worldId} compact />
           <Dice lectern={lectern} edit={edit} />
           <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
           <QuickNote sessionId={session.id} />
@@ -163,6 +169,7 @@ function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: 
                 {ENTITY_LABELS[e.type].icon} {e.name}
               </strong>
             </Link>
+            <StatusBadge entity={e} />
             <div className="row">
               <button className="ghost" title="Add to initiative" onClick={() => edit((l) => addCombatants(l, [fromEntity(e)]))}>
                 ⚔️
@@ -253,37 +260,10 @@ function LecternThreads({ lectern, entities, worldId, sessionId }: { lectern: Le
 
 const CONDITIONS = ['Blinded', 'Charmed', 'Concentrating', 'Deafened', 'Frightened', 'Grappled', 'Hidden', 'Invisible', 'Paralysed', 'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious']
 
-const field = (e: Entity, pattern: RegExp) => e.fields.find((f) => pattern.test(f.key.trim()))?.value
-const numberFrom = (text: string | undefined) => {
-  const m = text?.match(/\d+/)
-  return m ? Number(m[0]) : null
-}
-
-function fromEntity(e: Entity): Omit<Combatant, 'id'> {
-  const hp = numberFrom(field(e, /^(hp|hit points|health)$/i))
-  return {
-    name: e.name,
-    init: null,
-    hp,
-    maxHp: hp,
-    ac: field(e, /^(ac|armou?r class|armou?r|defen[cs]e|evasion)$/i),
-    side: e.type === 'pc' ? 'pc' : 'foe',
-    conditions: [],
-    entityId: e.id,
-  }
-}
+const field = fieldOf
 
 /** Initiative order: highest first, unrolled at the bottom, ties keep the order they were added. */
 const ordered = (cs: Combatant[]) => [...cs].sort((a, b) => (b.init ?? -Infinity) - (a.init ?? -Infinity))
-
-function addCombatants(l: LecternState, cs: Omit<Combatant, 'id'>[]) {
-  for (const c of cs) {
-    let name = c.name
-    // Two goblins become "Goblin" and "Goblin 2".
-    for (let n = 2; l.combat.combatants.some((x) => x.name === name); n++) name = `${c.name} ${n}`
-    l.combat.combatants.push({ ...c, name, id: newId() })
-  }
-}
 
 function Initiative({ lectern, edit, entities }: PanelProps & { entities: Entity[] }) {
   const { round, activeId } = lectern.combat
@@ -519,33 +499,6 @@ function HpControl({ c, onChange }: { c: Combatant; onChange: (fn: (c: Combatant
 const toNumber = (v: string) => {
   const n = parseInt(v, 10)
   return Number.isNaN(n) ? null : n
-}
-
-/**
- * A text box that keeps what you type locally and saves every change. Saved values come back a moment later,
- * so reading them straight back while typing would drop keystrokes.
- */
-function DraftText({
-  value,
-  onCommit,
-  multiline,
-  rows,
-  ...rest
-}: { value: string; onCommit: (v: string) => void; multiline?: boolean; rows?: number } & Omit<
-  InputHTMLAttributes<HTMLInputElement>,
-  'value' | 'onChange'
->) {
-  const [draft, setDraft] = useState<string | null>(null)
-  const props = {
-    value: draft ?? value,
-    onFocus: () => setDraft(value),
-    onBlur: () => setDraft(null),
-    onChange: (e: { target: { value: string } }) => {
-      setDraft(e.target.value)
-      onCommit(e.target.value)
-    },
-  }
-  return multiline ? <textarea rows={rows} placeholder={rest.placeholder} {...props} /> : <input {...rest} {...props} />
 }
 
 const QUICK_DICE = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100']

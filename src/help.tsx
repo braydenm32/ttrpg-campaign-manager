@@ -10,6 +10,8 @@ export const HELP = {
   overview: 'Your world at a glance: quick-add buttons, campaigns, open quests, loose threads and what changed lately.',
   viewingAs:
     'Switch to Player to preview exactly what your players can see. Anything marked 🔒 GM only, GM notes and secret passages disappear.',
+  previewAs:
+    'Pick one player to see the world exactly as they do: what’s revealed to everyone, plus pages revealed just to them and :::for passages for their character.',
   codex:
     'The codex holds every page in your world, grouped by type. Pages can sit inside places (a tavern inside a town), and the sidebar opens down to wherever you are.',
   quickAdd: 'Make a new page of any type in one click. It starts as 🔒 GM only, so nothing is revealed until you choose.',
@@ -30,6 +32,9 @@ export const HELP = {
   recentlyDeleted: 'Pages deleted on this device, or deleted on another device and synced here. Restore brings the page back as it was.',
   templates:
     'A template is a starting point for new pages, like a "Dungeon room" with the headings and details you always fill in. Templates are always GM only and never appear in lists. Make one with "Save as template" on any page.',
+  lifeStatus:
+    'Mark a character alive, dead, missing or captured. It shows in lists, on map pins, at the Lectern and on corkboards. Players only see it if you tick "Players know this".',
+  print: 'A clean copy to print or save as a PDF (choose "Save as PDF" in the print window). The player copy leaves out secrets, GM notes and anything not revealed.',
   customTypes: 'Add your own kinds of page, such as Ships, Spells or Gods of the Deep. Each gets its own section in the codex.',
 
   // Maps
@@ -56,6 +61,17 @@ export const HELP = {
     'Claude drafts a GM summary and a player recap from the transcript. "Copy for Claude" works with a Claude subscription for free; "Write it now" uses your own API key. You review both before saving.',
   lectern:
     'The Lectern is your screen while you run the session: the current scene, who is there, loose threads, initiative, dice, quick notes and improvised names, all on one page.',
+  prep:
+    'Plan the session: a strong start, the scenes you expect, secrets and clues, and fights ready to run. At the Lectern you tick scenes and clues off as they happen.',
+  strongStart: 'How the session opens. Starting in the middle of something happening gets the table going fast.',
+  clues:
+    'Things the players could learn, not tied to any one scene. Drop each one wherever it fits and tick it off when they find it; leftovers carry into your next prep.',
+  encounters:
+    'Build a fight ahead of time: who’s in it, how many, HP and AC. Pick NPC pages to read their HP and AC from their details. "Run" adds everyone to the Lectern’s initiative tracker.',
+  soundboard:
+    'Buttons for ambience, music and sound effects. Upload your own audio files, or add Syrinscape moods and elements. Tap to play, tap again to stop. Sounds keep playing as you move around the app.',
+  syrinscape:
+    'Control Syrinscape from here: keep its online player open, add your auth token once on this device, then paste the remote control link of any mood or element.',
   initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go.',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',
   quickNote: 'Jot something down mid-session. It is added to this session’s GM notes with the time.',
@@ -64,6 +80,8 @@ export const HELP = {
   improvise: 'Need a name or a tavern right now? Roll one here and save it into your world if it sticks.',
 
   // Tools
+  boards:
+    'A corkboard for mysteries, plots and politics. Pin pages and note cards, drag them about, and tie string between them with 🧶. Click a string to label or cut it. GM only.',
   generators: 'Roll up taverns, shops and NPCs without any AI. Save the ones you like; they start as GM only.',
   assets: 'Every file in this world: map images, portraits and handouts. Mark a file revealed to let players see it.',
   loot:
@@ -84,6 +102,10 @@ export const HELP = {
     'A co-GM sees and edits everything in this world, secrets included, from their own account. Only you can invite or remove co-GMs, manage players and links, or delete the cloud copy.',
   schedule:
     'Suggest a few dates for the next session. Players who joined mark each one yes, maybe or no, and you book the one that works. Booking makes the session with that date.',
+  questions:
+    'Ask your GM something privately: about a page, or anything at all. Only your GM sees your question, and only you see the answer.',
+  questionsGm:
+    'Questions your players sent you, privately. Your answer goes only to the player who asked. If they asked about a hidden page, you can reveal it to just them from here.',
   character: 'Who plays this character. Players claim their own character from here; you can release a claim from World settings.',
   aiTools: 'Keys for transcription and recaps. They stay on this device only: never synced and never in backups.',
 } as const

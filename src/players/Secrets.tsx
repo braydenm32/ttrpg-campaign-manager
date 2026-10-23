@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { Help } from '../help'
 import { useAuthSession } from '../cloud/auth'
 import { listPlayers } from '../cloud/players'
-import type { Entity, World } from '../db'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db, type Entity, type World } from '../db'
+import { useViewMode } from '../viewMode'
 
 export interface PlayerChoice {
   userId: string
@@ -91,5 +93,34 @@ export function RevealedToBadge({ entity, world, entities, isGM }: { entity: Ent
     <span className="badge reveal" title="GM-only, but these players can see it">
       🤫 Revealed to {shown.length ? shown.map((p) => p.name).join(', ') : `${entity.revealedTo.length} player${entity.revealedTo.length > 1 ? 's' : ''}`}
     </span>
+  )
+}
+
+/** In the sidebar while previewing the player view: see it as everyone, or as one player who has joined. */
+export function PreviewAsPicker({ world }: { world: World }) {
+  const { previewAs, setPreviewAs } = useViewMode()
+  const pcs = useLiveQuery(() => db.entities.where({ worldId: world.id }).filter((e) => e.type === 'pc').toArray(), [world.id]) ?? []
+  const players = useWorldPlayers(world, pcs)
+  if (!world.cloud?.enabled || !players.length) return null
+  return (
+    <label className="preview-as small">
+      <span>
+        As <Help topic="previewAs" />
+      </span>
+      <select
+        value={previewAs?.userId ?? ''}
+        onChange={(e) => {
+          const p = players.find((x) => x.userId === e.target.value)
+          setPreviewAs(p ? { userId: p.userId, name: p.name, characterNames: p.plays } : undefined)
+        }}
+      >
+        <option value="">Every player</option>
+        {players.map((p) => (
+          <option key={p.userId} value={p.userId}>
+            {playerLabel(p)}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 }

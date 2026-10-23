@@ -5,6 +5,7 @@ The order of these items is a starting point and will change as we see what matt
 ## Recently built
 
 - Random tables, page history and recently deleted pages, page templates and custom page types, party loot and coin purse, co-GMs, and session scheduling.
+- Preview as one player, session prep sheets (strong start, scenes, secrets and clues), encounters that load into the Lectern, character status (alive, dead, missing, captured) with "last seen", printing and PDFs, a soundboard (your own files and Syrinscape), corkboards, and private questions from players to the GM.
 
 ## Next up
 

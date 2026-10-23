@@ -3,29 +3,33 @@ import { Help } from '../help'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, TagInput, VisibilityBadge, VisibilityToggle } from '../components'
-import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, saveEntity, THREAD_STATUS, typeLabel, type Entity, type EntityType, type ThreadStatus } from '../db'
+import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, newId, PICKER_TYPES, saveEntity, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus } from '../db'
 import { HistoryButton } from '../History'
 import { TableRoller } from '../tables'
 import { URGENCY, useWorldSessions } from '../threads'
-import { saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
+import { asPlayerSees, saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
 import { CharacterOwnerBox } from '../players/Characters'
 import { PlayerNotesBox } from '../players/Notes'
 import { RevealedToBadge, RevealToPicker } from '../players/Secrets'
 import { useViewMode } from '../viewMode'
+import { LastSeen, StatusBadge } from '../status'
+import { PrintButton } from '../print'
+import { AskGmBox } from '../players/Questions'
 
 export default function EntityPage() {
   const { worldId } = useWorld()
   const { entityId = '' } = useParams()
   const [params, setParams] = useSearchParams()
-  const { isGM, canSee } = useViewMode()
-  const entity = useLiveQuery(() => db.entities.get(entityId), [entityId])
+  const { isGM, canSeeEntity } = useViewMode()
+  const stored = useLiveQuery(() => db.entities.get(entityId), [entityId])
   const editing = isGM && params.get('edit') === '1'
 
-  if (entity === undefined) return null
-  if (entity === null || entity.worldId !== worldId || !canSee(entity.visibility))
+  if (stored === undefined) return null
+  if (stored === null || stored.worldId !== worldId || stored.template && !isGM || !canSeeEntity(stored))
     return <Empty>This page doesn't exist or hasn't been revealed.</Empty>
+  const entity = isGM ? stored : asPlayerSees(stored)
 
   return editing ? (
     <EntityEditor key={entity.id} entity={entity} onDone={() => setParams({})} />
@@ -38,6 +42,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   const { worldId, world } = useWorld()
   const { isGM, canSee } = useViewMode()
   const entities = useVisibleEntities(worldId)
+  const sessions = useWorldSessions(worldId)
   const image = useAssetUrl(e.imageId)
   const pins =
     useLiveQuery(
@@ -82,16 +87,27 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             {e.questStatus && ` · ${e.questStatus}`}
             {e.type === 'thread' && ` · ${THREAD_STATUS[e.threadStatus ?? 'open'].label}`}
             {e.type === 'thread' && e.threadUrgency && e.threadUrgency !== 'normal' && ` · ${URGENCY[e.threadUrgency].icon} ${URGENCY[e.threadUrgency].label}`}
+            <LastSeen entity={e} sessions={sessions} worldId={worldId} />
           </div>
           <h1>
             {e.name} <VisibilityBadge value={e.visibility} /> <RevealedToBadge entity={e} world={world} entities={entities} isGM={isGM} />
           </h1>
+          {e.status && (
+            <p>
+              <StatusBadge entity={e} showAlive />
+            </p>
+          )}
           {e.summary && <p className="lead">{e.summary}</p>}
         </div>
-        {isGM && (
+        {isGM ? (
           <div className="row">
+            <PrintButton to={`/w/${worldId}/print/e/${e.id}`} />
             <HistoryButton entity={e} />
             <button onClick={onEdit}>✏️ Edit</button>
+          </div>
+        ) : (
+          <div className="row">
+            <PrintButton to={`/w/${worldId}/print/e/${e.id}`} />
           </div>
         )}
       </header>
@@ -126,6 +142,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             </div>
           )}
           {world && <PlayerNotesBox world={world} entityId={e.id} entities={entities} />}
+          {world && <AskGmBox world={world} entityId={e.id} />}
           {isGM && e.type === 'location' && <AddInside parent={e} />}
           {groups.map(([t, xs]) => (
             <section key={t}>
@@ -335,6 +352,27 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
                 <input type="number" min={0} value={d.quantity ?? 1} onChange={(ev) => set('quantity', ev.target.value === '' ? undefined : Math.max(0, Number(ev.target.value)))} />
               </label>
             </>
+          )}
+          {HAS_STATUS.includes(d.type) && (
+            <label>
+              <span>
+                Status <Help topic="lifeStatus" />
+              </span>
+              <select value={d.status ?? ''} onChange={(ev) => set('status', (ev.target.value || undefined) as Entity['status'])}>
+                <option value="">(not set)</option>
+                {(Object.keys(LIFE_STATUS) as LifeStatus[]).map((k) => (
+                  <option key={k} value={k}>
+                    {LIFE_STATUS[k].icon} {LIFE_STATUS[k].label}
+                  </option>
+                ))}
+              </select>
+              {d.status && (
+                <span className="row small">
+                  <input type="checkbox" checked={!!d.statusKnown} onChange={(ev) => set('statusKnown', ev.target.checked || undefined)} />
+                  Players know this
+                </span>
+              )}
+            </label>
           )}
           {d.type === 'quest' && (
             <label>

@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { RecapPanel } from '../ai/RecapPanel'
 import { TranscriptPanel } from '../ai/TranscriptPanel'
 import { Empty, VisibilityToggle } from '../components'
@@ -20,6 +20,8 @@ import {
 import { ThreadCard } from '../ThreadCard'
 import { newThread, useWorldSessions } from '../threads'
 import { useViewMode } from '../viewMode'
+import { PrepSheet } from '../prep'
+import { PrintButton } from '../print'
 
 export default function SessionPage() {
   const { worldId, world } = useWorld()
@@ -29,7 +31,9 @@ export default function SessionPage() {
   const session = useLiveQuery(() => db.sessions.get(sessionId), [sessionId])
   const campaign = useLiveQuery(() => (session ? db.campaigns.get(session.campaignId) : undefined), [session?.campaignId])
   const entities = useVisibleEntities(worldId)
-  const [tab, setTab] = useState<'notes' | 'recap'>('notes')
+  const [params, setParams] = useSearchParams()
+  const tab = (['notes', 'recap', 'prep'] as const).find((t) => t === params.get('tab')) ?? 'notes'
+  const setTab = (t: 'notes' | 'recap' | 'prep') => setParams(t === 'notes' ? {} : { tab: t }, { replace: true })
 
   if (session === undefined) return null
   if (session === null || !canSee(session.visibility) || (campaign && campaign.worldId !== worldId))
@@ -44,7 +48,10 @@ export default function SessionPage() {
         <h1>
           #{session.number} {session.title}
         </h1>
-        <div className="muted">{session.date}</div>
+        <div className="row spread">
+          <div className="muted">{session.date}</div>
+          <PrintButton to={`/w/${worldId}/print/s/${session.id}`} />
+        </div>
         {session.recap ? (
           <Markdown text={session.recap} entities={entities} worldId={worldId} showSecrets={false} />
         ) : (
@@ -71,6 +78,7 @@ export default function SessionPage() {
         <div className="row">
           <input type="date" value={session.date} onChange={(e) => update({ date: e.target.value })} />
           <VisibilityToggle value={session.visibility} onChange={(v) => update({ visibility: v })} />
+          <PrintButton to={`/w/${worldId}/print/s/${session.id}`} />
           <Link className="button primary" to={`/w/${worldId}/s/${session.id}/lectern`}>
             📖 Run at the Lectern
           </Link>
@@ -81,6 +89,9 @@ export default function SessionPage() {
       {world && <RecapPanel world={world} session={session} entities={entities} />}
 
       <div className="segmented tabs">
+        <button className={tab === 'prep' ? 'on' : ''} onClick={() => setTab('prep')}>
+          📋 Prep
+        </button>
         <button className={tab === 'notes' ? 'on' : ''} onClick={() => setTab('notes')}>
           🔒 GM notes
         </button>
@@ -89,7 +100,9 @@ export default function SessionPage() {
         </button>
       </div>
       <Help topic="session" />
-      {tab === 'notes' ? (
+      {tab === 'prep' ? (
+        <PrepSheet session={session} entities={entities} worldId={worldId} />
+      ) : tab === 'notes' ? (
         <textarea
           rows={14}
           value={session.notes}
@@ -105,10 +118,12 @@ export default function SessionPage() {
           onChange={(v) => update({ recap: v })}
         />
       )}
-      <details>
-        <summary>Preview</summary>
-        <Markdown text={tab === 'notes' ? session.notes : session.recap} entities={entities} worldId={worldId} showSecrets />
-      </details>
+      {tab !== 'prep' && (
+        <details>
+          <summary>Preview</summary>
+          <Markdown text={tab === 'notes' ? session.notes : session.recap} entities={entities} worldId={worldId} showSecrets />
+        </details>
+      )}
 
       <section>
         <h2>Featured in this session</h2>

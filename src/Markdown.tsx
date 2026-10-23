@@ -3,6 +3,7 @@ import { marked } from 'marked'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Entity } from './db'
+import { characterNames, useViewMode } from './viewMode'
 
 type Segment = { kind: 'text' | 'gm' | 'foryou'; body: string } | { kind: 'for'; names: string[]; body: string }
 
@@ -77,12 +78,18 @@ export function Markdown({
   showSecrets: boolean
 }) {
   const navigate = useNavigate()
+  // Previewing as one player: passages for their characters show as they would for them.
+  const { previewAs } = useViewMode()
+  const forViewer = (previewAs ? characterNames(previewAs.characterNames) : []).join('\n')
   const html = useMemo(() => {
+    const viewer = new Set(forViewer.split('\n').filter(Boolean))
     const byName = new Map(entities.map((e) => [e.name.trim().toLowerCase(), e]))
     let src = splitSecrets(text)
       .map((seg) => {
         if (seg.kind === 'text') return seg.body
         if (seg.kind === 'foryou') return `<div class="secret for-you">\n\n${seg.body}\n\n</div>`
+        if (!showSecrets && seg.kind === 'for' && seg.names.some((n) => viewer.has(n.toLowerCase())))
+          return `<div class="secret for-you">\n\n${seg.body}\n\n</div>`
         if (!showSecrets) return ''
         if (seg.kind !== 'for') return `<div class="secret">\n\n${seg.body}\n\n</div>`
         return `<div class="secret for-some" data-for="${escapeHtml(seg.names.join(', ') || 'nobody yet')}">\n\n${seg.body}\n\n</div>`
@@ -95,7 +102,7 @@ export function Markdown({
       return `<a class="wikilink" href="#/w/${worldId}/e/${target.id}" data-internal="1">${shown}</a>`
     })
     return DOMPurify.sanitize(marked.parse(src, { async: false }) as string)
-  }, [text, entities, worldId, showSecrets])
+  }, [text, entities, worldId, showSecrets, forViewer])
 
   return (
     <div

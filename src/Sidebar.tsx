@@ -6,6 +6,7 @@ import { db, ENTITY_LABELS, ENTITY_TYPES, type CustomType, type Entity, type Ent
 import { useVisibleEntities, useWorld } from './hooks'
 import { useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
+import { useGmQuestions } from './players/Questions'
 
 /** Longest list shown under a codex section before linking to the full list. */
 const MAX_CHILDREN = 25
@@ -58,6 +59,8 @@ export function WorldNav({ worldId }: { worldId: string }) {
   const countOf = (t: EntityType) => entities.filter((e) => e.type === t).length
   const kind = at('type/custom/:kind')?.kind ?? (currentEntity?.type === 'custom' ? currentEntity.customType : undefined)
   const hasLoot = entities.some((e) => e.type === 'item' && e.heldBy) || !!world?.partyCoin?.length
+  const gmQuestions = useGmQuestions(isGM ? world : undefined)
+  const waiting = gmQuestions.questions.filter((q) => !q.answer).length
   const openThreads = entities.filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active')).length
 
   /** Locations as a tree: everything at the top, and the children of each place on the way to the current page. */
@@ -138,6 +141,17 @@ export function WorldNav({ worldId }: { worldId: string }) {
       {(world?.shared?.memberOf || (!world?.shared && world?.cloud?.enabled)) && (
         <NavLink to={`/w/${worldId}/scratchpad`} title={world.shared ? HELP.scratchpad : HELP.gmPlayerNotes}>📝 {world.shared ? 'Scratchpad' : 'Players’ scratchpad'}</NavLink>
       )}
+      {world?.shared?.memberOf && (
+        <NavLink to={`/w/${worldId}/questions`} title={HELP.questions}>
+          ❓ Questions for the GM
+        </NavLink>
+      )}
+      {isGM && gmQuestions.available && (
+        <NavLink to={`/w/${worldId}/questions`} title={HELP.questionsGm}>
+          ❓ Players’ questions
+          {waiting ? <span className="count">{waiting}</span> : null}
+        </NavLink>
+      )}
 
       <div className="nav-heading" title={HELP.campaign}>Campaigns</div>
       {campaigns.map((c) => {
@@ -212,6 +226,8 @@ export function WorldNav({ worldId }: { worldId: string }) {
           <div className="nav-heading">GM tools</div>
           <NavLink to={`/w/${worldId}/generators`} title={HELP.generators}>🎰 Generators</NavLink>
           <NavLink to={`/w/${worldId}/type/table`} title={HELP.randomTables}>🎲 Random tables</NavLink>
+          <NavLink to={`/w/${worldId}/boards`} title={HELP.boards}>📌 Corkboards</NavLink>
+          <NavLink to={`/w/${worldId}/sounds`} title={HELP.soundboard}>🎵 Soundboard</NavLink>
           <NavLink to={`/w/${worldId}/assets`} title={HELP.assets}>📁 Assets</NavLink>
           <NavLink to={`/w/${worldId}/settings`}>⚙️ World settings</NavLink>
         </>
