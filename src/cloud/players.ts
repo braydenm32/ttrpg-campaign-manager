@@ -1,4 +1,5 @@
-import { db, type Availability, type PlayerNote, type SharedInfo } from '../db'
+import { db, type Availability, type PlayerNote, type PlayerQuestion, type SharedInfo } from '../db'
+import { tellPlayers } from './sync'
 import { appUrl, supabase, SUPABASE_URL } from './client'
 import { storePlayerCopy, tellOtherPlayers, type SharedPayload } from './share'
 
@@ -133,12 +134,12 @@ export async function loadMemberWorld(cloudId: string): Promise<string> {
     fetch(`${SUPABASE_URL}/functions/v1/shared-asset?world=${encodeURIComponent(cloudId)}&id=${encodeURIComponent(assetId)}`, {
       headers: access ? { Authorization: `Bearer ${access}` } : {},
     })
-  const p = data as SharedPayload & Pick<SharedInfo, 'me' | 'members' | 'claims' | 'notes' | 'availability'>
+  const p = data as SharedPayload & Pick<SharedInfo, 'me' | 'members' | 'claims' | 'notes' | 'availability' | 'questions'>
   return storePlayerCopy(
     p,
     memberWorldId(cloudId),
     `@m${cloudId.slice(0, 8)}`,
-    { memberOf: cloudId, me: p.me, members: p.members, claims: p.claims, notes: p.notes, availability: p.availability },
+    { memberOf: cloudId, me: p.me, members: p.members, claims: p.claims, notes: p.notes, availability: p.availability, questions: p.questions },
     fetchAsset,
   )
 }
@@ -217,6 +218,62 @@ export async function setAvailability(cloudId: string, optionId: string, answer:
       w.shared.availability = answer ? [...rest, { optionId, userId: me, answer }] : rest
     })
   tellOtherPlayers(cloudId)
+}
+
+// ---- Questions to the GM ----
+
+/** A player asks the GM something about a page ('' for anything else). */
+export async function askQuestion(cloudId: string, localEntityId: string, body: string) {
+  const { data, error } = await supabase.rpc('ask_question', { wid: cloudId, eid: localEntityId ? cloudEntityId(localEntityId) : '', body })
+  if (error) throw error
+  await db.worlds
+    .where('id')
+    .equals(memberWorldId(cloudId))
+    .modify((w) => {
+      if (!w.shared) return
+      w.shared.questions = [...(w.shared.questions ?? []), { id: data as string, entityId: localEntityId, body, createdAt: new Date().toISOString() }]
+    })
+}
+
+/** A player takes back a question they asked. */
+export async function withdrawQuestion(cloudId: string, questionId: string) {
+  const { error } = await supabase.rpc('withdraw_question', { qid: questionId })
+  if (error) throw error
+  await db.worlds
+    .where('id')
+    .equals(memberWorldId(cloudId))
+    .modify((w) => {
+      if (w.shared) w.shared.questions = (w.shared.questions ?? []).filter((q) => q.id !== questionId)
+    })
+}
+
+/** Every player's questions in a world (for the GM), newest first. entityId is the GM's own page id. */
+export async function listQuestions(worldId: string): Promise<PlayerQuestion[]> {
+  const { data, error } = await supabase
+    .from('player_questions')
+    .select('id, entity_id, user_id, body, answer, answered_at, created_at')
+    .eq('world_id', worldId)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data.map((r) => ({ id: r.id, entityId: r.entity_id, userId: r.user_id, body: r.body, answer: r.answer, answeredAt: r.answered_at, createdAt: r.created_at }))
+}
+
+/** The GM answers (or changes an answer); an empty answer marks it unanswered again. */
+export async function answerQuestion(worldId: string, questionId: string, answer: string) {
+  const a = answer.trim()
+  const { error } = await supabase
+    .from('player_questions')
+    .update({ answer: a || null, answered_at: a ? new Date().toISOString() : null })
+    .eq('world_id', worldId)
+    .eq('id', questionId)
+  if (error) throw error
+  await tellPlayers(worldId)
+}
+
+export async function deleteQuestion(worldId: string, questionId: string) {
+  const { error } = await supabase.from('player_questions').delete().eq('world_id', worldId).eq('id', questionId)
+  if (error) throw error
+  await tellPlayers(worldId)
 }
 
 export async function leaveWorld(cloudId: string) {

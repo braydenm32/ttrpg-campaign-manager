@@ -461,3 +461,82 @@ input[type=color] { width: 3em; height: 2.2em; padding: 2px; }
 .answers { display: flex; flex-wrap: wrap; gap: .3em .8em; margin-top: .3em; color: var(--muted); }
 .answer.yes { color: var(--text); }
 .table-roller select { flex: 1; min-width: 0; }
+
+/* Preview as one player */
+.preview-as { display: flex; align-items: center; gap: .4em; }
+.preview-as select { flex: 1; min-width: 0; }
+
+/* Character status */
+.tag.status-life { white-space: nowrap; }
+.tag.status-dead { border-color: var(--danger); }
+.tag.status-missing, .tag.status-captured { border-color: var(--accent); }
+
+/* Session prep */
+.prep { display: flex; flex-direction: column; gap: .6em; }
+.prep h3 { margin: .6em 0 0; }
+.check-list { display: flex; flex-direction: column; gap: .3em; }
+.check-item { align-items: center; }
+.check-item input[type='text'], .check-item input:not([type]) { flex: 1; }
+.check-item.done input:not([type='checkbox']), label.check-item.done { text-decoration: line-through; color: var(--muted); }
+label.check-item { display: flex; gap: .4em; align-items: flex-start; font-size: .9em; }
+.encounters { display: flex; flex-direction: column; gap: .6em; }
+.encounter summary { cursor: pointer; }
+.foe-table { width: 100%; border-collapse: collapse; font-size: .9em; }
+.foe-table th { text-align: left; color: var(--muted); font-weight: normal; }
+.foe-table td, .foe-table th { padding: .2em .3em; vertical-align: middle; }
+.foe-table .num-cell { width: 4.5em; }
+
+/* Soundboard */
+.sound-group { display: flex; flex-direction: column; gap: .3em; margin-bottom: .5em; }
+.sound-button { display: inline-flex; align-items: center; gap: .3em; }
+.sound-button input[type='range'] { width: 70px; }
+.sound-table { width: 100%; border-collapse: collapse; }
+.sound-table td, .sound-table th { padding: .3em; text-align: left; vertical-align: top; }
+
+/* Corkboards */
+.board-toolbar { margin-bottom: .6em; }
+.board-toolbar .string-edit input { width: 14em; }
+.board-wrap { overflow: auto; height: calc(100vh - 230px); min-height: 360px; border: 1px solid var(--border); border-radius: var(--radius); }
+.board { position: relative; background-color: #8b6a43; background-image: radial-gradient(rgba(0, 0, 0, .12) 1px, transparent 1.5px), radial-gradient(rgba(255, 255, 255, .07) 1px, transparent 1.5px); background-size: 7px 7px, 11px 11px; touch-action: none; }
+.board.connecting .board-card { cursor: crosshair; }
+.board-strings { position: absolute; inset: 0; pointer-events: none; }
+.board-string { pointer-events: stroke; cursor: pointer; }
+.board-string .hit { stroke: transparent; stroke-width: 14; fill: none; }
+.board-string .line { stroke: #b3261e; stroke-width: 2.5; fill: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .4)); }
+.board-string.selected .line { stroke: #ffcf4d; }
+.board-string text { fill: #fff; font-size: 13px; paint-order: stroke; stroke: rgba(0, 0, 0, .7); stroke-width: 3px; pointer-events: none; }
+.board-card { position: absolute; padding: 1.1em .7em .6em; border-radius: 4px; box-shadow: 0 3px 8px rgba(0, 0, 0, .35); cursor: grab; display: flex; flex-direction: column; gap: .25em; user-select: none; }
+.board-card.page-card { background: var(--panel); border: 1px solid var(--border); }
+.board-card.note-card { color: #2a241b; }
+.board-card.note-card textarea { background: transparent; border: none; color: inherit; resize: none; font: inherit; padding: 0; }
+.board-card.dragging { cursor: grabbing; box-shadow: 0 8px 20px rgba(0, 0, 0, .45); z-index: 2; }
+.board-card.connect-from { outline: 3px solid #ffcf4d; }
+.board-pin { position: absolute; top: 2px; left: 50%; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff8a80, #b3261e); box-shadow: 0 1px 2px rgba(0, 0, 0, .5); }
+.board-card-tools { position: absolute; top: 0; right: 0; display: none; }
+.board-card:hover .board-card-tools, .board-card:focus-within .board-card-tools { display: flex; }
+.board-card-tools button { padding: .1em .3em; font-size: .85em; }
+@media (hover: none) { .board-card-tools { display: flex; } }
+
+/* Questions */
+.questions { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .5em; }
+.question .answer { border-left: 3px solid var(--accent); padding-left: .6em; }
+.ask-gm { margin-top: 1em; }
+
+/* Print */
+.print-page { max-width: 800px; margin: 0 auto; padding: 1.5em; }
+.print-controls { margin-bottom: 1.5em; align-items: center; }
+.print-image { max-width: 260px; float: right; margin: 0 0 1em 1em; border-radius: 6px; }
+.print-section { break-inside: avoid-page; }
+.print-checks { list-style: none; padding-left: 0; }
+.print-encounter { break-inside: avoid; }
+@media print {
+  :root { --bg: #fff; --panel: #fff; --panel-2: #f3f3f3; --border: #bbb; --text: #000; --muted: #555; --link: #000; --secret-bg: #f4f4f4; --secret-border: #888; color-scheme: light; }
+  body { background: #fff; }
+  .print-controls, .sidebar, .player-banner, .help { display: none !important; }
+  .print-page { padding: 0; max-width: none; }
+  a { color: inherit; text-decoration: none; }
+}
+.check-item input[type='checkbox'] { width: auto; flex: none; }
+.check-item > input:not([type='checkbox']) { flex: 1; min-width: 0; }
+.encounter .encounter-name { flex: 1; font-weight: 600; }
+.row > input[type='checkbox'], .row > input[type='radio'] { flex: none; }

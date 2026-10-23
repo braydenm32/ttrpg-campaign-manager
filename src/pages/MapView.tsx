@@ -9,6 +9,7 @@ import { Empty, VisibilityBadge, VisibilityToggle } from '../components'
 import { blankEntity, db, deleteMap, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type Pin, type WorldMap } from '../db'
 import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
+import { StatusBadge, statusIcon } from '../status'
 import { SecretTextarea } from '../SecretTextarea'
 import { useViewMode } from '../viewMode'
 
@@ -143,7 +144,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
           <ResizeWatcher panelOpen={!!selected || showSettings} />
           {pins.map((p) => {
             const entity = p.entityId ? byId.get(p.entityId) : undefined
-            const label = p.label || entity?.name || 'Pin'
+            const label = `${statusIcon(entity)} ${p.label || entity?.name || 'Pin'}`.trim()
             const handlers = {
               click: (ev: L.LeafletMouseEvent) => {
                 if (tool !== 'select') return
@@ -272,6 +273,7 @@ function PinDetails({
           ×
         </button>
       </header>
+      {entity?.status && <StatusBadge entity={entity} />}
       {entity?.summary && <p className="lead">{entity.summary}</p>}
       {pin.note && <Markdown text={pin.note} entities={entities} worldId={worldId} showSecrets={isGM} />}
       <div className="row wrap">

@@ -13,6 +13,7 @@ import { Modal } from './components'
 import SharedWorld from './pages/SharedWorld'
 import JoinWorld from './pages/JoinWorld'
 import { ChooseCharacterBanner } from './players/Characters'
+import { PreviewAsPicker } from './players/Secrets'
 import { useCharacterOwners } from './players/owners'
 import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
@@ -31,6 +32,11 @@ import Assets from './pages/Assets'
 import Generators from './pages/Generators'
 import PartyLoot from './pages/PartyLoot'
 import WorldSettings from './pages/WorldSettings'
+import PrintPage from './print'
+import Boards from './pages/Boards'
+import BoardView from './pages/BoardView'
+import Sounds from './pages/Sounds'
+import Questions from './pages/Questions'
 
 export default function App() {
   return (
@@ -41,6 +47,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/shared/:token" element={<SharedWorld />} />
           <Route path="/join/:token" element={<JoinWorld />} />
+          <Route path="/w/:worldId/print/:kind/:id" element={<PrintPage />} />
           <Route path="/w/:worldId" element={<WorldLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="type/:type" element={<EntityList />} />
@@ -59,6 +66,10 @@ export default function App() {
             <Route path="assets" element={<Assets />} />
             <Route path="generators" element={<Generators />} />
             <Route path="settings" element={<WorldSettings />} />
+            <Route path="boards" element={<Boards />} />
+            <Route path="boards/:boardId" element={<BoardView />} />
+            <Route path="sounds" element={<Sounds />} />
+            <Route path="questions" element={<Questions />} />
           </Route>
           <Route path="*" element={<Home />} />
         </Routes>
@@ -129,7 +140,7 @@ function SyncBadge() {
 
 function WorldShell() {
   const { worldId, world } = useWorld()
-  const { isGM, setMode } = useViewMode()
+  const { isGM, setMode, previewAs } = useViewMode()
   const shared = world?.shared
   const [shareError, setShareError] = useState('')
   const token = shared?.token
@@ -195,6 +206,7 @@ function WorldShell() {
             <button className={isGM ? 'on' : ''} onClick={() => setMode('gm')}>GM</button>
             <button className={!isGM ? 'on' : ''} onClick={() => setMode('player')}>Player</button>
           </div>
+          {!isGM && <PreviewAsPicker world={world} />}
         </div>
         )}
       </aside>
@@ -203,7 +215,9 @@ function WorldShell() {
         {memberOf && <ChooseCharacterBanner world={world} />}
         {!isGM && !shared && (
           <div className="player-banner">
-            Player view: you're seeing only what's been revealed to players.
+            {previewAs
+              ? `Player view as ${previewAs.name}: what's revealed to everyone, plus what's just for ${previewAs.characterNames.join(' and ') || previewAs.name}.`
+              : "Player view: you're seeing only what's been revealed to players."}
             <button onClick={() => setMode('gm')}>Back to GM view</button>
           </div>
         )}

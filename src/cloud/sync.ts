@@ -25,7 +25,7 @@ const EDIT_DELAY = 3000
 /** The safety-net check, in case a Realtime message was missed. Paused while the app is hidden. */
 const POLL_EVERY = 5 * 60_000
 
-export const SYNCED_TABLES = ['worlds', 'campaigns', 'entities', 'maps', 'pins', 'sessions', 'assets'] as const
+export const SYNCED_TABLES = ['worlds', 'campaigns', 'entities', 'maps', 'pins', 'sessions', 'assets', 'boards', 'sounds'] as const
 type SyncedTable = (typeof SYNCED_TABLES)[number]
 
 interface Row {
@@ -89,7 +89,7 @@ async function localRows(worldId: string): Promise<Row[]> {
   const out: Row[] = []
   const world = await db.worlds.get(worldId)
   if (world) out.push({ table: 'worlds', id: world.id, data: toData('worlds', world as never) })
-  for (const table of ['campaigns', 'entities', 'maps', 'pins', 'sessions'] as const) {
+  for (const table of ['campaigns', 'entities', 'maps', 'pins', 'sessions', 'boards', 'sounds'] as const) {
     const rows = await tableOf(table).where({ worldId }).toArray()
     for (const r of rows) out.push({ table, id: r.id as string, data: toData(table, r) })
   }
@@ -129,6 +129,8 @@ async function pullWorld(worldId: string) {
 }
 
 async function applyRemote(worldId: string, table: SyncedTable, id: string, data: Record<string, unknown> | null, deleted: boolean) {
+  // A kind of row this version of the app doesn't know about: skip it rather than fail the whole sync.
+  if (!SYNCED_TABLES.includes(table)) return
   const key = metaKey(table, id)
   const meta = await db.syncMeta.get(key)
   const local = await tableOf(table).get(id)
@@ -300,6 +302,9 @@ async function notifyShareViewers(worldId: string) {
   const names = [`members:${worldId}`, ...(token ? [`share:${token}`] : [])]
   await Promise.all(names.map(broadcastChanged))
 }
+
+/** Tells the players who joined a world to refresh their copy (after the GM answers a question, say). */
+export const tellPlayers = (worldId: string) => broadcastChanged(`members:${worldId}`)
 
 async function broadcastChanged(name: string) {
   const ch = supabase.channel(name)

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { Help } from '../help'
 import { Link, useParams } from 'react-router-dom'
 import { Empty, VisibilityBadge } from '../components'
+import { StatusBadge } from '../status'
 import { ENTITY_TYPES, typeLabel, type Entity, type EntityType } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { NewPageButton } from '../NewPage'
@@ -80,6 +81,7 @@ function EntityCard({ worldId, entity: e }: { worldId: string; entity: Entity })
       {e.summary && <p>{e.summary}</p>}
       <div className="tags">
         {e.questStatus && <span className={`tag status-${e.questStatus}`}>{e.questStatus}</span>}
+        <StatusBadge entity={e} />
         {e.type === 'table' && <span className="tag">{e.entries?.filter((x) => x.trim()).length ?? 0} entries</span>}
         {e.tags.map((t) => (
           <span key={t} className="tag">

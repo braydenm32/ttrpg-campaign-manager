@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { db, type Asset } from './db'
+import { db, type Asset, type Entity } from './db'
 import { useViewMode } from './viewMode'
 
 /** Object URL for a stored asset, revoked automatically. */
@@ -30,17 +30,35 @@ export function useWorld() {
 
 /** All entities in the world the current viewer is allowed to see (templates aren't real pages, so they're left out). */
 export function useVisibleEntities(worldId: string) {
-  const { isGM } = useViewMode()
+  const { isGM, previewAs } = useViewMode()
+  const as = previewAs?.userId
   return (
     useLiveQuery(
-      () =>
-        db.entities
+      async () => {
+        const list = await db.entities
           .where({ worldId })
-          .filter((e) => !e.template && (isGM || e.visibility === 'players'))
-          .sortBy('name'),
-      [worldId, isGM],
+          .filter((e) => !e.template && (isGM || e.visibility === 'players' || (!!as && !!e.revealedTo?.includes(as))))
+          .sortBy('name')
+        return isGM ? list : list.map(asPlayerSees)
+      },
+      [worldId, isGM, as],
     ) ?? []
   )
+}
+
+/**
+ * A page as a player's copy has it, for the GM's player preview: GM notes gone, a page revealed to
+ * one player flagged as theirs, and a status the players don't know left out. The server does the
+ * same in public.player_view; player copies already arrive this way.
+ */
+export function asPlayerSees(e: Entity): Entity {
+  return {
+    ...e,
+    gmNotes: '',
+    secretForYou: e.secretForYou || e.visibility !== 'players',
+    visibility: 'players',
+    status: e.statusKnown ? e.status : undefined,
+  }
 }
 
 /** The world's page templates (GM only). */

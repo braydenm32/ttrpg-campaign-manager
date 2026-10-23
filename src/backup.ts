@@ -1,4 +1,4 @@
-import { db, newId, type Asset, type Campaign, type Entity, type Pin, type Session, type World, type WorldMap } from './db'
+import { db, newId, type Asset, type Board, type Campaign, type Entity, type Pin, type Session, type Sound, type World, type WorldMap } from './db'
 
 /** A whole world in one JSON file, including uploaded files (base64). Used for backups and moving between devices. */
 interface WorldBackup {
@@ -12,6 +12,9 @@ interface WorldBackup {
   pins: Pin[]
   sessions: Session[]
   assets: (Omit<Asset, 'blob'> & { data: string })[]
+  /** Added later; older backups don't have them. */
+  boards?: Board[]
+  sounds?: Sound[]
 }
 
 export async function exportWorld(worldId: string) {
@@ -30,6 +33,8 @@ export async function exportWorld(worldId: string) {
     maps,
     pins: await db.pins.where({ worldId }).toArray(),
     sessions: await db.sessions.where({ worldId }).toArray(),
+    boards: await db.boards.where({ worldId }).toArray(),
+    sounds: await db.sounds.where({ worldId }).toArray(),
     assets: await Promise.all(
       (await db.assets.where({ worldId }).toArray()).map(async ({ blob, ...a }) => ({ ...a, data: await blobToBase64(blob) })),
     ),
@@ -55,7 +60,7 @@ export async function importWorld(file: File): Promise<string> {
   const worldId = id(b.world.id)
   const now = Date.now()
 
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.boards, db.sounds], async () => {
     await db.worlds.add({ ...b.world, id: worldId, name: b.world.name, updatedAt: now, cloud: undefined, shared: undefined })
     await db.assets.bulkAdd(
       b.assets.map(({ data, ...a }) => ({ ...a, id: id(a.id), worldId, blob: base64ToBlob(data, a.mime) })),
@@ -87,8 +92,19 @@ export async function importWorld(file: File): Promise<string> {
         campaignId: id(s.campaignId),
         entityIds: s.entityIds.map(id),
         recordings: s.recordings.map((r) => ({ ...r, assetId: id(r.assetId) })),
+        prep: s.prep && {
+          ...s.prep,
+          encounters: s.prep.encounters.map((enc) => ({ ...enc, foes: enc.foes.map((f) => ({ ...f, entityId: opt(f.entityId) })) })),
+        },
       })),
     )
+    await db.boards.bulkAdd(
+      (b.boards ?? []).map((x) => {
+        // Card ids are only used inside the board, so they keep theirs.
+        return { ...x, id: id(x.id), worldId, cards: x.cards.map((c) => ({ ...c, entityId: opt(c.entityId) })) }
+      }),
+    )
+    await db.sounds.bulkAdd((b.sounds ?? []).map((x) => ({ ...x, id: id(x.id), worldId, assetId: opt(x.assetId) })))
   })
   return worldId
 }

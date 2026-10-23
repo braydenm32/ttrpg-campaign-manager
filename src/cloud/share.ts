@@ -89,6 +89,7 @@ export async function storePlayerCopy(
   const now = Date.now()
   const claims = info.claims?.map((c) => ({ ...c, entityId: id(c.entityId) }))
   const notes = info.notes?.map((n) => ({ ...n, entityId: n.entityId ? id(n.entityId) : '' }))
+  const questions = info.questions?.map((q) => ({ ...q, entityId: q.entityId ? id(q.entityId) : '' }))
 
   await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
     for (const t of [db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets] as const) await t.where({ worldId }).delete()
@@ -97,7 +98,7 @@ export async function storePlayerCopy(
       id: worldId,
       updatedAt: now,
       cloud: undefined,
-      shared: { ...info, claims, notes, fetchedAt: now },
+      shared: { ...info, claims, notes, questions, fetchedAt: now },
     } as World)
     await db.assets.bulkPut(assets)
     await db.campaigns.bulkPut(p.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))

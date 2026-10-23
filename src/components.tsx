@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useState, type InputHTMLAttributes, type ReactNode } from 'react'
 import type { Visibility } from './db'
 
 export function VisibilityToggle({
@@ -76,3 +76,31 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
 export function Empty({ children }: { children: ReactNode }) {
   return <div className="empty">{children}</div>
 }
+
+/**
+ * A text box that keeps what you type locally and saves every change. Saved values come back a moment later,
+ * so reading them straight back while typing would drop keystrokes.
+ */
+export function DraftText({
+  value,
+  onCommit,
+  multiline,
+  rows,
+  ...rest
+}: { value: string; onCommit: (v: string) => void; multiline?: boolean; rows?: number } & Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'onChange'
+>) {
+  const [draft, setDraft] = useState<string | null>(null)
+  const props = {
+    value: draft ?? value,
+    onFocus: () => setDraft(value),
+    onBlur: () => setDraft(null),
+    onChange: (e: { target: { value: string } }) => {
+      setDraft(e.target.value)
+      onCommit(e.target.value)
+    },
+  }
+  return multiline ? <textarea rows={rows} placeholder={rest.placeholder} {...props} /> : <input {...rest} {...props} />
+}
+

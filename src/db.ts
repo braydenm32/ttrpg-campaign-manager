@@ -100,6 +100,18 @@ export interface PlayerNote {
   updatedAt?: string
 }
 
+/** A player's question to the GM, about a page (or entityId '' for anything else). */
+export interface PlayerQuestion {
+  id: string
+  entityId: string
+  /** Who asked (only in the GM's inbox). */
+  userId?: string
+  body: string
+  answer?: string | null
+  answeredAt?: string | null
+  createdAt: string
+}
+
 /** A player's answer to "can you make this date?". */
 export type Availability = 'yes' | 'maybe' | 'no'
 
@@ -115,6 +127,8 @@ export interface SharedInfo {
   notes?: PlayerNote[]
   /** For joined worlds: everyone's answers to the GM's proposed session dates. */
   availability?: { optionId: string; userId: string; answer: Availability }[]
+  /** For joined worlds: your own questions to the GM, and the answers. */
+  questions?: PlayerQuestion[]
 }
 
 export interface World {
@@ -199,9 +213,23 @@ export interface Entity {
   /** Items: who carries it (a character's page id, or 'party' for the shared stash), and how many. */
   heldBy?: string
   quantity?: number
+  /** Characters: alive, dead, missing or captured (unset means alive or not worth saying). */
+  status?: LifeStatus | null
+  /** Whether players may see the status. Unticked, it stays GM-only even on a revealed page. */
+  statusKnown?: boolean
   createdAt: number
   updatedAt: number
 }
+
+export type LifeStatus = 'alive' | 'dead' | 'missing' | 'captured'
+export const LIFE_STATUS: Record<LifeStatus, { label: string; icon: string }> = {
+  alive: { label: 'Alive', icon: '💚' },
+  dead: { label: 'Dead', icon: '💀' },
+  missing: { label: 'Missing', icon: '❓' },
+  captured: { label: 'Captured', icon: '⛓️' },
+}
+/** Page types that can have a status. */
+export const HAS_STATUS: EntityType[] = ['npc', 'pc']
 
 /** An earlier version of a page, kept on this device so a bad edit or delete can be undone. */
 export interface PageVersion {
@@ -308,7 +336,45 @@ export interface Session {
   recapDraft?: RecapDraft
   /** The Lectern: live state while running this session at the table. Always GM-only. */
   lectern?: LecternState
+  /** The GM's plan for this session. Always GM-only. */
+  prep?: SessionPrep
   createdAt: number
+}
+
+export interface CheckItem {
+  id: string
+  text: string
+  done: boolean
+}
+
+/** The session prep sheet: how it opens, likely scenes, clues to drop and fights ready to run. */
+export interface SessionPrep {
+  strongStart: string
+  scenes: CheckItem[]
+  /** Secrets and clues the players might find this session; ticked once they do. */
+  clues: CheckItem[]
+  encounters: Encounter[]
+}
+
+export const blankPrep = (): SessionPrep => ({ strongStart: '', scenes: [], clues: [], encounters: [] })
+
+/** A fight planned ahead, loaded into the Lectern's initiative tracker in one click. */
+export interface Encounter {
+  id: string
+  name: string
+  notes: string
+  foes: EncounterFoe[]
+}
+
+export interface EncounterFoe {
+  id: string
+  name: string
+  count: number
+  hp?: number | null
+  ac?: string
+  side: Combatant['side']
+  /** The NPC page this foe comes from, if any. */
+  entityId?: string
 }
 
 export interface Combatant {
@@ -351,6 +417,50 @@ export interface Asset {
   updatedAt?: number
 }
 
+/** A corkboard: pages and notes pinned up, with string between them. GM-only. */
+export interface Board {
+  id: string
+  worldId: string
+  name: string
+  cards: BoardCard[]
+  strings: BoardString[]
+  createdAt: number
+  updatedAt: number
+}
+
+export interface BoardCard {
+  id: string
+  x: number
+  y: number
+  /** A page on the board; otherwise a note card with text. */
+  entityId?: string
+  text?: string
+  color?: string
+}
+
+export interface BoardString {
+  id: string
+  from: string
+  to: string
+  label?: string
+}
+
+/** A soundboard button: an uploaded file, or a Syrinscape mood or element. GM-only. */
+export interface Sound {
+  id: string
+  worldId: string
+  name: string
+  source: 'file' | 'syrinscape'
+  assetId?: string
+  syrinscape?: { kind: 'mood' | 'element'; id: string }
+  loop: boolean
+  /** 0 to 1. */
+  volume: number
+  /** Buttons with the same group sit together, e.g. Ambience, Music, Effects. */
+  group: string
+  createdAt: number
+}
+
 /** What was last synced for each row, so only real changes are uploaded. */
 export interface SyncMeta {
   key: string
@@ -371,6 +481,8 @@ export const db = new Dexie('ttrpg-campaign-manager') as Dexie & {
   assets: EntityTable<Asset, 'id'>
   syncMeta: EntityTable<SyncMeta, 'key'>
   history: EntityTable<PageVersion, 'id'>
+  boards: EntityTable<Board, 'id'>
+  sounds: EntityTable<Sound, 'id'>
 }
 
 db.version(1).stores({
@@ -404,6 +516,12 @@ db.version(2)
 // v3: page history (device-only, never synced).
 db.version(3).stores({
   history: 'id, entityId, worldId, at',
+})
+
+// v4: corkboards and soundboard buttons (both synced, both GM-only).
+db.version(4).stores({
+  boards: 'id, worldId',
+  sounds: 'id, worldId',
 })
 
 export const newId = () => crypto.randomUUID()
@@ -455,8 +573,10 @@ export function fromTemplate(t: Entity, name = `New ${t.name}`): Entity {
 }
 
 export async function deleteWorld(worldId: string) {
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history], async () => {
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds], async () => {
     await db.history.where({ worldId }).delete()
+    await db.boards.where({ worldId }).delete()
+    await db.sounds.where({ worldId }).delete()
     await db.sessions.where({ worldId }).delete()
     await db.pins.where({ worldId }).delete()
     await db.syncMeta.where({ worldId }).delete()
