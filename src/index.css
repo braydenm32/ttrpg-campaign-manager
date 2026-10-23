@@ -284,6 +284,12 @@ input[type=color] { width: 3em; height: 2.2em; padding: 2px; }
 .sync-badge { font-size: .8rem; color: var(--muted); justify-content: flex-start; }
 .notice { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); border-radius: 8px; padding: .5em .8em; }
 .share-heading { margin-top: 1.5em; }
+.social-logins { display: flex; flex-direction: column; gap: .5em; }
+button.social { justify-content: center; font-weight: 600; padding: .55em 1em; }
+.social-icon { display: inline-grid; place-items: center; width: 1.3em; height: 1.3em; border-radius: 50%; font-family: Arial, sans-serif; font-weight: 700; color: #fff; }
+button.social.google .social-icon { background: #4285f4; }
+button.social.facebook .social-icon { background: #1877f2; }
+.or-divider { text-align: center; margin: .2em 0; }
 @media (max-width: 800px) { .account-button { position: static; margin-bottom: 1em; } }
 
 /* The Lectern */

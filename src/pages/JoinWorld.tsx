@@ -25,7 +25,7 @@ export default function JoinWorld() {
     setBusy(true)
     setError('')
     try {
-      const { cloudId, isGM, name: worldName } = await joinWorld(token, name.trim() || user?.email?.split('@')[0] || '')
+      const { cloudId, isGM, name: worldName } = await joinWorld(token, name.trim() || user?.email?.split('@')[0] || user?.user_metadata?.full_name || '')
       pendingInvite.set(null)
       if (isGM) {
         // A co-GM (or the GM opening their own link): bring down the full world, secrets and all, rather than a player copy.
@@ -78,9 +78,9 @@ export default function JoinWorld() {
           >
             <label>
               What should the table call you?
-              <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={user.email?.split('@')[0]} maxLength={60} />
+              <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={user.email?.split('@')[0] || user.user_metadata?.full_name} maxLength={60} />
             </label>
-            <p className="muted small">Signed in as {user.email}.</p>
+            <p className="muted small">Signed in as {user.email || user.user_metadata?.full_name}.</p>
             <div className="row end">
               <button className="primary" disabled={busy}>
                 {busy ? 'Joining…' : asGM ? 'Join as co-GM' : 'Join the world'}
