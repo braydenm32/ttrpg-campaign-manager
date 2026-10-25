@@ -1,3 +1,4 @@
+import { nameIndex } from './links'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { blankEntity, db, type Entity, type Session, type ThreadStatus } from './db'
 import { stripSecrets } from './Markdown'
@@ -5,7 +6,7 @@ import { useViewMode } from './viewMode'
 
 /** The pages a thread involves: anything it [[links]] to, plus where it's located. */
 export function threadLinks(thread: Entity, entities: Entity[], showSecrets: boolean) {
-  const byName = new Map(entities.map((e) => [e.name.trim().toLowerCase(), e]))
+  const byName = nameIndex(entities)
   const text = `${thread.summary}\n${showSecrets ? thread.body : stripSecrets(thread.body)}`
   const found = new Map<string, Entity>()
   const parent = thread.parentId && entities.find((e) => e.id === thread.parentId)
@@ -17,18 +18,23 @@ export function threadLinks(thread: Entity, entities: Entity[], showSecrets: boo
   return [...found.values()]
 }
 
-/** All sessions in a world the viewer may see, oldest first. */
+/** Campaigns the viewer may see: a campaign the GM keeps hidden never shows in the player view. */
+export function useCampaigns(worldId: string) {
+  const { isGM } = useViewMode()
+  return useLiveQuery(() => db.campaigns.where({ worldId }).filter((c) => isGM || c.visibility !== 'gm').toArray(), [worldId, isGM]) ?? []
+}
+
+/** All sessions in a world the viewer may see, oldest first (none from a hidden campaign, for players). */
 export function useWorldSessions(worldId: string) {
   const { isGM } = useViewMode()
   return (
-    useLiveQuery(
-      () =>
-        db.sessions
-          .where({ worldId })
-          .filter((s) => isGM || s.visibility === 'players')
-          .sortBy('date'),
-      [worldId, isGM],
-    ) ?? []
+    useLiveQuery(async () => {
+      const hidden = isGM ? new Set<string>() : new Set((await db.campaigns.where({ worldId }).filter((c) => c.visibility === 'gm').toArray()).map((c) => c.id))
+      return db.sessions
+        .where({ worldId })
+        .filter((s) => isGM || (s.visibility === 'players' && !hidden.has(s.campaignId)))
+        .sortBy('date')
+    }, [worldId, isGM]) ?? []
   )
 }
 

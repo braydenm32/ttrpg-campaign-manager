@@ -1,6 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useLayoutEffect, useRef, useState, type TextareaHTMLAttributes } from 'react'
 import { db } from './db'
+import { Help } from './help'
+import { saveFileAsAsset } from './hooks'
 import { forNames } from './Markdown'
 
 /**
@@ -74,6 +76,22 @@ export function SecretTextarea({
     edit(pos - partial.length, pos, `${sep}${name}`)
   }
   const track = () => setCaret(ref.current?.selectionStart ?? null)
+  // Pictures pasted, dropped or picked go into the world's files and into the text where the caret is.
+  const addPictures = async (files: File[]) => {
+    const images = files.filter((f) => f.type.startsWith('image/'))
+    if (!images.length) return false
+    const t = ref.current
+    const at = t ? t.selectionStart : value.length
+    const end = t ? t.selectionEnd : at
+    const parts: string[] = []
+    for (const f of images) {
+      const name = f.name && f.name !== 'image.png' ? f.name.replace(/\.[^.]+$/, '') : 'Picture'
+      parts.push(`![${name.replace(/[[\]]/g, '')}](asset:${await saveFileAsAsset(worldId, f, f.name || 'Pasted picture.png', ['in text'])})`)
+    }
+    const lead = at > 0 && value[at - 1] !== '\n' ? '\n' : ''
+    edit(at, end, `${lead}${parts.join('\n')}\n`)
+    return true
+  }
 
   return (
     <div className="secret-textarea">
@@ -88,6 +106,20 @@ export function SecretTextarea({
         onSelect={track}
         onClick={track}
         onKeyUp={track}
+        onPaste={(e) => {
+          const files = [...e.clipboardData.files]
+          if (files.some((f) => f.type.startsWith('image/'))) {
+            e.preventDefault()
+            addPictures(files)
+          }
+        }}
+        onDrop={(e) => {
+          const files = [...e.dataTransfer.files]
+          if (files.some((f) => f.type.startsWith('image/'))) {
+            e.preventDefault()
+            addPictures(files)
+          }
+        }}
       />
       {suggestions.length > 0 ? (
         <div className="name-suggestions" role="listbox" aria-label="Characters">
@@ -116,6 +148,20 @@ export function SecretTextarea({
         >
           🤫 Secret for…
         </button>
+        <label className="button ghost small" title="Put a picture in the text (you can also paste or drop one)">
+          🖼️ Picture
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            onChange={(e) => {
+              addPictures([...(e.target.files ?? [])])
+              e.target.value = ''
+            }}
+          />
+        </label>
+        <Help topic="pictures" />
       </div>
     </div>
   )

@@ -1,11 +1,12 @@
 import DOMPurify from 'dompurify'
 import { marked } from 'marked'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ENTITY_LABELS, type Entity } from './db'
+import { db, ENTITY_LABELS, type Entity } from './db'
 import { useAssetUrl } from './hooks'
 import { StatusBadge } from './status'
 import { plainLinks } from './text'
+import { nameIndex, namesOf } from './links'
 import { characterNames, useViewMode } from './viewMode'
 
 type Segment = { kind: 'text' | 'gm' | 'foryou'; body: string } | { kind: 'for'; names: string[]; body: string }
@@ -118,7 +119,7 @@ export function Markdown({
   const forViewer = (previewAs ? characterNames(previewAs.characterNames) : []).join('\n')
   const html = useMemo(() => {
     const viewer = new Set(forViewer.split('\n').filter(Boolean))
-    const byName = new Map(entities.map((e) => [e.name.trim().toLowerCase(), e]))
+    const byName = nameIndex(entities)
     // Passages inside passages are rendered the same way, so an inner secret stays hidden.
     const render = (t: string): string =>
       splitSecrets(t)
@@ -133,6 +134,8 @@ export function Markdown({
         })
         .join('\n')
     let src = render(text)
+    // Pictures from the world's files: filled in from this device's copy once on screen.
+    src = src.replace(/!\[([^\]]*)\]\(asset:([0-9a-fA-F-]{36})\)/g, (_m, alt: string, id: string) => `<img class="inline-picture" data-asset="${id}" alt="${escapeHtml(alt)}">`)
     src = src.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, name: string, label?: string) => {
       const target = byName.get(name.trim().toLowerCase())
       const shown = escapeHtml(label ?? name)
@@ -145,11 +148,29 @@ export function Markdown({
   // Hovering a link shows a peek at the page it goes to.
   const [peek, setPeek] = useState<{ entity: Entity; left: number; top: number; below: boolean }>()
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const box = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const urls: string[] = []
+    let live = true
+    for (const img of box.current?.querySelectorAll<HTMLImageElement>('img[data-asset]') ?? [])
+      db.assets.get(img.dataset.asset!).then((a) => {
+        if (!live) return
+        if (!a) return void (img.alt = img.alt ? `${img.alt} (picture not on this device yet)` : 'Picture not on this device yet')
+        const u = URL.createObjectURL(a.blob)
+        urls.push(u)
+        img.src = u
+      })
+    return () => {
+      live = false
+      urls.forEach((u) => URL.revokeObjectURL(u))
+    }
+  }, [html])
   const linkAt = (t: EventTarget) => (t as HTMLElement).closest?.('a.wikilink[data-id]') as HTMLAnchorElement | null
 
   return (
     <>
       <div
+        ref={box}
         className="markdown"
         onClick={(ev) => {
           const a = (ev.target as HTMLElement).closest('a[data-internal]') as HTMLAnchorElement | null
@@ -213,12 +234,12 @@ function escapeHtml(s: string) {
 
 /** Entities whose page links to the given entity, for "mentioned in" backlinks. */
 export function findBacklinks(target: Entity, entities: Entity[]) {
-  const needle = target.name.trim().toLowerCase()
-  if (!needle) return []
+  const needles = new Set(namesOf(target))
+  if (!needles.size) return []
   return entities.filter(
     (e) =>
       e.id !== target.id &&
-      [...e.body.matchAll(/\[\[([^\]|]+)/g)].some((m) => m[1].trim().toLowerCase() === needle),
+      [...e.body.matchAll(/\[\[([^\]|]+)/g)].some((m) => needles.has(m[1].trim().toLowerCase())),
   )
 }
 

@@ -91,6 +91,26 @@ export async function storePlayerCopy(
   const notes = info.notes?.map((n) => ({ ...n, entityId: n.entityId ? id(n.entityId) : '' }))
   const questions = info.questions?.map((q) => ({ ...q, entityId: q.entityId ? id(q.entityId) : '' }))
 
+  // What's new since the last refresh: pages and sessions revealed, and questions answered. The
+  // first time a world arrives everything is new, so nothing is flagged.
+  const before = await db.worlds.get(worldId)
+  let news = before?.shared?.news
+  if (before) {
+    const hadPages = new Set(await db.entities.where({ worldId }).primaryKeys())
+    const hadSessions = new Set(await db.sessions.where({ worldId }).primaryKeys())
+    const wasAnswered = new Set((before.shared?.questions ?? []).filter((q) => q.answer).map((q) => q.id))
+    const pageIds = p.entities.map((e) => id(e.id))
+    const sessionIds = p.sessions.map((s) => id(s.id))
+    const questionIds = (questions ?? []).map((q) => q.id)
+    const keep = (old: string[] | undefined, now: string[], fresh: string[]) => [...new Set([...(old ?? []).filter((x) => now.includes(x)), ...fresh])]
+    news = {
+      entityIds: keep(news?.entityIds, pageIds, pageIds.filter((x) => !hadPages.has(x))),
+      sessionIds: keep(news?.sessionIds, sessionIds, sessionIds.filter((x) => !hadSessions.has(x))),
+      questionIds: keep(news?.questionIds, questionIds, (questions ?? []).filter((q) => q.answer && !wasAnswered.has(q.id)).map((q) => q.id)),
+    }
+    if (!news.entityIds.length && !news.sessionIds.length && !news.questionIds.length) news = undefined
+  }
+
   await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
     for (const t of [db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets] as const) await t.where({ worldId }).delete()
     const showing = p.world?.showing
@@ -100,7 +120,7 @@ export async function storePlayerCopy(
       id: worldId,
       updatedAt: now,
       cloud: undefined,
-      shared: { ...info, claims, notes, questions, fetchedAt: now },
+      shared: { ...info, claims, notes, questions, news, fetchedAt: now },
     } as World)
     await db.assets.bulkPut(assets)
     await db.campaigns.bulkPut(p.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))

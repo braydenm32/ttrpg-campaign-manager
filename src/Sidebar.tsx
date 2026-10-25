@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { matchPath, NavLink, useLocation } from 'react-router-dom'
 import { db, ENTITY_LABELS, ENTITY_TYPES, type CustomType, type Entity, type EntityType } from './db'
 import { useVisibleEntities, useWorld } from './hooks'
-import { useWorldSessions } from './threads'
+import { useCampaigns, useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
 import { useGmQuestions } from './players/Questions'
 
@@ -22,7 +22,7 @@ export function WorldNav({ worldId }: { worldId: string }) {
   const { pathname } = useLocation()
   const entities = useVisibleEntities(worldId)
   const sessions = useWorldSessions(worldId)
-  const campaigns = useLiveQuery(() => db.campaigns.where({ worldId }).toArray(), [worldId]) ?? []
+  const campaigns = useCampaigns(worldId)
   const maps = useLiveQuery(() => db.maps.where({ worldId }).sortBy('name'), [worldId]) ?? []
   // Sections the user opened or closed by hand; anything not listed follows where you are.
   const [manual, setManual] = useState<Record<string, boolean>>({})
@@ -149,7 +149,8 @@ export function WorldNav({ worldId }: { worldId: string }) {
       {(isGM || hasLoot) && (
         <NavLink to={`/w/${worldId}/loot`} title={HELP.loot}>🎒 Party loot</NavLink>
       )}
-      {(isGM || !!world?.safety?.lines.length || !!world?.safety?.veils.length || !!world?.safety?.notes.trim() || !!world?.safety?.xcard) && (
+      {/* Safety tools are for the table, not for wiki readers. */}
+      {!world?.shared?.token && (isGM || !!world?.safety?.lines.length || !!world?.safety?.veils.length || !!world?.safety?.notes.trim() || !!world?.safety?.xcard) && (
         <NavLink to={`/w/${worldId}/safety`} title={HELP.safety}>🛡️ Safety tools</NavLink>
       )}
       {(world?.shared?.memberOf || (!world?.shared && world?.cloud?.enabled)) && (
@@ -167,7 +168,7 @@ export function WorldNav({ worldId }: { worldId: string }) {
         </NavLink>
       )}
 
-      <div className="nav-heading" title={HELP.campaign}>Campaigns</div>
+      {(isGM || campaigns.length > 0) && <div className="nav-heading" title={HELP.campaign}>Campaigns</div>}
       {campaigns.map((c) => {
         const own = sessions.filter((s) => s.campaignId === c.id).sort((a, b) => a.number - b.number)
         const key = `camp:${c.id}`

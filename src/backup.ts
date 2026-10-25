@@ -23,6 +23,24 @@ interface WorldBackup {
   sounds?: Sound[]
 }
 
+/** When this device last downloaded a backup of a world, and when a reminder was put off until (device-only). */
+export const backupStore = {
+  read: (worldId: string, what: 'last' | 'snooze') => {
+    try {
+      return Number(localStorage.getItem(`codex.backup.${what}.${worldId}`)) || 0
+    } catch {
+      return 0
+    }
+  },
+  write: (worldId: string, what: 'last' | 'snooze', at: number) => {
+    try {
+      localStorage.setItem(`codex.backup.${what}.${worldId}`, String(at))
+    } catch {
+      // Storage blocked: the reminder just comes back next time.
+    }
+  },
+}
+
 export async function exportWorld(worldId: string) {
   const world = await db.worlds.get(worldId)
   if (!world) throw new Error('World not found')
@@ -53,6 +71,7 @@ export async function exportWorld(worldId: string) {
   a.download = `${world.name.replace(/[^\w-]+/g, '_')}-${backup.exportedAt.slice(0, 10)}.codex.zip`
   a.click()
   setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+  backupStore.write(worldId, 'last', Date.now())
 }
 
 /** Imports a backup as a new copy of the world (fresh ids), so importing twice never overwrites anything. */
@@ -75,6 +94,8 @@ export async function importWorld(file: File): Promise<string> {
     return ids.get(old)!
   }
   const opt = (old?: string) => (old ? id(old) : undefined)
+  // Pictures in text point at files by id, and the files get new ids.
+  const pics = <T extends string | undefined>(t: T): T => (t ? (t.replace(/asset:([0-9a-fA-F-]{36})/g, (m, old: string) => (ids.has(old) ? `asset:${ids.get(old)}` : m)) as T) : t)
   const worldId = id(b.world.id)
   const now = Date.now()
 
@@ -98,6 +119,9 @@ export async function importWorld(file: File): Promise<string> {
         ...e,
         id: id(e.id),
         worldId,
+        body: pics(e.body),
+        gmNotes: pics(e.gmNotes),
+        playerBody: pics(e.playerBody),
         parentId: opt(e.parentId),
         imageId: opt(e.imageId),
         raisedIn: opt(e.raisedIn),
@@ -125,6 +149,8 @@ export async function importWorld(file: File): Promise<string> {
         id: id(s.id),
         worldId,
         campaignId: id(s.campaignId),
+        notes: pics(s.notes),
+        recap: pics(s.recap),
         entityIds: s.entityIds.map(id),
         recordings: s.recordings.map((r) => ({ ...r, assetId: id(r.assetId) })),
         // The Lectern points at pages: the scene, who's present and who's in the fight.

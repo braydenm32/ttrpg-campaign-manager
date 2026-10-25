@@ -99,11 +99,13 @@ export default function CloudSettings({ world }: { world: World }) {
           <>
 
           <h3 className="share-heading">
-            📜 Player share link <Help topic="shareLink" />
+            📜 Public wiki link <Help topic="shareLink" />
           </h3>
           <p className="muted">
-            Anyone with the link sees only what you've revealed: GM-only pages, pins, maps, sessions, secret passages and GM notes are
-            removed on the server before anything is sent. It updates live as you sync.
+            A read-only wiki of your world for anyone with the link, no account needed: friends outside the group, or a player before
+            they sign up. It shows only what you've revealed to the whole table. GM-only pages, pins, maps, sessions, secret passages,
+            GM notes and anything revealed to just one player are removed on the server before anything is sent. It updates as you sync.
+            To bring players into the game, use the invite link below instead.
           </p>
           {token ? (
             <>
@@ -131,7 +133,7 @@ export default function CloudSettings({ world }: { world: World }) {
             </>
           ) : (
             <button className="primary" disabled={busy} onClick={() => run(async () => setToken(await createShareLink(world.id)))}>
-              Create share link
+              Create wiki link
             </button>
           )}
 

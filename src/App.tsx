@@ -1,5 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import { HashRouter, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
+import { HashRouter, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Help } from './help'
 import { useWorld } from './hooks'
 import { WorldNav } from './Sidebar'
@@ -11,9 +11,11 @@ import { watchPlayerCopy } from './cloud/share'
 import { startSync, stopSync, syncNow, syncStore } from './cloud/sync'
 import { Modal } from './components'
 import { UpdateBanner } from './appUpdate'
+import { SearchButton } from './search'
 import SharedWorld from './pages/SharedWorld'
 import JoinWorld from './pages/JoinWorld'
 import { ChooseCharacterBanner } from './players/Characters'
+import { NewsBanner } from './players/News'
 import { PreviewAsPicker } from './players/Secrets'
 import { useCharacterOwners } from './players/owners'
 import Home from './pages/Home'
@@ -197,6 +199,9 @@ function WorldShell() {
   const { owners } = useCharacterOwners(world)
   const myCharacters = [...owners.entries()].filter(([, o]) => o.mine).map(([id]) => id)
   const navigate = useNavigate()
+  // On a phone the menu is open only on the page it was opened on, so following a link folds it away.
+  const { pathname } = useLocation()
+  const [menuOpenAt, setMenuOpenAt] = useState<string>()
 
   if (world === undefined) return <div className="loading">Loading…</div>
   if (world === null)
@@ -213,10 +218,24 @@ function WorldShell() {
 
   return (
     <div className={`layout ${isGM ? '' : 'player-mode'}`}>
-      <aside className="sidebar">
-        <button className="world-name" onClick={() => navigate('/')} title="All worlds">
-          ← {world.name}
-        </button>
+      <aside className={`sidebar ${menuOpenAt === pathname ? 'open' : ''}`}>
+        <div className="sidebar-top">
+          <button className="world-name" onClick={() => navigate('/')} title="All worlds">
+            ← {world.name}
+          </button>
+          {/* Phones only: the menu folds away so pages start at the top of the screen. */}
+          <button
+            className="menu-toggle"
+            aria-expanded={menuOpenAt === pathname}
+            onClick={() => setMenuOpenAt(menuOpenAt === pathname ? undefined : pathname)}
+          >
+            {menuOpenAt === pathname ? '✕ Close' : '☰ Menu'}
+          </button>
+          <span className="menu-toggle-help">
+            <Help topic="phoneMenu" />
+          </span>
+        </div>
+        <SearchButton worldId={worldId} world={world} />
         <WorldNav worldId={worldId} />
         {world.cloud?.enabled && <SyncBadge />}
         {memberOf ? (
@@ -241,7 +260,7 @@ function WorldShell() {
           </div>
         ) : shared ? (
           <div className="mode-switch">
-            <span>📜 Shared by your GM. Read only, updates automatically.</span>
+            <span>📜 A public wiki shared by the GM. Read only, updates automatically.</span>
           </div>
         ) : (
         <div className="mode-switch">
@@ -259,6 +278,7 @@ function WorldShell() {
       <main className="content">
         {shareError && <div className="player-banner">Couldn't refresh: {shareError}</div>}
         {memberOf && <ChooseCharacterBanner world={world} />}
+        {shared && <NewsBanner world={world} />}
         {shared && <ShowingPopup world={world} />}
         {isGM && !shared && <ShowingBanner world={world} />}
         {!shared && <XCardAlert world={world} />}

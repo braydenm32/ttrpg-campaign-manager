@@ -2,7 +2,7 @@ import { binCampaign } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Empty, VisibilityBadge } from '../components'
+import { Empty, VisibilityBadge, VisibilityToggle } from '../components'
 import { db, GAME_SYSTEMS, newId, type Campaign } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
@@ -24,7 +24,7 @@ export default function CampaignPage() {
   const quests = entities.filter((e) => e.type === 'quest' && e.questStatus === 'active')
 
   if (campaign === undefined) return null
-  if (campaign === null || campaign.worldId !== worldId) return <Empty>Campaign not found.</Empty>
+  if (campaign === null || campaign.worldId !== worldId || (!isGM && campaign.visibility === 'gm')) return <Empty>Campaign not found.</Empty>
   const update = (patch: Partial<Campaign>) => db.campaigns.update(campaign.id, patch)
 
   const newSession = async (date = new Date().toISOString().slice(0, 10)) => {
@@ -71,6 +71,8 @@ export default function CampaignPage() {
                 <option value="paused">Paused</option>
                 <option value="finished">Finished</option>
               </select>
+              <VisibilityToggle value={campaign.visibility ?? 'players'} onChange={(v) => update({ visibility: v === 'players' ? undefined : v })} />
+              <Help topic="hiddenCampaign" />
             </div>
           ) : (
             <div className="muted">
@@ -92,7 +94,7 @@ export default function CampaignPage() {
             value={campaign.description}
             onChange={(e) => update({ description: e.target.value })}
           />
-          <small className="muted">Players can read this. Keep secrets out of it.</small>
+          <small className="muted">{campaign.visibility === 'gm' ? 'This campaign is hidden from players.' : 'Players can read this. Keep secrets out of it.'}</small>
         </>
       ) : (
         campaign.description && <p className="lead">{campaign.description}</p>

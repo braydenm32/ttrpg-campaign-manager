@@ -494,7 +494,16 @@ export async function exportMarkdown(worldId: string) {
       files[`images/${name}`] = new Uint8Array(await asset.blob.arrayBuffer())
       image = `![[${name}]]\n\n`
     }
-    const parts = [`---\n${fm.join('\n')}\n---\n`, image, e.body]
+    // Pictures in the text go into the zip too, as Obsidian-style embeds.
+    let body = e.body
+    for (const m of e.body.matchAll(/!\[[^\]]*\]\(asset:([0-9a-fA-F-]{36})\)/g)) {
+      const pic = await db.assets.get(m[1])
+      if (!pic) continue
+      const name = `${pic.id.slice(0, 8)}-${safeFile(pic.name)}`
+      files[`images/${name}`] = new Uint8Array(await pic.blob.arrayBuffer())
+      body = body.replace(m[0], `![[${name}]]`)
+    }
+    const parts = [`---\n${fm.join('\n')}\n---\n`, image, body]
     if (e.playerBody) parts.push(`\n\n## In the player’s words\n\n${e.playerBody}`)
     const rels = (e.relations ?? []).filter((r) => byId.has(r.to))
     if (rels.length) parts.push(`\n\n## Relationships\n\n${rels.map((r) => `- ${r.kind} [[${byId.get(r.to)!.name}]]${r.note ? ` (${r.note})` : ''}`).join('\n')}`)

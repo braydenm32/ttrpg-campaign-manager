@@ -26,7 +26,17 @@ export const HELP = {
   revealTo:
     'This page is GM only, but you can still let particular players see it. Tick their names and only they get it, marked "Just for you". Needs cloud sync and players who have joined.',
   gmNotes: 'Notes for you alone. They are never sent to players, not even on revealed pages.',
-  fields: 'Free-form details like stats, prices or alignment. Add whatever your game needs.',
+  fields: 'Free-form details like stats, prices or alignment. Add whatever your game needs. Click 👁 to make a detail 🔒 GM only: players never get it, even on a revealed page.',
+  hiddenCampaign:
+    'A campaign you’re still planning can stay 🔒 GM only: players don’t see it or any of its sessions until you switch it to 👁 players.',
+  pictures: 'Put pictures in the text: paste one, drop one in, or use 🖼️ Picture. Players see a picture once the text around it is revealed to them (not inside a secret passage).',
+  search: 'Finds pages by name, nickname, summary, details, tags and the words in them, plus sessions (title, recap and your notes) and maps. Press Ctrl+K (⌘K on a Mac) anywhere to search. In the player view it only searches what players can read.',
+  phoneMenu: 'On a phone the menu folds away so each page starts at the top. Tap ☰ Menu to open it; it folds up again when you pick a page. 🔍 Search stays at the top.',
+  news: 'What your GM has revealed since you last looked: new pages, session recaps and answers to your questions. Tap one to read it, and “Got it” when you’re done.',
+  backupReminder: 'A reminder to download a backup of this world every two weeks (monthly with cloud sync on). Save the file somewhere safe, like Google Drive or a USB stick. “Later” asks again in a week.',
+  aliases:
+    'Other names this page goes by, like “the Harbourmaster” for Corvin Vane. A [[link]] to any of them finds this page. Nicknames are for you: players don’t see them. Renaming a page updates every link to it.',
+  gmTags: 'Tags only you see, like “traitor” or “recurring”. Players get the ordinary tags of a revealed page, never these.',
   history:
     'Every time you save a page, the version before is kept on this device (the last 40). Look at an old version or restore it; restoring keeps today’s version too.',
   recentlyDeleted: 'Pages, sessions, campaigns, maps, files, corkboards and sounds deleted on this device (pages deleted on another device too). Restore brings them back as they were. Things other than pages are kept for a month.',
@@ -116,7 +126,8 @@ export const HELP = {
     'Sign in to keep this world in step across your devices. Your world is still saved on each device, so it works offline and catches up when you reconnect. If two devices change the same page at once, both sets of changes are kept where they don’t overlap; where they do, the other version is kept in the page’s history.',
   socialLogin:
     'Sign in with your Google or Facebook account instead of a password. If you already made an account with the same email, you’ll land in that same account. Not available in the desktop app yet, so use email there.',
-  shareLink: 'A read-only link to everything you’ve revealed. No account needed. GM-only things are removed before anything is sent.',
+  shareLink: 'A public, read-only wiki of everything you’ve revealed to the whole table. No account needed, so it suits people outside your group. GM-only things are removed before anything is sent. Players should join with the invite link instead.',
+  wiki: 'A read-only wiki of this world, shared by its GM. It shows only what the GM has revealed to everyone, and updates as they add to it.',
   players:
     'Invite your players with a link. They sign in, join, claim their character and keep notes. They only ever receive what you’ve revealed to them.',
   playerNotes:
