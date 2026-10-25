@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { claimCharacter, editMyCharacter, releaseCharacter, savePlayerNotes } from '../cloud/players'
+import { approveClaim, claimCharacter, editMyCharacter, releaseCharacter, savePlayerNotes } from '../cloud/players'
 import { Modal } from '../components'
 import { db, type Entity, type World } from '../db'
 import { useCharacterOwners } from './owners'
@@ -36,7 +36,19 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
       <h3>
         🎭 Player <Help topic="character" />
       </h3>
-      {owner ? (
+      {owner?.pending ? (
+        <p>
+          {owner.mine ? (
+            <>
+              <strong>You asked to play this character.</strong> Your GM will approve it soon.
+            </>
+          ) : (
+            <>
+              <strong>{owner.name}</strong> asked to play this character.
+            </>
+          )}
+        </p>
+      ) : owner ? (
         <p>
           {owner.mine ? <strong>This is your character.</strong> : <>Played by <strong>{owner.name}</strong>.</>}
         </p>
@@ -50,7 +62,13 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
         </button>
       )}
 
-      {owner?.mine && memberOf && <EditMyCharacter entity={entity} cloudId={memberOf} />}
+      {owner?.pending && !memberOf && (
+        <button className="primary" disabled={busy} onClick={() => run(() => approveClaim(world.id, entity.id))}>
+          ✓ Approve
+        </button>
+      )}
+
+      {owner?.mine && !owner.pending && memberOf && <EditMyCharacter entity={entity} cloudId={memberOf} />}
       {owner?.mine ? (
         <PlayerNotes key={entity.id} initial={owner.notes} onSave={(notes) => savePlayerNotes(memberOf!, entity.id, notes)} />
       ) : (
@@ -71,7 +89,7 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
             run(() => releaseCharacter(memberOf ?? world.id, entity.id, !!memberOf))
           }
         >
-          {owner.mine ? 'Let go of this character' : 'Release from this player'}
+          {owner.mine ? (owner.pending ? 'Take back my request' : 'Let go of this character') : owner.pending ? 'Decline' : 'Release from this player'}
         </button>
       )}
       {error && <p className="error small">{error}</p>}
@@ -189,7 +207,15 @@ export function ChooseCharacterBanner({ world }: { world: World }) {
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   if (!memberOf || hidden || !pcs) return null
-  if ([...owners.values()].some((o) => o.mine)) return null
+  const mine = [...owners.values()].filter((o) => o.mine)
+  if (mine.some((o) => !o.pending)) return null
+  if (mine.length)
+    return (
+      <div className="choose-character">
+        <strong>🎭 Waiting for your GM</strong>
+        <p className="muted small">You’ve asked to play {pcs.find((e) => owners.get(e.id)?.mine)?.name ?? 'a character'}. Your GM approves it, and then it’s yours.</p>
+      </div>
+    )
   const free = pcs.filter((e) => !owners.has(e.id))
 
   return (

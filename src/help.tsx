@@ -29,7 +29,7 @@ export const HELP = {
   fields: 'Free-form details like stats, prices or alignment. Add whatever your game needs.',
   history:
     'Every time you save a page, the version before is kept on this device (the last 40). Look at an old version or restore it; restoring keeps today’s version too.',
-  recentlyDeleted: 'Pages deleted on this device, or deleted on another device and synced here. Restore brings the page back as it was.',
+  recentlyDeleted: 'Pages, sessions, campaigns, maps, files, corkboards and sounds deleted on this device (pages deleted on another device too). Restore brings them back as they were. Things other than pages are kept for a month.',
   templates:
     'A template is a starting point for new pages, like a "Dungeon room" with the headings and details you always fill in. Templates are always GM only and never appear in lists. Make one with "Save as template" on any page.',
   lifeStatus:
@@ -69,7 +69,7 @@ export const HELP = {
   session:
     'One game night. Keep 🔒 GM notes for yourself and a 👁 player recap for the table. Record the session, then turn the recording into a transcript and a recap.',
   recording:
-    'Record from one microphone for games at the table, or the microphone plus your Discord or Zoom audio for online games. Add bookmarks while you play to jump back to big moments.',
+    'Record from one microphone for games at the table, or the microphone plus your Discord or Zoom audio for online games. Add bookmarks while you play to jump back to big moments. Recordings are big, so they stay on the device that made them; their transcripts sync to your other devices.',
   transcript:
     'Turns a recording into text. "On this device" is free and private but slower, with no speaker names. "Cloud" uses AssemblyAI with your own key, is faster and tells speakers apart.',
   recap:
@@ -109,11 +109,11 @@ export const HELP = {
   exportMarkdown: 'Download every page as Markdown files in folders, ready to open in Obsidian or any notes app. GM notes and secrets are included, so keep it to yourself.',
   discord:
     'Post recaps and session dates to your group’s Discord channel. In Discord: Server settings, Integrations, Webhooks, New webhook, then copy its link here. The link is kept on this device only.',
-  backup: 'Save the whole world, uploaded files included, as one file. Keep a backup even if sync is on.',
+  backup: 'Save the whole world, uploaded files and recordings included, as one .zip file. Keep a backup even if sync is on. Older .json backups still import.',
 
   // Sharing and players
   cloudSync:
-    'Sign in to keep this world in step across your devices. Your world is still saved on each device, so it works offline and catches up when you reconnect.',
+    'Sign in to keep this world in step across your devices. Your world is still saved on each device, so it works offline and catches up when you reconnect. If two devices change the same page at once, both sets of changes are kept where they don’t overlap; where they do, the other version is kept in the page’s history.',
   socialLogin:
     'Sign in with your Google or Facebook account instead of a password. If you already made an account with the same email, you’ll land in that same account. Not available in the desktop app yet, so use email there.',
   shareLink: 'A read-only link to everything you’ve revealed. No account needed. GM-only things are removed before anything is sent.',
@@ -133,7 +133,7 @@ export const HELP = {
     'Questions your players sent you, privately. Your answer goes only to the player who asked. If they asked about a hidden page, you can reveal it to just them from here.',
   editCharacter:
     'Keep your character’s details up to date: the one-line summary, stats and anything you want to write about them. Your GM sees your changes and can change them back.',
-  character: 'Who plays this character. Players claim their own character from here; you can release a claim from World settings.',
+  character: 'Who plays this character. Players ask to play their character from here, and you approve it (here or in World settings) before it counts, so nobody can take someone else’s character or their secrets. You can release a claim later.',
   aiTools: 'Keys for transcription and recaps. They stay on this device only: never synced and never in backups.',
 } as const
 

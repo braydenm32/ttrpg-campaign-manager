@@ -20,44 +20,73 @@ export function forNames(spec: string) {
     .filter(Boolean)
 }
 
+/** A line that opens a secret passage: ":::gm", ":::for …" or ":::foryou", forgiving of case and spaces. */
+const OPENER = /^[ \t]*:::[ \t]*(foryou|gm|for)(?![a-z0-9])(.*)$/i
+const CLOSER = /^[ \t]*:::[ \t]*$/
+
+/** Reads an opener line: its kind, and for a one-line passage its text (and names). */
+function readOpener(line: string): { kind: 'gm' | 'for' | 'foryou'; names: string[]; one?: string; first?: string } | null {
+  const m = line.match(OPENER)
+  if (!m) {
+    // Older player copies hold one-line passages as ":::foryouText:::".
+    const legacy = line.match(/^:::foryou(\S.*?):::[ \t]*$/)
+    return legacy ? { kind: 'foryou', names: [], one: legacy[1].trim() } : null
+  }
+  const kind = m[1].toLowerCase() as 'gm' | 'for' | 'foryou'
+  const rest = m[2]
+  if (kind === 'for') {
+    const one = rest.match(/^[ \t]+(.+?):::(.*):::[ \t]*$/)
+    if (one) return { kind, names: forNames(one[1]), one: one[2].trim() }
+    return { kind, names: forNames(rest.replace(/^[ \t:]*/, '')) }
+  }
+  const one = rest.match(/^[: \t]*([^: \t].*?)[ \t]*:::[ \t]*$/)
+  // ":::gm The innkeeper is a spy" with no closing marker opens a block that starts with that text.
+  return { kind, names: [], one: one?.[1], first: rest.replace(/^[: \t]*/, '') }
+}
+
 /**
  * Splits text into ordinary text and secret passages, line by line:
  *  - ":::gm" up to a ":::" line is for the GM only. Any line starting ":::gm" opens one, even with
  *    text after it, and a missing closing line keeps the rest secret, so a typo never leaks.
+ *    ":::GM", "::: gm" and indented markers count too.
  *  - ":::for Wren and Silas" up to ":::" is for the players of those characters only.
  *  - Either fits on one line too: ":::gm::: The innkeeper is a spy :::".
  *  - ":::foryou" is what a player's copy holds for a ":::for" passage meant for them.
+ *  - Passages can sit inside each other: a ":::" closes the innermost one, so a secret inside a
+ *    secret never ends the outer one early. A passage's body keeps its inner markers.
  * Keep in step with public.player_text in supabase/migrations, which decides what players receive.
  */
 export function splitSecrets(text: string): Segment[] {
   const out: Segment[] = []
   let open: Segment | null = null
-  const push = (kind: 'text', line: string) => {
+  let depth = 0
+  const push = (line: string) => {
     const last = out[out.length - 1]
-    if (last?.kind === kind) last.body += '\n' + line
-    else out.push({ kind, body: line })
+    if (last?.kind === 'text') last.body += '\n' + line
+    else out.push({ kind: 'text', body: line })
   }
-  for (const line of text.split('\n')) {
+  for (const line of text.split(/\r?\n/)) {
+    const opener = readOpener(line)
     if (open) {
-      if (/^:::[ \t]*$/.test(line)) {
+      if (CLOSER.test(line)) depth--
+      else if (opener && opener.one === undefined) depth++
+      if (depth === 0) {
         out.push(open)
         open = null
       } else open.body += (open.body ? '\n' : '') + line
       continue
     }
-    const forLine = line.match(/^:::for[ \t]+(.+?):::(.*):::[ \t]*$/)
-    if (/^:::gm\b/.test(line)) {
-      const one = line.match(/^:::gm\b[: \t]*([^: \t].*?)[ \t]*:::[ \t]*$/)
-      if (one) out.push({ kind: 'gm', body: one[1] })
-      else open = { kind: 'gm', body: line.replace(/^:::gm\b[: \t]*/, '') }
-    } else if (/^:::foryou\b/.test(line)) {
-      open = { kind: 'foryou', body: '' }
-    } else if (forLine) {
-      out.push({ kind: 'for', names: forNames(forLine[1]), body: forLine[2].trim() })
-    } else if (/^:::for(?=[ \t:]|$)/.test(line)) {
-      // With no names yet it's a secret for nobody, never for everyone.
-      open = { kind: 'for', names: forNames(line.replace(/^:::for[ \t:]*/, '')), body: '' }
-    } else push('text', line)
+    if (!opener) {
+      push(line)
+      continue
+    }
+    const seg: Segment =
+      opener.kind === 'for' ? { kind: 'for', names: opener.names, body: opener.one ?? '' } : { kind: opener.kind, body: opener.one ?? opener.first ?? '' }
+    if (opener.one !== undefined) out.push(seg)
+    else {
+      open = seg
+      depth = 1
+    }
   }
   if (open) out.push(open)
   return out
@@ -74,11 +103,14 @@ export function Markdown({
   entities,
   worldId,
   showSecrets,
+  stillLinks,
 }: {
   text: string
   entities: Entity[]
   worldId: string
   showSecrets: boolean
+  /** Links don't open anything (the players' screen on a TV, where a click would leave the player view). */
+  stillLinks?: boolean
 }) {
   const navigate = useNavigate()
   // Previewing as one player: passages for their characters show as they would for them.
@@ -87,17 +119,20 @@ export function Markdown({
   const html = useMemo(() => {
     const viewer = new Set(forViewer.split('\n').filter(Boolean))
     const byName = new Map(entities.map((e) => [e.name.trim().toLowerCase(), e]))
-    let src = splitSecrets(text)
-      .map((seg) => {
-        if (seg.kind === 'text') return seg.body
-        if (seg.kind === 'foryou') return `<div class="secret for-you">\n\n${seg.body}\n\n</div>`
-        if (!showSecrets && seg.kind === 'for' && seg.names.some((n) => viewer.has(n.toLowerCase())))
-          return `<div class="secret for-you">\n\n${seg.body}\n\n</div>`
-        if (!showSecrets) return ''
-        if (seg.kind !== 'for') return `<div class="secret">\n\n${seg.body}\n\n</div>`
-        return `<div class="secret for-some" data-for="${escapeHtml(seg.names.join(', ') || 'nobody yet')}">\n\n${seg.body}\n\n</div>`
-      })
-      .join('\n')
+    // Passages inside passages are rendered the same way, so an inner secret stays hidden.
+    const render = (t: string): string =>
+      splitSecrets(t)
+        .map((seg) => {
+          if (seg.kind === 'text') return seg.body
+          if (seg.kind === 'foryou') return `<div class="secret for-you">\n\n${render(seg.body)}\n\n</div>`
+          if (!showSecrets && seg.kind === 'for' && seg.names.some((n) => viewer.has(n.toLowerCase())))
+            return `<div class="secret for-you">\n\n${render(seg.body)}\n\n</div>`
+          if (!showSecrets) return ''
+          if (seg.kind !== 'for') return `<div class="secret">\n\n${render(seg.body)}\n\n</div>`
+          return `<div class="secret for-some" data-for="${escapeHtml(seg.names.join(', ') || 'nobody yet')}">\n\n${render(seg.body)}\n\n</div>`
+        })
+        .join('\n')
+    let src = render(text)
     src = src.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, name: string, label?: string) => {
       const target = byName.get(name.trim().toLowerCase())
       const shown = escapeHtml(label ?? name)
@@ -121,7 +156,7 @@ export function Markdown({
           if (a) {
             ev.preventDefault()
             setPeek(undefined)
-            navigate(a.getAttribute('href')!.slice(1))
+            if (!stillLinks) navigate(a.getAttribute('href')!.slice(1))
           }
         }}
         onMouseOver={(ev) => {

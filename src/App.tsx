@@ -10,6 +10,7 @@ import { leaveWorld } from './cloud/players'
 import { watchPlayerCopy } from './cloud/share'
 import { startSync, stopSync, syncNow, syncStore } from './cloud/sync'
 import { Modal } from './components'
+import { UpdateBanner } from './appUpdate'
 import SharedWorld from './pages/SharedWorld'
 import JoinWorld from './pages/JoinWorld'
 import { ChooseCharacterBanner } from './players/Characters'
@@ -46,6 +47,7 @@ export default function App() {
   return (
     <ViewModeProvider>
       <CloudBoot />
+      <UpdateBanner />
       <HashRouter>
         <Routes>
           <Route path="/" element={<Home />} />

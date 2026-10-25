@@ -105,32 +105,78 @@ const justPushed = new Map<string, number>()
 
 // ---------- pull / push ----------
 
+/** Each pull re-reads the last minute too: a save that began before the last pull but finished after it would otherwise be missed. */
+const OVERLAP_MS = 60_000
+/** Raised to make every device read its synced worlds from the start once. v2: earlier pulls could skip rows. */
+const PULL_VERSION = 2
+/** Files that failed to download, and how often; a file is retried on later pulls a few times, then left. */
+const downloadTries = new Map<string, number>()
+
 async function pullWorld(worldId: string) {
   const world = await db.worlds.get(worldId)
-  let since = world?.cloud?.lastPulledAt ?? '1970-01-01T00:00:00Z'
+  const last = (world?.cloud?.pullVersion ?? 1) >= PULL_VERSION ? world?.cloud?.lastPulledAt : undefined
+  // The cloud gives times to the microsecond, which some browsers can't read: keep milliseconds.
+  const lastMs = last ? Date.parse(last.replace(/(\.\d{3})\d+/, '$1')) : NaN
+  const since = Number.isNaN(lastMs) ? '1970-01-01T00:00:00Z' : new Date(lastMs - OVERLAP_MS).toISOString()
+  let newest = last ?? since
+  let retryFrom: string | undefined
+  // Rows saved together share a time, so pages are ordered by time, then kind and id, and each page
+  // carries on from the exact row the last one ended at.
+  let after: { at: string; table: string; id: string } | undefined
   for (;;) {
-    const { data, error } = await supabase
-      .from('records')
-      .select('table_name, id, data, deleted, updated_at')
-      .eq('world_id', worldId)
-      .gt('updated_at', since)
-      .order('updated_at', { ascending: true })
-      .limit(500)
+    let query = supabase.from('records').select('table_name, id, data, deleted, updated_at').eq('world_id', worldId).gte('updated_at', since)
+    if (after) {
+      const at = `"${after.at}"`
+      query = query.or(
+        `updated_at.gt.${at},and(updated_at.eq.${at},table_name.gt."${after.table}"),and(updated_at.eq.${at},table_name.eq."${after.table}",id.gt."${after.id}")`,
+      )
+    }
+    const { data, error } = await query.order('updated_at').order('table_name').order('id').limit(500)
     if (error) throw error
     if (!data.length) break
     for (const rec of data as { table_name: SyncedTable; id: string; data: Record<string, unknown> | null; deleted: boolean; updated_at: string }[]) {
-      await applyRemote(worldId, rec.table_name, rec.id, rec.data, rec.deleted)
-      since = rec.updated_at
+      const ok = await applyRemote(worldId, rec.table_name, rec.id, rec.data, rec.deleted)
+      if (!ok) {
+        const key = metaKey(rec.table_name, rec.id)
+        const tries = (downloadTries.get(key) ?? 0) + 1
+        downloadTries.set(key, tries)
+        if (tries < 5 && (!retryFrom || rec.updated_at < retryFrom)) retryFrom = rec.updated_at
+      }
+      after = { at: rec.updated_at, table: rec.table_name, id: rec.id }
+      if (rec.updated_at > newest) newest = rec.updated_at
     }
     if (data.length < 500) break
   }
+  // A file that couldn't be fetched holds the next pull back to it, so it's tried again.
+  const pulledTo = retryFrom ?? newest
   const latest = await db.worlds.get(worldId)
-  if (latest && latest.cloud?.lastPulledAt !== since) await db.worlds.update(worldId, { cloud: { enabled: true, ...latest.cloud, lastPulledAt: since } })
+  if (latest && (latest.cloud?.lastPulledAt !== pulledTo || latest.cloud?.pullVersion !== PULL_VERSION))
+    await db.worlds.update(worldId, { cloud: { enabled: true, ...latest.cloud, lastPulledAt: pulledTo, pullVersion: PULL_VERSION } })
 }
 
-async function applyRemote(worldId: string, table: SyncedTable, id: string, data: Record<string, unknown> | null, deleted: boolean) {
+/**
+ * Merges a row changed both here and on another device since they last agreed (base): each part
+ * (field) takes this device's value if it changed here, and the other device's otherwise.
+ * Returns the merged row, and whether both sides changed the same part.
+ */
+export function mergeRows(base: Record<string, unknown>, mine: Record<string, unknown>, theirs: Record<string, unknown>) {
+  const merged: Record<string, unknown> = { ...theirs }
+  let clash = false
+  for (const k of new Set([...Object.keys(base), ...Object.keys(mine), ...Object.keys(theirs)])) {
+    const mineChanged = stableStringify(mine[k]) !== stableStringify(base[k])
+    if (!mineChanged) continue
+    // Both sides always move "updatedAt", so that alone isn't a clash.
+    if (k !== 'updatedAt' && stableStringify(theirs[k]) !== stableStringify(base[k]) && stableStringify(theirs[k]) !== stableStringify(mine[k])) clash = true
+    if (mine[k] === undefined) delete merged[k]
+    else merged[k] = mine[k]
+  }
+  return { merged, clash }
+}
+
+/** Applies one row from the cloud. Returns false when its file couldn't be downloaded (try again later). */
+async function applyRemote(worldId: string, table: SyncedTable, id: string, data: Record<string, unknown> | null, deleted: boolean): Promise<boolean> {
   // A kind of row this version of the app doesn't know about: skip it rather than fail the whole sync.
-  if (!SYNCED_TABLES.includes(table)) return
+  if (!SYNCED_TABLES.includes(table)) return true
   const key = metaKey(table, id)
   const meta = await db.syncMeta.get(key)
   const local = await tableOf(table).get(id)
@@ -139,30 +185,45 @@ async function applyRemote(worldId: string, table: SyncedTable, id: string, data
 
   // Nothing new for this device.
   if (remoteHash && remoteHash === localHash) {
-    await db.syncMeta.put({ key, worldId, hash: remoteHash })
-    return
+    if (meta?.hash !== remoteHash || !meta.base) await db.syncMeta.put({ key, worldId, hash: remoteHash, base: data! })
+    return true
   }
-  // Edited here since the last sync: keep this device's version; it will be pushed next.
+  // Already seen (pulls overlap a little): nothing to do.
+  if (meta && (remoteHash ? meta.hash === remoteHash : meta.deleted)) return true
+  // Edited here since the last sync.
   const dirty = local ? !meta || meta.deleted || meta.hash !== localHash : !!meta && !meta.deleted
-  if (dirty) return
+  if (dirty) {
+    // Changed on both devices: keep both sets of changes where they touch different parts. Files
+    // aren't merged (this device's copy wins, as before). The merged row is pushed next.
+    if (local && data && remoteHash && meta?.base && table !== 'assets') {
+      const { merged, clash } = mergeRows(meta.base, toData(table, local), data)
+      // Where both changed the same part this device's edit wins; keep the other version of a page to go back to.
+      if (clash && table === 'entities') await keepVersion({ ...(data as unknown as Entity) }, 'conflict')
+      if (table === 'worlds') await db.worlds.put({ ...(merged as unknown as World), cloud: (local as unknown as World).cloud, shared: (local as unknown as World).shared })
+      else await tableOf(table).put(merged)
+      await db.syncMeta.put({ key, worldId, hash: remoteHash, base: data })
+    }
+    return true
+  }
   // Keep this device's copy of a page before another device's change replaces it.
   if (table === 'entities' && local) await keepVersion(local as unknown as Entity, deleted || !data ? 'deleted' : 'synced')
 
   if (deleted || !data) {
     if (local) await tableOf(table).delete(id)
     await db.syncMeta.put({ key, worldId, hash: '', deleted: true })
-    return
+    return true
   }
   if (table === 'assets') {
     const { data: file, error } = await supabase.storage.from('assets').download(storagePath(worldId, id))
-    if (error || !file) return // file not uploaded yet; try again next pull
+    if (error || !file) return false
     await db.assets.put({ ...(data as unknown as Asset), blob: file })
   } else if (table === 'worlds') {
     await db.worlds.put({ ...(data as unknown as World), cloud: (local as unknown as World | undefined)?.cloud ?? { enabled: true } })
   } else {
     await tableOf(table).put(data)
   }
-  await db.syncMeta.put({ key, worldId, hash: remoteHash! })
+  await db.syncMeta.put({ key, worldId, hash: remoteHash!, base: data })
+  return true
 }
 
 /** Uploads everything that changed on this device. Returns how many rows were sent. */
@@ -172,6 +233,9 @@ async function pushWorld(worldId: string): Promise<number> {
   const upserts: { world_id: string; table_name: string; id: string; data: unknown; deleted: boolean }[] = []
   const newMetas: SyncMeta[] = []
   const failures: string[] = []
+  // Session recordings are big, so new ones stay on the device that made them (their transcripts
+  // sync with the session). Ones uploaded before this rule keep syncing as they were.
+  const recordings = new Set((await db.sessions.where({ worldId }).toArray()).flatMap((x) => x.recordings.map((r) => r.assetId)))
 
   for (const r of rows) {
     const key = metaKey(r.table, r.id)
@@ -180,6 +244,7 @@ async function pushWorld(worldId: string): Promise<number> {
     metas.delete(key)
     if (meta && !meta.deleted && meta.hash === hash) continue
     if (meta?.failed && meta.hash === hash) continue
+    if (r.table === 'assets' && recordings.has(r.id) && (!meta || meta.deleted || meta.failed)) continue
     if (r.table === 'assets' && r.blob) {
       const { error } = await supabase.storage
         .from('assets')
@@ -191,7 +256,7 @@ async function pushWorld(worldId: string): Promise<number> {
       }
     }
     upserts.push({ world_id: worldId, table_name: r.table, id: r.id, data: r.data, deleted: false })
-    newMetas.push({ key, worldId, hash })
+    newMetas.push({ key, worldId, hash, base: r.data })
   }
   // Anything synced before but gone now was deleted on this device.
   for (const meta of metas.values()) {
@@ -246,17 +311,25 @@ export async function syncNow() {
   try {
     const ids = await syncedWorldIds()
     await subscribeRealtime(ids)
+    // One world failing (say, its cloud copy was deleted elsewhere) doesn't stop the others.
+    const problems: string[] = []
     for (const id of ids) {
-      suppress++
       try {
-        await pullWorld(id)
-      } finally {
-        suppress--
+        suppress++
+        try {
+          await pullWorld(id)
+        } finally {
+          suppress--
+        }
+        const sent = await pushWorld(id)
+        if (sent) await notifyShareViewers(id)
+      } catch (err) {
+        const name = (await db.worlds.get(id))?.name ?? 'A world'
+        problems.push(`${name}: ${(err as Error).message}`)
       }
-      const sent = await pushWorld(id)
-      if (sent) await notifyShareViewers(id)
     }
-    setState({ status: 'idle', lastSync: Date.now() })
+    if (problems.length) throw new Error(problems.join('; '))
+    setState({ status: 'idle', lastSync: Date.now(), message: undefined })
   } catch (err) {
     setState({ status: navigator.onLine ? 'error' : 'offline', message: (err as Error).message })
   } finally {
@@ -352,13 +425,20 @@ export async function enableCloud(worldId: string) {
   if (!world) throw new Error('World not found')
   const { error } = await supabase.from('cloud_worlds').upsert({ id: worldId, name: world.name }, { onConflict: 'id' })
   if (error) throw error
+  // A brand-new (or emptied) cloud copy gets everything, not just what changed since the last sync.
+  const { count } = await supabase.from('records').select('id', { count: 'exact', head: true }).eq('world_id', worldId)
+  if (!count) await db.syncMeta.where({ worldId }).delete()
   await db.worlds.update(worldId, { cloud: { enabled: true } })
   await syncNow()
 }
 
-export async function disableCloud(worldId: string) {
+/**
+ * Stops syncing this world on this device. What was last synced is remembered, so turning it back
+ * on picks up deletes and changes made elsewhere instead of pushing every old row back up.
+ */
+export async function disableCloud(worldId: string, forget = false) {
   await db.worlds.update(worldId, { cloud: undefined })
-  await db.syncMeta.where({ worldId }).delete()
+  if (forget) await db.syncMeta.where({ worldId }).delete()
   const ch = channels.get(worldId)
   if (ch) {
     supabase.removeChannel(ch)
@@ -372,7 +452,7 @@ export async function deleteCloudCopy(worldId: string) {
   if (files?.length) await supabase.storage.from('assets').remove(files.map((f) => `${worldId}/${f.name}`))
   const { error } = await supabase.from('cloud_worlds').delete().eq('id', worldId)
   if (error) throw error
-  await disableCloud(worldId)
+  await disableCloud(worldId, true)
 }
 
 export interface CloudWorld {

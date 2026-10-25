@@ -1,3 +1,4 @@
+import { binFile } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useState } from 'react'
@@ -80,7 +81,7 @@ function AssetCard({ asset }: { asset: Asset }) {
             onClick={async () => {
               const usedBy = await db.maps.filter((m) => m.imageId === asset.id).count()
               if (!confirm(usedBy ? 'This file is used as a map image. Delete anyway?' : `Delete "${asset.name}"?`)) return
-              await db.assets.delete(asset.id)
+              await binFile(asset.id)
             }}
           >
             🗑

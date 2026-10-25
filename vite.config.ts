@@ -10,7 +10,8 @@ export default defineConfig({
     // Makes the web version installable and usable offline. Registered from main.tsx (skipped inside the desktop app).
     VitePWA({
       injectRegister: null,
-      registerType: 'autoUpdate',
+      // A new version waits for the GM to reload (see src/appUpdate.tsx), so it never interrupts a session.
+      registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Campaign Codex',

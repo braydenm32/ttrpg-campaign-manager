@@ -1,12 +1,13 @@
+import { binMap } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ImageOverlay, MapContainer, Marker, Polygon, Polyline, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, VisibilityBadge, VisibilityToggle } from '../components'
-import { blankEntity, db, deleteMap, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type Pin, type WorldMap } from '../db'
+import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type Pin, type WorldMap } from '../db'
 import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { StatusBadge, statusIcon } from '../status'
@@ -62,12 +63,21 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   }, [isGM])
 
   // Keep the players' fogged picture up to date, a moment after the GM stops changing the fog.
+  // Leaving the map (or switching to the player view) before then still updates it.
   const fogShapes = fog?.shapes
+  const fogPending = useRef<string>(undefined)
+  const flushFog = () => {
+    const id = fogPending.current
+    fogPending.current = undefined
+    if (id) renderPlayerFog(id).catch(() => {})
+  }
   useEffect(() => {
-    if (!isGM || !fog) return
-    const t = setTimeout(() => renderPlayerFog(map.id).catch(() => {}), 1500)
+    if (!isGM || !fog) return flushFog()
+    fogPending.current = map.id
+    const t = setTimeout(flushFog, 1500)
     return () => clearTimeout(t)
   }, [isGM, fog, fogShapes, map.id, map.imageId])
+  useEffect(() => () => flushFog(), [])
 
   const addFog = (shape: ReturnType<typeof rectShape>) =>
     db.maps
@@ -649,7 +659,7 @@ function MapSettings({ map, entities, onClose, onDeleted }: { map: WorldMap; ent
         className="danger"
         onClick={async () => {
           if (!confirm(`Delete map "${map.name}" and all its pins?`)) return
-          await deleteMap(map.id)
+          await binMap(map.id)
           onDeleted()
         }}
       >

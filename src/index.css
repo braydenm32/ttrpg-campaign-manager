@@ -563,6 +563,7 @@ label.check-item { display: flex; gap: .4em; align-items: flex-start; font-size:
 .showing-view.big img { max-height: 80vh; }
 .showing-modal { width: min(820px, 100%); max-height: 92vh; overflow: auto; }
 .showing-reopen { position: fixed; right: 1em; bottom: 1em; z-index: 1500; background: var(--accent); color: var(--accent-ink); border-radius: 999px; box-shadow: 0 4px 16px rgba(0, 0, 0, .35); }
+.update-banner { position: fixed; left: 50%; bottom: 1em; transform: translateX(-50%); z-index: 1600; display: flex; flex-wrap: wrap; gap: .5em .8em; align-items: center; justify-content: center; max-width: calc(100vw - 32px); padding: .6em 1em; background: var(--panel, #fff); border: 1px solid var(--border, #ccc); border-radius: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, .25); }
 .showing-banner { justify-content: flex-start; flex-wrap: wrap; }
 .show-thumbs { display: flex; flex-wrap: wrap; gap: .4em; align-items: center; max-height: 220px; overflow: auto; }
 .show-thumb { padding: 0; width: 64px; height: 64px; overflow: hidden; border-radius: 6px; }

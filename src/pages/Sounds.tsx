@@ -1,3 +1,4 @@
+import { binSound } from '../bin'
 import { useState } from 'react'
 import { DraftText, Empty } from '../components'
 import { db, newId, type Sound } from '../db'
@@ -123,8 +124,7 @@ export default function Sounds() {
                       onClick={async () => {
                         if (!confirm(`Remove “${s.name}”?`)) return
                         await stop(s).catch(() => {})
-                        await db.sounds.delete(s.id)
-                        if (s.assetId && !(await db.sounds.where({ worldId }).filter((x) => x.assetId === s.assetId).count())) await db.assets.delete(s.assetId)
+                        await binSound(s.id)
                       }}
                     >
                       ✕

@@ -27,7 +27,7 @@ export function useWorldPlayers(world: World | null | undefined, entities: Entit
         setPlayers(
           members
             .filter((m) => m.role === 'player')
-            .map((m) => ({ userId: m.userId, name: m.name, plays: claims.filter((c) => c.userId === m.userId).map((c) => c.entityId) })),
+            .map((m) => ({ userId: m.userId, name: m.name, plays: claims.filter((c) => c.userId === m.userId && c.approved).map((c) => c.entityId) })),
         )
       })
       .catch(() => {

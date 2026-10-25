@@ -51,7 +51,7 @@ export default function Home() {
           Import backup…
           <input
             type="file"
-            accept="application/json,.json"
+            accept="application/json,.json,application/zip,.zip"
             hidden
             onChange={async (e) => {
               const f = e.target.files?.[0]

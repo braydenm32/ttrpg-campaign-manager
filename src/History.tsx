@@ -4,6 +4,7 @@ import { Empty, Modal } from './components'
 import { db, saveEntity, typeLabel, type Entity, type PageVersion } from './db'
 import { Help } from './help'
 import { useWorld } from './hooks'
+import { restoreFromBin, useBin } from './bin'
 
 /**
  * Page history: every save keeps the version it replaced, on this device. Changes that arrive from
@@ -14,6 +15,7 @@ const REASON: Record<PageVersion['reason'], string> = {
   edit: 'Before an edit',
   synced: 'Before a change from another device',
   deleted: 'When it was deleted',
+  conflict: 'Another device’s version, when both changed the same part',
 }
 
 const when = (t: number) => new Date(t).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
@@ -97,6 +99,8 @@ function HistoryModal({ entity, onClose }: { entity: Entity; onClose: () => void
   )
 }
 
+const BIN_ICON: Record<string, string> = { session: '📖', campaign: '🎲', file: '📁', board: '📌', sound: '🎵', map: '🗺️' }
+
 /** World settings: pages deleted on this device, with a way to bring them back. */
 export function RecentlyDeleted() {
   const { worldId, world } = useWorld()
@@ -108,13 +112,29 @@ export function RecentlyDeleted() {
       // Newest deletion of each page that hasn't come back since.
       return vs.filter((v) => !still.has(v.entityId) && !seen.has(v.entityId) && seen.add(v.entityId))
     }, [worldId]) ?? []
+  const bin = useBin(worldId)
   return (
     <section>
       <h2>
         🗑️ Recently deleted <Help topic="recentlyDeleted" />
       </h2>
+      {bin.length > 0 && (
+        <ul className="entity-list">
+          {bin.slice(0, 30).map((b) => (
+            <li key={b.id} className="row spread">
+              <span>
+                {BIN_ICON[b.kind]} {b.label || 'Untitled'} <span className="muted small">· deleted {when(b.at)}</span>
+              </span>
+              <button className="small" onClick={() => restoreFromBin(b.id)}>
+                Restore
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       {deleted.length === 0 ? (
-        <Empty>Nothing deleted on this device.</Empty>
+        bin.length === 0 && 
+<Empty>Nothing deleted on this device.</Empty>
       ) : (
         <ul className="entity-list">
           {deleted.slice(0, 30).map((v) => (

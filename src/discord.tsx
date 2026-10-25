@@ -34,7 +34,7 @@ export const forDiscord = (text: string) => plainLinks(stripSecrets(text)).trim(
 
 /**
  * Posts a titled message. Long text is split across several embeds (Discord allows 4,096
- * characters in each and ten in a message).
+ * characters in each, and 6,000 across all the embeds in one message), sent as several messages.
  */
 export async function postToDiscord(worldId: string, title: string, text: string) {
   const url = getWebhook(worldId)
@@ -47,12 +47,19 @@ export async function postToDiscord(worldId: string, title: string, text: string
     chunks.push(rest.slice(0, cut))
     rest = rest.slice(cut).replace(/^\n+/, '')
   }
-  for (let i = 0; i < chunks.length; i += 10) {
-    const embeds = chunks.slice(i, i + 10).map((description, j) => ({
-      ...(i + j === 0 ? { title: title.slice(0, 256) } : {}),
-      description,
-      color: 0xb3261e,
-    }))
+  const messages: { title?: string; description: string; color: number }[][] = []
+  let size = Infinity
+  chunks.forEach((description, i) => {
+    const embed = { ...(i === 0 ? { title: title.slice(0, 256) } : {}), description, color: 0xb3261e }
+    const length = description.length + (embed.title?.length ?? 0)
+    if (size + length > 5900 || messages[messages.length - 1].length >= 10) {
+      messages.push([])
+      size = 0
+    }
+    messages[messages.length - 1].push(embed)
+    size += length
+  })
+  for (const embeds of messages) {
     // Sent as a form, which browsers send without a preflight check, with ?wait so Discord says whether it worked.
     const body = new FormData()
     body.append('payload_json', JSON.stringify({ username: 'Campaign Codex', embeds, allowed_mentions: { parse: [] } }))
