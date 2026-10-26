@@ -61,7 +61,7 @@ export function UpdateBanner() {
   if (!ready) return null
   return (
     <div className="update-banner" role="status">
-      <span>✨ A new version of Campaign Codex is ready.</span>
+      <span>✨ A new version of the Warded Atlas is ready.</span>
       <button className="small primary" onClick={() => reload?.()}>
         Reload now
       </button>

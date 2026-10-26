@@ -121,14 +121,14 @@ function CloudBoot() {
       if (!r) return
       if (r.error) setLinkNotice(r.error)
       else if (r.type === 'recovery') setRecovering(true)
-      else if (r.type === 'signup' || r.type === 'email') setLinkNotice('Your email is confirmed and you’re signed in. Welcome to Campaign Codex!')
+      else if (r.type === 'signup' || r.type === 'email') setLinkNotice('Your email is confirmed and you’re signed in. Welcome to the Warded Atlas!')
       else if (r.type === 'email_change') setLinkNotice('Your email address has been updated.')
     })
     return () => data.subscription.unsubscribe()
   }, [])
   if (linkNotice && !recovering)
     return (
-      <Modal title="Campaign Codex account" onClose={() => setLinkNotice('')}>
+      <Modal title="The Warded Atlas account" onClose={() => setLinkNotice('')}>
         <div className="form">
           <p>{linkNotice}</p>
           <div className="row end">

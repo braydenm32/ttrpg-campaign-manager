@@ -62,7 +62,7 @@ export async function postToDiscord(worldId: string, title: string, text: string
   for (const embeds of messages) {
     // Sent as a form, which browsers send without a preflight check, with ?wait so Discord says whether it worked.
     const body = new FormData()
-    body.append('payload_json', JSON.stringify({ username: 'Campaign Codex', embeds, allowed_mentions: { parse: [] } }))
+    body.append('payload_json', JSON.stringify({ username: 'The Warded Atlas', embeds, allowed_mentions: { parse: [] } }))
     const res = await fetch(`${url}?wait=true`, { method: 'POST', body })
     if (!res.ok) throw new Error(`Discord said no (${res.status}). Check the webhook link in World settings.`)
   }
@@ -97,7 +97,7 @@ export function DiscordSettings({ worldId }: { worldId: string }) {
           onClick={async () => {
             setState('Sending…')
             try {
-              await postToDiscord(worldId, '👋 Hello from Campaign Codex', 'Recaps and session dates will appear here.')
+              await postToDiscord(worldId, '👋 Hello from the Warded Atlas', 'Recaps and session dates will appear here.')
               setState('✓ Sent. Check your channel.')
             } catch (e) {
               setState((e as Error).message)

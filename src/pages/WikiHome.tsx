@@ -125,7 +125,7 @@ export default function WikiHome({ world }: { world: World }) {
           </ul>
         </section>
       </div>
-      <p className="muted small wiki-footer">Made with Campaign Codex.</p>
+      <p className="muted small wiki-footer">Made with the Warded Atlas.</p>
     </div>
   )
 }
