@@ -131,6 +131,8 @@ export interface SharedInfo {
   availability?: { optionId: string; userId: string; answer: Availability }[]
   /** For joined worlds: your own questions to the GM, and the answers. */
   questions?: PlayerQuestion[]
+  /** What arrived since the player last said "got it": newly revealed pages and sessions, and answers to their questions. */
+  news?: { entityIds: string[]; sessionIds: string[]; questionIds: string[] }
 }
 
 export interface World {
@@ -211,6 +213,8 @@ export interface Campaign {
   description: string
   system: string
   status: 'planning' | 'active' | 'paused' | 'finished'
+  /** 'gm' keeps the campaign and its sessions from players (one you're still planning). Unset means players. */
+  visibility?: Visibility
   /** Dates the GM has proposed for the next session; players say whether they can make each one. */
   schedule?: DateOption[]
   createdAt: number
@@ -246,8 +250,12 @@ export interface Entity {
   tags: string[]
   /** For locations: the containing location (city inside a region, etc). */
   parentId?: string
-  /** Free-form key/value fields (stats, prices, alignment...). Keeps the core system-agnostic. */
-  fields: { key: string; value: string }[]
+  /** Free-form key/value fields (stats, prices, alignment...). Keeps the core system-agnostic. gm: never shown to players. */
+  fields: { key: string; value: string; gm?: boolean }[]
+  /** Other names the page goes by; [[links]] to any of them find it. GM-only. */
+  aliases?: string[]
+  /** Tags for the GM alone (players get only the ordinary tags). */
+  gmTags?: string[]
   imageId?: string
   /** Events: in-world date label and whether it happened before or during the campaign. */
   eventDate?: string

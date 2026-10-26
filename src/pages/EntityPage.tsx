@@ -1,3 +1,4 @@
+import { renameLinks } from '../links'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useEffect, useState } from 'react'
@@ -217,21 +218,30 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               <h3>Details</h3>
               <dl className="fields">
                 {e.fields.map((f, i) => (
-                  <div key={i}>
-                    <dt>{f.key}</dt>
+                  <div key={i} className={f.gm ? 'gm-field' : undefined}>
+                    <dt>
+                      {f.gm && <span title="GM only">🔒 </span>}
+                      {f.key}
+                    </dt>
                     <dd>{f.value}</dd>
                   </div>
                 ))}
               </dl>
             </div>
           )}
-          {e.tags.length > 0 && (
+          {(e.tags.length > 0 || (isGM && !!e.gmTags?.length)) && (
             <div className="tags">
               {e.tags.map((t) => (
                 <span key={t} className="tag">
                   {t}
                 </span>
               ))}
+              {isGM &&
+                e.gmTags?.map((t) => (
+                  <span key={`gm-${t}`} className="tag gm" title="GM only">
+                    🔒 {t}
+                  </span>
+                ))}
             </div>
           )}
         </aside>
@@ -259,7 +269,10 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
   const save = async () => {
     // A calendar date puts the event in its place on the timeline.
     const order = d.type === 'event' && d.eventWhen && world?.calendar ? { eventOrder: toDays(world.calendar, d.eventWhen) } : {}
-    await saveEntity({ ...d, ...order, name: d.name.trim() || 'Untitled', updatedAt: Date.now() })
+    const next = { ...d, ...order, name: d.name.trim() || 'Untitled', updatedAt: Date.now() }
+    await saveEntity(next)
+    // Renamed: links to the old name (and :::for passages, for a player character) follow it.
+    if (!next.template) await renameLinks(worldId, entity, next)
     onDone()
   }
   const saveAsTemplate = async () => {
@@ -282,7 +295,15 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
         }}
       >
         <header className="page-header">
-          <input className="title-input" value={d.name} onChange={(ev) => set('name', ev.target.value)} placeholder="Name" />
+          <div className="title-block">
+            <input className="title-input" value={d.name} onChange={(ev) => set('name', ev.target.value)} placeholder="Name" />
+            <div className="row small aliases">
+              <span className="muted">
+                Also called <Help topic="aliases" />
+              </span>
+              <TagInput tags={d.aliases ?? []} onChange={(t) => set('aliases', t.length ? t : undefined)} placeholder="Add a nickname…" />
+            </div>
+          </div>
           <div className="row">
             {d.template ? (
               <span className="muted small">📐 Template <Help topic="templates" /></span>
@@ -437,7 +458,7 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
         <label>
           Summary
           <input value={d.summary} onChange={(ev) => set('summary', ev.target.value)} placeholder="One line shown in lists and on map pins" />
-          <small className="muted">Players see the summary, details and tags once the page is revealed. Secrets go in GM notes or a :::gm block.</small>
+          <small className="muted">Players see the summary, details and tags once the page is revealed (except 🔒 details and GM-only tags). Secrets go in GM notes or a :::gm block.</small>
         </label>
         <label>
           <span>
@@ -470,7 +491,7 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
               Details <Help topic="fields" />
             </div>
             {d.fields.map((f, i) => (
-              <div key={i} className="row field-row">
+              <div key={i} className={`row field-row ${f.gm ? 'gm-field' : ''}`}>
                 <input
                   value={f.key}
                   placeholder="Field"
@@ -481,6 +502,15 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
                   placeholder="Value"
                   onChange={(ev) => set('fields', d.fields.map((x, j) => (j === i ? { ...x, value: ev.target.value } : x)))}
                 />
+                <button
+                  type="button"
+                  className={`ghost ${f.gm ? 'on' : ''}`}
+                  title={f.gm ? 'GM only: players never see this. Click to show it to players.' : 'Players see this once the page is revealed. Click to keep it GM only.'}
+                  aria-pressed={!!f.gm}
+                  onClick={() => set('fields', d.fields.map((x, j) => (j === i ? { ...x, gm: !x.gm || undefined } : x)))}
+                >
+                  {f.gm ? '🔒' : '👁'}
+                </button>
                 <button type="button" className="ghost" onClick={() => set('fields', d.fields.filter((_, j) => j !== i))}>
                   ×
                 </button>
@@ -517,6 +547,12 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
         <div>
           <div className="label">Tags</div>
           <TagInput tags={d.tags} onChange={(t) => set('tags', t)} />
+        </div>
+        <div>
+          <div className="label">
+            🔒 GM-only tags <Help topic="gmTags" />
+          </div>
+          <TagInput tags={d.gmTags ?? []} onChange={(t) => set('gmTags', t.length ? t : undefined)} />
         </div>
         <div className="row spread">
           <div className="row">

@@ -1,4 +1,3 @@
-import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -7,28 +6,25 @@ import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel } from 
 import { useCreatePage } from '../NewPage'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { plainLinks } from '../text'
-import { URGENCY } from '../threads'
+import { URGENCY, useCampaigns } from '../threads'
+import { searchWorld, useSearchable } from '../search'
 import { useViewMode } from '../viewMode'
 import { WorldToday } from '../calendar'
+import { BackupReminder } from '../BackupReminder'
+import WikiHome from './WikiHome'
 
 export default function Dashboard() {
   const { worldId, world } = useWorld()
   const { isGM } = useViewMode()
   const navigate = useNavigate()
   const entities = useVisibleEntities(worldId)
-  const campaigns = useLiveQuery(() => db.campaigns.where({ worldId }).toArray(), [worldId]) ?? []
+  const campaigns = useCampaigns(worldId)
   const [query, setQuery] = useState('')
   const [newCampaign, setNewCampaign] = useState(false)
 
   const q = query.trim().toLowerCase()
-  const results = q
-    ? entities.filter(
-        (e) =>
-          e.name.toLowerCase().includes(q) ||
-          e.summary.toLowerCase().includes(q) ||
-          e.tags.some((t) => t.toLowerCase().includes(q)),
-      )
-    : []
+  const searchable = useSearchable(worldId)
+  const results = searchWorld(query, { worldId, world, ...searchable })
   const recent = [...entities].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 8)
   const urgencyRank = { high: 0, normal: 1, low: 2 }
   const openThreads = entities
@@ -39,6 +35,8 @@ export default function Dashboard() {
   const quickCreate = useCreatePage(world)
 
   if (!world) return null
+  // Opened from a public wiki link: a tidy front page for readers instead of the GM's overview.
+  if (world.shared?.token) return <WikiHome world={world} />
   return (
     <div className="page">
       <header className="page-header">
@@ -50,22 +48,23 @@ export default function Dashboard() {
         </div>
       </header>
       {world.description && <p className="lead">{world.description}</p>}
+      {isGM && <BackupReminder world={world} />}
       <WorldToday world={world} isGM={isGM} />
 
       <input
         className="search"
-        placeholder="Search names, summaries and tags…"
+        placeholder="Search pages, text, sessions and maps…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
       {q && (
         <ul className="entity-list">
-          {results.map((e) => (
-            <li key={e.id}>
-              <Link to={`/w/${worldId}/e/${e.id}`}>
-                {typeLabel(e, world).icon} {e.name}
+          {results.map((h) => (
+            <li key={h.key}>
+              <Link to={h.to}>
+                {h.icon} {h.title}
               </Link>
-              <span className="muted"> · {e.summary}</span>
+              {h.snippet && <span className="muted"> · {h.snippet}</span>}
             </li>
           ))}
           {results.length === 0 && <li className="muted">Nothing matches.</li>}

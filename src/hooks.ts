@@ -61,6 +61,9 @@ export function asPlayerSees(e: Entity): Entity {
     // Links and clocks players haven't been told about (links to pages they can't see drop out where they're shown).
     relations: e.relations?.filter((r) => r.known),
     clocks: e.clocks?.filter((c) => c.known),
+    fields: e.fields.filter((f) => !f.gm),
+    aliases: undefined,
+    gmTags: undefined,
   }
 }
 

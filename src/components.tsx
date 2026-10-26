@@ -24,7 +24,7 @@ export function VisibilityBadge({ value }: { value: Visibility }) {
   return value === 'gm' ? <span className="badge gm" title="GM only">🔒</span> : null
 }
 
-export function TagInput({ tags, onChange }: { tags: string[]; onChange: (t: string[]) => void }) {
+export function TagInput({ tags, onChange, placeholder = 'Add tag…' }: { tags: string[]; onChange: (t: string[]) => void; placeholder?: string }) {
   const [draft, setDraft] = useState('')
   const add = () => {
     const t = draft.trim()
@@ -43,7 +43,7 @@ export function TagInput({ tags, onChange }: { tags: string[]; onChange: (t: str
       ))}
       <input
         value={draft}
-        placeholder="Add tag…"
+        placeholder={placeholder}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ',') {
