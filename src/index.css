@@ -69,6 +69,7 @@ button.primary, .button.primary { background: var(--accent); color: var(--accent
 button.danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 50%, transparent); background: transparent; }
 button.ghost { background: transparent; border-color: transparent; padding: .2em .5em; }
 button.link { background: none; border: none; padding: 0; color: var(--link); }
+button.link.danger-link { color: var(--danger); }
 .block { display: flex; width: 100%; margin: .25em 0; }
 input, select, textarea { width: 100%; }
 textarea { resize: vertical; line-height: 1.5; }

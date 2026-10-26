@@ -4,6 +4,7 @@ import { Modal } from '../components'
 import { Help } from '../help'
 import { appUrl, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
 import { pendingInvite } from './players'
+import { deleteMyAccount } from './sync'
 
 type Provider = 'google' | 'facebook'
 const PROVIDERS: { id: Provider; label: string }[] = [
@@ -108,7 +109,33 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
             Signed in as <strong>{user.email || user.user_metadata?.full_name || 'you'}</strong>. Worlds you turn sync on for are backed up to the cloud and kept in step
             across your devices.
           </p>
-          <div className="row end">
+          {error && <p className="error">{error}</p>}
+          <div className="row spread">
+            <span className="row small">
+              <button
+                className="link danger-link"
+                disabled={busy}
+                onClick={async () => {
+                  const typed = prompt(
+                    'Delete your account?\n\nThis removes the cloud copy of every world you own (and its share and invite links), and takes you out of worlds you joined. Worlds saved on this device stay here.\n\nType DELETE to confirm.',
+                  )
+                  if (typed?.trim().toUpperCase() !== 'DELETE') return
+                  setBusy(true)
+                  setError('')
+                  try {
+                    await deleteMyAccount()
+                    onClose()
+                  } catch (err) {
+                    setError((err as Error).message)
+                  } finally {
+                    setBusy(false)
+                  }
+                }}
+              >
+                {busy ? 'Deleting…' : 'Delete my account'}
+              </button>
+              <Help topic="deleteAccount" />
+            </span>
             <button
               onClick={async () => {
                 await supabase.auth.signOut()

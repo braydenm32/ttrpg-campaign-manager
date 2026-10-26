@@ -464,6 +464,22 @@ export async function deleteCloudCopy(worldId: string) {
   await disableCloud(worldId, true)
 }
 
+/**
+ * Deletes the signed-in person's account: the cloud copy and files of every world they own, then
+ * the account itself (which also removes their memberships, claimed characters, notes and
+ * questions in other people's worlds). Worlds saved on this device are kept.
+ */
+export async function deleteMyAccount() {
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) throw new Error('Not signed in')
+  const { data: owned, error } = await supabase.from('cloud_worlds').select('id').eq('owner', auth.user.id)
+  if (error) throw error
+  for (const w of owned ?? []) await deleteCloudCopy(w.id)
+  const { error: deleteError } = await supabase.rpc('delete_my_account')
+  if (deleteError) throw deleteError
+  await supabase.auth.signOut({ scope: 'local' })
+}
+
 export interface CloudWorld {
   id: string
   name: string
