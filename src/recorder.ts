@@ -9,6 +9,7 @@ export type RecordSource = 'mic' | 'mic+system'
 export interface ActiveRecording {
   stop: () => Promise<Blob>
   startedAt: number
+  mime: string
 }
 
 const MIME_CANDIDATES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']
@@ -21,7 +22,8 @@ export function systemAudioSupported() {
   return !!navigator.mediaDevices?.getDisplayMedia
 }
 
-export async function startRecording(source: RecordSource, onChunk?: (bytes: number) => void): Promise<ActiveRecording> {
+/** Starts recording. onPiece gets each few seconds of audio as it's made, so it can be saved straight away. */
+export async function startRecording(source: RecordSource, onPiece?: (piece: Blob, totalBytes: number) => void): Promise<ActiveRecording> {
   const streams: MediaStream[] = []
   const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
   streams.push(mic)
@@ -57,13 +59,14 @@ export async function startRecording(source: RecordSource, onChunk?: (bytes: num
     if (e.data.size) {
       chunks.push(e.data)
       bytes += e.data.size
-      onChunk?.(bytes)
+      onPiece?.(e.data, bytes)
     }
   }
   rec.start(5000)
 
   return {
     startedAt: Date.now(),
+    mime: rec.mimeType || mimeType || 'audio/webm',
     stop: () =>
       new Promise<Blob>((resolve) => {
         rec.onstop = () => {

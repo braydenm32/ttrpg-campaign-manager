@@ -6,18 +6,12 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { RecapPanel } from '../ai/RecapPanel'
 import { TranscriptPanel } from '../ai/TranscriptPanel'
 import { Empty, VisibilityToggle } from '../components'
-import { db, ENTITY_LABELS, newId, type Bookmark, type Entity, type Recording, type Session } from '../db'
-import { formatBytes, saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
+import { db, ENTITY_LABELS, type Entity, type Recording, type Session } from '../db'
+import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
-import {
-  formatTime,
-  recordingSupported,
-  startRecording,
-  systemAudioSupported,
-  type ActiveRecording,
-  type RecordSource,
-} from '../recorder'
+import { formatTime, recordingSupported, systemAudioSupported, type RecordSource } from '../recorder'
+import { addBookmark, beginRecording, discardRecording, endRecording, recoverRecording, unsavedRecordings, useLiveRecording } from '../recordingStore'
 import { ThreadCard } from '../ThreadCard'
 import { newThread, useWorldSessions } from '../threads'
 import { useViewMode } from '../viewMode'
@@ -25,6 +19,7 @@ import { PrepSheet } from '../prep'
 import { PrintButton } from '../print'
 import { CalDateInput, formatDate } from '../calendar'
 import { DiscordButton, forDiscord } from '../discord'
+import { EndSessionChecklist } from '../EndSession'
 
 export default function SessionPage() {
   const { worldId, world } = useWorld()
@@ -88,6 +83,11 @@ export default function SessionPage() {
           <Link className="button primary" to={`/w/${worldId}/s/${session.id}/lectern`}>
             📖 Run at the Lectern
           </Link>
+          {params.get('end') !== '1' && (
+            <button title="Recap, show players, next session" onClick={() => setParams({ end: '1' }, { replace: true })}>
+              🏁 Wrap up
+            </button>
+          )}
         </div>
       </header>
 
@@ -104,8 +104,13 @@ export default function SessionPage() {
           )}
         </div>
       )}
-      <Recorder session={session} />
-      {world && <RecapPanel world={world} session={session} entities={entities} />}
+      {world && params.get('end') === '1' && (
+        <EndSessionChecklist world={world} session={session} onClose={() => setParams({}, { replace: true })} />
+      )}
+      <div id="session-recorder">
+        <Recorder session={session} />
+      </div>
+      <div id="session-recap">{world && <RecapPanel world={world} session={session} entities={entities} />}</div>
 
       <div className="segmented tabs">
         <button className={tab === 'prep' ? 'on' : ''} onClick={() => setTab('prep')}>
@@ -226,87 +231,62 @@ function FeaturedList({
 }
 
 function Recorder({ session }: { session: Session }) {
-  const { worldId } = useWorld()
   const [source, setSource] = useState<RecordSource>('mic')
-  const [active, setActive] = useState<ActiveRecording>()
+  const live = useLiveRecording()
+  const active = live?.sessionId === session.id ? live : undefined
   const [elapsed, setElapsed] = useState(0)
-  const [bytes, setBytes] = useState(0)
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [mark, setMark] = useState('')
   const [error, setError] = useState('')
-  const live = useRef<{ rec: ActiveRecording; bookmarks: Bookmark[] }>(undefined)
+  // Recordings cut off by a crash or a closed tab, waiting to be put back together.
+  const cutOff = useLiveQuery(() => unsavedRecordings(session.id), [session.id, live?.recordingId]) ?? []
 
   useEffect(() => {
     if (!active) return
-    const t = setInterval(() => setElapsed((Date.now() - active.startedAt) / 1000), 500)
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault()
-    window.addEventListener('beforeunload', warn)
-    return () => {
-      clearInterval(t)
-      window.removeEventListener('beforeunload', warn)
-    }
+    const t = setInterval(() => setElapsed((Date.now() - active.rec.startedAt) / 1000), 500)
+    return () => clearInterval(t)
   }, [active])
-
-  const save = async (rec: ActiveRecording, marks: Bookmark[]) => {
-    const blob = await rec.stop()
-    const ext = blob.type.includes('mp4') ? 'm4a' : blob.type.includes('ogg') ? 'ogg' : 'webm'
-    const name = `Session ${session.number} – ${new Date(rec.startedAt).toLocaleString()}.${ext}`
-    const assetId = await saveFileAsAsset(worldId, blob, name, ['recording'])
-    const fresh = await db.sessions.get(session.id)
-    await db.sessions.update(session.id, {
-      recordings: [...(fresh?.recordings ?? []), { assetId, startedAt: rec.startedAt, bookmarks: marks }],
-    })
-  }
-
-  // If the GM navigates away mid-recording, stop and keep what was captured.
-  useEffect(
-    () => () => {
-      if (live.current) save(live.current.rec, live.current.bookmarks)
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  )
 
   const start = async () => {
     setError('')
     try {
-      const rec = await startRecording(source, setBytes)
-      live.current = { rec, bookmarks: [] }
-      setBookmarks([])
       setElapsed(0)
-      setBytes(0)
-      setActive(rec)
+      await beginRecording(session, source)
     } catch (err) {
       setError((err as Error).message || 'Could not start recording.')
     }
   }
-  const stop = async () => {
-    if (!live.current) return
-    const { rec, bookmarks: marks } = live.current
-    live.current = undefined
-    setActive(undefined)
-    await save(rec, marks)
-  }
-  const addBookmark = () => {
-    if (!live.current) return
-    const b = { id: newId(), t: (Date.now() - live.current.rec.startedAt) / 1000, text: mark.trim() || 'Bookmark' }
-    live.current.bookmarks = [...live.current.bookmarks, b]
-    setBookmarks(live.current.bookmarks)
-    setMark('')
-  }
+  const stop = () => endRecording().catch((err) => setError((err as Error).message))
+  const bookmarks = active?.bookmarks ?? []
 
   return (
     <section className="recorder">
       <h2>
         🎙️ Recording <Help topic="recording" />
       </h2>
+      {cutOff.map((r) => (
+        <div key={r.recordingId} className="player-banner recover-recording">
+          <span>
+            ⚠️ A recording from {new Date(r.startedAt).toLocaleString()} wasn’t finished (the app closed while it was running). About{' '}
+            {formatTime(r.seconds)} ({formatBytes(r.bytes)}) was saved as it went.
+          </span>
+          <button className="primary small" onClick={() => recoverRecording(session.id, r.recordingId, session.number)}>
+            Recover it
+          </button>
+          <button className="small ghost" onClick={() => confirm('Throw this recording away?') && discardRecording(r.recordingId)}>
+            Discard
+          </button>
+        </div>
+      ))}
+      {live && !active && (
+        <p className="muted small">Session #{live.sessionNumber} is being recorded. Stop it there before starting another.</p>
+      )}
       {!recordingSupported() ? (
         <p className="muted">Recording isn't supported on this device or browser.</p>
       ) : active ? (
         <>
           <div className="row">
             <span className="rec-dot" /> <strong>{formatTime(elapsed)}</strong>
-            <span className="muted">{formatBytes(bytes)}</span>
+            <span className="muted">{formatBytes(active.bytes)}</span>
             <button className="danger" onClick={stop}>
               ■ Stop & save
             </button>
@@ -315,7 +295,8 @@ function Recorder({ session }: { session: Session }) {
             className="row"
             onSubmit={(e) => {
               e.preventDefault()
-              addBookmark()
+              addBookmark(mark)
+              setMark('')
             }}
           >
             <input value={mark} onChange={(e) => setMark(e.target.value)} placeholder="Bookmark this moment (e.g. 'party meets the lich')" />
@@ -333,11 +314,12 @@ function Recorder({ session }: { session: Session }) {
         </>
       ) : (
         <div className="row wrap">
+          <span className="muted small">Keeps recording while you use the rest of the app, and saves as it goes.</span>
           <select value={source} onChange={(e) => setSource(e.target.value as RecordSource)}>
             <option value="mic">In person: this device's microphone</option>
             {systemAudioSupported() && <option value="mic+system">Online: microphone + call audio (Discord, Zoom…)</option>}
           </select>
-          <button className="primary" onClick={start}>
+          <button className="primary" onClick={start} disabled={!!live}>
             ● Start recording
           </button>
         </div>

@@ -1,20 +1,22 @@
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
 import { HashRouter, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Help } from './help'
 import { useWorld } from './hooks'
 import { WorldNav } from './Sidebar'
 import { ForcePlayerView, useViewMode, ViewModeProvider } from './viewMode'
 import { finishSignInRedirect, useAuthSession, verifyEmailLink } from './cloud/auth'
-import { supabase } from './cloud/client'
+import { cloudErrorMessage, supabase } from './cloud/client'
 import { leaveWorld } from './cloud/players'
 import { watchPlayerCopy } from './cloud/share'
 import { startSync, stopSync, syncNow, syncStore } from './cloud/sync'
 import { Modal } from './components'
 import { UpdateBanner } from './appUpdate'
+import { RecordingBar } from './RecordingBar'
 import { SearchButton } from './search'
 import SharedWorld from './pages/SharedWorld'
 import JoinWorld from './pages/JoinWorld'
 import { ChooseCharacterBanner } from './players/Characters'
+import { ClaimRequestsBanner } from './players/ClaimRequests'
 import { NewsBanner } from './players/News'
 import { PreviewAsPicker } from './players/Secrets'
 import { useCharacterOwners } from './players/owners'
@@ -23,27 +25,28 @@ import Dashboard from './pages/Dashboard'
 import EntityList from './pages/EntityList'
 import EntityPage from './pages/EntityPage'
 import MapList from './pages/MapList'
-import MapView from './pages/MapView'
-import MapBuilder from './pages/MapBuilder'
-import Timeline from './pages/Timeline'
+const MapView = lazy(() => import('./pages/MapView'))
+const MapBuilder = lazy(() => import('./pages/MapBuilder'))
+const Timeline = lazy(() => import('./pages/Timeline'))
 import CampaignPage from './pages/CampaignPage'
 import SessionPage from './pages/SessionPage'
-import Lectern from './pages/Lectern'
+const Lectern = lazy(() => import('./pages/Lectern'))
 import Threads from './pages/Threads'
 import Scratchpad from './pages/Scratchpad'
 import Assets from './pages/Assets'
-import Generators from './pages/Generators'
+const Generators = lazy(() => import('./pages/Generators'))
 import PartyLoot from './pages/PartyLoot'
-import WorldSettings from './pages/WorldSettings'
-import PrintPage from './print'
+const WorldSettings = lazy(() => import('./pages/WorldSettings'))
+const PrintPage = lazy(() => import('./print'))
 import Boards from './pages/Boards'
-import BoardView from './pages/BoardView'
-import Sounds from './pages/Sounds'
+const BoardView = lazy(() => import('./pages/BoardView'))
+const Sounds = lazy(() => import('./pages/Sounds'))
 import Questions from './pages/Questions'
-import RelationWeb from './pages/RelationWeb'
+const RelationWeb = lazy(() => import('./pages/RelationWeb'))
 import ClocksPage from './clocks'
 import SafetyPage, { XCardAlert, XCardButton } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
+import Handouts from './pages/Handouts'
 
 export default function App() {
   return (
@@ -55,7 +58,14 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/shared/:token" element={<SharedWorld />} />
           <Route path="/join/:token" element={<JoinWorld />} />
-          <Route path="/w/:worldId/print/:kind/:id" element={<PrintPage />} />
+          <Route
+            path="/w/:worldId/print/:kind/:id"
+            element={
+              <Suspense fallback={<div className="loading">Loading…</div>}>
+                <PrintPage />
+              </Suspense>
+            }
+          />
           <Route path="/screen/:worldId" element={<ScreenRoute />} />
           <Route path="/w/:worldId" element={<WorldLayout />}>
             <Route index element={<Dashboard />} />
@@ -82,6 +92,7 @@ export default function App() {
             <Route path="web" element={<RelationWeb />} />
             <Route path="clocks" element={<ClocksPage />} />
             <Route path="safety" element={<SafetyPage />} />
+            <Route path="handouts" element={<Handouts />} />
           </Route>
           <Route path="*" element={<Home />} />
         </Routes>
@@ -193,7 +204,7 @@ function WorldShell() {
   const token = shared?.token
   const memberOf = shared?.memberOf
   useEffect(
-    () => (token || memberOf ? watchPlayerCopy({ token, memberOf, fetchedAt: 0 }, (e) => setShareError(e.message)) : undefined),
+    () => (token || memberOf ? watchPlayerCopy({ token, memberOf, fetchedAt: 0 }, (e) => setShareError(cloudErrorMessage(e))) : undefined),
     [token, memberOf],
   )
   const { owners } = useCharacterOwners(world)
@@ -276,11 +287,14 @@ function WorldShell() {
         )}
       </aside>
       <main className="content">
-        {shareError && <div className="player-banner">Couldn't refresh: {shareError}</div>}
+        {shareError && <div className="player-banner">Couldn’t refresh: {shareError}</div>}
+        {isGM && !shared && <RecordingBar />}
         {memberOf && <ChooseCharacterBanner world={world} />}
         {shared && <NewsBanner world={world} />}
-        {shared && <ShowingPopup world={world} />}
+        {/* What the GM shows is for the table; a public wiki link never pops it up. */}
+        {memberOf && <ShowingPopup world={world} />}
         {isGM && !shared && <ShowingBanner world={world} />}
+        {isGM && !shared && world.cloud?.enabled && <ClaimRequestsBanner world={world} />}
         {!shared && <XCardAlert world={world} />}
         {!isGM && !shared && (
           <div className="player-banner">
@@ -290,7 +304,10 @@ function WorldShell() {
             <button onClick={() => setMode('gm')}>Back to GM view</button>
           </div>
         )}
-        <Outlet />
+        {/* Bigger screens (maps, the Lectern, settings…) load the first time they're opened. */}
+        <Suspense fallback={<div className="loading">Loading…</div>}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   )

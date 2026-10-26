@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../cloud/client'
+import { liveChannel } from '../cloud/share'
 import { DraftText, Empty } from '../components'
 import { db, type Safety, type World } from '../db'
 import { Help } from '../help'
@@ -148,20 +149,25 @@ function SafetyList({
 
 const channelName = (cloudWorldId: string) => `safety:${cloudWorldId}`
 
-/** A player taps the X-card: the GM's screen hears about it at once. No name is sent. */
+/**
+ * A player taps the X-card. The tap is kept on the server (without a name) so the GM sees it even if
+ * their app was closed, and the GM's open screen hears about it at once.
+ */
 async function sendXCard(cloudId: string) {
-  const ch = supabase.channel(channelName(cloudId))
-  await new Promise<void>((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error('Couldn’t reach your GM. Tell them in person, or check your connection.')), 8000)
+  const { error } = await supabase.rpc('tap_xcard', { wid: cloudId })
+  if (error) throw new Error('Couldn’t reach your GM. Tell them in person, or check your connection.')
+  const ch = liveChannel(channelName(cloudId))
+  await new Promise<void>((resolve) => {
+    const t = setTimeout(resolve, 8000)
     ch.subscribe((status) => {
       if (status === 'SUBSCRIBED')
-        ch.send({ type: 'broadcast', event: 'xcard', payload: {} }).then(() => {
+        ch.send({ type: 'broadcast', event: 'xcard', payload: {} }).finally(() => {
           clearTimeout(t)
           resolve()
         })
       else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         clearTimeout(t)
-        reject(new Error('Couldn’t reach your GM. Tell them in person, or check your connection.'))
+        resolve()
       }
     })
   }).finally(() => supabase.removeChannel(ch))
@@ -189,31 +195,67 @@ export function XCardButton({ cloudId, small }: { cloudId: string; small?: boole
         ✋ X-card
       </button>
       {!small && <Help topic="xcard" />}
-      {state === 'sent' && <span className="small">Your GM has been told. Thank you.</span>}
+      {state === 'sent' && <span className="small">Sent to your GM. They’ll see it as soon as they look at the app. Thank you.</span>}
       {state && state !== 'sending' && state !== 'sent' && <span className="error small">{state}</span>}
     </div>
   )
 }
 
-/** For the GM: listens for X-card taps in a synced world and shows a clear alert. */
+const seenKey = (worldId: string) => `codex.xcard.seen.${worldId}`
+
+/** For the GM: listens for X-card taps in a synced world, and shows any made while the app was closed. */
 export function XCardAlert({ world }: { world: World }) {
-  const [at, setAt] = useState<number>()
+  // When the tap was made, and whether it arrived live (then no time is needed).
+  const [tap, setTap] = useState<{ at: number; live: boolean }>()
   const listening = !!world.cloud?.enabled && !world.shared && !!world.safety?.xcard
   useEffect(() => {
     if (!listening) return
-    const ch = supabase
-      .channel(channelName(world.id))
-      .on('broadcast', { event: 'xcard' }, () => setAt(Date.now()))
+    // Taps kept on the server since the GM last saw one (the last day's worth).
+    const check = async () => {
+      let seen = 0
+      try {
+        seen = Number(localStorage.getItem(seenKey(world.id)) ?? 0)
+      } catch {
+        // Storage blocked: show anything from the last day.
+      }
+      const { data } = await supabase
+        .from('xcard_taps')
+        .select('at')
+        .eq('world_id', world.id)
+        .gt('at', new Date(Math.max(seen, Date.now() - 86_400_000)).toISOString())
+        .order('at', { ascending: false })
+        .limit(1)
+      const t = data?.[0] && Date.parse(data[0].at as string)
+      if (t) setTap({ at: t, live: false })
+    }
+    check()
+    const ch = liveChannel(channelName(world.id))
+      .on('broadcast', { event: 'xcard' }, () => setTap({ at: 0, live: true }))
       .subscribe()
+    const onVisible = () => !document.hidden && check()
+    document.addEventListener('visibilitychange', onVisible)
     return () => {
       supabase.removeChannel(ch)
+      document.removeEventListener('visibilitychange', onVisible)
     }
   }, [listening, world.id])
-  if (!at) return null
+  if (!tap) return null
   return (
     <div className="xcard-alert" role="alert">
-      <strong>✋ Someone tapped the X-card.</strong> Change course or skip ahead; no need to ask who or why.
-      <button onClick={() => setAt(undefined)}>OK</button>
+      <strong>✋ Someone tapped the X-card{tap.live ? '' : ` at ${new Date(tap.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })}`}.</strong>{' '}
+      Change course or skip ahead; no need to ask who or why.
+      <button
+        onClick={() => {
+          try {
+            localStorage.setItem(seenKey(world.id), String(Date.now()))
+          } catch {
+            // Storage blocked: it may show again next time.
+          }
+          setTap(undefined)
+        }}
+      >
+        OK
+      </button>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { listAvailability, listPlayers, setAvailability, type Member } from '../cloud/players'
-import { db, newId, type Availability, type Campaign, type SharedInfo, type World } from '../db'
+import { db, newId, type Availability, type Campaign, type DateOption, type SharedInfo, type World } from '../db'
 import { Help } from '../help'
 import { DiscordButton, getWebhook, postToDiscord } from '../discord'
 
@@ -15,9 +15,22 @@ const ANSWERS: { value: Availability; icon: string; label: string }[] = [
   { value: 'no', icon: '❌', label: 'Can’t make it' },
 ]
 
-const showDate = (at: string) => {
-  const d = new Date(at)
-  return isNaN(d.getTime()) ? at : d.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+/**
+ * A suggested date in the viewer's own time. Dates saved with a full timestamp show in each
+ * person's time zone (with the zone named), so an online group spread across zones agrees on the hour.
+ */
+export const showDate = (o: DateOption) => {
+  const d = new Date(o.utc ?? o.at)
+  if (isNaN(d.getTime())) return o.at
+  return d.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', ...(o.utc ? { timeZoneName: 'short' } : {}) })
+}
+
+/** The booked date of a campaign's next session, while it's still ahead (or today). */
+export function upcoming(campaign: Campaign) {
+  const b = campaign.booked
+  if (!b) return undefined
+  const t = new Date(b.utc ?? b.at).getTime()
+  return t > Date.now() - 12 * 3_600_000 ? b : undefined
 }
 
 type Answers = NonNullable<SharedInfo['availability']>
@@ -52,7 +65,7 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
   const all: Answers = shared ? (shared.availability ?? []) : answers
   const save = (schedule: Campaign['schedule']) => db.campaigns.update(campaign.id, { schedule })
 
-  if (!isGM && !options.length) return null
+  if (!isGM && !options.length && !upcoming(campaign)) return null
   return (
     <section className="card scheduler">
       <div className="section-header">
@@ -67,7 +80,13 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
       </div>
       {isGM && !synced && <p className="muted small">Turn on cloud sync and invite your players (World settings) so they can answer. You can still jot dates down here.</p>}
       {shared && !shared.memberOf && options.length > 0 && <p className="muted small">Ask your GM for an invite link to answer.</p>}
-      {options.length === 0 && <p className="muted small">No dates suggested yet.</p>}
+      {upcoming(campaign) && (
+        <p>
+          📌 Booked: <strong>{showDate(upcoming(campaign)!)}</strong>
+          {upcoming(campaign)!.note && <span className="muted small"> · {upcoming(campaign)!.note}</span>}
+        </p>
+      )}
+      {options.length === 0 && <p className="muted small">{isGM ? 'No dates suggested yet. Suggest a few and your players answer which they can make.' : 'No other dates suggested.'}</p>}
       <ul className="date-options">
         {options.map((o) => {
           const here = all.filter((a) => a.optionId === o.id)
@@ -77,7 +96,7 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
             <li key={o.id}>
               <div className="row spread wrap">
                 <div>
-                  <strong>{showDate(o.at)}</strong>
+                  <strong>{showDate(o)}</strong>
                   {o.note && <span className="muted small"> · {o.note}</span>}
                   {people.length > 0 && (
                     <span className="muted small">
@@ -91,11 +110,11 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
                     <button
                       className="small primary"
                       onClick={async () => {
-                        if (!confirm(`Book ${showDate(o.at)}? This makes the next session with that date and clears the other suggestions.`)) return
+                        if (!confirm(`Book ${showDate(o)}? This makes the next session with that date and clears the other suggestions.`)) return
                         await onBook(o.at.slice(0, 10))
-                        await save([])
+                        await db.campaigns.update(campaign.id, { schedule: [], booked: o })
                         if (getWebhook(world.id) && confirm('Tell everyone on Discord?'))
-                          postToDiscord(world.id, `📅 Next session: ${showDate(o.at)}`, `${campaign.name}${o.note ? `\n${o.note}` : ''}`).catch((e) =>
+                          postToDiscord(world.id, `📅 Next session: ${showDate(o)}`, `${campaign.name}${o.note ? `\n${o.note}` : ''}`).catch((e) =>
                             setError((e as Error).message),
                           )
                       }}
@@ -146,7 +165,7 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
           label="💬 Ask on Discord"
           text={() =>
             [
-              ...options.map((o) => `• **${showDate(o.at)}**${o.note ? ` (${o.note})` : ''}`),
+              ...options.map((o) => `• **${showDate(o)}**${o.note ? ` (${o.note})` : ''}`),
               '',
               synced ? 'Answer yes, maybe or no in Campaign Codex.' : 'Reply with the dates you can make.',
             ].join('\n')
@@ -159,7 +178,7 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
           onSubmit={(e) => {
             e.preventDefault()
             if (!draft) return
-            save([...options, { id: newId(), at: draft, ...(note.trim() ? { note: note.trim() } : {}) }])
+            save([...options, { id: newId(), at: draft, utc: new Date(draft).toISOString(), ...(note.trim() ? { note: note.trim() } : {}) }])
             setDraft('')
             setNote('')
           }}

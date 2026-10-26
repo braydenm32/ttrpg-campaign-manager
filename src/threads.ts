@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { blankEntity, db, type Entity, type Session, type ThreadStatus } from './db'
 import { stripSecrets } from './Markdown'
 import { useViewMode } from './viewMode'
+import { localDate } from './sessions'
 
 /** The pages a thread involves: anything it [[links]] to, plus where it's located. */
 export function threadLinks(thread: Entity, entities: Entity[], showSecrets: boolean) {
@@ -40,16 +41,20 @@ export function useWorldSessions(worldId: string) {
 
 /** The session most recently played (or the newest one, if none has a date yet). */
 export function latestSession(sessions: Session[]) {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localDate()
   const played = sessions.filter((s) => s.date && s.date <= today)
   return played.at(-1) ?? sessions.at(-1)
 }
 
-/** How many sessions have been played since the thread was last touched. */
+/**
+ * How many sessions have been played since the thread was last touched. A thread raised in one
+ * campaign only counts that campaign's sessions, so a second group's games don't make it go cold.
+ */
 export function sessionsSinceTouched(thread: Entity, sessions: Session[]) {
-  const touched = new Date(thread.updatedAt).toISOString().slice(0, 10)
-  const today = new Date().toISOString().slice(0, 10)
-  return sessions.filter((s) => s.date && s.date > touched && s.date <= today).length
+  const touched = localDate(thread.updatedAt)
+  const today = localDate()
+  const campaignId = thread.raisedIn ? sessions.find((s) => s.id === thread.raisedIn)?.campaignId : undefined
+  return sessions.filter((s) => s.date && s.date > touched && s.date <= today && (!campaignId || s.campaignId === campaignId)).length
 }
 
 /** Unresolved threads untouched for this many sessions get a "going cold" warning. */

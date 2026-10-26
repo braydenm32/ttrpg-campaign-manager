@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Help, HelpTipsToggle } from '../help'
 import { RecentlyDeleted } from '../History'
 import { AiSettingsSection } from '../ai/AiSettingsSection'
@@ -14,9 +14,19 @@ import { CalendarEditor } from '../calendar'
 import { DiscordSettings } from '../discord'
 import { ImportPages } from '../ImportPages'
 
+const TABS = [
+  ['world', '🌍 World'],
+  ['players', '🎭 Players and sharing'],
+  ['device', '💻 This device'],
+  ['data', '💾 Data and backup'],
+] as const
+type Tab = (typeof TABS)[number][0]
+
 export default function WorldSettings() {
   const { worldId, world } = useWorld()
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const tab: Tab = TABS.find(([t]) => t === params.get('tab'))?.[0] ?? 'world'
   if (!world) return null
   const update = (patch: Partial<World>) => db.worlds.update(worldId, { ...patch, updatedAt: Date.now() })
 
@@ -25,80 +35,105 @@ export default function WorldSettings() {
       <header className="page-header">
         <h1>⚙️ World settings</h1>
       </header>
-      <HelpTipsToggle />
-      <div className="form">
-        <label>
-          Name
-          <input value={world.name} onChange={(e) => update({ name: e.target.value })} />
-        </label>
-        <label>
-          Default game system
-          <select value={world.system} onChange={(e) => update({ system: e.target.value })}>
-            {GAME_SYSTEMS.map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Description
-          <textarea rows={4} value={world.description} onChange={(e) => update({ description: e.target.value })} />
-          <small className="muted">Players can read this. Keep secrets in GM notes or a :::gm block on a page.</small>
-        </label>
+      <div className="segmented tabs settings-tabs" role="tablist">
+        {TABS.map(([t, label]) => (
+          <button
+            key={t}
+            role="tab"
+            aria-selected={tab === t}
+            className={tab === t ? 'on' : ''}
+            onClick={() => setParams(t === 'world' ? {} : { tab: t }, { replace: true })}
+          >
+            {label}
+          </button>
+        ))}
       </div>
+      {tab === 'world' && (
+        <>
+          <div className="form">
+            <label>
+              Name
+              <input value={world.name} onChange={(e) => update({ name: e.target.value })} />
+            </label>
+            <label>
+              Default game system
+              <select value={world.system} onChange={(e) => update({ system: e.target.value })}>
+                {GAME_SYSTEMS.map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Description
+              <textarea rows={4} value={world.description} onChange={(e) => update({ description: e.target.value })} />
+              <small className="muted">Players can read this. Keep secrets in GM notes or a :::gm block on a page.</small>
+            </label>
+          </div>
 
-      <CalendarEditor world={world} />
+          <CalendarEditor world={world} />
 
-      <CustomTypes world={world} update={update} />
+          <CustomTypes world={world} update={update} />
 
-      <Templates world={world} />
+          <Templates world={world} />
+        </>
+      )}
 
-      <CloudSettings world={world} />
+      {tab === 'players' && <CloudSettings world={world} />}
 
-      <DiscordSettings worldId={worldId} />
+      {tab === 'device' && (
+        <>
+          <p className="muted">These settings stay on this device: they aren’t synced or put in backups.</p>
+          <HelpTipsToggle />
+          <DiscordSettings worldId={worldId} />
+          <AiSettingsSection />
+        </>
+      )}
 
-      <AiSettingsSection />
+      {tab === 'data' && (
+        <>
+          <section>
+            <h2>
+              Backup <Help topic="backup" />
+            </h2>
+            <p className="muted">
+              A backup is a single file with the whole world in it, including uploaded files. Keep one even if sync is on; you can import it from the
+              home screen on any device.
+            </p>
+            <button onClick={() => exportWorld(worldId)}>⬇ Download backup</button>
+          </section>
 
-      <section>
-        <h2>
-          Backup <Help topic="backup" />
-        </h2>
-        <p className="muted">
-          A backup is a single file with the whole world in it, including uploaded files. Keep one even if sync is on; you can
-          import it from the home screen on any device.
-        </p>
-        <button onClick={() => exportWorld(worldId)}>⬇ Download backup</button>
-      </section>
+          <ImportPages worldId={worldId} />
 
-      <ImportPages worldId={worldId} />
+          <RecentlyDeleted />
 
-      <RecentlyDeleted />
-
-      <section>
-        <h2>Danger zone</h2>
-        <button
-          className="danger"
-          onClick={async () => {
-            const inCloud = !!world.cloud?.enabled
-            const warning = inCloud ? ' This also deletes the cloud copy, so your players, share link and other devices lose it too.' : ''
-            if (prompt(`Type the world's name to delete it forever: ${world.name}.${warning}`) !== world.name) return
-            // Only the owner can delete the cloud copy; a co-GM just removes it from this device.
-            if (inCloud) {
-              const role = await myRole(worldId).catch(() => null)
-              if (role === 'owner') {
-                try {
-                  await deleteCloudCopy(worldId)
-                } catch (e) {
-                  if (!confirm(`Couldn't delete the cloud copy (${(e as Error).message}). Delete it from this device only?`)) return
+          <section>
+            <h2>Danger zone</h2>
+            <button
+              className="danger"
+              onClick={async () => {
+                const inCloud = !!world.cloud?.enabled
+                const warning = inCloud ? ' This also deletes the cloud copy, so your players, share link and other devices lose it too.' : ''
+                if (prompt(`Type the world's name to delete it forever: ${world.name}.${warning}`) !== world.name) return
+                // Only the owner can delete the cloud copy; a co-GM just removes it from this device.
+                if (inCloud) {
+                  const role = await myRole(worldId).catch(() => null)
+                  if (role === 'owner') {
+                    try {
+                      await deleteCloudCopy(worldId)
+                    } catch (e) {
+                      if (!confirm(`Couldn't delete the cloud copy (${(e as Error).message}). Delete it from this device only?`)) return
+                    }
+                  } else if (!role && !confirm('You’re offline or signed out, so the cloud copy stays. Delete it from this device only?')) return
                 }
-              } else if (!role && !confirm('You’re offline or signed out, so the cloud copy stays. Delete it from this device only?')) return
-            }
-            await deleteWorld(worldId)
-            navigate('/')
-          }}
-        >
-          Delete this world
-        </button>
-      </section>
+                await deleteWorld(worldId)
+                navigate('/')
+              }}
+            >
+              Delete this world
+            </button>
+          </section>
+        </>
+      )}
     </div>
   )
 }
@@ -106,7 +141,15 @@ export default function WorldSettings() {
 function CustomTypes({ world, update }: { world: World; update: (patch: Partial<World>) => unknown }) {
   const types = world.customTypes ?? []
   const [draft, setDraft] = useState<Omit<CustomType, 'id'>>({ one: '', many: '', icon: '📄' })
-  const counts = useLiveQuery(() => db.entities.where({ worldId: world.id }).filter((e) => e.type === 'custom').toArray(), [world.id]) ?? []
+  const counts =
+    useLiveQuery(
+      () =>
+        db.entities
+          .where({ worldId: world.id })
+          .filter((e) => e.type === 'custom')
+          .toArray(),
+      [world.id],
+    ) ?? []
   const set = (next: CustomType[]) => update({ customTypes: next })
   return (
     <section>
@@ -151,7 +194,11 @@ function CustomTypes({ world, update }: { world: World; update: (patch: Partial<
       >
         <input className="icon-input" value={draft.icon} onChange={(e) => setDraft({ ...draft, icon: e.target.value })} aria-label="Icon" />
         <input value={draft.one} onChange={(e) => setDraft({ ...draft, one: e.target.value })} placeholder="Name, e.g. Ship" />
-        <input value={draft.many} onChange={(e) => setDraft({ ...draft, many: e.target.value })} placeholder={draft.one ? `${draft.one}s` : 'Plural, e.g. Ships'} />
+        <input
+          value={draft.many}
+          onChange={(e) => setDraft({ ...draft, many: e.target.value })}
+          placeholder={draft.one ? `${draft.one}s` : 'Plural, e.g. Ships'}
+        />
         <button disabled={!draft.one.trim()}>+ Add type</button>
       </form>
     </section>

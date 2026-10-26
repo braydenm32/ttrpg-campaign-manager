@@ -201,20 +201,33 @@ export async function editMyCharacter(cloudId: string, localEntityId: string, sh
   tellOtherPlayers(cloudId)
 }
 
-/** Saves a player's note on a page ('' for the scratchpad), private or for the whole group. */
-export async function savePlayerNote(cloudId: string, localEntityId: string, shared: boolean, body: string) {
-  const { error } = await supabase.rpc('save_player_note', { wid: cloudId, eid: localEntityId ? cloudEntityId(localEntityId) : '', shared, body })
+/** A group note someone else saved while this player was typing. */
+export interface NoteClash {
+  body: string
+  updatedBy: string
+  updatedAt: string
+}
+
+/**
+ * Saves a player's note on a page ('' for the scratchpad), private or for the whole group. For a group
+ * note, `expected` is when the note was last saved as this player saw it: if someone else has saved
+ * since, nothing is written and their version comes back. Pass null to save anyway.
+ */
+export async function savePlayerNote(cloudId: string, localEntityId: string, shared: boolean, body: string, expected: string | null = null): Promise<NoteClash | null> {
+  const { data, error } = await supabase.rpc('save_player_note', { wid: cloudId, eid: localEntityId ? cloudEntityId(localEntityId) : '', shared, body, expected })
   if (error) throw error
+  const clash = data as NoteClash | null
   await db.worlds
     .where('id')
     .equals(memberWorldId(cloudId))
     .modify((w) => {
       if (!w.shared) return
       const notes = (w.shared.notes ?? []).filter((n) => !(n.entityId === localEntityId && n.shared === shared))
-      notes.push({ entityId: localEntityId, shared, body, updatedBy: w.shared.me, updatedAt: new Date().toISOString() })
+      notes.push(clash ? { entityId: localEntityId, shared, ...clash } : { entityId: localEntityId, shared, body, updatedBy: w.shared.me, updatedAt: new Date().toISOString() })
       w.shared.notes = notes
     })
-  if (shared) tellOtherPlayers(cloudId)
+  if (shared && !clash) tellOtherPlayers(cloudId)
+  return clash
 }
 
 /** The group's notes in a world (for the GM). entityId is the GM's own page id, or '' for the scratchpad. */

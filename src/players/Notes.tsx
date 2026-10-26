@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Help } from '../help'
 import { useAuthSession } from '../cloud/auth'
-import { listGroupNotes, savePlayerNote } from '../cloud/players'
+import { listGroupNotes, savePlayerNote, type NoteClash } from '../cloud/players'
 import type { Entity, PlayerNote, World } from '../db'
 import { Markdown } from '../Markdown'
 
@@ -56,11 +56,14 @@ function MemberNotes({ world, memberOf, entityId, big }: { world: World; memberO
           hint="Only you can see these."
           placeholder={big ? 'Anything you want to remember…' : 'What you know, suspect or want to ask about this…'}
           onSave={(body) => savePlayerNote(memberOf, entityId, false, body)}
+          nameOf={() => ''}
         />
       ) : (
         <NoteEditor
           key={`${entityId}:group`}
           saved={group?.body ?? ''}
+          savedAt={group?.updatedAt}
+          nameOf={(id) => (id === world.shared?.me ? 'You' : (names.get(id) ?? 'Another player'))}
           hint={
             <>
               Every player can read and edit these, and your GM can read them.
@@ -68,7 +71,7 @@ function MemberNotes({ world, memberOf, entityId, big }: { world: World; memberO
             </>
           }
           placeholder={big ? 'The party’s shared notes: names, clues, plans, who owes whom…' : 'Shared with the whole party…'}
-          onSave={(body) => savePlayerNote(memberOf, entityId, true, body)}
+          onSave={(body, expected) => savePlayerNote(memberOf, entityId, true, body, expected)}
         />
       )}
     </section>
@@ -77,31 +80,46 @@ function MemberNotes({ world, memberOf, entityId, big }: { world: World; memberO
 
 /**
  * A notes box that keeps what you're typing even if a refresh brings in a newer copy, and shows the
- * newest saved text whenever you aren't mid-edit.
+ * newest saved text whenever you aren't mid-edit. For group notes, if someone else saved while you
+ * were typing, nothing is overwritten: you choose to keep both, use yours or use theirs.
  */
 function NoteEditor({
   saved,
+  savedAt,
   hint,
   placeholder,
   onSave,
+  nameOf,
 }: {
   saved: string
+  savedAt?: string
   hint: ReactNode
   placeholder: string
-  onSave: (body: string) => Promise<void>
+  onSave: (body: string, expected: string | null) => Promise<NoteClash | null>
+  nameOf: (userId: string) => string
 }) {
   const [draft, setDraft] = useState<string | null>(null)
+  // When the note you started from was saved, so a newer save by someone else is caught.
+  const [base, setBase] = useState<string | null>(null)
+  const [clash, setClash] = useState<NoteClash | null>(null)
   const [state, setState] = useState<'' | 'saving' | 'saved' | 'error'>('')
   const text = draft ?? saved
-  const save = async () => {
-    if (draft === null || draft === saved) {
+  const save = async (body = draft, expected: string | null = base ?? savedAt ?? null) => {
+    if (body === null || (body === saved && !clash)) {
       setDraft(null)
       return
     }
     setState('saving')
     try {
-      await onSave(draft)
+      const theirs = await onSave(body, expected)
+      if (theirs) {
+        setClash(theirs)
+        setState('')
+        return
+      }
       setDraft(null)
+      setBase(null)
+      setClash(null)
       setState('saved')
     } catch {
       setState('error')
@@ -113,17 +131,41 @@ function NoteEditor({
         rows={6}
         value={text}
         onChange={(e) => {
+          if (draft === null) setBase(savedAt ?? null)
           setDraft(e.target.value)
           setState('')
         }}
-        onBlur={save}
+        onBlur={() => !clash && save()}
         placeholder={placeholder}
         maxLength={50000}
       />
+      {clash && draft !== null && (
+        <div className="note-clash" role="alert">
+          <p>
+            <strong>{nameOf(clash.updatedBy)} changed these notes while you were typing.</strong> Nothing has been overwritten yet. Their version:
+          </p>
+          <pre className="note-clash-theirs">{clash.body}</pre>
+          <div className="row wrap">
+            <button className="primary" onClick={() => save(`${clash.body.trimEnd()}\n\n${draft.trim()}`, null)}>
+              Keep both
+            </button>
+            <button onClick={() => save(draft, null)}>Use mine</button>
+            <button
+              onClick={() => {
+                setDraft(null)
+                setBase(null)
+                setClash(null)
+              }}
+            >
+              Use theirs
+            </button>
+          </div>
+        </div>
+      )}
       <span className="note-meta">
         {state === 'saving' ? 'Saving…' : state === 'saved' ? '✓ Saved. ' : state === 'error' ? 'Couldn’t save. Check your connection and click away to try again. ' : ''}
         {state !== 'saving' && hint}
-        {state === '' && ' Saves when you click away.'}
+        {state === '' && !clash && ' Saves when you click away.'}
       </span>
     </>
   )

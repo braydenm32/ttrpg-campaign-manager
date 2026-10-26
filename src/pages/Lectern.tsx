@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { partyOf } from '../sessions'
 import { DraftText, Empty } from '../components'
 import { blankLectern, db, ENTITY_LABELS, newId, type Combatant, type Entity, type LecternState } from '../db'
 import { modifierFrom, roll, rollDie } from '../dice'
@@ -48,7 +49,10 @@ export default function Lectern() {
   if (session === null || session.worldId !== worldId) return <Empty>Session not found.</Empty>
 
   const lectern: LecternState = { ...blankLectern(), ...session.lectern }
-  /** Changes the Lectern atomically, starting from what's saved, so quick clicks never overwrite each other. */
+  /**
+   * Changes the Lectern atomically, starting from what's saved, so quick clicks never overwrite each
+   * other. Anyone who turns up in a scene is also listed as featured in the session.
+   */
   const edit = (fn: (l: LecternState) => void) =>
     db.sessions
       .where('id')
@@ -56,13 +60,20 @@ export default function Lectern() {
       .modify((s) => {
         s.lectern = { ...blankLectern(), ...s.lectern }
         fn(s.lectern)
+        const fresh = s.lectern.presentIds.filter((id) => !s.entityIds.includes(id))
+        if (fresh.length) s.entityIds = [...s.entityIds, ...fresh]
       })
 
   return (
     <div className="page wide lectern-page">
       <header className="page-header">
         <div>
-          <Link to={`/w/${worldId}/s/${session.id}`}>← Session notes</Link>
+          <div className="row spread">
+            <Link to={`/w/${worldId}/s/${session.id}`}>← Session notes</Link>
+            <Link className="button" to={`/w/${worldId}/s/${session.id}?end=1`} title="Recap, show players, start the next session">
+              🏁 End session
+            </Link>
+          </div>
           <h1>
             📖 The Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
           </h1>
@@ -84,7 +95,7 @@ export default function Lectern() {
         </div>
         <div className="lectern-col">
           <LecternPrep session={session} worldId={worldId} />
-          <Initiative lectern={lectern} edit={edit} entities={entities} />
+          <Initiative lectern={lectern} edit={edit} entities={entities} campaignId={session.campaignId} />
           <ClocksPanel worldId={worldId} entities={entities} />
         </div>
         <div className="lectern-col">
@@ -278,14 +289,15 @@ const field = fieldOf
 /** Initiative order: highest first, unrolled at the bottom, ties keep the order they were added. */
 const ordered = (cs: Combatant[]) => [...cs].sort((a, b) => (b.init ?? -Infinity) - (a.init ?? -Infinity))
 
-function Initiative({ lectern, edit, entities }: PanelProps & { entities: Entity[] }) {
+function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { entities: Entity[]; campaignId: string }) {
   const { round, activeId } = lectern.combat
   const list = ordered(lectern.combat.combatants)
   const [name, setName] = useState('')
   const [count, setCount] = useState(1)
   const [hp, setHp] = useState('')
   const [init, setInit] = useState('')
-  const pcs = entities.filter((e) => e.type === 'pc' && !lectern.combat.combatants.some((c) => c.entityId === e.id))
+  // This campaign's party, leaving out anyone dead, missing or captured.
+  const pcs = partyOf(entities, campaignId, { activeOnly: true }).filter((e) => !lectern.combat.combatants.some((c) => c.entityId === e.id))
   const initMod = (c: Combatant) => {
     const e = entities.find((x) => x.id === c.entityId)
     return e ? modifierFrom(field(e, /^(init|initiative)/i)) : 0

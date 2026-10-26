@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { importWorld } from '../backup'
 import { Empty, Modal } from '../components'
+import { Help } from '../help'
 import { db, GAME_SYSTEMS, newId } from '../db'
 import { loadSampleWorld } from '../sample'
 import { AccountModal, useAuthSession } from '../cloud/auth'
@@ -42,7 +43,9 @@ export default function Home() {
           {user ? `☁️ ${user.email || user.user_metadata?.full_name || 'Signed in'}` : '☁️ Sign in to sync'}
         </button>
         <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />Campaign Codex</h1>
-        <p>Your worlds, maps, NPCs and sessions, all in one place. Everything is saved on this device.</p>
+        <p>
+          Your worlds, maps, NPCs and sessions, all in one place. Everything is saved on this device. <Help topic="home" />
+        </p>
       </header>
       <div className="row">
         <button className="primary" onClick={() => setCreating(true)}>+ New world</button>
@@ -65,8 +68,9 @@ export default function Home() {
           />
         </label>
       </div>
+      <InviteBox />
       {worlds.length === 0 ? (
-        <Empty>No worlds yet. Create one, or load the sample world to look around.</Empty>
+        <Empty>No worlds yet. Create one, or load the sample world to look around. A player? Paste the invite link your GM sent you above.</Empty>
       ) : (
         <div className="card-grid">
           {worlds.map((w) => (
@@ -152,6 +156,31 @@ export default function Home() {
       {account && <AccountModal onClose={() => setAccount(false)} />}
       {creating && <NewWorld onClose={() => setCreating(false)} onCreated={(id) => navigate(`/w/${id}`)} />}
     </div>
+  )
+}
+
+/** For players: paste the invite or wiki link the GM sent, in case it opened in the wrong place. */
+function InviteBox() {
+  const [link, setLink] = useState('')
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
+  return (
+    <form
+      className="invite-box row wrap"
+      onSubmit={(e) => {
+        e.preventDefault()
+        const m = link.match(/#?\/?(join|shared)\/([A-Za-z0-9_-]{16,})(\?[^\s]*)?/)
+        if (!m) return setError('That doesn’t look like an invite or wiki link. It should have /join/ or /shared/ in it.')
+        navigate(`/${m[1]}/${m[2]}${m[3] ?? ''}`)
+      }}
+    >
+      <label>
+        Got an invite link? <Help topic="joining" />
+        <input value={link} onChange={(e) => (setLink(e.target.value), setError(''))} placeholder="Paste the link your GM sent you" />
+      </label>
+      <button disabled={!link.trim()}>Open</button>
+      {error && <p className="error small">{error}</p>}
+    </form>
   )
 }
 

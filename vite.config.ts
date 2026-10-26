@@ -26,7 +26,13 @@ export default defineConfig({
         ],
       },
       // The legal pages are their own pages, not routes inside the app, so the offline cache must not swap them for the app.
-      workbox: { globPatterns: ['**/*.{js,css,html,svg,png,woff2}'], navigateFallbackDenylist: [/\.html$/], maximumFileSizeToCacheInBytes: 4 * 1024 * 1024 },
+      // The on-device transcription engine is big and needs the internet for its model anyway, so it isn't kept for offline.
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globIgnores: ['**/whisper.worker-*.js'],
+        navigateFallbackDenylist: [/\.html$/],
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+      },
     }),
   ],
   server: { port: 5173, strictPort: true },

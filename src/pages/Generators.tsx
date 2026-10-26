@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Help } from '../help'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { db } from '../db'
 import {
   generateNpc,
@@ -52,8 +52,11 @@ export default function Generators() {
     <div className="page">
       <header className="page-header">
         <h1>
-          🎰 Generators <Help topic="generators" />
+          🎰 Generators &amp; tables <Help topic="generators" />
         </h1>
+        <Link className="button" to={`/w/${worldId}/type/table`}>
+          🎲 Edit your random tables <Help topic="randomTables" />
+        </Link>
       </header>
       <p className="muted">Roll up a place or person on the fly, then save it into your world. Saved results start as GM only.</p>
       <div className="row wrap">

@@ -1,7 +1,7 @@
 import Dexie from 'dexie'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { db, keepVersion, type Asset, type Entity, type SyncMeta, type World } from '../db'
-import { supabase } from './client'
+import { supabase, cloudErrorMessage } from './client'
 
 /**
  * Cloud sync for worlds the GM has opted in.
@@ -331,7 +331,7 @@ export async function syncNow() {
     if (problems.length) throw new Error(problems.join('; '))
     setState({ status: 'idle', lastSync: Date.now(), message: undefined })
   } catch (err) {
-    setState({ status: navigator.onLine ? 'error' : 'offline', message: (err as Error).message })
+    setState({ status: navigator.onLine ? 'error' : 'offline', message: cloudErrorMessage(err) })
   } finally {
     running = false
     if (again) {
@@ -380,7 +380,7 @@ async function notifyShareViewers(worldId: string) {
 export const tellPlayers = (worldId: string) => broadcastChanged(`members:${worldId}`)
 
 async function broadcastChanged(name: string) {
-  const ch = supabase.channel(name)
+  const ch = supabase.channel(name, { config: { private: true } })
   await new Promise<void>((resolve) => {
     ch.subscribe((status) => {
       if (status === 'SUBSCRIBED') ch.send({ type: 'broadcast', event: 'changed', payload: {} }).finally(() => resolve())
@@ -393,9 +393,12 @@ async function broadcastChanged(name: string) {
 /** Starts background syncing. Safe to call more than once. */
 export function startSync() {
   if (!stopMutationListener) {
-    // Any local change schedules a sync, except the writes sync itself makes while pulling.
-    const onChange = () => {
-      if (!suppress) schedule()
+    // Any local change to a synced table schedules a sync, except the writes sync itself makes while
+    // pulling. (Device-only tables, like a recording being saved as it goes, don't.)
+    const onChange = (parts: Record<string, unknown>) => {
+      if (suppress) return
+      const tables = Object.keys(parts ?? {}).map((k) => k.split('/')[3])
+      if (!tables.length || tables.some((t) => !t || (SYNCED_TABLES as readonly string[]).includes(t))) schedule()
     }
     Dexie.on('storagemutated', onChange)
     stopMutationListener = () => Dexie.on('storagemutated').unsubscribe(onChange)
@@ -448,8 +451,14 @@ export async function disableCloud(worldId: string, forget = false) {
 
 /** Removes the cloud copy (and its share link) entirely. Local data on this device is kept. */
 export async function deleteCloudCopy(worldId: string) {
-  const { data: files } = await supabase.storage.from('assets').list(worldId, { limit: 1000 })
-  if (files?.length) await supabase.storage.from('assets').remove(files.map((f) => `${worldId}/${f.name}`))
+  // Files are listed a thousand at a time; keep going until none are left (or nothing more can be removed).
+  for (let round = 0; round < 100; round++) {
+    const { data: files, error } = await supabase.storage.from('assets').list(worldId, { limit: 1000 })
+    if (error) throw error
+    if (!files?.length) break
+    const { error: removeError } = await supabase.storage.from('assets').remove(files.map((f) => `${worldId}/${f.name}`))
+    if (removeError) throw removeError
+  }
   const { error } = await supabase.from('cloud_worlds').delete().eq('id', worldId)
   if (error) throw error
   await disableCloud(worldId, true)

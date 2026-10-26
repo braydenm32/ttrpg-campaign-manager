@@ -1,3 +1,4 @@
+import { localDate } from './sessions'
 import { CALENDAR_PRESETS } from './calendar'
 import { blankEntity, db, newId, type Entity, type Pin } from './db'
 
@@ -213,7 +214,7 @@ export async function loadSampleWorld(): Promise<string> {
       campaignId,
       number: 1,
       title: 'Arrival in Saltmere',
-      date: new Date().toISOString().slice(0, 10),
+      date: localDate(),
       notes: 'Party met [[Marta Copperkettle]] at [[The Salty Anchor]]. Took the [[The Missing Fishermen]] quest.\n\nLoose thread: Wren noticed [[Corvin Vane]] wearing a strange coral ring.',
       recap: 'The party arrived in [[Saltmere]] in a storm and found shelter at [[The Salty Anchor]]. Marta told them about the missing fishing boats.',
       visibility: 'players',
