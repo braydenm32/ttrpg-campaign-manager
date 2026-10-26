@@ -1,3 +1,4 @@
+import { binSession } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useEffect, useRef, useState } from 'react'
@@ -184,9 +185,8 @@ export default function SessionPage() {
         <button
           className="danger"
           onClick={async () => {
-            if (!confirm('Delete this session and its recordings?')) return
-            await db.assets.bulkDelete(session.recordings.map((r) => r.assetId))
-            await db.sessions.delete(session.id)
+            if (!confirm('Delete this session and its recordings? You can restore it from World settings for a month.')) return
+            await binSession(session.id)
             navigate(campaign ? `/w/${worldId}/c/${campaign.id}` : `/w/${worldId}`)
           }}
         >
@@ -359,7 +359,18 @@ function Playback({ sessionId, recording }: { sessionId: string; recording: Reco
   const { worldId } = useWorld()
   const { assetId, bookmarks, startedAt } = recording
   const url = useAssetUrl(assetId)
+  const onThisDevice = useLiveQuery(() => db.assets.get(assetId).then((a) => !!a), [assetId])
   const audio = useRef<HTMLAudioElement>(null)
+  // Recordings are big, so they stay on the device that made them; the transcript travels.
+  if (onThisDevice === false)
+    return (
+      <div className="playback">
+        <div className="muted small">
+          Recorded {new Date(startedAt).toLocaleString()} on another device. The audio stays there; its transcript is here.
+        </div>
+        <TranscriptPanel sessionId={sessionId} recording={recording} worldId={worldId} seek={() => {}} />
+      </div>
+    )
   if (!url) return null
   const seek = (t: number) => {
     if (!audio.current) return

@@ -1,3 +1,4 @@
+import { binCampaign } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -84,12 +85,15 @@ export default function CampaignPage() {
         )}
       </header>
       {isGM ? (
-        <textarea
-          rows={3}
-          placeholder="Campaign pitch, themes, session zero notes…"
-          value={campaign.description}
-          onChange={(e) => update({ description: e.target.value })}
-        />
+        <>
+          <textarea
+            rows={3}
+            placeholder="Campaign pitch, themes, what the players should know…"
+            value={campaign.description}
+            onChange={(e) => update({ description: e.target.value })}
+          />
+          <small className="muted">Players can read this. Keep secrets out of it.</small>
+        </>
       ) : (
         campaign.description && <p className="lead">{campaign.description}</p>
       )}
@@ -152,12 +156,7 @@ export default function CampaignPage() {
             className="danger"
             onClick={async () => {
               if (!confirm(`Delete campaign "${campaign.name}" and its sessions? World content is kept.`)) return
-              const recs = sessions.flatMap((s) => s.recordings.map((r) => r.assetId))
-              await db.transaction('rw', [db.campaigns, db.sessions, db.assets], async () => {
-                await db.assets.bulkDelete(recs)
-                await db.sessions.where({ campaignId }).delete()
-                await db.campaigns.delete(campaignId)
-              })
+              await binCampaign(campaignId)
               navigate(`/w/${worldId}`)
             }}
           >

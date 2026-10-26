@@ -3,6 +3,7 @@ import { Help } from '../help'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  approveClaim,
   createGmInviteLink,
   createInviteLink,
   getGmInviteToken,
@@ -127,14 +128,22 @@ export function PlayersSettings({ world }: { world: World }) {
                       ? mine.map((c, i) => (
                           <span key={c.entityId}>
                             {i > 0 && ', '}
-                            plays{' '}
+                            {c.approved ? 'plays' : 'asked to play'}{' '}
                             <Link to={`/w/${world.id}/e/${c.entityId}`}>{pcName(c.entityId)}</Link>{' '}
+                            {!c.approved && (
+                              <button className="link" disabled={busy} onClick={() => run(() => approveClaim(world.id, c.entityId))}>
+                                (approve)
+                              </button>
+                            )}{' '}
                             <button
                               className="link"
                               title="Free this character for someone else"
-                              onClick={() => confirm(`Release ${pcName(c.entityId)} from ${m.name}?`) && run(() => releaseCharacter(world.id, c.entityId, false))}
+                              onClick={() =>
+                                confirm(c.approved ? `Release ${pcName(c.entityId)} from ${m.name}?` : `Turn down ${m.name}’s request to play ${pcName(c.entityId)}?`) &&
+                                run(() => releaseCharacter(world.id, c.entityId, false))
+                              }
                             >
-                              (release)
+                              {c.approved ? '(release)' : '(decline)'}
                             </button>
                           </span>
                         ))

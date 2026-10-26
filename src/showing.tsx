@@ -35,13 +35,15 @@ export function ShowingView({ showing, worldId, big }: { showing: Showing; world
   return (
     <div className={`showing-view ${big ? 'big' : ''}`}>
       {showing.kind === 'image' && (image ? <img src={image} alt={showing.title} /> : <p className="muted">Loading the picture…</p>)}
-      {showing.kind === 'text' && <Markdown text={stripSecrets(showing.text ?? '')} entities={entities} worldId={worldId} showSecrets={false} />}
+      {showing.kind === 'text' && (
+        <Markdown text={stripSecrets(showing.text ?? '')} entities={entities} worldId={worldId} showSecrets={false} stillLinks={big} />
+      )}
       {showing.kind === 'page' &&
         (page ? (
           <>
             {pageImage && <img src={pageImage} alt={page.name} />}
             {page.summary && <p className="lead">{page.summary}</p>}
-            <Markdown text={page.body} entities={entities} worldId={worldId} showSecrets={false} />
+            <Markdown text={page.body} entities={entities} worldId={worldId} showSecrets={false} stillLinks={big} />
           </>
         ) : (
           <p className="muted">This page isn’t revealed to players.</p>
@@ -125,10 +127,15 @@ export function ShowButton({ worldId, what, disabled }: { worldId: string; what:
 /** The Lectern's panel: pick a picture, a revealed page or type something, and show it. */
 export function ShowPanel({ world, sceneText }: { world: World; sceneText?: string }) {
   const entities = useVisibleEntities(world.id)
-  const images = useLiveQuery(
-    () => db.assets.where({ worldId: world.id }).filter((a) => a.mime.startsWith('image/') && !a.tags.includes('fog')).reverse().sortBy('createdAt'),
-    [world.id],
-  )
+  const images = useLiveQuery(async () => {
+    // The clean picture of a fogged map would show players everything under the fog.
+    const fogged = new Set((await db.maps.where({ worldId: world.id }).toArray()).filter((m) => m.fog?.on).map((m) => m.imageId))
+    return db.assets
+      .where({ worldId: world.id })
+      .filter((a) => a.mime.startsWith('image/') && !a.tags.includes('fog') && !fogged.has(a.id))
+      .reverse()
+      .sortBy('createdAt')
+  }, [world.id])
   const [kind, setKind] = useState<'image' | 'page' | 'text'>('image')
   const [text, setText] = useState('')
   const [title, setTitle] = useState('')

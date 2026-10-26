@@ -1,3 +1,4 @@
+import { binBoard } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -119,7 +120,7 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
           className="danger"
           onClick={async () => {
             if (!confirm(`Delete the board “${board.name}”? The pages on it are kept.`)) return
-            await db.boards.delete(board.id)
+            await binBoard(board.id)
             navigate(`/w/${worldId}/boards`)
           }}
         >

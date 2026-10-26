@@ -84,20 +84,29 @@ export interface Claim {
   entityId: string
   userId: string
   notes: string
+  /** False while the GM hasn't approved the claim yet. */
+  approved: boolean
 }
 
 /** Who has joined, and who plays which character (for the GM). */
 export async function listPlayers(worldId: string): Promise<{ members: Member[]; claims: Claim[] }> {
   const [m, c] = await Promise.all([
     supabase.from('world_members').select('user_id, display_name, role, created_at').eq('world_id', worldId).order('created_at'),
-    supabase.from('character_claims').select('entity_id, user_id, player_notes').eq('world_id', worldId),
+    supabase.from('character_claims').select('*').eq('world_id', worldId),
   ])
   if (m.error) throw m.error
   if (c.error) throw c.error
   return {
     members: m.data.map((r) => ({ userId: r.user_id, name: r.display_name || 'Unnamed player', role: r.role, joinedAt: r.created_at })),
-    claims: c.data.map((r) => ({ entityId: r.entity_id, userId: r.user_id, notes: r.player_notes })),
+    claims: c.data.map((r) => ({ entityId: r.entity_id, userId: r.user_id, notes: r.player_notes, approved: r.approved !== false })),
   }
+}
+
+/** The GM lets a player play the character they asked for. */
+export async function approveClaim(worldId: string, entityId: string) {
+  const { error } = await supabase.from('character_claims').update({ approved: true }).eq('world_id', worldId).eq('entity_id', entityId)
+  if (error) throw error
+  await tellPlayers(worldId)
 }
 
 export async function removePlayer(worldId: string, userId: string) {
@@ -114,8 +123,12 @@ export async function joinWorld(token: string, name: string) {
   if (!data) throw new Error('This invite link has been turned off or replaced. Ask your GM for a new one.')
   const cloudId = data as string
   const role = await myRole(cloudId)
-  const { data: w } = await supabase.from('cloud_worlds').select('name').eq('id', cloudId).maybeSingle()
-  return { cloudId, isGM: role === 'owner' || role === 'gm', name: (w?.name as string | undefined) ?? '' }
+  const isGM = role === 'owner' || role === 'gm'
+  // GMs can read the world's row; players get its name from their list of worlds.
+  const worldName = isGM
+    ? (((await supabase.from('cloud_worlds').select('name').eq('id', cloudId).maybeSingle()).data?.name as string | undefined) ?? '')
+    : ((await listMyMemberships()).find((m) => m.cloudId === cloudId)?.name ?? '')
+  return { cloudId, isGM, name: worldName }
 }
 
 /** Fetches (or refreshes) a joined world onto this device. Returns the local world id. */
@@ -307,16 +320,9 @@ async function deleteLocalCopy(worldId: string) {
 export async function listMyMemberships(): Promise<{ cloudId: string; name: string }[]> {
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return []
-  const { data, error } = await supabase
-    .from('world_members')
-    .select('world_id, cloud_worlds(name)')
-    .eq('user_id', auth.user.id)
-    .eq('role', 'player')
+  const { data, error } = await supabase.rpc('my_memberships')
   if (error) throw error
-  return (data as unknown as { world_id: string; cloud_worlds: { name: string } | null }[]).map((r) => ({
-    cloudId: r.world_id,
-    name: r.cloud_worlds?.name ?? 'A world',
-  }))
+  return ((data ?? []) as { cloudId: string; name: string | null }[]).map((r) => ({ cloudId: r.cloudId, name: r.name || 'A world' }))
 }
 
 /** Remembers an invite across signing up (the confirmation email opens the app without it). */

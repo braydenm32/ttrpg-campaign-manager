@@ -498,7 +498,8 @@ export async function exportMarkdown(worldId: string) {
     if (e.playerBody) parts.push(`\n\n## In the player’s words\n\n${e.playerBody}`)
     const rels = (e.relations ?? []).filter((r) => byId.has(r.to))
     if (rels.length) parts.push(`\n\n## Relationships\n\n${rels.map((r) => `- ${r.kind} [[${byId.get(r.to)!.name}]]${r.note ? ` (${r.note})` : ''}`).join('\n')}`)
-    if (e.gmNotes) parts.push(`\n\n## GM notes\n\n${e.gmNotes}`)
+    // Inside a :::gm block, so importing the export back in never turns GM notes into page text players can see.
+    if (e.gmNotes) parts.push(`\n\n## GM notes\n\n:::gm\n${e.gmNotes}\n:::`)
     files[file] = strToU8(parts.join(''))
   }
   const zip = zipSync(files, { level: 6 })

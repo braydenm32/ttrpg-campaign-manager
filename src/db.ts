@@ -88,6 +88,8 @@ export interface CharacterClaim {
   userId: string
   /** The player's own notes on their character. */
   notes: string
+  /** False while the claim waits for the GM to approve it (older servers leave it out: approved). */
+  approved?: boolean
 }
 
 /** A player's note on a page (entityId '' is the world's scratchpad), private or shared with the group. */
@@ -149,7 +151,7 @@ export interface World {
   /** The table's safety tools: lines (never in the game) and veils (happens off screen). Everyone sees these. */
   safety?: Safety
   /** Device-only: cloud sync settings for this world. Never uploaded. */
-  cloud?: { enabled: boolean; lastPulledAt?: string }
+  cloud?: { enabled: boolean; lastPulledAt?: string; pullVersion?: number }
   /**
    * Device-only: set when this world is a read-only player copy, either opened from a share link
    * (token) or joined with an invite (memberOf, the GM's cloud world id).
@@ -317,7 +319,7 @@ export interface PageVersion {
   worldId: string
   at: number
   /** Why it was kept: before an edit here, before a change from another device, or when deleted. */
-  reason: 'edit' | 'synced' | 'deleted'
+  reason: 'edit' | 'synced' | 'deleted' | 'conflict'
   entity: Entity
 }
 
@@ -560,6 +562,18 @@ export interface Sound {
   createdAt: number
 }
 
+/** Something deleted on this device (not a page: those live in history), kept a while so it can be restored. */
+export interface BinItem {
+  id: string
+  worldId: string
+  at: number
+  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map'
+  /** What to call it in the list, e.g. the session's title. */
+  label: string
+  /** The rows that were removed, by table, so restoring puts every one back. */
+  rows: { table: 'campaigns' | 'sessions' | 'assets' | 'boards' | 'sounds' | 'maps' | 'pins'; rows: unknown[] }[]
+}
+
 /** What was last synced for each row, so only real changes are uploaded. */
 export interface SyncMeta {
   key: string
@@ -568,6 +582,8 @@ export interface SyncMeta {
   deleted?: boolean
   /** Upload failed (e.g. file too large); not retried until the row changes. */
   failed?: string
+  /** The row as last synced (without files), so edits made here and elsewhere can be merged. */
+  base?: Record<string, unknown>
 }
 
 export const db = new Dexie('ttrpg-campaign-manager') as Dexie & {
@@ -582,6 +598,7 @@ export const db = new Dexie('ttrpg-campaign-manager') as Dexie & {
   history: EntityTable<PageVersion, 'id'>
   boards: EntityTable<Board, 'id'>
   sounds: EntityTable<Sound, 'id'>
+  bin: EntityTable<BinItem, 'id'>
 }
 
 db.version(1).stores({
@@ -621,6 +638,11 @@ db.version(3).stores({
 db.version(4).stores({
   boards: 'id, worldId',
   sounds: 'id, worldId',
+})
+
+// v5: the recently deleted bin for sessions, campaigns, files, maps, boards and sounds (device-only, never synced).
+db.version(5).stores({
+  bin: 'id, worldId, at',
 })
 
 export const newId = () => crypto.randomUUID()
@@ -672,8 +694,9 @@ export function fromTemplate(t: Entity, name = `New ${t.name}`): Entity {
 }
 
 export async function deleteWorld(worldId: string) {
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds], async () => {
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds, db.bin], async () => {
     await db.history.where({ worldId }).delete()
+    await db.bin.where({ worldId }).delete()
     await db.boards.where({ worldId }).delete()
     await db.sounds.where({ worldId }).delete()
     await db.sessions.where({ worldId }).delete()
@@ -696,13 +719,5 @@ export async function deleteEntity(id: string) {
     await db.maps.where({ locationId: id }).modify({ locationId: undefined })
     await db.entities.where({ parentId: id }).modify({ parentId: undefined })
     await db.entities.delete(id)
-  })
-}
-
-export async function deleteMap(id: string) {
-  await db.transaction('rw', [db.maps, db.pins], async () => {
-    await db.pins.where({ mapId: id }).delete()
-    await db.pins.filter((p) => p.childMapId === id).modify({ childMapId: undefined })
-    await db.maps.delete(id)
   })
 }

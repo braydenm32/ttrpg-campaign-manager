@@ -5,6 +5,8 @@ import { Help, HelpTipsToggle } from '../help'
 import { RecentlyDeleted } from '../History'
 import { AiSettingsSection } from '../ai/AiSettingsSection'
 import { exportWorld } from '../backup'
+import { deleteCloudCopy } from '../cloud/sync'
+import { myRole } from '../cloud/players'
 import { db, deleteWorld, GAME_SYSTEMS, newId, typeLabel, type CustomType, type World } from '../db'
 import { useTemplates, useWorld } from '../hooks'
 import CloudSettings from './CloudSettings'
@@ -40,6 +42,7 @@ export default function WorldSettings() {
         <label>
           Description
           <textarea rows={4} value={world.description} onChange={(e) => update({ description: e.target.value })} />
+          <small className="muted">Players can read this. Keep secrets in GM notes or a :::gm block on a page.</small>
         </label>
       </div>
 
@@ -75,7 +78,20 @@ export default function WorldSettings() {
         <button
           className="danger"
           onClick={async () => {
-            if (prompt(`Type the world's name to delete it forever: ${world.name}`) !== world.name) return
+            const inCloud = !!world.cloud?.enabled
+            const warning = inCloud ? ' This also deletes the cloud copy, so your players, share link and other devices lose it too.' : ''
+            if (prompt(`Type the world's name to delete it forever: ${world.name}.${warning}`) !== world.name) return
+            // Only the owner can delete the cloud copy; a co-GM just removes it from this device.
+            if (inCloud) {
+              const role = await myRole(worldId).catch(() => null)
+              if (role === 'owner') {
+                try {
+                  await deleteCloudCopy(worldId)
+                } catch (e) {
+                  if (!confirm(`Couldn't delete the cloud copy (${(e as Error).message}). Delete it from this device only?`)) return
+                }
+              } else if (!role && !confirm('You’re offline or signed out, so the cloud copy stays. Delete it from this device only?')) return
+            }
             await deleteWorld(worldId)
             navigate('/')
           }}

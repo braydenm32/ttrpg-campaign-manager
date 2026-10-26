@@ -437,6 +437,7 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
         <label>
           Summary
           <input value={d.summary} onChange={(ev) => set('summary', ev.target.value)} placeholder="One line shown in lists and on map pins" />
+          <small className="muted">Players see the summary, details and tags once the page is revealed. Secrets go in GM notes or a :::gm block.</small>
         </label>
         <label>
           <span>

@@ -8,6 +8,8 @@ export interface Owner {
   name: string
   notes: string
   mine: boolean
+  /** Asked for, but the GM hasn't approved it yet. */
+  pending: boolean
 }
 
 /**
@@ -25,7 +27,7 @@ export function useCharacterOwners(world: World | undefined | null) {
     try {
       const { members, claims } = await listPlayers(gmCloud)
       const names = new Map(members.map((m) => [m.userId, m.name]))
-      setFetched(new Map(claims.map((c) => [c.entityId, { userId: c.userId, name: names.get(c.userId) ?? 'A player', notes: c.notes, mine: false }])))
+      setFetched(new Map(claims.map((c) => [c.entityId, { userId: c.userId, name: names.get(c.userId) ?? 'A player', notes: c.notes, mine: false, pending: !c.approved }])))
     } catch {
       // Offline: no ownership info for now.
     }
@@ -39,7 +41,7 @@ export function useCharacterOwners(world: World | undefined | null) {
     const s = world!.shared!
     const names = new Map((s.members ?? []).map((m) => [m.userId, m.name || 'A player']))
     const owners = new Map(
-      (s.claims ?? []).map((c) => [c.entityId, { userId: c.userId, name: names.get(c.userId) ?? 'A player', notes: c.notes, mine: c.userId === s.me }]),
+      (s.claims ?? []).map((c) => [c.entityId, { userId: c.userId, name: names.get(c.userId) ?? 'A player', notes: c.notes, mine: c.userId === s.me, pending: c.approved === false }]),
     )
     return { owners, memberOf, reload: async () => {} }
   }
