@@ -5,6 +5,8 @@ import { db, type Entity, type Session, type World } from '../db'
 import { Markdown } from '../Markdown'
 import { buildRecapPrompt, estimateTokens, parseRecap, recapCost, recapWithClaude } from './recap'
 import { useAiSettings } from './settings'
+import { Ico } from '../icons'
+import { ClipboardText, Eye, Lock, PenNib, Sparkle } from '@phosphor-icons/react'
 
 /**
  * Turns a session's transcript (and GM notes) into a GM summary and a player recap.
@@ -64,7 +66,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
   return (
     <section className="recap-panel">
       <h2>
-        ✨ Write up this session <Help topic="recap" />
+        <Ico as={Sparkle} /> Write up this session <Help topic="recap" />
       </h2>
       <p className="muted small">
         {transcribed
@@ -77,7 +79,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
       {writing ? (
         <div className="recap-writing">
           <div className="row spread">
-            <span className="small">✍️ Claude is writing…</span>
+            <span className="small"><Ico as={PenNib} /> Claude is writing…</span>
             <button className="ghost small" onClick={() => writing.abort.abort()}>
               Stop
             </button>
@@ -87,7 +89,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
       ) : (
         <div className="row wrap">
           <button onClick={copy} disabled={!hasMaterial} title="Copies everything Claude needs. Paste it into claude.ai, then paste the answer back here.">
-            📋 Copy for Claude
+            <Ico as={ClipboardText} /> Copy for Claude
           </button>
           <button
             className="primary"
@@ -95,7 +97,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
             disabled={!hasMaterial || !settings.anthropicKey.trim()}
             title={settings.anthropicKey.trim() ? 'Uses your Anthropic API key' : 'Add an Anthropic API key in World settings first'}
           >
-            ✨ Write it now{estimate ? ` (about US$${Math.max(0.01, estimate).toFixed(2)})` : ''}
+            <Ico as={Sparkle} /> Write it now{estimate ? ` (about US$${Math.max(0.01, estimate).toFixed(2)})` : ''}
           </button>
           {mode === 'idle' && (
             <button className="ghost small" onClick={() => setMode('paste')}>
@@ -174,7 +176,7 @@ function RecapDraftReview({ session, entities, worldId, note }: { session: Sessi
   return (
     <section className="recap-panel recap-review">
       <div className="row spread">
-        <h2>✨ Claude’s draft</h2>
+        <h2><Ico as={Sparkle} /> Claude’s draft</h2>
         <label className="row small">
           <input type="checkbox" checked={preview} onChange={(e) => setPreview(e.target.checked)} /> Preview
         </label>
@@ -182,7 +184,7 @@ function RecapDraftReview({ session, entities, worldId, note }: { session: Sessi
       {note && <p className="muted small">{note}</p>}
       <p className="muted small">Check it over and fix anything Claude misheard. Nothing is saved to the session until you choose below.</p>
 
-      <h3>🔒 GM summary</h3>
+      <h3><Ico as={Lock} /> GM summary</h3>
       {preview ? (
         <Markdown text={gm} entities={entities} worldId={worldId} showSecrets />
       ) : (
@@ -194,7 +196,7 @@ function RecapDraftReview({ session, entities, worldId, note }: { session: Sessi
         </button>
       </div>
 
-      <h3>👁 Player recap</h3>
+      <h3><Ico as={Eye} /> Player recap</h3>
       {preview ? (
         <Markdown text={players} entities={entities} worldId={worldId} showSecrets={false} />
       ) : (

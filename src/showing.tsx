@@ -6,6 +6,8 @@ import { db, newId, type Entity, type Showing, type World } from './db'
 import { saveFileAsAsset, useAssetUrl, useBlobUrl, useVisibleEntities } from './hooks'
 import { Markdown, stripSecrets } from './Markdown'
 import { schedule } from './cloud/sync'
+import { Ico } from './icons'
+import { Television } from '@phosphor-icons/react'
 
 /**
  * "Show to players": the GM puts a picture, a page or some text on every player's screen.
@@ -105,14 +107,14 @@ export function ShowingPopup({ world }: { world: World }) {
   if (!open)
     return (
       <button className="showing-reopen" onClick={() => setSeen('')}>
-        📺 Your GM is showing: {showing.title}
+        <Ico as={Television} /> Your GM is showing: {showing.title}
       </button>
     )
   return (
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && close()}>
       <div className="modal showing-modal" role="dialog" aria-label={showing.title}>
         <header>
-          <h2>📺 {showing.title}</h2>
+          <h2><Ico as={Television} /> {showing.title}</h2>
           <button className="ghost" onClick={close} aria-label="Close">
             ×
           </button>
@@ -128,7 +130,7 @@ export function ShowingBanner({ world }: { world: World }) {
   if (!world.showing) return null
   return (
     <div className="player-banner showing-banner">
-      📺 Showing players: <strong>{world.showing.title}</strong>
+      <Ico as={Television} /> Showing players: <strong>{world.showing.title}</strong>
       <Link className="button" to={`/screen/${world.id}`} target="_blank">
         Players’ screen
       </Link>
@@ -146,7 +148,7 @@ export function ShowButton({ worldId, what, disabled }: { worldId: string; what:
       disabled={!!disabled}
       onClick={() => showToPlayers(worldId, what)}
     >
-      📺 Show players
+      <Ico as={Television} /> Show players
     </button>
   )
 }
@@ -171,7 +173,7 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
   return (
     <section className="card lectern-panel">
       <h2>
-        📺 Show players <Help topic="showPlayers" />
+        <Ico as={Television} /> Show players <Help topic="showPlayers" />
       </h2>
       {world.showing ? (
         <div className="row wrap small">

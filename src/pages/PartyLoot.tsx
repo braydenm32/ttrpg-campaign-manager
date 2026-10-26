@@ -5,6 +5,8 @@ import { db, saveEntity, type Entity, type World } from '../db'
 import { Help } from '../help'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
+import { Ico } from '../icons'
+import { Backpack } from '@phosphor-icons/react'
 
 /**
  * Party loot: every item someone is carrying, grouped by who has it, plus the party's coin.
@@ -38,7 +40,7 @@ export default function PartyLoot() {
     <div className="page">
       <header className="page-header">
         <h1>
-          🎒 Party loot <Help topic="loot" />
+          <Ico as={Backpack} /> Party loot <Help topic="loot" />
         </h1>
       </header>
       <CoinPurse world={world} editable={isGM} />

@@ -18,6 +18,8 @@ import {
 import { useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { TablesPanel } from '../tables'
+import { Ico } from '../icons'
+import { DiceFive } from '@phosphor-icons/react'
 
 type Kind = 'tavern' | 'shop' | 'npc'
 
@@ -52,10 +54,10 @@ export default function Generators() {
     <div className="page">
       <header className="page-header">
         <h1>
-          🎰 Generators &amp; tables <Help topic="generators" />
+          <Ico as={DiceFive} /> Generators &amp; tables <Help topic="generators" />
         </h1>
         <Link className="button" to={`/w/${worldId}/type/table`}>
-          🎲 Edit your random tables <Help topic="randomTables" />
+          <Ico as={DiceFive} /> Edit your random tables <Help topic="randomTables" />
         </Link>
       </header>
       <p className="muted">Roll up a place or person on the fly, then save it into your world. Saved results start as GM only.</p>
@@ -88,7 +90,7 @@ export default function Generators() {
             ))}
           </select>
         )}
-        <button onClick={() => reroll()}>🎲 Reroll</button>
+        <button onClick={() => reroll()}><Ico as={DiceFive} /> Reroll</button>
       </div>
       <div className="card generated">
         <Markdown text={preview} entities={entities} worldId={worldId} showSecrets />

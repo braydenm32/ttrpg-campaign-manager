@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Empty } from './components'
-import { db, ENTITY_LABELS, newId, type Clock, type Entity } from './db'
+import { db, newId, type Clock, type Entity } from './db'
 import { Help } from './help'
 import { useVisibleEntities, useWorld } from './hooks'
 import { useViewMode } from './viewMode'
+import { Ico, TypeIcon } from './icons'
+import { Timer } from '@phosphor-icons/react'
 
 /**
  * Progress clocks (as in Blades in the Dark): a circle cut into slices that fill as a plan, a threat
@@ -67,7 +69,7 @@ function ClockRow({ clock, owner, isGM, showOwner, worldId }: { clock: Clock; ow
             <>
               {' · '}
               <Link to={`/w/${worldId}/e/${owner.id}`}>
-                {ENTITY_LABELS[owner.type].icon} {owner.name}
+                <TypeIcon type={owner.type} /> {owner.name}
               </Link>
             </>
           )}
@@ -115,14 +117,14 @@ export function ClocksBox({ entity, isGM, worldId }: { entity: Entity; isGM: boo
   if (!clocks.length && !adding)
     return (
       <button className="add-extra" onClick={() => setAdding(true)}>
-        ⏱️ Add a clock
+        <Ico as={Timer} /> Add a clock
       </button>
     )
   return (
     <section className="clocks">
       <div className="section-header">
         <h2>
-          ⏱️ Clocks <Help topic="clocks" />
+          <Ico as={Timer} /> Clocks <Help topic="clocks" />
         </h2>
         {isGM && !adding && <button onClick={() => setAdding(true)}>+ Clock</button>}
       </div>
@@ -173,7 +175,7 @@ export function ClocksPanel({ worldId, entities }: { worldId: string; entities: 
   return (
     <section className="card lectern-panel">
       <h2>
-        ⏱️ <Link to={`/w/${worldId}/clocks`}>Clocks</Link> <Help topic="clocks" />
+        <Ico as={Timer} /> <Link to={`/w/${worldId}/clocks`}>Clocks</Link> <Help topic="clocks" />
       </h2>
       <div className="clock-list compact">
         {all.map(({ clock, owner }) => (
@@ -196,7 +198,7 @@ export default function ClocksPage() {
     <div className="page">
       <header className="page-header">
         <h1>
-          ⏱️ Clocks <Help topic="clocks" />
+          <Ico as={Timer} /> Clocks <Help topic="clocks" />
         </h1>
       </header>
       {all.length === 0 ? (

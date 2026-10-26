@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { db } from './db'
+import { Ico } from './icons'
+import { Sparkle } from '@phosphor-icons/react'
 
 /**
  * Keeping the app safe on this device:
@@ -61,7 +63,7 @@ export function UpdateBanner() {
   if (!ready) return null
   return (
     <div className="update-banner" role="status">
-      <span>✨ A new version of the Warded Atlas is ready.</span>
+      <span><Ico as={Sparkle} /> A new version of the Warded Atlas is ready.</span>
       <button className="small primary" onClick={() => reload?.()}>
         Reload now
       </button>

@@ -8,12 +8,14 @@ import { asPlayerSees, useAssetUrl, useVisibleEntities } from './hooks'
 import { Markdown } from './Markdown'
 import { StatusBadge } from './status'
 import { ForcePlayerView, useViewMode } from './viewMode'
+import { Ico, PageIcon } from './icons'
+import { Eye, Lock, Printer } from '@phosphor-icons/react'
 
 /** Opens the print page for a page or a session. */
 export function PrintButton({ to }: { to: string }) {
   return (
     <Link className="button" to={to} title="Print this, or save it as a PDF">
-      🖨️ Print
+      <Ico as={Printer} /> Print
     </Link>
   )
 }
@@ -54,15 +56,15 @@ function PrintBody({ world }: { world: World }) {
       <div className="print-controls row wrap">
         <button onClick={() => navigate(-1)}>← Back</button>
         <button className="primary" onClick={() => window.print()}>
-          🖨️ Print or save as PDF
+          <Ico as={Printer} /> Print or save as PDF
         </button>
         {!world.shared && (
           <div className="segmented">
             <button className={isGM ? 'on' : ''} onClick={() => setParams({}, { replace: true })}>
-              🔒 GM copy
+              <Ico as={Lock} /> GM copy
             </button>
             <button className={!isGM ? 'on' : ''} onClick={() => setParams({ copy: 'players' }, { replace: true })}>
-              👁 Player copy
+              <Ico as={Eye} /> Player copy
             </button>
           </div>
         )}
@@ -86,7 +88,7 @@ function PrintEntity({ world, id }: { world: World; id: string }) {
   return (
     <article>
       <div className="muted">
-        {typeLabel(e, world).icon} {typeLabel(e, world).one} · {world.name}
+        <PageIcon page={e} world={world} /> {typeLabel(e, world).one} · {world.name}
       </div>
       <h1>{e.name}</h1>
       <StatusBadge entity={e} />

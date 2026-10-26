@@ -22,6 +22,9 @@ import { revealAndShow, ShowButton } from '../showing'
 import { CalDateInput, formatDate, toDays } from '../calendar'
 import { RelationsBox } from '../relations'
 import { ClocksBox } from '../clocks'
+import { Ico, TypeIcon } from '../icons'
+import { Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Spiral, Television } from '@phosphor-icons/react'
+import { initials } from '../text'
 
 export default function EntityPage() {
   const { worldId } = useWorld()
@@ -72,19 +75,21 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
 
   return (
     <div className="page entity-page">
-      {ancestors.length > 0 && (
-        <nav className="breadcrumbs">
-          {ancestors.map((a) => (
-            <span key={a.id}>
-              <Link to={`/w/${worldId}/e/${a.id}`}>{a.name}</Link> ›{' '}
-            </span>
-          ))}
-        </nav>
-      )}
+      <nav className="runhead" aria-label="Where this page sits">
+        <Link to={`/w/${worldId}`}>{world?.name}</Link>
+        {ancestors.map((a) => (
+          <span key={a.id}>
+            {' › '}
+            <Link to={`/w/${worldId}/e/${a.id}`}>{a.name}</Link>
+          </span>
+        ))}
+        {' › '}
+        <Link to={`/w/${worldId}/type/${e.type}${e.type === 'custom' && e.customType ? `/${e.customType}` : ''}`}>{typeLabel(e, world).many}</Link>
+      </nav>
       <header className="page-header">
         <div>
-          <div className="muted">
-            {typeLabel(e, world).icon} {typeLabel(e, world).one}
+          <div className="kicker">
+            <TypeIcon type={e.type} custom={world?.customTypes?.find((c) => c.id === e.customType)} /> {typeLabel(e, world).one}
             {e.type === 'item' && e.quantity != null && e.quantity !== 1 && ` · ×${e.quantity}`}
             {e.type === 'item' && e.heldBy && ` · carried by ${e.heldBy === 'party' ? 'the party' : (entities.find((x) => x.id === e.heldBy)?.name ?? 'someone')}`}
             {e.type === 'event' &&
@@ -98,15 +103,10 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           <h1>
             {e.name} <VisibilityBadge value={e.visibility} /> <RevealedToBadge entity={e} world={world} entities={entities} isGM={isGM} />
           </h1>
-          {e.status && (
-            <p>
-              <StatusBadge entity={e} showAlive />
-            </p>
-          )}
           {e.summary && <p className="lead">{e.summary}</p>}
         </div>
         {isGM ? (
-          <div className="row">
+          <div className="row entity-actions">
             <PrintButton to={`/w/${worldId}/print/e/${e.id}`} />
             {!e.template &&
               (e.visibility === 'players' ? (
@@ -116,21 +116,23 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
                   title="Reveal this page to every player and put it on their screens"
                   onClick={() => confirm(`Reveal “${e.name}” to every player and show it? GM notes and secret passages stay hidden.`) && revealAndShow(worldId, e)}
                 >
-                  📺 Reveal and show
+                  <Ico as={Television} /> Reveal and show
                 </button>
               ))}
             <HistoryButton entity={e} />
-            <button onClick={onEdit}>✏️ Edit</button>
+            <button className="primary" onClick={onEdit}>
+              <Ico as={PencilSimple} /> Edit
+            </button>
           </div>
         ) : (
-          <div className="row">
+          <div className="row entity-actions">
             <PrintButton to={`/w/${worldId}/print/e/${e.id}`} />
           </div>
         )}
       </header>
       {e.template && (
         <p className="notice">
-          📐 This is a template <Help topic="templates" />: a starting point for new {typeLabel(e, world).many.toLowerCase()}. It’s
+          <Ico as={Ruler} /> This is a template <Help topic="templates" />: a starting point for new {typeLabel(e, world).many.toLowerCase()}. It’s
           GM only and doesn’t show up in lists.
         </p>
       )}
@@ -148,13 +150,17 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             </div>
           )}
           {e.body ? (
-            <Markdown text={e.body} entities={entities} worldId={worldId} showSecrets={isGM} />
-          ) : (
-            <p className="muted">No description yet.</p>
-          )}
+            <div className="entity-prose">
+              <Markdown text={e.body} entities={entities} worldId={worldId} showSecrets={isGM} />
+            </div>
+          ) : isGM && !e.template ? (
+            <button className="write-description" onClick={onEdit}>
+              <Ico as={PencilSimple} /> Write a description
+            </button>
+          ) : null}
           {e.playerBody && (
             <section className="player-written">
-              <h2>✍️ In the player’s words</h2>
+              <h2><Ico as={PenNib} /> In the player’s words</h2>
               <Markdown text={e.playerBody} entities={entities} worldId={worldId} showSecrets={false} />
             </section>
           )}
@@ -164,6 +170,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
             </div>
           )}
+          {(e.body || (isGM && e.gmNotes)) && <div className="fleuron" aria-hidden="true">❦</div>}
           {!e.template && <ClocksBox entity={e} isGM={isGM} worldId={worldId} />}
           {!e.template && <RelationsBox entity={e} entities={entities} isGM={isGM} worldId={worldId} />}
           {world && <PlayerNotesBox world={world} entityId={e.id} entities={entities} />}
@@ -172,7 +179,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           {groups.map(([t, xs]) => (
             <section key={t}>
               <h2>
-                {ENTITY_LABELS[t].icon} {ENTITY_LABELS[t].many} here
+                <TypeIcon type={t} /> {ENTITY_LABELS[t].many} here
               </h2>
               <ul className="entity-list">
                 {xs.map((x) => (
@@ -191,7 +198,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
                 {backlinks.map((x) => (
                   <li key={x.id}>
                     <Link to={`/w/${worldId}/e/${x.id}`}>
-                      {ENTITY_LABELS[x.type].icon} {x.name}
+                      <TypeIcon type={x.type} /> {x.name}
                     </Link>
                   </li>
                 ))}
@@ -200,40 +207,66 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           )}
         </div>
         <aside className="entity-side">
-          {image && <img className="portrait" src={image} alt={e.name} />}
+          <div className="infobox">
+            {image ? (
+              <img className="portrait" src={image} alt={e.name} />
+            ) : isGM && !e.template ? (
+              <button className="portrait-placeholder" onClick={onEdit} title="Add a picture">
+                <span aria-hidden="true">{initials(e.name)}</span>
+                <small>Add a picture</small>
+              </button>
+            ) : (
+              <div className="portrait-placeholder" aria-hidden="true">
+                <span>{initials(e.name)}</span>
+              </div>
+            )}
+            <dl className="facts">
+              {e.status && (
+                <div>
+                  <dt>Status</dt>
+                  <dd>
+                    <StatusBadge entity={e} showAlive />
+                  </dd>
+                </div>
+              )}
+              {ancestors.length > 0 && (
+                <div>
+                  <dt>{e.type === 'location' ? 'Inside' : e.type === 'event' ? 'Where' : 'Located in'}</dt>
+                  <dd>
+                    <Link to={`/w/${worldId}/e/${ancestors.at(-1)!.id}`}>{ancestors.at(-1)!.name}</Link>
+                  </dd>
+                </div>
+              )}
+              {e.fields.map((f, i) => (
+                <div key={i} className={f.gm ? 'gm-field' : undefined}>
+                  <dt>
+                    {f.gm && <span title="GM only"><Ico as={Lock} /> </span>}
+                    {f.key}
+                  </dt>
+                  <dd>{f.value}</dd>
+                </div>
+              ))}
+              {(ownMaps.length > 0 || pins.length > 0) && (
+                <div>
+                  <dt>Maps</dt>
+                  <dd>
+                    {ownMaps.map((m) => (
+                      <Link key={m.id} className="block" to={`/w/${worldId}/maps/${m.id}`}>
+                        <Ico as={MapTrifold} /> Open {m.name}
+                      </Link>
+                    ))}
+                    {pins.map(({ pin, map }) => (
+                      <Link key={pin.id} className="block" to={`/w/${worldId}/maps/${map.id}?pin=${pin.id}`}>
+                        <Ico as={MapPin} /> On {map.name}
+                      </Link>
+                    ))}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </div>
           {e.type === 'pc' && world && <CharacterOwnerBox entity={e} world={world} />}
           {e.type === 'quest' && isGM && <QuestThreads quest={e} entities={entities} worldId={worldId} />}
-          {(ownMaps.length > 0 || pins.length > 0) && (
-            <div className="side-box">
-              <h3>Maps</h3>
-              {ownMaps.map((m) => (
-                <Link key={m.id} className="button block" to={`/w/${worldId}/maps/${m.id}`}>
-                  🗺️ Open {m.name}
-                </Link>
-              ))}
-              {pins.map(({ pin, map }) => (
-                <Link key={pin.id} className="block" to={`/w/${worldId}/maps/${map.id}?pin=${pin.id}`}>
-                  📍 On {map.name}
-                </Link>
-              ))}
-            </div>
-          )}
-          {e.fields.length > 0 && (
-            <div className="side-box">
-              <h3>Details</h3>
-              <dl className="fields">
-                {e.fields.map((f, i) => (
-                  <div key={i} className={f.gm ? 'gm-field' : undefined}>
-                    <dt>
-                      {f.gm && <span title="GM only">🔒 </span>}
-                      {f.key}
-                    </dt>
-                    <dd>{f.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )}
           {(e.tags.length > 0 || (isGM && !!e.gmTags?.length)) && (
             <div className="tags">
               {e.tags.map((t) => (
@@ -244,7 +277,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               {isGM &&
                 e.gmTags?.map((t) => (
                   <span key={`gm-${t}`} className="tag gm" title="GM only">
-                    🔒 {t}
+                    <Ico as={Lock} /> {t}
                   </span>
                 ))}
             </div>
@@ -312,7 +345,7 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
           </div>
           <div className="row">
             {d.template ? (
-              <span className="muted small">📐 Template <Help topic="templates" /></span>
+              <span className="muted small"><Ico as={Ruler} /> Template <Help topic="templates" /></span>
             ) : (
               <>
                 <VisibilityToggle value={d.visibility} onChange={(v) => set('visibility', v)} />
@@ -571,7 +604,7 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
         </div>
         <div>
           <div className="label">
-            🔒 GM-only tags <Help topic="gmTags" />
+            <Ico as={Lock} /> GM-only tags <Help topic="gmTags" />
           </div>
           <TagInput tags={d.gmTags ?? []} onChange={(t) => set('gmTags', t.length ? t : undefined)} />
         </div>
@@ -590,7 +623,7 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
             </button>
             {!d.template && (
               <button type="button" title="Keep a copy of this page as a starting point for new ones" onClick={saveAsTemplate}>
-                📐 Save as template
+                <Ico as={Ruler} /> Save as template
               </button>
             )}
           </div>
@@ -673,7 +706,7 @@ function QuestThreads({ quest, entities, worldId }: { quest: Entity; entities: E
   return (
     <div className="side-box">
       <h3>
-        🧵 Loose threads <Help topic="trackAsThread" />
+        <Ico as={Spiral} /> Loose threads <Help topic="trackAsThread" />
       </h3>
       {following.map((t) => (
         <Link key={t.id} className="block" to={`/w/${worldId}/e/${t.id}`}>

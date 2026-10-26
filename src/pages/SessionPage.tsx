@@ -20,6 +20,8 @@ import { PrintButton } from '../print'
 import { CalDateInput, formatDate } from '../calendar'
 import { DiscordButton, forDiscord } from '../discord'
 import { EndSessionChecklist } from '../EndSession'
+import { Ico, TypeIcon } from '../icons'
+import { BookOpen, BookmarkSimple, CalendarBlank, ClipboardText, Eye, FlagCheckered, Lock, Microphone, Spiral, Warning } from '@phosphor-icons/react'
 
 export default function SessionPage() {
   const { worldId, world } = useWorld()
@@ -81,11 +83,11 @@ export default function SessionPage() {
           <VisibilityToggle value={session.visibility} onChange={(v) => update({ visibility: v })} />
           <PrintButton to={`/w/${worldId}/print/s/${session.id}`} />
           <Link className="button primary" to={`/w/${worldId}/s/${session.id}/lectern`}>
-            📖 Run at the Lectern
+            <Ico as={BookOpen} /> Run at the Lectern
           </Link>
           {params.get('end') !== '1' && (
             <button title="Recap, show players, next session" onClick={() => setParams({ end: '1' }, { replace: true })}>
-              🏁 Wrap up
+              <Ico as={FlagCheckered} /> Wrap up
             </button>
           )}
         </div>
@@ -94,7 +96,7 @@ export default function SessionPage() {
       {world?.calendar && (
         <div className="row wrap small">
           <span>
-            📅 In the world <Help topic="worldToday" />
+            <Ico as={CalendarBlank} /> In the world <Help topic="worldToday" />
           </span>
           <CalDateInput calendar={world.calendar} value={session.worldDate} onChange={(worldDate) => update({ worldDate })} />
           {world.calendar.today && (
@@ -114,13 +116,13 @@ export default function SessionPage() {
 
       <div className="segmented tabs">
         <button className={tab === 'prep' ? 'on' : ''} onClick={() => setTab('prep')}>
-          📋 Prep
+          <Ico as={ClipboardText} /> Prep
         </button>
         <button className={tab === 'notes' ? 'on' : ''} onClick={() => setTab('notes')}>
-          🔒 GM notes
+          <Ico as={Lock} /> GM notes
         </button>
         <button className={tab === 'recap' ? 'on' : ''} onClick={() => setTab('recap')}>
-          👁 Player recap
+          <Ico as={Eye} /> Player recap
         </button>
       </div>
       <Help topic="session" />
@@ -217,7 +219,7 @@ function FeaturedList({
       {entities.map((e) => (
         <span key={e.id} className="tag">
           <Link to={`/w/${worldId}/e/${e.id}`}>
-            {ENTITY_LABELS[e.type].icon} {e.name}
+            <TypeIcon type={e.type} /> {e.name}
           </Link>
           {onRemove && (
             <button onClick={() => onRemove(e.id)} aria-label={`Remove ${e.name}`}>
@@ -261,12 +263,12 @@ function Recorder({ session }: { session: Session }) {
   return (
     <section className="recorder">
       <h2>
-        🎙️ Recording <Help topic="recording" />
+        <Ico as={Microphone} /> Recording <Help topic="recording" />
       </h2>
       {cutOff.map((r) => (
         <div key={r.recordingId} className="player-banner recover-recording">
           <span>
-            ⚠️ A recording from {new Date(r.startedAt).toLocaleString()} wasn’t finished (the app closed while it was running). About{' '}
+            <Ico as={Warning} /> A recording from {new Date(r.startedAt).toLocaleString()} wasn’t finished (the app closed while it was running). About{' '}
             {formatTime(r.seconds)} ({formatBytes(r.bytes)}) was saved as it went.
           </span>
           <button className="primary small" onClick={() => recoverRecording(session.id, r.recordingId, session.number)}>
@@ -300,7 +302,7 @@ function Recorder({ session }: { session: Session }) {
             }}
           >
             <input value={mark} onChange={(e) => setMark(e.target.value)} placeholder="Bookmark this moment (e.g. 'party meets the lich')" />
-            <button>🔖 Bookmark</button>
+            <button><Ico as={BookmarkSimple} /> Bookmark</button>
           </form>
           {bookmarks.length > 0 && (
             <ul className="bookmarks">
@@ -408,7 +410,7 @@ function SessionThreads({ sessionId, entities, worldId }: { sessionId: string; e
   const threads = entities.filter((e) => e.type === 'thread' && (e.raisedIn === sessionId || e.tiedOffIn === sessionId))
   return (
     <section>
-      <h2>🧵 Loose threads from this session</h2>
+      <h2><Ico as={Spiral} /> Loose threads from this session</h2>
       {threads.map((t) => (
         <ThreadCard key={t.id} thread={t} entities={entities} sessions={sessions} worldId={worldId} currentSessionId={sessionId} />
       ))}

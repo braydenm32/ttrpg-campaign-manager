@@ -8,6 +8,8 @@ import { createNextSession, partyOf } from '../sessions'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
 import { useViewMode } from '../viewMode'
+import { Ico } from '../icons'
+import { Compass, Microphone, Shield } from '@phosphor-icons/react'
 
 export default function CampaignPage() {
   const { worldId, world } = useWorld()
@@ -104,7 +106,7 @@ export default function CampaignPage() {
                   </Link>{' '}
                   <VisibilityBadge value={s.visibility} />
                   <span className="muted"> · {s.date}</span>
-                  {s.recordings.length > 0 && <span title="Has recordings"> 🎙️</span>}
+                  {s.recordings.length > 0 && <span title="Has recordings"> <Ico as={Microphone} /></span>}
                 </li>
               ))}
             </ul>
@@ -118,7 +120,7 @@ export default function CampaignPage() {
             <ul className="entity-list">
               {pcs.map((e) => (
                 <li key={e.id}>
-                  <Link to={`/w/${worldId}/e/${e.id}`}>🛡️ {e.name}</Link>
+                  <Link to={`/w/${worldId}/e/${e.id}`}><Ico as={Shield} /> {e.name}</Link>
                   {e.summary && <span className="muted"> · {e.summary}</span>}
                 </li>
               ))}
@@ -131,7 +133,7 @@ export default function CampaignPage() {
             <ul className="entity-list">
               {quests.map((e) => (
                 <li key={e.id}>
-                  <Link to={`/w/${worldId}/e/${e.id}`}>🧭 {e.name}</Link>
+                  <Link to={`/w/${worldId}/e/${e.id}`}><Ico as={Compass} /> {e.name}</Link>
                 </li>
               ))}
             </ul>

@@ -1,11 +1,12 @@
 import logo from '../assets/logo.svg'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { importWorld } from '../backup'
 import { Empty, Modal } from '../components'
 import { Help } from '../help'
-import { db, GAME_SYSTEMS, newId } from '../db'
+import { db, GAME_SYSTEMS, newId, worldColor, type World } from '../db'
+import { useAssetUrl } from '../hooks'
 import { loadSampleWorld } from '../sample'
 import { AccountModal, useAuthSession } from '../cloud/auth'
 import { listMyMemberships, loadMemberWorld, memberWorldId, pendingInvite } from '../cloud/players'
@@ -72,17 +73,13 @@ export default function Home() {
       {worlds.length === 0 ? (
         <Empty>No worlds yet. Create one, or load the sample world to look around. A player? Paste the invite link your GM sent you above.</Empty>
       ) : (
-        <div className="card-grid">
+        <div className="shelf">
           {worlds.map((w) => (
-            <button key={w.id} className="card world-card" onClick={() => navigate(`/w/${w.id}`)}>
-              <h3>{w.name}</h3>
-              <div className="muted">
-                {w.shared?.memberOf ? '🎭 You’re a player' : w.shared ? '📜 Shared with you (read only)' : w.system}
-                {w.cloud?.enabled && ' · ☁️ synced'}
-              </div>
-              <p>{w.description}</p>
-            </button>
+            <WorldBook key={w.id} world={w} onOpen={() => navigate(`/w/${w.id}`)} />
           ))}
+          <button className="book book-new" onClick={() => setCreating(true)}>
+            + New world
+          </button>
         </div>
       )}
       {notHere.length > 0 && (
@@ -175,7 +172,9 @@ function InviteBox() {
       }}
     >
       <label>
-        Got an invite link? <Help topic="joining" />
+        <span>
+          Got an invite link? <Help topic="joining" />
+        </span>
         <input value={link} onChange={(e) => (setLink(e.target.value), setError(''))} placeholder="Paste the link your GM sent you" />
       </label>
       <button disabled={!link.trim()}>Open</button>
@@ -223,5 +222,20 @@ function NewWorld({ onClose, onCreated }: { onClose: () => void; onCreated: (id:
         </div>
       </form>
     </Modal>
+  )
+}
+
+/** A world on the shelf: a cloth-bound book in the world's colour, with its cover picture if it has one. */
+function WorldBook({ world: w, onOpen }: { world: World; onOpen: () => void }) {
+  const cover = useAssetUrl(w.coverId)
+  return (
+    <button className={`book ${cover ? 'has-picture' : ''}`} style={{ '--world': worldColor(w), '--cover': cover ? `url("${cover}")` : undefined } as CSSProperties} onClick={onOpen}>
+      <img className="book-sigil" src={logo} alt="" />
+      <b>{w.name}</b>
+      <small>
+        {w.shared?.memberOf ? 'You’re a player' : w.shared ? 'Shared with you (read only)' : w.system}
+        {w.cloud?.enabled && ' · synced'}
+      </small>
+    </button>
   )
 }

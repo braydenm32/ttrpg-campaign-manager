@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import { VisibilityBadge } from './components'
-import { db, ENTITY_LABELS, THREAD_STATUS, type Entity, type Session } from './db'
+import { db, THREAD_STATUS, type Entity, type Session } from './db'
 import { COLD_AFTER, sessionsSinceTouched, setThreadStatus, threadLinks, URGENCY } from './threads'
 import { plainLinks } from './text'
 import { useViewMode } from './viewMode'
+import { Ico, TypeIcon } from './icons'
+import { Graph } from '@phosphor-icons/react'
 
 const sessionName = (sessions: Session[], id?: string) => {
   const s = id && sessions.find((x) => x.id === id)
@@ -51,7 +53,7 @@ export function ThreadCard({
         <div className="tags">
           {links.map((e) => (
             <Link key={e.id} className="tag" to={`/w/${worldId}/e/${e.id}`}>
-              {ENTITY_LABELS[e.type].icon} {e.name}
+              <TypeIcon type={e.type} /> {e.name}
             </Link>
           ))}
         </div>
@@ -62,7 +64,7 @@ export function ThreadCard({
         {tied && <>{raised ? ' · ' : ''}Tied off in {tied}</>}
         {isGM && unresolved && idle >= COLD_AFTER && (
           <span className="thread-cold" title="No change to this thread for a while. Bring it back, or drop it.">
-            {raised || tied ? ' · ' : ''}🕸️ untouched for {idle} sessions
+            {raised || tied ? ' · ' : ''}<Ico as={Graph} /> untouched for {idle} sessions
           </span>
         )}
       </div>

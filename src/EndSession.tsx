@@ -5,6 +5,8 @@ import { WorldToday } from './calendar'
 import { db, type Session, type World } from './db'
 import { Help } from './help'
 import { createNextSession } from './sessions'
+import { Ico } from './icons'
+import { FlagCheckered } from '@phosphor-icons/react'
 
 /**
  * Wrapping up after play, in one place: transcribe the recording, write the recap with Claude,
@@ -77,7 +79,7 @@ export function EndSessionChecklist({ world, session, onClose }: { world: World;
     <section className="card end-session">
       <div className="section-header">
         <h2>
-          🏁 End of session <Help topic="endSession" />
+          <Ico as={FlagCheckered} /> End of session <Help topic="endSession" />
         </h2>
         <button className="ghost small" onClick={onClose}>
           Hide

@@ -3,6 +3,8 @@ import { listAvailability, listPlayers, setAvailability, type Member } from '../
 import { db, newId, type Availability, type Campaign, type DateOption, type SharedInfo, type World } from '../db'
 import { Help } from '../help'
 import { DiscordButton, getWebhook, postToDiscord } from '../discord'
+import { Ico } from '../icons'
+import { CalendarBlank, PushPin } from '@phosphor-icons/react'
 
 /**
  * Picking the next session date. The GM proposes a few dates on the campaign; players who joined
@@ -70,7 +72,7 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
     <section className="card scheduler">
       <div className="section-header">
         <h2>
-          📅 Next session <Help topic="schedule" />
+          <Ico as={CalendarBlank} /> Next session <Help topic="schedule" />
         </h2>
         {isGM && synced && (
           <button className="ghost small" onClick={load}>
@@ -82,7 +84,7 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
       {shared && !shared.memberOf && options.length > 0 && <p className="muted small">Ask your GM for an invite link to answer.</p>}
       {upcoming(campaign) && (
         <p>
-          📌 Booked: <strong>{showDate(upcoming(campaign)!)}</strong>
+          <Ico as={PushPin} /> Booked: <strong>{showDate(upcoming(campaign)!)}</strong>
           {upcoming(campaign)!.note && <span className="muted small"> · {upcoming(campaign)!.note}</span>}
         </p>
       )}

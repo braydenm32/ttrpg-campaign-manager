@@ -2,23 +2,26 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Help, HelpTipsToggle } from '../help'
+import { ThemePicker } from '../theme'
 import { RecentlyDeleted } from '../History'
 import { AiSettingsSection } from '../ai/AiSettingsSection'
 import { exportWorld } from '../backup'
 import { deleteCloudCopy } from '../cloud/sync'
 import { myRole } from '../cloud/players'
-import { db, deleteWorld, GAME_SYSTEMS, newId, typeLabel, type CustomType, type World } from '../db'
-import { useTemplates, useWorld } from '../hooks'
+import { db, deleteWorld, GAME_SYSTEMS, newId, typeLabel, WORLD_COLORS, worldColor, type Asset, type CustomType, type World } from '../db'
+import { saveFileAsAsset, useBlobUrl, useTemplates, useWorld } from '../hooks'
 import CloudSettings from './CloudSettings'
 import { CalendarEditor } from '../calendar'
 import { DiscordSettings } from '../discord'
 import { ImportPages } from '../ImportPages'
+import { Ico, PageIcon } from '../icons'
+import { Ruler } from '@phosphor-icons/react'
 
 const TABS = [
-  ['world', '🌍 World'],
-  ['players', '🎭 Players and sharing'],
-  ['device', '💻 This device'],
-  ['data', '💾 Data and backup'],
+  ['world', 'World'],
+  ['players', 'Players and sharing'],
+  ['device', 'This device'],
+  ['data', 'Data and backup'],
 ] as const
 type Tab = (typeof TABS)[number][0]
 
@@ -33,7 +36,7 @@ export default function WorldSettings() {
   return (
     <div className="page">
       <header className="page-header">
-        <h1>⚙️ World settings</h1>
+        <h1>World settings</h1>
       </header>
       <div className="segmented tabs settings-tabs" role="tablist">
         {TABS.map(([t, label]) => (
@@ -70,6 +73,8 @@ export default function WorldSettings() {
             </label>
           </div>
 
+          <WorldLook world={world} update={update} />
+
           <CalendarEditor world={world} />
 
           <CustomTypes world={world} update={update} />
@@ -83,6 +88,7 @@ export default function WorldSettings() {
       {tab === 'device' && (
         <>
           <p className="muted">These settings stay on this device: they aren’t synced or put in backups.</p>
+          <ThemePicker /> <Help topic="theme" />
           <HelpTipsToggle />
           <DiscordSettings worldId={worldId} />
           <AiSettingsSection />
@@ -210,7 +216,7 @@ function Templates({ world }: { world: World }) {
   return (
     <section>
       <h2>
-        📐 Templates <Help topic="templates" />
+        <Ico as={Ruler} /> Templates <Help topic="templates" />
       </h2>
       {templates.length === 0 ? (
         <p className="muted">No templates yet. Open any page, edit it, and choose “Save as template”.</p>
@@ -219,7 +225,7 @@ function Templates({ world }: { world: World }) {
           {templates.map((t) => (
             <li key={t.id}>
               <Link to={`/w/${world.id}/e/${t.id}`}>
-                {typeLabel(t, world).icon} {t.name}
+                <PageIcon page={t} world={world} /> {t.name}
               </Link>{' '}
               <span className="muted small">· for new {typeLabel(t, world).many.toLowerCase()}</span>
             </li>
@@ -227,5 +233,66 @@ function Templates({ world }: { world: World }) {
         </ul>
       )}
     </section>
+  )
+}
+
+/** The world's cover picture and colour, shown on Home and on its book on the shelf of worlds. */
+function WorldLook({ world, update }: { world: World; update: (patch: Partial<World>) => void }) {
+  const pictures = useLiveQuery(() => db.assets.where({ worldId: world.id }).filter((a) => a.mime.startsWith('image/')).toArray(), [world.id]) ?? []
+  // The cover is for everyone, so choosing a picture reveals it to players.
+  const choose = async (id: string | undefined) => {
+    if (id) await db.assets.update(id, { visibility: 'players', updatedAt: Date.now() })
+    update({ coverId: id })
+  }
+  return (
+    <section className="world-look">
+      <h2>
+        Cover and colour <Help topic="worldLook" />
+      </h2>
+      <div className="row wrap swatches world-colors" role="radiogroup" aria-label="World colour">
+        {WORLD_COLORS.map((c) => (
+          <button
+            key={c.value}
+            type="button"
+            role="radio"
+            aria-checked={worldColor(world) === c.value}
+            className={`swatch ${worldColor(world) === c.value ? 'on' : ''}`}
+            style={{ background: c.value }}
+            title={c.name}
+            onClick={() => update({ color: c.value })}
+          />
+        ))}
+      </div>
+      <p className="muted small">Cover picture (players see it too):</p>
+      <div className="show-thumbs">
+        <button type="button" className={`show-thumb no-cover ${world.coverId ? '' : 'on'}`} onClick={() => choose(undefined)}>
+          None
+        </button>
+        {pictures.map((a) => (
+          <CoverThumb key={a.id} asset={a} on={world.coverId === a.id} onPick={() => choose(a.id)} />
+        ))}
+        <label className="button">
+          Upload…
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={async (e) => {
+              const f = e.target.files?.[0]
+              if (f) choose(await saveFileAsAsset(world.id, f, f.name, ['cover']))
+            }}
+          />
+        </label>
+      </div>
+    </section>
+  )
+}
+
+function CoverThumb({ asset, on, onPick }: { asset: Asset; on: boolean; onPick: () => void }) {
+  const url = useBlobUrl(asset)
+  return (
+    <button type="button" className={`show-thumb ${on ? 'on' : ''}`} title={asset.name} onClick={onPick}>
+      {url && <img src={url} alt={asset.name} />}
+    </button>
   )
 }

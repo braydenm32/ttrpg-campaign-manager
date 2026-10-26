@@ -7,6 +7,8 @@ import { db, newId, type WorldMap } from '../db'
 import { imageSize, saveFileAsAsset, useAssetUrl, useWorld } from '../hooks'
 import { BACKGROUNDS, emptyDrawing, renderDrawing, type Background } from '../mapDrawing'
 import { useViewMode } from '../viewMode'
+import { Ico } from '../icons'
+import { MapTrifold, PencilSimple } from '@phosphor-icons/react'
 
 export default function MapList() {
   const { worldId } = useWorld()
@@ -44,11 +46,11 @@ export default function MapList() {
     <div className="page">
       <header className="page-header">
         <h1>
-          🗺️ Maps <Help topic="maps" />
+          <Ico as={MapTrifold} /> Maps <Help topic="maps" />
         </h1>
         {isGM && (
           <div className="row">
-          <button onClick={() => setDrawing(true)}>✏️ Draw a new map</button>
+          <button onClick={() => setDrawing(true)}><Ico as={PencilSimple} /> Draw a new map</button>
           <label className="button primary">
             {busy ? 'Uploading…' : '+ Upload map image'}
             <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />

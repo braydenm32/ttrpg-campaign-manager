@@ -8,6 +8,8 @@ import { stop, stopAll, usePlaying } from '../sound/player'
 import { Soundboard, useSounds } from '../sound/Soundboard'
 import { parseSyrinscape, syrinscape, useSyrinscapeToken } from '../sound/syrinscape'
 import { useViewMode } from '../viewMode'
+import { Ico } from '../icons'
+import { MusicNotes, SpeakerHigh } from '@phosphor-icons/react'
 
 const GROUPS = ['Ambience', 'Music', 'Effects']
 
@@ -28,7 +30,7 @@ export default function Sounds() {
     <div className="page">
       <header className="page-header">
         <h1>
-          🎵 Soundboard <Help topic="soundboard" />
+          <Ico as={MusicNotes} /> Soundboard <Help topic="soundboard" />
         </h1>
         {playing.length > 0 && <button onClick={() => stopAll()}>■ Stop all</button>}
       </header>
@@ -149,7 +151,7 @@ function SyrinscapeAdd({ worldId, group }: { worldId: string; group: string }) {
   return (
     <details className="card">
       <summary>
-        <strong>🔊 Syrinscape</strong> <Help topic="syrinscape" />
+        <strong><Ico as={SpeakerHigh} /> Syrinscape</strong> <Help topic="syrinscape" />
       </summary>
       {token ? (
         <p className="small">

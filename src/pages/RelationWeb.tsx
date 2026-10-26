@@ -6,6 +6,8 @@ import { Help } from '../help'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { familyOf, linksOf, toneOf } from '../relations'
 import { useViewMode } from '../viewMode'
+import { Ico, TypeIcon } from '../icons'
+import { Graph } from '@phosphor-icons/react'
 
 interface Edge {
   id: string
@@ -63,7 +65,7 @@ export default function RelationWeb() {
     <div className="page wide">
       <header className="page-header">
         <h1>
-          🕸️ Relationship web <Help topic="relationWeb" />
+          <Ico as={Graph} /> Relationship web <Help topic="relationWeb" />
         </h1>
         <div className="row wrap">
           <div className="segmented">
@@ -103,7 +105,7 @@ export default function RelationWeb() {
             <aside className="web-side card">
               <h2>
                 <Link to={`/w/${worldId}/e/${focused.id}`}>
-                  {ENTITY_LABELS[focused.type].icon} {focused.name}
+                  <TypeIcon type={focused.type} /> {focused.name}
                 </Link>
               </h2>
               {focused.summary && <p className="muted">{focused.summary}</p>}

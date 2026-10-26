@@ -6,6 +6,8 @@ import { useWorld } from '../hooks'
 import { removeHandout, showToPlayers, ShowingView } from '../showing'
 import { useViewMode } from '../viewMode'
 import { useState } from 'react'
+import { Ico } from '../icons'
+import { Newspaper, Television } from '@phosphor-icons/react'
 
 /**
  * Handouts: everything the GM has shown at the table, newest first. Players can read a letter or
@@ -21,7 +23,7 @@ export default function Handouts() {
     <div className="page">
       <header className="page-header">
         <h1>
-          🗞️ Handouts <Help topic="handouts" />
+          <Ico as={Newspaper} /> Handouts <Help topic="handouts" />
         </h1>
       </header>
       <p className="muted">
@@ -46,7 +48,7 @@ export default function Handouts() {
                 {isGM && (
                   <span className="row">
                     <button className="small" onClick={() => showToPlayers(worldId, h)}>
-                      📺 Show again
+                      <Ico as={Television} /> Show again
                     </button>
                     <button className="small ghost" onClick={() => confirm(`Take “${h.title}” back from the players?`) && removeHandout(worldId, h.id)}>
                       Remove

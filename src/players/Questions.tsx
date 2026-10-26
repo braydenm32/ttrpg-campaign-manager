@@ -4,6 +4,8 @@ import { useAuthSession } from '../cloud/auth'
 import { askQuestion, listQuestions, withdrawQuestion } from '../cloud/players'
 import type { PlayerQuestion, World } from '../db'
 import { Help } from '../help'
+import { Ico } from '../icons'
+import { Question } from '@phosphor-icons/react'
 
 /**
  * Players' questions to the GM. A player asks about a page (or anything, from the Questions page);
@@ -18,7 +20,7 @@ export function AskGmBox({ world, entityId }: { world: World; entityId: string }
   return (
     <section className="ask-gm">
       <h2>
-        ❓ Ask your GM <Help topic="questions" />
+        <Ico as={Question} /> Ask your GM <Help topic="questions" />
       </h2>
       <QuestionList questions={mine} memberOf={memberOf} />
       <AskForm memberOf={memberOf} entityId={entityId} placeholder="Something you want to know about this, just between you and your GM…" />

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Help } from './help'
 import { stripSecrets } from './Markdown'
 import { plainLinks } from './text'
+import { Ico } from './icons'
+import { ChatCircleDots } from '@phosphor-icons/react'
 
 /**
  * Posting to the group's Discord channel through a webhook link. The link works like a password
@@ -76,7 +78,7 @@ export function DiscordSettings({ worldId }: { worldId: string }) {
   return (
     <section>
       <h2>
-        💬 Discord <Help topic="discord" />
+        <Ico as={ChatCircleDots} /> Discord <Help topic="discord" />
       </h2>
       <p className="muted">Post recaps and session dates to your group’s channel. The link stays on this device.</p>
       <div className="row wrap">

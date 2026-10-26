@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Help } from './help'
 import { db, ENTITY_LABELS, newId, type Entity, type Relation } from './db'
+import { Ico, TypeIcon } from './icons'
+import { Graph } from '@phosphor-icons/react'
 
 /**
  * Relationships between pages: family, friends and foes, who serves whom. Each link is stored once,
@@ -69,14 +71,14 @@ export function RelationsBox({ entity, entities, isGM, worldId }: { entity: Enti
   if (!links.length && !adding)
     return (
       <button className="add-extra" onClick={() => setAdding(true)}>
-        🕸️ Add a relationship
+        <Ico as={Graph} /> Add a relationship
       </button>
     )
   return (
     <section className="relations">
       <div className="section-header">
         <h2>
-          🕸️ Relationships <Help topic="relations" />
+          <Ico as={Graph} /> Relationships <Help topic="relations" />
         </h2>
         <div className="row">
           <Link className="small" to={`/w/${worldId}/web?focus=${entity.id}`}>
@@ -91,7 +93,7 @@ export function RelationsBox({ entity, entities, isGM, worldId }: { entity: Enti
             <li key={rel.id} className={`tone-${toneOf(rel.kind)}`}>
               <span className="muted">{label}</span>{' '}
               <Link to={`/w/${worldId}/e/${other.id}`}>
-                {ENTITY_LABELS[other.type].icon} {other.name}
+                <TypeIcon type={other.type} /> {other.name}
               </Link>
               {rel.note && <span className="muted small"> · {rel.note}</span>}
               {isGM && (

@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { backupStore, exportWorld } from './backup'
 import { db, type World } from './db'
 import { Help } from './help'
+import { Ico } from './icons'
+import { FloppyDisk } from '@phosphor-icons/react'
 
 /**
  * A nudge on the overview to download a backup now and then. A world kept only on this device is
@@ -25,7 +27,7 @@ export function BackupReminder({ world }: { world: World }) {
   return (
     <div className="backup-reminder">
       <span>
-        💾 {last ? `Your last backup of this world was ${Math.round((now - last) / DAY)} days ago.` : 'You haven’t downloaded a backup of this world yet.'}{' '}
+        <Ico as={FloppyDisk} /> {last ? `Your last backup of this world was ${Math.round((now - last) / DAY)} days ago.` : 'You haven’t downloaded a backup of this world yet.'}{' '}
         {world.cloud?.enabled ? 'Sync keeps a copy in the cloud, but a file of your own is the safest.' : 'It only lives on this device, so keep a copy somewhere safe.'}{' '}
         <Help topic="backupReminder" />
       </span>

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { ENTITY_LABELS, type EntityType } from './db'
 import { Help } from './help'
 import { applyImport, exportMarkdown, planImport, readFiles, type ImportPlan, type ImportSource } from './importers'
+import { Ico } from './icons'
+import { Folder } from '@phosphor-icons/react'
 
 const SOURCES: { id: ImportSource; label: string; hint: string; accept: string; folder?: boolean }[] = [
   { id: 'markdown', label: '📝 Obsidian or Markdown', hint: 'Pick your vault folder, a .zip of it, or some .md files.', accept: '.md,.markdown,.zip', folder: true },
@@ -55,7 +57,7 @@ export function ImportPages({ worldId }: { worldId: string }) {
               </label>
               {s.folder && (
                 <label className="button">
-                  📁 Pick a folder
+                  <Ico as={Folder} /> Pick a folder
                   <input
                     type="file"
                     hidden

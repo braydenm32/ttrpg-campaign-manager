@@ -8,6 +8,8 @@ import { Help } from '../help'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { StatusBadge } from '../status'
 import { useViewMode } from '../viewMode'
+import { Ico, TypeIcon } from '../icons'
+import { PushPin, Spiral } from '@phosphor-icons/react'
 
 const W = 2400
 const H = 1600
@@ -113,7 +115,7 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
         <div>
           <Link to={`/w/${worldId}/boards`}>← Corkboards</Link>
           <h1 className="row">
-            📌 <DraftText className="title-input" value={board.name} onCommit={(v) => edit((b) => void (b.name = v))} /> <Help topic="boards" />
+            <Ico as={PushPin} /> <DraftText className="title-input" value={board.name} onCommit={(v) => edit((b) => void (b.name = v))} /> <Help topic="boards" />
           </h1>
         </div>
         <button
@@ -158,12 +160,12 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
         </form>
         {connectFrom && (
           <span className="notice small">
-            🧶 Now click the card to tie the string to. <button className="link" onClick={() => setConnectFrom(undefined)}>Cancel</button>
+            <Ico as={Spiral} /> Now click the card to tie the string to. <button className="link" onClick={() => setConnectFrom(undefined)}>Cancel</button>
           </span>
         )}
         {string && (
           <span className="row small string-edit">
-            🧶 String:
+            <Ico as={Spiral} /> String:
             <DraftText value={string.label ?? ''} placeholder="Label, e.g. ‘owes money to’" onCommit={(v) => edit((b) => void (b.strings.find((s) => s.id === string.id)!.label = v || undefined))} />
             <button className="danger" onClick={() => (edit((b) => void (b.strings = b.strings.filter((s) => s.id !== string.id))), setSelected(undefined))}>
               Cut string
@@ -213,7 +215,7 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
                 <span className="board-pin" />
                 <div className="board-card-tools">
                   <button className="ghost" title="Tie string to another card" onClick={() => setConnectFrom(connectFrom === c.id ? undefined : c.id)}>
-                    🧶
+                    <Ico as={Spiral} />
                   </button>
                   {!page && c.entityId === undefined && (
                     <button
@@ -246,7 +248,7 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
                   <>
                     <Link to={`/w/${worldId}/e/${page.id}`}>
                       <strong>
-                        {ENTITY_LABELS[page.type].icon} {page.name}
+                        <TypeIcon type={page.type} /> {page.name}
                       </strong>
                     </Link>
                     <StatusBadge entity={page} />

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { partyOf } from '../sessions'
 import { DraftText, Empty } from '../components'
-import { blankLectern, db, ENTITY_LABELS, newId, type Combatant, type Entity, type LecternState } from '../db'
+import { ENTITY_LABELS, blankLectern, db, newId, type Combatant, type Entity, type LecternState } from '../db'
 import { modifierFrom, roll, rollDie } from '../dice'
 import { addCombatants, fieldOf, fromEntity, numberFrom } from '../encounters'
 import {
@@ -31,6 +31,8 @@ import { StatusBadge } from '../status'
 import { ShowPanel } from '../showing'
 import { WorldToday } from '../calendar'
 import { ClocksPanel } from '../clocks'
+import { Ico, TypeIcon } from '../icons'
+import { BookOpen, CastleTurret, CloudFog, DiceFive, FlagCheckered, MapTrifold, Prohibit, Shield, Spiral, Sword, User } from '@phosphor-icons/react'
 
 /**
  * The Lectern: one screen for running a session at the table.
@@ -71,18 +73,18 @@ export default function Lectern() {
           <div className="row spread">
             <Link to={`/w/${worldId}/s/${session.id}`}>← Session notes</Link>
             <Link className="button" to={`/w/${worldId}/s/${session.id}?end=1`} title="Recap, show players, start the next session">
-              🏁 End session
+              <Ico as={FlagCheckered} /> End session
             </Link>
           </div>
           <h1>
-            📖 The Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
+            <Ico as={BookOpen} /> The Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
           </h1>
           {world && <WorldToday world={world} isGM />}
           {!!(world?.safety?.lines.length || world?.safety?.veils.length) && (
             <details className="small safety-reminder">
-              <summary>🛡️ Lines and veils</summary>
-              {world!.safety!.lines.length > 0 && <div>⛔ Lines: {world!.safety!.lines.join(' · ')}</div>}
-              {world!.safety!.veils.length > 0 && <div>🌫️ Veils: {world!.safety!.veils.join(' · ')}</div>}
+              <summary><Ico as={Shield} /> Lines and veils</summary>
+              {world!.safety!.lines.length > 0 && <div><Ico as={Prohibit} /> Lines: {world!.safety!.lines.join(' · ')}</div>}
+              {world!.safety!.veils.length > 0 && <div><Ico as={CloudFog} /> Veils: {world!.safety!.veils.join(' · ')}</div>}
             </details>
           )}
         </div>
@@ -125,7 +127,7 @@ function Scene({ lectern, edit, entities, worldId }: PanelProps & { entities: En
   const here = place ? entities.filter((e) => e.parentId === place.id && !lectern.presentIds.includes(e.id) && e.type !== 'location') : []
   return (
     <section className="card lectern-panel">
-      <h2>🏰 Scene</h2>
+      <h2><Ico as={CastleTurret} /> Scene</h2>
       <select
         value={lectern.sceneId ?? ''}
         onChange={(e) => {
@@ -146,7 +148,7 @@ function Scene({ lectern, edit, entities, worldId }: PanelProps & { entities: En
         <>
           <div className="row wrap small">
             <Link to={`/w/${worldId}/e/${place.id}`}>Open page</Link>
-            {map && <Link to={`/w/${worldId}/maps/${map.id}`}>🗺️ Open map</Link>}
+            {map && <Link to={`/w/${worldId}/maps/${map.id}`}><Ico as={MapTrifold} /> Open map</Link>}
           </div>
           {place.summary && <p className="muted">{place.summary}</p>}
           <details>
@@ -160,7 +162,7 @@ function Scene({ lectern, edit, entities, worldId }: PanelProps & { entities: En
               <span className="tags">
                 {here.map((e) => (
                   <button key={e.id} className="tag" title="Add to who's present" onClick={() => edit((l) => void l.presentIds.push(e.id))}>
-                    + {ENTITY_LABELS[e.type].icon} {e.name}
+                    + <TypeIcon type={e.type} /> {e.name}
                   </button>
                 ))}
               </span>
@@ -183,20 +185,20 @@ function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: 
   const present = lectern.presentIds.map((id) => entities.find((e) => e.id === id)).filter((e): e is Entity => !!e)
   return (
     <section className="card lectern-panel">
-      <h2>🧙 Who's here</h2>
+      <h2><Ico as={User} /> Who's here</h2>
       {present.length === 0 && <p className="muted small">Add the NPCs and others in this scene to keep their notes in reach.</p>}
       {present.map((e) => (
         <div key={e.id} className="present">
           <div className="row spread">
             <Link to={`/w/${worldId}/e/${e.id}`}>
               <strong>
-                {ENTITY_LABELS[e.type].icon} {e.name}
+                <TypeIcon type={e.type} /> {e.name}
               </strong>
             </Link>
             <StatusBadge entity={e} />
             <div className="row">
               <button className="ghost" title="Add to initiative" onClick={() => edit((l) => addCombatants(l, [fromEntity(e)]))}>
-                ⚔️
+                <Ico as={Sword} />
               </button>
               <button className="ghost" title="Remove from scene" onClick={() => edit((l) => void (l.presentIds = l.presentIds.filter((x) => x !== e.id)))}>
                 ✕
@@ -251,7 +253,7 @@ function LecternThreads({ lectern, entities, worldId, sessionId }: { lectern: Le
   return (
     <section className="card lectern-panel">
       <div className="row spread">
-        <h2>🧵 Loose threads</h2>
+        <h2><Ico as={Spiral} /> Loose threads</h2>
         <Link className="small" to={`/w/${worldId}/threads`}>
           All threads
         </Link>
@@ -333,7 +335,7 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
     <section className="card lectern-panel">
       <div className="row spread">
         <h2>
-          ⚔️ Initiative <Help topic="initiative" />
+          <Ico as={Sword} /> Initiative <Help topic="initiative" />
         </h2>
         <span className="muted">{round > 0 ? `Round ${round}` : 'Not started'}</span>
       </div>
@@ -350,7 +352,7 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
             })
           }
         >
-          🎲 Roll for NPCs
+          <Ico as={DiceFive} /> Roll for NPCs
         </button>
         <button
           className="danger"
@@ -375,10 +377,10 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
                 onCommit={(v) => change(c.id, (x) => void (x.init = toNumber(v)))}
               />
               <button className="ghost" title={`Roll d20${initMod(c) ? ` ${initMod(c) > 0 ? '+' : ''}${initMod(c)}` : ''}`} onClick={() => change(c.id, (x) => void (x.init = rollDie(20) + initMod(c)))}>
-                🎲
+                <Ico as={DiceFive} />
               </button>
               <strong className="combatant-name">{c.name}</strong>
-              {c.ac && <span className="field-chip" title="Armour class / defence">🛡 {c.ac}</span>}
+              {c.ac && <span className="field-chip" title="Armour class / defence"><Ico as={Shield} /> {c.ac}</span>}
               <select
                 className="side-select"
                 value={c.side}
@@ -458,7 +460,7 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
       </form>
       {pcs.length > 0 && (
         <button onClick={() => edit((l) => addCombatants(l, pcs.map(fromEntity)))}>
-          🛡️ Add the party ({pcs.length})
+          <Ico as={Shield} /> Add the party ({pcs.length})
         </button>
       )}
     </section>
@@ -544,7 +546,7 @@ function Dice({ lectern, edit }: PanelProps) {
   return (
     <section className="card lectern-panel">
       <h2>
-        🎲 Dice <Help topic="dice" />
+        <Ico as={DiceFive} /> Dice <Help topic="dice" />
       </h2>
       <div className="row wrap dice-buttons">
         {QUICK_DICE.map((d) => (
@@ -671,7 +673,7 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
   return (
     <section className="card lectern-panel">
       <h2>
-        🎰 Improvise <Help topic="improvise" />
+        <Ico as={DiceFive} /> Improvise <Help topic="improvise" />
       </h2>
       <div className="row wrap">
         <div className="segmented">
@@ -719,7 +721,7 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
       )}
       <blockquote className="small">{greeting}</blockquote>
       <div className="row wrap">
-        <button onClick={() => reroll(kind)}>🎲 Reroll</button>
+        <button onClick={() => reroll(kind)}><Ico as={DiceFive} /> Reroll</button>
         <button className="primary" onClick={save} disabled={!!savedName}>
           {savedName ? '✓ Saved' : kind === 'npc' ? 'Save and add to scene' : 'Save and set as scene'}
         </button>

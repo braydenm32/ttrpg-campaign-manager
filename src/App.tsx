@@ -1,8 +1,14 @@
 import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
-import { HashRouter, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { Help } from './help'
+import { HashRouter, Link, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Help, HELP } from './help'
 import { useWorld } from './hooks'
-import { WorldNav } from './Sidebar'
+import { modeOf, WorldNav, type WorldMode } from './Sidebar'
+import { Ico } from './icons'
+import logo from './assets/logo.svg'
+import { GlobeHemisphereWest, House, List, Play, Shield, SlidersHorizontal, UsersThree, X, Feather, type Icon } from '@phosphor-icons/react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from './db'
+import { nextSessions, useCampaigns, useWorldSessions } from './threads'
 import { ForcePlayerView, useViewMode, ViewModeProvider } from './viewMode'
 import { finishSignInRedirect, useAuthSession, verifyEmailLink } from './cloud/auth'
 import { cloudErrorMessage, supabase } from './cloud/client'
@@ -196,6 +202,9 @@ function SyncBadge() {
   )
 }
 
+const MODE_LABELS: Record<WorldMode, string> = { home: 'Home', world: 'World', prep: 'Prep', play: 'Play', table: 'Table' }
+const MODE_ICONS: Record<WorldMode, Icon> = { home: House, world: GlobeHemisphereWest, prep: Feather, play: Play, table: UsersThree }
+
 function WorldShell() {
   const { worldId, world } = useWorld()
   const { isGM, setMode, previewAs } = useViewMode()
@@ -213,6 +222,26 @@ function WorldShell() {
   // On a phone the menu is open only on the page it was opened on, so following a link folds it away.
   const { pathname } = useLocation()
   const [menuOpenAt, setMenuOpenAt] = useState<string>()
+  const menuOpen = menuOpenAt === pathname
+  // In the phone menu, the tabs only change which list shows; picking a page then goes there.
+  const [drawerPick, setDrawerPick] = useState<WorldMode>()
+  const mode = modeOf(pathname, isGM)
+  // Settings belongs to no mode, so the sidebar keeps showing the one you came from.
+  const [lastMode, setLastMode] = useState<WorldMode>('world')
+  if (mode && mode !== 'home' && mode !== lastMode) setLastMode(mode)
+  // Each tab goes back to the page you were last on in that mode.
+  const [lastPath, setLastPath] = useState<Partial<Record<WorldMode, string>>>({})
+  if (mode && lastPath[mode] !== pathname) setLastPath({ ...lastPath, [mode]: pathname })
+  if (!menuOpen && drawerPick) setDrawerPick(undefined)
+  const campaigns = useCampaigns(worldId)
+  const sessions = useWorldSessions(worldId)
+  const maps = useLiveQuery(() => db.maps.where({ worldId }).count(), [worldId]) ?? 0
+  useEffect(() => {
+    if (!menuOpen) return
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpenAt(undefined)
+    window.addEventListener('keydown', esc)
+    return () => window.removeEventListener('keydown', esc)
+  }, [menuOpen])
 
   if (world === undefined) return <div className="loading">Loading…</div>
   if (world === null)
@@ -227,37 +256,96 @@ function WorldShell() {
       </div>
     )
 
+  const tabs: WorldMode[] = isGM && !shared ? ['home', 'world', 'prep', 'play'] : ['home', 'world', 'table']
+  const sideMode: WorldMode = (menuOpen && drawerPick) || mode || lastMode
+  const goTo = (m: WorldMode) => {
+    if (m === 'home') return navigate(`/w/${worldId}`)
+    if (m === mode) return
+    const next = nextSessions(campaigns, sessions)[0]?.session
+    const landing: Record<WorldMode, string> = {
+      home: '',
+      world: maps ? 'maps' : 'type/location',
+      prep: campaigns[0] ? `c/${campaigns[0].id}` : 'threads',
+      play: next ? `s/${next.id}/lectern` : 'clocks',
+      table: 'threads',
+    }
+    navigate(lastPath[m] ?? `/w/${worldId}/${landing[m]}`)
+  }
+  const ownWorld = !shared
+
   return (
     <div className={`layout ${isGM ? '' : 'player-mode'}`}>
-      <aside className={`sidebar ${menuOpenAt === pathname ? 'open' : ''}`}>
-        <div className="sidebar-top">
-          <button className="world-name" onClick={() => navigate('/')} title="All worlds">
-            ← {world.name}
-          </button>
-          {/* Phones only: the menu folds away so pages start at the top of the screen. */}
-          <button
-            className="menu-toggle"
-            aria-expanded={menuOpenAt === pathname}
-            onClick={() => setMenuOpenAt(menuOpenAt === pathname ? undefined : pathname)}
-          >
-            {menuOpenAt === pathname ? '✕ Close' : '☰ Menu'}
-          </button>
-          <span className="menu-toggle-help">
-            <Help topic="phoneMenu" />
+      <header className="topbar">
+        <button
+          className="icon-button menu-toggle"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          title={HELP.phoneMenu}
+          onClick={() => setMenuOpenAt(menuOpen ? undefined : pathname)}
+        >
+          <Ico as={menuOpen ? X : List} size="1.3em" />
+        </button>
+        <button className="world-tile" onClick={() => navigate('/')} title="All your worlds">
+          <img src={logo} alt="" />
+          <span>
+            <b>{world.name}</b>
+            <small>The Warded Atlas</small>
           </span>
-        </div>
+        </button>
+        <nav className="mode-tabs" aria-label="Modes" title={HELP.modes}>
+          {tabs.map((m) => (
+            <button key={m} className={mode === m ? 'on' : ''} aria-current={mode === m ? 'page' : undefined} onClick={() => goTo(m)}>
+              <Ico as={MODE_ICONS[m]} /> {MODE_LABELS[m]}
+            </button>
+          ))}
+        </nav>
         <SearchButton worldId={worldId} world={world} />
-        <WorldNav worldId={worldId} />
-        {world.cloud?.enabled && <SyncBadge />}
+        {ownWorld && (
+          <div className="segmented gm-switch" title={HELP.viewingAs}>
+            <button className={isGM ? 'on' : ''} onClick={() => setMode('gm')}>GM</button>
+            <button className={!isGM ? 'on' : ''} onClick={() => setMode('player')}>Player</button>
+          </div>
+        )}
+        {ownWorld && isGM && (
+          <Link className="button icon-button desk-only" to={`/w/${worldId}/settings`} title="World settings" aria-label="World settings">
+            <Ico as={SlidersHorizontal} size="1.2em" />
+          </Link>
+        )}
+      </header>
+      <div className={`layout-body ${mode === 'home' ? 'no-side' : ''}`}>
+      {menuOpen && <button className="drawer-scrim" aria-label="Close menu" onClick={() => setMenuOpenAt(undefined)} />}
+      <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
+        <div className="drawer-tabs" role="tablist">
+          {tabs.map((m) => (
+            <button
+              key={m}
+              role="tab"
+              aria-selected={sideMode === m}
+              className={sideMode === m ? 'on' : ''}
+              onClick={() => (m === 'home' ? navigate(`/w/${worldId}`) : setDrawerPick(m))}
+            >
+              <Ico as={MODE_ICONS[m]} size="1.35em" />
+              {MODE_LABELS[m]}
+            </button>
+          ))}
+        </div>
+        <WorldNav worldId={worldId} mode={sideMode} />
+        <div className="sidebar-foot">
+          {ownWorld && isGM && (
+            <NavLink className="nav-foot-link" to={`/w/${worldId}/settings`}>
+              <Ico as={SlidersHorizontal} /> World settings
+            </NavLink>
+          )}
+          {world.cloud?.enabled && <SyncBadge />}
         {memberOf ? (
           <div className="mode-switch">
             {myCharacters.map((id) => (
               <button key={id} className="button block" onClick={() => navigate(`/w/${worldId}/e/${id}`)}>
-                🛡️ My character
+                <Ico as={Shield} /> My character
               </button>
             ))}
             {world.safety?.xcard && <XCardButton cloudId={memberOf} small />}
-            <span>🎭 You’re a player in this world. It updates as your GM adds to it.</span>
+            <span>You’re a player in this world. It updates as your GM adds to it.</span>
             <button
               className="link small"
               onClick={async () => {
@@ -271,20 +359,21 @@ function WorldShell() {
           </div>
         ) : shared ? (
           <div className="mode-switch">
-            <span>📜 A public wiki shared by the GM. Read only, updates automatically.</span>
+            <span>A public wiki shared by the GM. Read only, updates automatically.</span>
           </div>
         ) : (
         <div className="mode-switch">
-          <span>
+          <span className="drawer-only">
             Viewing as <Help topic="viewingAs" />
           </span>
-          <div className="segmented">
+          <div className="segmented drawer-only">
             <button className={isGM ? 'on' : ''} onClick={() => setMode('gm')}>GM</button>
             <button className={!isGM ? 'on' : ''} onClick={() => setMode('player')}>Player</button>
           </div>
           {!isGM && <PreviewAsPicker world={world} />}
         </div>
         )}
+        </div>
       </aside>
       <main className="content">
         {shareError && <div className="player-banner">Couldn’t refresh: {shareError}</div>}
@@ -309,6 +398,7 @@ function WorldShell() {
           <Outlet />
         </Suspense>
       </main>
+      </div>
     </div>
   )
 }

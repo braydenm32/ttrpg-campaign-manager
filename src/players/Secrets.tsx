@@ -5,6 +5,8 @@ import { listPlayers } from '../cloud/players'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Entity, type World } from '../db'
 import { useViewMode } from '../viewMode'
+import { Ico } from '../icons'
+import { EyeClosed } from '@phosphor-icons/react'
 
 export interface PlayerChoice {
   userId: string
@@ -61,7 +63,7 @@ export function RevealToPicker({
   return (
     <div className="reveal-picker">
       <span className="small">
-        🤫 Reveal just to: <Help topic="revealTo" />
+        <Ico as={EyeClosed} /> Reveal just to: <Help topic="revealTo" />
       </span>
       {players.length === 0 && <span className="muted small">No players have joined yet. Invite them from World settings.</span>}
       {players.map((p) => (
@@ -86,12 +88,12 @@ export function RevealToPicker({
 /** Next to a page's title: who a GM-only page has been revealed to, or (for a player) that it's just for them. */
 export function RevealedToBadge({ entity, world, entities, isGM }: { entity: Entity; world: World | null | undefined; entities: Entity[]; isGM: boolean }) {
   const players = useWorldPlayers(isGM && entity.revealedTo?.length ? world : undefined, entities)
-  if (!isGM) return entity.secretForYou ? <span className="badge for-you" title="Your GM revealed this to you, not the whole table">🤫 Just for you</span> : null
+  if (!isGM) return entity.secretForYou ? <span className="badge for-you" title="Your GM revealed this to you, not the whole table"><Ico as={EyeClosed} /> Just for you</span> : null
   if (entity.visibility !== 'gm' || !entity.revealedTo?.length) return null
   const shown = players.filter((p) => entity.revealedTo!.includes(p.userId))
   return (
     <span className="badge reveal" title="GM-only, but these players can see it">
-      🤫 Revealed to {shown.length ? shown.map((p) => p.name).join(', ') : `${entity.revealedTo.length} player${entity.revealedTo.length > 1 ? 's' : ''}`}
+      <Ico as={EyeClosed} /> Revealed to {shown.length ? shown.map((p) => p.name).join(', ') : `${entity.revealedTo.length} player${entity.revealedTo.length > 1 ? 's' : ''}`}
     </span>
   )
 }

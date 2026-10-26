@@ -14,6 +14,8 @@ import { StatusBadge, statusIcon } from '../status'
 import { SecretTextarea } from '../SecretTextarea'
 import { useViewMode } from '../viewMode'
 import { circleShape, fogOverlay, pinRevealed, rectShape, removeFog, renderPlayerFog } from '../fog'
+import { Ico, TypeIcon } from '../icons'
+import { CloudFog, Eye, HandPalm, MapPin, PencilSimple, SlidersHorizontal } from '@phosphor-icons/react'
 
 type Tool = 'select' | 'pin' | 'region' | 'fog-rect' | 'fog-shape' | 'fog-circle'
 const COLORS = ['#e0b354', '#d9534f', '#5bc0de', '#5cb85c', '#a678de', '#f0f0f0']
@@ -136,10 +138,10 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
           <div className="row">
             <div className="segmented">
               <button className={tool === 'select' ? 'on' : ''} onClick={() => setTool('select')} title="Select and move">
-                🖐 Select
+                <Ico as={HandPalm} /> Select
               </button>
               <button className={tool === 'pin' ? 'on' : ''} onClick={() => setTool('pin')} title="Click the map to drop a pin">
-                📍 Pin
+                <Ico as={MapPin} /> Pin
               </button>
               <button
                 className={tool === 'region' ? 'on' : ''}
@@ -165,7 +167,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
             )}
             {map.drawing && (
               <Link className="button" to={`/w/${worldId}/maps/${map.id}/draw`}>
-                ✏️ Draw
+                <Ico as={PencilSimple} /> Draw
               </Link>
             )}
             <button
@@ -176,9 +178,9 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                 setDraft([])
               }}
             >
-              🌫️ Fog{fog ? ' (on)' : ''}
+              <Ico as={CloudFog} /> Fog{fog ? ' (on)' : ''}
             </button>
-            <button onClick={() => setShowSettings((s) => !s)}>⚙️ Map settings</button>
+            <button onClick={() => setShowSettings((s) => !s)}><Ico as={SlidersHorizontal} /> Map settings</button>
           </div>
         )}
       </div>
@@ -355,7 +357,7 @@ function FogBar({
   return (
     <div className="map-toolbar fog-bar">
       <strong>
-        🌫️ Fog of war <Help topic="fog" />
+        <Ico as={CloudFog} /> Fog of war <Help topic="fog" />
       </strong>
       <label className="inline-check small">
         <input type="checkbox" checked={!!fog?.on} onChange={(e) => setFog({ on: e.target.checked })} />
@@ -368,7 +370,7 @@ function FogBar({
               ☀️ Uncover
             </button>
             <button className={mode === 'hide' ? 'on' : ''} onClick={() => setMode('hide')}>
-              🌫️ Cover
+              <Ico as={CloudFog} /> Cover
             </button>
           </div>
           <div className="segmented">
@@ -504,7 +506,7 @@ function PinDetails({
       {groups.map(([t, xs]) => (
         <section key={t}>
           <h3>
-            {ENTITY_LABELS[t].icon} {ENTITY_LABELS[t].many}
+            <TypeIcon type={t} /> {ENTITY_LABELS[t].many}
           </h3>
           <ul className="entity-list">
             {xs.map((x) => (
@@ -531,7 +533,7 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
     return (
       <>
         <button className="block" onClick={() => setPreview(false)}>
-          ✏️ Back to editing
+          <Ico as={PencilSimple} /> Back to editing
         </button>
         <PinDetails pin={pin} entity={entity} entities={entities} maps={maps} onClose={onClose} />
       </>
@@ -620,7 +622,7 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
         >
           Delete
         </button>
-        <button onClick={() => setPreview(true)}>👁 Preview</button>
+        <button onClick={() => setPreview(true)}><Ico as={Eye} /> Preview</button>
       </div>
     </div>
   )

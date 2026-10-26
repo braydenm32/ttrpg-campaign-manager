@@ -7,6 +7,8 @@ import { useVisibleEntities, useWorld } from '../hooks'
 import { ThreadCard } from '../ThreadCard'
 import { COLD_AFTER, latestSession, newThread, sessionsSinceTouched, threadLinks, URGENCY, useWorldSessions } from '../threads'
 import { useViewMode } from '../viewMode'
+import { Ico } from '../icons'
+import { Graph, Spiral } from '@phosphor-icons/react'
 
 const COLUMNS: ThreadStatus[] = ['open', 'active', 'resolved', 'dropped']
 const URGENCY_ORDER = { high: 0, normal: 1, low: 2 }
@@ -59,7 +61,7 @@ export default function Threads() {
       <header className="page-header">
         <div>
           <h1>
-            🧵 {isGM ? 'Loose threads' : 'Leads and rumours'} <Help topic={isGM ? 'threads' : 'leads'} />
+            <Ico as={Spiral} /> {isGM ? 'Loose threads' : 'Leads and rumours'} <Help topic={isGM ? 'threads' : 'leads'} />
           </h1>
           <p className="muted">
             {isGM
@@ -117,7 +119,7 @@ export default function Threads() {
         )}
         {isGM && cold > 0 && (
           <span className="thread-cold small">
-            🕸️ {cold} {cold === 1 ? 'thread hasn’t' : 'threads haven’t'} moved in {COLD_AFTER}+ sessions
+            <Ico as={Graph} /> {cold} {cold === 1 ? 'thread hasn’t' : 'threads haven’t'} moved in {COLD_AFTER}+ sessions
           </span>
         )}
       </div>
