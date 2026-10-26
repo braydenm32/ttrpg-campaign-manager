@@ -6,7 +6,7 @@ The app side is done. These steps happen in your own accounts. Supabase project:
 - **App address:** `https://braydenm32.github.io/ttrpg-campaign-manager/`
 - **Callback address:** `https://ysrxumagiiaoihlhofqt.supabase.co/auth/v1/callback`
 
-## 1. Emails that come from Campaign Codex
+## 1. Emails that come from the Warded Atlas
 
 ### a. Paste the templates (free, 5 minutes)
 
@@ -15,10 +15,10 @@ switch the body to source/HTML, and paste the whole file from `supabase/template
 
 | Template | Subject | File |
 | --- | --- | --- |
-| Confirm signup | Confirm your Campaign Codex account | `confirm-signup.html` |
-| Reset password | Reset your Campaign Codex password | `reset-password.html` |
-| Change email address | Confirm your new Campaign Codex email | `change-email.html` |
-| Magic link | Your Campaign Codex sign-in link | `magic-link.html` |
+| Confirm signup | Confirm your Warded Atlas account | `confirm-signup.html` |
+| Reset password | Reset your Warded Atlas password | `reset-password.html` |
+| Change email address | Confirm your new Warded Atlas email | `change-email.html` |
+| Magic link | Your Warded Atlas sign-in link | `magic-link.html` |
 
 These templates link straight to the app address, so the supabase.co link is gone from the email.
 
@@ -28,7 +28,7 @@ Supabase's built-in mailer always signs as "Supabase Auth", only sends to your o
 and allows about 2 emails an hour, so you need this before anyone else can sign up. Pick one:
 
 - **Gmail (free, quickest).** Turn on 2-step verification on your Google account, then make an app
-  password at <https://myaccount.google.com/apppasswords>. Emails arrive as "Campaign Codex" but from
+  password at <https://myaccount.google.com/apppasswords>. Emails arrive as "The Warded Atlas" but from
   your Gmail address. Fine for friends, about 500 a day.
 - **Resend (free up to 3,000 a month, needs a domain, best for publishing).** Buy a domain (around
   A$20 a year, e.g. campaigncodex.app), sign up at <https://resend.com>, add the domain and copy the
@@ -39,7 +39,7 @@ Then Supabase → **Authentication → Emails → SMTP Settings** → turn on cu
 | Field | Gmail | Resend |
 | --- | --- | --- |
 | Sender email | your Gmail address | `hello@yourdomain` |
-| Sender name | Campaign Codex | Campaign Codex |
+| Sender name | The Warded Atlas | The Warded Atlas |
 | Host | `smtp.gmail.com` | `smtp.resend.com` |
 | Port | `465` | `465` |
 | Username | your Gmail address | `resend` |
@@ -49,8 +49,8 @@ Afterwards, raise the email rate limit under **Authentication → Rate Limits** 
 
 ## 2. Google sign-in
 
-1. Go to <https://console.cloud.google.com>, make a project called Campaign Codex.
-2. **APIs & Services → OAuth consent screen**: External, app name Campaign Codex, your email as
+1. Go to <https://console.cloud.google.com>, make a project called The Warded Atlas.
+2. **APIs & Services → OAuth consent screen**: External, app name The Warded Atlas, your email as
    support and developer contact, add the app address as the home page. Upload the sigil logo if you
    like. Under branding, add the privacy policy and terms links (see section 3). Publish the app
    (otherwise only test users you list can sign in).
@@ -63,7 +63,7 @@ Afterwards, raise the email rate limit under **Authentication → Rate Limits** 
 ## 3. Facebook sign-in
 
 1. Go to <https://developers.facebook.com/apps>, **Create app**, choose "Authenticate and request data
-   from users with Facebook Login", name it Campaign Codex.
+   from users with Facebook Login", name it The Warded Atlas.
 2. **Facebook Login → Settings**: add the callback address under Valid OAuth Redirect URIs.
 3. **App settings → Basic**: copy the App ID and App secret. Fill in:
    - Privacy policy URL: `https://braydenm32.github.io/ttrpg-campaign-manager/privacy.html`

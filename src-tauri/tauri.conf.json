@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Campaign Codex",
+  "productName": "The Warded Atlas",
   "version": "0.1.0",
   "identifier": "io.github.braydenm32.campaigncodex",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Campaign Codex",
+        "title": "The Warded Atlas",
         "width": 1280,
         "height": 820,
         "resizable": true,

@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Campaign Codex',
-        short_name: 'Codex',
+        name: 'The Warded Atlas',
+        short_name: 'Warded Atlas',
         description: 'GM-focused campaign and world manager for tabletop RPGs',
         theme_color: '#15131a',
         background_color: '#15131a',

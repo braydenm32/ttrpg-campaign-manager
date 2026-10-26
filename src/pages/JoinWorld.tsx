@@ -47,7 +47,7 @@ export default function JoinWorld() {
 
   return (
     <div className="home join-page">
-      <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />Campaign Codex</h1>
+      <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />The Warded Atlas</h1>
       <div className="card join-card">
         {asGM ? (
           <>

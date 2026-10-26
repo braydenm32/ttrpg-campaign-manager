@@ -22,7 +22,7 @@ export default function SharedWorld() {
 
   return (
     <div className="home">
-      <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />Campaign Codex</h1>
+      <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />The Warded Atlas</h1>
       {error ? (
         <>
           <p className="error">{error}</p>

@@ -1,4 +1,4 @@
-# Campaign Codex
+# The Warded Atlas
 
 GM-first TTRPG campaign/world manager. Owner (Brayden) is not a developer: explain changes in plain language and keep the app working end to end.
 

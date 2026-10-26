@@ -83,9 +83,9 @@ export async function importWorld(file: File): Promise<string> {
   try {
     b = JSON.parse(files ? strFromU8(files['world.json'] ?? new Uint8Array()) : strFromU8(bytes)) as WorldBackup
   } catch {
-    throw new Error('This file is not a Campaign Codex world backup.')
+    throw new Error('This file is not a Warded Atlas world backup.')
   }
-  if (b.format !== 'campaign-codex-world') throw new Error('This file is not a Campaign Codex world backup.')
+  if (b.format !== 'campaign-codex-world') throw new Error('This file is not a Warded Atlas world backup.')
   const fileOf = (a: WorldBackup['assets'][number]) =>
     a.data !== undefined ? base64ToBlob(a.data, a.mime) : new Blob([(files?.[`files/${a.id}`] ?? new Uint8Array()) as Uint8Array<ArrayBuffer>], { type: a.mime })
   const ids = new Map<string, string>()

@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 /**
- * Connection to the Campaign Codex cloud (Supabase). These two values are public by design:
+ * Connection to the Warded Atlas cloud (Supabase). These two values are public by design:
  * the database's security rules decide what each signed-in person can read or write.
  */
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? 'https://ysrxumagiiaoihlhofqt.supabase.co'
@@ -29,6 +29,6 @@ export function cloudErrorMessage(e: unknown) {
   const msg = (e as Error)?.message ?? String(e)
   if (typeof navigator !== 'undefined' && !navigator.onLine) return 'You’re offline. Your copy on this device still works, and it will catch up when you’re back online.'
   if (/failed to fetch|networkerror|load failed|network request failed|paused|status of 54\d|fetch/i.test(msg))
-    return 'Can’t reach the Campaign Codex server right now. If nobody has used it for about a week it may be asleep: the GM can wake it by opening their Supabase dashboard (it takes a minute). Your copy on this device still works.'
+    return 'Can’t reach the Warded Atlas server right now. If nobody has used it for about a week it may be asleep: the GM can wake it by opening their Supabase dashboard (it takes a minute). Your copy on this device still works.'
   return msg
 }

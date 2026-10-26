@@ -42,7 +42,7 @@ export default function Home() {
         <button className="account-button" onClick={() => setAccount(true)}>
           {user ? `☁️ ${user.email || user.user_metadata?.full_name || 'Signed in'}` : '☁️ Sign in to sync'}
         </button>
-        <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />Campaign Codex</h1>
+        <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />The Warded Atlas</h1>
         <p>
           Your worlds, maps, NPCs and sessions, all in one place. Everything is saved on this device. <Help topic="home" />
         </p>

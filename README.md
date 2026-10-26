@@ -1,4 +1,4 @@
-# ⚔️ Campaign Codex
+# ⚔️ The Warded Atlas
 
 A GM-first campaign and world manager for tabletop RPGs: D&D, Pathfinder, Starfinder, Call of Cthulhu, Daggerheart and anything else. Build your world, click around your maps, track NPCs and sessions, and show players only what you've revealed.
 

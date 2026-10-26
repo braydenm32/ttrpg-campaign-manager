@@ -167,7 +167,7 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
             [
               ...options.map((o) => `• **${showDate(o)}**${o.note ? ` (${o.note})` : ''}`),
               '',
-              synced ? 'Answer yes, maybe or no in Campaign Codex.' : 'Reply with the dates you can make.',
+              synced ? 'Answer yes, maybe or no in the Warded Atlas.' : 'Reply with the dates you can make.',
             ].join('\n')
           }
         />
