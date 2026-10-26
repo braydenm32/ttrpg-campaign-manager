@@ -314,6 +314,10 @@ function Recorder({ session }: { session: Session }) {
         </>
       ) : (
         <div className="row wrap">
+          <p className="notice small">
+            Ask everyone at the table before you record, and record only if they agree. In several Australian states it’s an offence to
+            record a private conversation without everyone’s consent.
+          </p>
           <span className="muted small">Keeps recording while you use the rest of the app, and saves as it goes.</span>
           <select value={source} onChange={(e) => setSource(e.target.value as RecordSource)}>
             <option value="mic">In person: this device's microphone</option>

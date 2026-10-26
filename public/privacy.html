@@ -27,7 +27,7 @@
   <header><img src="icon-512.png" alt=""><a href="./">Campaign Codex</a></header>
   <article>
     <h1>Privacy policy</h1>
-    <p class="muted">Last updated 23 October 2026</p>
+    <p class="muted">Last updated 26 October 2026</p>
     <p>Campaign Codex is a tool for running tabletop roleplaying games, made by Brayden (“we”, “us”) in Australia. This policy explains what information the app handles, where it goes, and the choices you have. We have tried to keep it short and plain.</p>
 
     <h2>The short version</h2>
@@ -40,9 +40,11 @@
 
     <h2>What we collect</h2>
     <p><strong>Account details.</strong> If you make an account we store your email address and a securely hashed password. If you sign in with Google or Facebook, we receive your name, email address and profile picture link from them. We don’t receive your Google or Facebook password, contacts or posts.</p>
-    <p><strong>Content you sync.</strong> When you turn on sync for a world, its pages, maps, images, sessions, notes and settings are stored in the cloud. If you join someone else’s world as a player, your display name, the characters you claim and the notes, questions and party items you write are stored with that world.</p>
+    <p><strong>Content you sync.</strong> When you turn on sync for a world, its pages, maps, images, sessions, notes and settings are stored in the cloud. If you join someone else’s world as a player, your display name, the characters you claim, the notes, questions and party items you write, and your answers to session scheduling polls are stored with that world. When someone uses the X-card safety tool, we only record that it was tapped and when, not who tapped it.</p>
+    <p><strong>Session recordings and transcripts.</strong> Recordings capture the voices of everyone at the table, so game masters must ask everyone before recording (see our <a href="terms.html">terms</a>). Recordings are kept on the device that made them. Transcripts and recap drafts are only visible to the game masters of that world, and sync with the world if sync is turned on. (Recordings made before 26 October 2026 in a synced world may also be in the cloud; deleting them in the app removes them.)</p>
+    <p><strong>Information about real people in your notes.</strong> If you write about real people in your world (for example players’ names or how to reach them), you’re responsible for having their OK, and you can delete it at any time.</p>
     <p><strong>Basic technical records.</strong> Our hosting providers keep standard logs (such as IP address, browser type and time of request) for security and to keep the service running. We don’t use these to profile you.</p>
-    <p><strong>Things that stay on your device.</strong> Worlds you don’t sync, session recordings, transcripts made on your device, and any API keys you enter (for AssemblyAI or Anthropic) are kept only in your browser or desktop app. API keys are never uploaded or included in backups.</p>
+    <p><strong>Things that stay on your device.</strong> Worlds you don’t sync, session recordings, and any API keys, tokens or webhook links you enter (for AssemblyAI, Anthropic, Syrinscape or Discord) are kept only in your browser or desktop app. Keys are never uploaded or included in backups. Anyone who uses your device and browser profile can see what’s stored there, so use a device only you use, or sign out and clear the site’s data on a shared one.</p>
 
     <h2>How we use it</h2>
     <p>Only to run the app: signing you in, syncing your worlds between your devices, showing players what the game master has chosen to share with them, sending account emails (like confirming your address or resetting your password), and keeping the service secure. We don’t send marketing emails.</p>
@@ -56,15 +58,28 @@
       <li><strong>GitHub Pages</strong> serves the website.</li>
       <li><strong>Google</strong> and <strong>Facebook</strong>, only if you choose to sign in with them.</li>
       <li>Our email provider, to send account emails.</li>
+      <li><strong>Discord</strong>, only if a game master adds a Discord webhook and chooses to post something (like a recap) to their own server.</li>
       <li><strong>AssemblyAI</strong> and <strong>Anthropic</strong>, only if you add your own API key and choose to send a recording for transcription or a transcript for a recap. That data goes directly from your device to them under their own privacy policies, using your own account with them.</li>
     </ul>
-    <p>Some of these providers may process data outside Australia.</p>
+    <p>Your account and synced worlds are stored in Australia. GitHub, Google, Facebook, Discord, AssemblyAI, Anthropic and our email provider are based in the United States and may process the data they handle there or in other countries. We choose providers with strong security practices, but overseas laws may give different protections from Australian law.</p>
+
+    <h2>How we keep it safe</h2>
+    <ul>
+      <li>Everything sent between the app and our servers is encrypted (HTTPS), and our database and file storage are encrypted at rest by Supabase.</li>
+      <li>Passwords are stored only as secure hashes. We never see them.</li>
+      <li>Database rules check every request, so people can only reach worlds they own or were invited to, and players only ever receive what the game master has revealed to them. Game master notes and secret passages are removed on our server before anything is sent to players.</li>
+      <li>Uploaded files are private, and are only handed out after a check that the person asking is allowed to see them.</li>
+      <li>Only Brayden has administrator access to the database, and we don’t look at your worlds unless you ask us to help with a problem.</li>
+    </ul>
+
+    <h2>If something goes wrong</h2>
+    <p>If we learn of a data breach that could seriously harm you, we’ll tell you by email as soon as we can, explain what happened and what to do, and notify the Office of the Australian Information Commissioner (OAIC) where the law requires it.</p>
 
     <h2>How long we keep it</h2>
-    <p>We keep your account and synced worlds until you delete them. Deleting a cloud copy of a world removes it from our database. Deleting your account removes your account and the worlds you own. Backups held by our providers are cleared on their normal schedule.</p>
+    <p>We keep your account and synced worlds until you delete them. Deleting a cloud copy of a world removes it from our database. Deleting your account removes your account, the worlds you own and their files, and your notes, questions and characters in other people’s worlds. Group notes you helped write in someone else’s world stay with that world. Backups held by our providers are cleared on their normal schedule.</p>
 
     <h2>Your choices and rights</h2>
-    <p>You can use the app without an account, turn sync off for any world, delete cloud copies, and export your data as a backup file at any time. You can ask us for a copy of your information, to correct it, or to delete it. See <a href="data-deletion.html">how to delete your data</a>. If you’re in Australia, the EU or the UK you have rights under the Privacy Act 1988 (Cth) or the GDPR, and you may complain to the OAIC or your local regulator.</p>
+    <p>You can use the app without an account, turn sync off for any world, delete cloud copies, and export your data as a backup file at any time. You can delete your account yourself in the app (☁️ your account → Delete my account), or ask us for a copy of your information, to correct it, or to delete it. We’ll reply within 30 days. See <a href="data-deletion.html">how to delete your data</a>. If you’re in Australia, the EU or the UK you have rights under the Privacy Act 1988 (Cth) or the GDPR, and you may complain to the OAIC or your local regulator.</p>
 
     <h2>Children</h2>
     <p>Campaign Codex isn’t meant for children under 13, and we don’t knowingly collect their information. If you think a child has made an account, contact us and we’ll delete it.</p>

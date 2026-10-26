@@ -79,7 +79,7 @@ export const HELP = {
   session:
     'One game night. Keep 🔒 GM notes for yourself and a 👁 player recap for the table. Record the session, then turn the recording into a transcript and a recap.',
   recording:
-    'Record from one microphone for games at the table, or the microphone plus your Discord or Zoom audio for online games. Add bookmarks while you play to jump back to big moments. Recording carries on while you use the rest of the app (the Lectern, maps, pages), and is saved every few seconds, so if the app closes by accident you can recover it here. Recordings are big, so they stay on the device that made them; their transcripts sync to your other devices.',
+    'Record from one microphone for games at the table, or the microphone plus your Discord or Zoom audio for online games. Add bookmarks while you play to jump back to big moments. Recording carries on while you use the rest of the app (the Lectern, maps, pages), and is saved every few seconds, so if the app closes by accident you can recover it here. Always get everyone’s OK before recording. Recordings are big, so they stay on the device that made them; their transcripts sync to your other devices.',
   transcript:
     'Turns a recording into text. "On this device" is free and private but slower, with no speaker names. "Cloud" uses AssemblyAI with your own key, is faster and tells speakers apart.',
   recap:
@@ -127,6 +127,8 @@ export const HELP = {
   // Sharing and players
   cloudSync:
     'Sign in to keep this world in step across your devices. Your world is still saved on each device, so it works offline and catches up when you reconnect. If two devices change the same page at once, both sets of changes are kept where they don’t overlap; where they do, the other version is kept in the page’s history.',
+  deleteAccount:
+    'Removes your account and everything stored with it in the cloud: worlds you own, their files and links, and your notes and characters in other people’s worlds. Worlds on this device are kept, so you can still use them without an account.',
   socialLogin:
     'Sign in with your Google or Facebook account instead of a password. If you already made an account with the same email, you’ll land in that same account. Not available in the desktop app yet, so use email there.',
   shareLink: 'A public, read-only wiki of everything you’ve revealed to the whole table. No account needed, so it suits people outside your group. GM-only things are removed before anything is sent. Players should join with the invite link instead.',
