@@ -7,6 +7,7 @@ import { useVisibleEntities, useWorld } from './hooks'
 import { useCampaigns, useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
 import { useGmQuestions } from './players/Questions'
+import { useCharacterOwners } from './players/owners'
 
 /** Longest list shown under a codex section before linking to the full list. */
 const MAX_CHILDREN = 25
@@ -63,6 +64,13 @@ export function WorldNav({ worldId }: { worldId: string }) {
   const waiting = gmQuestions.questions.filter((q) => !q.answer).length
   const hasLinks = entities.some((e) => e.relations?.length)
   const clockCount = entities.reduce((n, e) => n + (e.clocks ?? []).filter((c) => c.filled < c.segments).length, 0)
+  const handouts = world?.handouts?.length ?? 0
+  const { owners } = useCharacterOwners(isGM && world?.cloud?.enabled ? world : undefined)
+  const pendingClaims = [...owners.values()].filter((o) => o.pending).length
+  // Safety tools are for the table, not for wiki readers.
+  const safetyLink = !world?.shared?.token && (isGM || !!world?.safety?.lines.length || !!world?.safety?.veils.length || !!world?.safety?.notes.trim() || !!world?.safety?.xcard) && (
+    <NavLink to={`/w/${worldId}/safety`} title={HELP.safety}>🛡️ Safety tools</NavLink>
+  )
   const openThreads = entities.filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active')).length
 
   /** Locations as a tree: everything at the top, and the children of each place on the way to the current page. */
@@ -133,39 +141,28 @@ export function WorldNav({ worldId }: { worldId: string }) {
         </div>
       )}
       <NavLink to={`/w/${worldId}/timeline`} title={HELP.timeline}>⏳ Timeline</NavLink>
-      {(isGM || hasLinks) && (
-        <NavLink to={`/w/${worldId}/web`} title={HELP.relationWeb}>🕸️ Relationships</NavLink>
-      )}
-      {(isGM || clockCount > 0) && (
-        <NavLink to={`/w/${worldId}/clocks`} title={HELP.clocks}>
-          ⏱️ Clocks
-          {clockCount ? <span className="count">{clockCount}</span> : null}
-        </NavLink>
-      )}
-      <NavLink to={`/w/${worldId}/threads`} title={isGM ? HELP.threads : HELP.leads}>
-        🧵 {isGM ? 'Loose threads' : 'Leads'}
-        {openThreads ? <span className="count">{openThreads}</span> : null}
-      </NavLink>
-      {(isGM || hasLoot) && (
-        <NavLink to={`/w/${worldId}/loot`} title={HELP.loot}>🎒 Party loot</NavLink>
-      )}
-      {/* Safety tools are for the table, not for wiki readers. */}
-      {!world?.shared?.token && (isGM || !!world?.safety?.lines.length || !!world?.safety?.veils.length || !!world?.safety?.notes.trim() || !!world?.safety?.xcard) && (
-        <NavLink to={`/w/${worldId}/safety`} title={HELP.safety}>🛡️ Safety tools</NavLink>
-      )}
-      {(world?.shared?.memberOf || (!world?.shared && world?.cloud?.enabled)) && (
-        <NavLink to={`/w/${worldId}/scratchpad`} title={world.shared ? HELP.scratchpad : HELP.gmPlayerNotes}>📝 {world.shared ? 'Scratchpad' : 'Players’ scratchpad'}</NavLink>
-      )}
-      {world?.shared?.memberOf && (
-        <NavLink to={`/w/${worldId}/questions`} title={HELP.questions}>
-          ❓ Questions for the GM
-        </NavLink>
-      )}
-      {isGM && gmQuestions.available && (
-        <NavLink to={`/w/${worldId}/questions`} title={HELP.questionsGm}>
-          ❓ Players’ questions
-          {waiting ? <span className="count">{waiting}</span> : null}
-        </NavLink>
+      {!isGM && (
+        <>
+          <NavLink to={`/w/${worldId}/threads`} title={HELP.leads}>
+            🧵 Leads
+            {openThreads ? <span className="count">{openThreads}</span> : null}
+          </NavLink>
+          {handouts > 0 && <NavLink to={`/w/${worldId}/handouts`} title={HELP.handouts}>🗞️ Handouts</NavLink>}
+          {hasLoot && <NavLink to={`/w/${worldId}/loot`} title={HELP.loot}>🎒 Party loot</NavLink>}
+          {clockCount > 0 && (
+            <NavLink to={`/w/${worldId}/clocks`} title={HELP.clocks}>
+              ⏱️ Clocks <span className="count">{clockCount}</span>
+            </NavLink>
+          )}
+          {hasLinks && <NavLink to={`/w/${worldId}/web`} title={HELP.relationWeb}>🕸️ Relationships</NavLink>}
+          {safetyLink}
+          {world?.shared?.memberOf && (
+            <>
+              <NavLink to={`/w/${worldId}/scratchpad`} title={HELP.scratchpad}>📝 Scratchpad</NavLink>
+              <NavLink to={`/w/${worldId}/questions`} title={HELP.questions}>❓ Questions for the GM</NavLink>
+            </>
+          )}
+        </>
       )}
 
       {(isGM || campaigns.length > 0) && <div className="nav-heading" title={HELP.campaign}>Campaigns</div>}
@@ -238,11 +235,38 @@ export function WorldNav({ worldId }: { worldId: string }) {
 
       {isGM && (
         <>
-          <div className="nav-heading">GM tools</div>
-          <NavLink to={`/w/${worldId}/generators`} title={HELP.generators}>🎰 Generators</NavLink>
-          <NavLink to={`/w/${worldId}/type/table`} title={HELP.randomTables}>🎲 Random tables</NavLink>
-          <NavLink to={`/w/${worldId}/boards`} title={HELP.boards}>📌 Corkboards</NavLink>
+          <div className="nav-heading" title={HELP.atTheTable}>At the table</div>
+          <NavLink to={`/w/${worldId}/threads`} title={HELP.threads}>
+            🧵 Loose threads
+            {openThreads ? <span className="count">{openThreads}</span> : null}
+          </NavLink>
+          <NavLink to={`/w/${worldId}/clocks`} title={HELP.clocks}>
+            ⏱️ Clocks
+            {clockCount ? <span className="count">{clockCount}</span> : null}
+          </NavLink>
+          <NavLink to={`/w/${worldId}/loot`} title={HELP.loot}>🎒 Party loot</NavLink>
+          <NavLink to={`/w/${worldId}/handouts`} title={HELP.handouts}>🗞️ Handouts</NavLink>
           <NavLink to={`/w/${worldId}/sounds`} title={HELP.soundboard}>🎵 Soundboard</NavLink>
+          {safetyLink}
+          {world?.cloud?.enabled && (
+            <>
+              <NavLink to={`/w/${worldId}/settings?tab=players`} title={HELP.players}>
+                🎭 Players
+                {pendingClaims ? <span className="count">{pendingClaims}</span> : null}
+              </NavLink>
+              <NavLink to={`/w/${worldId}/scratchpad`} title={HELP.gmPlayerNotes}>📝 Players’ scratchpad</NavLink>
+            </>
+          )}
+          {gmQuestions.available && (
+            <NavLink to={`/w/${worldId}/questions`} title={HELP.questionsGm}>
+              ❓ Players’ questions
+              {waiting ? <span className="count">{waiting}</span> : null}
+            </NavLink>
+          )}
+          <div className="nav-heading" title={HELP.prepTools}>Prep</div>
+          <NavLink to={`/w/${worldId}/generators`} title={HELP.generators}>🎰 Generators &amp; tables</NavLink>
+          <NavLink to={`/w/${worldId}/boards`} title={HELP.boards}>📌 Corkboards</NavLink>
+          <NavLink to={`/w/${worldId}/web`} title={HELP.relationWeb}>🕸️ Relationships</NavLink>
           <NavLink to={`/w/${worldId}/assets`} title={HELP.assets}>📁 Assets</NavLink>
           <NavLink to={`/w/${worldId}/settings`}>⚙️ World settings</NavLink>
         </>

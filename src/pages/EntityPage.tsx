@@ -7,7 +7,7 @@ import { Empty, TagInput, VisibilityBadge, VisibilityToggle } from '../component
 import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, newId, PICKER_TYPES, saveEntity, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus } from '../db'
 import { HistoryButton } from '../History'
 import { TableRoller } from '../tables'
-import { URGENCY, useWorldSessions } from '../threads'
+import { newThread, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
 import { asPlayerSees, saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
@@ -18,7 +18,7 @@ import { useViewMode } from '../viewMode'
 import { LastSeen, StatusBadge } from '../status'
 import { PrintButton } from '../print'
 import { AskGmBox } from '../players/Questions'
-import { ShowButton } from '../showing'
+import { revealAndShow, ShowButton } from '../showing'
 import { CalDateInput, formatDate, toDays } from '../calendar'
 import { RelationsBox } from '../relations'
 import { ClocksBox } from '../clocks'
@@ -108,13 +108,17 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
         {isGM ? (
           <div className="row">
             <PrintButton to={`/w/${worldId}/print/e/${e.id}`} />
-            {!e.template && (
-              <ShowButton
-                worldId={worldId}
-                what={{ kind: 'page', title: e.name, entityId: e.id }}
-                disabled={e.visibility === 'players' ? undefined : 'Reveal this page first: players can only be shown revealed pages'}
-              />
-            )}
+            {!e.template &&
+              (e.visibility === 'players' ? (
+                <ShowButton worldId={worldId} what={{ kind: 'page', title: e.name, entityId: e.id }} />
+              ) : (
+                <button
+                  title="Reveal this page to every player and put it on their screens"
+                  onClick={() => confirm(`Reveal “${e.name}” to every player and show it? GM notes and secret passages stay hidden.`) && revealAndShow(worldId, e)}
+                >
+                  📺 Reveal and show
+                </button>
+              ))}
             <HistoryButton entity={e} />
             <button onClick={onEdit}>✏️ Edit</button>
           </div>
@@ -198,6 +202,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
         <aside className="entity-side">
           {image && <img className="portrait" src={image} alt={e.name} />}
           {e.type === 'pc' && world && <CharacterOwnerBox entity={e} world={world} />}
+          {e.type === 'quest' && isGM && <QuestThreads quest={e} entities={entities} worldId={worldId} />}
           {(ownMaps.length > 0 || pins.length > 0) && (
             <div className="side-box">
               <h3>Maps</h3>
@@ -257,6 +262,7 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
   const entities = useVisibleEntities(worldId)
   const image = useAssetUrl(d.imageId)
   const set = <K extends keyof Entity>(k: K, v: Entity[K]) => setD((x) => ({ ...x, [k]: v }))
+  const campaigns = useCampaigns(worldId)
   const dirty = JSON.stringify(d) !== JSON.stringify(entity)
 
   useEffect(() => {
@@ -427,6 +433,21 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
                   Players know this
                 </span>
               )}
+            </label>
+          )}
+          {d.type === 'pc' && campaigns.length > 1 && (
+            <label>
+              <span>
+                Plays in <Help topic="partyCampaign" />
+              </span>
+              <select value={d.campaignId ?? ''} onChange={(ev) => set('campaignId', ev.target.value || undefined)}>
+                <option value="">Any campaign</option>
+                {campaigns.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
             </label>
           )}
           {d.type === 'quest' && (
@@ -642,5 +663,33 @@ function AddInside({ parent }: { parent: Entity }) {
       <input value={name} onChange={(ev) => setName(ev.target.value)} placeholder={`Add a place inside ${parent.name}, e.g. a district or building`} />
       <button disabled={!name.trim()}>+ Add place inside</button>
     </form>
+  )
+}
+
+/** On a quest: the loose threads that follow it, and a button to start one (for urgency and "going cold"). */
+function QuestThreads({ quest, entities, worldId }: { quest: Entity; entities: Entity[]; worldId: string }) {
+  const navigate = useNavigate()
+  const following = entities.filter((t) => t.type === 'thread' && threadLinks(t, entities, true).some((x) => x.id === quest.id))
+  return (
+    <div className="side-box">
+      <h3>
+        🧵 Loose threads <Help topic="trackAsThread" />
+      </h3>
+      {following.map((t) => (
+        <Link key={t.id} className="block" to={`/w/${worldId}/e/${t.id}`}>
+          {t.name} <span className="muted small">· {t.threadStatus ?? 'open'}</span>
+        </Link>
+      ))}
+      <button
+        className="block"
+        onClick={async () => {
+          const t = { ...newThread(worldId, quest.name), summary: quest.summary, body: `Follows the quest [[${quest.name}]].` }
+          await db.entities.add(t)
+          navigate(`/w/${worldId}/e/${t.id}`)
+        }}
+      >
+        + Track as thread
+      </button>
+    </div>
   )
 }

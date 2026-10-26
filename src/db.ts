@@ -150,6 +150,8 @@ export interface World {
   calendar?: WorldCalendar
   /** What the GM is showing every player right now (a handout, a page or some text). */
   showing?: Showing | null
+  /** Everything the GM has shown, newest first, so players can read a handout again later. */
+  handouts?: Showing[]
   /** The table's safety tools: lines (never in the game) and veils (happens off screen). Everyone sees these. */
   safety?: Safety
   /** Device-only: cloud sync settings for this world. Never uploaded. */
@@ -217,13 +219,17 @@ export interface Campaign {
   visibility?: Visibility
   /** Dates the GM has proposed for the next session; players say whether they can make each one. */
   schedule?: DateOption[]
+  /** The date the GM booked for the next session, so players can see it. */
+  booked?: DateOption
   createdAt: number
 }
 
 export interface DateOption {
   id: string
-  /** Local date and time, "2026-11-02T19:00". */
+  /** The GM's local date and time, "2026-11-02T19:00". */
   at: string
+  /** The same moment as a full timestamp, so players in other time zones see it in their own time. */
+  utc?: string
   note?: string
 }
 
@@ -286,6 +292,8 @@ export interface Entity {
   status?: LifeStatus | null
   /** Whether players may see the status. Unticked, it stays GM-only even on a revealed page. */
   statusKnown?: boolean
+  /** Player characters: the campaign they play in, when a world has several groups. Unset means any. */
+  campaignId?: string
   createdAt: number
   updatedAt: number
 }
@@ -570,6 +578,24 @@ export interface Sound {
   createdAt: number
 }
 
+/**
+ * A few seconds of a recording in progress, kept on this device only. The pieces are joined into one
+ * file when the GM presses Stop; if the app closed first, the session page offers to recover them.
+ */
+export interface RecordingChunk {
+  id?: number
+  recordingId: string
+  sessionId: string
+  worldId: string
+  startedAt: number
+  /** Order within the recording. */
+  seq: number
+  mime: string
+  blob: Blob
+  /** Bookmarks so far (each piece carries the latest list). */
+  bookmarks: Bookmark[]
+}
+
 /** Something deleted on this device (not a page: those live in history), kept a while so it can be restored. */
 export interface BinItem {
   id: string
@@ -607,6 +633,7 @@ export const db = new Dexie('ttrpg-campaign-manager') as Dexie & {
   boards: EntityTable<Board, 'id'>
   sounds: EntityTable<Sound, 'id'>
   bin: EntityTable<BinItem, 'id'>
+  recordingChunks: EntityTable<RecordingChunk, 'id'>
 }
 
 db.version(1).stores({
@@ -651,6 +678,11 @@ db.version(4).stores({
 // v5: the recently deleted bin for sessions, campaigns, files, maps, boards and sounds (device-only, never synced).
 db.version(5).stores({
   bin: 'id, worldId, at',
+})
+
+// v6: recordings are saved a few seconds at a time while they run, so a crash loses almost nothing.
+db.version(6).stores({
+  recordingChunks: '++id, recordingId, sessionId',
 })
 
 export const newId = () => crypto.randomUUID()
@@ -702,9 +734,10 @@ export function fromTemplate(t: Entity, name = `New ${t.name}`): Entity {
 }
 
 export async function deleteWorld(worldId: string) {
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds, db.bin], async () => {
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds, db.bin, db.recordingChunks], async () => {
     await db.history.where({ worldId }).delete()
     await db.bin.where({ worldId }).delete()
+    await db.recordingChunks.filter((c) => c.worldId === worldId).delete()
     await db.boards.where({ worldId }).delete()
     await db.sounds.where({ worldId }).delete()
     await db.sessions.where({ worldId }).delete()

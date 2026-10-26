@@ -109,6 +109,7 @@ export async function importWorld(file: File): Promise<string> {
       cloud: undefined,
       shared: undefined,
       showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId) } : undefined,
+      handouts: b.world.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId) })),
     })
     await db.assets.bulkAdd(
       b.assets.map(({ data: _data, ...a }) => ({ ...a, id: id(a.id), worldId, blob: fileOf({ ...a, data: _data }) })),
@@ -125,6 +126,7 @@ export async function importWorld(file: File): Promise<string> {
         parentId: opt(e.parentId),
         imageId: opt(e.imageId),
         raisedIn: opt(e.raisedIn),
+        campaignId: opt(e.campaignId),
         tiedOffIn: opt(e.tiedOffIn),
         heldBy: e.heldBy === 'party' ? 'party' : opt(e.heldBy),
         relations: e.relations?.map((r) => ({ ...r, to: id(r.to) })),

@@ -117,6 +117,7 @@ export async function storePlayerCopy(
     await db.worlds.put({
       ...(p.world ?? { name: 'Shared world', description: '', system: '', createdAt: now }),
       showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId) } : null,
+      handouts: p.world?.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId) })),
       id: worldId,
       updatedAt: now,
       cloud: undefined,
@@ -125,7 +126,7 @@ export async function storePlayerCopy(
     await db.assets.bulkPut(assets)
     await db.campaigns.bulkPut(p.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))
     await db.entities.bulkPut(
-      p.entities.map((e) => ({ ...e, id: id(e.id), worldId, parentId: opt(e.parentId), imageId: opt(e.imageId), raisedIn: opt(e.raisedIn), tiedOffIn: opt(e.tiedOffIn), heldBy: e.heldBy === 'party' ? 'party' : opt(e.heldBy), relations: e.relations?.map((r) => ({ ...r, to: id(r.to) })), gmNotes: '' })),
+      p.entities.map((e) => ({ ...e, id: id(e.id), worldId, parentId: opt(e.parentId), imageId: opt(e.imageId), raisedIn: opt(e.raisedIn), campaignId: opt(e.campaignId), tiedOffIn: opt(e.tiedOffIn), heldBy: e.heldBy === 'party' ? 'party' : opt(e.heldBy), relations: e.relations?.map((r) => ({ ...r, to: id(r.to) })), gmNotes: '' })),
     )
     await db.maps.bulkPut(p.maps.map((m) => ({ ...m, id: id(m.id), worldId, imageId: id(m.imageId), locationId: opt(m.locationId), drawing: undefined })))
     await db.pins.bulkPut(
@@ -154,22 +155,52 @@ export function tellOtherPlayers(cloudId: string) {
   openChannels.get(`members:${cloudId}`)?.send({ type: 'broadcast', event: 'changed', payload: {} })
 }
 
-/** Keeps a read-only copy fresh while it's open: instant refresh when the GM syncs, plus a slow poll. */
+/** Live channels are private to the world: only its GM and players (or holders of a wiki link) can use them. */
+export const liveChannel = (name: string) => supabase.channel(name, { config: { private: true } })
+
+/** Players refresh at most this often while the GM is busy editing; the first change still arrives at once. */
+const REFRESH_GAP = 30_000
+
+/**
+ * Keeps a read-only copy fresh while it's open: a refresh when the GM syncs, plus a slow poll.
+ * A burst of changes becomes one refresh now and one more at the end, so nothing is missed and
+ * players don't re-download the world every few seconds while the GM types.
+ */
 export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) {
   let busy = false
-  const refresh = async () => {
-    if (busy || !navigator.onLine) return
+  let pending = false
+  let last = 0
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const run = async () => {
+    if (!navigator.onLine) return
+    if (busy) {
+      pending = true
+      return
+    }
     busy = true
+    last = Date.now()
     try {
       await refreshPlayerCopy(info)
     } catch (e) {
       onError?.(e as Error)
     } finally {
       busy = false
+      if (pending) {
+        pending = false
+        refresh()
+      }
     }
   }
+  const refresh = () => {
+    if (timer) return
+    const wait = Math.max(0, last + REFRESH_GAP - Date.now())
+    timer = setTimeout(() => {
+      timer = undefined
+      run()
+    }, wait)
+  }
   const name = info.token ? `share:${info.token}` : `members:${info.memberOf}`
-  const ch = supabase.channel(name).on('broadcast', { event: 'changed' }, refresh).subscribe()
+  const ch = liveChannel(name).on('broadcast', { event: 'changed' }, refresh).subscribe()
   openChannels.set(name, ch)
   // The GM's broadcast is the main signal; this slow check only covers a missed one, and skips hidden tabs.
   const poll = setInterval(() => !document.hidden && refresh(), 5 * 60_000)
@@ -177,6 +208,7 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) 
   window.addEventListener('online', refresh)
   document.addEventListener('visibilitychange', onVisible)
   return () => {
+    clearTimeout(timer)
     openChannels.delete(name)
     supabase.removeChannel(ch)
     clearInterval(poll)

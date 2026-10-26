@@ -3,7 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Empty, VisibilityBadge, VisibilityToggle } from '../components'
-import { db, GAME_SYSTEMS, newId, type Campaign } from '../db'
+import { db, GAME_SYSTEMS, type Campaign } from '../db'
+import { createNextSession, partyOf } from '../sessions'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
 import { useViewMode } from '../viewMode'
@@ -20,31 +21,16 @@ export default function CampaignPage() {
       [campaignId, isGM],
     ) ?? []
   const entities = useVisibleEntities(worldId)
-  const pcs = entities.filter((e) => e.type === 'pc')
+  const pcs = partyOf(entities, campaignId)
   const quests = entities.filter((e) => e.type === 'quest' && e.questStatus === 'active')
 
   if (campaign === undefined) return null
   if (campaign === null || campaign.worldId !== worldId || (!isGM && campaign.visibility === 'gm')) return <Empty>Campaign not found.</Empty>
   const update = (patch: Partial<Campaign>) => db.campaigns.update(campaign.id, patch)
 
-  const newSession = async (date = new Date().toISOString().slice(0, 10)) => {
-    const id = newId()
-    const number = (sessions.at(-1)?.number ?? 0) + 1
-    await db.sessions.add({
-      id,
-      worldId,
-      campaignId,
-      number,
-      title: `Session ${number}`,
-      date,
-      notes: '',
-      recap: '',
-      visibility: 'gm',
-      entityIds: [],
-      recordings: [],
-      createdAt: Date.now(),
-    })
-    navigate(`/w/${worldId}/s/${id}`)
+  const newSession = async (date?: string) => {
+    const s = await createNextSession(worldId, campaignId, date)
+    navigate(`/w/${worldId}/s/${s.id}`)
   }
 
   return (

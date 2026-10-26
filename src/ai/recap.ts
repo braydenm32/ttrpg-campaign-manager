@@ -21,6 +21,16 @@ export function buildRecapPrompt(world: World, session: Session, entities: Entit
   const names = entities
     .filter((e) => e.type !== 'thread')
     .map((e) => `- ${e.name} (${ENTITY_LABELS[e.type].one.toLowerCase()})`)
+  // The GM's plan: which scenes were reached and which clues were found (or not), for the GM summary.
+  const prep = session.prep
+  const planned = prep
+    ? [
+        ...(prep.strongStart.trim() ? [`Planned opening: ${prep.strongStart.trim()}`] : []),
+        ...prep.scenes.filter((x) => x.text.trim()).map((x) => `- Scene ${x.done ? '(played)' : '(not reached)'}: ${x.text}`),
+        ...prep.clues.filter((x) => x.text.trim()).map((x) => `- Clue ${x.done ? '(found)' : '(not found yet)'}: ${x.text}`),
+        ...prep.encounters.map((x) => `- Fight planned: ${x.name}`),
+      ]
+    : []
   const threads = entities
     .filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active'))
     .map((e) => `- ${e.name}`)
@@ -41,7 +51,7 @@ ${PLAYER_HEADING}
 For the players to read before next session. Two to five short paragraphs in a warm "previously on…" voice, past tense, about the characters rather than the players. Only include what happened at the table. Do not use anything from the GM's notes below, which may contain secrets.
 
 When you mention a person, place, faction or thing from the list of known names, write it exactly as listed inside double square brackets, like [[Name]], so it links to its page. Only link names from the list. Use Markdown.
-${names.length ? `\nKnown names:\n${names.join('\n')}\n` : ''}${threads.length ? `\nLoose threads the GM is tracking (mention any that moved):\n${threads.join('\n')}\n` : ''}${bookmarks.length ? `\nMoments the GM bookmarked while recording:\n${bookmarks.join('\n')}\n` : ''}${session.notes.trim() ? `\nThe GM's own notes for this session (secret, for the GM summary only):\n<gm_notes>\n${session.notes.trim()}\n</gm_notes>\n` : ''}
+${names.length ? `\nKnown names:\n${names.join('\n')}\n` : ''}${threads.length ? `\nLoose threads the GM is tracking (mention any that moved):\n${threads.join('\n')}\n` : ''}${bookmarks.length ? `\nMoments the GM bookmarked while recording:\n${bookmarks.join('\n')}\n` : ''}${planned.length ? `\nThe GM's prep for this session (secret, for the GM summary only; say which unfound clues are still in play):\n<gm_prep>\n${planned.join('\n')}\n</gm_prep>\n` : ''}${session.notes.trim() ? `\nThe GM's own notes for this session (secret, for the GM summary only):\n<gm_notes>\n${session.notes.trim()}\n</gm_notes>\n` : ''}
 <transcript>
 ${transcripts.join('\n\n') || '(No transcript. Work from the GM notes.)'}
 </transcript>`

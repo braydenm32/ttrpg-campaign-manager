@@ -15,10 +15,37 @@ import { schedule } from './cloud/sync'
  * from text (public.player_view).
  */
 
+/** The same thing shown twice is one handout. */
+const sameHandout = (a: Omit<Showing, 'id' | 'at'>, b: Omit<Showing, 'id' | 'at'>) =>
+  a.kind === b.kind && (a.kind === 'image' ? a.assetId === b.assetId : a.kind === 'page' ? a.entityId === b.entityId : a.text === b.text)
+
+/** Shows something to every player, and keeps it in the world's handouts so they can read it again later. */
 export async function showToPlayers(worldId: string, s: Omit<Showing, 'id' | 'at'>) {
-  await db.worlds.update(worldId, { showing: { ...s, id: newId(), at: Date.now() } })
+  const shown = { ...s, id: newId(), at: Date.now() }
+  await db.worlds
+    .where('id')
+    .equals(worldId)
+    .modify((w) => {
+      w.showing = shown
+      w.handouts = [shown, ...(w.handouts ?? []).filter((h) => !sameHandout(h, s))].slice(0, 100)
+    })
   // Don't wait for the usual pause after an edit: the table is waiting.
   schedule(200)
+}
+
+/** Reveals a page to everyone and puts it on their screens, for an NPC who just walked in. */
+export async function revealAndShow(worldId: string, page: Entity) {
+  if (page.visibility !== 'players') await db.entities.update(page.id, { visibility: 'players', updatedAt: Date.now() })
+  await showToPlayers(worldId, { kind: 'page', title: page.name, entityId: page.id })
+}
+
+export async function removeHandout(worldId: string, id: string) {
+  await db.worlds
+    .where('id')
+    .equals(worldId)
+    .modify((w) => {
+      w.handouts = (w.handouts ?? []).filter((h) => h.id !== id)
+    })
 }
 
 export async function stopShowing(worldId: string) {
@@ -124,7 +151,7 @@ export function ShowButton({ worldId, what, disabled }: { worldId: string; what:
   )
 }
 
-/** The Lectern's panel: pick a picture, a revealed page or type something, and show it. */
+/** The Lectern's panel: pick a picture or a page (revealing it if need be), or type something, and show it. */
 export function ShowPanel({ world, sceneText }: { world: World; sceneText?: string }) {
   const entities = useVisibleEntities(world.id)
   const images = useLiveQuery(async () => {
@@ -140,6 +167,7 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
   const [text, setText] = useState('')
   const [title, setTitle] = useState('')
   const revealed = entities.filter((e) => e.visibility === 'players')
+  const hidden = entities.filter((e) => e.visibility !== 'players' && !e.template)
   return (
     <section className="card lectern-panel">
       <h2>
@@ -188,16 +216,31 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
         <select
           value=""
           onChange={(e) => {
-            const p = revealed.find((x) => x.id === e.target.value)
-            if (p) showToPlayers(world.id, { kind: 'page', title: p.name, entityId: p.id })
+            const p = entities.find((x) => x.id === e.target.value)
+            if (!p) return
+            if (p.visibility === 'players') showToPlayers(world.id, { kind: 'page', title: p.name, entityId: p.id })
+            else if (confirm(`Reveal “${p.name}” to every player and show it? GM notes and secret passages stay hidden.`)) revealAndShow(world.id, p)
           }}
         >
-          <option value="">{revealed.length ? 'Pick a revealed page…' : 'No revealed pages yet'}</option>
-          {revealed.map((p: Entity) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
+          <option value="">Pick a page…</option>
+          {revealed.length > 0 && (
+            <optgroup label="Revealed">
+              {revealed.map((p: Entity) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </optgroup>
+          )}
+          {hidden.length > 0 && (
+            <optgroup label="Not revealed yet (reveal and show)">
+              {hidden.map((p: Entity) => (
+                <option key={p.id} value={p.id}>
+                  🔒 {p.name}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
       )}
       {kind === 'text' && (
@@ -227,6 +270,14 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
         Open the players’ screen (for a TV) ↗
       </Link>{' '}
       <Help topic="playersScreen" />
+      {!!world.handouts?.length && (
+        <>
+          {' · '}
+          <Link className="small" to={`/w/${world.id}/handouts`}>
+            Handouts ({world.handouts.length})
+          </Link>
+        </>
+      )}
     </section>
   )
 }

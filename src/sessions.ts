@@ -1,0 +1,62 @@
+import { blankLectern, blankPrep, db, newId, type CheckItem, type Entity, type Session } from './db'
+
+/** Today's date on this device, "2026-10-26" (not UTC, which is a day off in the evening or morning in many places). */
+export function localDate(t: number | Date = new Date()) {
+  const d = new Date(t)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/** A leftover from session #n, tagged so the GM can see where it came from. */
+const carried = (items: CheckItem[] | undefined, n: number) =>
+  (items ?? []).filter((x) => !x.done && x.text.trim()).map((x) => ({ id: newId(), done: false, text: /\(from #\d+\)$/.test(x.text) ? x.text : `${x.text} (from #${n})` }))
+
+/**
+ * Makes the next session of a campaign. The prep starts with the clues the players haven't found
+ * and the scenes they didn't reach last time, and the Lectern starts where the party left off
+ * (same place, same people around).
+ */
+export async function createNextSession(worldId: string, campaignId: string, date = localDate()) {
+  const all = await db.sessions.where({ campaignId }).sortBy('number')
+  const prev = all.at(-1)
+  const number = (prev?.number ?? 0) + 1
+  const prep = blankPrep()
+  if (prev?.prep) {
+    prep.clues = carried(prev.prep.clues, prev.number)
+    prep.scenes = carried(prev.prep.scenes, prev.number)
+  }
+  const lectern = blankLectern()
+  if (prev?.lectern) {
+    lectern.sceneId = prev.lectern.sceneId
+    lectern.sceneText = prev.lectern.sceneText
+    lectern.presentIds = [...prev.lectern.presentIds]
+  }
+  const session: Session = {
+    id: newId(),
+    worldId,
+    campaignId,
+    number,
+    title: `Session ${number}`,
+    date,
+    notes: '',
+    recap: '',
+    visibility: 'gm',
+    entityIds: [],
+    recordings: [],
+    prep: prep.clues.length || prep.scenes.length ? prep : undefined,
+    lectern: prev?.lectern ? lectern : undefined,
+    createdAt: Date.now(),
+  }
+  await db.sessions.add(session)
+  return session
+}
+
+/** The player characters who play in a campaign: ones marked for it, or for no campaign in particular. */
+export function partyOf(entities: Entity[], campaignId: string | undefined, { activeOnly = false } = {}) {
+  return entities.filter(
+    (e) =>
+      e.type === 'pc' &&
+      !e.template &&
+      (!campaignId || !e.campaignId || e.campaignId === campaignId) &&
+      (!activeOnly || !e.status || e.status === 'alive'),
+  )
+}

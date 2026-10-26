@@ -243,10 +243,13 @@ export function findBacklinks(target: Entity, entities: Entity[]) {
   )
 }
 
-/** Hidden parts of an entity are removed for players; used for previews and exports. */
+/**
+ * Hidden parts of an entity are removed for players; used for previews and exports. A ":::foryou"
+ * passage only exists in a player's own copy (the server picked it for them), so it stays.
+ */
 export function stripSecrets(text: string) {
   return splitSecrets(text)
-    .filter((seg) => seg.kind === 'text')
+    .filter((seg) => seg.kind === 'text' || seg.kind === 'foryou')
     .map((seg) => seg.body)
     .join('\n')
 }

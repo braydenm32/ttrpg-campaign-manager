@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Modal } from '../components'
 import { Help } from '../help'
 import { appUrl, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
+import { pendingInvite } from './players'
 
 type Provider = 'google' | 'facebook'
 const PROVIDERS: { id: Provider; label: string }[] = [
@@ -56,11 +57,15 @@ export function finishSignInRedirect() {
  * supabase.co address. Finish that here: returns the link type on success.
  */
 export async function verifyEmailLink(): Promise<{ type?: EmailOtpType; error?: string } | null> {
-  const params = new URLSearchParams(window.location.search)
+  // Usually "?token_hash=…" on the address. A link that returns to an invite page carries it inside
+  // the "#/join/…" part instead, so look there too.
+  const { search, hash, pathname } = window.location
+  const inHash = hash.includes('?') ? hash.slice(hash.indexOf('?')) : ''
+  const params = new URLSearchParams(search.includes('token_hash') ? search : inHash)
   const token_hash = params.get('token_hash')
   const type = params.get('type') as EmailOtpType | null
   if (!token_hash || !type) return null
-  window.history.replaceState(null, '', window.location.pathname + window.location.hash)
+  window.history.replaceState(null, '', pathname + (search.includes('token_hash') ? hash : hash.slice(0, hash.indexOf('?'))))
   const { error } = await supabase.auth.verifyOtp({ token_hash, type })
   if (error) return { error: 'That link has expired or was already used. Sign in, or ask for a new email.' }
   return { type }
@@ -127,7 +132,9 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
         if (error) throw error
         onClose()
       } else if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: appUrl() } })
+        // Someone signing up from an invite comes back to it from the email, even on another device.
+        const invite = pendingInvite.get()
+        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: invite ? `${appUrl()}#/join/${invite}` : appUrl() } })
         if (error) throw error
         if (data.session) onClose()
         else setMessage('Check your email and click the confirmation link, then sign in here.')

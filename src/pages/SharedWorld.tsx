@@ -1,4 +1,5 @@
 import logo from '../assets/logo.svg'
+import { cloudErrorMessage } from '../cloud/client'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { loadSharedWorld } from '../cloud/share'
@@ -13,7 +14,7 @@ export default function SharedWorld() {
     let cancelled = false
     loadSharedWorld(token)
       .then((id) => !cancelled && navigate(`/w/${id}`, { replace: true }))
-      .catch((e: Error) => !cancelled && setError(e.message))
+      .catch((e: Error) => !cancelled && setError(cloudErrorMessage(e)))
     return () => {
       cancelled = true
     }

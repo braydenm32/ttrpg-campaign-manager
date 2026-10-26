@@ -12,6 +12,10 @@ import { useViewMode } from '../viewMode'
 import { WorldToday } from '../calendar'
 import { BackupReminder } from '../BackupReminder'
 import WikiHome from './WikiHome'
+import PlayerHome from './PlayerHome'
+import { localDate } from '../sessions'
+import { showDate, upcoming } from '../players/Schedule'
+import { useLiveQuery } from 'dexie-react-hooks'
 
 export default function Dashboard() {
   const { worldId, world } = useWorld()
@@ -37,6 +41,8 @@ export default function Dashboard() {
   if (!world) return null
   // Opened from a public wiki link: a tidy front page for readers instead of the GM's overview.
   if (world.shared?.token) return <WikiHome world={world} />
+  // Players (and the GM previewing as one) get their own front page.
+  if (!isGM) return <PlayerHome world={world} />
   return (
     <div className="page">
       <header className="page-header">
@@ -50,6 +56,8 @@ export default function Dashboard() {
       {world.description && <p className="lead">{world.description}</p>}
       {isGM && <BackupReminder world={world} />}
       <WorldToday world={world} isGM={isGM} />
+      {entities.length < 3 && campaigns.length === 0 && <GettingStarted worldId={worldId} />}
+      <NextSessions worldId={worldId} />
 
       <input
         className="search"
@@ -228,5 +236,91 @@ function NewCampaign({
         </div>
       </form>
     </Modal>
+  )
+}
+
+/** The GM's "what's next" card: each campaign's coming session, with its prep and the Lectern a click away. */
+function NextSessions({ worldId }: { worldId: string }) {
+  const campaigns = useCampaigns(worldId)
+  const sessions = useLiveQuery(() => db.sessions.where({ worldId }).toArray(), [worldId]) ?? []
+  const today = localDate()
+  const cards = campaigns
+    .filter((c) => c.status !== 'finished')
+    .map((c) => {
+      const own = sessions.filter((s) => s.campaignId === c.id).sort((a, b) => a.number - b.number)
+      // The first session not played yet: dated today or later, or with nothing recapped.
+      const next = own.find((s) => s.date >= today && !s.recap.trim()) ?? own.at(-1)
+      return { c, next, booked: upcoming(c) }
+    })
+    .filter((x) => x.next || x.booked)
+  if (!cards.length) return null
+  return (
+    <section className="next-sessions">
+      <h2>
+        Next session <Help topic="nextSession" />
+      </h2>
+      <div className="card-grid">
+        {cards.map(({ c, next, booked }) => {
+          const clues = next?.prep?.clues.filter((x) => !x.done && x.text.trim()).length ?? 0
+          const scenes = next?.prep?.scenes.filter((x) => !x.done && x.text.trim()).length ?? 0
+          return (
+            <div key={c.id} className="card">
+              <div className="muted small">🎲 {c.name}</div>
+              {next ? (
+                <Link to={`/w/${worldId}/s/${next.id}`}>
+                  <strong>
+                    #{next.number} {next.title}
+                  </strong>
+                </Link>
+              ) : (
+                <strong>No session yet</strong>
+              )}
+              <div className="muted small">
+                {booked ? `📌 ${showDate(booked)}` : next?.date}
+                {next && (clues || scenes) ? ` · ${scenes} scene${scenes === 1 ? '' : 's'}, ${clues} clue${clues === 1 ? '' : 's'} ready` : ''}
+              </div>
+              {next && (
+                <div className="row wrap">
+                  <Link className="button small" to={`/w/${worldId}/s/${next.id}?tab=prep`}>
+                    📋 Prep
+                  </Link>
+                  <Link className="button small primary" to={`/w/${worldId}/s/${next.id}/lectern`}>
+                    📖 Run at the Lectern
+                  </Link>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+/** A short first-steps list for a new, nearly empty world. */
+function GettingStarted({ worldId }: { worldId: string }) {
+  const steps: [string, string, string][] = [
+    ['🎲', 'Make a campaign', 'One group’s story in this world. Use “+ Campaign” below.'],
+    ['🧑', 'Add a few people and places', 'Use Quick add. Link pages to each other by writing [[Name]].'],
+    ['🗺️', 'Add a map', 'Upload one or draw it, then pin your places on it.'],
+    ['🔒', 'Keep secrets', 'Pages start GM only. Reveal them when the players find out, and hide passages with the 🔒 buttons.'],
+    ['☁️', 'Invite your players (optional)', 'Turn on cloud sync in World settings, then send invite links.'],
+  ]
+  return (
+    <section className="card getting-started">
+      <h2>
+        Getting started <Help topic="gettingStarted" />
+      </h2>
+      <ol>
+        {steps.map(([icon, title, text]) => (
+          <li key={title}>
+            {icon} <strong>{title}.</strong> <span className="muted">{text}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="small muted">
+        Every ? button explains the thing next to it. <Link to={`/w/${worldId}/settings`}>World settings</Link> can turn them off.
+      </p>
+    </section>
   )
 }

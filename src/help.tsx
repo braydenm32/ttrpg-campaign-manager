@@ -72,14 +72,14 @@ export const HELP = {
   safety:
     'Agree what’s off limits before you play. Lines never happen in the game; veils can happen, but off screen. Everyone in the world can read this page.',
   xcard:
-    'Tap the X-card if something in the game isn’t OK for you. Your GM is told straight away, without your name, and moves the story on. No one asks why.',
+    'Tap the X-card if something in the game isn’t OK for you. Your GM is told without your name: straight away if their app is open, or as soon as they next open it. They move the story on, and no one asks why.',
   campaign: 'A campaign is one story in your world, with its sessions, party and active quests. A world can hold several.',
 
   // Sessions
   session:
     'One game night. Keep 🔒 GM notes for yourself and a 👁 player recap for the table. Record the session, then turn the recording into a transcript and a recap.',
   recording:
-    'Record from one microphone for games at the table, or the microphone plus your Discord or Zoom audio for online games. Add bookmarks while you play to jump back to big moments. Recordings are big, so they stay on the device that made them; their transcripts sync to your other devices.',
+    'Record from one microphone for games at the table, or the microphone plus your Discord or Zoom audio for online games. Add bookmarks while you play to jump back to big moments. Recording carries on while you use the rest of the app (the Lectern, maps, pages), and is saved every few seconds, so if the app closes by accident you can recover it here. Recordings are big, so they stay on the device that made them; their transcripts sync to your other devices.',
   transcript:
     'Turns a recording into text. "On this device" is free and private but slower, with no speaker names. "Cloud" uses AssemblyAI with your own key, is faster and tells speakers apart.',
   recap:
@@ -98,7 +98,8 @@ export const HELP = {
   syrinscape:
     'Control Syrinscape from here: keep its online player open, add your auth token once on this device, then paste the remote control link of any mood or element.',
   showPlayers:
-    'Put a picture, a page or some text on every player’s screen right now, like handing round a letter or showing a monster. It pops up for players who joined; open the Players’ screen on a TV or second monitor for the table.',
+    'Put a picture, a page or some text on every player’s screen right now, like handing round a letter or showing a monster. It pops up for players who joined; open the Players’ screen on a TV or second monitor for the table. Pick a page that isn’t revealed yet and it’s revealed as you show it. Everything you show is kept in Handouts.',
+  handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove one to take it back.',
   playersScreen: 'A clean screen for a TV or second monitor at the table. It shows whatever you’re showing players, and nothing else.',
   initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go.',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',
@@ -110,7 +111,9 @@ export const HELP = {
   // Tools
   boards:
     'A corkboard for mysteries, plots and politics. Pin pages and note cards, drag them about, and tie string between them with 🧶. Click a string to label or cut it. GM only.',
-  generators: 'Roll up taverns, shops and NPCs without any AI. Save the ones you like; they start as GM only.',
+  generators: 'Roll up taverns, shops and NPCs without any AI, or roll on your own random tables. Save the ones you like; they start as GM only.',
+  atTheTable: 'Things you reach for while you play: threads, clocks, loot, handouts, sounds, safety tools and your players.',
+  prepTools: 'Things for planning between sessions: generators and tables, corkboards, the relationship web and your files.',
   assets: 'Every file in this world: map images, portraits and handouts. Mark a file revealed to let players see it.',
   loot:
     'Who carries what. Set "Carried by" on any item page to a character or the party stash, and keep the party’s coin here. Players see revealed items and the purse.',
@@ -131,13 +134,23 @@ export const HELP = {
   players:
     'Invite your players with a link. They sign in, join, claim their character and keep notes. They only ever receive what you’ve revealed to them.',
   playerNotes:
-    '"My notes" are private to you. "Group notes" are shared with the whole party, and your GM can read them. Both save when you click away.',
+    '"My notes" are private to you. "Group notes" are shared with the whole party, and your GM can read them. Both save when you click away. If someone else changed the group notes while you were typing, nothing is lost: you choose to keep both, yours or theirs.',
   scratchpad: 'A notebook for anything that isn’t about one page: plans, names, clues. Keep your own notes or write in the party’s shared one.',
   gmPlayerNotes: 'What your players have written together. Only they can edit it, and their private notes stay private.',
   coGM:
     'A co-GM sees and edits everything in this world, secrets included, from their own account. Only you can invite or remove co-GMs, manage players and links, or delete the cloud copy.',
   schedule:
-    'Suggest a few dates for the next session. Players who joined mark each one yes, maybe or no, and you book the one that works. Booking makes the session with that date.',
+    'Suggest a few dates for the next session. Players who joined mark each one yes, maybe or no, and you book the one that works. Booking makes the session with that date and shows it to players. Times show in each person’s own time zone.',
+  nextSession: 'Each campaign’s coming session, with its prep and the Lectern one click away, and how many scenes and clues are ready.',
+  endSession:
+    'Wrap up after play: transcribe the recording, write the recap with Claude, show the session to players and move the world’s date on. “Start next session” carries over the clues they didn’t find, the scenes they didn’t reach, and where the party is.',
+  partyCampaign: 'When a world has more than one group, pick which campaign this character plays in. The campaign page and the Lectern’s “Add the party” then only show that group.',
+  trackAsThread: 'Quests are what the players know they’re doing. A loose thread is your own tracker for it: how pressing it is, and a warning when it goes cold.',
+  claimRequests: 'A player asked to play one of your characters. Approve it and they can edit that character’s sheet and read passages written for them.',
+  playerHome: 'Your way into this world: the next session, what happened last time, your character, handouts from your GM and leads to follow.',
+  gettingStarted: 'A few first steps for a new world. It goes away once you’ve made a campaign and a few pages.',
+  home: 'Each world is kept on this device. Sign in to sync your worlds across devices, invite players, or open worlds you play in.',
+  joining: 'An invite link from your GM lets you join their world as a player. Paste it here if it opened somewhere else, sign in, and you’re in.',
   questions:
     'Ask your GM something privately: about a page, or anything at all. Only your GM sees your question, and only you see the answer.',
   questionsGm:

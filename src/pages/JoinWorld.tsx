@@ -4,6 +4,8 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AccountModal, useAuthSession } from '../cloud/auth'
 import { joinWorld, loadMemberWorld, pendingInvite } from '../cloud/players'
 import { downloadCloudWorld } from '../cloud/sync'
+import { cloudErrorMessage } from '../cloud/client'
+import { Help } from '../help'
 import { db } from '../db'
 
 /** Opening a player invite link: sign in, say what to call you, and join the GM's world. */
@@ -35,7 +37,9 @@ export default function JoinWorld() {
       }
       navigate(`/w/${await loadMemberWorld(cloudId)}`, { replace: true })
     } catch (e) {
-      setError((e as Error).message)
+      // A link that's been turned off would otherwise send the player back here every time they open the app.
+      pendingInvite.set(null)
+      setError(cloudErrorMessage(e))
     } finally {
       setBusy(false)
     }
@@ -54,7 +58,9 @@ export default function JoinWorld() {
           </>
         ) : (
           <>
-            <h2>🎭 You’re invited to a world</h2>
+            <h2>
+              🎭 You’re invited to a world <Help topic="joining" />
+            </h2>
             <p className="muted">
               Your GM has invited you to play. You’ll see everything they’ve revealed, kept up to date as they add to it, and you can
               claim your character.
@@ -90,7 +96,10 @@ export default function JoinWorld() {
         )}
         {error && (
           <p className="error">
-            {error} <Link to="/">Go to your worlds</Link>
+            {error}{' '}
+            <Link to="/" onClick={() => pendingInvite.set(null)}>
+              Go to your worlds
+            </Link>
           </p>
         )}
       </div>
