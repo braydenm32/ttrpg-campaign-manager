@@ -2,6 +2,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
 import { db, type World } from '../db'
 import { Help } from '../help'
+import { Ico } from '../icons'
+import { BookOpen, ChatCircleDots, File, Sparkle } from '@phosphor-icons/react'
 
 /**
  * For players: what's new since they last looked. Pages and sessions the GM has just revealed, and
@@ -24,7 +26,7 @@ export function NewsBanner({ world }: { world: World }) {
     <div className="news-banner" role="status">
       <div className="row spread">
         <strong>
-          ✨ New since you last looked <Help topic="news" />
+          <Ico as={Sparkle} /> New since you last looked <Help topic="news" />
         </strong>
         <button className="small" onClick={clear}>
           Got it
@@ -33,17 +35,17 @@ export function NewsBanner({ world }: { world: World }) {
       <div className="row wrap small">
         {pages.map((e) => e && (
           <Link key={e.id} className="chip" to={`/w/${world.id}/e/${e.id}`}>
-            📄 {e.name}
+            <Ico as={File} /> {e.name}
           </Link>
         ))}
         {sessions.map((s) => s && (
           <Link key={s.id} className="chip" to={`/w/${world.id}/s/${s.id}`}>
-            📖 #{s.number} {s.title}
+            <Ico as={BookOpen} /> #{s.number} {s.title}
           </Link>
         ))}
         {answers.map((q) => (
           <Link key={q.id} className="chip" to={q.entityId ? `/w/${world.id}/e/${q.entityId}` : `/w/${world.id}/questions`}>
-            💬 Your GM answered “{q.body.length > 40 ? `${q.body.slice(0, 40)}…` : q.body}”
+            <Ico as={ChatCircleDots} /> Your GM answered “{q.body.length > 40 ? `${q.body.slice(0, 40)}…` : q.body}”
           </Link>
         ))}
       </div>

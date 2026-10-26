@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Help } from '../help'
 import { DEVICE_MODELS, setAiSettings, useAiSettings } from './settings'
+import { Ico } from '../icons'
+import { Sparkle } from '@phosphor-icons/react'
 
 /** Keys and choices for transcription and recaps. Stored on this device only. */
 export function AiSettingsSection() {
@@ -8,7 +10,7 @@ export function AiSettingsSection() {
   return (
     <section>
       <h2>
-        ✨ AI tools (this device) <Help topic="aiTools" />
+        <Ico as={Sparkle} /> AI tools (this device) <Help topic="aiTools" />
       </h2>
       <p className="muted">
         Used to turn session recordings into transcripts and recaps. These settings stay on this device and apply to all your

@@ -7,6 +7,8 @@ import { Help } from '../help'
 import { useWorld } from '../hooks'
 import { AskForm, pageLink, QuestionList, useGmQuestions } from '../players/Questions'
 import { useViewMode } from '../viewMode'
+import { Ico } from '../icons'
+import { EyeClosed, Question } from '@phosphor-icons/react'
 
 /** Questions: the GM's inbox of players' questions, or a player's own questions and answers. */
 export default function Questions() {
@@ -23,7 +25,7 @@ function PlayerQuestions({ world, memberOf }: { world: World; memberOf: string }
   return (
     <div className="page">
       <h1>
-        ❓ Questions for your GM <Help topic="questions" />
+        <Ico as={Question} /> Questions for your GM <Help topic="questions" />
       </h1>
       <AskForm memberOf={memberOf} entityId="" placeholder="Ask your GM anything, just between the two of you…" />
       <QuestionList questions={world.shared?.questions ?? []} memberOf={memberOf} pageName={(q) => pageLink(world.id, q.entityId, names?.get(q.entityId))} />
@@ -49,7 +51,7 @@ function GmInbox({ world }: { world: World }) {
     <div className="page">
       <header className="page-header">
         <h1>
-          ❓ Players’ questions <Help topic="questionsGm" />
+          <Ico as={Question} /> Players’ questions <Help topic="questionsGm" />
         </h1>
         <button onClick={reload}>↻ Refresh</button>
       </header>
@@ -117,7 +119,7 @@ function InboxItem({ world, q, who, pages, onChange }: { world: World; q: Player
                 })
               }
             >
-              🤫 Reveal this page to {who}
+              <Ico as={EyeClosed} /> Reveal this page to {who}
             </button>
           )}
           <button type="button" className="ghost danger" disabled={busy} onClick={() => confirm('Delete this question?') && act(() => deleteQuestion(world.id, q.id))}>

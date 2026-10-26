@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { DraftText } from './components'
-import { blankLectern, blankPrep, db, ENTITY_LABELS, newId, type CheckItem, type Encounter, type Entity, type Session, type SessionPrep } from './db'
+import { ENTITY_LABELS, blankLectern, blankPrep, db, newId, type CheckItem, type Encounter, type Entity, type Session, type SessionPrep } from './db'
 import { addCombatants, encounterCombatants, foeCount, foeFromEntity, numberFrom } from './encounters'
 import { Help } from './help'
 import { StatusBadge } from './status'
+import { Ico, TypeIcon } from './icons'
+import { ClipboardText, FilmSlate, MagnifyingGlass, Sword } from '@phosphor-icons/react'
 
 /** Changes a session's prep sheet atomically, starting from what's saved. */
 export const editPrep = (sessionId: string, fn: (p: SessionPrep) => void) =>
@@ -50,14 +52,14 @@ export function PrepSheet({ session, entities, worldId }: { session: Session; en
           onCommit={(v) => edit((p) => void (p.strongStart = v))}
         />
       </label>
-      <h3>🎬 Scenes you expect</h3>
+      <h3><Ico as={FilmSlate} /> Scenes you expect</h3>
       <CheckList items={prep.scenes} placeholder="A scene that might happen, e.g. ‘Ambush at the ford’" doneLabel="Played" onEdit={(fn) => edit((p) => fn(p.scenes))} />
       <h3>
-        🔍 Secrets and clues <Help topic="clues" />
+        <Ico as={MagnifyingGlass} /> Secrets and clues <Help topic="clues" />
       </h3>
       <CheckList items={prep.clues} placeholder="Something the players could learn, e.g. ‘The mayor paid the bandits’" doneLabel="Found" onEdit={(fn) => edit((p) => fn(p.clues))} />
       <h3>
-        ⚔️ Encounters <Help topic="encounters" />
+        <Ico as={Sword} /> Encounters <Help topic="encounters" />
       </h3>
       <Encounters session={session} prep={prep} entities={entities} worldId={worldId} />
     </div>
@@ -153,7 +155,7 @@ function Encounters({ session, prep, entities, worldId }: { session: Session; pr
                 navigate(`/w/${worldId}/s/${session.id}/lectern`)
               }}
             >
-              ⚔️ Run at the Lectern
+              <Ico as={Sword} /> Run at the Lectern
             </button>
             <button className="ghost" title="Delete encounter" onClick={() => confirm(`Delete “${enc.name}”?`) && edit((p) => void (p.encounters = p.encounters.filter((x) => x.id !== enc.id)))}>
               ✕
@@ -219,7 +221,7 @@ function FoeTable({ enc, entities, worldId, onChange }: { enc: Encounter; entiti
                   <td>
                     {page ? (
                       <Link to={`/w/${worldId}/e/${page.id}`}>
-                        {ENTITY_LABELS[page.type].icon} {f.name}
+                        <TypeIcon type={page.type} /> {f.name}
                       </Link>
                     ) : (
                       <DraftText value={f.name} onCommit={(v) => foe(f.id, (x) => void (x.name = v))} />
@@ -321,7 +323,7 @@ export function LecternPrep({ session, worldId }: { session: Session; worldId: s
     <section className="card lectern-panel">
       <div className="row spread">
         <h2>
-          📋 Prep <Help topic="prep" />
+          <Ico as={ClipboardText} /> Prep <Help topic="prep" />
         </h2>
         <Link className="small" to={`/w/${worldId}/s/${session.id}?tab=prep`}>
           Edit prep
@@ -335,25 +337,25 @@ export function LecternPrep({ session, worldId }: { session: Session; worldId: s
       )}
       {prep.scenes.length > 0 && (
         <details open>
-          <summary className="small">🎬 Scenes ({prep.scenes.filter((s) => s.done).length}/{prep.scenes.length} played)</summary>
+          <summary className="small"><Ico as={FilmSlate} /> Scenes ({prep.scenes.filter((s) => s.done).length}/{prep.scenes.length} played)</summary>
           <div className="check-list">{prep.scenes.map((x) => tick('scenes', x))}</div>
         </details>
       )}
       {prep.clues.length > 0 && (
         <details open>
           <summary className="small">
-            🔍 Secrets and clues ({found}/{prep.clues.length} found)
+            <Ico as={MagnifyingGlass} /> Secrets and clues ({found}/{prep.clues.length} found)
           </summary>
           <div className="check-list">{prep.clues.map((x) => tick('clues', x))}</div>
         </details>
       )}
       {prep.encounters.length > 0 && (
         <div className="small">
-          <div className="muted">⚔️ Encounters</div>
+          <div className="muted"><Ico as={Sword} /> Encounters</div>
           <div className="row wrap">
             {prep.encounters.map((enc) => (
               <button key={enc.id} disabled={!enc.foes.length} title={enc.notes || 'Add to initiative'} onClick={() => runEncounter(session.id, enc)}>
-                ⚔️ {enc.name} ({foeCount(enc)})
+                <Ico as={Sword} /> {enc.name} ({foeCount(enc)})
               </button>
             ))}
           </div>

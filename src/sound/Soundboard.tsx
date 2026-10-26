@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom'
 import { db, type Sound } from '../db'
 import { Help } from '../help'
 import { setLiveVolume, stopAll, toggle, usePlaying } from './player'
+import { Ico } from '../icons'
+import { MusicNotes } from '@phosphor-icons/react'
 
 export const soundGroups = (sounds: Sound[]) => {
   const groups = new Map<string, Sound[]>()
@@ -67,7 +69,7 @@ export function Soundboard({ worldId, compact }: { worldId: string; compact?: bo
     <section className="card lectern-panel">
       <div className="row spread">
         <h2>
-          🎵 Soundboard <Help topic="soundboard" />
+          <Ico as={MusicNotes} /> Soundboard <Help topic="soundboard" />
         </h2>
         <div className="row">
           {playing.length > 0 && (

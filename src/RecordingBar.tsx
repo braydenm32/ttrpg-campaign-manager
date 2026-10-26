@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { formatTime } from './recorder'
 import { addBookmark, endRecording, useLiveRecording } from './recordingStore'
+import { Ico } from './icons'
+import { BookmarkSimple } from '@phosphor-icons/react'
 
 /** While a session is being recorded, a slim bar on every other screen: how long, a bookmark, and Stop. */
 export function RecordingBar() {
@@ -22,7 +24,7 @@ export function RecordingBar() {
           const text = prompt('Bookmark this moment:')
           if (text !== null) addBookmark(text)
         }}>
-        🔖 Bookmark
+        <Ico as={BookmarkSimple} /> Bookmark
       </button>
       <button className="small danger" onClick={() => endRecording()}>
         ■ Stop & save

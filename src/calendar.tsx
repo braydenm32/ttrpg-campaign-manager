@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Help } from './help'
 import { db, type CalDate, type Entity, type Session, type World, type WorldCalendar } from './db'
+import { Ico } from './icons'
+import { CalendarBlank, DiceFive } from '@phosphor-icons/react'
 
 /**
  * In-world calendars: month and day names, the era after the year, and moons. Dates are stored as
@@ -215,7 +217,7 @@ export function CalendarEditor({ world }: { world: World }) {
   return (
     <section>
       <h2>
-        📅 Calendar <Help topic="calendar" />
+        <Ico as={CalendarBlank} /> Calendar <Help topic="calendar" />
       </h2>
       <div className="row wrap">
         <select
@@ -355,7 +357,7 @@ export function WorldToday({ world, isGM }: { world: World; isGM: boolean }) {
   return (
     <div className="world-today">
       <span>
-        📅 <strong>{formatDate(c, c.today)}</strong> <Help topic="worldToday" />
+        <Ico as={CalendarBlank} /> <strong>{formatDate(c, c.today)}</strong> <Help topic="worldToday" />
       </span>
       {c.moons.map((m) => (
         <span key={m.name} className="muted small">
@@ -436,7 +438,7 @@ export function MonthGrid({ world, events, sessions }: { world: World; events: E
               <span className="month-num">{day}</span>
               {ses.map((s) => (
                 <Link key={s.id} className="month-item session" to={`/w/${world.id}/s/${s.id}`}>
-                  🎲 #{s.number}
+                  <Ico as={DiceFive} /> #{s.number}
                 </Link>
               ))}
               {evs.map((e) => (

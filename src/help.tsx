@@ -7,14 +7,19 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
  */
 export const HELP = {
   // Getting around
-  overview: 'Your world at a glance: quick-add buttons, campaigns, open quests, loose threads and what changed lately.',
+  overview: 'Home: your world’s cover, the next session with a Run button, what needs you (player questions, character claims, urgent threads), running clocks and what changed lately. “New page” makes a page of any type.',
+  modes:
+    'The bar across the top splits the world into modes. Home is what needs you now. World is the atlas itself: maps, timeline and every codex page. Prep is getting sessions ready: campaigns, loose threads, handouts and generators. Play is running the table: the Lectern, clocks, sounds and safety tools. The sidebar lists the pages of the mode you’re in.',
+  needsYou: 'Things waiting on you: questions your players asked, players asking to claim a character, and urgent loose threads. When it’s empty you’re all caught up.',
+  worldLook: 'Give this world its own cover picture and colour. They show on Home and on the world’s book on your shelf of worlds. Players see them too.',
+  theme: 'Candlelit is the dark look, Parchment the light one. “Match this device” follows your phone or computer’s own setting.',
   viewingAs:
     'Switch to Player to preview exactly what your players can see. Anything marked 🔒 GM only, GM notes and secret passages disappear.',
   previewAs:
     'Pick one player to see the world exactly as they do: what’s revealed to everyone, plus pages revealed just to them and :::for passages for their character.',
   codex:
     'The codex holds every page in your world, grouped by type. Pages can sit inside places (a tavern inside a town), and the sidebar opens down to wherever you are.',
-  quickAdd: 'Make a new page of any type in one click. It starts as 🔒 GM only, so nothing is revealed until you choose.',
+  quickAdd: 'Make a new page of any type. It starts as GM only, so nothing is revealed until you choose. You can also press Ctrl+K and type “new npc”.',
   visibility:
     '🔒 GM only means just you. 👁 Revealed means every player can see it. Click to switch. Pins, maps, sessions and files work the same way.',
 
@@ -30,8 +35,8 @@ export const HELP = {
   hiddenCampaign:
     'A campaign you’re still planning can stay 🔒 GM only: players don’t see it or any of its sessions until you switch it to 👁 players.',
   pictures: 'Put pictures in the text: paste one, drop one in, or use 🖼️ Picture. Players see a picture once the text around it is revealed to them (not inside a secret passage).',
-  search: 'Finds pages by name, nickname, summary, details, tags and the words in them, plus sessions (title, recap and your notes) and maps. Press Ctrl+K (⌘K on a Mac) anywhere to search. In the player view it only searches what players can read.',
-  phoneMenu: 'On a phone the menu folds away so each page starts at the top. Tap ☰ Menu to open it; it folds up again when you pick a page. 🔍 Search stays at the top.',
+  search: 'Finds pages by name, nickname, summary, details, tags and the words in them, plus sessions and maps. It also does things: type “new npc” to make a page, or “clocks” to go there. Press Ctrl+K (⌘K on a Mac) anywhere to open it. In the player view it only searches what players can read.',
+  phoneMenu: 'Open the menu. Its tabs (Home, World, Prep, Play) match the bar at the top on a computer; pick one to see its pages. It closes when you pick a page.',
   news: 'What your GM has revealed since you last looked: new pages, session recaps and answers to your questions. Tap one to read it, and “Got it” when you’re done.',
   backupReminder: 'A reminder to download a backup of this world every two weeks (monthly with cloud sync on). Save the file somewhere safe, like Google Drive or a USB stick. “Later” asks again in a week.',
   aliases:

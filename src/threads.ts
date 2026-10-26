@@ -1,6 +1,6 @@
 import { nameIndex } from './links'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { blankEntity, db, type Entity, type Session, type ThreadStatus } from './db'
+import { blankEntity, db, type Campaign, type Entity, type Session, type ThreadStatus } from './db'
 import { stripSecrets } from './Markdown'
 import { useViewMode } from './viewMode'
 import { localDate } from './sessions'
@@ -37,6 +37,22 @@ export function useWorldSessions(worldId: string) {
         .sortBy('date')
     }, [worldId, isGM]) ?? []
   )
+}
+
+/**
+ * Each running campaign's coming session: the first one not played yet (dated today or later with
+ * no recap), or its newest. Soonest first.
+ */
+export function nextSessions(campaigns: Campaign[], sessions: Session[]) {
+  const today = localDate()
+  return campaigns
+    .filter((c) => c.status !== 'finished')
+    .flatMap((c) => {
+      const own = sessions.filter((s) => s.campaignId === c.id).sort((a, b) => a.number - b.number)
+      const next = own.find((s) => s.date >= today && !s.recap.trim()) ?? own.at(-1)
+      return next ? [{ campaign: c, session: next }] : []
+    })
+    .sort((a, b) => (a.session.date || '9999').localeCompare(b.session.date || '9999'))
 }
 
 /** The session most recently played (or the newest one, if none has a date yet). */

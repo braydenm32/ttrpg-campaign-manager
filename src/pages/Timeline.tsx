@@ -7,6 +7,8 @@ import { useVisibleEntities, useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
 import { formatDate, MonthGrid, WorldToday } from '../calendar'
 import { useWorldSessions } from '../threads'
+import { Ico } from '../icons'
+import { Hourglass } from '@phosphor-icons/react'
 
 export default function Timeline() {
   const { worldId, world } = useWorld()
@@ -57,7 +59,7 @@ export default function Timeline() {
     <div className="page">
       <header className="page-header">
         <h1>
-          ⏳ Timeline <Help topic="timeline" />
+          <Ico as={Hourglass} /> Timeline <Help topic="timeline" />
         </h1>
         <div className="row">
         {world?.calendar && (

@@ -4,6 +4,8 @@ import type { Entity } from './db'
 import { roll, rollDie } from './dice'
 import { Help } from './help'
 import { Markdown } from './Markdown'
+import { Ico } from './icons'
+import { DiceFive } from '@phosphor-icons/react'
 
 /**
  * Random tables the GM writes: one entry per line, rolled on with one click.
@@ -67,7 +69,7 @@ export function TableRoller({ tables, worldId, entities, fixed, showSecrets }: {
           </select>
         )}
         <button className="primary" onClick={go}>
-          🎲 Roll{fixed ? ` on ${table.name}` : ''}
+          <Ico as={DiceFive} /> Roll{fixed ? ` on ${table.name}` : ''}
         </button>
         {!fixed && (
           <Link className="small" to={`/w/${worldId}/e/${table.id}`}>
@@ -90,7 +92,7 @@ export function TablesPanel({ tables, worldId, entities }: { tables: Entity[]; w
   return (
     <section className="card lectern-panel">
       <h2>
-        🎲 Random tables <Help topic="randomTables" />
+        <Ico as={DiceFive} /> Random tables <Help topic="randomTables" />
       </h2>
       {tables.length ? (
         <TableRoller tables={tables} worldId={worldId} entities={entities} showSecrets />

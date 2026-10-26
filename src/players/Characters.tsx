@@ -6,6 +6,8 @@ import { approveClaim, claimCharacter, editMyCharacter, releaseCharacter, savePl
 import { Modal } from '../components'
 import { db, type Entity, type World } from '../db'
 import { useCharacterOwners } from './owners'
+import { Ico } from '../icons'
+import { MaskHappy, PencilSimple } from '@phosphor-icons/react'
 
 /** On a player character's page: who plays them, their player's notes, and claim / let go buttons. */
 export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: World }) {
@@ -34,7 +36,7 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
   return (
     <div className="side-box owner-box">
       <h3>
-        🎭 Player <Help topic="character" />
+        <Ico as={MaskHappy} /> Player <Help topic="character" />
       </h3>
       {owner?.pending ? (
         <p>
@@ -115,7 +117,7 @@ function EditMyCharacter({ entity, cloudId }: { entity: Entity; cloudId: string 
   return (
     <>
       <button className="block" onClick={start}>
-        ✏️ Edit my character
+        <Ico as={PencilSimple} /> Edit my character
       </button>
       {open && (
         <Modal title={`Edit ${entity.name}`} onClose={() => setOpen(false)}>
@@ -212,7 +214,7 @@ export function ChooseCharacterBanner({ world }: { world: World }) {
   if (mine.length)
     return (
       <div className="choose-character">
-        <strong>🎭 Waiting for your GM</strong>
+        <strong><Ico as={MaskHappy} /> Waiting for your GM</strong>
         <p className="muted small">You’ve asked to play {pcs.find((e) => owners.get(e.id)?.mine)?.name ?? 'a character'}. Your GM approves it, and then it’s yours.</p>
       </div>
     )
@@ -221,7 +223,7 @@ export function ChooseCharacterBanner({ world }: { world: World }) {
   return (
     <div className="choose-character">
       <div className="row spread">
-        <strong>🎭 Which character are you playing?</strong>
+        <strong><Ico as={MaskHappy} /> Which character are you playing?</strong>
         <button className="ghost small" onClick={() => setHidden(true)}>
           Later
         </button>

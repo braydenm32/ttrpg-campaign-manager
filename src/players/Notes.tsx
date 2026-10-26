@@ -4,6 +4,8 @@ import { useAuthSession } from '../cloud/auth'
 import { listGroupNotes, savePlayerNote, type NoteClash } from '../cloud/players'
 import type { Entity, PlayerNote, World } from '../db'
 import { Markdown } from '../Markdown'
+import { Ico } from '../icons'
+import { Notepad } from '@phosphor-icons/react'
 
 /**
  * Players' own notes on a page (or, with entityId '', the world's scratchpad).
@@ -38,7 +40,7 @@ function MemberNotes({ world, memberOf, entityId, big }: { world: World; memberO
     <section className={`player-notes ${big ? 'scratchpad' : ''}`}>
       {!big && (
         <h2>
-          📝 Notes <Help topic="playerNotes" />
+          <Ico as={Notepad} /> Notes <Help topic="playerNotes" />
         </h2>
       )}
       <div className="tabs segmented">
@@ -194,7 +196,7 @@ function GmGroupNotes({ world, entityId, entities, big }: { world: World; entity
     <section className="player-notes">
       {!big && (
         <h2>
-          📝 Your players’ notes <Help topic="gmPlayerNotes" />
+          <Ico as={Notepad} /> Your players’ notes <Help topic="gmPlayerNotes" />
         </h2>
       )}
       <span className="note-meta">

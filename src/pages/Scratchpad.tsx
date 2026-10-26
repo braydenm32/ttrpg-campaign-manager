@@ -2,6 +2,8 @@ import { Empty } from '../components'
 import { Help } from '../help'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { PlayerNotesBox } from '../players/Notes'
+import { Ico } from '../icons'
+import { Notepad } from '@phosphor-icons/react'
 
 /** The players' world-wide notebook: a shared page for the party, and a private one for each player. */
 export default function Scratchpad() {
@@ -16,7 +18,7 @@ export default function Scratchpad() {
       <header className="page-header">
         <div>
           <h1>
-            📝 Scratchpad <Help topic={player ? 'scratchpad' : 'gmPlayerNotes'} />
+            <Ico as={Notepad} /> Scratchpad <Help topic={player ? 'scratchpad' : 'gmPlayerNotes'} />
           </h1>
           <p className="lead">
             {player

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Empty } from '../components'
-import { typeLabel, type World } from '../db'
-import { Help } from '../help'
+import { type World } from '../db'
+import { WorldCover } from '../WorldCover'
 import { useAssetUrl, useVisibleEntities } from '../hooks'
 import { Markdown } from '../Markdown'
 import { useCharacterOwners } from '../players/owners'
@@ -10,6 +10,8 @@ import { SessionScheduler } from '../players/Schedule'
 import { searchWorld, useSearchable } from '../search'
 import { plainLinks } from '../text'
 import { latestSession, useCampaigns, useWorldSessions } from '../threads'
+import { Ico, PageIcon } from '../icons'
+import { Newspaper, Question, Scroll, Shield, Spiral } from '@phosphor-icons/react'
 
 /**
  * The overview for players (and the GM's player view): the next session, "previously on…" from the
@@ -36,20 +38,13 @@ export default function PlayerHome({ world }: { world: World }) {
 
   return (
     <div className="page player-home">
-      <header className="page-header">
-        <div>
-          <h1>
-            {world.name} <Help topic="playerHome" />
-          </h1>
-          <div className="muted">{world.system}</div>
-        </div>
+      <WorldCover world={world} help="playerHome">
         {memberOf && (
           <Link className="button" to={`/w/${worldId}/questions`}>
-            ❓ Ask the GM
+            <Ico as={Question} /> Ask the GM
           </Link>
         )}
-      </header>
-      {world.description && <p className="lead">{world.description}</p>}
+      </WorldCover>
 
       <input className="search" placeholder="Search what you know…" value={query} onChange={(e) => setQuery(e.target.value)} />
       {query.trim() && (
@@ -72,7 +67,7 @@ export default function PlayerHome({ world }: { world: World }) {
 
       <div className="two-col">
         <section>
-          <h2>📜 Previously on…</h2>
+          <h2><Ico as={Scroll} /> Previously on…</h2>
           {last ? (
             <div className="card">
               <Link to={`/w/${worldId}/s/${last.id}`}>
@@ -87,7 +82,7 @@ export default function PlayerHome({ world }: { world: World }) {
           ) : (
             <Empty>No recaps yet. Your GM’s write-up of each session lands here.</Empty>
           )}
-          <h2>🧵 Leads</h2>
+          <h2><Ico as={Spiral} /> Leads</h2>
           {leads.length + quests.length === 0 ? (
             <Empty>No open leads or quests yet.</Empty>
           ) : (
@@ -95,7 +90,7 @@ export default function PlayerHome({ world }: { world: World }) {
               {[...quests, ...leads].slice(0, 10).map((e) => (
                 <li key={e.id}>
                   <Link to={`/w/${worldId}/e/${e.id}`}>
-                    {typeLabel(e, world).icon} {e.name}
+                    <PageIcon page={e} world={world} /> {e.name}
                   </Link>
                   {e.summary && <span className="muted"> · {plainLinks(e.summary)}</span>}
                 </li>
@@ -106,7 +101,7 @@ export default function PlayerHome({ world }: { world: World }) {
         <section>
           {mine.length > 0 && (
             <>
-              <h2>🛡️ {mine.length > 1 ? 'Your characters' : 'Your character'}</h2>
+              <h2><Ico as={Shield} /> {mine.length > 1 ? 'Your characters' : 'Your character'}</h2>
               {mine.map((e) => (
                 <MyCharacterCard key={e.id} worldId={worldId} id={e.id} name={e.name} summary={e.summary} imageId={e.imageId} />
               ))}
@@ -115,7 +110,7 @@ export default function PlayerHome({ world }: { world: World }) {
           {handouts.length > 0 && (
             <>
               <h2>
-                <Link to={`/w/${worldId}/handouts`}>🗞️ Handouts</Link>
+                <Link to={`/w/${worldId}/handouts`}><Ico as={Newspaper} /> Handouts</Link>
               </h2>
               <ul className="entity-list">
                 {handouts.map((h) => (
@@ -136,7 +131,7 @@ export default function PlayerHome({ world }: { world: World }) {
               {recent.map((e) => (
                 <li key={e.id}>
                   <Link to={`/w/${worldId}/e/${e.id}`}>
-                    {typeLabel(e, world).icon} {e.name}
+                    <PageIcon page={e} world={world} /> {e.name}
                   </Link>
                   {e.summary && <span className="muted"> · {plainLinks(e.summary)}</span>}
                 </li>

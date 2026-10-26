@@ -1,5 +1,7 @@
 import { useState, type InputHTMLAttributes, type ReactNode } from 'react'
 import type { Visibility } from './db'
+import { Ico } from './icons'
+import { Lock } from '@phosphor-icons/react'
 
 export function VisibilityToggle({
   value,
@@ -21,7 +23,7 @@ export function VisibilityToggle({
 }
 
 export function VisibilityBadge({ value }: { value: Visibility }) {
-  return value === 'gm' ? <span className="badge gm" title="GM only">🔒</span> : null
+  return value === 'gm' ? <span className="badge gm" title="GM only"><Ico as={Lock} /></span> : null
 }
 
 export function TagInput({ tags, onChange, placeholder = 'Add tag…' }: { tags: string[]; onChange: (t: string[]) => void; placeholder?: string }) {

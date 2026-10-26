@@ -7,6 +7,8 @@ import { db, type Safety, type World } from '../db'
 import { Help } from '../help'
 import { useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
+import { Ico } from '../icons'
+import { HandPalm, Shield } from '@phosphor-icons/react'
 
 /**
  * Safety tools: the table's lines (never in the game) and veils (off screen only), notes on other
@@ -29,7 +31,7 @@ export default function SafetyPage() {
     <div className="page">
       <header className="page-header">
         <h1>
-          🛡️ Safety tools <Help topic="safety" />
+          <Ico as={Shield} /> Safety tools <Help topic="safety" />
         </h1>
       </header>
       {memberOf && safety.xcard && <XCardButton cloudId={memberOf} />}
@@ -74,7 +76,7 @@ export default function SafetyPage() {
       {isGM && (
         <section>
           <h2>
-            ✋ X-card <Help topic="xcard" />
+            <Ico as={HandPalm} /> X-card <Help topic="xcard" />
           </h2>
           <label className="inline-check">
             <input type="checkbox" checked={!!safety.xcard} onChange={(e) => update({ xcard: e.target.checked || undefined })} />
@@ -192,7 +194,7 @@ export function XCardButton({ cloudId, small }: { cloudId: string; small?: boole
           }
         }}
       >
-        ✋ X-card
+        <Ico as={HandPalm} /> X-card
       </button>
       {!small && <Help topic="xcard" />}
       {state === 'sent' && <span className="small">Sent to your GM. They’ll see it as soon as they look at the app. Thank you.</span>}
@@ -242,7 +244,7 @@ export function XCardAlert({ world }: { world: World }) {
   if (!tap) return null
   return (
     <div className="xcard-alert" role="alert">
-      <strong>✋ Someone tapped the X-card{tap.live ? '' : ` at ${new Date(tap.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })}`}.</strong>{' '}
+      <strong><Ico as={HandPalm} /> Someone tapped the X-card{tap.live ? '' : ` at ${new Date(tap.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })}`}.</strong>{' '}
       Change course or skip ahead; no need to ask who or why.
       <button
         onClick={() => {

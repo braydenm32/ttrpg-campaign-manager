@@ -3,12 +3,14 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Empty } from '../components'
 import { db, ENTITY_LABELS, ENTITY_TYPES, type World } from '../db'
-import { Help } from '../help'
+import { WorldCover } from '../WorldCover'
 import { useVisibleEntities } from '../hooks'
 import { Markdown } from '../Markdown'
 import { searchWorld, useSearchable } from '../search'
 import { plainLinks } from '../text'
 import { useCampaigns, useWorldSessions } from '../threads'
+import { Ico, TypeIcon } from '../icons'
+import { Hourglass, MapTrifold } from '@phosphor-icons/react'
 
 /**
  * The front page of a world opened from a public wiki link: a tidy read-only wiki of everything the
@@ -31,14 +33,9 @@ export default function WikiHome({ world }: { world: World }) {
 
   return (
     <div className="page wiki-home">
-      <header className="wiki-hero">
-        <div className="muted small">
-          📜 Public wiki · read only <Help topic="wiki" />
-        </div>
-        <h1>{world.name}</h1>
-        {world.system && <div className="muted">{world.system}</div>}
-        {world.description && <p className="lead">{world.description}</p>}
-      </header>
+      <WorldCover world={world} help="wiki">
+        <span className="world-cover-meta">Public wiki · read only</span>
+      </WorldCover>
 
       <input className="search" placeholder="Search this world…" value={query} onChange={(e) => setQuery(e.target.value)} />
       {query.trim() && (
@@ -63,7 +60,7 @@ export default function WikiHome({ world }: { world: World }) {
           <div className="wiki-cards">
             {types.map(([t, n]) => (
               <Link key={t} className="wiki-card" to={`/w/${worldId}/type/${t}`}>
-                <span className="wiki-card-icon">{ENTITY_LABELS[t].icon}</span>
+                <span className="wiki-card-icon"><TypeIcon type={t} /></span>
                 <strong>{ENTITY_LABELS[t].many}</strong>
                 <span className="muted small">{n}</span>
               </Link>
@@ -77,13 +74,13 @@ export default function WikiHome({ world }: { world: World }) {
             ))}
             {maps.length > 0 && (
               <Link className="wiki-card" to={`/w/${worldId}/maps`}>
-                <span className="wiki-card-icon">🗺️</span>
+                <span className="wiki-card-icon"><Ico as={MapTrifold} /></span>
                 <strong>Maps</strong>
                 <span className="muted small">{maps.length}</span>
               </Link>
             )}
             <Link className="wiki-card" to={`/w/${worldId}/timeline`}>
-              <span className="wiki-card-icon">⏳</span>
+              <span className="wiki-card-icon"><Ico as={Hourglass} /></span>
               <strong>Timeline</strong>
             </Link>
           </div>
@@ -117,7 +114,7 @@ export default function WikiHome({ world }: { world: World }) {
             {recent.map((e) => (
               <li key={e.id}>
                 <Link to={`/w/${worldId}/e/${e.id}`}>
-                  {ENTITY_LABELS[e.type].icon} {e.name}
+                  <TypeIcon type={e.type} /> {e.name}
                 </Link>
                 {e.summary && <span className="muted"> · {plainLinks(e.summary)}</span>}
               </li>

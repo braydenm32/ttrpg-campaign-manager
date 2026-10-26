@@ -1,10 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Empty, Modal } from './components'
-import { db, saveEntity, typeLabel, type Entity, type PageVersion } from './db'
+import { db, saveEntity, type Entity, type PageVersion } from './db'
 import { Help } from './help'
 import { useWorld } from './hooks'
 import { restoreFromBin, useBin } from './bin'
+import { PageIcon } from './icons'
 
 /**
  * Page history: every save keeps the version it replaced, on this device. Changes that arrive from
@@ -140,7 +141,7 @@ export function RecentlyDeleted() {
           {deleted.slice(0, 30).map((v) => (
             <li key={v.id} className="row spread">
               <span>
-                {typeLabel(v.entity, world).icon} {v.entity.name} <span className="muted small">· deleted {when(v.at)}</span>
+                <PageIcon page={v.entity} world={world} /> {v.entity.name} <span className="muted small">· deleted {when(v.at)}</span>
               </span>
               <button
                 className="small"

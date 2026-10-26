@@ -17,8 +17,8 @@ export default defineConfig({
         name: 'The Warded Atlas',
         short_name: 'Warded Atlas',
         description: 'GM-focused campaign and world manager for tabletop RPGs',
-        theme_color: '#15131a',
-        background_color: '#15131a',
+        theme_color: '#16141a',
+        background_color: '#16141a',
         display: 'standalone',
         icons: [
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

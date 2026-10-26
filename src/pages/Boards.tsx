@@ -6,6 +6,8 @@ import { db, newId } from '../db'
 import { Help } from '../help'
 import { useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
+import { Ico } from '../icons'
+import { PushPin } from '@phosphor-icons/react'
 
 /** The world's corkboards. */
 export default function Boards() {
@@ -19,7 +21,7 @@ export default function Boards() {
     <div className="page">
       <header className="page-header">
         <h1>
-          📌 Corkboards <Help topic="boards" />
+          <Ico as={PushPin} /> Corkboards <Help topic="boards" />
         </h1>
       </header>
       <form
@@ -45,7 +47,7 @@ export default function Boards() {
         <div className="card-grid">
           {boards.map((b) => (
             <Link key={b.id} className="card" to={`/w/${worldId}/boards/${b.id}`}>
-              <h3>📌 {b.name}</h3>
+              <h3><Ico as={PushPin} /> {b.name}</h3>
               <p className="muted small">
                 {b.cards.length} card{b.cards.length === 1 ? '' : 's'} · {b.strings.length} string{b.strings.length === 1 ? '' : 's'}
               </p>

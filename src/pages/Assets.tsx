@@ -6,6 +6,8 @@ import { Empty, TagInput, VisibilityToggle } from '../components'
 import { db, type Asset } from '../db'
 import { formatBytes, saveFileAsAsset, useBlobUrl, useWorld } from '../hooks'
 import { ShowButton } from '../showing'
+import { Ico } from '../icons'
+import { File, Folder } from '@phosphor-icons/react'
 
 export default function Assets() {
   const { worldId } = useWorld()
@@ -20,7 +22,7 @@ export default function Assets() {
       <header className="page-header">
         <div>
           <h1>
-            📁 Assets <Help topic="assets" />
+            <Ico as={Folder} /> Assets <Help topic="assets" />
           </h1>
           <div className="muted">
             {assets.length} files · {formatBytes(total)} stored on this device
@@ -61,7 +63,7 @@ function AssetCard({ asset }: { asset: Asset }) {
     <div className="card asset-card">
       {url && kind === 'image' && <img src={url} alt={asset.name} />}
       {url && kind === 'audio' && <audio controls src={url} preload="none" />}
-      {kind !== 'image' && kind !== 'audio' && <div className="file-icon">📄</div>}
+      {kind !== 'image' && kind !== 'audio' && <div className="file-icon"><Ico as={File} /></div>}
       <input value={asset.name} onChange={(e) => update({ name: e.target.value })} />
       <div className="muted small">{formatBytes(asset.size)}</div>
       <TagInput tags={asset.tags} onChange={(tags) => update({ tags })} />

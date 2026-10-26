@@ -5,6 +5,8 @@ import { db, type Recording, type Transcript, type TranscriptLine } from '../db'
 import { formatTime } from '../recorder'
 import { DEVICE_MODELS, useAiSettings } from './settings'
 import { saveTranscript, speakerLabels, speakerName } from './transcript'
+import { Ico } from '../icons'
+import { Cloud, Desktop, Scroll } from '@phosphor-icons/react'
 
 type Engine = 'device' | 'cloud'
 
@@ -135,14 +137,14 @@ export function TranscriptPanel({
         )}
         <div className="row wrap">
           <button onClick={() => run('device')} title="Free and private. Slower, no speaker names.">
-            💻 {t?.pending && t.engine === 'device' ? 'Carry on transcribing' : 'Transcribe on this device'}
+            <Ico as={Desktop} /> {t?.pending && t.engine === 'device' ? 'Carry on transcribing' : 'Transcribe on this device'}
           </button>
           <button
             onClick={() => run('cloud')}
             disabled={!settings.assemblyKey.trim()}
             title={settings.assemblyKey.trim() ? 'Uses your AssemblyAI account. Faster, and tells speakers apart.' : 'Add an AssemblyAI key in World settings first.'}
           >
-            ☁️ {t?.pending && t.engine === 'cloud' ? 'Check on cloud transcript' : 'Transcribe in the cloud'}
+            <Ico as={Cloud} /> {t?.pending && t.engine === 'cloud' ? 'Check on cloud transcript' : 'Transcribe in the cloud'}
           </button>
           <Help topic="transcript" />
           {t?.pending && (
@@ -194,7 +196,7 @@ function TranscriptView({
   return (
     <details className="transcript">
       <summary>
-        📜 Transcript <span className="muted small">({t.lines.length} lines, {t.engine === 'cloud' ? 'cloud' : 'this device'})</span>
+        <Ico as={Scroll} /> Transcript <span className="muted small">({t.lines.length} lines, {t.engine === 'cloud' ? 'cloud' : 'this device'})</span>
       </summary>
       <div className="row wrap transcript-tools">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the transcript" />

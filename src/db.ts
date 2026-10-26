@@ -37,6 +37,26 @@ export const ENTITY_LABELS: Record<EntityType, { one: string; many: string; icon
   custom: { one: 'Page', many: 'Other pages', icon: '📄' },
 }
 
+/** Colours a world can take for its cover and book: deep, matte cloth colours that keep gold and text readable. */
+export const WORLD_COLORS: { name: string; value: string }[] = [
+  { name: 'Ink', value: '#2a2633' },
+  { name: 'Oxblood', value: '#5e2622' },
+  { name: 'Verdigris', value: '#24403c' },
+  { name: 'Midnight', value: '#2b3350' },
+  { name: 'Moss', value: '#34402a' },
+  { name: 'Umber', value: '#4a3424' },
+  { name: 'Plum', value: '#43283f' },
+  { name: 'Slate', value: '#33393f' },
+]
+
+/** A world's colour: its own choice, or one picked from its id so a new shelf isn't all one colour. */
+export function worldColor(w: { id: string; color?: string }) {
+  if (w.color) return w.color
+  let h = 0
+  for (const ch of w.id) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return WORLD_COLORS[h % WORLD_COLORS.length].value
+}
+
 /** Types offered when making or changing a page. Custom types are offered separately, from the world's own list. */
 export const PICKER_TYPES = ENTITY_TYPES.filter((t) => t !== 'custom')
 
@@ -144,6 +164,10 @@ export interface World {
   updatedAt: number
   /** Page types the GM added, like Ships or Spells. */
   customTypes?: CustomType[]
+  /** A picture (asset id) for the top of Home and the world's book on the shelf. Players see it too. */
+  coverId?: string
+  /** The world's own colour, one of WORLD_COLORS, for its cover and book. */
+  color?: string
   /** The party's money, e.g. [{ name: 'gp', amount: 120 }]. Shown on the party loot page. */
   partyCoin?: { name: string; amount: number }[]
   /** The world's own calendar (months, weekdays, moons) and today's date in the world. */

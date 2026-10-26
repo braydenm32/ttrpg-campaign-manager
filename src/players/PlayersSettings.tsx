@@ -19,6 +19,8 @@ import {
   type Member,
 } from '../cloud/players'
 import { db, type World } from '../db'
+import { Ico } from '../icons'
+import { BookOpen, MaskHappy } from '@phosphor-icons/react'
 
 /** World settings: invite players with a link, and see who has joined and which character each plays. */
 export function PlayersSettings({ world }: { world: World }) {
@@ -63,7 +65,7 @@ export function PlayersSettings({ world }: { world: World }) {
   return (
     <>
       <h3 className="share-heading">
-        🎭 Players <Help topic="players" />
+        <Ico as={MaskHappy} /> Players <Help topic="players" />
       </h3>
       <p className="muted">
         Send your players an invite link. They sign in, join, and see everything you’ve revealed (never anything GM-only), kept up
@@ -205,7 +207,7 @@ export function CoGmSettings({ world }: { world: World }) {
   return (
     <>
       <h3 className="share-heading">
-        📖 Co-GMs <Help topic="coGM" />
+        <Ico as={BookOpen} /> Co-GMs <Help topic="coGM" />
       </h3>
       <p className="muted">
         A co-GM sees and edits everything, secrets included. Only send this link to someone you’d trust with your GM notes.

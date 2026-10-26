@@ -6,6 +6,8 @@ import { deleteCloudCopy, disableCloud, enableCloud, syncNow, syncStore } from '
 import type { World } from '../db'
 import { myRole } from '../cloud/players'
 import { CoGmSettings, PlayersSettings } from '../players/PlayersSettings'
+import { Ico } from '../icons'
+import { BookOpen, Cloud, Scroll } from '@phosphor-icons/react'
 
 /** World settings section: turn on sync, and manage the player share link. */
 export default function CloudSettings({ world }: { world: World }) {
@@ -40,7 +42,7 @@ export default function CloudSettings({ world }: { world: World }) {
   return (
     <section>
       <h2>
-        ☁️ Cloud sync, sharing and players <Help topic="cloudSync" />
+        <Ico as={Cloud} /> Cloud sync, sharing and players <Help topic="cloudSync" />
       </h2>
       {!user ? (
         <>
@@ -76,7 +78,7 @@ export default function CloudSettings({ world }: { world: World }) {
           {sync.message && <p className="notice small">{sync.message}</p>}
           {coGM && (
             <p className="notice small">
-              📖 You’re a co-GM of this world <Help topic="coGM" />. Everything you change syncs to the other GM. Share links, players and
+              <Ico as={BookOpen} /> You’re a co-GM of this world <Help topic="coGM" />. Everything you change syncs to the other GM. Share links, players and
               the cloud copy are managed by the world’s owner.
             </p>
           )}
@@ -99,7 +101,7 @@ export default function CloudSettings({ world }: { world: World }) {
           <>
 
           <h3 className="share-heading">
-            📜 Public wiki link <Help topic="shareLink" />
+            <Ico as={Scroll} /> Public wiki link <Help topic="shareLink" />
           </h3>
           <p className="muted">
             A read-only wiki of your world for anyone with the link, no account needed: friends outside the group, or a player before

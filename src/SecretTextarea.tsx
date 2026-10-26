@@ -4,6 +4,8 @@ import { db } from './db'
 import { Help } from './help'
 import { saveFileAsAsset } from './hooks'
 import { forNames } from './Markdown'
+import { Ico } from './icons'
+import { EyeClosed, Image, Lock, Shield } from '@phosphor-icons/react'
 
 /**
  * A Markdown text box for GM writing, with buttons to add a GM secret or a secret for chosen
@@ -126,7 +128,7 @@ export function SecretTextarea({
           <span className="small muted">Who is it for?</span>
           {suggestions.map((s) => (
             <button key={s.label} type="button" className="chip" onMouseDown={(e) => e.preventDefault()} onClick={() => pick(s.insert)}>
-              🛡️ {s.label}
+              <Ico as={Shield} /> {s.label}
             </button>
           ))}
           {pcs.length === 0 && <span className="small muted">No player characters yet.</span>}
@@ -138,7 +140,7 @@ export function SecretTextarea({
       ) : null}
       <div className="row wrap secret-buttons">
         <button type="button" className="ghost small" title="Hide a passage from every player" onClick={() => insertBlock('gm')}>
-          🔒 GM-only passage
+          <Ico as={Lock} /> GM-only passage
         </button>
         <button
           type="button"
@@ -146,10 +148,10 @@ export function SecretTextarea({
           title="A passage only the players of the characters you name will see"
           onClick={() => insertBlock('for')}
         >
-          🤫 Secret for…
+          <Ico as={EyeClosed} /> Secret for…
         </button>
         <label className="button ghost small" title="Put a picture in the text (you can also paste or drop one)">
-          🖼️ Picture
+          <Ico as={Image} /> Picture
           <input
             type="file"
             accept="image/*"

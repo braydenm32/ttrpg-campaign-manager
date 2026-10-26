@@ -1,21 +1,24 @@
-import { Help } from '../help'
+import { Help, HELP } from '../help'
+import { WorldCover } from '../WorldCover'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Empty, Modal } from '../components'
-import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel } from '../db'
+import { Modal } from '../components'
+import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel, type Entity, type World } from '../db'
 import { useCreatePage } from '../NewPage'
-import { useVisibleEntities, useWorld } from '../hooks'
-import { plainLinks } from '../text'
-import { URGENCY, useCampaigns } from '../threads'
-import { searchWorld, useSearchable } from '../search'
+import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
+import { initials } from '../text'
+import { nextSessions, URGENCY, useCampaigns } from '../threads'
 import { useViewMode } from '../viewMode'
-import { WorldToday } from '../calendar'
 import { BackupReminder } from '../BackupReminder'
 import WikiHome from './WikiHome'
 import PlayerHome from './PlayerHome'
-import { localDate } from '../sessions'
 import { showDate, upcoming } from '../players/Schedule'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { ClockFace, useAllClocks } from '../clocks'
+import { useGmQuestions } from '../players/Questions'
+import { useCharacterOwners } from '../players/owners'
+import { Ico, TypeIcon } from '../icons'
+import { ChatCircleDots, ListChecks, Play, Plus, Spiral, UserCirclePlus } from '@phosphor-icons/react'
 
 export default function Dashboard() {
   const { worldId, world } = useWorld()
@@ -23,20 +26,15 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const entities = useVisibleEntities(worldId)
   const campaigns = useCampaigns(worldId)
-  const [query, setQuery] = useState('')
   const [newCampaign, setNewCampaign] = useState(false)
 
-  const q = query.trim().toLowerCase()
-  const searchable = useSearchable(worldId)
-  const results = searchWorld(query, { worldId, world, ...searchable })
-  const recent = [...entities].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 8)
+  const recent = [...entities].filter((e) => e.type !== 'thread').sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 8)
   const urgencyRank = { high: 0, normal: 1, low: 2 }
   const openThreads = entities
     .filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active'))
     .sort((a, b) => urgencyRank[a.threadUrgency ?? 'normal'] - urgencyRank[b.threadUrgency ?? 'normal'] || b.updatedAt - a.updatedAt)
   const openQuests = entities.filter((e) => e.type === 'quest' && (e.questStatus === 'open' || e.questStatus === 'active'))
-
-  const quickCreate = useCreatePage(world)
+  const clocks = useAllClocks(entities).filter(({ clock }) => clock.filled < clock.segments)
 
   if (!world) return null
   // Opened from a public wiki link: a tidy front page for readers instead of the GM's overview.
@@ -44,131 +42,110 @@ export default function Dashboard() {
   // Players (and the GM previewing as one) get their own front page.
   if (!isGM) return <PlayerHome world={world} />
   return (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <h1>
-            {world.name} <Help topic="overview" />
-          </h1>
-          <div className="muted">{world.system}</div>
-        </div>
-      </header>
-      {world.description && <p className="lead">{world.description}</p>}
-      {isGM && <BackupReminder world={world} />}
-      <WorldToday world={world} isGM={isGM} />
+    <div className="page home-page">
+      <WorldCover world={world}>
+        <NewPageMenu world={world} />
+      </WorldCover>
+      <BackupReminder world={world} />
       {entities.length < 3 && campaigns.length === 0 && <GettingStarted worldId={worldId} />}
-      <NextSessions worldId={worldId} />
 
-      <input
-        className="search"
-        placeholder="Search pages, text, sessions and maps…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
-      {q && (
-        <ul className="entity-list">
-          {results.map((h) => (
-            <li key={h.key}>
-              <Link to={h.to}>
-                {h.icon} {h.title}
-              </Link>
-              {h.snippet && <span className="muted"> · {h.snippet}</span>}
-            </li>
-          ))}
-          {results.length === 0 && <li className="muted">Nothing matches.</li>}
-        </ul>
-      )}
+      <div className="home-grid">
+        <NextSessions worldId={worldId} onNewCampaign={() => setNewCampaign(true)} />
+        <NeedsYou world={world} threads={openThreads.filter((t) => t.threadUrgency === 'high')} />
+        <section className="card">
+          <h3>
+            <Link to={`/w/${worldId}/clocks`}>Clocks</Link> <Help topic="clocks" />
+          </h3>
+          {clocks.length === 0 ? (
+            <p className="muted small">No clocks ticking. Add one to a faction or loose thread to track a plan or a threat.</p>
+          ) : (
+            <div className="home-clocks">
+              {clocks.slice(0, 4).map(({ clock, owner }) => (
+                <Link key={clock.id} className="home-clock" to={`/w/${worldId}/e/${owner.id}`}>
+                  <ClockFace clock={clock} size={34} />
+                  <span>
+                    {clock.name}
+                    <small className="muted">
+                      {clock.filled} of {clock.segments} · {owner.name}
+                    </small>
+                  </span>
+                </Link>
+              ))}
+              {clocks.length > 4 && <Link to={`/w/${worldId}/clocks`}>All {clocks.length} clocks…</Link>}
+            </div>
+          )}
+        </section>
+      </div>
 
-      {isGM && (
-        <section>
-          <h2>
-            Quick add <Help topic="quickAdd" />
-          </h2>
-          <div className="row wrap">
-            {PICKER_TYPES.map((t) => (
-              <button key={t} onClick={() => quickCreate(t)}>
-                {ENTITY_LABELS[t].icon} {ENTITY_LABELS[t].one}
-              </button>
-            ))}
-            {world.customTypes?.map((c) => (
-              <button key={c.id} onClick={() => quickCreate('custom', c.id)}>
-                {c.icon} {c.one}
-              </button>
+      <section className="card">
+        <h3>Recently changed</h3>
+        {recent.length === 0 ? (
+          <p className="muted small">Nothing here yet. Use New page to start your world.</p>
+        ) : (
+          <div className="tiles">
+            {recent.map((e) => (
+              <PageTile key={e.id} entity={e} world={world} />
             ))}
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
-      <div className="two-col">
-        <section>
+      <div className="home-grid">
+        <section className="card">
           <div className="section-header">
-            <h2>
+            <h3>
               Campaigns <Help topic="campaign" />
-            </h2>
-            {isGM && <button onClick={() => setNewCampaign(true)}>+ Campaign</button>}
+            </h3>
+            <button className="small" onClick={() => setNewCampaign(true)}>+ Campaign</button>
           </div>
           {campaigns.length === 0 ? (
-            <Empty>A campaign is one group's story in this world. You can run several in the same world.</Empty>
+            <p className="muted small">A campaign is one group's story in this world. You can run several in the same world.</p>
           ) : (
             <ul className="entity-list">
               {campaigns.map((c) => (
                 <li key={c.id}>
-                  <Link to={`/w/${worldId}/c/${c.id}`}>🎲 {c.name}</Link>
+                  <Link to={`/w/${worldId}/c/${c.id}`}>{c.name}</Link>
                   <span className="muted"> · {c.status}</span>
                 </li>
               ))}
             </ul>
           )}
-          <h2>Open quests</h2>
+        </section>
+        <section className="card">
+          <h3>Open quests</h3>
           {openQuests.length === 0 ? (
-            <Empty>No open quests.</Empty>
+            <p className="muted small">No open quests.</p>
           ) : (
             <ul className="entity-list">
               {openQuests.map((e) => (
                 <li key={e.id}>
-                  <Link to={`/w/${worldId}/e/${e.id}`}>🧭 {e.name}</Link>
+                  <Link to={`/w/${worldId}/e/${e.id}`}>{e.name}</Link>
                   <span className="muted"> · {e.questStatus}</span>
                 </li>
               ))}
             </ul>
           )}
-          <h2>
-            <Link to={`/w/${worldId}/threads`}>🧵 Loose threads</Link>
-          </h2>
+        </section>
+        <section className="card">
+          <h3>
+            <Link to={`/w/${worldId}/threads`}>Loose threads</Link>
+          </h3>
           {openThreads.length === 0 ? (
-            <Empty>No loose threads.</Empty>
+            <p className="muted small">No loose threads.</p>
           ) : (
             <ul className="entity-list">
-              {openThreads.slice(0, 6).map((e) => (
+              {openThreads.slice(0, 5).map((e) => (
                 <li key={e.id}>
                   <Link to={`/w/${worldId}/e/${e.id}`}>
                     {e.threadUrgency && URGENCY[e.threadUrgency].icon} {e.name}
                   </Link>
-                  {e.summary && <span className="muted"> · {plainLinks(e.summary)}</span>}
                 </li>
               ))}
-              {openThreads.length > 6 && (
+              {openThreads.length > 5 && (
                 <li>
-                  <Link to={`/w/${worldId}/threads`}>…and {openThreads.length - 6} more</Link>
+                  <Link to={`/w/${worldId}/threads`}>…and {openThreads.length - 5} more</Link>
                 </li>
               )}
-            </ul>
-          )}
-        </section>
-        <section>
-          <h2>Recently updated</h2>
-          {recent.length === 0 ? (
-            <Empty>Nothing here yet.</Empty>
-          ) : (
-            <ul className="entity-list">
-              {recent.map((e) => (
-                <li key={e.id}>
-                  <Link to={`/w/${worldId}/e/${e.id}`}>
-                    {typeLabel(e, world).icon} {e.name}
-                  </Link>
-                  {e.summary && <span className="muted"> · {plainLinks(e.summary)}</span>}
-                </li>
-              ))}
             </ul>
           )}
         </section>
@@ -182,6 +159,95 @@ export default function Dashboard() {
         />
       )}
     </div>
+  )
+}
+
+/** "New page": one button with every page type, instead of a row of quick-add buttons. */
+function NewPageMenu({ world }: { world: World }) {
+  const create = useCreatePage(world)
+  const [open, setOpen] = useState(false)
+  return (
+    <span className="menu-wrap new-page-menu">
+      <button className="primary" aria-expanded={open} onClick={() => setOpen(!open)} title={HELP.quickAdd}>
+        <Ico as={Plus} /> New page
+      </button>
+      {open && (
+        <span className="menu" onMouseLeave={() => setOpen(false)}>
+          {PICKER_TYPES.map((t) => (
+            <button key={t} onClick={() => create(t)}>
+              <TypeIcon type={t} /> {ENTITY_LABELS[t].one}
+            </button>
+          ))}
+          {world.customTypes?.map((c) => (
+            <button key={c.id} onClick={() => create('custom', c.id)}>
+              <TypeIcon type="custom" custom={c} /> {c.one}
+            </button>
+          ))}
+        </span>
+      )}
+    </span>
+  )
+}
+
+/** A page as a little card with its picture, or its initials when it has none. */
+function PageTile({ entity: e, world }: { entity: Entity; world: World }) {
+  const image = useAssetUrl(e.imageId)
+  return (
+    <Link className="tile" to={`/w/${world.id}/e/${e.id}`}>
+      <span className="tile-picture">{image ? <img src={image} alt="" /> : <span aria-hidden="true">{initials(e.name)}</span>}</span>
+      <span className="tile-text">
+        {e.name}
+        <small>
+          <TypeIcon type={e.type} custom={world.customTypes?.find((c) => c.id === e.customType)} size="1em" /> {typeLabel(e, world).one}
+        </small>
+      </span>
+    </Link>
+  )
+}
+
+/** What's waiting on the GM: questions, character claims and urgent threads. */
+function NeedsYou({ world, threads }: { world: World; threads: Entity[] }) {
+  const questions = useGmQuestions(world)
+  const waiting = questions.questions.filter((q) => !q.answer)
+  const { owners } = useCharacterOwners(world.cloud?.enabled ? world : undefined)
+  const claims = [...owners.values()].filter((o) => o.pending).length
+  const count = waiting.length + claims + threads.length
+  return (
+    <section className="card needs-you">
+      <h3>
+        Needs you {count > 0 && <span className="count alert">{count}</span>} <Help topic="needsYou" />
+      </h3>
+      {count === 0 && <p className="muted small">All caught up.</p>}
+      <ul className="entity-list">
+        {waiting.slice(0, 4).map((q) => (
+          <li key={q.id}>
+            <Link to={`/w/${world.id}/questions`}>
+              <Ico as={ChatCircleDots} /> {q.body.length > 70 ? `${q.body.slice(0, 70)}…` : q.body}
+            </Link>
+          </li>
+        ))}
+        {waiting.length > 4 && (
+          <li>
+            <Link to={`/w/${world.id}/questions`}>…and {waiting.length - 4} more questions</Link>
+          </li>
+        )}
+        {claims > 0 && (
+          <li>
+            <Link to={`/w/${world.id}/settings?tab=players`}>
+              <Ico as={UserCirclePlus} /> {claims} character claim{claims === 1 ? '' : 's'} to approve
+            </Link>
+          </li>
+        )}
+        {threads.map((t) => (
+          <li key={t.id}>
+            <Link to={`/w/${world.id}/e/${t.id}`}>
+              <Ico as={Spiral} /> {t.name}
+            </Link>
+            <span className="muted small"> · urgent thread</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
@@ -240,59 +306,53 @@ function NewCampaign({
 }
 
 /** The GM's "what's next" card: each campaign's coming session, with its prep and the Lectern a click away. */
-function NextSessions({ worldId }: { worldId: string }) {
+function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampaign: () => void }) {
   const campaigns = useCampaigns(worldId)
   const sessions = useLiveQuery(() => db.sessions.where({ worldId }).toArray(), [worldId]) ?? []
-  const today = localDate()
-  const cards = campaigns
-    .filter((c) => c.status !== 'finished')
-    .map((c) => {
-      const own = sessions.filter((s) => s.campaignId === c.id).sort((a, b) => a.number - b.number)
-      // The first session not played yet: dated today or later, or with nothing recapped.
-      const next = own.find((s) => s.date >= today && !s.recap.trim()) ?? own.at(-1)
-      return { c, next, booked: upcoming(c) }
-    })
-    .filter((x) => x.next || x.booked)
-  if (!cards.length) return null
+  const cards = nextSessions(campaigns, sessions)
+  const booked = campaigns.filter((c) => c.status !== 'finished' && upcoming(c) && !cards.some((x) => x.campaign.id === c.id))
   return (
-    <section className="next-sessions">
-      <h2>
+    <section className="card next-sessions">
+      <h3>
         Next session <Help topic="nextSession" />
-      </h2>
-      <div className="card-grid">
-        {cards.map(({ c, next, booked }) => {
-          const clues = next?.prep?.clues.filter((x) => !x.done && x.text.trim()).length ?? 0
-          const scenes = next?.prep?.scenes.filter((x) => !x.done && x.text.trim()).length ?? 0
-          return (
-            <div key={c.id} className="card">
-              <div className="muted small">🎲 {c.name}</div>
-              {next ? (
-                <Link to={`/w/${worldId}/s/${next.id}`}>
-                  <strong>
-                    #{next.number} {next.title}
-                  </strong>
-                </Link>
-              ) : (
-                <strong>No session yet</strong>
-              )}
-              <div className="muted small">
-                {booked ? `📌 ${showDate(booked)}` : next?.date}
-                {next && (clues || scenes) ? ` · ${scenes} scene${scenes === 1 ? '' : 's'}, ${clues} clue${clues === 1 ? '' : 's'} ready` : ''}
-              </div>
-              {next && (
-                <div className="row wrap">
-                  <Link className="button small" to={`/w/${worldId}/s/${next.id}?tab=prep`}>
-                    📋 Prep
-                  </Link>
-                  <Link className="button small primary" to={`/w/${worldId}/s/${next.id}/lectern`}>
-                    📖 Run at the Lectern
-                  </Link>
-                </div>
-              )}
+      </h3>
+      {!cards.length && !booked.length && (
+        <p className="muted small">
+          No sessions yet. <button className="link" onClick={onNewCampaign}>Make a campaign</button>, then add its first session.
+        </p>
+      )}
+      {cards.map(({ campaign: c, session: next }) => {
+        const clues = next.prep?.clues.filter((x) => !x.done && x.text.trim()).length ?? 0
+        const scenes = next.prep?.scenes.filter((x) => !x.done && x.text.trim()).length ?? 0
+        const when = upcoming(c)
+        return (
+          <div key={c.id} className="next-session">
+            <div className="kicker">{c.name}</div>
+            <Link className="next-title" to={`/w/${worldId}/s/${next.id}`}>
+              #{next.number} {next.title}
+            </Link>
+            <div className="muted small">
+              {when ? showDate(when) : next.date}
+              {clues || scenes ? ` · ${scenes} scene${scenes === 1 ? '' : 's'}, ${clues} clue${clues === 1 ? '' : 's'} ready` : ''}
             </div>
-          )
-        })}
-      </div>
+            <div className="row wrap">
+              <Link className="button primary" to={`/w/${worldId}/s/${next.id}/lectern`} title={HELP.lectern}>
+                <Ico as={Play} weight="fill" /> Run session
+              </Link>
+              <Link className="button" to={`/w/${worldId}/s/${next.id}?tab=prep`}>
+                <Ico as={ListChecks} /> Prep
+              </Link>
+            </div>
+          </div>
+        )
+      })}
+      {booked.map((c) => (
+        <div key={c.id} className="next-session">
+          <div className="kicker">{c.name}</div>
+          <Link to={`/w/${worldId}/c/${c.id}`}>No session yet</Link>
+          <div className="muted small">{showDate(upcoming(c)!)}</div>
+        </div>
+      ))}
     </section>
   )
 }

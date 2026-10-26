@@ -7,6 +7,8 @@ import { downloadCloudWorld } from '../cloud/sync'
 import { cloudErrorMessage } from '../cloud/client'
 import { Help } from '../help'
 import { db } from '../db'
+import { Ico } from '../icons'
+import { BookOpen, MaskHappy } from '@phosphor-icons/react'
 
 /** Opening a player invite link: sign in, say what to call you, and join the GM's world. */
 export default function JoinWorld() {
@@ -51,7 +53,7 @@ export default function JoinWorld() {
       <div className="card join-card">
         {asGM ? (
           <>
-            <h2>📖 You’re invited to co-GM a world</h2>
+            <h2><Ico as={BookOpen} /> You’re invited to co-GM a world</h2>
             <p className="muted">
               You’ll get the whole world on your device, secrets included, and anything you change syncs back to the other GM.
             </p>
@@ -59,7 +61,7 @@ export default function JoinWorld() {
         ) : (
           <>
             <h2>
-              🎭 You’re invited to a world <Help topic="joining" />
+              <Ico as={MaskHappy} /> You’re invited to a world <Help topic="joining" />
             </h2>
             <p className="muted">
               Your GM has invited you to play. You’ll see everything they’ve revealed, kept up to date as they add to it, and you can

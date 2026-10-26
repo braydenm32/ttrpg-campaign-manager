@@ -8,6 +8,7 @@ import { StatusBadge } from './status'
 import { plainLinks } from './text'
 import { nameIndex, namesOf } from './links'
 import { characterNames, useViewMode } from './viewMode'
+import { TypeIcon } from './icons'
 
 type Segment = { kind: 'text' | 'gm' | 'foryou'; body: string } | { kind: 'for'; names: string[]; body: string }
 
@@ -218,7 +219,7 @@ function LinkPeek({ entity: e, left, top, below }: { entity: Entity; left: numbe
       {image && <img src={image} alt="" />}
       <div>
         <div className="muted small">
-          {ENTITY_LABELS[e.type].icon} {ENTITY_LABELS[e.type].one}
+          <TypeIcon type={e.type} /> {ENTITY_LABELS[e.type].one}
         </div>
         <strong>{e.name}</strong> {e.status && <StatusBadge entity={e} />}
         {e.summary && <p className="small">{plainLinks(e.summary)}</p>}
