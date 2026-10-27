@@ -8,6 +8,7 @@ import { Markdown, stripSecrets } from './Markdown'
 import { schedule } from './cloud/sync'
 import { Ico } from './icons'
 import { Television } from '@phosphor-icons/react'
+import { worldPath } from './paths'
 
 /**
  * "Show to players": the GM puts a picture, a page or some text on every player's screen.
@@ -131,7 +132,7 @@ export function ShowingBanner({ world }: { world: World }) {
   return (
     <div className="player-banner showing-banner">
       <Ico as={Television} /> Showing players: <strong>{world.showing.title}</strong>
-      <Link className="button" to={`/screen/${world.id}`} target="_blank">
+      <Link className="button" to={`/screen${worldPath(world.id).slice(2)}`} target="_blank">
         Players’ screen
       </Link>
       <button onClick={() => stopShowing(world.id)}>Stop showing</button>
@@ -268,14 +269,14 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
           </div>
         </form>
       )}
-      <Link className="small" to={`/screen/${world.id}`} target="_blank">
+      <Link className="small" to={`/screen${worldPath(world.id).slice(2)}`} target="_blank">
         Open the players’ screen (for a TV) ↗
       </Link>{' '}
       <Help topic="playersScreen" />
       {!!world.handouts?.length && (
         <>
           {' · '}
-          <Link className="small" to={`/w/${world.id}/handouts`}>
+          <Link className="small" to={`${worldPath(world.id)}/handouts`}>
             Handouts ({world.handouts.length})
           </Link>
         </>

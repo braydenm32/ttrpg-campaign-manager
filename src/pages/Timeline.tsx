@@ -9,6 +9,7 @@ import { formatDate, MonthGrid, WorldToday } from '../calendar'
 import { useWorldSessions } from '../threads'
 import { Ico } from '../icons'
 import { Hourglass } from '@phosphor-icons/react'
+import { pagePath } from '../paths'
 
 export default function Timeline() {
   const { worldId, world } = useWorld()
@@ -52,7 +53,7 @@ export default function Timeline() {
     e.eventOrder = Date.now()
     if (place) e.parentId = place
     await db.entities.add(e)
-    navigate(`/w/${worldId}/e/${e.id}?edit=1`)
+    navigate(`${pagePath(worldId, e.id)}?edit=1`)
   }
 
   return (
@@ -101,7 +102,7 @@ export default function Timeline() {
                 <li key={e.id}>
                   <div className="when">{formatDate(world?.calendar, e.eventWhen, false) || e.eventDate || '—'}</div>
                   <div className="what">
-                    <Link to={`/w/${worldId}/e/${e.id}`}>{e.name}</Link> <VisibilityBadge value={e.visibility} />
+                    <Link to={`${pagePath(worldId, e.id)}`}>{e.name}</Link> <VisibilityBadge value={e.visibility} />
                     {e.parentId && byId.get(e.parentId) && <span className="muted"> · {byId.get(e.parentId)!.name}</span>}
                     {e.summary && <div className="muted small">{e.summary}</div>}
                   </div>

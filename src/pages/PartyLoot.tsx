@@ -7,6 +7,7 @@ import { useVisibleEntities, useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { Backpack } from '@phosphor-icons/react'
+import { pagePath } from '../paths'
 
 /**
  * Party loot: every item someone is carrying, grouped by who has it, plus the party's coin.
@@ -30,7 +31,7 @@ export default function PartyLoot() {
     ...[...new Map([...pcs, ...holders].map((h) => [h.id, h])).values()].map((h) => ({
       id: h.id,
       name: `${h.type === 'pc' ? '🛡️' : '🧙'} ${h.name}`,
-      link: `/w/${worldId}/e/${h.id}`,
+      link: `${pagePath(worldId, h.id)}`,
       items: carried.filter((i) => i.heldBy === h.id),
     })),
   ]
@@ -86,7 +87,7 @@ function ItemList({ items, worldId, holders, isGM }: { items: Entity[]; worldId:
             ) : (
               <span className="qty">{i.quantity ?? 1}×</span>
             )}{' '}
-            <Link to={`/w/${worldId}/e/${i.id}`}>{i.name}</Link> <VisibilityBadge value={i.visibility} />
+            <Link to={`${pagePath(worldId, i.id)}`}>{i.name}</Link> <VisibilityBadge value={i.visibility} />
             {i.summary && <span className="muted small"> · {i.summary}</span>}
           </span>
           {isGM && (

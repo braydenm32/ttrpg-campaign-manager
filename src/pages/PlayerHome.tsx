@@ -12,6 +12,7 @@ import { plainLinks } from '../text'
 import { latestSession, useCampaigns, useWorldSessions } from '../threads'
 import { Ico, PageIcon } from '../icons'
 import { Newspaper, Question, Scroll, Shield, Spiral } from '@phosphor-icons/react'
+import { pagePath, worldPath } from '../paths'
 
 /**
  * The overview for players (and the GM's player view): the next session, "previously on…" from the
@@ -40,7 +41,7 @@ export default function PlayerHome({ world }: { world: World }) {
     <div className="page player-home">
       <WorldCover world={world} help="playerHome">
         {memberOf && (
-          <Link className="button" to={`/w/${worldId}/questions`}>
+          <Link className="button" to={`${worldPath(worldId)}/questions`}>
             <Ico as={Question} /> Ask the GM
           </Link>
         )}
@@ -70,7 +71,7 @@ export default function PlayerHome({ world }: { world: World }) {
           <h2><Ico as={Scroll} /> Previously on…</h2>
           {last ? (
             <div className="card">
-              <Link to={`/w/${worldId}/s/${last.id}`}>
+              <Link to={`${worldPath(worldId)}/s/${last.id}`}>
                 <strong>
                   #{last.number} {last.title}
                 </strong>
@@ -89,7 +90,7 @@ export default function PlayerHome({ world }: { world: World }) {
             <ul className="entity-list">
               {[...quests, ...leads].slice(0, 10).map((e) => (
                 <li key={e.id}>
-                  <Link to={`/w/${worldId}/e/${e.id}`}>
+                  <Link to={`${pagePath(worldId, e.id)}`}>
                     <PageIcon page={e} world={world} /> {e.name}
                   </Link>
                   {e.summary && <span className="muted"> · {plainLinks(e.summary)}</span>}
@@ -110,12 +111,12 @@ export default function PlayerHome({ world }: { world: World }) {
           {handouts.length > 0 && (
             <>
               <h2>
-                <Link to={`/w/${worldId}/handouts`}><Ico as={Newspaper} /> Handouts</Link>
+                <Link to={`${worldPath(worldId)}/handouts`}><Ico as={Newspaper} /> Handouts</Link>
               </h2>
               <ul className="entity-list">
                 {handouts.map((h) => (
                   <li key={h.id}>
-                    <Link to={`/w/${worldId}/handouts`}>
+                    <Link to={`${worldPath(worldId)}/handouts`}>
                       {{ image: '🖼️', page: '📄', text: '📝' }[h.kind]} {h.title}
                     </Link>
                   </li>
@@ -130,7 +131,7 @@ export default function PlayerHome({ world }: { world: World }) {
             <ul className="entity-list">
               {recent.map((e) => (
                 <li key={e.id}>
-                  <Link to={`/w/${worldId}/e/${e.id}`}>
+                  <Link to={`${pagePath(worldId, e.id)}`}>
                     <PageIcon page={e} world={world} /> {e.name}
                   </Link>
                   {e.summary && <span className="muted"> · {plainLinks(e.summary)}</span>}
@@ -147,7 +148,7 @@ export default function PlayerHome({ world }: { world: World }) {
 function MyCharacterCard({ worldId, id, name, summary, imageId }: { worldId: string; id: string; name: string; summary: string; imageId?: string }) {
   const image = useAssetUrl(imageId)
   return (
-    <Link className="card my-character" to={`/w/${worldId}/e/${id}`}>
+    <Link className="card my-character" to={`${pagePath(worldId, id)}`}>
       {image && <img src={image} alt="" />}
       <div>
         <strong>{name}</strong>

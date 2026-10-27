@@ -6,6 +6,7 @@ import type { PlayerQuestion, World } from '../db'
 import { Help } from '../help'
 import { Ico } from '../icons'
 import { Question } from '@phosphor-icons/react'
+import { pagePath } from '../paths'
 
 /**
  * Players' questions to the GM. A player asks about a page (or anything, from the Questions page);
@@ -125,7 +126,7 @@ export function useGmQuestions(world: World | null | undefined) {
 export const pageLink = (worldId: string, entityId: string, name: string | undefined) =>
   entityId ? (
     <div className="small muted">
-      About <Link to={`/w/${worldId}/e/${entityId}`}>{name ?? 'a page'}</Link>
+      About <Link to={`${pagePath(worldId, entityId)}`}>{name ?? 'a page'}</Link>
     </div>
   ) : (
     <div className="small muted">General question</div>

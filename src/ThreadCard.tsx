@@ -6,6 +6,7 @@ import { plainLinks } from './text'
 import { useViewMode } from './viewMode'
 import { Ico, TypeIcon } from './icons'
 import { Graph } from '@phosphor-icons/react'
+import { pagePath } from './paths'
 
 const sessionName = (sessions: Session[], id?: string) => {
   const s = id && sessions.find((x) => x.id === id)
@@ -42,7 +43,7 @@ export function ThreadCard({
   return (
     <div className={`thread-card status-${status} urgency-${t.threadUrgency ?? 'normal'}`}>
       <div className="row spread">
-        <Link to={`/w/${worldId}/e/${t.id}`} className="thread-name">
+        <Link to={`${pagePath(worldId, t.id)}`} className="thread-name">
           {urgency.icon && <span title={urgency.label}>{urgency.icon} </span>}
           {t.name}
         </Link>
@@ -52,7 +53,7 @@ export function ThreadCard({
       {links.length > 0 && (
         <div className="tags">
           {links.map((e) => (
-            <Link key={e.id} className="tag" to={`/w/${worldId}/e/${e.id}`}>
+            <Link key={e.id} className="tag" to={`${pagePath(worldId, e.id)}`}>
               <TypeIcon type={e.type} /> {e.name}
             </Link>
           ))}

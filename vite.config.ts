@@ -2,9 +2,10 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// Relative base so the same build works on GitHub Pages (served from /<repo>/) and inside the Tauri desktop app.
+// Addresses like wardedatlas.com/w/eldoria/locations need files loaded from the site's root, so the base is "/".
+// The old GitHub Pages copy lives in a folder, so its build passes --base ./ (see .github/workflows/web.yml).
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: [
     react(),
     // The speech engine's own copy of its 26 MB runtime is never loaded: transformers.js fetches the

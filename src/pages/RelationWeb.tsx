@@ -8,6 +8,7 @@ import { familyOf, linksOf, toneOf } from '../relations'
 import { useViewMode } from '../viewMode'
 import { Ico, TypeIcon } from '../icons'
 import { Graph } from '@phosphor-icons/react'
+import { pagePath } from '../paths'
 
 interface Edge {
   id: string
@@ -104,7 +105,7 @@ export default function RelationWeb() {
           {focused && (
             <aside className="web-side card">
               <h2>
-                <Link to={`/w/${worldId}/e/${focused.id}`}>
+                <Link to={`${pagePath(worldId, focused.id)}`}>
                   <TypeIcon type={focused.type} /> {focused.name}
                 </Link>
               </h2>

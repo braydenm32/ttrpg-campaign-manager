@@ -9,6 +9,7 @@ import { useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { HandPalm, Shield } from '@phosphor-icons/react'
+import { worldPath } from '../paths'
 
 /**
  * Safety tools: the table's lines (never in the game) and veils (off screen only), notes on other
@@ -91,7 +92,7 @@ export default function SafetyPage() {
       )}
       {memberOf && (
         <p className="muted small">
-          Something you’d rather say privately? <Link to={`/w/${world.id}/questions`}>Send your GM a private question</Link>.
+          Something you’d rather say privately? <Link to={`${worldPath(world.id)}/questions`}>Send your GM a private question</Link>.
         </p>
       )}
     </div>

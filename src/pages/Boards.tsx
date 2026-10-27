@@ -8,6 +8,7 @@ import { useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { PushPin } from '@phosphor-icons/react'
+import { worldPath } from '../paths'
 
 /** The world's corkboards. */
 export default function Boards() {
@@ -33,7 +34,7 @@ export default function Boards() {
           const id = newId()
           const now = Date.now()
           await db.boards.add({ id, worldId, name: n, cards: [], strings: [], createdAt: now, updatedAt: now })
-          navigate(`/w/${worldId}/boards/${id}`)
+          navigate(`${worldPath(worldId)}/boards/${id}`)
         }}
       >
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="New board, e.g. ‘Who killed the duke?’" />
@@ -46,7 +47,7 @@ export default function Boards() {
       ) : (
         <div className="card-grid">
           {boards.map((b) => (
-            <Link key={b.id} className="card" to={`/w/${worldId}/boards/${b.id}`}>
+            <Link key={b.id} className="card" to={`${worldPath(worldId)}/boards/${b.id}`}>
               <h3><Ico as={PushPin} /> {b.name}</h3>
               <p className="muted small">
                 {b.cards.length} card{b.cards.length === 1 ? '' : 's'} · {b.strings.length} string{b.strings.length === 1 ? '' : 's'}

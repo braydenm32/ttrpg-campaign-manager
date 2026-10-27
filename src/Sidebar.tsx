@@ -29,6 +29,7 @@ import { nextSessions, useCampaigns, useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
 import { useGmQuestions } from './players/Questions'
 import { useCharacterOwners } from './players/owners'
+import { pagePath, resolveCustom, resolvePage, SECTION_WORDS, sectionType, typePath, worldPath } from './paths'
 
 /** Longest list shown under a codex section before linking to the full list. */
 const MAX_CHILDREN = 25
@@ -44,7 +45,7 @@ export function modeOf(pathname: string, isGM: boolean): WorldMode | undefined {
   const rest = pathname.replace(/^\/w\/[^/]+\/?/, '')
   const first = rest.split('/')[0]
   if (!rest) return 'home'
-  if (['maps', 'type', 'e', 'timeline', 'web', 'assets'].includes(first)) return 'world'
+  if (['maps', 'type', 'e', 'p', 'timeline', 'web', 'assets', ...SECTION_WORDS].includes(first)) return 'world'
   if (first === 'settings') return undefined
   if (!isGM) return 'table'
   if (first === 's' && rest.endsWith('/lectern')) return 'play'
@@ -74,9 +75,11 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
   const sessionId = at('s/:sessionId')?.sessionId
   const currentSession = sessions.find((s) => s.id === sessionId)
   const campaignId = at('c/:campaignId')?.campaignId ?? currentSession?.campaignId
-  const entityId = at('e/:entityId')?.entityId
+  const pageParam = at('p/:entityId')?.entityId ?? at('e/:entityId')?.entityId
+  const entityId = pageParam && resolvePage(worldId, pageParam)
   const currentEntity = entities.find((e) => e.id === entityId)
-  const type = (at('type/:type')?.type as EntityType | undefined) ?? currentEntity?.type
+  const section = at(':section')?.section
+  const type = (at('type/:type')?.type as EntityType | undefined) ?? (section ? sectionType(section) : undefined) ?? currentEntity?.type
   const inMaps = !!at('maps')
 
   const byId = new Map(entities.map((e) => [e.id, e]))
@@ -108,7 +111,8 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
   )
 
   const countOf = (t: EntityType) => entities.filter((e) => e.type === t).length
-  const kind = at('type/custom/:kind')?.kind ?? (currentEntity?.type === 'custom' ? currentEntity.customType : undefined)
+  const kindParam = at('other/:kind')?.kind
+  const kind = (kindParam && resolveCustom(worldId, kindParam)) ?? at('type/custom/:kind')?.kind ?? (currentEntity?.type === 'custom' ? currentEntity.customType : undefined)
   const hasLoot = entities.some((e) => e.type === 'item' && e.heldBy) || !!world?.partyCoin?.length
   const gmQuestions = useGmQuestions(isGM && mode === 'play' ? world : undefined)
   const waiting = gmQuestions.questions.filter((q) => !q.answer).length
@@ -119,7 +123,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
   const pendingClaims = [...owners.values()].filter((o) => o.pending).length
   // Safety tools are for the table, not for wiki readers.
   const safetyLink = !world?.shared?.token && (isGM || !!world?.safety?.lines.length || !!world?.safety?.veils.length || !!world?.safety?.notes.trim() || !!world?.safety?.xcard) && (
-    <NavLink to={`/w/${worldId}/safety`} title={HELP.safety}><Ico as={HandPalm} /> Safety tools</NavLink>
+    <NavLink to={`${worldPath(worldId)}/safety`} title={HELP.safety}><Ico as={HandPalm} /> Safety tools</NavLink>
   )
   const openThreads = entities.filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active')).length
   const next = nextSessions(campaigns, sessions)[0]?.session
@@ -142,7 +146,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
             <div key={e.id}>
               <div className="nav-row">
                 {hasKids ? caret(key, auto, e.name) : <span className="nav-caret-space" />}
-                <NavLink to={`/w/${worldId}/e/${e.id}`}>{e.name}</NavLink>
+                <NavLink to={`${pagePath(worldId, e.id)}`}>{e.name}</NavLink>
               </div>
               {hasKids && open(key, auto) && depth < 12 && locationTree(e.id, depth + 1)}
             </div>
@@ -160,12 +164,12 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
     return (
       <div className="nav-children">
         {shown.map((e: Entity) => (
-          <NavLink key={e.id} to={`/w/${worldId}/e/${e.id}`}>
+          <NavLink key={e.id} to={`${pagePath(worldId, e.id)}`}>
             {e.name}
           </NavLink>
         ))}
         {list.length > shown.length && (
-          <NavLink end to={`/w/${worldId}/type/${t}${custom ? `/${custom.id}` : ''}`} className="nav-more">
+          <NavLink end to={`${typePath(worldId, t, custom?.id)}`} className="nav-more">
             All {list.length} {(custom ?? ENTITY_LABELS[t]).many.toLowerCase()}…
           </NavLink>
         )}
@@ -189,7 +193,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
             <div key={t}>
               <div className="nav-row">
                 {n > 0 ? caret(key, auto, ENTITY_LABELS[t].many.toLowerCase()) : <span className="nav-caret-space" />}
-                <NavLink end to={`/w/${worldId}/type/${t}`}>
+                <NavLink end to={`${typePath(worldId, t)}`}>
                   <TypeIcon type={t} /> {ENTITY_LABELS[t].many}
                   {n ? <span className="count">{n}</span> : null}
                 </NavLink>
@@ -207,7 +211,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
             <div key={c.id}>
               <div className="nav-row">
                 {n > 0 ? caret(key, auto, c.many.toLowerCase()) : <span className="nav-caret-space" />}
-                <NavLink end to={`/w/${worldId}/type/custom/${c.id}`}>
+                <NavLink end to={`${typePath(worldId, 'custom', c.id)}`}>
                   <TypeIcon type="custom" custom={c} /> {c.many}
                   {n ? <span className="count">{n}</span> : null}
                 </NavLink>
@@ -237,7 +241,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
         <div key={c.id}>
           <div className="nav-row">
             {own.length > 0 ? caret(key, auto, 'sessions') : <span className="nav-caret-space" />}
-            <NavLink end to={`/w/${worldId}/c/${c.id}`}>
+            <NavLink end to={`${worldPath(worldId)}/c/${c.id}`}>
               <Ico as={DiceFive} /> {c.name}
             </NavLink>
           </div>
@@ -245,7 +249,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
             <div className="nav-children">
               {own.map((s) => (
                 <div key={s.id}>
-                  <NavLink end to={`/w/${worldId}/s/${s.id}`}>
+                  <NavLink end to={`${worldPath(worldId)}/s/${s.id}`}>
                     #{s.number} {s.title}
                   </NavLink>
                 </div>
@@ -266,14 +270,14 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
           <>
             <div className="nav-row">
               {maps.length > 0 ? caret('maps', inMaps, 'maps') : <span className="nav-caret-space" />}
-              <NavLink end to={`/w/${worldId}/maps`} title={HELP.maps}><Ico as={MapTrifold} /> Maps</NavLink>
+              <NavLink end to={`${worldPath(worldId)}/maps`} title={HELP.maps}><Ico as={MapTrifold} /> Maps</NavLink>
             </div>
             {open('maps', inMaps) && maps.length > 0 && (
               <div className="nav-children">
                 {maps
                   .filter((m) => canSee(m.visibility))
                   .map((m) => (
-                    <NavLink key={m.id} to={`/w/${worldId}/maps/${m.id}`}>
+                    <NavLink key={m.id} to={`${worldPath(worldId)}/maps/${m.id}`}>
                       {m.name}
                     </NavLink>
                   ))}
@@ -281,12 +285,12 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
             )}
             <div className="nav-row">
               <span className="nav-caret-space" />
-              <NavLink to={`/w/${worldId}/timeline`} title={HELP.timeline}><Ico as={Hourglass} /> Timeline</NavLink>
+              <NavLink to={`${worldPath(worldId)}/timeline`} title={HELP.timeline}><Ico as={Hourglass} /> Timeline</NavLink>
             </div>
             {(isGM || hasLinks) && (
               <div className="nav-row">
                 <span className="nav-caret-space" />
-                <NavLink to={`/w/${worldId}/web`} title={HELP.relationWeb}><Ico as={Graph} /> Relationships</NavLink>
+                <NavLink to={`${worldPath(worldId)}/web`} title={HELP.relationWeb}><Ico as={Graph} /> Relationships</NavLink>
               </div>
             )}
           </>,
@@ -299,7 +303,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
             HELP.assets,
             <div className="nav-row">
               <span className="nav-caret-space" />
-              <NavLink to={`/w/${worldId}/assets`} title={HELP.assets}><Ico as={Folder} /> Files</NavLink>
+              <NavLink to={`${worldPath(worldId)}/assets`} title={HELP.assets}><Ico as={Folder} /> Files</NavLink>
             </div>,
           )}
       </nav>
@@ -314,11 +318,11 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
           'Story',
           HELP.threads,
           <>
-            <NavLink to={`/w/${worldId}/threads`} title={HELP.threads}>
+            <NavLink to={`${worldPath(worldId)}/threads`} title={HELP.threads}>
               <Ico as={Spiral} /> Loose threads
               {openThreads ? <span className="count">{openThreads}</span> : null}
             </NavLink>
-            <NavLink to={`/w/${worldId}/handouts`} title={HELP.handouts}><Ico as={Newspaper} /> Handouts</NavLink>
+            <NavLink to={`${worldPath(worldId)}/handouts`} title={HELP.handouts}><Ico as={Newspaper} /> Handouts</NavLink>
           </>,
         )}
         {group(
@@ -326,8 +330,8 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
           'Tools',
           HELP.prepTools,
           <>
-            <NavLink to={`/w/${worldId}/generators`} title={HELP.generators}><Ico as={DiceFive} /> Generators &amp; tables</NavLink>
-            <NavLink to={`/w/${worldId}/boards`} title={HELP.boards}><Ico as={PushPin} /> Corkboards</NavLink>
+            <NavLink to={`${worldPath(worldId)}/generators`} title={HELP.generators}><Ico as={DiceFive} /> Generators &amp; tables</NavLink>
+            <NavLink to={`${worldPath(worldId)}/boards`} title={HELP.boards}><Ico as={PushPin} /> Corkboards</NavLink>
           </>,
         )}
       </nav>
@@ -337,7 +341,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
     return (
       <nav>
         {next && (
-          <NavLink className="button primary nav-run" to={`/w/${worldId}/s/${next.id}/lectern`} title={HELP.lectern}>
+          <NavLink className="button primary nav-run" to={`${worldPath(worldId)}/s/${next.id}/lectern`} title={HELP.lectern}>
             <Ico as={Play} weight="fill" /> Run #{next.number} {next.title}
           </NavLink>
         )}
@@ -347,15 +351,15 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
           HELP.atTheTable,
           <>
             {currentSession && (
-              <NavLink to={`/w/${worldId}/s/${currentSession.id}/lectern`} title={HELP.lectern}><Ico as={BookOpen} /> The Lectern</NavLink>
+              <NavLink to={`${worldPath(worldId)}/s/${currentSession.id}/lectern`} title={HELP.lectern}><Ico as={BookOpen} /> The Lectern</NavLink>
             )}
-            <NavLink to={`/w/${worldId}/clocks`} title={HELP.clocks}>
+            <NavLink to={`${worldPath(worldId)}/clocks`} title={HELP.clocks}>
               <Ico as={Timer} /> Clocks
               {clockCount ? <span className="count">{clockCount}</span> : null}
             </NavLink>
-            <NavLink to={`/w/${worldId}/sounds`} title={HELP.soundboard}><Ico as={MusicNotes} /> Soundboard</NavLink>
+            <NavLink to={`${worldPath(worldId)}/sounds`} title={HELP.soundboard}><Ico as={MusicNotes} /> Soundboard</NavLink>
             {safetyLink}
-            <NavLink to={`/w/${worldId}/loot`} title={HELP.loot}><Ico as={Backpack} /> Party loot</NavLink>
+            <NavLink to={`${worldPath(worldId)}/loot`} title={HELP.loot}><Ico as={Backpack} /> Party loot</NavLink>
           </>,
         )}
         {(world?.cloud?.enabled || gmQuestions.available) &&
@@ -365,19 +369,19 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
             HELP.players,
             <>
               {world?.cloud?.enabled && (
-                <NavLink to={`/w/${worldId}/settings?tab=players`} title={HELP.players}>
+                <NavLink to={`${worldPath(worldId)}/settings?tab=players`} title={HELP.players}>
                   <Ico as={UsersThree} /> Players
                   {pendingClaims ? <span className="count alert">{pendingClaims}</span> : null}
                 </NavLink>
               )}
               {gmQuestions.available && (
-                <NavLink to={`/w/${worldId}/questions`} title={HELP.questionsGm}>
+                <NavLink to={`${worldPath(worldId)}/questions`} title={HELP.questionsGm}>
                   <Ico as={ChatCircleDots} /> Players’ questions
                   {waiting ? <span className="count alert">{waiting}</span> : null}
                 </NavLink>
               )}
               {world?.cloud?.enabled && (
-                <NavLink to={`/w/${worldId}/scratchpad`} title={HELP.gmPlayerNotes}><Ico as={Notepad} /> Players’ scratchpad</NavLink>
+                <NavLink to={`${worldPath(worldId)}/scratchpad`} title={HELP.gmPlayerNotes}><Ico as={Notepad} /> Players’ scratchpad</NavLink>
               )}
             </>,
           )}
@@ -392,22 +396,22 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
         'At the table',
         undefined,
         <>
-          <NavLink to={`/w/${worldId}/threads`} title={HELP.leads}>
+          <NavLink to={`${worldPath(worldId)}/threads`} title={HELP.leads}>
             <Ico as={Spiral} /> Leads
             {openThreads ? <span className="count">{openThreads}</span> : null}
           </NavLink>
-          {handouts > 0 && <NavLink to={`/w/${worldId}/handouts`} title={HELP.handouts}><Ico as={Newspaper} /> Handouts</NavLink>}
-          {hasLoot && <NavLink to={`/w/${worldId}/loot`} title={HELP.loot}><Ico as={Backpack} /> Party loot</NavLink>}
+          {handouts > 0 && <NavLink to={`${worldPath(worldId)}/handouts`} title={HELP.handouts}><Ico as={Newspaper} /> Handouts</NavLink>}
+          {hasLoot && <NavLink to={`${worldPath(worldId)}/loot`} title={HELP.loot}><Ico as={Backpack} /> Party loot</NavLink>}
           {clockCount > 0 && (
-            <NavLink to={`/w/${worldId}/clocks`} title={HELP.clocks}>
+            <NavLink to={`${worldPath(worldId)}/clocks`} title={HELP.clocks}>
               <Ico as={Timer} /> Clocks <span className="count">{clockCount}</span>
             </NavLink>
           )}
           {safetyLink}
           {world?.shared?.memberOf && (
             <>
-              <NavLink to={`/w/${worldId}/scratchpad`} title={HELP.scratchpad}><Ico as={Notepad} /> Scratchpad</NavLink>
-              <NavLink to={`/w/${worldId}/questions`} title={HELP.questions}><Ico as={ChatCircleDots} /> Questions for the GM</NavLink>
+              <NavLink to={`${worldPath(worldId)}/scratchpad`} title={HELP.scratchpad}><Ico as={Notepad} /> Scratchpad</NavLink>
+              <NavLink to={`${worldPath(worldId)}/questions`} title={HELP.questions}><Ico as={ChatCircleDots} /> Questions for the GM</NavLink>
             </>
           )}
         </>,

@@ -25,10 +25,13 @@ import { ClocksBox } from '../clocks'
 import { Ico, TypeIcon } from '../icons'
 import { Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Spiral, Television } from '@phosphor-icons/react'
 import { initials } from '../text'
+import { pagePath, resolvePage, typePath, usePathsVersion, worldPath } from '../paths'
 
 export default function EntityPage() {
   const { worldId } = useWorld()
-  const { entityId = '' } = useParams()
+  const { entityId: param = '' } = useParams()
+  usePathsVersion()
+  const entityId = resolvePage(worldId, param)
   const [params, setParams] = useSearchParams()
   const { isGM, canSeeEntity } = useViewMode()
   const stored = useLiveQuery(() => db.entities.get(entityId), [entityId])
@@ -76,15 +79,15 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   return (
     <div className="page entity-page">
       <nav className="runhead" aria-label="Where this page sits">
-        <Link to={`/w/${worldId}`}>{world?.name}</Link>
+        <Link to={`${worldPath(worldId)}`}>{world?.name}</Link>
         {ancestors.map((a) => (
           <span key={a.id}>
             {' › '}
-            <Link to={`/w/${worldId}/e/${a.id}`}>{a.name}</Link>
+            <Link to={`${pagePath(worldId, a.id)}`}>{a.name}</Link>
           </span>
         ))}
         {' › '}
-        <Link to={`/w/${worldId}/type/${e.type}${e.type === 'custom' && e.customType ? `/${e.customType}` : ''}`}>{typeLabel(e, world).many}</Link>
+        <Link to={typePath(worldId, e.type, e.customType)}>{typeLabel(e, world).many}</Link>
       </nav>
       <header className="page-header">
         <div>
@@ -107,7 +110,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
         </div>
         {isGM ? (
           <div className="row entity-actions">
-            <PrintButton to={`/w/${worldId}/print/e/${e.id}`} />
+            <PrintButton to={`${worldPath(worldId)}/print/e/${e.id}`} />
             {!e.template &&
               (e.visibility === 'players' ? (
                 <ShowButton worldId={worldId} what={{ kind: 'page', title: e.name, entityId: e.id }} />
@@ -126,7 +129,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           </div>
         ) : (
           <div className="row entity-actions">
-            <PrintButton to={`/w/${worldId}/print/e/${e.id}`} />
+            <PrintButton to={`${worldPath(worldId)}/print/e/${e.id}`} />
           </div>
         )}
       </header>
@@ -184,7 +187,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               <ul className="entity-list">
                 {xs.map((x) => (
                   <li key={x.id}>
-                    <Link to={`/w/${worldId}/e/${x.id}`}>{x.name}</Link> <VisibilityBadge value={x.visibility} />
+                    <Link to={`${pagePath(worldId, x.id)}`}>{x.name}</Link> <VisibilityBadge value={x.visibility} />
                     {x.summary && <span className="muted"> · {x.summary}</span>}
                   </li>
                 ))}
@@ -197,7 +200,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               <ul className="entity-list">
                 {backlinks.map((x) => (
                   <li key={x.id}>
-                    <Link to={`/w/${worldId}/e/${x.id}`}>
+                    <Link to={`${pagePath(worldId, x.id)}`}>
                       <TypeIcon type={x.type} /> {x.name}
                     </Link>
                   </li>
@@ -233,7 +236,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
                 <div>
                   <dt>{e.type === 'location' ? 'Inside' : e.type === 'event' ? 'Where' : 'Located in'}</dt>
                   <dd>
-                    <Link to={`/w/${worldId}/e/${ancestors.at(-1)!.id}`}>{ancestors.at(-1)!.name}</Link>
+                    <Link to={`${pagePath(worldId, ancestors.at(-1)!.id)}`}>{ancestors.at(-1)!.name}</Link>
                   </dd>
                 </div>
               )}
@@ -251,12 +254,12 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
                   <dt>Maps</dt>
                   <dd>
                     {ownMaps.map((m) => (
-                      <Link key={m.id} className="block" to={`/w/${worldId}/maps/${m.id}`}>
+                      <Link key={m.id} className="block" to={`${worldPath(worldId)}/maps/${m.id}`}>
                         <Ico as={MapTrifold} /> Open {m.name}
                       </Link>
                     ))}
                     {pins.map(({ pin, map }) => (
-                      <Link key={pin.id} className="block" to={`/w/${worldId}/maps/${map.id}?pin=${pin.id}`}>
+                      <Link key={pin.id} className="block" to={`${worldPath(worldId)}/maps/${map.id}?pin=${pin.id}`}>
                         <Ico as={MapPin} /> On {map.name}
                       </Link>
                     ))}
@@ -616,7 +619,7 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
               onClick={async () => {
                 if (!confirm(`Delete "${entity.name}"? You can bring it back from World settings → Recently deleted, on this device.`)) return
                 await deleteEntity(entity.id)
-                navigate(entity.template ? `/w/${worldId}/settings` : `/w/${worldId}/type/${entity.type}${entity.type === 'custom' ? `/${entity.customType}` : ''}`)
+                navigate(entity.template ? `${worldPath(worldId)}/settings` : typePath(worldId, entity.type, entity.customType))
               }}
             >
               Delete
@@ -690,7 +693,7 @@ function AddInside({ parent }: { parent: Entity }) {
         const child = { ...blankEntity(parent.worldId, 'location', name.trim()), parentId: parent.id }
         await db.entities.add(child)
         setName('')
-        navigate(`/w/${parent.worldId}/e/${child.id}`)
+        navigate(`${pagePath(parent.worldId, child.id)}`)
       }}
     >
       <input value={name} onChange={(ev) => setName(ev.target.value)} placeholder={`Add a place inside ${parent.name}, e.g. a district or building`} />
@@ -709,7 +712,7 @@ function QuestThreads({ quest, entities, worldId }: { quest: Entity; entities: E
         <Ico as={Spiral} /> Loose threads <Help topic="trackAsThread" />
       </h3>
       {following.map((t) => (
-        <Link key={t.id} className="block" to={`/w/${worldId}/e/${t.id}`}>
+        <Link key={t.id} className="block" to={`${pagePath(worldId, t.id)}`}>
           {t.name} <span className="muted small">· {t.threadStatus ?? 'open'}</span>
         </Link>
       ))}
@@ -718,7 +721,7 @@ function QuestThreads({ quest, entities, worldId }: { quest: Entity; entities: E
         onClick={async () => {
           const t = { ...newThread(worldId, quest.name), summary: quest.summary, body: `Follows the quest [[${quest.name}]].` }
           await db.entities.add(t)
-          navigate(`/w/${worldId}/e/${t.id}`)
+          navigate(`${pagePath(worldId, t.id)}`)
         }}
       >
         + Track as thread

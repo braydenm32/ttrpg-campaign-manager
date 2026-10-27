@@ -4,6 +4,7 @@ import { db, type World } from '../db'
 import { Help } from '../help'
 import { Ico } from '../icons'
 import { BookOpen, ChatCircleDots, File, Sparkle } from '@phosphor-icons/react'
+import { pagePath, worldPath } from '../paths'
 
 /**
  * For players: what's new since they last looked. Pages and sessions the GM has just revealed, and
@@ -34,17 +35,17 @@ export function NewsBanner({ world }: { world: World }) {
       </div>
       <div className="row wrap small">
         {pages.map((e) => e && (
-          <Link key={e.id} className="chip" to={`/w/${world.id}/e/${e.id}`}>
+          <Link key={e.id} className="chip" to={`${pagePath(world.id, e.id)}`}>
             <Ico as={File} /> {e.name}
           </Link>
         ))}
         {sessions.map((s) => s && (
-          <Link key={s.id} className="chip" to={`/w/${world.id}/s/${s.id}`}>
+          <Link key={s.id} className="chip" to={`${worldPath(world.id)}/s/${s.id}`}>
             <Ico as={BookOpen} /> #{s.number} {s.title}
           </Link>
         ))}
         {answers.map((q) => (
-          <Link key={q.id} className="chip" to={q.entityId ? `/w/${world.id}/e/${q.entityId}` : `/w/${world.id}/questions`}>
+          <Link key={q.id} className="chip" to={q.entityId ? `${pagePath(world.id, q.entityId)}` : `${worldPath(world.id)}/questions`}>
             <Ico as={ChatCircleDots} /> Your GM answered “{q.body.length > 40 ? `${q.body.slice(0, 40)}…` : q.body}”
           </Link>
         ))}

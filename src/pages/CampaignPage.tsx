@@ -10,6 +10,7 @@ import { SessionScheduler } from '../players/Schedule'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { Compass, Microphone, Shield } from '@phosphor-icons/react'
+import { pagePath, worldPath } from '../paths'
 
 export default function CampaignPage() {
   const { worldId, world } = useWorld()
@@ -32,7 +33,7 @@ export default function CampaignPage() {
 
   const newSession = async (date?: string) => {
     const s = await createNextSession(worldId, campaignId, date)
-    navigate(`/w/${worldId}/s/${s.id}`)
+    navigate(`${worldPath(worldId)}/s/${s.id}`)
   }
 
   return (
@@ -101,7 +102,7 @@ export default function CampaignPage() {
             <ul className="entity-list sessions">
               {[...sessions].reverse().map((s) => (
                 <li key={s.id}>
-                  <Link to={`/w/${worldId}/s/${s.id}`}>
+                  <Link to={`${worldPath(worldId)}/s/${s.id}`}>
                     #{s.number} {s.title}
                   </Link>{' '}
                   <VisibilityBadge value={s.visibility} />
@@ -120,7 +121,7 @@ export default function CampaignPage() {
             <ul className="entity-list">
               {pcs.map((e) => (
                 <li key={e.id}>
-                  <Link to={`/w/${worldId}/e/${e.id}`}><Ico as={Shield} /> {e.name}</Link>
+                  <Link to={`${pagePath(worldId, e.id)}`}><Ico as={Shield} /> {e.name}</Link>
                   {e.summary && <span className="muted"> · {e.summary}</span>}
                 </li>
               ))}
@@ -133,7 +134,7 @@ export default function CampaignPage() {
             <ul className="entity-list">
               {quests.map((e) => (
                 <li key={e.id}>
-                  <Link to={`/w/${worldId}/e/${e.id}`}><Ico as={Compass} /> {e.name}</Link>
+                  <Link to={`${pagePath(worldId, e.id)}`}><Ico as={Compass} /> {e.name}</Link>
                 </li>
               ))}
             </ul>
@@ -147,7 +148,7 @@ export default function CampaignPage() {
             onClick={async () => {
               if (!confirm(`Delete campaign "${campaign.name}" and its sessions? World content is kept.`)) return
               await binCampaign(campaignId)
-              navigate(`/w/${worldId}`)
+              navigate(`${worldPath(worldId)}`)
             }}
           >
             Delete campaign

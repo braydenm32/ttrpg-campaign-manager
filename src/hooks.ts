@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { db, type Asset, type Entity } from './db'
+import { resolveWorld, usePathsVersion } from './paths'
 import { useViewMode } from './viewMode'
 
 /** Object URL for a stored asset, revoked automatically. */
@@ -22,7 +23,9 @@ export function useBlobUrl(asset: Asset | undefined) {
 }
 
 export function useWorld() {
-  const { worldId = '' } = useParams()
+  const { worldId: param = '' } = useParams()
+  usePathsVersion()
+  const worldId = resolveWorld(param)
   // null once we know the world isn't on this device (undefined means still loading).
   const world = useLiveQuery(async () => (await db.worlds.get(worldId)) ?? null, [worldId])
   return { worldId, world }

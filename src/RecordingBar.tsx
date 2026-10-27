@@ -4,6 +4,7 @@ import { formatTime } from './recorder'
 import { addBookmark, endRecording, useLiveRecording } from './recordingStore'
 import { Ico } from './icons'
 import { BookmarkSimple } from '@phosphor-icons/react'
+import { worldPath } from './paths'
 
 /** While a session is being recorded, a slim bar on every other screen: how long, a bookmark, and Stop. */
 export function RecordingBar() {
@@ -15,7 +16,7 @@ export function RecordingBar() {
     const t = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(t)
   }, [live])
-  const sessionPath = live && `/w/${live.worldId}/s/${live.sessionId}`
+  const sessionPath = live && `${worldPath(live.worldId)}/s/${live.sessionId}`
   if (!live || pathname === sessionPath) return null
   return (
     <div className="recording-bar" role="status">

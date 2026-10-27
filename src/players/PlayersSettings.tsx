@@ -21,6 +21,7 @@ import {
 import { db, type World } from '../db'
 import { Ico } from '../icons'
 import { BookOpen, MaskHappy } from '@phosphor-icons/react'
+import { pagePath } from '../paths'
 
 /** World settings: invite players with a link, and see who has joined and which character each plays. */
 export function PlayersSettings({ world }: { world: World }) {
@@ -110,7 +111,7 @@ export function PlayersSettings({ world }: { world: World }) {
           {hiddenPcs.map((e, i) => (
             <span key={e.id}>
               {i > 0 && ', '}
-              <Link to={`/w/${world.id}/e/${e.id}?edit=1`}>{e.name}</Link>
+              <Link to={`${pagePath(world.id, e.id)}?edit=1`}>{e.name}</Link>
             </span>
           ))}
           .
@@ -131,7 +132,7 @@ export function PlayersSettings({ world }: { world: World }) {
                           <span key={c.entityId}>
                             {i > 0 && ', '}
                             {c.approved ? 'plays' : 'asked to play'}{' '}
-                            <Link to={`/w/${world.id}/e/${c.entityId}`}>{pcName(c.entityId)}</Link>{' '}
+                            <Link to={`${pagePath(world.id, c.entityId)}`}>{pcName(c.entityId)}</Link>{' '}
                             {!c.approved && (
                               <button className="link" disabled={busy} onClick={() => run(() => approveClaim(world.id, c.entityId))}>
                                 (approve)

@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { blankPrep, db, typeLabel, type Entity, type Session, type World } from './db'
 import { foeCount } from './encounters'
 import { Help } from './help'
-import { asPlayerSees, useAssetUrl, useVisibleEntities } from './hooks'
+import { asPlayerSees, useAssetUrl, useVisibleEntities, useWorld } from './hooks'
 import { Markdown } from './Markdown'
 import { StatusBadge } from './status'
 import { ForcePlayerView, useViewMode } from './viewMode'
@@ -26,7 +26,7 @@ export function PrintButton({ to }: { to: string }) {
  * and a player copy, which leaves out everything players can't see.
  */
 export default function PrintPage() {
-  const { worldId = '' } = useParams()
+  const { worldId } = useWorld()
   const [params] = useSearchParams()
   const world = useLiveQuery(async () => (await db.worlds.get(worldId)) ?? null, [worldId])
   if (world === undefined) return null

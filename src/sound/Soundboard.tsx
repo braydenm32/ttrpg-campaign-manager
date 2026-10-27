@@ -6,6 +6,7 @@ import { Help } from '../help'
 import { setLiveVolume, stopAll, toggle, usePlaying } from './player'
 import { Ico } from '../icons'
 import { MusicNotes } from '@phosphor-icons/react'
+import { worldPath } from '../paths'
 
 export const soundGroups = (sounds: Sound[]) => {
   const groups = new Map<string, Sound[]>()
@@ -30,7 +31,7 @@ export function Soundboard({ worldId, compact }: { worldId: string; compact?: bo
     <>
       {sounds.length === 0 && (
         <p className="muted small">
-          No sounds yet. <Link to={`/w/${worldId}/sounds`}>Add your own files or Syrinscape moods</Link>.
+          No sounds yet. <Link to={`${worldPath(worldId)}/sounds`}>Add your own files or Syrinscape moods</Link>.
         </p>
       )}
       {soundGroups(sounds).map(([group, list]) => (
@@ -77,7 +78,7 @@ export function Soundboard({ worldId, compact }: { worldId: string; compact?: bo
               ■ Stop all
             </button>
           )}
-          <Link className="small" to={`/w/${worldId}/sounds`}>
+          <Link className="small" to={`${worldPath(worldId)}/sounds`}>
             Edit
           </Link>
         </div>

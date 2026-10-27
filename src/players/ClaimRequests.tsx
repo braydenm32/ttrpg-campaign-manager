@@ -7,6 +7,7 @@ import { Help } from '../help'
 import { useCharacterOwners } from './owners'
 import { Ico } from '../icons'
 import { MaskHappy } from '@phosphor-icons/react'
+import { pagePath } from '../paths'
 
 /**
  * For the GM: a banner when a player asks to play a character, with Approve and Decline right
@@ -40,7 +41,7 @@ export function ClaimRequestsBanner({ world }: { world: World }) {
         return (
           <div key={entityId} className="row wrap">
             <span>
-              <Ico as={MaskHappy} /> <strong>{o.name}</strong> asked to play <Link to={`/w/${world.id}/e/${entityId}`}>{name}</Link>.
+              <Ico as={MaskHappy} /> <strong>{o.name}</strong> asked to play <Link to={`${pagePath(world.id, entityId)}`}>{name}</Link>.
             </span>
             <button className="primary small" disabled={busy} onClick={() => run(() => approveClaim(world.id, entityId))}>
               ✓ Approve

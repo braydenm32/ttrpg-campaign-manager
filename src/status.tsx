@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { HAS_STATUS, LIFE_STATUS, type Entity, type Session } from './db'
+import { worldPath } from './paths'
 
 /** A small badge for a character who is dead, missing or captured (alive needs no badge in lists). */
 export function StatusBadge({ entity: e, showAlive }: { entity: Entity; showAlive?: boolean }) {
@@ -31,7 +32,7 @@ export function LastSeen({ entity, sessions, worldId }: { entity: Entity; sessio
   return (
     <>
       {' · last seen in '}
-      <Link to={`/w/${worldId}/s/${s.id}`}>
+      <Link to={`${worldPath(worldId)}/s/${s.id}`}>
         #{s.number} {s.title}
       </Link>
     </>

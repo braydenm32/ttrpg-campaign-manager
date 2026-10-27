@@ -4,6 +4,7 @@ import { Help } from './help'
 import { db, ENTITY_LABELS, newId, type Entity, type Relation } from './db'
 import { Ico, TypeIcon } from './icons'
 import { Graph } from '@phosphor-icons/react'
+import { pagePath, worldPath } from './paths'
 
 /**
  * Relationships between pages: family, friends and foes, who serves whom. Each link is stored once,
@@ -81,7 +82,7 @@ export function RelationsBox({ entity, entities, isGM, worldId }: { entity: Enti
           <Ico as={Graph} /> Relationships <Help topic="relations" />
         </h2>
         <div className="row">
-          <Link className="small" to={`/w/${worldId}/web?focus=${entity.id}`}>
+          <Link className="small" to={`${worldPath(worldId)}/web?focus=${entity.id}`}>
             See the web
           </Link>
           {isGM && !adding && <button onClick={() => setAdding(true)}>+ Link</button>}
@@ -92,7 +93,7 @@ export function RelationsBox({ entity, entities, isGM, worldId }: { entity: Enti
           {links.map(({ rel, owner, other, label }) => (
             <li key={rel.id} className={`tone-${toneOf(rel.kind)}`}>
               <span className="muted">{label}</span>{' '}
-              <Link to={`/w/${worldId}/e/${other.id}`}>
+              <Link to={`${pagePath(worldId, other.id)}`}>
                 <TypeIcon type={other.type} /> {other.name}
               </Link>
               {rel.note && <span className="muted small"> · {rel.note}</span>}

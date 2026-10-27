@@ -2,7 +2,8 @@ import type { EmailOtpType, Session } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
 import { Modal } from '../components'
 import { Help } from '../help'
-import { appUrl, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
+import { currentPath, goToPath } from '../paths'
+import { appLink, appUrl, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
 import { pendingInvite } from './players'
 import { deleteMyAccount } from './sync'
 
@@ -32,7 +33,7 @@ function enabledProviders() {
  */
 async function signInWith(provider: Provider) {
   try {
-    sessionStorage.setItem(RETURN_KEY, JSON.stringify({ hash: window.location.hash, at: Date.now() }))
+    sessionStorage.setItem(RETURN_KEY, JSON.stringify({ path: currentPath(), at: Date.now() }))
   } catch {
     // private window: we just land on the front page
   }
@@ -45,9 +46,9 @@ export function finishSignInRedirect() {
     const saved = sessionStorage.getItem(RETURN_KEY)
     if (!saved) return
     sessionStorage.removeItem(RETURN_KEY)
-    const { hash, at } = JSON.parse(saved) as { hash: string; at: number }
-    // Only a sign-in that just came back from Google or Facebook, not one abandoned earlier.
-    if (hash && Date.now() - at < 10 * 60_000 && hash !== window.location.hash) window.location.hash = hash
+    const { path, at } = JSON.parse(saved) as { path?: string; at: number }
+    // Only a sign-in that just came back from Google, not one abandoned earlier.
+    if (path && path !== '/' && Date.now() - at < 10 * 60_000 && path !== currentPath()) goToPath(path)
   } catch {
     // nothing to restore
   }
@@ -161,7 +162,7 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
       } else if (mode === 'signup') {
         // Someone signing up from an invite comes back to it from the email, even on another device.
         const invite = pendingInvite.get()
-        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: invite ? `${appUrl()}#/join/${invite}` : appUrl() } })
+        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: invite ? appLink(`/join/${invite}`) : appUrl() } })
         if (error) throw error
         if (data.session) onClose()
         else setMessage('Check your email and click the confirmation link, then sign in here.')
@@ -244,11 +245,11 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
         {mode !== 'reset' && (
           <p className="muted small">
             By continuing you agree to the{' '}
-            <a href="terms.html" target="_blank" rel="noreferrer">
+            <a href={`${import.meta.env.BASE_URL}terms.html`} target="_blank" rel="noreferrer">
               terms of service
             </a>{' '}
             and{' '}
-            <a href="privacy.html" target="_blank" rel="noreferrer">
+            <a href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noreferrer">
               privacy policy
             </a>
             .

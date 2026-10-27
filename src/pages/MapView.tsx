@@ -16,6 +16,7 @@ import { useViewMode } from '../viewMode'
 import { circleShape, fogOverlay, pinRevealed, rectShape, removeFog, renderPlayerFog } from '../fog'
 import { Ico, TypeIcon } from '../icons'
 import { CloudFog, Eye, HandPalm, MapPin, PencilSimple, SlidersHorizontal } from '@phosphor-icons/react'
+import { pagePath, worldPath } from '../paths'
 
 type Tool = 'select' | 'pin' | 'region' | 'fog-rect' | 'fog-shape' | 'fog-circle'
 const COLORS = ['#e0b354', '#d9534f', '#5bc0de', '#5cb85c', '#a678de', '#f0f0f0']
@@ -132,7 +133,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   return (
     <div className="map-page">
       <div className="map-toolbar">
-        <Link to={`/w/${worldId}/maps`}>← Maps</Link>
+        <Link to={`${worldPath(worldId)}/maps`}>← Maps</Link>
         <strong>{map.name}</strong> <VisibilityBadge value={map.visibility} /> <Help topic="mapView" />
         {isGM && (
           <div className="row">
@@ -166,7 +167,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
               </>
             )}
             {map.drawing && (
-              <Link className="button" to={`/w/${worldId}/maps/${map.id}/draw`}>
+              <Link className="button" to={`${worldPath(worldId)}/maps/${map.id}/draw`}>
                 <Ico as={PencilSimple} /> Draw
               </Link>
             )}
@@ -279,7 +280,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
         {(selected || showSettings) && (
           <aside className="map-panel">
             {showSettings && isGM ? (
-              <MapSettings map={map} entities={entities} onClose={() => setShowSettings(false)} onDeleted={() => navigate(`/w/${worldId}/maps`)} />
+              <MapSettings map={map} entities={entities} onClose={() => setShowSettings(false)} onDeleted={() => navigate(`${worldPath(worldId)}/maps`)} />
             ) : selected ? (
               isGM ? (
                 <PinEditor key={selected.id} pin={selected} entities={entities} maps={allMaps.filter((m) => m.id !== map.id)} onClose={() => select()} />
@@ -493,12 +494,12 @@ function PinDetails({
       {pin.note && <Markdown text={pin.note} entities={entities} worldId={worldId} showSecrets={isGM} />}
       <div className="row wrap">
         {entity && (
-          <Link className="button" to={`/w/${worldId}/e/${entity.id}`}>
+          <Link className="button" to={`${pagePath(worldId, entity.id)}`}>
             Open page
           </Link>
         )}
         {childMap && (
-          <Link className="button primary" to={`/w/${worldId}/maps/${childMap.id}`}>
+          <Link className="button primary" to={`${worldPath(worldId)}/maps/${childMap.id}`}>
             Enter {childMap.name} →
           </Link>
         )}
@@ -511,7 +512,7 @@ function PinDetails({
           <ul className="entity-list">
             {xs.map((x) => (
               <li key={x.id}>
-                <Link to={`/w/${worldId}/e/${x.id}`}>{x.name}</Link> <VisibilityBadge value={x.visibility} />
+                <Link to={`${pagePath(worldId, x.id)}`}>{x.name}</Link> <VisibilityBadge value={x.visibility} />
                 {x.summary && <div className="muted small">{x.summary}</div>}
               </li>
             ))}
@@ -592,7 +593,7 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
         </div>
       )}
       {entity && (
-        <Link className="small" to={`/w/${worldId}/e/${entity.id}?edit=1`}>
+        <Link className="small" to={`${pagePath(worldId, entity.id)}?edit=1`}>
           Edit "{entity.name}" page →
         </Link>
       )}

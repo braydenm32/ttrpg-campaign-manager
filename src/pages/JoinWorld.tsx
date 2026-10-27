@@ -9,6 +9,7 @@ import { Help } from '../help'
 import { db } from '../db'
 import { Ico } from '../icons'
 import { BookOpen, MaskHappy } from '@phosphor-icons/react'
+import { worldPath } from '../paths'
 
 /** Opening a player invite link: sign in, say what to call you, and join the GM's world. */
 export default function JoinWorld() {
@@ -34,10 +35,10 @@ export default function JoinWorld() {
       if (isGM) {
         // A co-GM (or the GM opening their own link): bring down the full world, secrets and all, rather than a player copy.
         if (!(await db.worlds.get(cloudId))) await downloadCloudWorld({ id: cloudId, name: worldName, share_token: null, updated_at: '' })
-        navigate(`/w/${cloudId}`, { replace: true })
+        navigate(`${worldPath(cloudId)}`, { replace: true })
         return
       }
-      navigate(`/w/${await loadMemberWorld(cloudId)}`, { replace: true })
+      navigate(`${worldPath(await loadMemberWorld(cloudId))}`, { replace: true })
     } catch (e) {
       // A link that's been turned off would otherwise send the player back here every time they open the app.
       pendingInvite.set(null)

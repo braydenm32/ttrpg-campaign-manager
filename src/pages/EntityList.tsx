@@ -8,10 +8,14 @@ import { useVisibleEntities, useWorld } from '../hooks'
 import { NewPageButton } from '../NewPage'
 import { TableRoller } from '../tables'
 import { useViewMode } from '../viewMode'
+import { pagePath, resolveCustom, sectionType, usePathsVersion } from '../paths'
 
 export default function EntityList() {
   const { worldId, world } = useWorld()
-  const { type = '', kind } = useParams()
+  const params = useParams()
+  usePathsVersion()
+  const type = sectionType(params.type ?? params.section ?? (params.kind ? 'custom' : '')) ?? ''
+  const kind = params.kind && resolveCustom(worldId, params.kind)
   const { isGM } = useViewMode()
   const all = useVisibleEntities(worldId)
   const [query, setQuery] = useState('')
@@ -74,7 +78,7 @@ export default function EntityList() {
 
 function EntityCard({ worldId, entity: e }: { worldId: string; entity: Entity }) {
   return (
-    <Link className="card" to={`/w/${worldId}/e/${e.id}`}>
+    <Link className="card" to={`${pagePath(worldId, e.id)}`}>
       <h3>
         {e.name} <VisibilityBadge value={e.visibility} />
       </h3>
@@ -104,7 +108,7 @@ function LocationTree({ worldId, entities }: { worldId: string; entities: Entity
       <ul className={depth === 0 ? 'tree' : ''}>
         {kids.map((e) => (
           <li key={e.id}>
-            <Link to={`/w/${worldId}/e/${e.id}`}>{e.name}</Link> <VisibilityBadge value={e.visibility} />
+            <Link to={`${pagePath(worldId, e.id)}`}>{e.name}</Link> <VisibilityBadge value={e.visibility} />
             {e.summary && <span className="muted"> · {e.summary}</span>}
             {render(e.id, depth + 1)}
           </li>

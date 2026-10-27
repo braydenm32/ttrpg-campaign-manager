@@ -11,6 +11,7 @@ import { loadSampleWorld } from '../sample'
 import { AccountModal, useAuthSession } from '../cloud/auth'
 import { listMyMemberships, loadMemberWorld, memberWorldId, pendingInvite } from '../cloud/players'
 import { downloadCloudWorld, listCloudWorlds, type CloudWorld } from '../cloud/sync'
+import { worldPath } from '../paths'
 
 export default function Home() {
   const worlds = useLiveQuery(() => db.worlds.orderBy('updatedAt').reverse().toArray()) ?? []
@@ -50,7 +51,7 @@ export default function Home() {
       </header>
       <div className="row">
         <button className="primary" onClick={() => setCreating(true)}>+ New world</button>
-        <button onClick={async () => navigate(`/w/${await loadSampleWorld()}`)}>Load sample world</button>
+        <button onClick={async () => navigate(`${worldPath(await loadSampleWorld())}`)}>Load sample world</button>
         <label className="button">
           Import backup…
           <input
@@ -61,7 +62,7 @@ export default function Home() {
               const f = e.target.files?.[0]
               if (!f) return
               try {
-                navigate(`/w/${await importWorld(f)}`)
+                navigate(`${worldPath(await importWorld(f))}`)
               } catch (err) {
                 alert(`Import failed: ${(err as Error).message}`)
               }
@@ -75,7 +76,7 @@ export default function Home() {
       ) : (
         <div className="shelf">
           {worlds.map((w) => (
-            <WorldBook key={w.id} world={w} onOpen={() => navigate(`/w/${w.id}`)} />
+            <WorldBook key={w.id} world={w} onOpen={() => navigate(`${worldPath(w.id)}`)} />
           ))}
           <button className="book book-new" onClick={() => setCreating(true)}>
             + New world
@@ -96,7 +97,7 @@ export default function Home() {
                     setDownloading(c.id)
                     try {
                       await downloadCloudWorld(c)
-                      navigate(`/w/${c.id}`)
+                      navigate(`${worldPath(c.id)}`)
                     } catch (err) {
                       alert(`Download failed: ${(err as Error).message}`)
                     } finally {
@@ -124,7 +125,7 @@ export default function Home() {
                   onClick={async () => {
                     setDownloading(m.cloudId)
                     try {
-                      navigate(`/w/${await loadMemberWorld(m.cloudId)}`)
+                      navigate(`${worldPath(await loadMemberWorld(m.cloudId))}`)
                     } catch (err) {
                       alert((err as Error).message)
                     } finally {
@@ -141,18 +142,18 @@ export default function Home() {
       )}
       <About />
       <footer className="legal-links muted small">
-        <a href="privacy.html" target="_blank" rel="noreferrer">
+        <a href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noreferrer">
           Privacy
         </a>
-        <a href="terms.html" target="_blank" rel="noreferrer">
+        <a href={`${import.meta.env.BASE_URL}terms.html`} target="_blank" rel="noreferrer">
           Terms
         </a>
-        <a href="data-deletion.html" target="_blank" rel="noreferrer">
+        <a href={`${import.meta.env.BASE_URL}data-deletion.html`} target="_blank" rel="noreferrer">
           Delete your data
         </a>
       </footer>
       {account && <AccountModal onClose={() => setAccount(false)} />}
-      {creating && <NewWorld onClose={() => setCreating(false)} onCreated={(id) => navigate(`/w/${id}`)} />}
+      {creating && <NewWorld onClose={() => setCreating(false)} onCreated={(id) => navigate(`${worldPath(id)}`)} />}
     </div>
   )
 }
@@ -178,7 +179,7 @@ function About() {
       <p>
         Signing in is optional. An account, using your email or your Google account, lets you sync your worlds between your devices and invite players. The
         Warded Atlas only uses your sign-in to know who you are: your name and email address. It never posts anything or reads your contacts. See the{' '}
-        <a href="privacy.html" target="_blank" rel="noreferrer">privacy policy</a> for details.
+        <a href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noreferrer">privacy policy</a> for details.
       </p>
     </section>
   )

@@ -1,6 +1,6 @@
 import { db, type Availability, type PlayerNote, type PlayerQuestion, type SharedInfo } from '../db'
 import { tellPlayers } from './sync'
-import { appUrl, supabase, SUPABASE_URL } from './client'
+import { appLink, supabase, SUPABASE_URL } from './client'
 import { storePlayerCopy, tellOtherPlayers, type SharedPayload } from './share'
 
 /**
@@ -14,9 +14,9 @@ function newToken() {
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-export const inviteUrl = (token: string) => `${appUrl()}#/join/${token}`
+export const inviteUrl = (token: string) => appLink(`/join/${token}`)
 /** The co-GM link opens the same join page; the server decides the role from the token. */
-export const gmInviteUrl = (token: string) => `${appUrl()}#/join/${token}?as=gm`
+export const gmInviteUrl = (token: string) => appLink(`/join/${token}?as=gm`)
 
 /** Local id of a joined world's copy on a player's device. */
 export const memberWorldId = (cloudWorldId: string) => `member-${cloudWorldId}`

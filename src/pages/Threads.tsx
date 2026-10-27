@@ -9,6 +9,7 @@ import { COLD_AFTER, latestSession, newThread, sessionsSinceTouched, threadLinks
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { Graph, Spiral } from '@phosphor-icons/react'
+import { typePath } from '../paths'
 
 const COLUMNS: ThreadStatus[] = ['open', 'active', 'resolved', 'dropped']
 const URGENCY_ORDER = { high: 0, normal: 1, low: 2 }
@@ -147,7 +148,7 @@ export default function Threads() {
       {isGM && threads.length > 0 && (
         <p className="muted small">
           Open a thread to write more about it, link pages with [[Name]], or reveal it to players.{' '}
-          <button className="link" onClick={() => navigate(`/w/${worldId}/type/thread`)}>
+          <button className="link" onClick={() => navigate(`${typePath(worldId, 'thread')}`)}>
             See them as a list
           </button>
         </p>

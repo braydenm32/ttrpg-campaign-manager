@@ -33,6 +33,7 @@ import { WorldToday } from '../calendar'
 import { ClocksPanel } from '../clocks'
 import { Ico, TypeIcon } from '../icons'
 import { BookOpen, CastleTurret, CloudFog, DiceFive, FlagCheckered, MapTrifold, Prohibit, Shield, Spiral, Sword, User } from '@phosphor-icons/react'
+import { pagePath, worldPath } from '../paths'
 
 /**
  * The Lectern: one screen for running a session at the table.
@@ -71,8 +72,8 @@ export default function Lectern() {
       <header className="page-header">
         <div>
           <div className="row spread">
-            <Link to={`/w/${worldId}/s/${session.id}`}>← Session notes</Link>
-            <Link className="button" to={`/w/${worldId}/s/${session.id}?end=1`} title="Recap, show players, start the next session">
+            <Link to={`${worldPath(worldId)}/s/${session.id}`}>← Session notes</Link>
+            <Link className="button" to={`${worldPath(worldId)}/s/${session.id}?end=1`} title="Recap, show players, start the next session">
               <Ico as={FlagCheckered} /> End session
             </Link>
           </div>
@@ -147,8 +148,8 @@ function Scene({ lectern, edit, entities, worldId }: PanelProps & { entities: En
       {place && (
         <>
           <div className="row wrap small">
-            <Link to={`/w/${worldId}/e/${place.id}`}>Open page</Link>
-            {map && <Link to={`/w/${worldId}/maps/${map.id}`}><Ico as={MapTrifold} /> Open map</Link>}
+            <Link to={`${pagePath(worldId, place.id)}`}>Open page</Link>
+            {map && <Link to={`${worldPath(worldId)}/maps/${map.id}`}><Ico as={MapTrifold} /> Open map</Link>}
           </div>
           {place.summary && <p className="muted">{place.summary}</p>}
           <details>
@@ -190,7 +191,7 @@ function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: 
       {present.map((e) => (
         <div key={e.id} className="present">
           <div className="row spread">
-            <Link to={`/w/${worldId}/e/${e.id}`}>
+            <Link to={`${pagePath(worldId, e.id)}`}>
               <strong>
                 <TypeIcon type={e.type} /> {e.name}
               </strong>
@@ -254,7 +255,7 @@ function LecternThreads({ lectern, entities, worldId, sessionId }: { lectern: Le
     <section className="card lectern-panel">
       <div className="row spread">
         <h2><Ico as={Spiral} /> Loose threads</h2>
-        <Link className="small" to={`/w/${worldId}/threads`}>
+        <Link className="small" to={`${worldPath(worldId)}/threads`}>
           All threads
         </Link>
       </div>

@@ -8,6 +8,7 @@ import { db, type Entity, type World } from '../db'
 import { useCharacterOwners } from './owners'
 import { Ico } from '../icons'
 import { MaskHappy, PencilSimple } from '@phosphor-icons/react'
+import { pagePath } from '../paths'
 
 /** On a player character's page: who plays them, their player's notes, and claim / let go buttons. */
 export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: World }) {
@@ -254,7 +255,7 @@ export function ChooseCharacterBanner({ world }: { world: World }) {
               >
                 {busy === e.id ? 'Claiming…' : `🛡️ ${e.name}`}
               </button>
-              <Link className="small" to={`/w/${world.id}/e/${e.id}`}>
+              <Link className="small" to={`${pagePath(world.id, e.id)}`}>
                 read
               </Link>
             </span>

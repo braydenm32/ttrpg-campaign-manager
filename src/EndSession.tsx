@@ -7,6 +7,7 @@ import { Help } from './help'
 import { createNextSession } from './sessions'
 import { Ico } from './icons'
 import { FlagCheckered } from '@phosphor-icons/react'
+import { worldPath } from './paths'
 
 /**
  * Wrapping up after play, in one place: transcribe the recording, write the recap with Claude,
@@ -101,7 +102,7 @@ export function EndSessionChecklist({ world, session, onClose }: { world: World;
             {next ? (
               <>
                 <strong>Next session is ready: </strong>
-                <Link to={`/w/${world.id}/s/${next.id}?tab=prep`}>
+                <Link to={`${worldPath(world.id)}/s/${next.id}?tab=prep`}>
                   #{next.number} {next.title}
                 </Link>
               </>
@@ -113,7 +114,7 @@ export function EndSessionChecklist({ world, session, onClose }: { world: World;
                   onClick={async () => {
                     setBusy(true)
                     const s = await createNextSession(world.id, session.campaignId)
-                    navigate(`/w/${world.id}/s/${s.id}?tab=prep`)
+                    navigate(`${worldPath(world.id)}/s/${s.id}?tab=prep`)
                   }}
                 >
                   Start session #{session.number + 1}

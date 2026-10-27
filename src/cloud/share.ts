@@ -1,5 +1,5 @@
 import { db, type Asset, type Campaign, type Entity, type Pin, type Session, type SharedInfo, type World, type WorldMap } from '../db'
-import { appUrl, supabase, SUPABASE_URL } from './client'
+import { appLink, supabase, SUPABASE_URL } from './client'
 
 /**
  * Player share links. The GM turns on a link for a synced world; anyone with the link gets a
@@ -13,7 +13,7 @@ function newToken() {
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-export const shareUrl = (token: string) => `${appUrl()}#/shared/${token}`
+export const shareUrl = (token: string) => appLink(`/shared/${token}`)
 
 export async function getShareToken(worldId: string): Promise<string | null> {
   const { data, error } = await supabase.from('cloud_worlds').select('share_token').eq('id', worldId).maybeSingle()

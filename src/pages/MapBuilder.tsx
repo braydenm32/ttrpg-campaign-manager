@@ -24,6 +24,7 @@ import {
   type Terrain,
 } from '../mapDrawing'
 import { useViewMode } from '../viewMode'
+import { worldPath } from '../paths'
 
 type Tool = 'select' | 'hand' | 'area' | 'rect' | 'line' | 'stamp' | 'label' | 'erase'
 
@@ -306,7 +307,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   return (
     <div className="map-page builder">
       <div className="map-toolbar">
-        <Link to={`/w/${worldId}/maps/${map.id}`}>← Done</Link>
+        <Link to={`${worldPath(worldId)}/maps/${map.id}`}>← Done</Link>
         <strong>{map.name}</strong>
         <span className="muted small">{saved ? 'Saved' : 'Saving…'}</span>
         <div className="row">

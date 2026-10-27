@@ -7,6 +7,7 @@ import { buildRecapPrompt, estimateTokens, parseRecap, recapCost, recapWithClaud
 import { useAiSettings } from './settings'
 import { Ico } from '../icons'
 import { ClipboardText, Eye, Lock, PenNib, Sparkle } from '@phosphor-icons/react'
+import { worldPath } from '../paths'
 
 /**
  * Turns a session's transcript (and GM notes) into a GM summary and a player recap.
@@ -109,7 +110,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
       {!settings.anthropicKey.trim() && !writing && (
         <p className="muted small">
           “Copy for Claude” is free with your Claude subscription. For one click, add an Anthropic API key in{' '}
-          <Link to={`/w/${world.id}/settings`}>World settings → AI tools</Link>.
+          <Link to={`${worldPath(world.id)}/settings`}>World settings → AI tools</Link>.
         </p>
       )}
 
