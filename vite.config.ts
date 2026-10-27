@@ -7,6 +7,14 @@ export default defineConfig({
   base: './',
   plugins: [
     react(),
+    // The speech engine's own copy of its 26 MB runtime is never loaded: transformers.js fetches the
+    // runtime from jsDelivr at run time. Leaving it out keeps every file under Cloudflare Pages' 25 MB limit.
+    {
+      name: 'drop-unused-onnx-wasm',
+      generateBundle(_, bundle) {
+        for (const name of Object.keys(bundle)) if (/ort-wasm-simd-threaded.*\.wasm$/.test(name)) delete bundle[name]
+      },
+    },
     // Makes the web version installable and usable offline. Registered from main.tsx (skipped inside the desktop app).
     VitePWA({
       injectRegister: null,

@@ -132,6 +132,8 @@ export const HELP = {
   // Sharing and players
   cloudSync:
     'Sign in to keep this world in step across your devices. Your world is still saved on each device, so it works offline and catches up when you reconnect. If two devices change the same page at once, both sets of changes are kept where they don’t overlap; where they do, the other version is kept in the page’s history.',
+  moving:
+    'The web app moved from braydenm32.github.io to its own address. Your browser keeps each address’s saved worlds apart, so “Move my worlds” copies everything saved here (worlds, files, recordings, page history and this device’s settings) to the new address. Nothing here is deleted. Afterwards the old address just sends you to the new one, and old invite and share links keep working.',
   deleteAccount:
     'Removes your account and everything stored with it in the cloud: worlds you own, their files and links, and your notes and characters in other people’s worlds. Worlds on this device are kept, so you can still use them without an account.',
   socialLogin:

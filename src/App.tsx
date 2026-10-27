@@ -17,6 +17,7 @@ import { watchPlayerCopy } from './cloud/share'
 import { startSync, stopSync, syncNow, syncStore } from './cloud/sync'
 import { Modal } from './components'
 import { UpdateBanner } from './appUpdate'
+import { MoveBanner } from './move'
 import { RecordingBar } from './RecordingBar'
 import { SearchButton } from './search'
 import SharedWorld from './pages/SharedWorld'
@@ -59,6 +60,7 @@ export default function App() {
     <ViewModeProvider>
       <CloudBoot />
       <UpdateBanner />
+      <MoveBanner />
       <HashRouter>
         <Routes>
           <Route path="/" element={<Home />} />

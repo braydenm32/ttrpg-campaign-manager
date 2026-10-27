@@ -47,7 +47,7 @@ Everything is stored on your device first, so it works with no internet. Sync ca
 
 ## Using it
 
-- **Web:** once GitHub Pages is switched on, the app lives at `https://braydenm32.github.io/ttrpg-campaign-manager/`. In Chrome or Edge, use "Install app" in the address bar to get a desktop-style app that works offline.
+- **Web:** the app lives at `https://wardedatlas.com/` (Cloudflare Pages). The old GitHub Pages address still works and forwards there. In Chrome or Edge, use "Install app" in the address bar to get a desktop-style app that works offline.
 - **Desktop installers:** open the **Actions** tab, choose **Desktop**, then **Run workflow**. About 15 minutes later, a draft release with Windows, macOS and Linux installers appears under **Releases**. These installers are unsigned, so Windows and macOS will warn you the first time you open them.
 
 ## For developers
