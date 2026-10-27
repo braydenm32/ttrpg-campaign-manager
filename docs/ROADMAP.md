@@ -15,9 +15,9 @@ The order of these items is a starting point and will change as we see what matt
 
 - **Players, next steps:** invite links, claiming a character, per-player reveals (pages and `:::for` passages), and private or group notes plus a party scratchpad are built. Still to come: per-player map pins, and the GM replying in the group notes.
 - **Map builder, Dungeondraft-style (in stages):**
-  - Stage 1 (built): classic hand-inked world maps. Paint land and sea, automatic ragged coastlines, rivers, roads and borders, a library of hand-drawn pieces (mountains, forests, towns, ships, compass roses) that come out a little different each time, curved labels, layers to hide or lock, three looks (ink on parchment, ink on white, coloured) and biome tints.
+  - Stage 1 (built): classic hand-inked world maps. Paint land and sea, automatic ragged coastlines, rivers, roads and borders, a library of hand-drawn pieces (mountains, forests, towns, ships, compass roses) with 8 previewable versions each, a click-and-hold scatter brush, curved labels, layers to hide or lock, three looks (ink on parchment, ink on white, coloured) and biome tints.
   - Battle maps in the hand-drawn style, with top-down pieces.
-  - Stage 2: spray and scatter brushes, a searchable piece browser, rotation, and pieces that link to a page and act like pins.
+  - Stage 2: a searchable piece browser, rotation, mixed scatter (several pieces in one brush), and pieces that link to a page and act like pins.
   - Stage 3: dungeons. A room and corridor tool whose walls merge on their own, doors, and dungeon props.
   - Stage 4: export as PNG and Universal VTT (.dd2vtt) with walls and lights for Foundry and Roll20.
   - Later: lighting, editing on phones, drawing on top of an uploaded map, custom colours.
