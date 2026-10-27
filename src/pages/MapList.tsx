@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Empty, Modal, VisibilityBadge } from '../components'
 import { db, newId, type WorldMap } from '../db'
 import { imageSize, saveFileAsAsset, useAssetUrl, useWorld } from '../hooks'
-import { BACKGROUNDS, emptyDrawing, renderDrawing, type Background } from '../mapDrawing'
+import { BACKGROUNDS, emptyDrawing, renderDrawing, type Background, type MapStyle } from '../mapDrawing'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { MapTrifold, PencilSimple } from '@phosphor-icons/react'
@@ -78,16 +78,17 @@ export default function MapList() {
 }
 
 const SIZES = {
-  region: { label: 'World or region (2400 × 1600)', w: 2400, h: 1600, bg: 'sea' as Background },
-  city: { label: 'Town or city (1800 × 1200)', w: 1800, h: 1200, bg: 'grass' as Background },
-  dungeon: { label: 'Dungeon or building, 5 ft squares (1400 × 1400)', w: 1400, h: 1400, bg: 'stone' as Background },
-  battle: { label: 'Battle map (2100 × 1400)', w: 2100, h: 1400, bg: 'grass' as Background },
+  region: { label: 'World or region (2400 × 1600)', w: 2400, h: 1600, bg: 'sea' as Background, style: 'classic' as MapStyle },
+  city: { label: 'Town or city (1800 × 1200)', w: 1800, h: 1200, bg: 'grass' as Background, style: 'simple' as MapStyle },
+  dungeon: { label: 'Dungeon or building, 5 ft squares (1400 × 1400)', w: 1400, h: 1400, bg: 'stone' as Background, style: 'simple' as MapStyle },
+  battle: { label: 'Battle map (2100 × 1400)', w: 2100, h: 1400, bg: 'grass' as Background, style: 'simple' as MapStyle },
 }
 
 function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose: () => void; onCreated: (id: string) => void }) {
   const [name, setName] = useState('')
   const [size, setSize] = useState<keyof typeof SIZES>('region')
   const [bg, setBg] = useState<Background>('sea')
+  const [style, setStyle] = useState<MapStyle>('classic')
   return (
     <Modal title="Draw a new map" onClose={onClose}>
       <form
@@ -95,9 +96,15 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
         onSubmit={async (e) => {
           e.preventDefault()
           const { w, h } = SIZES[size]
-          const drawing = emptyDrawing(bg)
-          const blob = new Blob([renderDrawing(drawing, w, h)], { type: 'image/svg+xml' })
-          const imageId = await saveFileAsAsset(worldId, blob, `${name.trim() || 'Map'}.svg`, ['map', 'drawn'])
+          const drawing = emptyDrawing(style === 'classic' && bg !== 'sea' ? 'parchment' : bg, style)
+          let blob: Blob
+          if (style === 'classic') {
+            const { renderClassic, classicBlob, loadMapFonts } = await import('../mapArt/classic')
+            await loadMapFonts()
+            blob = await classicBlob(renderClassic(drawing, w, h))
+          } else blob = new Blob([renderDrawing(drawing, w, h)], { type: 'image/svg+xml' })
+          const ext = blob.type === 'image/svg+xml' ? 'svg' : blob.type === 'image/webp' ? 'webp' : 'jpg'
+          const imageId = await saveFileAsAsset(worldId, blob, `${name.trim() || 'Map'}.${ext}`, ['map', 'drawn'])
           const id = newId()
           await db.maps.add({ id, worldId, name: name.trim() || 'Untitled map', imageId, width: w, height: h, visibility: 'gm', drawing, createdAt: Date.now() })
           onCreated(id)
@@ -115,6 +122,7 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
               const k = e.target.value as keyof typeof SIZES
               setSize(k)
               setBg(SIZES[k].bg)
+              setStyle(SIZES[k].style)
             }}
           >
             {Object.entries(SIZES).map(([k, v]) => (
@@ -125,14 +133,30 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
           </select>
         </label>
         <label>
-          Start with
-          <select value={bg} onChange={(e) => setBg(e.target.value as Background)}>
-            {Object.entries(BACKGROUNDS).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v.label}
-              </option>
-            ))}
+          <span>
+            Style <Help topic="mapStyle" />
+          </span>
+          <select value={style} onChange={(e) => setStyle(e.target.value as MapStyle)}>
+            <option value="classic">Classic fantasy map (hand-inked)</option>
+            <option value="simple">Simple (flat colours)</option>
           </select>
+        </label>
+        <label>
+          Start with
+          {style === 'classic' ? (
+            <select value={bg === 'sea' ? 'sea' : 'parchment'} onChange={(e) => setBg(e.target.value as Background)}>
+              <option value="sea">Open sea (paint the land)</option>
+              <option value="parchment">All land (carve out the water)</option>
+            </select>
+          ) : (
+            <select value={bg} onChange={(e) => setBg(e.target.value as Background)}>
+              {Object.entries(BACKGROUNDS).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v.label}
+                </option>
+              ))}
+            </select>
+          )}
         </label>
         <div className="row end">
           <button type="button" onClick={onClose}>
