@@ -412,6 +412,8 @@ export interface Pin {
   /** Clicking "enter" on this pin opens another map (e.g. city map from a region pin). */
   childMapId?: string
   note: string
+  /** Set when the pin is a piece on a drawn map that was linked to a page: the piece's id in the drawing. */
+  pieceId?: string
 }
 
 export interface Bookmark {

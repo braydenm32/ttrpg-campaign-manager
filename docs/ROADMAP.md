@@ -17,7 +17,7 @@ The order of these items is a starting point and will change as we see what matt
 - **Map builder, Dungeondraft-style (in stages):**
   - Stage 1 (built): classic hand-inked world maps. Paint land and sea, automatic ragged coastlines, rivers, roads and borders, a library of hand-drawn pieces (mountains, forests, towns, ships, compass roses) with 8 previewable versions each, a click-and-hold scatter brush, curved labels, layers to hide or lock, three looks (ink on parchment, ink on white, coloured) and biome tints.
   - Battle maps (built): the same hand-drawn style seen from above on a 5 ft grid. Paint the ground (grass, dirt, sand, rocky ground, mud, snow, paving, water) with soft uneven edges and inked banks, fences, hedges, stone walls and cliff edges, and 39 top-down pieces (trees, plants, rocks, camp gear, village things, buildings, bridges) with 8 versions of each made thing.
-  - Stage 2: a searchable piece browser, rotation, mixed scatter (several pieces in one brush), and pieces that link to a page and act like pins.
+  - Stage 2 (built): a searchable piece browser with recently used pieces, turning pieces (by hand, with R, or at random) with shadows that still fall the right way, a scatter brush that mixes several pieces, and pieces that link to a page and work like pins on the map, following the usual GM-only, reveal and fog rules.
   - Stage 3: dungeons. A room and corridor tool whose walls merge on their own, doors, and dungeon props.
   - Stage 4: export as PNG and Universal VTT (.dd2vtt) with walls and lights for Foundry and Roll20.
   - Later: lighting, editing on phones, drawing on top of an uploaded map, custom colours.
