@@ -4,7 +4,9 @@
  * curved labels, then saved as the map's picture, so pins, fog and the player view work as usual.
  */
 import { Atlas, type InkStyle, type Point, type Rng, type Tint } from './atlas'
-import { LAYERS, layerOf, type Drawing, type LayerId, type LabelFont, type Look, type Shape, type StampKind, type Terrain } from '../mapDrawing'
+import { hashId, loopArea, makeNoise, roughen, scaleOf, smoothLine, traceLoops } from './geometry'
+import { buildGround, drawGround, groundColour, type GroundMap } from './ground'
+import { LAYERS, layerOf, type Drawing, type GroundId, type LayerId, type LabelFont, type Look, type Shape, type StampKind, type Terrain } from '../mapDrawing'
 
 export const LOOKS: Record<Look, { label: string; mode: 'ink' | 'colour'; paper?: string; ink?: string }> = {
   parchment: { label: 'Ink on parchment', mode: 'ink', paper: '#ead9b0', ink: '#3a2814' },
@@ -24,15 +26,6 @@ const STAMP_ASSET: Record<StampKind, string> = {
   cave: 'city-dot', dungeon: 'city-dot', camp: 'village', ship: 'ship', tree: 'tree', peak: 'mountain', door: 'city-dot', chest: 'city-dot',
   stairs: 'city-dot', skull: 'city-dot', star: 'city-dot', compass: 'compass-rose',
 }
-
-const hashId = (s: string) => {
-  let h = 2166136261
-  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619)
-  return h >>> 0
-}
-
-/** Map size relative to the 1400 px the recipes were tuned at; widths and spacings scale with it. */
-const scaleOf = (W: number, H: number) => Math.max(W, H) / 1400
 
 export function styleFor(d: Drawing, W: number, H: number): InkStyle {
   const look = LOOKS[d.look ?? 'parchment']
@@ -100,189 +93,14 @@ function paintMask(d: Drawing, W: number, H: number, ms: number) {
   return { mw, mh, data }
 }
 
-/** Marching squares over the mask; returns closed loops in map coordinates. */
-function traceLoops(data: Uint8ClampedArray, mw: number, mh: number, ms: number): Point[][] {
-  const P = 2
-  const GW = mw + 2 * P
-  const GH = mh + 2 * P
-  const v = new Float32Array(GW * GH)
-  for (let gy = 0; gy < GH; gy++)
-    for (let gx = 0; gx < GW; gx++) {
-      const x = Math.min(mw - 1, Math.max(0, gx - P))
-      const y = Math.min(mh - 1, Math.max(0, gy - P))
-      v[gy * GW + gx] = data[(y * mw + x) * 4 + 3] / 255
-    }
-  const T = 0.5
-  const pts = new Map<number, Point>()
-  const hId = (x: number, y: number) => (y * GW + x) * 2
-  const vId = (x: number, y: number) => (y * GW + x) * 2 + 1
-  const at = (id: number): Point => {
-    let p = pts.get(id)
-    if (p) return p
-    const cell = id >> 1
-    const x = cell % GW
-    const y = (cell - x) / GW
-    if (id & 1) {
-      const a = v[y * GW + x]
-      const b = v[(y + 1) * GW + x]
-      const t = (T - a) / (b - a || 1)
-      p = [x, y + t]
-    } else {
-      const a = v[y * GW + x]
-      const b = v[y * GW + x + 1]
-      const t = (T - a) / (b - a || 1)
-      p = [x + t, y]
-    }
-    pts.set(id, p)
-    return p
-  }
-  const segs: [number, number][] = []
-  for (let cy = 0; cy < GH - 1; cy++)
-    for (let cx = 0; cx < GW - 1; cx++) {
-      const a = v[cy * GW + cx]
-      const b = v[cy * GW + cx + 1]
-      const c = v[(cy + 1) * GW + cx + 1]
-      const dd = v[(cy + 1) * GW + cx]
-      const k = (a >= T ? 8 : 0) | (b >= T ? 4 : 0) | (c >= T ? 2 : 0) | (dd >= T ? 1 : 0)
-      if (k === 0 || k === 15) continue
-      const top = hId(cx, cy)
-      const bottom = hId(cx, cy + 1)
-      const left = vId(cx, cy)
-      const right = vId(cx + 1, cy)
-      const centre = (a + b + c + dd) / 4 >= T
-      switch (k) {
-        case 1: case 14: segs.push([left, bottom]); break
-        case 2: case 13: segs.push([bottom, right]); break
-        case 3: case 12: segs.push([left, right]); break
-        case 4: case 11: segs.push([top, right]); break
-        case 6: case 9: segs.push([top, bottom]); break
-        case 7: case 8: segs.push([left, top]); break
-        case 5:
-          if (centre) segs.push([left, top], [bottom, right])
-          else segs.push([top, right], [left, bottom])
-          break
-        case 10:
-          if (centre) segs.push([top, right], [left, bottom])
-          else segs.push([left, top], [bottom, right])
-          break
-      }
-    }
-  const byEdge = new Map<number, number[]>()
-  segs.forEach(([p, q], i) => {
-    for (const e of [p, q]) {
-      const l = byEdge.get(e)
-      if (l) l.push(i)
-      else byEdge.set(e, [i])
-    }
-  })
-  const used = new Uint8Array(segs.length)
-  const loops: Point[][] = []
-  for (let i = 0; i < segs.length; i++) {
-    if (used[i]) continue
-    used[i] = 1
-    const ids = [segs[i][0], segs[i][1]]
-    let cur = segs[i][1]
-    for (;;) {
-      const next = (byEdge.get(cur) ?? []).find((j) => !used[j])
-      if (next === undefined) break
-      used[next] = 1
-      cur = segs[next][0] === cur ? segs[next][1] : segs[next][0]
-      if (cur === ids[0]) break
-      ids.push(cur)
-    }
-    if (ids.length < 4) continue
-    loops.push(ids.map((id) => {
-      const [gx, gy] = at(id)
-      return [(gx - P + 0.5) / ms, (gy - P + 0.5) / ms] as Point
-    }))
-  }
-  return loops
-}
-
-function makeNoise(seed: number) {
-  const h = (x: number, y: number) => {
-    let n = Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(seed, 1442695041)
-    n = Math.imul(n ^ (n >>> 13), 1274126177)
-    return ((n ^ (n >>> 16)) >>> 0) / 4294967296
-  }
-  const vn = (x: number, y: number) => {
-    const xi = Math.floor(x)
-    const yi = Math.floor(y)
-    const xf = x - xi
-    const yf = y - yi
-    const u = xf * xf * (3 - 2 * xf)
-    const w = yf * yf * (3 - 2 * yf)
-    const a = h(xi, yi)
-    const b = h(xi + 1, yi)
-    const c = h(xi, yi + 1)
-    const e = h(xi + 1, yi + 1)
-    return a + (b - a) * u + (c - a) * w + (a - b - c + e) * u * w
-  }
-  return (x: number, y: number) => {
-    let s = 0
-    let amp = 1
-    let f = 1
-    let tot = 0
-    for (let o = 0; o < 4; o++) {
-      s += amp * (vn(x * f, y * f) * 2 - 1)
-      tot += amp
-      amp *= 0.5
-      f *= 2.13
-    }
-    return s / tot
-  }
-}
-
-/** Smooth the traced loop, resample it evenly and push it in and out with noise tied to position,
- * so the coast looks hand-drawn and an edit elsewhere doesn't redraw the whole coastline. */
-function roughen(loop: Point[], k: number, noise: (x: number, y: number) => number): Point[] {
-  let p = loop
-  for (let it = 0; it < 2; it++) {
-    const q: Point[] = []
-    for (let i = 0; i < p.length; i++) {
-      const a = p[i]
-      const b = p[(i + 1) % p.length]
-      q.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25], [a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75])
-    }
-    p = q
-  }
-  const step = 3 * k
-  const res: Point[] = []
-  let carry = 0
-  for (let i = 0; i < p.length; i++) {
-    const a = p[i]
-    const b = p[(i + 1) % p.length]
-    const d = Math.hypot(b[0] - a[0], b[1] - a[1])
-    for (let t = carry; t < d; t += step) res.push([a[0] + ((b[0] - a[0]) * t) / d, a[1] + ((b[1] - a[1]) * t) / d])
-    carry = d > 0 ? (((carry - d) % step) + step) % step : carry
-  }
-  if (res.length < 6) return res
-  const amp = 7 * k
-  const wl = 55 * k
-  return res.map((pt, i) => {
-    const a = res[(i - 1 + res.length) % res.length]
-    const b = res[(i + 1) % res.length]
-    const dx = b[0] - a[0]
-    const dy = b[1] - a[1]
-    const len = Math.hypot(dx, dy) || 1
-    const off = noise(pt[0] / wl, pt[1] / wl) * amp
-    return [pt[0] - (dy / len) * off, pt[1] + (dx / len) * off] as Point
-  })
-}
-
-const loopArea = (l: Point[]) => {
-  let a = 0
-  for (let i = 0, j = l.length - 1; i < l.length; j = i++) a += (l[j][0] + l[i][0]) * (l[j][1] - l[i][1])
-  return Math.abs(a / 2)
-}
-
 function landShape(d: Drawing, W: number, H: number): LandShape {
   const ms = Math.min(1, 1000 / Math.max(W, H))
   const { mw, mh, data } = paintMask(d, W, H, ms)
   const k = scaleOf(W, H)
   const noise = makeNoise(d.seed ?? 1)
   const minArea = (6 * k) ** 2
-  const loops = traceLoops(data, mw, mh, ms)
+  // padded well past the coast's wiggle, so land running off the map edge closes out of sight
+  const loops = traceLoops(data, mw, mh, ms, Math.ceil(24 * k * ms) + 2)
     .filter((l) => loopArea(l) > minArea)
     .map((l) => roughen(l, k, noise))
     .filter((l) => l.length > 5)
@@ -301,28 +119,6 @@ function landShape(d: Drawing, W: number, H: number): LandShape {
 }
 
 /* ---------------- lines ---------------- */
-
-/** Catmull-Rom through the points, sampled every few px, so freehand lines come out smooth. */
-function smoothLine(points: Point[], smooth: boolean, step: number): Point[] {
-  if (!smooth || points.length < 3) return points
-  const out: Point[] = []
-  const p = (i: number) => points[Math.max(0, Math.min(points.length - 1, i))]
-  for (let i = 0; i < points.length - 1; i++) {
-    const [p0, p1, p2, p3] = [p(i - 1), p(i), p(i + 1), p(i + 2)]
-    const n = Math.max(2, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / step))
-    for (let j = 0; j < n; j++) {
-      const t = j / n
-      const t2 = t * t
-      const t3 = t2 * t
-      out.push([
-        0.5 * (2 * p1[0] + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
-        0.5 * (2 * p1[1] + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3),
-      ])
-    }
-  }
-  out.push(points[points.length - 1])
-  return out
-}
 
 type Area = Extract<Shape, { kind: 'area' }>
 
@@ -369,10 +165,214 @@ function drawArea(ctx: CanvasRenderingContext2D, s: Area, st: InkStyle, k: numbe
   ctx.restore()
 }
 
-function drawLine(ctx: CanvasRenderingContext2D, s: Extract<Shape, { kind: 'line' }>, st: InkStyle, k: number) {
+const mixHex = (a: string, b: string, t: number) => {
+  const p = (c: string) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16))
+  const [x, y] = [p(a), p(b)]
+  return `#${x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('')}`
+}
+
+/** The line moved sideways by d (positive is to the right of the direction it was drawn in). */
+function offsetLine(pts: Point[], d: number): Point[] {
+  return pts.map((p, i) => {
+    const a = pts[Math.max(0, i - 1)]
+    const b = pts[Math.min(pts.length - 1, i + 1)]
+    const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1
+    return [p[0] - ((b[1] - a[1]) / l) * d, p[1] + ((b[0] - a[0]) / l) * d]
+  })
+}
+
+/** Evenly spaced points along a line, each with the direction of the line there. */
+function along(pts: Point[], step: number): { x: number; y: number; ang: number }[] {
+  const out: { x: number; y: number; ang: number }[] = []
+  let carry = 0
+  for (let i = 1; i < pts.length; i++) {
+    const [x0, y0] = pts[i - 1]
+    const [x1, y1] = pts[i]
+    const d = Math.hypot(x1 - x0, y1 - y0)
+    const ang = Math.atan2(y1 - y0, x1 - x0)
+    let t = carry
+    for (; t < d; t += step) out.push({ x: x0 + ((x1 - x0) * t) / d, y: y0 + ((y1 - y0) * t) / d, ang })
+    carry = t - d
+  }
+  return out
+}
+
+const stroke = (ctx: CanvasRenderingContext2D, pts: Point[]) => {
+  ctx.beginPath()
+  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+  ctx.stroke()
+}
+
+/** Battle-map lines, seen from above. `u` is the size of a 5 ft square over 70 px. */
+function drawBattleLine(ctx: CanvasRenderingContext2D, s: Extract<Shape, { kind: 'line' }>, pts: Point[], st: InkStyle, r: Rng, u: number) {
+  const colour = st.mode === 'colour'
+  const shadow = st.shadows ? (colour ? 'rgba(40,30,15,.25)' : 'rgba(35,26,16,.16)') : undefined
+  ctx.save()
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  switch (s.style) {
+    case 'fence': {
+      const wood = colour ? '#7a5634' : st.ink
+      if (shadow) {
+        ctx.strokeStyle = shadow
+        ctx.lineWidth = 6 * u
+        stroke(ctx, pts.map(([x, y]) => [x + 4 * u, y + 4 * u] as Point))
+      }
+      if (colour) {
+        ctx.strokeStyle = wood
+        ctx.lineWidth = 5 * u
+        stroke(ctx, pts)
+      }
+      for (const off of [-2.6, 2.6]) Atlas.inkStroke(ctx, offsetLine(pts, off * u), r, { w: 1.3 * st.line, wob: 0.35, taper: 0.1, color: st.ink })
+      for (const p of along(pts, 60 * u)) {
+        ctx.save()
+        ctx.translate(p.x, p.y)
+        ctx.rotate(p.ang + Atlas.R(r, -0.15, 0.15))
+        ctx.fillStyle = colour ? '#8a643e' : st.paper
+        ctx.strokeStyle = st.ink
+        ctx.lineWidth = 0.9 * st.line
+        const h = 4.5 * u
+        ctx.fillRect(-h, -h, 2 * h, 2 * h)
+        ctx.strokeRect(-h, -h, 2 * h, 2 * h)
+        ctx.beginPath()
+        ctx.moveTo(-h * 0.4, -h * 0.4)
+        ctx.lineTo(h * 0.4, h * 0.4)
+        ctx.stroke()
+        ctx.restore()
+      }
+      break
+    }
+    case 'hedge': {
+      const hw = 20 * u
+      const leaf = colour ? st.tint.forest : st.paper
+      const dark = colour ? st.tint.forestDark : st.ink
+      if (shadow) {
+        ctx.strokeStyle = shadow
+        ctx.lineWidth = 2 * hw
+        stroke(ctx, pts.map(([x, y]) => [x + 7 * u, y + 7 * u] as Point))
+      }
+      // a bumpy outline: overlapping leaf clumps along both edges, inked, then the insides painted over
+      const clumps: { x: number; y: number; rad: number }[] = []
+      for (const side of [-1, 1])
+        for (const p of along(offsetLine(pts, side * hw * 0.5), 10 * u)) clumps.push({ x: p.x + Atlas.R(r, -2, 2) * u, y: p.y + Atlas.R(r, -2, 2) * u, rad: Atlas.R(r, 8, 12) * u })
+      ctx.strokeStyle = st.ink
+      ctx.lineWidth = 2 * hw * 0.62 + 2 * st.line
+      stroke(ctx, pts)
+      ctx.fillStyle = st.ink
+      for (const c of clumps) {
+        ctx.beginPath()
+        ctx.arc(c.x, c.y, c.rad + 1.1 * st.line, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      ctx.strokeStyle = leaf
+      ctx.lineWidth = 2 * hw * 0.62
+      stroke(ctx, pts)
+      ctx.fillStyle = leaf
+      for (const c of clumps) {
+        ctx.beginPath()
+        ctx.arc(c.x, c.y, c.rad, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      // leafy marks inside, heavier on the shaded (lower right) side
+      ctx.strokeStyle = dark
+      ctx.lineWidth = 0.8 * st.line
+      ctx.globalAlpha = colour ? 0.7 : 0.75
+      ctx.beginPath()
+      for (const c of clumps) {
+        const a = Atlas.R(r, 0, Math.PI * 2)
+        ctx.moveTo(c.x + Math.cos(a) * c.rad * 0.5, c.y + Math.sin(a) * c.rad * 0.5)
+        ctx.arc(c.x, c.y, c.rad * 0.5, a, a + Atlas.R(r, 1, 2))
+        if (r() < 0.5) {
+          ctx.moveTo(c.x + c.rad * 0.2, c.y + c.rad * 0.65)
+          ctx.arc(c.x + c.rad * 0.1, c.y + c.rad * 0.1, c.rad * 0.6, 0.4, 1.6)
+        }
+      }
+      ctx.stroke()
+      break
+    }
+    case 'cliff': {
+      // the drop is to the right of the direction the line was drawn: hachures running down the face
+      if (colour) {
+        ctx.strokeStyle = 'rgba(90,80,64,.35)'
+        ctx.lineWidth = 36 * u
+        stroke(ctx, offsetLine(pts, 18 * u))
+        ctx.strokeStyle = 'rgba(70,60,48,.3)'
+        ctx.lineWidth = 12 * u
+        stroke(ctx, offsetLine(pts, 7 * u))
+      }
+      const samples = along(pts, 4 * u)
+      samples.forEach((p, i) => {
+        const len = (14 + 18 * Math.abs(Math.sin(i * 0.23) * Math.cos(i * 0.07)) + Atlas.R(r, 0, 6)) * u
+        const a = p.ang + Math.PI / 2 + Atlas.R(r, -0.12, 0.12)
+        Atlas.inkStroke(
+          ctx,
+          [
+            [p.x, p.y],
+            [p.x + Math.cos(a) * len, p.y + Math.sin(a) * len],
+          ],
+          r,
+          { w: (i % 3 ? 0.9 : 1.4) * st.line, wob: 0.3, taper: 0.9, color: st.ink },
+        )
+      })
+      Atlas.inkStroke(ctx, pts, r, { w: 3 * st.line, wob: 0.6, taper: 0.1, color: st.ink })
+      break
+    }
+    case 'wall': {
+      // a dry-stone wall: two courses of rough stones between inked edges
+      const hw = 13 * u
+      if (shadow) {
+        ctx.strokeStyle = shadow
+        ctx.lineWidth = 2 * hw
+        stroke(ctx, pts.map(([x, y]) => [x + 6 * u, y + 6 * u] as Point))
+      }
+      const stoneCol = colour ? groundColour('stone', st.tint) : st.paper
+      ctx.strokeStyle = st.ink
+      ctx.lineWidth = 2 * hw + 2.4 * st.line
+      stroke(ctx, pts)
+      ctx.strokeStyle = stoneCol
+      ctx.lineWidth = 2 * hw
+      stroke(ctx, pts)
+      ctx.lineWidth = 0.9 * st.line
+      for (const course of [-0.5, 0.5]) {
+        let carry = 0
+        for (const p of along(offsetLine(pts, course * hw), 2 * u)) {
+          carry -= 2 * u
+          if (carry > 0) continue
+          const len = Atlas.R(r, 14, 24) * u
+          carry = len
+          const nx = -Math.sin(p.ang)
+          const ny = Math.cos(p.ang)
+          const tx = Math.cos(p.ang)
+          const ty = Math.sin(p.ang)
+          const hh = hw * 0.46
+          const q: Point[] = [
+            [p.x + nx * hh * Atlas.R(r, 0.8, 1) + tx * 1.5 * u, p.y + ny * hh * Atlas.R(r, 0.8, 1) + ty * 1.5 * u],
+            [p.x + nx * hh * Atlas.R(r, 0.8, 1) + tx * (len - 1.5 * u), p.y + ny * hh * Atlas.R(r, 0.8, 1) + ty * (len - 1.5 * u)],
+            [p.x - nx * hh * Atlas.R(r, 0.8, 1) + tx * (len - 1.5 * u), p.y - ny * hh * Atlas.R(r, 0.8, 1) + ty * (len - 1.5 * u)],
+            [p.x - nx * hh * Atlas.R(r, 0.8, 1) + tx * 1.5 * u, p.y - ny * hh * Atlas.R(r, 0.8, 1) + ty * 1.5 * u],
+          ]
+          Atlas.poly(ctx, q)
+          ctx.fillStyle = colour ? mixHex(stoneCol, r() < 0.5 ? '#6f6656' : '#f4ecdc', Atlas.R(r, 0, 0.3)) : st.paper
+          ctx.fill()
+          ctx.strokeStyle = st.ink
+          ctx.globalAlpha = 0.85
+          ctx.stroke()
+          ctx.globalAlpha = 1
+        }
+      }
+      break
+    }
+    default:
+      Atlas.inkStroke(ctx, pts, r, { w: 1.8 * st.line, wob: 0.5, taper: 0.6, color: st.ink })
+  }
+  ctx.restore()
+}
+
+function drawLine(ctx: CanvasRenderingContext2D, s: Extract<Shape, { kind: 'line' }>, st: InkStyle, k: number, battleUnit?: number) {
   const r = Atlas.rng(hashId(s.id))
   const pts = smoothLine(s.points, s.smooth, 6 * k)
   const T = Atlas.terrain
+  if (battleUnit && ['fence', 'hedge', 'cliff', 'wall', 'ink'].includes(s.style)) return drawBattleLine(ctx, s, pts, st, r, battleUnit)
   switch (s.style) {
     case 'river':
       T.river(ctx, pts, r, st, { w0: 0.5, w1: 3 })
@@ -401,10 +401,16 @@ function drawLine(ctx: CanvasRenderingContext2D, s: Extract<Shape, { kind: 'line
     case 'ink':
       Atlas.inkStroke(ctx, pts, r, { w: 1.8 * st.line, wob: 0.5, taper: 0.6, color: st.ink })
       break
+    default:
+      // fences, hedges and cliffs are drawn small on world maps
+      drawBattleLine(ctx, s, pts, st, r, 0.5 * st.line)
   }
 }
 
 /* ---------------- pieces and labels ---------------- */
+
+/** On battle maps the old symbols that have a top-down piece use it. */
+const STAMP_BATTLE: Partial<Record<StampKind, string>> = { tree: 'bm-tree', camp: 'bm-tent', chest: 'bm-chest', ship: 'bm-rowboat', inn: 'bm-house', temple: 'bm-chapel', tower: 'bm-tower', ruins: 'bm-ruin' }
 
 export interface Piece {
   id: string
@@ -416,11 +422,19 @@ export interface Piece {
   flip: boolean
 }
 
-const pieceOf = (s: Shape): Piece | undefined =>
+const pieceOf = (s: Shape, battle = false): Piece | undefined =>
   s.kind === 'asset'
     ? { id: s.id, asset: s.asset, at: s.at, size: s.size, seed: s.seed, variant: s.variant, flip: !!s.flip }
     : s.kind === 'stamp'
-      ? { id: s.id, asset: STAMP_ASSET[s.stamp], at: s.at, size: s.size, seed: hashId(s.id), variant: hashId(s.id) % 8, flip: false }
+      ? {
+          id: s.id,
+          asset: (battle && STAMP_BATTLE[s.stamp] && Atlas.assets[STAMP_BATTLE[s.stamp]!] ? STAMP_BATTLE[s.stamp] : undefined) ?? STAMP_ASSET[s.stamp],
+          at: s.at,
+          size: s.size,
+          seed: hashId(s.id),
+          variant: hashId(s.id) % 8,
+          flip: false,
+        }
       : undefined
 
 /** Rough area a piece covers, [x, y, w, h], for clicking and selecting. */
@@ -586,8 +600,28 @@ function landFor(d: Drawing, W: number, H: number): LandShape & { key: string } 
   return landCache
 }
 
+let groundCache: GroundMap | undefined
+
+/** A battle map's ground only changes when its strokes, old area shapes, starting ground or seed change. */
+function groundFor(d: Drawing, W: number, H: number): GroundMap {
+  const areas = d.shapes.filter((s) => s.kind === 'area').map((s) => `${s.id}:${s.kind === 'area' ? s.terrain + s.points.length + s.points[0] : ''}`)
+  const strokes = (d.ground ?? []).map((s) => s.id)
+  const key = `${W}x${H}|${d.groundBase}|${d.gridSize}|${d.seed}|${d.hidden?.includes('land') ? 'h' : ''}|${areas.join(',')}|${strokes.join(',')}`
+  if (groundCache?.key !== key) groundCache = buildGround(d, W, H, key)
+  return groundCache
+}
+
 /** Whether a point is on land, so the scatter brush can keep trees ashore and ships at sea. */
-export const landTest = (d: Drawing, W: number, H: number) => landFor(d, W, H).isLand
+export const landTest = (d: Drawing, W: number, H: number): ((x: number, y: number) => boolean) => {
+  if (d.scene === 'battle') {
+    const gm = groundFor(d, W, H)
+    return (x, y) => gm.at(x, y) !== 'water'
+  }
+  return landFor(d, W, H).isLand
+}
+
+/** What a battle map's ground is at a point. */
+export const groundAt = (d: Drawing, W: number, H: number): ((x: number, y: number) => GroundId) => groundFor(d, W, H).at
 
 function drawBase(d: Drawing, W: number, H: number, scale: number, st: InkStyle, land: LandShape, landPaper: string, r: Rng) {
   const canvas = document.createElement('canvas')
@@ -651,29 +685,40 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
   const landPaper = colour ? st.tint.land : st.paper
   const stLand = { ...st, paper: landPaper }
 
-  // sea, then land with its coast: the slow part, so it's kept until the land or the look changes
-  const land = landFor(d, W, H)
-  const baseKey = `${land.key}|${look}|${d.biome}|${scale}|${canvas.width}x${canvas.height}`
-  if (baseCache?.key !== baseKey) baseCache = { key: baseKey, canvas: drawBase(d, W, H, scale, st, land, landPaper, r) }
+  const battle = d.scene === 'battle'
+  const u = (d.gridSize || 70) / 70
+  // the ground, or sea then land with its coast: the slow part, so it's kept until it or the look changes
+  const land = battle ? undefined : landFor(d, W, H)
+  if (land) {
+    const baseKey = `${land.key}|${look}|${d.biome}|${scale}|${canvas.width}x${canvas.height}`
+    if (baseCache?.key !== baseKey) baseCache = { key: baseKey, canvas: drawBase(d, W, H, scale, st, land, landPaper, r) }
+  } else {
+    const gm = groundFor(d, W, H)
+    const baseKey = `${gm.key}|${look}|${d.biome}|${scale}|${canvas.width}x${canvas.height}`
+    if (baseCache?.key !== baseKey) baseCache = { key: baseKey, canvas: drawGround(gm, d, W, H, scale, st, r) }
+  }
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
   ctx.drawImage(baseCache.canvas, 0, 0)
   ctx.restore()
 
   const visible = (s: Shape) => !hidden.has(layerOf(s))
-  for (const s of d.shapes) if (s.kind === 'area' && visible(s) && marked(s)) drawArea(ctx, s, st, k)
+  // on battle maps old areas became ground, so only rooms keep an outline
+  for (const s of d.shapes) if (s.kind === 'area' && visible(s) && (battle ? !s.smooth : marked(s))) drawArea(ctx, s, st, k)
 
   // lines: rivers under roads and borders
   const lines = d.shapes.filter((s): s is Extract<Shape, { kind: 'line' }> => s.kind === 'line' && visible(s))
-  for (const s of lines.filter((s) => s.style === 'river')) drawLine(ctx, s, st, k)
-  for (const s of lines.filter((s) => s.style !== 'river')) drawLine(ctx, s, st, k)
+  const bu = battle ? u : undefined
+  for (const s of lines.filter((s) => s.style === 'river')) drawLine(ctx, s, st, k, bu)
+  for (const s of lines.filter((s) => s.style !== 'river')) drawLine(ctx, s, st, k, bu)
 
-  // pieces: lower ones in front
-  const pieces = d.shapes.filter(visible).map(pieceOf).filter((p): p is Piece => !!p)
-  pieces.sort((a, b) => a.at[1] - b.at[1]).forEach((p) => drawPiece(ctx, p, stLand))
+  // pieces: on world maps lower ones stand in front; seen from above, the one put down last is on top
+  const pieces = d.shapes.filter(visible).map((s) => pieceOf(s, battle)).filter((p): p is Piece => !!p)
+  if (!battle) pieces.sort((a, b) => a.at[1] - b.at[1])
+  pieces.forEach((p) => drawPiece(ctx, p, stLand))
 
   // colour washes over the land keep the ink lines
-  if (colour && land.loops.length) {
+  if (colour && land && land.loops.length) {
     ctx.save()
     ctx.clip(land.path, 'evenodd')
     ctx.globalCompositeOperation = 'multiply'
@@ -688,9 +733,10 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
 
   drawGrid(ctx, d, W, H, st)
 
-  if (!hidden.has('labels')) for (const s of d.shapes) if (s.kind === 'label') drawLabel(ctx, s, st, landPaper, k)
+  if (!hidden.has('labels')) for (const s of d.shapes) if (s.kind === 'label') drawLabel(ctx, s, st, battle && colour ? '#efe6cc' : landPaper, k)
 
-  agePaper(ctx, W, H, look, Atlas.rng((d.seed ?? 1) + 99), k)
+  // battle maps in colour stay clean for the table and virtual tabletops; ink ones get the old paper
+  if (!battle || !colour) agePaper(ctx, W, H, look, Atlas.rng((d.seed ?? 1) + 99), battle ? u : k)
   if (d.frame !== false) drawFrame(ctx, W, H, st, k)
   return canvas
 }

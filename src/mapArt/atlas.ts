@@ -9,6 +9,9 @@ import './lib/mountains.js'
 import './lib/vegetation.js'
 import './lib/settlements.js'
 import './lib/furniture.js'
+import './lib/bm-nature.js'
+import './lib/bm-props.js'
+import './lib/bm-buildings.js'
 
 export type Point = [number, number]
 export type Rng = () => number
@@ -66,6 +69,7 @@ export interface AtlasApi {
   style(mode: 'ink' | 'colour', biome?: string, shadows?: boolean): InkStyle
   wobble(pts: Point[], r: Rng, amp?: number, step?: number): Point[]
   inkStroke(ctx: CanvasRenderingContext2D, pts: Point[], r: Rng, opts?: { w?: number; wob?: number; taper?: number; color?: string }): void
+  poly(ctx: CanvasRenderingContext2D, pts: Point[]): void
   terrain: TerrainApi
 }
 
@@ -77,6 +81,16 @@ export const ASSET_GROUPS: { label: string; categories: string[] }[] = [
   { label: 'Forests & plants', categories: ['vegetation'] },
   { label: 'Towns & landmarks', categories: ['settlements', 'landmarks', 'symbols'] },
   { label: 'Sea & map furniture', categories: ['furniture', 'sea'] },
+]
+
+/** The groups the stamp picker shows on battle maps (pieces seen from above). */
+export const BATTLE_GROUPS: { label: string; categories: string[] }[] = [
+  { label: 'Trees & plants', categories: ['bm-trees', 'bm-plants'] },
+  { label: 'Rocks & water', categories: ['bm-rocks', 'bm-water'] },
+  { label: 'Camp', categories: ['bm-camp'] },
+  { label: 'Buildings', categories: ['bm-buildings'] },
+  { label: 'Village', categories: ['bm-village'] },
+  { label: 'Things', categories: ['bm-objects'] },
 ]
 
 export const assetNamesIn = (categories: string[]) => Object.keys(Atlas.assets).filter((n) => categories.includes(Atlas.assets[n].category))

@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Empty, Modal, VisibilityBadge } from '../components'
 import { db, newId, type WorldMap } from '../db'
 import { imageSize, saveFileAsAsset, useAssetUrl, useWorld } from '../hooks'
-import { BACKGROUNDS, emptyDrawing, renderDrawing, type Background, type MapStyle } from '../mapDrawing'
+import { BACKGROUNDS, emptyDrawing, GROUNDS, renderDrawing, type Background, type GroundId, type MapStyle, type Scene } from '../mapDrawing'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { MapTrifold, PencilSimple } from '@phosphor-icons/react'
@@ -78,10 +78,10 @@ export default function MapList() {
 }
 
 const SIZES = {
-  region: { label: 'World or region (2400 × 1600)', w: 2400, h: 1600, bg: 'sea' as Background, style: 'classic' as MapStyle },
-  city: { label: 'Town or city (1800 × 1200)', w: 1800, h: 1200, bg: 'grass' as Background, style: 'simple' as MapStyle },
-  dungeon: { label: 'Dungeon or building, 5 ft squares (1400 × 1400)', w: 1400, h: 1400, bg: 'stone' as Background, style: 'simple' as MapStyle },
-  battle: { label: 'Battle map (2100 × 1400)', w: 2100, h: 1400, bg: 'grass' as Background, style: 'simple' as MapStyle },
+  region: { label: 'World or region (2400 × 1600)', w: 2400, h: 1600, bg: 'sea' as Background, style: 'classic' as MapStyle, scene: 'world' as Scene, ground: 'grass' as GroundId },
+  city: { label: 'Town or city (1800 × 1200)', w: 1800, h: 1200, bg: 'grass' as Background, style: 'simple' as MapStyle, scene: 'world' as Scene, ground: 'grass' as GroundId },
+  dungeon: { label: 'Dungeon or building, 5 ft squares (1400 × 1400)', w: 1400, h: 1400, bg: 'stone' as Background, style: 'simple' as MapStyle, scene: 'battle' as Scene, ground: 'paving' as GroundId },
+  battle: { label: 'Battle map, 5 ft squares (2100 × 1400)', w: 2100, h: 1400, bg: 'grass' as Background, style: 'classic' as MapStyle, scene: 'battle' as Scene, ground: 'grass' as GroundId },
 }
 
 function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose: () => void; onCreated: (id: string) => void }) {
@@ -89,6 +89,8 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
   const [size, setSize] = useState<keyof typeof SIZES>('region')
   const [bg, setBg] = useState<Background>('sea')
   const [style, setStyle] = useState<MapStyle>('classic')
+  const [ground, setGround] = useState<GroundId>('grass')
+  const scene = SIZES[size].scene
   return (
     <Modal title="Draw a new map" onClose={onClose}>
       <form
@@ -96,7 +98,7 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
         onSubmit={async (e) => {
           e.preventDefault()
           const { w, h } = SIZES[size]
-          const drawing = emptyDrawing(style === 'classic' && bg !== 'sea' ? 'parchment' : bg, style)
+          const drawing = emptyDrawing(style === 'classic' && scene === 'world' && bg !== 'sea' ? 'parchment' : bg, style, scene, ground)
           let blob: Blob
           if (style === 'classic') {
             const { renderClassic, classicBlob, loadMapFonts } = await import('../mapArt/classic')
@@ -123,6 +125,7 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
               setSize(k)
               setBg(SIZES[k].bg)
               setStyle(SIZES[k].style)
+              setGround(SIZES[k].ground)
             }}
           >
             {Object.entries(SIZES).map(([k, v]) => (
@@ -143,7 +146,15 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
         </label>
         <label>
           Start with
-          {style === 'classic' ? (
+          {style === 'classic' && scene === 'battle' ? (
+            <select value={ground} onChange={(e) => setGround(e.target.value as GroundId)}>
+              {(Object.keys(GROUNDS) as GroundId[]).map((g) => (
+                <option key={g} value={g}>
+                  {GROUNDS[g]} everywhere (paint the rest)
+                </option>
+              ))}
+            </select>
+          ) : style === 'classic' ? (
             <select value={bg === 'sea' ? 'sea' : 'parchment'} onChange={(e) => setBg(e.target.value as Background)}>
               <option value="sea">Open sea (paint the land)</option>
               <option value="parchment">All land (carve out the water)</option>

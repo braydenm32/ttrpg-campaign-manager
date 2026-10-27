@@ -9,6 +9,7 @@ import { renderPlayerFog } from '../fog'
 import {
   BACKGROUNDS,
   drawingInnerSvg,
+  GROUNDS,
   LAYERS,
   LINE_STYLES,
   pathFor,
@@ -19,17 +20,20 @@ import {
   type Background,
   type Biome,
   type Drawing,
+  type GroundId,
   type LabelFont,
   type LayerId,
   type LineStyle,
   type Look,
   type Point,
+  type Scene,
   type Shape,
   type StampKind,
   type Terrain,
 } from '../mapDrawing'
-import { ASSET_GROUPS, Atlas, assetNamesIn } from '../mapArt/atlas'
+import { ASSET_GROUPS, Atlas, assetNamesIn, BATTLE_GROUPS } from '../mapArt/atlas'
 import { classicBlob, classicHitSvg, drawPiece, FONTS, landTest, loadMapFonts, LOOKS, renderClassic, styleFor } from '../mapArt/classic'
+import { groundColour } from '../mapArt/ground'
 import { useViewMode } from '../viewMode'
 import { worldPath } from '../paths'
 
@@ -63,19 +67,43 @@ const CLASSIC_TOOLS: ToolDef[] = [
   { id: 'erase', icon: '🧽', label: 'Erase', hint: 'Click a piece, line or label to delete it, or drag across several' },
 ]
 
+const BATTLE_TOOLS: ToolDef[] = [
+  { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a piece, line or label to edit it, drag to move it' },
+  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll to zoom' },
+  { id: 'land', icon: '🖌', label: 'Ground', hint: 'Drag to paint grass, dirt, sand, stone, mud, snow, paving or water. Where two kinds meet they blend softly' },
+  { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw fences, hedges, stone walls and cliff edges' },
+  { id: 'stamp', icon: '🌳', label: 'Place', hint: 'Click to place a piece. Click and hold, then drag, to scatter lots of them' },
+  { id: 'label', icon: '🔤', label: 'Label', hint: 'Click to place text, or drag to write it along a curve' },
+  { id: 'erase', icon: '🧽', label: 'Erase', hint: 'Click a piece, line or label to delete it, or drag across several' },
+]
+
+/** Which kinds of line each kind of map offers. */
+const WORLD_LINES: LineStyle[] = ['river', 'road', 'path', 'border', 'wall', 'ink']
+const BATTLE_LINES: LineStyle[] = ['fence', 'hedge', 'wall', 'cliff', 'ink']
+
+/** Starting sizes for battle-map pieces, at 70 px to a 5 ft square (scaled to the map's grid). */
+const BATTLE_SIZE: Record<string, number> = {
+  'bm-tree': 170, 'bm-pine': 130, 'bm-dead-tree': 140, 'bm-bush': 60, 'bm-grass': 34, 'bm-flowers': 44, 'bm-reeds': 50, 'bm-fern': 44, 'bm-mushrooms': 30,
+  'bm-stump': 44, 'bm-log': 190, 'bm-rock': 70, 'bm-rocks': 100, 'bm-lilypads': 60,
+  'bm-tent': 150, 'bm-campfire': 70, 'bm-bedroll': 80, 'bm-cart': 210, 'bm-crate': 46, 'bm-barrel': 38, 'bm-sacks': 56, 'bm-woodpile': 90, 'bm-chest': 46,
+  'bm-well': 95, 'bm-haystack': 110, 'bm-stall': 170, 'bm-table': 120, 'bm-gravestone': 36, 'bm-statue': 80, 'bm-signpost': 64, 'bm-rowboat': 160,
+  'bm-cottage': 320, 'bm-house': 330, 'bm-barn': 430, 'bm-tower': 230, 'bm-chapel': 400, 'bm-ruin': 380, 'bm-bridge': 300, 'bm-tent-large': 290,
+}
+
 /** Starting sizes for library pieces, at a 1400 px map (scaled to the map's size). */
 const PIECE_SIZE: Record<string, number> = {
   mountain: 36, 'mountain-soft': 30, 'mountain-small': 18, hill: 14, downs: 14, volcano: 60,
   tree: 13, pine: 15, 'tree-tiny': 9, 'forest-clump': 46, 'wood-stipple': 46, grass: 9, marsh: 16, palm: 18, scrub: 12, 'dead-tree': 15,
   'city-dot': 9, 'compass-rose': 120, cartouche: 320, 'scale-bar': 160, ship: 50, 'sea-serpent': 56, cloud: 100, waves: 22, whirlpool: 30,
 }
-const pieceSize = (asset: string, W: number, H: number) => {
+const pieceSize = (asset: string, W: number, H: number, gridSize = 70) => {
+  if (asset.startsWith('bm-')) return Math.round(((BATTLE_SIZE[asset] ?? 80) * (gridSize || 70)) / 70)
   const def = Atlas.assets[asset]
   const base = PIECE_SIZE[asset] ?? (def?.category === 'settlements' ? 34 : def?.category === 'landmarks' ? 30 : 30)
   return Math.round(base * Math.max(1, Math.max(W, H) / 1400))
 }
 /** Natural things get flipped at random, so a range of mountains doesn't all lean the same way. */
-const flips = (asset: string) => ['mountains', 'hills', 'vegetation'].includes(Atlas.assets[asset]?.category ?? '')
+const flips = (asset: string) => ['mountains', 'hills', 'vegetation', 'bm-trees', 'bm-plants', 'bm-rocks'].includes(Atlas.assets[asset]?.category ?? '')
 /** Natural pieces are drawn fresh from a seed; versions 1 to 8 are fixed seeds, so they can be previewed and picked. */
 const versionSeed = (v: number) => 1000 + v * 7919
 const randomSeed = () => 1 + Math.floor(Math.random() * 2 ** 30)
@@ -108,20 +136,25 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const H = map.height
   const [drawing, setDrawing] = useState<Drawing>(map.drawing)
   const classic = drawing.style === 'classic'
-  const TOOLS = classic ? CLASSIC_TOOLS : SIMPLE_TOOLS
+  const battle = classic && drawing.scene === 'battle'
+  const TOOLS = classic ? (battle ? BATTLE_TOOLS : CLASSIC_TOOLS) : SIMPLE_TOOLS
   const [past, setPast] = useState<Drawing[]>([])
   const [future, setFuture] = useState<Drawing[]>([])
   const [tool, setTool] = useState<Tool>(classic ? 'land' : 'area')
   const [terrain, setTerrain] = useState<Terrain>('land')
-  const [lineStyle, setLineStyle] = useState<LineStyle>(classic ? 'river' : 'road')
+  const [lineStyle, setLineStyle] = useState<LineStyle>(classic ? (battle ? 'fence' : 'river') : 'road')
   const [stamp, setStamp] = useState<StampKind>('town')
   const [stampSize, setStampSize] = useState(() => Math.round(Math.max(W, H) / 24))
   const [brush, setBrush] = useState<{ mode: 'land' | 'water'; size: number }>(() => ({ mode: 'land', size: Math.round(Math.max(W, H) / 16) }))
-  const [piece, setPiece] = useState<PieceChoice>(() => ({ asset: 'mountain', size: pieceSize('mountain', W, H), variant: 'random' }))
+  const [piece, setPiece] = useState<PieceChoice>(() => {
+    const asset = battle ? 'bm-tree' : 'mountain'
+    return { asset, size: pieceSize(asset, W, H, drawing.gridSize), variant: 'random' }
+  })
+  const [groundBrush, setGroundBrush] = useState<{ ground: GroundId; size: number }>(() => ({ ground: 'dirt', size: Math.round((drawing.gridSize || 70) * 2) }))
   const [spray, setSpray] = useState(() => ({ spread: Math.round(Math.max(W, H) / 18), thickness: 3 }))
   const [labelText, setLabelText] = useState('')
   const [labelSize, setLabelSize] = useState(() => Math.round(Math.max(W, H) / 40))
-  const [labelFont, setLabelFont] = useState<LabelFont>('region')
+  const [labelFont, setLabelFont] = useState<LabelFont>(battle ? 'place' : 'region')
   const [selectedId, setSelectedId] = useState<string>()
   const [view, setView] = useState({ x: 0, y: 0, w: W, h: H })
   const [draft, setDraft] = useState<Point[]>([])
@@ -322,6 +355,12 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
 
   const scatterFits = (): ((p: Point) => boolean) => {
     const cat = Atlas.assets[piece.asset]?.category ?? ''
+    if (battle) {
+      if (piece.asset === 'bm-bridge') return () => true
+      const onWater = cat === 'bm-water' || piece.asset === 'bm-rowboat'
+      const dry = landTest(drawing, W, H)
+      return ([x, y]) => dry(x, y) !== onWater
+    }
     const sea = cat === 'sea' && piece.asset !== 'cloud'
     if (!sea && !ASHORE.includes(cat)) return () => true
     const isLand = landTest(drawing, W, H)
@@ -490,7 +529,10 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     if (g.kind === 'draw') {
       const pts = simplify(g.points, 1.5 * unitsPerPixel())
       setDraft([])
-      if (tool === 'land') {
+      if (tool === 'land' && battle) {
+        const stroke = { id: newId(), ground: groundBrush.ground, size: groundBrush.size, points: pts.length > 1 ? pts : [g.points[0]] }
+        commit({ ...drawing, ground: [...(drawing.ground ?? []), stroke] })
+      } else if (tool === 'land') {
         const stroke = { id: newId(), mode: brush.mode, size: brush.size, points: pts.length > 1 ? pts : [g.points[0]] }
         commit({ ...drawing, land: [...(drawing.land ?? []), stroke] })
       }
@@ -595,8 +637,9 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                 <path
                   d={draftPath}
                   fill="none"
-                  stroke={brush.mode === 'water' ? 'rgba(80,140,190,.45)' : 'rgba(224,179,84,.45)'}
-                  strokeWidth={brush.size}
+                  stroke={battle ? groundColour(groundBrush.ground, Atlas.BIOMES[drawing.biome ?? 'temperate']) : brush.mode === 'water' ? 'rgba(80,140,190,.45)' : 'rgba(224,179,84,.45)'}
+                  strokeOpacity={battle ? 0.6 : undefined}
+                  strokeWidth={battle ? groundBrush.size : brush.size}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   pointerEvents="none"
@@ -634,7 +677,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
               W={W}
               H={H}
               {...{ terrain, setTerrain, lineStyle, setLineStyle, stamp, setStamp, stampSize, setStampSize, labelText, setLabelText, labelSize, setLabelSize }}
-              {...{ brush, setBrush, piece, setPiece, spray, setSpray, labelFont, setLabelFont }}
+              {...{ brush, setBrush, piece, setPiece, spray, setSpray, labelFont, setLabelFont, groundBrush, setGroundBrush }}
             />
           )}
           {classic && (
@@ -651,7 +694,10 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {LAYERS.map((l) => (
+                  {(battle
+                    ? LAYERS.filter((l) => l.id !== 'rivers').map((l) => ({ ...l, label: l.id === 'land' ? 'Ground & water' : l.id === 'paths' ? 'Fences, walls & hedges' : l.label }))
+                    : LAYERS
+                  ).map((l) => (
                     <tr key={l.id}>
                       <td>{l.label}</td>
                       <td>
@@ -677,13 +723,31 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                   value={drawing.style ?? 'simple'}
                   onChange={(e) => {
                     const style = e.target.value as 'simple' | 'classic'
+                    // a map with a grid was most likely a battle map
+                    const scene: Scene = drawing.scene ?? (drawing.grid !== 'none' ? 'battle' : 'world')
+                    const groundBase: GroundId = drawing.background === 'stone' ? 'paving' : drawing.background === 'sea' ? 'water' : 'grass'
                     commit(
                       style === 'classic'
-                        ? { look: 'parchment', biome: 'temperate', shadows: true, frame: true, seed: 1 + Math.floor(Math.random() * 99999), ...drawing, style }
+                        ? {
+                            look: scene === 'battle' ? 'colour' : 'parchment',
+                            biome: 'temperate',
+                            shadows: true,
+                            frame: scene !== 'battle',
+                            seed: 1 + Math.floor(Math.random() * 99999),
+                            groundBase,
+                            ...drawing,
+                            style,
+                            scene,
+                          }
                         : { ...drawing, style },
                     )
                     setTool(style === 'classic' ? 'land' : 'area')
-                    if (style === 'classic' && lineStyle === 'road') setLineStyle('river')
+                    if (style === 'classic') setLineStyle(scene === 'battle' ? 'fence' : 'river')
+                    else setLineStyle('road')
+                    if (style === 'classic') {
+                      const asset = scene === 'battle' ? 'bm-tree' : 'mountain'
+                      setPiece({ asset, size: pieceSize(asset, W, H, drawing.gridSize), variant: 'random' })
+                    }
                   }}
                 >
                   <option value="classic">Classic fantasy map (hand-inked)</option>
@@ -692,6 +756,29 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
               </label>
               {classic ? (
                 <>
+                  <label>
+                    <span>
+                      Kind of map <Help topic="mapScene" />
+                    </span>
+                    <select
+                      value={drawing.scene ?? 'world'}
+                      onChange={(e) => {
+                        const scene = e.target.value as Scene
+                        commit(
+                          scene === 'battle'
+                            ? { groundBase: 'grass', ...drawing, scene, grid: drawing.grid === 'none' ? 'square' : drawing.grid, frame: false }
+                            : { ...drawing, scene },
+                        )
+                        setTool('land')
+                        setLineStyle(scene === 'battle' ? 'fence' : 'river')
+                        const asset = scene === 'battle' ? 'bm-tree' : 'mountain'
+                        setPiece({ asset, size: pieceSize(asset, W, H, drawing.gridSize), variant: 'random' })
+                      }}
+                    >
+                      <option value="world">World or region (seen from the side)</option>
+                      <option value="battle">Battle map (seen from above)</option>
+                    </select>
+                  </label>
                   <label>
                     Look
                     <select value={drawing.look ?? 'parchment'} onChange={(e) => commit({ ...drawing, look: e.target.value as Look })}>
@@ -712,21 +799,34 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                       ))}
                     </select>
                   </label>
-                  <label>
-                    Start from
-                    <select value={drawing.background === 'sea' ? 'sea' : 'land'} onChange={(e) => commit({ ...drawing, background: e.target.value === 'sea' ? 'sea' : 'parchment' })}>
-                      <option value="sea">Open sea (paint the land)</option>
-                      <option value="land">All land (carve out the water)</option>
-                    </select>
-                  </label>
+                  {battle ? (
+                    <label>
+                      Ground to start on
+                      <select value={drawing.groundBase ?? 'grass'} onChange={(e) => commit({ ...drawing, groundBase: e.target.value as GroundId })}>
+                        {(Object.keys(GROUNDS) as GroundId[]).map((g) => (
+                          <option key={g} value={g}>
+                            {GROUNDS[g]}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <label>
+                      Start from
+                      <select value={drawing.background === 'sea' ? 'sea' : 'land'} onChange={(e) => commit({ ...drawing, background: e.target.value === 'sea' ? 'sea' : 'parchment' })}>
+                        <option value="sea">Open sea (paint the land)</option>
+                        <option value="land">All land (carve out the water)</option>
+                      </select>
+                    </label>
+                  )}
                   <label className="check">
-                    <input type="checkbox" checked={drawing.shadows !== false} onChange={(e) => commit({ ...drawing, shadows: e.target.checked })} /> Shading under pieces
+                    <input type="checkbox" checked={drawing.shadows !== false} onChange={(e) => commit({ ...drawing, shadows: e.target.checked })} /> {battle ? 'Shadows under pieces' : 'Shading under pieces'}
                   </label>
                   <label className="check">
                     <input type="checkbox" checked={drawing.frame !== false} onChange={(e) => commit({ ...drawing, frame: e.target.checked })} /> Border around the map
                   </label>
                   <button type="button" onClick={() => commit({ ...drawing, seed: 1 + Math.floor(Math.random() * 99999) })}>
-                    Redraw the coastline's wiggles
+                    {battle ? 'Redraw the uneven edges' : "Redraw the coastline's wiggles"}
                   </button>
                 </>
               ) : (
@@ -800,20 +900,40 @@ function ToolOptions(p: {
   setSpray: (s: { spread: number; thickness: number }) => void
   labelFont: LabelFont
   setLabelFont: (f: LabelFont) => void
+  groundBrush: { ground: GroundId; size: number }
+  setGroundBrush: (b: { ground: GroundId; size: number }) => void
 }) {
   const classic = p.drawing.style === 'classic'
+  const battle = classic && p.drawing.scene === 'battle'
+  const tint = Atlas.BIOMES[p.drawing.biome ?? 'temperate']
+  const grid = p.drawing.gridSize || 70
   const def = p.tools.find((t) => t.id === p.tool)
   const big = Math.max(p.W, p.H)
   return (
     <div className="form">
       <h2>
         {def?.label}
-        {classic && p.tool === 'land' && <Help topic="landBrush" />}
+        {classic && p.tool === 'land' && <Help topic={battle ? 'groundBrush' : 'landBrush'} />}
         {classic && p.tool === 'stamp' && <Help topic="mapPieces" />}
         {classic && p.tool === 'label' && <Help topic="curvedLabels" />}
       </h2>
       <p className="muted small">{def?.hint}. Hold Space and drag to pan from any tool.</p>
-      {p.tool === 'land' && (
+      {p.tool === 'land' && battle && (
+        <>
+          <div className="swatch-grid">
+            {(Object.keys(GROUNDS) as GroundId[]).map((g) => (
+              <button key={g} className={p.groundBrush.ground === g ? 'on' : ''} onClick={() => p.setGroundBrush({ ...p.groundBrush, ground: g })}>
+                <span className="chip" style={{ width: 16, height: 16, background: groundColour(g, tint) }} /> {GROUNDS[g]}
+              </button>
+            ))}
+          </div>
+          <label>
+            Brush size: {p.groundBrush.size}px ({Math.round((p.groundBrush.size / grid) * 5)} ft)
+            <input type="range" min={Math.round(grid / 4)} max={grid * 8} value={p.groundBrush.size} onChange={(e) => p.setGroundBrush({ ...p.groundBrush, size: Number(e.target.value) })} />
+          </label>
+        </>
+      )}
+      {p.tool === 'land' && !battle && (
         <>
           <div className="row">
             <button className={p.brush.mode === 'land' ? 'primary' : ''} onClick={() => p.setBrush({ ...p.brush, mode: 'land' })}>
@@ -840,12 +960,12 @@ function ToolOptions(p: {
       )}
       {p.tool === 'line' && (
         <div className="swatch-grid">
-          {(Object.keys(LINE_STYLES) as LineStyle[]).map((s) => (
+          {(classic ? (battle ? BATTLE_LINES : WORLD_LINES) : (Object.keys(LINE_STYLES) as LineStyle[])).map((s) => (
             <button key={s} className={p.lineStyle === s ? 'on' : ''} onClick={() => p.setLineStyle(s)}>
               <svg width="34" height="12" aria-hidden>
                 <path d="M2 6 H32" stroke={LINE_STYLES[s].color} strokeWidth={Math.min(6, LINE_STYLES[s].width)} strokeDasharray={LINE_STYLES[s].dash ? '6 4' : undefined} />
               </svg>
-              {LINE_STYLES[s].label}
+              {battle && s === 'wall' ? 'Stone wall' : LINE_STYLES[s].label}
             </button>
           ))}
         </div>
@@ -914,14 +1034,15 @@ function ToolOptions(p: {
 function PiecePicker({ drawing, W, H, piece, setPiece }: { drawing: Drawing; W: number; H: number; piece: PieceChoice; setPiece: (b: PieceChoice) => void }) {
   const def = Atlas.assets[piece.asset]
   const big = Math.max(W, H)
+  const battle = drawing.scene === 'battle'
   return (
     <>
-      {ASSET_GROUPS.map((g) => (
+      {(battle ? BATTLE_GROUPS : ASSET_GROUPS).map((g) => (
         <details key={g.label} className="piece-group" open={g.categories.includes(def?.category ?? '') || undefined}>
           <summary>{g.label}</summary>
           <div className="stamp-grid">
             {assetNamesIn(g.categories).map((n) => (
-              <button key={n} className={piece.asset === n ? 'on' : ''} title={Atlas.assets[n].label} onClick={() => setPiece({ asset: n, size: pieceSize(n, W, H), variant: 'random' })}>
+              <button key={n} className={piece.asset === n ? 'on' : ''} title={Atlas.assets[n].label} onClick={() => setPiece({ asset: n, size: pieceSize(n, W, H, drawing.gridSize), variant: 'random' })}>
                 <PieceThumb asset={n} look={drawing.look} biome={drawing.biome} />
                 <span>{Atlas.assets[n].label}</span>
               </button>

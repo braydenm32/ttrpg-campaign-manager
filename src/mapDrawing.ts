@@ -26,6 +26,9 @@ export const LINE_STYLES = {
   wall: { label: 'Wall', color: '#1a1a1f', width: 10, dash: '' },
   border: { label: 'Border', color: '#8b2f3c', width: 4, dash: '18 6 4 6' },
   ink: { label: 'Ink', color: '#3a2e1c', width: 3, dash: '' },
+  fence: { label: 'Fence', color: '#6b4a2a', width: 4, dash: '3 7' },
+  hedge: { label: 'Hedge', color: '#4f6a35', width: 16, dash: '' },
+  cliff: { label: 'Cliff edge', color: '#5a5348', width: 7, dash: '' },
 } as const
 export type LineStyle = keyof typeof LINE_STYLES
 
@@ -90,6 +93,29 @@ export type MapStyle = 'simple' | 'classic'
 export type Look = 'parchment' | 'white' | 'colour'
 export type Biome = 'temperate' | 'autumn' | 'winter' | 'desert' | 'swamp' | 'tropical'
 export type LayerId = 'land' | 'rivers' | 'paths' | 'objects' | 'labels'
+/** Classic maps are either a world or region seen from the side (mountains, forests), or a battle map seen from above. */
+export type Scene = 'world' | 'battle'
+
+/** What the ground of a battle map is painted with. */
+export const GROUNDS = {
+  grass: 'Grass',
+  dirt: 'Dirt',
+  sand: 'Sand',
+  stone: 'Rocky ground',
+  mud: 'Mud',
+  snow: 'Snow',
+  paving: 'Paving stones',
+  water: 'Water',
+} as const
+export type GroundId = keyof typeof GROUNDS
+
+/** A soft-edged brush stroke of one kind of ground on a battle map; later strokes paint over earlier ones. */
+export interface GroundStroke {
+  id: string
+  ground: GroundId
+  size: number
+  points: Point[]
+}
 
 /** A brush stroke that paints land, or carves water (sea, lakes) back out of it. */
 export interface LandStroke {
@@ -113,6 +139,10 @@ export interface Drawing {
   /** Shapes the ragged coast and the paper stains; change it for a different hand. */
   seed?: number
   land?: LandStroke[]
+  scene?: Scene
+  /** Battle maps: the ground everything starts on, and what's been painted over it. */
+  groundBase?: GroundId
+  ground?: GroundStroke[]
   hidden?: LayerId[]
   locked?: LayerId[]
 }
@@ -128,13 +158,14 @@ export const LAYERS: { id: LayerId; label: string }[] = [
 export const layerOf = (s: Shape): LayerId =>
   s.kind === 'area' ? 'land' : s.kind === 'line' ? (s.style === 'river' ? 'rivers' : 'paths') : s.kind === 'label' ? 'labels' : 'objects'
 
-export const emptyDrawing = (background: Background, style: MapStyle = 'simple'): Drawing => ({
-  background,
-  grid: background === 'stone' ? 'square' : 'none',
-  gridSize: 70,
-  shapes: [],
-  ...(style === 'classic' ? { style, look: 'parchment' as Look, biome: 'temperate' as Biome, shadows: true, frame: true, seed: 1 + Math.floor(Math.random() * 99999), land: [] } : {}),
-})
+export const emptyDrawing = (background: Background, style: MapStyle = 'simple', scene: Scene = 'world', groundBase: GroundId = 'grass'): Drawing => {
+  const seed = 1 + Math.floor(Math.random() * 99999)
+  if (style !== 'classic')
+    return scene === 'battle' ? { background, grid: 'square', gridSize: 70, shapes: [], scene } : { background, grid: background === 'stone' ? 'square' : 'none', gridSize: 70, shapes: [] }
+  if (scene === 'battle')
+    return { background, grid: 'square', gridSize: 70, shapes: [], style, scene, look: 'colour', biome: 'temperate', shadows: true, frame: false, seed, groundBase, ground: [] }
+  return { background, grid: 'none', gridSize: 70, shapes: [], style, look: 'parchment', biome: 'temperate', shadows: true, frame: true, seed, land: [] }
+}
 
 /** Smooth closed or open path through the points (Catmull-Rom converted to Béziers). */
 export function pathFor(points: Point[], closed: boolean, smooth: boolean) {

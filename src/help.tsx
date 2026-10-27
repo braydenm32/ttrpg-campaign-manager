@@ -60,7 +60,11 @@ export const HELP = {
     'Hide the map from players and uncover it as they explore. Uncover a circle, a box or any shape; switch to Cover to hide a part again. Players get a copy of the picture with the fog painted on, so covered areas and the pins in them can’t be peeked at.',
   mapBuilder: 'Draw a map from scratch: paint land and water, draw roads, rivers and borders, place mountains, forests and towns, and add labels. It then works like any uploaded map: pins, regions, fog and the player view.',
   mapStyle:
-    'Classic is the hand-inked look of old fantasy maps (think Middle-earth or the Wheel of Time), with ink on parchment, ink on white or a coloured version. Simple is the original flat-colour style. You can switch at any time.',
+    'Classic is the hand-drawn look: old fantasy world maps (think Middle-earth or the Wheel of Time), or hand-drawn battle maps seen from above, in ink on parchment, ink on white or colour. Simple is the original flat-colour style. You can switch at any time.',
+  mapScene:
+    'A world or region map is seen from the side, the old fantasy-map way: mountains, forests and towns drawn as little pictures. A battle map is seen from above, on a grid, for fights: paint the ground, add fences and walls, and place trees, rocks, tents and buildings.',
+  groundBrush:
+    'Paint the ground with a soft brush: grass, dirt for paths, sand, rocky ground, mud, snow, paving stones or water. Where two kinds meet they blend unevenly, like real ground. Water gets an inked bank, ripples and darker deep parts on its own. Paint over anything to change it.',
   mapLayers:
     'Each kind of thing sits on its own layer. Untick Show to hide a layer (it also disappears from the picture players get). Tick Lock to stop a layer being picked, moved or erased while you work on something else.',
   landBrush:
