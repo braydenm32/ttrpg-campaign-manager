@@ -31,14 +31,25 @@ export const isOldHome = () => window.location.hostname === OLD_HOST
 
 const newHome = (hash = window.location.hash) => PUBLIC_APP_URL + (hash || '')
 
-/** Whether the new address answers (it may not be set up yet, or this device may be offline). */
-async function newHomeIsUp() {
-  try {
-    await fetch(PUBLIC_APP_URL + 'favicon.svg', { mode: 'no-cors', cache: 'no-store' })
-    return true
-  } catch {
-    return false
-  }
+/**
+ * Whether the new address answers with the app (it may not be set up yet, may still be serving the
+ * old landing page, or this device may be offline). Only the app has atlas-here.gif, and only a real
+ * image loads, so a "not found" page doesn't count.
+ */
+function newHomeIsUp() {
+  return new Promise<boolean>((resolve) => {
+    const img = new Image()
+    const timer = setTimeout(() => resolve(false), 5000)
+    img.onload = () => {
+      clearTimeout(timer)
+      resolve(true)
+    }
+    img.onerror = () => {
+      clearTimeout(timer)
+      resolve(false)
+    }
+    img.src = `${PUBLIC_APP_URL}atlas-here.gif?${Date.now()}`
+  })
 }
 
 function readLocal() {
