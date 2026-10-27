@@ -11,6 +11,7 @@ import { stripSecrets } from './Markdown'
 import { plainLinks } from './text'
 import { useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
+import { pagePath, worldPath } from './paths'
 
 /**
  * Search everything: page names, nicknames, summaries, details, tags and the text itself, plus
@@ -70,7 +71,7 @@ export function searchWorld(
       snippet = around(body, q) || around(extra, q)
     }
     if (score)
-      hits.push({ key: e.id, to: `/w/${worldId}/e/${e.id}`, icon: typeLabel(e, world).icon, node: <TypeIcon type={e.type} custom={world?.customTypes?.find((c) => c.id === e.customType)} />, title: e.name, snippet: snippet || e.summary, score })
+      hits.push({ key: e.id, to: `${pagePath(worldId, e.id)}`, icon: typeLabel(e, world).icon, node: <TypeIcon type={e.type} custom={world?.customTypes?.find((c) => c.id === e.customType)} />, title: e.name, snippet: snippet || e.summary, score })
   }
   for (const s of sessions) {
     const title = `#${s.number} ${s.title}`
@@ -78,10 +79,10 @@ export function searchWorld(
     const notes = isGM ? text(s.notes) : ''
     const inTitle = title.toLowerCase().includes(q)
     if (inTitle || recap.toLowerCase().includes(q) || notes.toLowerCase().includes(q))
-      hits.push({ key: s.id, to: `/w/${worldId}/s/${s.id}`, icon: '📖', node: <Ico as={BookOpen} />, title, snippet: inTitle ? s.date : around(recap, q) || around(notes, q), score: inTitle ? 50 : 15 })
+      hits.push({ key: s.id, to: `${worldPath(worldId)}/s/${s.id}`, icon: '📖', node: <Ico as={BookOpen} />, title, snippet: inTitle ? s.date : around(recap, q) || around(notes, q), score: inTitle ? 50 : 15 })
   }
   for (const m of maps)
-    if (m.name.toLowerCase().includes(q)) hits.push({ key: m.id, to: `/w/${worldId}/maps/${m.id}`, icon: '🗺️', node: <Ico as={MapTrifold} />, title: m.name, snippet: 'Map', score: 45 })
+    if (m.name.toLowerCase().includes(q)) hits.push({ key: m.id, to: `${worldPath(worldId)}/maps/${m.id}`, icon: '🗺️', node: <Ico as={MapTrifold} />, title: m.name, snippet: 'Map', score: 45 })
   return hits.sort((a, b) => b.score - a.score || a.title.localeCompare(b.title)).slice(0, 40)
 }
 
@@ -126,7 +127,7 @@ function commandHits(query: string, worldId: string, world: World | null | undef
   for (const [title, path, words, gmOnly] of PLACES) {
     if (gmOnly && !own) continue
     if (!title.toLowerCase().includes(q) && !words.includes(q)) continue
-    hits.push({ key: `go:${path}`, to: `/w/${worldId}${path ? `/${path}` : ''}`, icon: '→', node: <Ico as={ArrowRight} />, title, snippet: 'Go to', score: title.toLowerCase().startsWith(q) ? 90 : 35 })
+    hits.push({ key: `go:${path}`, to: `${worldPath(worldId)}${path ? `/${path}` : ''}`, icon: '→', node: <Ico as={ArrowRight} />, title, snippet: 'Go to', score: title.toLowerCase().startsWith(q) ? 90 : 35 })
   }
   return hits
 }

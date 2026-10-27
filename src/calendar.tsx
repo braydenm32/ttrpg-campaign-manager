@@ -4,6 +4,7 @@ import { Help } from './help'
 import { db, type CalDate, type Entity, type Session, type World, type WorldCalendar } from './db'
 import { Ico } from './icons'
 import { CalendarBlank, DiceFive } from '@phosphor-icons/react'
+import { pagePath, worldPath } from './paths'
 
 /**
  * In-world calendars: month and day names, the era after the year, and moons. Dates are stored as
@@ -437,12 +438,12 @@ export function MonthGrid({ world, events, sessions }: { world: World; events: E
             <div key={day} className={`month-day ${isToday(day) ? 'today' : ''}`}>
               <span className="month-num">{day}</span>
               {ses.map((s) => (
-                <Link key={s.id} className="month-item session" to={`/w/${world.id}/s/${s.id}`}>
+                <Link key={s.id} className="month-item session" to={`${worldPath(world.id)}/s/${s.id}`}>
                   <Ico as={DiceFive} /> #{s.number}
                 </Link>
               ))}
               {evs.map((e) => (
-                <Link key={e.id} className="month-item" to={`/w/${world.id}/e/${e.id}`}>
+                <Link key={e.id} className="month-item" to={`${pagePath(world.id, e.id)}`}>
                   {e.name}
                 </Link>
               ))}

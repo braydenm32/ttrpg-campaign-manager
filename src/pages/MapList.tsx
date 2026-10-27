@@ -9,6 +9,7 @@ import { BACKGROUNDS, emptyDrawing, renderDrawing, type Background } from '../ma
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { MapTrifold, PencilSimple } from '@phosphor-icons/react'
+import { worldPath } from '../paths'
 
 export default function MapList() {
   const { worldId } = useWorld()
@@ -34,7 +35,7 @@ export default function MapList() {
         visibility: 'gm',
         createdAt: Date.now(),
       })
-      navigate(`/w/${worldId}/maps/${id}`)
+      navigate(`${worldPath(worldId)}/maps/${id}`)
     } catch (err) {
       alert((err as Error).message)
     } finally {
@@ -71,7 +72,7 @@ export default function MapList() {
           ))}
         </div>
       )}
-      {drawing && <NewDrawnMap worldId={worldId} onClose={() => setDrawing(false)} onCreated={(id) => navigate(`/w/${worldId}/maps/${id}/draw`)} />}
+      {drawing && <NewDrawnMap worldId={worldId} onClose={() => setDrawing(false)} onCreated={(id) => navigate(`${worldPath(worldId)}/maps/${id}/draw`)} />}
     </div>
   )
 }
@@ -147,7 +148,7 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
 function MapCard({ map, worldId }: { map: WorldMap; worldId: string }) {
   const url = useAssetUrl(map.imageId)
   return (
-    <Link className="card map-card" to={`/w/${worldId}/maps/${map.id}`}>
+    <Link className="card map-card" to={`${worldPath(worldId)}/maps/${map.id}`}>
       {url && <img src={url} alt="" />}
       <h3>
         {map.name} <VisibilityBadge value={map.visibility} />

@@ -10,6 +10,7 @@ import { StatusBadge } from '../status'
 import { useViewMode } from '../viewMode'
 import { Ico, TypeIcon } from '../icons'
 import { PushPin, Spiral } from '@phosphor-icons/react'
+import { pagePath, worldPath } from '../paths'
 
 const W = 2400
 const H = 1600
@@ -113,7 +114,7 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
     <div className="page wide board-page">
       <header className="page-header">
         <div>
-          <Link to={`/w/${worldId}/boards`}>← Corkboards</Link>
+          <Link to={`${worldPath(worldId)}/boards`}>← Corkboards</Link>
           <h1 className="row">
             <Ico as={PushPin} /> <DraftText className="title-input" value={board.name} onCommit={(v) => edit((b) => void (b.name = v))} /> <Help topic="boards" />
           </h1>
@@ -123,7 +124,7 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
           onClick={async () => {
             if (!confirm(`Delete the board “${board.name}”? The pages on it are kept.`)) return
             await binBoard(board.id)
-            navigate(`/w/${worldId}/boards`)
+            navigate(`${worldPath(worldId)}/boards`)
           }}
         >
           Delete board
@@ -246,7 +247,7 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
                 </div>
                 {page ? (
                   <>
-                    <Link to={`/w/${worldId}/e/${page.id}`}>
+                    <Link to={`${pagePath(worldId, page.id)}`}>
                       <strong>
                         <TypeIcon type={page.type} /> {page.name}
                       </strong>

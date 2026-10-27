@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { blankEntity, db, fromTemplate, typeLabel, type Entity, type EntityType, type World } from './db'
 import { useTemplates } from './hooks'
+import { pagePath } from './paths'
 
 /** Makes a new page (blank, or from a template) and opens it for editing. */
 export function useCreatePage(world: World | null | undefined) {
@@ -11,7 +12,7 @@ export function useCreatePage(world: World | null | undefined) {
     const label = typeLabel({ type, customType }, world)
     const e = template ? fromTemplate(template) : { ...blankEntity(world.id, type, `New ${label.one}`), ...(customType ? { customType } : {}) }
     await db.entities.add(e)
-    navigate(`/w/${world.id}/e/${e.id}?edit=1`)
+    navigate(`${pagePath(world.id, e.id)}?edit=1`)
   }
 }
 

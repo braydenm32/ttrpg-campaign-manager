@@ -6,6 +6,6 @@ GM-first TTRPG campaign/world manager. Owner (Brayden) is not a developer: expla
 - Visibility is the core rule: anything with `visibility: 'gm'`, `gmNotes`, or a `:::gm` block must never reach the player view. Exceptions are per player and decided on the server: `revealedTo` (user ids) on a page, and `:::for Name` passages (`player_text`), matched only against characters the player has claimed. Check `useViewMode().canSee` when adding screens.
 - Players see worlds only through server functions (`shared_world`, `member_world`, both built on `player_view(wid, viewer)` in `supabase/migrations`); they never read `records` or `player_notes` directly. New GM-only fields must stay out of `player_view`.
 - New features get a help tip: add a line to `HELP` in `src/help.tsx` and put `<Help topic="…" />` by the heading.
-- HashRouter + `base: './'` so the same build works on GitHub Pages and in Tauri.
+- Plain web addresses (`/w/<world-name>/p/<page-name>`, BrowserRouter, `base: '/'`); the desktop app and the old GitHub Pages copy keep HashRouter (`hashRouting` in `src/paths.ts`). Build in-app links with `worldPath`/`pagePath`/`typePath` from `src/paths.ts`, never by hand; old `#/` and long-id addresses must keep working.
 - AI features live in `src/ai/`: transcription (on-device Whisper in a worker, or AssemblyAI) and recaps (Claude). API keys are device-only (localStorage), never synced or backed up. Transcripts and recap drafts are GM-only. Other AI ideas are parked; see `docs/ROADMAP.md`.
 - Before pushing: `npm run lint && npm run build`.

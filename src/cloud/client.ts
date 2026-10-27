@@ -14,10 +14,20 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 /** Where the public web app lives; used for share links made from the desktop app or a dev server. */
 export const PUBLIC_APP_URL = 'https://wardedatlas.com/'
 
+const OLD_HOST = 'braydenm32.github.io'
+
+/** The app's front page, where sign-in comes back to. */
 export function appUrl() {
   const { protocol, hostname, origin, pathname } = window.location
-  if (protocol.startsWith('http') && hostname !== 'localhost' && hostname !== '127.0.0.1') return origin + pathname
+  // The old GitHub Pages address lives in a folder and only knows "#/" addresses.
+  if (hostname === OLD_HOST) return origin + pathname
+  if (protocol.startsWith('http') && hostname !== 'localhost' && hostname !== '127.0.0.1') return origin + '/'
   return PUBLIC_APP_URL
+}
+
+/** A full link to a place in the app, e.g. appLink('/join/abc'), for share and invite links and emails. */
+export function appLink(path: string) {
+  return window.location.hostname === OLD_HOST ? `${appUrl()}#${path}` : appUrl() + path.slice(1)
 }
 
 /**

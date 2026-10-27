@@ -3,6 +3,7 @@ import { cloudErrorMessage } from '../cloud/client'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { loadSharedWorld } from '../cloud/share'
+import { worldPath } from '../paths'
 
 /** Opening a player share link: fetch the player-safe copy, then show it like any other world. */
 export default function SharedWorld() {
@@ -13,7 +14,7 @@ export default function SharedWorld() {
   useEffect(() => {
     let cancelled = false
     loadSharedWorld(token)
-      .then((id) => !cancelled && navigate(`/w/${id}`, { replace: true }))
+      .then((id) => !cancelled && navigate(`${worldPath(id)}`, { replace: true }))
       .catch((e: Error) => !cancelled && setError(cloudErrorMessage(e)))
     return () => {
       cancelled = true

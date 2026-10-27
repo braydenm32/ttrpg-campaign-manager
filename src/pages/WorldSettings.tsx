@@ -16,6 +16,7 @@ import { DiscordSettings } from '../discord'
 import { ImportPages } from '../ImportPages'
 import { Ico, PageIcon } from '../icons'
 import { Ruler } from '@phosphor-icons/react'
+import { pagePath, typePath } from '../paths'
 
 const TABS = [
   ['world', 'World'],
@@ -172,7 +173,7 @@ function CustomTypes({ world, update }: { world: World; update: (patch: Partial<
                 <input className="icon-input" value={c.icon} onChange={(e) => change({ icon: e.target.value })} aria-label="Icon" />
                 <input value={c.one} onChange={(e) => change({ one: e.target.value })} aria-label="Name for one" />
                 <input value={c.many} onChange={(e) => change({ many: e.target.value })} aria-label="Name for several" />
-                <Link className="small" to={`/w/${world.id}/type/custom/${c.id}`}>
+                <Link className="small" to={`${typePath(world.id, 'custom', c.id)}`}>
                   {n} page{n === 1 ? '' : 's'}
                 </Link>
                 <button
@@ -224,7 +225,7 @@ function Templates({ world }: { world: World }) {
         <ul className="entity-list">
           {templates.map((t) => (
             <li key={t.id}>
-              <Link to={`/w/${world.id}/e/${t.id}`}>
+              <Link to={`${pagePath(world.id, t.id)}`}>
                 <PageIcon page={t} world={world} /> {t.name}
               </Link>{' '}
               <span className="muted small">· for new {typeLabel(t, world).many.toLowerCase()}</span>

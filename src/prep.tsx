@@ -7,6 +7,7 @@ import { Help } from './help'
 import { StatusBadge } from './status'
 import { Ico, TypeIcon } from './icons'
 import { ClipboardText, FilmSlate, MagnifyingGlass, Sword } from '@phosphor-icons/react'
+import { pagePath, worldPath } from './paths'
 
 /** Changes a session's prep sheet atomically, starting from what's saved. */
 export const editPrep = (sessionId: string, fn: (p: SessionPrep) => void) =>
@@ -152,7 +153,7 @@ function Encounters({ session, prep, entities, worldId }: { session: Session; pr
               title="Add everyone in this fight to the Lectern’s initiative tracker"
               onClick={async () => {
                 await runEncounter(session.id, enc)
-                navigate(`/w/${worldId}/s/${session.id}/lectern`)
+                navigate(`${worldPath(worldId)}/s/${session.id}/lectern`)
               }}
             >
               <Ico as={Sword} /> Run at the Lectern
@@ -220,7 +221,7 @@ function FoeTable({ enc, entities, worldId, onChange }: { enc: Encounter; entiti
                 <tr key={f.id}>
                   <td>
                     {page ? (
-                      <Link to={`/w/${worldId}/e/${page.id}`}>
+                      <Link to={`${pagePath(worldId, page.id)}`}>
                         <TypeIcon type={page.type} /> {f.name}
                       </Link>
                     ) : (
@@ -325,7 +326,7 @@ export function LecternPrep({ session, worldId }: { session: Session; worldId: s
         <h2>
           <Ico as={ClipboardText} /> Prep <Help topic="prep" />
         </h2>
-        <Link className="small" to={`/w/${worldId}/s/${session.id}?tab=prep`}>
+        <Link className="small" to={`${worldPath(worldId)}/s/${session.id}?tab=prep`}>
           Edit prep
         </Link>
       </div>

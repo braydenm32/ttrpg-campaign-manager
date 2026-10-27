@@ -6,6 +6,7 @@ import { Help } from './help'
 import { Markdown } from './Markdown'
 import { Ico } from './icons'
 import { DiceFive } from '@phosphor-icons/react'
+import { pagePath, typePath } from './paths'
 
 /**
  * Random tables the GM writes: one entry per line, rolled on with one click.
@@ -72,7 +73,7 @@ export function TableRoller({ tables, worldId, entities, fixed, showSecrets }: {
           <Ico as={DiceFive} /> Roll{fixed ? ` on ${table.name}` : ''}
         </button>
         {!fixed && (
-          <Link className="small" to={`/w/${worldId}/e/${table.id}`}>
+          <Link className="small" to={`${pagePath(worldId, table.id)}`}>
             Open table
           </Link>
         )}
@@ -98,7 +99,7 @@ export function TablesPanel({ tables, worldId, entities }: { tables: Entity[]; w
         <TableRoller tables={tables} worldId={worldId} entities={entities} showSecrets />
       ) : (
         <p className="muted small">
-          No tables yet. <Link to={`/w/${worldId}/type/table`}>Make one</Link>, like “What’s in the sewer?” or “Tavern rumours”.
+          No tables yet. <Link to={`${typePath(worldId, 'table')}`}>Make one</Link>, like “What’s in the sewer?” or “Tavern rumours”.
         </p>
       )}
     </section>

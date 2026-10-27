@@ -20,6 +20,7 @@ import { Markdown } from '../Markdown'
 import { TablesPanel } from '../tables'
 import { Ico } from '../icons'
 import { DiceFive } from '@phosphor-icons/react'
+import { pagePath, typePath } from '../paths'
 
 type Kind = 'tavern' | 'shop' | 'npc'
 
@@ -42,7 +43,7 @@ export default function Generators() {
   const save = async () => {
     const created = kind === 'npc' ? [npcToEntity(worldId, npc, parentId || undefined)] : placeToEntities(worldId, place, parentId || undefined)
     await db.entities.bulkAdd(created)
-    navigate(`/w/${worldId}/e/${created[0].id}`)
+    navigate(`${pagePath(worldId, created[0].id)}`)
   }
 
   const preview =
@@ -56,7 +57,7 @@ export default function Generators() {
         <h1>
           <Ico as={DiceFive} /> Generators &amp; tables <Help topic="generators" />
         </h1>
-        <Link className="button" to={`/w/${worldId}/type/table`}>
+        <Link className="button" to={`${typePath(worldId, 'table')}`}>
           <Ico as={DiceFive} /> Edit your random tables <Help topic="randomTables" />
         </Link>
       </header>

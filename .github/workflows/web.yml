@@ -27,7 +27,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm run build
+      # The GitHub Pages copy lives in a folder (/ttrpg-campaign-manager/), so it loads files relative to the page.
+      - run: npm run build -- --base ./
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main'
         with:

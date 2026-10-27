@@ -22,6 +22,7 @@ import { DiscordButton, forDiscord } from '../discord'
 import { EndSessionChecklist } from '../EndSession'
 import { Ico, TypeIcon } from '../icons'
 import { BookOpen, BookmarkSimple, CalendarBlank, ClipboardText, Eye, FlagCheckered, Lock, Microphone, Spiral, Warning } from '@phosphor-icons/react'
+import { pagePath, worldPath } from '../paths'
 
 export default function SessionPage() {
   const { worldId, world } = useWorld()
@@ -44,7 +45,7 @@ export default function SessionPage() {
   if (!isGM)
     return (
       <div className="page">
-        {campaign && <Link to={`/w/${worldId}/c/${campaign.id}`}>← {campaign.name}</Link>}
+        {campaign && <Link to={`${worldPath(worldId)}/c/${campaign.id}`}>← {campaign.name}</Link>}
         <h1>
           #{session.number} {session.title}
         </h1>
@@ -53,7 +54,7 @@ export default function SessionPage() {
             {session.date}
             {session.worldDate && world?.calendar && ` · in the world: ${formatDate(world.calendar, session.worldDate)}`}
           </div>
-          <PrintButton to={`/w/${worldId}/print/s/${session.id}`} />
+          <PrintButton to={`${worldPath(worldId)}/print/s/${session.id}`} />
         </div>
         {session.recap ? (
           <Markdown text={session.recap} entities={entities} worldId={worldId} showSecrets={false} />
@@ -66,7 +67,7 @@ export default function SessionPage() {
 
   return (
     <div className="page">
-      {campaign && <Link to={`/w/${worldId}/c/${campaign.id}`}>← {campaign.name}</Link>}
+      {campaign && <Link to={`${worldPath(worldId)}/c/${campaign.id}`}>← {campaign.name}</Link>}
       <header className="page-header">
         <div className="row">
           <span className="session-number">#</span>
@@ -81,8 +82,8 @@ export default function SessionPage() {
         <div className="row">
           <input type="date" value={session.date} onChange={(e) => update({ date: e.target.value })} />
           <VisibilityToggle value={session.visibility} onChange={(v) => update({ visibility: v })} />
-          <PrintButton to={`/w/${worldId}/print/s/${session.id}`} />
-          <Link className="button primary" to={`/w/${worldId}/s/${session.id}/lectern`}>
+          <PrintButton to={`${worldPath(worldId)}/print/s/${session.id}`} />
+          <Link className="button primary" to={`${worldPath(worldId)}/s/${session.id}/lectern`}>
             <Ico as={BookOpen} /> Run at the Lectern
           </Link>
           {params.get('end') !== '1' && (
@@ -194,7 +195,7 @@ export default function SessionPage() {
           onClick={async () => {
             if (!confirm('Delete this session and its recordings? You can restore it from World settings for a month.')) return
             await binSession(session.id)
-            navigate(campaign ? `/w/${worldId}/c/${campaign.id}` : `/w/${worldId}`)
+            navigate(campaign ? `${worldPath(worldId)}/c/${campaign.id}` : `${worldPath(worldId)}`)
           }}
         >
           Delete session
@@ -218,7 +219,7 @@ function FeaturedList({
     <div className="tags">
       {entities.map((e) => (
         <span key={e.id} className="tag">
-          <Link to={`/w/${worldId}/e/${e.id}`}>
+          <Link to={`${pagePath(worldId, e.id)}`}>
             <TypeIcon type={e.type} /> {e.name}
           </Link>
           {onRemove && (
@@ -426,7 +427,7 @@ function SessionThreads({ sessionId, entities, worldId }: { sessionId: string; e
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Add a thread this session left hanging" />
         <button disabled={!name.trim()}>Add</button>
       </form>
-      <Link className="small" to={`/w/${worldId}/threads`}>
+      <Link className="small" to={`${worldPath(worldId)}/threads`}>
         See all loose threads
       </Link>
     </section>

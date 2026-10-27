@@ -9,6 +9,7 @@ import { plainLinks } from './text'
 import { nameIndex, namesOf } from './links'
 import { characterNames, useViewMode } from './viewMode'
 import { TypeIcon } from './icons'
+import { hrefFor, pagePath } from './paths'
 
 type Segment = { kind: 'text' | 'gm' | 'foryou'; body: string } | { kind: 'for'; names: string[]; body: string }
 
@@ -141,7 +142,7 @@ export function Markdown({
       const target = byName.get(name.trim().toLowerCase())
       const shown = escapeHtml(label ?? name)
       if (!target) return `<span class="wikilink missing" title="No page yet">${shown}</span>`
-      return `<a class="wikilink" href="#/w/${worldId}/e/${target.id}" data-internal="1" data-id="${target.id}">${shown}</a>`
+      return `<a class="wikilink" href="${hrefFor(pagePath(worldId, target.id))}" data-internal="1" data-id="${target.id}">${shown}</a>`
     })
     return DOMPurify.sanitize(marked.parse(src, { async: false }) as string)
   }, [text, entities, worldId, showSecrets, forViewer])
@@ -178,7 +179,7 @@ export function Markdown({
           if (a) {
             ev.preventDefault()
             setPeek(undefined)
-            if (!stillLinks) navigate(a.getAttribute('href')!.slice(1))
+            if (!stillLinks) navigate(a.getAttribute('href')!.replace(/^#/, ''))
           }
         }}
         onMouseOver={(ev) => {

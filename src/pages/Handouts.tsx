@@ -8,6 +8,7 @@ import { useViewMode } from '../viewMode'
 import { useState } from 'react'
 import { Ico } from '../icons'
 import { Newspaper, Television } from '@phosphor-icons/react'
+import { pagePath } from '../paths'
 
 /**
  * Handouts: everything the GM has shown at the table, newest first. Players can read a letter or
@@ -44,7 +45,7 @@ export default function Handouts() {
                   </strong>
                 </button>
                 <span className="muted small">{new Date(h.at).toLocaleDateString()}</span>
-                {h.kind === 'page' && h.entityId && <Link to={`/w/${worldId}/e/${h.entityId}`} className="small">Open page</Link>}
+                {h.kind === 'page' && h.entityId && <Link to={`${pagePath(worldId, h.entityId)}`} className="small">Open page</Link>}
                 {isGM && (
                   <span className="row">
                     <button className="small" onClick={() => showToPlayers(worldId, h)}>

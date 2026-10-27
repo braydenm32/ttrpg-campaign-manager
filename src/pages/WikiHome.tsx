@@ -11,6 +11,7 @@ import { plainLinks } from '../text'
 import { useCampaigns, useWorldSessions } from '../threads'
 import { Ico, TypeIcon } from '../icons'
 import { Hourglass, MapTrifold } from '@phosphor-icons/react'
+import { pagePath, typePath, worldPath } from '../paths'
 
 /**
  * The front page of a world opened from a public wiki link: a tidy read-only wiki of everything the
@@ -59,27 +60,27 @@ export default function WikiHome({ world }: { world: World }) {
         ) : (
           <div className="wiki-cards">
             {types.map(([t, n]) => (
-              <Link key={t} className="wiki-card" to={`/w/${worldId}/type/${t}`}>
+              <Link key={t} className="wiki-card" to={`${typePath(worldId, t)}`}>
                 <span className="wiki-card-icon"><TypeIcon type={t} /></span>
                 <strong>{ENTITY_LABELS[t].many}</strong>
                 <span className="muted small">{n}</span>
               </Link>
             ))}
             {custom.map(([c, n]) => (
-              <Link key={c.id} className="wiki-card" to={`/w/${worldId}/type/custom/${c.id}`}>
+              <Link key={c.id} className="wiki-card" to={`${typePath(worldId, 'custom', c.id)}`}>
                 <span className="wiki-card-icon">{c.icon}</span>
                 <strong>{c.many}</strong>
                 <span className="muted small">{n}</span>
               </Link>
             ))}
             {maps.length > 0 && (
-              <Link className="wiki-card" to={`/w/${worldId}/maps`}>
+              <Link className="wiki-card" to={`${worldPath(worldId)}/maps`}>
                 <span className="wiki-card-icon"><Ico as={MapTrifold} /></span>
                 <strong>Maps</strong>
                 <span className="muted small">{maps.length}</span>
               </Link>
             )}
-            <Link className="wiki-card" to={`/w/${worldId}/timeline`}>
+            <Link className="wiki-card" to={`${worldPath(worldId)}/timeline`}>
               <span className="wiki-card-icon"><Ico as={Hourglass} /></span>
               <strong>Timeline</strong>
             </Link>
@@ -96,7 +97,7 @@ export default function WikiHome({ world }: { world: World }) {
             recaps.slice(0, 3).map((s) => (
               <article key={s.id} className="wiki-recap">
                 <h3>
-                  <Link to={`/w/${worldId}/s/${s.id}`}>
+                  <Link to={`${worldPath(worldId)}/s/${s.id}`}>
                     #{s.number} {s.title}
                   </Link>{' '}
                   <span className="muted small">
@@ -113,7 +114,7 @@ export default function WikiHome({ world }: { world: World }) {
           <ul className="entity-list">
             {recent.map((e) => (
               <li key={e.id}>
-                <Link to={`/w/${worldId}/e/${e.id}`}>
+                <Link to={`${pagePath(worldId, e.id)}`}>
                   <TypeIcon type={e.type} /> {e.name}
                 </Link>
                 {e.summary && <span className="muted"> · {plainLinks(e.summary)}</span>}

@@ -7,6 +7,7 @@ import { DEVICE_MODELS, useAiSettings } from './settings'
 import { saveTranscript, speakerLabels, speakerName } from './transcript'
 import { Ico } from '../icons'
 import { Cloud, Desktop, Scroll } from '@phosphor-icons/react'
+import { worldPath } from '../paths'
 
 type Engine = 'device' | 'cloud'
 
@@ -156,7 +157,7 @@ export function TranscriptPanel({
         <p className="muted small">
           On this device: free and private, but slow (roughly real time) and doesn’t tell voices apart. In the cloud: a few
           minutes, names each speaker, and costs well under a dollar for a long session on your own{' '}
-          <Link to={`/w/${worldId}/settings`}>AssemblyAI key</Link>.
+          <Link to={`${worldPath(worldId)}/settings`}>AssemblyAI key</Link>.
         </p>
         {error && <p className="error small">{error}</p>}
       </div>

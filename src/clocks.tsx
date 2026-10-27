@@ -7,6 +7,7 @@ import { useVisibleEntities, useWorld } from './hooks'
 import { useViewMode } from './viewMode'
 import { Ico, TypeIcon } from './icons'
 import { Timer } from '@phosphor-icons/react'
+import { pagePath, worldPath } from './paths'
 
 /**
  * Progress clocks (as in Blades in the Dark): a circle cut into slices that fill as a plan, a threat
@@ -68,7 +69,7 @@ function ClockRow({ clock, owner, isGM, showOwner, worldId }: { clock: Clock; ow
           {showOwner && (
             <>
               {' · '}
-              <Link to={`/w/${worldId}/e/${owner.id}`}>
+              <Link to={`${pagePath(worldId, owner.id)}`}>
                 <TypeIcon type={owner.type} /> {owner.name}
               </Link>
             </>
@@ -175,7 +176,7 @@ export function ClocksPanel({ worldId, entities }: { worldId: string; entities: 
   return (
     <section className="card lectern-panel">
       <h2>
-        <Ico as={Timer} /> <Link to={`/w/${worldId}/clocks`}>Clocks</Link> <Help topic="clocks" />
+        <Ico as={Timer} /> <Link to={`${worldPath(worldId)}/clocks`}>Clocks</Link> <Help topic="clocks" />
       </h2>
       <div className="clock-list compact">
         {all.map(({ clock, owner }) => (

@@ -19,6 +19,7 @@ import { useGmQuestions } from '../players/Questions'
 import { useCharacterOwners } from '../players/owners'
 import { Ico, TypeIcon } from '../icons'
 import { ChatCircleDots, ListChecks, Play, Plus, Spiral, UserCirclePlus } from '@phosphor-icons/react'
+import { pagePath, worldPath } from '../paths'
 
 export default function Dashboard() {
   const { worldId, world } = useWorld()
@@ -54,14 +55,14 @@ export default function Dashboard() {
         <NeedsYou world={world} threads={openThreads.filter((t) => t.threadUrgency === 'high')} />
         <section className="card">
           <h3>
-            <Link to={`/w/${worldId}/clocks`}>Clocks</Link> <Help topic="clocks" />
+            <Link to={`${worldPath(worldId)}/clocks`}>Clocks</Link> <Help topic="clocks" />
           </h3>
           {clocks.length === 0 ? (
             <p className="muted small">No clocks ticking. Add one to a faction or loose thread to track a plan or a threat.</p>
           ) : (
             <div className="home-clocks">
               {clocks.slice(0, 4).map(({ clock, owner }) => (
-                <Link key={clock.id} className="home-clock" to={`/w/${worldId}/e/${owner.id}`}>
+                <Link key={clock.id} className="home-clock" to={`${pagePath(worldId, owner.id)}`}>
                   <ClockFace clock={clock} size={34} />
                   <span>
                     {clock.name}
@@ -71,7 +72,7 @@ export default function Dashboard() {
                   </span>
                 </Link>
               ))}
-              {clocks.length > 4 && <Link to={`/w/${worldId}/clocks`}>All {clocks.length} clocks…</Link>}
+              {clocks.length > 4 && <Link to={`${worldPath(worldId)}/clocks`}>All {clocks.length} clocks…</Link>}
             </div>
           )}
         </section>
@@ -104,7 +105,7 @@ export default function Dashboard() {
             <ul className="entity-list">
               {campaigns.map((c) => (
                 <li key={c.id}>
-                  <Link to={`/w/${worldId}/c/${c.id}`}>{c.name}</Link>
+                  <Link to={`${worldPath(worldId)}/c/${c.id}`}>{c.name}</Link>
                   <span className="muted"> · {c.status}</span>
                 </li>
               ))}
@@ -119,7 +120,7 @@ export default function Dashboard() {
             <ul className="entity-list">
               {openQuests.map((e) => (
                 <li key={e.id}>
-                  <Link to={`/w/${worldId}/e/${e.id}`}>{e.name}</Link>
+                  <Link to={`${pagePath(worldId, e.id)}`}>{e.name}</Link>
                   <span className="muted"> · {e.questStatus}</span>
                 </li>
               ))}
@@ -128,7 +129,7 @@ export default function Dashboard() {
         </section>
         <section className="card">
           <h3>
-            <Link to={`/w/${worldId}/threads`}>Loose threads</Link>
+            <Link to={`${worldPath(worldId)}/threads`}>Loose threads</Link>
           </h3>
           {openThreads.length === 0 ? (
             <p className="muted small">No loose threads.</p>
@@ -136,14 +137,14 @@ export default function Dashboard() {
             <ul className="entity-list">
               {openThreads.slice(0, 5).map((e) => (
                 <li key={e.id}>
-                  <Link to={`/w/${worldId}/e/${e.id}`}>
+                  <Link to={`${pagePath(worldId, e.id)}`}>
                     {e.threadUrgency && URGENCY[e.threadUrgency].icon} {e.name}
                   </Link>
                 </li>
               ))}
               {openThreads.length > 5 && (
                 <li>
-                  <Link to={`/w/${worldId}/threads`}>…and {openThreads.length - 5} more</Link>
+                  <Link to={`${worldPath(worldId)}/threads`}>…and {openThreads.length - 5} more</Link>
                 </li>
               )}
             </ul>
@@ -155,7 +156,7 @@ export default function Dashboard() {
           worldId={worldId}
           defaultSystem={world.system}
           onClose={() => setNewCampaign(false)}
-          onCreated={(id) => navigate(`/w/${worldId}/c/${id}`)}
+          onCreated={(id) => navigate(`${worldPath(worldId)}/c/${id}`)}
         />
       )}
     </div>
@@ -193,7 +194,7 @@ function NewPageMenu({ world }: { world: World }) {
 function PageTile({ entity: e, world }: { entity: Entity; world: World }) {
   const image = useAssetUrl(e.imageId)
   return (
-    <Link className="tile" to={`/w/${world.id}/e/${e.id}`}>
+    <Link className="tile" to={`${pagePath(world.id, e.id)}`}>
       <span className="tile-picture">{image ? <img src={image} alt="" /> : <span aria-hidden="true">{initials(e.name)}</span>}</span>
       <span className="tile-text">
         {e.name}
@@ -221,26 +222,26 @@ function NeedsYou({ world, threads }: { world: World; threads: Entity[] }) {
       <ul className="entity-list">
         {waiting.slice(0, 4).map((q) => (
           <li key={q.id}>
-            <Link to={`/w/${world.id}/questions`}>
+            <Link to={`${worldPath(world.id)}/questions`}>
               <Ico as={ChatCircleDots} /> {q.body.length > 70 ? `${q.body.slice(0, 70)}…` : q.body}
             </Link>
           </li>
         ))}
         {waiting.length > 4 && (
           <li>
-            <Link to={`/w/${world.id}/questions`}>…and {waiting.length - 4} more questions</Link>
+            <Link to={`${worldPath(world.id)}/questions`}>…and {waiting.length - 4} more questions</Link>
           </li>
         )}
         {claims > 0 && (
           <li>
-            <Link to={`/w/${world.id}/settings?tab=players`}>
+            <Link to={`${worldPath(world.id)}/settings?tab=players`}>
               <Ico as={UserCirclePlus} /> {claims} character claim{claims === 1 ? '' : 's'} to approve
             </Link>
           </li>
         )}
         {threads.map((t) => (
           <li key={t.id}>
-            <Link to={`/w/${world.id}/e/${t.id}`}>
+            <Link to={`${pagePath(world.id, t.id)}`}>
               <Ico as={Spiral} /> {t.name}
             </Link>
             <span className="muted small"> · urgent thread</span>
@@ -328,7 +329,7 @@ function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampai
         return (
           <div key={c.id} className="next-session">
             <div className="kicker">{c.name}</div>
-            <Link className="next-title" to={`/w/${worldId}/s/${next.id}`}>
+            <Link className="next-title" to={`${worldPath(worldId)}/s/${next.id}`}>
               #{next.number} {next.title}
             </Link>
             <div className="muted small">
@@ -336,10 +337,10 @@ function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampai
               {clues || scenes ? ` · ${scenes} scene${scenes === 1 ? '' : 's'}, ${clues} clue${clues === 1 ? '' : 's'} ready` : ''}
             </div>
             <div className="row wrap">
-              <Link className="button primary" to={`/w/${worldId}/s/${next.id}/lectern`} title={HELP.lectern}>
+              <Link className="button primary" to={`${worldPath(worldId)}/s/${next.id}/lectern`} title={HELP.lectern}>
                 <Ico as={Play} weight="fill" /> Run session
               </Link>
-              <Link className="button" to={`/w/${worldId}/s/${next.id}?tab=prep`}>
+              <Link className="button" to={`${worldPath(worldId)}/s/${next.id}?tab=prep`}>
                 <Ico as={ListChecks} /> Prep
               </Link>
             </div>
@@ -349,7 +350,7 @@ function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampai
       {booked.map((c) => (
         <div key={c.id} className="next-session">
           <div className="kicker">{c.name}</div>
-          <Link to={`/w/${worldId}/c/${c.id}`}>No session yet</Link>
+          <Link to={`${worldPath(worldId)}/c/${c.id}`}>No session yet</Link>
           <div className="muted small">{showDate(upcoming(c)!)}</div>
         </div>
       ))}
@@ -379,7 +380,7 @@ function GettingStarted({ worldId }: { worldId: string }) {
         ))}
       </ol>
       <p className="small muted">
-        Every ? button explains the thing next to it. <Link to={`/w/${worldId}/settings`}>World settings</Link> can turn them off.
+        Every ? button explains the thing next to it. <Link to={`${worldPath(worldId)}/settings`}>World settings</Link> can turn them off.
       </p>
     </section>
   )

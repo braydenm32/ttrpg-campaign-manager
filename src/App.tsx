@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
-import { HashRouter, Link, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, HashRouter, Link, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Help, HELP } from './help'
 import { useWorld } from './hooks'
 import { modeOf, WorldNav, type WorldMode } from './Sidebar'
@@ -54,6 +54,9 @@ import ClocksPage from './clocks'
 import SafetyPage, { XCardAlert, XCardButton } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
 import Handouts from './pages/Handouts'
+import { hashRouting, pagePath, setPages, tidyPath, usePathsVersion, worldPath } from './paths'
+
+const Router = hashRouting ? HashRouter : BrowserRouter
 
 export default function App() {
   return (
@@ -61,7 +64,7 @@ export default function App() {
       <CloudBoot />
       <UpdateBanner />
       <MoveBanner />
-      <HashRouter>
+      <Router>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/shared/:token" element={<SharedWorld />} />
@@ -77,9 +80,12 @@ export default function App() {
           <Route path="/screen/:worldId" element={<ScreenRoute />} />
           <Route path="/w/:worldId" element={<WorldLayout />}>
             <Route index element={<Dashboard />} />
+            <Route path=":section" element={<EntityList />} />
+            <Route path="other/:kind" element={<EntityList />} />
             <Route path="type/:type" element={<EntityList />} />
             <Route path="type/:type/:kind" element={<EntityList />} />
             <Route path="loot" element={<PartyLoot />} />
+            <Route path="p/:entityId" element={<EntityPage />} />
             <Route path="e/:entityId" element={<EntityPage />} />
             <Route path="maps" element={<MapList />} />
             <Route path="maps/:mapId" element={<MapView />} />
@@ -104,7 +110,7 @@ export default function App() {
           </Route>
           <Route path="*" element={<Home />} />
         </Routes>
-      </HashRouter>
+      </Router>
     </ViewModeProvider>
   )
 }
@@ -173,7 +179,21 @@ function CloudBoot() {
 }
 
 function WorldLayout() {
-  const { world } = useWorld()
+  const { worldId, world } = useWorld()
+  // The world's page names, so links and the address can use them (see paths.ts).
+  const named = useLiveQuery(async () => {
+    setPages(worldId, await db.entities.where({ worldId }).toArray())
+    return true
+  }, [worldId])
+  // An old-style or renamed address is swapped for the tidy one, without a new step in Back.
+  const version = usePathsVersion()
+  const { pathname, search } = useLocation()
+  const navigate = useNavigate()
+  useEffect(() => {
+    const tidy = named && tidyPath(pathname)
+    if (tidy) navigate(tidy + search, { replace: true })
+  }, [named, version, pathname, search, navigate])
+  if (!named) return <div className="loading">Loading…</div>
   if (world?.shared) return (
     <ForcePlayerView>
       <WorldShell />
@@ -261,17 +281,17 @@ function WorldShell() {
   const tabs: WorldMode[] = isGM && !shared ? ['home', 'world', 'prep', 'play'] : ['home', 'world', 'table']
   const sideMode: WorldMode = (menuOpen && drawerPick) || mode || lastMode
   const goTo = (m: WorldMode) => {
-    if (m === 'home') return navigate(`/w/${worldId}`)
+    if (m === 'home') return navigate(`${worldPath(worldId)}`)
     if (m === mode) return
     const next = nextSessions(campaigns, sessions)[0]?.session
     const landing: Record<WorldMode, string> = {
       home: '',
-      world: maps ? 'maps' : 'type/location',
+      world: maps ? 'maps' : 'locations',
       prep: campaigns[0] ? `c/${campaigns[0].id}` : 'threads',
       play: next ? `s/${next.id}/lectern` : 'clocks',
       table: 'threads',
     }
-    navigate(lastPath[m] ?? `/w/${worldId}/${landing[m]}`)
+    navigate(lastPath[m] ?? `${worldPath(worldId)}/${landing[m]}`)
   }
   const ownWorld = !shared
 
@@ -309,7 +329,7 @@ function WorldShell() {
           </div>
         )}
         {ownWorld && isGM && (
-          <Link className="button icon-button desk-only" to={`/w/${worldId}/settings`} title="World settings" aria-label="World settings">
+          <Link className="button icon-button desk-only" to={`${worldPath(worldId)}/settings`} title="World settings" aria-label="World settings">
             <Ico as={SlidersHorizontal} size="1.2em" />
           </Link>
         )}
@@ -324,7 +344,7 @@ function WorldShell() {
               role="tab"
               aria-selected={sideMode === m}
               className={sideMode === m ? 'on' : ''}
-              onClick={() => (m === 'home' ? navigate(`/w/${worldId}`) : setDrawerPick(m))}
+              onClick={() => (m === 'home' ? navigate(`${worldPath(worldId)}`) : setDrawerPick(m))}
             >
               <Ico as={MODE_ICONS[m]} size="1.35em" />
               {MODE_LABELS[m]}
@@ -334,7 +354,7 @@ function WorldShell() {
         <WorldNav worldId={worldId} mode={sideMode} />
         <div className="sidebar-foot">
           {ownWorld && isGM && (
-            <NavLink className="nav-foot-link" to={`/w/${worldId}/settings`}>
+            <NavLink className="nav-foot-link" to={`${worldPath(worldId)}/settings`}>
               <Ico as={SlidersHorizontal} /> World settings
             </NavLink>
           )}
@@ -342,7 +362,7 @@ function WorldShell() {
         {memberOf ? (
           <div className="mode-switch">
             {myCharacters.map((id) => (
-              <button key={id} className="button block" onClick={() => navigate(`/w/${worldId}/e/${id}`)}>
+              <button key={id} className="button block" onClick={() => navigate(`${pagePath(worldId, id)}`)}>
                 <Ico as={Shield} /> My character
               </button>
             ))}
