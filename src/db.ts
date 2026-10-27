@@ -172,6 +172,10 @@ export interface World {
   partyCoin?: { name: string; amount: number }[]
   /** The world's own calendar (months, weekdays, moons) and today's date in the world. */
   calendar?: WorldCalendar
+  /** Named ages of history, oldest first, that split the timeline's history into sections. */
+  ages?: TimelineAge[]
+  /** Set on the ready-made example world (its content version), so Home can find it and offer a fresh copy. */
+  example?: number
   /** What the GM is showing every player right now (a handout, a page or some text). */
   showing?: Showing | null
   /** Everything the GM has shown, newest first, so players can read a handout again later. */
@@ -188,6 +192,15 @@ export interface World {
 }
 
 /** A date on the world's calendar. month is the position in the calendar's list (from 0), day starts at 1. */
+/** A named age of history on the timeline, such as "The Age of Wards". */
+export interface TimelineAge {
+  id: string
+  name: string
+  /** When it ran, in the world's own words, e.g. "0 to 940 AW". */
+  span?: string
+  summary?: string
+}
+
 export interface CalDate {
   year: number
   month: number
@@ -290,6 +303,8 @@ export interface Entity {
   /** Events: in-world date label and whether it happened before or during the campaign. */
   eventDate?: string
   eventEra?: 'pre' | 'campaign'
+  /** Which named age of history a "before the campaign" event belongs to (a TimelineAge id on the world). */
+  eventAge?: string
   /** Ordering key for the timeline (lower = earlier). */
   eventOrder?: number
   /** Quests: status. */

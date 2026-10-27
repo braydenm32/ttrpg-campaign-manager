@@ -11,6 +11,8 @@ export const HELP = {
   modes:
     'The bar across the top splits the world into modes. Home is what needs you now. World is the atlas itself: maps, timeline and every codex page. Prep is getting sessions ready: campaigns, loose threads, handouts and generators. Play is running the table: the Lectern, clocks, sounds and safety tools. The sidebar lists the pages of the mode you’re in.',
   needsYou: 'Things waiting on you: questions your players asked, players asking to claim a character, and urgent loose threads. When it’s empty you’re all caught up.',
+  exampleWorld:
+    'A complete world to explore and learn from: places, people, factions, gods, history, handouts and a campaign ready to run. Open it, look around, borrow ideas, or run it for your group. It lives only on this device unless you switch on sync, and World settings can reset it to new.',
   worldLook: 'Give this world its own cover picture and colour. They show on Home and on the world’s book on your shelf of worlds. Players see them too.',
   theme: 'Candlelit is the dark look, Parchment the light one. “Match this device” follows your phone or computer’s own setting.',
   viewingAs:
@@ -62,6 +64,7 @@ export const HELP = {
 
   // Story
   timeline: 'Events in order: the history before your campaign, and what has happened during it. Filter by place to see one area’s story.',
+  ages: 'Split your history into named ages, like “The Age of Kings” or “The Long Peace”. Each age gets its own section on the timeline, in order, and each event can belong to one. Players see the ages of any events you have revealed.',
   threads:
     'Every hook, mystery, promise and grudge you’ve left dangling. Move them from dangling to in play to tied off. A thread that hasn’t moved in three sessions gets flagged so nothing is forgotten.',
   leads: 'The rumours, hooks and mysteries your GM has shared with the party.',
@@ -105,6 +108,7 @@ export const HELP = {
   showPlayers:
     'Put a picture, a page or some text on every player’s screen right now, like handing round a letter or showing a monster. It pops up for players who joined; open the Players’ screen on a TV or second monitor for the table. Pick a page that isn’t revealed yet and it’s revealed as you show it. Everything you show is kept in Handouts.',
   handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove one to take it back.',
+  handoutsReady: 'Handouts you’ve prepared but not shown yet: any GM-only page tagged “handout”. Players can’t see them. “Reveal and show” reveals the page to everyone and puts it on their screens, and it moves to Shown so far.',
   playersScreen: 'A clean screen for a TV or second monitor at the table. It shows whatever you’re showing players, and nothing else.',
   initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go.',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',

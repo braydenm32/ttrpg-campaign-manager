@@ -2,8 +2,8 @@ import { Link } from 'react-router-dom'
 import { Empty } from '../components'
 import type { Showing } from '../db'
 import { Help } from '../help'
-import { useWorld } from '../hooks'
-import { removeHandout, showToPlayers, ShowingView } from '../showing'
+import { useVisibleEntities, useWorld } from '../hooks'
+import { removeHandout, revealAndShow, showToPlayers, ShowingView } from '../showing'
 import { useViewMode } from '../viewMode'
 import { useState } from 'react'
 import { Ico } from '../icons'
@@ -18,8 +18,11 @@ export default function Handouts() {
   const { worldId, world } = useWorld()
   const { isGM } = useViewMode()
   const [open, setOpen] = useState<string>()
+  const entities = useVisibleEntities(worldId)
   if (!world) return null
   const list = world.handouts ?? []
+  // Handouts prepared ahead: GM-only pages tagged "handout", waiting for the moment to show them.
+  const ready = isGM ? entities.filter((e) => e.visibility === 'gm' && e.tags.includes('handout')) : []
   return (
     <div className="page">
       <header className="page-header">
@@ -27,6 +30,31 @@ export default function Handouts() {
           <Ico as={Newspaper} /> Handouts <Help topic="handouts" />
         </h1>
       </header>
+      {isGM && (
+        <section>
+          <h2>
+            Ready to show <Help topic="handoutsReady" />
+          </h2>
+          {ready.length === 0 ? (
+            <Empty>Tag a GM-only page “handout” (a letter, a poster, a map scrap) and it waits here until you show it.</Empty>
+          ) : (
+            <ul className="handout-list">
+              {ready.map((e) => (
+                <li key={e.id} className="card row wrap">
+                  <Link to={pagePath(worldId, e.id)}>
+                    <strong>{e.name}</strong>
+                  </Link>
+                  {e.summary && <span className="muted small">{e.summary}</span>}
+                  <button className="small" onClick={() => revealAndShow(worldId, e)} title="Reveal this page to every player and put it on their screens">
+                    <Ico as={Television} /> Reveal and show
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <h2>Shown so far</h2>
+        </section>
+      )}
       <p className="muted">
         {isGM
           ? 'Everything you’ve shown players, newest first. Players can open these any time. Remove one to take it back.'

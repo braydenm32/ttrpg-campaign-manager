@@ -16,7 +16,8 @@ import { DiscordSettings } from '../discord'
 import { ImportPages } from '../ImportPages'
 import { Ico, PageIcon } from '../icons'
 import { Ruler } from '@phosphor-icons/react'
-import { pagePath, typePath } from '../paths'
+import { pagePath, typePath, worldPath } from '../paths'
+import { EXAMPLE_VERSION, resetExampleWorld } from '../example/load'
 
 const TABS = [
   ['world', 'World'],
@@ -112,6 +113,28 @@ export default function WorldSettings() {
           <ImportPages worldId={worldId} />
 
           <RecentlyDeleted />
+
+          {world.example && (
+            <section>
+              <h2>
+                Example world <Help topic="exampleWorld" />
+              </h2>
+              <p className="muted">
+                {world.example < EXAMPLE_VERSION
+                  ? 'A newer version of the example world is available. Resetting gives you the new one.'
+                  : 'Changed things while exploring? Reset puts the example world back the way it came.'}{' '}
+                Your changes to it are lost, so make a backup first if you want to keep them.
+              </p>
+              <button
+                onClick={async () => {
+                  if (!confirm('Reset the example world? Everything you changed in it is lost.')) return
+                  navigate(worldPath(await resetExampleWorld(worldId)))
+                }}
+              >
+                Reset the example world
+              </button>
+            </section>
+          )}
 
           <section>
             <h2>Danger zone</h2>

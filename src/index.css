@@ -178,6 +178,10 @@ button.nav-heading:hover { color: var(--text); border: none; }
 .page-header > div:first-child { flex: 1; min-width: 0; }
 .section-header { display: flex; justify-content: space-between; align-items: center; }
 .section-header h2 { margin-bottom: .3em; }
+.age-span { font: 400 .8em var(--font-body); }
+.age-summary { margin: 0 0 .6em; max-width: 65ch; }
+.ages-list { list-style: none; padding: 0; display: grid; gap: .6em; }
+.ages-list .card { display: grid; gap: .4em; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 2em; }
 .player-banner { background: color-mix(in srgb, var(--accent) 15%, var(--panel)); border-bottom: 1px solid var(--accent); padding: .6em 2em; display: flex; justify-content: space-between; align-items: center; gap: 1em; font-size: .9em; }
 .loading { padding: 3em; text-align: center; color: var(--muted); }
