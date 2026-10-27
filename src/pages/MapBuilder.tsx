@@ -9,6 +9,7 @@ import { renderPlayerFog } from '../fog'
 import {
   BACKGROUNDS,
   drawingInnerSvg,
+  LAYERS,
   LINE_STYLES,
   pathFor,
   renderDrawing,
@@ -16,19 +17,32 @@ import {
   STAMPS,
   TERRAINS,
   type Background,
+  type Biome,
   type Drawing,
+  type LabelFont,
+  type LayerId,
   type LineStyle,
+  type Look,
   type Point,
   type Shape,
   type StampKind,
   type Terrain,
 } from '../mapDrawing'
+import { ASSET_GROUPS, Atlas, assetNamesIn } from '../mapArt/atlas'
+import { classicBlob, classicHitSvg, drawPiece, FONTS, loadMapFonts, LOOKS, renderClassic, styleFor } from '../mapArt/classic'
 import { useViewMode } from '../viewMode'
 import { worldPath } from '../paths'
 
-type Tool = 'select' | 'hand' | 'area' | 'rect' | 'line' | 'stamp' | 'label' | 'erase'
+type Tool = 'select' | 'hand' | 'land' | 'area' | 'rect' | 'line' | 'stamp' | 'label' | 'erase'
 
-const TOOLS: { id: Tool; icon: string; label: string; hint: string }[] = [
+interface ToolDef {
+  id: Tool
+  icon: string
+  label: string
+  hint: string
+}
+
+const SIMPLE_TOOLS: ToolDef[] = [
   { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a shape to edit it, drag to move it' },
   { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll to zoom' },
   { id: 'area', icon: '🖌', label: 'Paint area', hint: 'Drag to paint land, forest, water…' },
@@ -38,6 +52,30 @@ const TOOLS: { id: Tool; icon: string; label: string; hint: string }[] = [
   { id: 'label', icon: '🔤', label: 'Label', hint: 'Click to place text' },
   { id: 'erase', icon: '🧽', label: 'Erase', hint: 'Click a shape to delete it' },
 ]
+
+const CLASSIC_TOOLS: ToolDef[] = [
+  { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a piece, line or label to edit it, drag to move it' },
+  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll to zoom' },
+  { id: 'land', icon: '🖌', label: 'Land', hint: 'Drag to paint land; switch to Water to carve out seas, bays and lakes. The coast draws itself' },
+  { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw rivers, roads, trails and borders' },
+  { id: 'stamp', icon: '⛰', label: 'Place', hint: 'Click to place a piece. Each one comes out a little different' },
+  { id: 'label', icon: '🔤', label: 'Label', hint: 'Click to place text, or drag to write it along a curve' },
+  { id: 'erase', icon: '🧽', label: 'Erase', hint: 'Click a piece, line or label to delete it' },
+]
+
+/** Starting sizes for library pieces, at a 1400 px map (scaled to the map's size). */
+const PIECE_SIZE: Record<string, number> = {
+  mountain: 36, 'mountain-soft': 30, 'mountain-small': 18, hill: 14, downs: 14, volcano: 60,
+  tree: 13, pine: 15, 'tree-tiny': 9, 'forest-clump': 46, 'wood-stipple': 46, grass: 9, marsh: 16, palm: 18, scrub: 12, 'dead-tree': 15,
+  'city-dot': 9, 'compass-rose': 120, cartouche: 320, 'scale-bar': 160, ship: 50, 'sea-serpent': 56, cloud: 100, waves: 22, whirlpool: 30,
+}
+const pieceSize = (asset: string, W: number, H: number) => {
+  const def = Atlas.assets[asset]
+  const base = PIECE_SIZE[asset] ?? (def?.category === 'settlements' ? 34 : def?.category === 'landmarks' ? 30 : 30)
+  return Math.round(base * Math.max(1, Math.max(W, H) / 1400))
+}
+/** Natural things get flipped at random, so a range of mountains doesn't all lean the same way. */
+const flips = (asset: string) => ['mountains', 'hills', 'vegetation'].includes(Atlas.assets[asset]?.category ?? '')
 
 export default function MapBuilder() {
   const { worldId } = useWorld()
@@ -54,21 +92,27 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const W = map.width
   const H = map.height
   const [drawing, setDrawing] = useState<Drawing>(map.drawing)
+  const classic = drawing.style === 'classic'
+  const TOOLS = classic ? CLASSIC_TOOLS : SIMPLE_TOOLS
   const [past, setPast] = useState<Drawing[]>([])
   const [future, setFuture] = useState<Drawing[]>([])
-  const [tool, setTool] = useState<Tool>('area')
+  const [tool, setTool] = useState<Tool>(classic ? 'land' : 'area')
   const [terrain, setTerrain] = useState<Terrain>('land')
-  const [lineStyle, setLineStyle] = useState<LineStyle>('road')
+  const [lineStyle, setLineStyle] = useState<LineStyle>(classic ? 'river' : 'road')
   const [stamp, setStamp] = useState<StampKind>('town')
   const [stampSize, setStampSize] = useState(() => Math.round(Math.max(W, H) / 24))
+  const [brush, setBrush] = useState<{ mode: 'land' | 'water'; size: number }>(() => ({ mode: 'land', size: Math.round(Math.max(W, H) / 16) }))
+  const [piece, setPiece] = useState<{ asset: string; size: number; variant: number | 'random' }>(() => ({ asset: 'mountain', size: pieceSize('mountain', W, H), variant: 'random' }))
   const [labelText, setLabelText] = useState('')
   const [labelSize, setLabelSize] = useState(() => Math.round(Math.max(W, H) / 40))
+  const [labelFont, setLabelFont] = useState<LabelFont>('region')
   const [selectedId, setSelectedId] = useState<string>()
   const [view, setView] = useState({ x: 0, y: 0, w: W, h: H })
   const [draft, setDraft] = useState<Point[]>([])
   const [saved, setSaved] = useState(true)
   const [canvas, setCanvas] = useState({ w: W, h: H })
   const svgRef = useRef<SVGSVGElement>(null)
+  const artRef = useRef<HTMLCanvasElement>(null)
   const gesture = useRef<
     | { kind: 'pan'; client: Point; view: typeof view }
     | { kind: 'draw'; points: Point[] }
@@ -110,21 +154,51 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   // A fogged map's players' picture is remade once you're done drawing (not on every stroke).
   useEffect(() => () => void renderPlayerFog(map.id).catch(() => {}), [map.id])
 
+  // Classic maps are painted on a canvas under the editor; it's redrawn shortly after each change.
+  const lastArt = useRef<{ drawing: Drawing; canvas: HTMLCanvasElement }>(undefined)
+  useEffect(() => {
+    if (!classic) return
+    let cancelled = false
+    const t = setTimeout(async () => {
+      await loadMapFonts()
+      if (cancelled) return
+      const t0 = performance.now()
+      const art = renderClassic(drawing, W, H)
+      if (import.meta.env.DEV) console.debug(`map drawn in ${Math.round(performance.now() - t0)} ms`)
+      lastArt.current = { drawing, canvas: art }
+      const el = artRef.current
+      if (!el) return
+      el.width = art.width
+      el.height = art.height
+      el.getContext('2d')!.drawImage(art, 0, 0)
+    }, 40)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+    }
+  }, [classic, drawing, W, H])
+
   // Autosave: the drawing is kept on the map, and the rendered picture replaces the map image.
   const lastSaved = useRef(map.drawing)
   useEffect(() => {
     if (drawing === lastSaved.current) return
     setSaved(false)
     const t = setTimeout(async () => {
-      const svg = renderDrawing(drawing, W, H)
-      const blob = new Blob([svg], { type: 'image/svg+xml' })
+      let blob: Blob
+      if (drawing.style === 'classic') {
+        await loadMapFonts()
+        const art = lastArt.current?.drawing === drawing ? lastArt.current.canvas : renderClassic(drawing, W, H)
+        blob = await classicBlob(art)
+      } else {
+        blob = new Blob([renderDrawing(drawing, W, H)], { type: 'image/svg+xml' })
+      }
       await db.transaction('rw', [db.maps, db.assets], async () => {
         await db.maps.update(map.id, { drawing })
-        await db.assets.update(map.imageId, { blob, size: blob.size, mime: 'image/svg+xml', updatedAt: Date.now() })
+        await db.assets.update(map.imageId, { blob, size: blob.size, mime: blob.type, updatedAt: Date.now() })
       })
       lastSaved.current = drawing
       setSaved(true)
-    }, 700)
+    }, 800)
     return () => clearTimeout(t)
   }, [drawing, map.id, map.imageId, W, H])
 
@@ -200,31 +274,73 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     return () => ro.disconnect()
   }, [fitView])
   const shapeAt = (target: EventTarget) => (target as Element).closest?.('[data-id]')?.getAttribute('data-id') ?? undefined
+  const locked = (layer: LayerId) => !!drawing.locked?.includes(layer) || !!drawing.hidden?.includes(layer)
+
+  const placePiece = (p: Point) => {
+    const def = Atlas.assets[piece.asset]
+    if (!def) return
+    const variant = piece.variant === 'random' ? Math.floor(Math.random() * 8) : piece.variant
+    const shape: Shape = {
+      id: newId(),
+      kind: 'asset',
+      asset: piece.asset,
+      at: p,
+      size: piece.size,
+      seed: 1 + Math.floor(Math.random() * 2 ** 30),
+      variant,
+      ...(flips(piece.asset) && Math.random() < 0.5 ? { flip: true } : {}),
+    }
+    commit({ ...drawing, shapes: [...drawing.shapes, shape] })
+  }
+
+  const addLabel = (at: Point, curve?: Point[]) => {
+    const text = labelText.trim() || prompt('Label text')?.trim()
+    if (!text) return
+    const id = newId()
+    commit({
+      ...drawing,
+      shapes: [
+        ...drawing.shapes,
+        {
+          id,
+          kind: 'label',
+          text,
+          at,
+          size: labelSize,
+          color: drawing.background === 'stone' ? '#f2efe6' : '#3a2e1c',
+          italic: !classic ? false : labelFont === 'place',
+          ...(classic ? { font: labelFont } : {}),
+          ...(curve ? { curve } : {}),
+        },
+      ],
+    })
+    setLabelText('')
+  }
 
   const onPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
     const p = toMap(e)
     const hit = shapeAt(e.target)
     if (tool === 'hand' || e.button === 1 || spaceDown.current) {
       gesture.current = { kind: 'pan', client: [e.clientX, e.clientY], view }
-    } else if (tool === 'area' || tool === 'line') {
+    } else if (tool === 'area' || tool === 'line' || tool === 'land' || (tool === 'label' && classic)) {
+      if (tool === 'land' && locked('land')) return
+      if (tool === 'line' && locked(lineStyle === 'river' ? 'rivers' : 'paths')) return
+      if (tool === 'label' && locked('labels')) return
       gesture.current = { kind: 'draw', points: [p] }
       setDraft([p])
     } else if (tool === 'rect') {
       gesture.current = { kind: 'rect', start: p }
       setDraft([p, p, p, p])
     } else if (tool === 'stamp') {
+      if (classic) {
+        if (!locked('objects')) placePiece(p)
+        return
+      }
       const id = newId()
       commit({ ...drawing, shapes: [...drawing.shapes, { id, kind: 'stamp', stamp, at: p, size: stampSize }] })
       return
     } else if (tool === 'label') {
-      const text = labelText.trim() || prompt('Label text')?.trim()
-      if (!text) return
-      const id = newId()
-      commit({
-        ...drawing,
-        shapes: [...drawing.shapes, { id, kind: 'label', text, at: p, size: labelSize, color: drawing.background === 'stone' ? '#f2efe6' : '#3a2e1c', italic: false }],
-      })
-      setLabelText('')
+      addLabel(p)
       return
     } else if (tool === 'erase') {
       if (hit) removeShape(hit)
@@ -263,6 +379,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
         shapes: g.before.shapes.map((s) => {
           if (s.id !== g.id) return s
           if (s.kind === 'area' || s.kind === 'line') return { ...s, points: s.points.map(shift) }
+          if (s.kind === 'label' && s.curve) return { ...s, at: shift(s.at), curve: s.curve.map(shift) }
           return { ...s, at: shift(s.at) }
         }),
       })
@@ -276,6 +393,16 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     if (g.kind === 'draw') {
       const pts = simplify(g.points, 1.5 * unitsPerPixel())
       setDraft([])
+      if (tool === 'land') {
+        const stroke = { id: newId(), mode: brush.mode, size: brush.size, points: pts.length > 1 ? pts : [g.points[0]] }
+        commit({ ...drawing, land: [...(drawing.land ?? []), stroke] })
+      }
+      if (tool === 'label') {
+        let len = 0
+        for (let i = 1; i < g.points.length; i++) len += Math.hypot(g.points[i][0] - g.points[i - 1][0], g.points[i][1] - g.points[i - 1][1])
+        if (len < 12 * unitsPerPixel()) addLabel(g.points[0])
+        else addLabel(g.points[Math.floor(g.points.length / 2)], simplify(g.points, 3 * unitsPerPixel()))
+      }
       if (tool === 'area' && pts.length >= 3)
         commit({ ...drawing, shapes: [...drawing.shapes, { id: newId(), kind: 'area', terrain, points: pts, smooth: true }] })
       if (tool === 'line' && pts.length >= 2)
@@ -299,10 +426,20 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   }
 
   const fit = () => fitView(canvas.w, canvas.h)
-  const html = useMemo(() => drawingInnerSvg(drawing, W, H), [drawing, W, H])
+  const html = useMemo(() => (classic ? classicHitSvg(drawing) : drawingInnerSvg(drawing, W, H)), [classic, drawing, W, H])
   const selected = drawing.shapes.find((s) => s.id === selectedId)
   const draftPath =
-    draft.length > 1 ? pathFor(draft, tool !== 'line', tool === 'area' || (tool === 'line' && lineStyle !== 'wall')) : ''
+    draft.length > 1 ? pathFor(draft, tool !== 'line' && tool !== 'land' && tool !== 'label', tool === 'area' || tool === 'land' || tool === 'label' || (tool === 'line' && lineStyle !== 'wall')) : ''
+  const sc = canvas.w / view.w
+  const toggleLayer = (key: 'hidden' | 'locked', id: LayerId) => {
+    const list = drawing[key] ?? []
+    commit({ ...drawing, [key]: list.includes(id) ? list.filter((l) => l !== id) : [...list, id] })
+  }
+  const selectionStyle = selectedId
+    ? classic
+      ? `[data-id="${selectedId}"] { stroke: #ffd36b; stroke-opacity: .5; } rect[data-id="${selectedId}"] { stroke-opacity: 1; stroke-width: ${2 * upp}; stroke-dasharray: ${6 * upp} ${4 * upp}; fill: rgba(255,211,107,.08); }`
+      : `[data-id="${selectedId}"] { filter: drop-shadow(0 0 4px #ffd36b) drop-shadow(0 0 2px #ffd36b); }`
+    : ''
 
   return (
     <div className="map-page builder">
@@ -329,56 +466,179 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
             </button>
           ))}
         </div>
-        <svg
-          ref={svgRef}
-          className={`builder-canvas tool-${tool}`}
-          viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
-          preserveAspectRatio="none"
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
-          onWheel={onWheel}
-        >
-          <g dangerouslySetInnerHTML={{ __html: html }} />
-          {selectedId && <style>{`[data-id="${selectedId}"] { filter: drop-shadow(0 0 4px #ffd36b) drop-shadow(0 0 2px #ffd36b); }`}</style>}
-          <rect width={W} height={H} fill="none" stroke="#000" strokeOpacity={0.4} strokeWidth={2 * upp} pointerEvents="none" />
-          {draftPath && (
-            <path
-              d={draftPath}
-              fill={tool === 'line' ? 'none' : 'rgba(224,179,84,.25)'}
-              stroke="#e0b354"
-              strokeWidth={2 * upp}
-              strokeDasharray={`${6 * upp} ${4 * upp}`}
-              pointerEvents="none"
+        <div className="builder-stage">
+          {classic && (
+            <canvas
+              ref={artRef}
+              className="builder-art"
+              aria-hidden
+              style={{ width: W * sc, height: H * sc, transform: `translate(${-view.x * sc}px, ${-view.y * sc}px)` }}
             />
           )}
-        </svg>
+          <svg
+            ref={svgRef}
+            className={`builder-canvas tool-${tool}`}
+            viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
+            preserveAspectRatio="none"
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            onWheel={onWheel}
+          >
+            <g dangerouslySetInnerHTML={{ __html: html }} />
+            {selectionStyle && <style>{selectionStyle}</style>}
+            <rect width={W} height={H} fill="none" stroke="#000" strokeOpacity={0.4} strokeWidth={2 * upp} pointerEvents="none" />
+            {draftPath &&
+              (tool === 'land' ? (
+                <path
+                  d={draftPath}
+                  fill="none"
+                  stroke={brush.mode === 'water' ? 'rgba(80,140,190,.45)' : 'rgba(224,179,84,.45)'}
+                  strokeWidth={brush.size}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  pointerEvents="none"
+                />
+              ) : (
+                <path
+                  d={draftPath}
+                  fill={tool === 'line' || tool === 'label' ? 'none' : 'rgba(224,179,84,.25)'}
+                  stroke="#e0b354"
+                  strokeWidth={2 * upp}
+                  strokeDasharray={`${6 * upp} ${4 * upp}`}
+                  pointerEvents="none"
+                />
+              ))}
+          </svg>
+        </div>
         <aside className="map-panel builder-panel">
           <div className="small muted">
             Map builder <Help topic="mapBuilder" />
           </div>
           {selected ? (
-            <ShapeProps shape={selected} onChange={(patch) => updateShape(selected.id, patch)} onDelete={() => removeShape(selected.id)} onClose={() => setSelectedId(undefined)} />
+            <ShapeProps
+              shape={selected}
+              classic={classic}
+              onChange={(patch) => updateShape(selected.id, patch)}
+              onDelete={() => removeShape(selected.id)}
+              onClose={() => setSelectedId(undefined)}
+            />
           ) : (
             <ToolOptions
               tool={tool}
+              tools={TOOLS}
+              drawing={drawing}
+              W={W}
+              H={H}
               {...{ terrain, setTerrain, lineStyle, setLineStyle, stamp, setStamp, stampSize, setStampSize, labelText, setLabelText, labelSize, setLabelSize }}
+              {...{ brush, setBrush, piece, setPiece, labelFont, setLabelFont }}
             />
           )}
-          <details className="map-settings">
+          {classic && (
+            <section className="map-layers">
+              <h3>
+                Layers <Help topic="mapLayers" />
+              </h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th />
+                    <th>Show</th>
+                    <th>Lock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {LAYERS.map((l) => (
+                    <tr key={l.id}>
+                      <td>{l.label}</td>
+                      <td>
+                        <input type="checkbox" aria-label={`Show ${l.label}`} checked={!drawing.hidden?.includes(l.id)} onChange={() => toggleLayer('hidden', l.id)} />
+                      </td>
+                      <td>
+                        <input type="checkbox" aria-label={`Lock ${l.label}`} checked={!!drawing.locked?.includes(l.id)} onChange={() => toggleLayer('locked', l.id)} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          )}
+          <details className="map-settings" open={classic || undefined}>
             <summary>Map settings</summary>
             <div className="form">
               <label>
-                Background
-                <select value={drawing.background} onChange={(e) => commit({ ...drawing, background: e.target.value as Background })}>
-                  {Object.entries(BACKGROUNDS).map(([k, v]) => (
-                    <option key={k} value={k}>
-                      {v.label}
-                    </option>
-                  ))}
+                <span>
+                  Style <Help topic="mapStyle" />
+                </span>
+                <select
+                  value={drawing.style ?? 'simple'}
+                  onChange={(e) => {
+                    const style = e.target.value as 'simple' | 'classic'
+                    commit(
+                      style === 'classic'
+                        ? { look: 'parchment', biome: 'temperate', shadows: true, frame: true, seed: 1 + Math.floor(Math.random() * 99999), ...drawing, style }
+                        : { ...drawing, style },
+                    )
+                    setTool(style === 'classic' ? 'land' : 'area')
+                    if (style === 'classic' && lineStyle === 'road') setLineStyle('river')
+                  }}
+                >
+                  <option value="classic">Classic fantasy map (hand-inked)</option>
+                  <option value="simple">Simple (flat colours)</option>
                 </select>
               </label>
+              {classic ? (
+                <>
+                  <label>
+                    Look
+                    <select value={drawing.look ?? 'parchment'} onChange={(e) => commit({ ...drawing, look: e.target.value as Look })}>
+                      {Object.entries(LOOKS).map(([k, v]) => (
+                        <option key={k} value={k}>
+                          {v.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Biome (tints the coloured look)
+                    <select value={drawing.biome ?? 'temperate'} onChange={(e) => commit({ ...drawing, biome: e.target.value as Biome })}>
+                      {Object.entries(Atlas.BIOMES).map(([k, v]) => (
+                        <option key={k} value={k}>
+                          {v.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Start from
+                    <select value={drawing.background === 'sea' ? 'sea' : 'land'} onChange={(e) => commit({ ...drawing, background: e.target.value === 'sea' ? 'sea' : 'parchment' })}>
+                      <option value="sea">Open sea (paint the land)</option>
+                      <option value="land">All land (carve out the water)</option>
+                    </select>
+                  </label>
+                  <label className="check">
+                    <input type="checkbox" checked={drawing.shadows !== false} onChange={(e) => commit({ ...drawing, shadows: e.target.checked })} /> Shading under pieces
+                  </label>
+                  <label className="check">
+                    <input type="checkbox" checked={drawing.frame !== false} onChange={(e) => commit({ ...drawing, frame: e.target.checked })} /> Border around the map
+                  </label>
+                  <button type="button" onClick={() => commit({ ...drawing, seed: 1 + Math.floor(Math.random() * 99999) })}>
+                    Redraw the coastline's wiggles
+                  </button>
+                </>
+              ) : (
+                <label>
+                  Background
+                  <select value={drawing.background} onChange={(e) => commit({ ...drawing, background: e.target.value as Background })}>
+                    {Object.entries(BACKGROUNDS).map(([k, v]) => (
+                      <option key={k} value={k}>
+                        {v.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label>
                 Grid
                 <select value={drawing.grid} onChange={(e) => commit({ ...drawing, grid: e.target.value as Drawing['grid'] })}>
@@ -402,6 +662,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
               )}
               <p className="muted small">
                 {W} × {H} px. Pins and regions are added on the map itself, after you press Done.
+                {!classic && drawing.land?.length ? ' Land painted with the classic Land brush only shows in the classic style.' : ''}
               </p>
             </div>
           </details>
@@ -413,6 +674,10 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
 
 function ToolOptions(p: {
   tool: Tool
+  tools: ToolDef[]
+  drawing: Drawing
+  W: number
+  H: number
   terrain: Terrain
   setTerrain: (t: Terrain) => void
   lineStyle: LineStyle
@@ -425,12 +690,41 @@ function ToolOptions(p: {
   setLabelText: (s: string) => void
   labelSize: number
   setLabelSize: (n: number) => void
+  brush: { mode: 'land' | 'water'; size: number }
+  setBrush: (b: { mode: 'land' | 'water'; size: number }) => void
+  piece: { asset: string; size: number; variant: number | 'random' }
+  setPiece: (b: { asset: string; size: number; variant: number | 'random' }) => void
+  labelFont: LabelFont
+  setLabelFont: (f: LabelFont) => void
 }) {
-  const hint = TOOLS.find((t) => t.id === p.tool)?.hint
+  const classic = p.drawing.style === 'classic'
+  const def = p.tools.find((t) => t.id === p.tool)
+  const big = Math.max(p.W, p.H)
   return (
     <div className="form">
-      <h2>{TOOLS.find((t) => t.id === p.tool)?.label}</h2>
-      <p className="muted small">{hint}. Hold Space and drag to pan from any tool.</p>
+      <h2>
+        {def?.label}
+        {classic && p.tool === 'land' && <Help topic="landBrush" />}
+        {classic && p.tool === 'stamp' && <Help topic="mapPieces" />}
+        {classic && p.tool === 'label' && <Help topic="curvedLabels" />}
+      </h2>
+      <p className="muted small">{def?.hint}. Hold Space and drag to pan from any tool.</p>
+      {p.tool === 'land' && (
+        <>
+          <div className="row">
+            <button className={p.brush.mode === 'land' ? 'primary' : ''} onClick={() => p.setBrush({ ...p.brush, mode: 'land' })}>
+              Land
+            </button>
+            <button className={p.brush.mode === 'water' ? 'primary' : ''} onClick={() => p.setBrush({ ...p.brush, mode: 'water' })}>
+              Water
+            </button>
+          </div>
+          <label>
+            Brush size: {p.brush.size}px
+            <input type="range" min={Math.round(big / 200)} max={Math.round(big / 4)} value={p.brush.size} onChange={(e) => p.setBrush({ ...p.brush, size: Number(e.target.value) })} />
+          </label>
+        </>
+      )}
       {(p.tool === 'area' || p.tool === 'rect') && (
         <div className="swatch-grid">
           {(Object.keys(TERRAINS) as Terrain[]).map((t) => (
@@ -452,7 +746,8 @@ function ToolOptions(p: {
           ))}
         </div>
       )}
-      {p.tool === 'stamp' && (
+      {p.tool === 'stamp' && classic && <PiecePicker drawing={p.drawing} W={p.W} H={p.H} piece={p.piece} setPiece={p.setPiece} />}
+      {p.tool === 'stamp' && !classic && (
         <>
           <div className="stamp-grid">
             {(Object.keys(STAMPS) as StampKind[]).map((s) => (
@@ -472,8 +767,20 @@ function ToolOptions(p: {
         <>
           <label>
             Text
-            <input value={p.labelText} onChange={(e) => p.setLabelText(e.target.value)} placeholder="Type, then click the map" />
+            <input value={p.labelText} onChange={(e) => p.setLabelText(e.target.value)} placeholder={classic ? 'Type, then click or drag on the map' : 'Type, then click the map'} />
           </label>
+          {classic && (
+            <label>
+              Lettering
+              <select value={p.labelFont} onChange={(e) => p.setLabelFont(e.target.value as LabelFont)}>
+                {(Object.keys(FONTS) as LabelFont[]).map((f) => (
+                  <option key={f} value={f}>
+                    {FONTS[f].label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label>
             Size: {p.labelSize}px
             <input type="range" min={12} max={160} value={p.labelSize} onChange={(e) => p.setLabelSize(Number(e.target.value))} />
@@ -484,13 +791,83 @@ function ToolOptions(p: {
   )
 }
 
-function ShapeProps({ shape, onChange, onDelete, onClose }: { shape: Shape; onChange: (p: Partial<Shape>) => void; onDelete: () => void; onClose: () => void }) {
+/** The library, grouped, with a little drawing of each piece in the map's own look. */
+function PiecePicker({ drawing, W, H, piece, setPiece }: {
+  drawing: Drawing
+  W: number
+  H: number
+  piece: { asset: string; size: number; variant: number | 'random' }
+  setPiece: (b: { asset: string; size: number; variant: number | 'random' }) => void
+}) {
+  const def = Atlas.assets[piece.asset]
+  const big = Math.max(W, H)
+  return (
+    <>
+      {ASSET_GROUPS.map((g) => (
+        <details key={g.label} className="piece-group" open={g.categories.includes(def?.category ?? '') || undefined}>
+          <summary>{g.label}</summary>
+          <div className="stamp-grid">
+            {assetNamesIn(g.categories).map((n) => (
+              <button key={n} className={piece.asset === n ? 'on' : ''} title={Atlas.assets[n].label} onClick={() => setPiece({ asset: n, size: pieceSize(n, W, H), variant: 'random' })}>
+                <PieceThumb asset={n} look={drawing.look} biome={drawing.biome} />
+                <span>{Atlas.assets[n].label}</span>
+              </button>
+            ))}
+          </div>
+        </details>
+      ))}
+      <label>
+        Size: {piece.size}px
+        <input type="range" min={Math.max(4, Math.round(big / 300))} max={Math.round(big / 3)} value={piece.size} onChange={(e) => setPiece({ ...piece, size: Number(e.target.value) })} />
+      </label>
+      {def?.kind === 'fixed' && (
+        <label>
+          Version
+          <select value={String(piece.variant)} onChange={(e) => setPiece({ ...piece, variant: e.target.value === 'random' ? 'random' : Number(e.target.value) })}>
+            <option value="random">A different one each time</option>
+            {Array.from({ length: 8 }, (_, i) => (
+              <option key={i} value={i}>
+                Version {i + 1}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+    </>
+  )
+}
+
+function PieceThumb({ asset, look, biome }: { asset: string; look?: Look; biome?: Biome }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const c = ref.current
+    if (!c) return
+    const dpr = Math.min(2, window.devicePixelRatio || 1)
+    c.width = 48 * dpr
+    c.height = 48 * dpr
+    const ctx = c.getContext('2d')!
+    ctx.scale(dpr, dpr)
+    ctx.lineJoin = 'round'
+    ctx.lineCap = 'round'
+    const st = styleFor({ background: 'sea', grid: 'none', gridSize: 70, shapes: [], look, biome }, 1400, 1400)
+    if (st.mode === 'colour') st.paper = st.tint.land
+    ctx.fillStyle = st.paper
+    ctx.fillRect(0, 0, 48, 48)
+    const def = Atlas.assets[asset]
+    const side = def?.view === 'side'
+    const wide = asset === 'cartouche' || asset === 'scale-bar' || def?.category === 'settlements' || def?.category === 'landmarks'
+    drawPiece(ctx, { id: asset, asset, at: [24, side ? 42 : 24], size: side ? (wide ? 26 : 34) : 40, seed: 7, variant: 0, flip: false }, st)
+  }, [asset, look, biome])
+  return <canvas ref={ref} style={{ width: 48, height: 48, borderRadius: 4 }} aria-hidden />
+}
+
+function ShapeProps({ shape, classic, onChange, onDelete, onClose }: { shape: Shape; classic: boolean; onChange: (p: Partial<Shape>) => void; onDelete: () => void; onClose: () => void }) {
+  const title =
+    shape.kind === 'area' ? 'Area' : shape.kind === 'line' ? 'Line' : shape.kind === 'stamp' ? STAMPS[shape.stamp] : shape.kind === 'asset' ? (Atlas.assets[shape.asset]?.label ?? 'Piece') : 'Label'
   return (
     <div className="form">
       <header>
-        <h2>
-          {shape.kind === 'area' ? 'Area' : shape.kind === 'line' ? 'Line' : shape.kind === 'stamp' ? STAMPS[shape.stamp] : 'Label'}
-        </h2>
+        <h2>{title}</h2>
         <button className="ghost" onClick={onClose} aria-label="Close">
           ×
         </button>
@@ -542,6 +919,33 @@ function ShapeProps({ shape, onChange, onDelete, onClose }: { shape: Shape; onCh
           </label>
         </>
       )}
+      {shape.kind === 'asset' && (
+        <>
+          <label>
+            Size: {shape.size}px
+            <input type="range" min={4} max={Math.max(400, shape.size)} value={shape.size} onChange={(e) => onChange({ size: Number(e.target.value) })} />
+          </label>
+          {Atlas.assets[shape.asset]?.kind === 'fixed' ? (
+            <label>
+              Version
+              <select value={shape.variant} onChange={(e) => onChange({ variant: Number(e.target.value) })}>
+                {Array.from({ length: 8 }, (_, i) => (
+                  <option key={i} value={i}>
+                    Version {i + 1}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <button type="button" onClick={() => onChange({ seed: 1 + Math.floor(Math.random() * 2 ** 30) })}>
+              Draw it differently
+            </button>
+          )}
+          <label className="check">
+            <input type="checkbox" checked={!!shape.flip} onChange={(e) => onChange({ flip: e.target.checked })} /> Mirror it
+          </label>
+        </>
+      )}
       {shape.kind === 'label' && (
         <>
           <label>
@@ -552,15 +956,35 @@ function ShapeProps({ shape, onChange, onDelete, onClose }: { shape: Shape; onCh
             Size: {shape.size}px
             <input type="range" min={12} max={160} value={shape.size} onChange={(e) => onChange({ size: Number(e.target.value) })} />
           </label>
-          <div className="row">
-            <input type="color" value={shape.color} onChange={(e) => onChange({ color: e.target.value })} aria-label="Colour" />
-            <label className="check">
-              <input type="checkbox" checked={shape.italic} onChange={(e) => onChange({ italic: e.target.checked })} /> Italic
-            </label>
-          </div>
+          {classic ? (
+            <>
+              <label>
+                Lettering
+                <select value={shape.font ?? 'place'} onChange={(e) => onChange({ font: e.target.value as LabelFont })}>
+                  {(Object.keys(FONTS) as LabelFont[]).map((f) => (
+                    <option key={f} value={f}>
+                      {FONTS[f].label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {shape.curve && (
+                <button type="button" onClick={() => onChange({ curve: undefined })}>
+                  Straighten it
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="row">
+              <input type="color" value={shape.color} onChange={(e) => onChange({ color: e.target.value })} aria-label="Colour" />
+              <label className="check">
+                <input type="checkbox" checked={shape.italic} onChange={(e) => onChange({ italic: e.target.checked })} /> Italic
+              </label>
+            </div>
+          )}
         </>
       )}
-      <p className="muted small">Drag the shape on the map to move it. Press Delete to remove it.</p>
+      <p className="muted small">Drag it on the map to move it. Press Delete to remove it.</p>
       <button className="danger" onClick={onDelete}>
         Delete
       </button>
