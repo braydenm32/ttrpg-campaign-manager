@@ -66,7 +66,9 @@ export const HELP = {
   landBrush:
     'Paint land with the brush and the coastline draws itself, with ripple lines and stippled shallows. Switch to Water to carve out seas, bays and lakes. Bigger brush for continents, smaller for islands and inlets.',
   mapPieces:
-    'Pick a piece and click the map to place it. Mountains, trees and other natural things come out a little different every time, so click along a ridge to build a range. Towns, castles and landmarks have 8 versions each. Click a placed piece with Select to resize, mirror or redraw it.',
+    'Pick a piece and click the map to place it. Each piece has 8 versions, drawn under Version so you can see them; pick one, or Any for a different one each time (best for ranges and forests). Click and hold to scatter lots at once. Click a placed piece with Select to resize, mirror or swap its version.',
+  scatterBrush:
+    'Click and hold with Place, then drag, and pieces keep landing inside the dashed circle without piling on top of each other: quick forests, mountain ranges and hills. Trees, mountains and towns stay on land; ships and waves stay at sea. Spread is the size of the circle; How thick sets how close together they sit. Letting go makes it one step, so Undo takes the whole lot back. Erase works the same way: drag across pieces to remove several.',
   curvedLabels:
     'Click to place a label, or drag a line on the map and the words will follow it, like a river name or a mountain range. Region lettering is spaced capitals, place names are italic, Title is for the map name.',
 

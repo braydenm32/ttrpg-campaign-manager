@@ -586,6 +586,9 @@ function landFor(d: Drawing, W: number, H: number): LandShape & { key: string } 
   return landCache
 }
 
+/** Whether a point is on land, so the scatter brush can keep trees ashore and ships at sea. */
+export const landTest = (d: Drawing, W: number, H: number) => landFor(d, W, H).isLand
+
 function drawBase(d: Drawing, W: number, H: number, scale: number, st: InkStyle, land: LandShape, landPaper: string, r: Rng) {
   const canvas = document.createElement('canvas')
   canvas.width = Math.max(1, Math.round(W * scale))

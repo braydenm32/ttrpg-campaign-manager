@@ -29,7 +29,7 @@ import {
   type Terrain,
 } from '../mapDrawing'
 import { ASSET_GROUPS, Atlas, assetNamesIn } from '../mapArt/atlas'
-import { classicBlob, classicHitSvg, drawPiece, FONTS, loadMapFonts, LOOKS, renderClassic, styleFor } from '../mapArt/classic'
+import { classicBlob, classicHitSvg, drawPiece, FONTS, landTest, loadMapFonts, LOOKS, renderClassic, styleFor } from '../mapArt/classic'
 import { useViewMode } from '../viewMode'
 import { worldPath } from '../paths'
 
@@ -58,9 +58,9 @@ const CLASSIC_TOOLS: ToolDef[] = [
   { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll to zoom' },
   { id: 'land', icon: '🖌', label: 'Land', hint: 'Drag to paint land; switch to Water to carve out seas, bays and lakes. The coast draws itself' },
   { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw rivers, roads, trails and borders' },
-  { id: 'stamp', icon: '⛰', label: 'Place', hint: 'Click to place a piece. Each one comes out a little different' },
+  { id: 'stamp', icon: '⛰', label: 'Place', hint: 'Click to place a piece. Click and hold, then drag, to scatter lots of them' },
   { id: 'label', icon: '🔤', label: 'Label', hint: 'Click to place text, or drag to write it along a curve' },
-  { id: 'erase', icon: '🧽', label: 'Erase', hint: 'Click a piece, line or label to delete it' },
+  { id: 'erase', icon: '🧽', label: 'Erase', hint: 'Click a piece, line or label to delete it, or drag across several' },
 ]
 
 /** Starting sizes for library pieces, at a 1400 px map (scaled to the map's size). */
@@ -76,6 +76,21 @@ const pieceSize = (asset: string, W: number, H: number) => {
 }
 /** Natural things get flipped at random, so a range of mountains doesn't all lean the same way. */
 const flips = (asset: string) => ['mountains', 'hills', 'vegetation'].includes(Atlas.assets[asset]?.category ?? '')
+/** Natural pieces are drawn fresh from a seed; versions 1 to 8 are fixed seeds, so they can be previewed and picked. */
+const versionSeed = (v: number) => 1000 + v * 7919
+const randomSeed = () => 1 + Math.floor(Math.random() * 2 ** 30)
+type PieceChoice = { asset: string; size: number; variant: number | 'random' }
+
+/** How close the scatter brush packs pieces, as a share of their size. */
+const THICKNESS = [
+  { label: 'Sparse', gap: 1.5 },
+  { label: 'Light', gap: 1.1 },
+  { label: 'Medium', gap: 0.8 },
+  { label: 'Thick', gap: 0.6 },
+  { label: 'Packed', gap: 0.42 },
+]
+/** Scattered natural things and towns stay on land; ships, serpents and waves stay at sea. */
+const ASHORE = ['mountains', 'hills', 'vegetation', 'settlements', 'landmarks', 'symbols']
 
 export default function MapBuilder() {
   const { worldId } = useWorld()
@@ -102,7 +117,8 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const [stamp, setStamp] = useState<StampKind>('town')
   const [stampSize, setStampSize] = useState(() => Math.round(Math.max(W, H) / 24))
   const [brush, setBrush] = useState<{ mode: 'land' | 'water'; size: number }>(() => ({ mode: 'land', size: Math.round(Math.max(W, H) / 16) }))
-  const [piece, setPiece] = useState<{ asset: string; size: number; variant: number | 'random' }>(() => ({ asset: 'mountain', size: pieceSize('mountain', W, H), variant: 'random' }))
+  const [piece, setPiece] = useState<PieceChoice>(() => ({ asset: 'mountain', size: pieceSize('mountain', W, H), variant: 'random' }))
+  const [spray, setSpray] = useState(() => ({ spread: Math.round(Math.max(W, H) / 18), thickness: 3 }))
   const [labelText, setLabelText] = useState('')
   const [labelSize, setLabelSize] = useState(() => Math.round(Math.max(W, H) / 40))
   const [labelFont, setLabelFont] = useState<LabelFont>('region')
@@ -118,7 +134,11 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     | { kind: 'draw'; points: Point[] }
     | { kind: 'rect'; start: Point }
     | { kind: 'move'; id: string; start: Point; before: Drawing }
+    | { kind: 'scatter'; before: Drawing; placed: Shape[]; start: Point; at: Point; t0: number; moved: boolean; fits: (p: Point) => boolean }
+    | { kind: 'erase'; before: Drawing; ids: Set<string> }
   >(undefined)
+  const scatterTimer = useRef<number>(undefined)
+  const ringRef = useRef<SVGCircleElement>(null)
   const spaceDown = useRef(false)
 
   const commit = useCallback(
@@ -153,30 +173,39 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
 
   // A fogged map's players' picture is remade once you're done drawing (not on every stroke).
   useEffect(() => () => void renderPlayerFog(map.id).catch(() => {}), [map.id])
+  useEffect(() => () => window.clearInterval(scatterTimer.current), [])
 
-  // Classic maps are painted on a canvas under the editor; it's redrawn shortly after each change.
+  // Classic maps are painted on a canvas under the editor. It's redrawn shortly after each change,
+  // and at a steady pace while changes keep coming (the scatter brush), always with the latest drawing.
   const lastArt = useRef<{ drawing: Drawing; canvas: HTMLCanvasElement }>(undefined)
+  const nextArt = useRef<Drawing>(undefined)
+  const artTimer = useRef<number>(undefined)
   useEffect(() => {
     if (!classic) return
-    let cancelled = false
-    const t = setTimeout(async () => {
+    nextArt.current = drawing
+    if (artTimer.current !== undefined) return
+    artTimer.current = window.setTimeout(async () => {
       await loadMapFonts()
-      if (cancelled) return
-      const t0 = performance.now()
-      const art = renderClassic(drawing, W, H)
-      if (import.meta.env.DEV) console.debug(`map drawn in ${Math.round(performance.now() - t0)} ms`)
-      lastArt.current = { drawing, canvas: art }
+      artTimer.current = undefined
+      const d = nextArt.current
       const el = artRef.current
-      if (!el) return
+      if (!d || !el) return
+      const t0 = performance.now()
+      const art = renderClassic(d, W, H)
+      if (import.meta.env.DEV) console.debug(`map drawn in ${Math.round(performance.now() - t0)} ms`)
+      lastArt.current = { drawing: d, canvas: art }
       el.width = art.width
       el.height = art.height
       el.getContext('2d')!.drawImage(art, 0, 0)
     }, 40)
-    return () => {
-      cancelled = true
-      clearTimeout(t)
-    }
   }, [classic, drawing, W, H])
+  useEffect(
+    () => () => {
+      window.clearTimeout(artTimer.current)
+      artTimer.current = undefined
+    },
+    [],
+  )
 
   // Autosave: the drawing is kept on the map, and the rendered picture replaces the map image.
   const lastSaved = useRef(map.drawing)
@@ -276,21 +305,62 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const shapeAt = (target: EventTarget) => (target as Element).closest?.('[data-id]')?.getAttribute('data-id') ?? undefined
   const locked = (layer: LayerId) => !!drawing.locked?.includes(layer) || !!drawing.hidden?.includes(layer)
 
-  const placePiece = (p: Point) => {
-    const def = Atlas.assets[piece.asset]
-    if (!def) return
-    const variant = piece.variant === 'random' ? Math.floor(Math.random() * 8) : piece.variant
-    const shape: Shape = {
+  const makePiece = (at: Point, size = piece.size): Shape => {
+    const pinned = piece.variant !== 'random'
+    const variant = pinned ? (piece.variant as number) : Math.floor(Math.random() * 8)
+    return {
       id: newId(),
       kind: 'asset',
       asset: piece.asset,
-      at: p,
-      size: piece.size,
-      seed: 1 + Math.floor(Math.random() * 2 ** 30),
+      at,
+      size,
+      seed: pinned && Atlas.assets[piece.asset]?.kind === 'recipe' ? versionSeed(variant) : randomSeed(),
       variant,
       ...(flips(piece.asset) && Math.random() < 0.5 ? { flip: true } : {}),
     }
-    commit({ ...drawing, shapes: [...drawing.shapes, shape] })
+  }
+
+  const scatterFits = (): ((p: Point) => boolean) => {
+    const cat = Atlas.assets[piece.asset]?.category ?? ''
+    const sea = cat === 'sea' && piece.asset !== 'cloud'
+    if (!sea && !ASHORE.includes(cat)) return () => true
+    const isLand = landTest(drawing, W, H)
+    return ([x, y]) => isLand(x, y) !== sea
+  }
+  // Click and hold with Place: pieces keep landing under the brush, spaced so they don't pile up.
+  const scatterTick = () => {
+    const g = gesture.current
+    if (g?.kind !== 'scatter' || (!g.moved && performance.now() - g.t0 < 300)) return
+    const side = Atlas.assets[piece.asset]?.view === 'side'
+    const gap = THICKNESS[spray.thickness].gap
+    const others = [...g.before.shapes, ...g.placed].filter((s): s is Extract<Shape, { kind: 'asset' }> => s.kind === 'asset')
+    for (let tries = 0; tries < 12; tries++) {
+      const a = Math.random() * Math.PI * 2
+      const d = spray.spread * Math.sqrt(Math.random())
+      const at: Point = [g.at[0] + Math.cos(a) * d, g.at[1] + Math.sin(a) * d]
+      if (at[0] < 0 || at[1] < 0 || at[0] > W || at[1] > H || !g.fits(at)) continue
+      const size = Math.round(piece.size * (0.82 + Math.random() * 0.36))
+      // side-on pieces may sit closer one behind another than side by side
+      const clear = others.every((o) => Math.hypot(o.at[0] - at[0], (o.at[1] - at[1]) * (side ? 1.8 : 1)) >= ((o.size + size) / 2) * gap)
+      if (!clear) continue
+      g.placed.push(makePiece(at, size))
+      setDrawing({ ...g.before, shapes: [...g.before.shapes, ...g.placed] })
+      return
+    }
+  }
+  const showRing = (p?: Point) => {
+    const ring = ringRef.current
+    if (!ring) return
+    ring.style.display = p ? 'inline' : 'none'
+    if (p) {
+      ring.setAttribute('cx', String(p[0]))
+      ring.setAttribute('cy', String(p[1]))
+    }
+  }
+  const eraseAt = (g: { before: Drawing; ids: Set<string> }, id?: string) => {
+    if (!id || g.ids.has(id)) return
+    g.ids.add(id)
+    setDrawing({ ...g.before, shapes: g.before.shapes.filter((s) => !g.ids.has(s.id)) })
   }
 
   const addLabel = (at: Point, curve?: Point[]) => {
@@ -331,11 +401,14 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     } else if (tool === 'rect') {
       gesture.current = { kind: 'rect', start: p }
       setDraft([p, p, p, p])
+    } else if (tool === 'stamp' && classic) {
+      if (locked('objects') || !Atlas.assets[piece.asset]) return
+      const first = makePiece(p)
+      gesture.current = { kind: 'scatter', before: drawing, placed: [first], start: p, at: p, t0: performance.now(), moved: false, fits: scatterFits() }
+      setDrawing({ ...drawing, shapes: [...drawing.shapes, first] })
+      window.clearInterval(scatterTimer.current)
+      scatterTimer.current = window.setInterval(scatterTick, 45)
     } else if (tool === 'stamp') {
-      if (classic) {
-        if (!locked('objects')) placePiece(p)
-        return
-      }
       const id = newId()
       commit({ ...drawing, shapes: [...drawing.shapes, { id, kind: 'stamp', stamp, at: p, size: stampSize }] })
       return
@@ -343,8 +416,10 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       addLabel(p)
       return
     } else if (tool === 'erase') {
-      if (hit) removeShape(hit)
-      return
+      // drag across several things to erase them all in one go
+      const g = { kind: 'erase' as const, before: drawing, ids: new Set<string>() }
+      gesture.current = g
+      eraseAt(g, hit)
     } else if (tool === 'select') {
       setSelectedId(hit)
       if (hit) gesture.current = { kind: 'move', id: hit, start: p, before: drawing }
@@ -355,7 +430,17 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
 
   const onPointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
     const g = gesture.current
+    if (classic && tool === 'stamp' && (!g || g.kind === 'scatter')) showRing(toMap(e))
     if (!g) return
+    if (g.kind === 'erase') {
+      eraseAt(g, shapeAt(document.elementFromPoint(e.clientX, e.clientY) ?? e.target))
+      return
+    }
+    if (g.kind === 'scatter') {
+      g.at = toMap(e)
+      if (Math.hypot(g.at[0] - g.start[0], g.at[1] - g.start[1]) > 6 * unitsPerPixel()) g.moved = true
+      return
+    }
     if (g.kind === 'pan') {
       const k = g.view.w / canvas.w
       setView({ ...g.view, x: g.view.x - (e.clientX - g.client[0]) * k, y: g.view.y - (e.clientY - g.client[1]) * k })
@@ -389,7 +474,19 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const onPointerUp = () => {
     const g = gesture.current
     gesture.current = undefined
+    window.clearInterval(scatterTimer.current)
     if (!g) return
+    if (g.kind === 'scatter') {
+      commit({ ...g.before, shapes: [...g.before.shapes, ...g.placed] }, g.before)
+      return
+    }
+    if (g.kind === 'erase') {
+      if (g.ids.size) {
+        commit({ ...g.before, shapes: g.before.shapes.filter((s) => !g.ids.has(s.id)) }, g.before)
+        if (selectedId && g.ids.has(selectedId)) setSelectedId(undefined)
+      }
+      return
+    }
     if (g.kind === 'draw') {
       const pts = simplify(g.points, 1.5 * unitsPerPixel())
       setDraft([])
@@ -484,11 +581,15 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
+            onPointerLeave={() => showRing()}
             onWheel={onWheel}
           >
             <g dangerouslySetInnerHTML={{ __html: html }} />
             {selectionStyle && <style>{selectionStyle}</style>}
             <rect width={W} height={H} fill="none" stroke="#000" strokeOpacity={0.4} strokeWidth={2 * upp} pointerEvents="none" />
+            {classic && tool === 'stamp' && (
+              <circle ref={ringRef} className="scatter-ring" r={spray.spread} fill="none" stroke="#e0b354" strokeOpacity={0.7} strokeWidth={1.5 * upp} strokeDasharray={`${5 * upp} ${4 * upp}`} pointerEvents="none" />
+            )}
             {draftPath &&
               (tool === 'land' ? (
                 <path
@@ -520,6 +621,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
             <ShapeProps
               shape={selected}
               classic={classic}
+              drawing={drawing}
               onChange={(patch) => updateShape(selected.id, patch)}
               onDelete={() => removeShape(selected.id)}
               onClose={() => setSelectedId(undefined)}
@@ -532,7 +634,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
               W={W}
               H={H}
               {...{ terrain, setTerrain, lineStyle, setLineStyle, stamp, setStamp, stampSize, setStampSize, labelText, setLabelText, labelSize, setLabelSize }}
-              {...{ brush, setBrush, piece, setPiece, labelFont, setLabelFont }}
+              {...{ brush, setBrush, piece, setPiece, spray, setSpray, labelFont, setLabelFont }}
             />
           )}
           {classic && (
@@ -692,8 +794,10 @@ function ToolOptions(p: {
   setLabelSize: (n: number) => void
   brush: { mode: 'land' | 'water'; size: number }
   setBrush: (b: { mode: 'land' | 'water'; size: number }) => void
-  piece: { asset: string; size: number; variant: number | 'random' }
-  setPiece: (b: { asset: string; size: number; variant: number | 'random' }) => void
+  piece: PieceChoice
+  setPiece: (b: PieceChoice) => void
+  spray: { spread: number; thickness: number }
+  setSpray: (s: { spread: number; thickness: number }) => void
   labelFont: LabelFont
   setLabelFont: (f: LabelFont) => void
 }) {
@@ -746,7 +850,22 @@ function ToolOptions(p: {
           ))}
         </div>
       )}
-      {p.tool === 'stamp' && classic && <PiecePicker drawing={p.drawing} W={p.W} H={p.H} piece={p.piece} setPiece={p.setPiece} />}
+      {p.tool === 'stamp' && classic && (
+        <>
+          <PiecePicker drawing={p.drawing} W={p.W} H={p.H} piece={p.piece} setPiece={p.setPiece} />
+          <h3>
+            Scatter brush <Help topic="scatterBrush" />
+          </h3>
+          <label>
+            Brush spread: {p.spray.spread}px
+            <input type="range" min={Math.round(big / 100)} max={Math.round(big / 5)} value={p.spray.spread} onChange={(e) => p.setSpray({ ...p.spray, spread: Number(e.target.value) })} />
+          </label>
+          <label>
+            How thick: {THICKNESS[p.spray.thickness].label}
+            <input type="range" min={0} max={THICKNESS.length - 1} value={p.spray.thickness} onChange={(e) => p.setSpray({ ...p.spray, thickness: Number(e.target.value) })} />
+          </label>
+        </>
+      )}
       {p.tool === 'stamp' && !classic && (
         <>
           <div className="stamp-grid">
@@ -792,13 +911,7 @@ function ToolOptions(p: {
 }
 
 /** The library, grouped, with a little drawing of each piece in the map's own look. */
-function PiecePicker({ drawing, W, H, piece, setPiece }: {
-  drawing: Drawing
-  W: number
-  H: number
-  piece: { asset: string; size: number; variant: number | 'random' }
-  setPiece: (b: { asset: string; size: number; variant: number | 'random' }) => void
-}) {
+function PiecePicker({ drawing, W, H, piece, setPiece }: { drawing: Drawing; W: number; H: number; piece: PieceChoice; setPiece: (b: PieceChoice) => void }) {
   const def = Atlas.assets[piece.asset]
   const big = Math.max(W, H)
   return (
@@ -820,33 +933,49 @@ function PiecePicker({ drawing, W, H, piece, setPiece }: {
         Size: {piece.size}px
         <input type="range" min={Math.max(4, Math.round(big / 300))} max={Math.round(big / 3)} value={piece.size} onChange={(e) => setPiece({ ...piece, size: Number(e.target.value) })} />
       </label>
-      {def?.kind === 'fixed' && (
-        <label>
-          Version
-          <select value={String(piece.variant)} onChange={(e) => setPiece({ ...piece, variant: e.target.value === 'random' ? 'random' : Number(e.target.value) })}>
-            <option value="random">A different one each time</option>
-            {Array.from({ length: 8 }, (_, i) => (
-              <option key={i} value={i}>
-                Version {i + 1}
-              </option>
-            ))}
-          </select>
-        </label>
+      {def && (
+        <div className="label">
+          <span>Version: {piece.variant === 'random' ? 'a different one each time' : piece.variant + 1}</span>
+          <VersionPicker asset={piece.asset} drawing={drawing} value={piece.variant} any onPick={(v) => setPiece({ ...piece, variant: v })} />
+        </div>
       )}
     </>
   )
 }
 
-function PieceThumb({ asset, look, biome }: { asset: string; look?: Look; biome?: Biome }) {
+/** The 8 versions of a piece, drawn small so you can see each before choosing; "Any" mixes them. */
+function VersionPicker({ asset, drawing, value, any, onPick }: { asset: string; drawing: Drawing; value?: number | 'random'; any?: boolean; onPick: (v: number | 'random') => void }) {
+  const recipe = Atlas.assets[asset]?.kind === 'recipe'
+  return (
+    <div className="version-grid" role="radiogroup" aria-label="Version">
+      {any && (
+        <button type="button" role="radio" aria-checked={value === 'random'} className={value === 'random' ? 'on' : ''} title="A different one each time" onClick={() => onPick('random')}>
+          <span className="version-any" aria-hidden>
+            🎲
+          </span>
+          <span>Any</span>
+        </button>
+      )}
+      {Array.from({ length: 8 }, (_, i) => (
+        <button key={i} type="button" role="radio" aria-checked={value === i} className={value === i ? 'on' : ''} title={`Version ${i + 1}`} onClick={() => onPick(i)}>
+          <PieceThumb asset={asset} look={drawing.look} biome={drawing.biome} variant={i} seed={recipe ? versionSeed(i) : 7} px={40} />
+          <span>{i + 1}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function PieceThumb({ asset, look, biome, variant = 0, seed = 7, px = 48 }: { asset: string; look?: Look; biome?: Biome; variant?: number; seed?: number; px?: number }) {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const c = ref.current
     if (!c) return
     const dpr = Math.min(2, window.devicePixelRatio || 1)
-    c.width = 48 * dpr
-    c.height = 48 * dpr
+    c.width = px * dpr
+    c.height = px * dpr
     const ctx = c.getContext('2d')!
-    ctx.scale(dpr, dpr)
+    ctx.scale((dpr * px) / 48, (dpr * px) / 48)
     ctx.lineJoin = 'round'
     ctx.lineCap = 'round'
     const st = styleFor({ background: 'sea', grid: 'none', gridSize: 70, shapes: [], look, biome }, 1400, 1400)
@@ -856,12 +985,19 @@ function PieceThumb({ asset, look, biome }: { asset: string; look?: Look; biome?
     const def = Atlas.assets[asset]
     const side = def?.view === 'side'
     const wide = asset === 'cartouche' || asset === 'scale-bar' || def?.category === 'settlements' || def?.category === 'landmarks'
-    drawPiece(ctx, { id: asset, asset, at: [24, side ? 42 : 24], size: side ? (wide ? 26 : 34) : 40, seed: 7, variant: 0, flip: false }, st)
-  }, [asset, look, biome])
-  return <canvas ref={ref} style={{ width: 48, height: 48, borderRadius: 4 }} aria-hidden />
+    drawPiece(ctx, { id: asset, asset, at: [24, side ? 42 : 24], size: side ? (wide ? 26 : 34) : 40, seed, variant, flip: false }, st)
+  }, [asset, look, biome, variant, seed, px])
+  return <canvas ref={ref} style={{ width: px, height: px, borderRadius: 4 }} aria-hidden />
 }
 
-function ShapeProps({ shape, classic, onChange, onDelete, onClose }: { shape: Shape; classic: boolean; onChange: (p: Partial<Shape>) => void; onDelete: () => void; onClose: () => void }) {
+function ShapeProps({ shape, classic, drawing, onChange, onDelete, onClose }: {
+  shape: Shape
+  classic: boolean
+  drawing: Drawing
+  onChange: (p: Partial<Shape>) => void
+  onDelete: () => void
+  onClose: () => void
+}) {
   const title =
     shape.kind === 'area' ? 'Area' : shape.kind === 'line' ? 'Line' : shape.kind === 'stamp' ? STAMPS[shape.stamp] : shape.kind === 'asset' ? (Atlas.assets[shape.asset]?.label ?? 'Piece') : 'Label'
   return (
@@ -925,19 +1061,17 @@ function ShapeProps({ shape, classic, onChange, onDelete, onClose }: { shape: Sh
             Size: {shape.size}px
             <input type="range" min={4} max={Math.max(400, shape.size)} value={shape.size} onChange={(e) => onChange({ size: Number(e.target.value) })} />
           </label>
-          {Atlas.assets[shape.asset]?.kind === 'fixed' ? (
-            <label>
-              Version
-              <select value={shape.variant} onChange={(e) => onChange({ variant: Number(e.target.value) })}>
-                {Array.from({ length: 8 }, (_, i) => (
-                  <option key={i} value={i}>
-                    Version {i + 1}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <button type="button" onClick={() => onChange({ seed: 1 + Math.floor(Math.random() * 2 ** 30) })}>
+          <div className="label">
+            <span>Version</span>
+            <VersionPicker
+              asset={shape.asset}
+              drawing={drawing}
+              value={Atlas.assets[shape.asset]?.kind === 'recipe' ? Array.from({ length: 8 }, (_, i) => i).find((i) => versionSeed(i) === shape.seed) : shape.variant}
+              onPick={(v) => v !== 'random' && onChange(Atlas.assets[shape.asset]?.kind === 'recipe' ? { variant: v, seed: versionSeed(v) } : { variant: v })}
+            />
+          </div>
+          {Atlas.assets[shape.asset]?.kind === 'recipe' && (
+            <button type="button" onClick={() => onChange({ seed: randomSeed() })}>
               Draw it differently
             </button>
           )}

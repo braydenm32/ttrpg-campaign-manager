@@ -350,6 +350,11 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
 .map-layers input { margin: 0; }
 .piece-group summary { cursor: pointer; padding: .25em 0; font-weight: 500; }
 .piece-group .stamp-grid { margin-bottom: .4em; }
+.version-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.version-grid button { flex-direction: column; gap: 1px; padding: .2em; font-size: .68rem; line-height: 1.1; }
+.version-grid button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, var(--panel-2)); }
+.version-any { font-size: 1.5rem; height: 40px; display: grid; place-items: center; }
+.scatter-ring { display: none; }
 .builder-canvas.tool-hand, .builder-canvas.tool-select { cursor: grab; }
 .builder-canvas.tool-erase { cursor: not-allowed; }
 .builder-panel h2 { margin: 0; }
