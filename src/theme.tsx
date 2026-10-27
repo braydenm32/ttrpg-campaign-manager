@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from 'react'
 
 /**
- * Dark ("candlelit") or light ("parchment"), or follow the device. The choice is per device and
- * lives in localStorage, like the help-tips switch; it isn't synced or put in backups.
+ * Dark ("candlelit", the default) or light ("parchment"), or follow the device. The choice is per
+ * device and lives in localStorage, like the help-tips switch; it isn't synced or put in backups.
  */
 export type ThemeChoice = 'system' | 'dark' | 'light'
 
@@ -12,9 +12,9 @@ const listeners = new Set<() => void>()
 function read(): ThemeChoice {
   try {
     const v = localStorage.getItem(KEY)
-    return v === 'dark' || v === 'light' ? v : 'system'
+    return v === 'system' || v === 'light' ? v : 'dark'
   } catch {
-    return 'system'
+    return 'dark'
   }
 }
 
@@ -29,8 +29,7 @@ export function applyTheme(choice = read()) {
 
 export function setTheme(choice: ThemeChoice) {
   try {
-    if (choice === 'system') localStorage.removeItem(KEY)
-    else localStorage.setItem(KEY, choice)
+    localStorage.setItem(KEY, choice)
   } catch {
     // Private windows can refuse storage; the choice then lasts until the page is closed.
   }

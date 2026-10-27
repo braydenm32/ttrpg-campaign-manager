@@ -139,6 +139,7 @@ export default function Home() {
           </div>
         </section>
       )}
+      <About />
       <footer className="legal-links muted small">
         <a href="privacy.html" target="_blank" rel="noreferrer">
           Privacy
@@ -153,6 +154,33 @@ export default function Home() {
       {account && <AccountModal onClose={() => setAccount(false)} />}
       {creating && <NewWorld onClose={() => setCreating(false)} onCreated={(id) => navigate(`/w/${id}`)} />}
     </div>
+  )
+}
+
+/** What the app is, under the shelf: the home page doubles as the public page Google's sign-in checks. */
+function About() {
+  return (
+    <section className="about">
+      <h2>What the Warded Atlas does</h2>
+      <p>
+        The Warded Atlas helps game masters of Dungeons &amp; Dragons and other tabletop roleplaying games keep their whole world in one place, and share just the
+        right parts with their players. It is free, works in your browser or as a desktop app, and keeps working offline. No account is needed to use it;
+        everything is saved on your own device.
+      </p>
+      <ul>
+        <li><strong>Wiki pages</strong> for places, people, factions, items and lore, linked together.</li>
+        <li><strong>Interactive maps</strong> with pins, regions, fog of war and a built-in map maker.</li>
+        <li><strong>Sessions</strong> with prep sheets, encounters, recordings, transcripts and recaps.</li>
+        <li><strong>Secrets stay secret:</strong> anything marked for the GM never reaches players, and you can reveal pages to individual players.</li>
+        <li><strong>Players join your world</strong> to see what you’ve revealed, claim their characters and keep notes.</li>
+      </ul>
+      <h2>Why sign in?</h2>
+      <p>
+        Signing in is optional. An account, using your email or your Google account, lets you sync your worlds between your devices and invite players. The
+        Warded Atlas only uses your sign-in to know who you are: your name and email address. It never posts anything or reads your contacts. See the{' '}
+        <a href="privacy.html" target="_blank" rel="noreferrer">privacy policy</a> for details.
+      </p>
+    </section>
   )
 }
 

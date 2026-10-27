@@ -12,7 +12,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 })
 
 /** Where the public web app lives; used for share links made from the desktop app or a dev server. */
-export const PUBLIC_APP_URL = 'https://braydenm32.github.io/ttrpg-campaign-manager/'
+export const PUBLIC_APP_URL = 'https://wardedatlas.com/'
 
 export function appUrl() {
   const { protocol, hostname, origin, pathname } = window.location
