@@ -77,9 +77,12 @@ export async function downloadFiles(from: { token: string } | { world: string },
   const query = 'token' in from ? `token=${encodeURIComponent(from.token)}` : `world=${encodeURIComponent(from.world)}`
   await Promise.all(
     ids.map(async (id) => {
+      const one = () => fetch(`${endpoint}?${query}&id=${encodeURIComponent(id)}`, { headers })
       try {
-        const res = urls ? (urls[id] ? await fetch(urls[id]) : undefined) : await fetch(`${endpoint}?${query}&id=${encodeURIComponent(id)}`, { headers })
-        if (res?.ok) files.set(id, await res.blob())
+        // A link that didn't come back or doesn't work falls back to asking for the file itself.
+        let res = urls?.[id] ? await fetch(urls[id]).catch(() => undefined) : undefined
+        if (!res?.ok) res = await one()
+        if (res.ok) files.set(id, await res.blob())
       } catch {
         // Skipped files are tried again on the next refresh.
       }
