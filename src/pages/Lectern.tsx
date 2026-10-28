@@ -1,3 +1,4 @@
+import { PreviouslyOn } from '../ai/ReadAloud'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useEffect, useRef, useState } from 'react'
@@ -86,7 +87,10 @@ export default function Lectern() {
           <h1>
             <Ico as={BookOpen} /> The Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
           </h1>
-          {world && <WorldToday world={world} isGM />}
+          <div className="row wrap">
+            {world && <WorldToday world={world} isGM />}
+            <PreviouslyOn session={session} />
+          </div>
           {!!(world?.safety?.lines.length || world?.safety?.veils.length) && (
             <details className="small safety-reminder">
               <summary><Ico as={Shield} /> Lines and veils</summary>

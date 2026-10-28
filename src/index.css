@@ -1075,3 +1075,40 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .holiday { color: var(--accent); display: inline-flex; align-items: center; gap: .3em; }
 .month-day.festival { background: color-mix(in srgb, var(--accent) 7%, var(--panel)); }
 .month-item.holiday { font-size: .78em; }
+
+/* The Archivist and other Claude tools */
+.claude-job { display: flex; flex-direction: column; gap: .5em; }
+.ask-world { display: flex; flex-direction: column; gap: .75em; margin-top: 1em; max-width: 52em; }
+.ask-starters { display: flex; flex-wrap: wrap; gap: .4em; align-items: center; }
+.ask-turn { display: flex; flex-direction: column; gap: .4em; }
+.ask-q { align-self: flex-end; max-width: 80%; margin: 0; padding: .5em .85em; border-radius: var(--radius) var(--radius) 2px var(--radius); background: var(--panel-2); border: 1px solid var(--border); white-space: pre-wrap; }
+.ask-a { margin: 0; }
+.ask-a .markdown > :first-child { margin-top: 0; }
+.ask-box { display: flex; flex-direction: column; gap: .5em; position: sticky; bottom: 0; background: var(--bg); padding: .5em 0; }
+.ask-box textarea { width: 100%; resize: vertical; }
+.continuity { display: flex; flex-direction: column; gap: .75em; margin-top: 1em; max-width: 52em; }
+.continuity-results { display: flex; flex-direction: column; gap: .6em; }
+.continuity-results h3 { margin: .5em 0 0; }
+.continuity-issue { margin: 0; }
+.continuity-issue .markdown p { margin: .35em 0 0; }
+.prep-helper { margin: .75em 0 1.25em; }
+.prep-helper h3 { margin-top: 0; }
+.prep-suggestion h4 { margin: .75em 0 .25em; }
+.suggest-item { display: flex; gap: .5em; align-items: flex-start; margin: .3em 0; cursor: pointer; }
+.suggest-item input { margin-top: .3em; flex: none; width: auto; }
+.suggest-item .markdown, .suggest-item .markdown p { display: inline; margin: 0; }
+.flavour { margin-top: 1em; }
+.npc-lines { margin-top: 1em; display: flex; flex-direction: column; gap: .5em; }
+.npc-lines h3 { margin: 0; }
+.npc-lines-open { align-self: flex-start; margin-top: .5em; }
+.npc-line-list { margin: 0; padding-left: 1.2em; }
+.npc-line-list .markdown p { margin: .2em 0; }
+.spotlight { margin: 1em 0; }
+.spotlight h2 { margin: 0; }
+.spotlight h3 { margin: .9em 0 .3em; color: var(--muted); font-weight: 600; }
+.spotlight-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35em; }
+.spotlight-bars li { display: grid; grid-template-columns: minmax(6em, 12em) 1fr auto; gap: .6em; align-items: center; }
+.spotlight-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spotlight-track { height: .7em; background: var(--panel-2); border-radius: 99px; overflow: hidden; }
+.spotlight-fill { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.spotlight-value { color: var(--muted); font-variant-numeric: tabular-nums; }

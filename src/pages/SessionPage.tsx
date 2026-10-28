@@ -1,9 +1,12 @@
+import { ReadAloud } from '../ai/ReadAloud'
 import { binSession } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { PrepHelper } from '../ai/PrepHelper'
 import { RecapPanel } from '../ai/RecapPanel'
+import { SpotlightPanel } from '../ai/Spotlight'
 import { TranscriptPanel } from '../ai/TranscriptPanel'
 import { DraftText, Empty, VisibilityToggle } from '../components'
 import { db, ENTITY_LABELS, type Entity, type Recording, type Session } from '../db'
@@ -54,7 +57,10 @@ export default function SessionPage() {
             {session.date}
             {session.worldDate && world?.calendar && ` · in the world: ${formatDate(world.calendar, session.worldDate)}`}
           </div>
-          <PrintButton to={`${worldPath(worldId)}/print/s/${session.id}`} />
+          <div className="row">
+            <ReadAloud text={session.recap} id={`recap-${session.id}`} className="small" />
+            <PrintButton to={`${worldPath(worldId)}/print/s/${session.id}`} />
+          </div>
         </div>
         {session.recap ? (
           <Markdown text={session.recap} entities={entities} worldId={worldId} showSecrets={false} />
@@ -109,6 +115,7 @@ export default function SessionPage() {
         <Recorder session={session} />
       </div>
       <div id="session-recap">{world && <RecapPanel world={world} session={session} entities={entities} />}</div>
+      <SpotlightPanel session={session} entities={entities} />
 
       <div className="segmented tabs">
         <button className={tab === 'prep' ? 'on' : ''} onClick={() => setTab('prep')}>
@@ -123,7 +130,10 @@ export default function SessionPage() {
       </div>
       <Help topic="session" />
       {tab === 'prep' ? (
-        <PrepSheet session={session} entities={entities} worldId={worldId} />
+        <>
+          {world && <PrepHelper world={world} session={session} entities={entities} />}
+          <PrepSheet session={session} entities={entities} worldId={worldId} />
+        </>
       ) : tab === 'notes' ? (
         <DraftText
           multiline
@@ -141,6 +151,7 @@ export default function SessionPage() {
           onChange={(v) => update({ recap: v })}
         />
       )}
+      {tab === 'recap' && session.recap.trim() && <ReadAloud text={session.recap} id={`recap-${session.id}`} className="small" />}
       {tab === 'recap' && session.recap.trim() && (
         <DiscordButton
           worldId={worldId}

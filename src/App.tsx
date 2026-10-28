@@ -43,6 +43,7 @@ import Threads from './pages/Threads'
 import Scratchpad from './pages/Scratchpad'
 import Assets from './pages/Assets'
 const Generators = lazy(() => import('./pages/Generators'))
+const Archivist = lazy(() => import('./ai/Archivist'))
 import PartyLoot from './pages/PartyLoot'
 const WorldSettings = lazy(() => import('./pages/WorldSettings'))
 const PrintPage = lazy(() => import('./print'))
@@ -102,6 +103,7 @@ export default function App() {
             <Route path="s/:sessionId/lectern" element={<Lectern />} />
             <Route path="assets" element={<Assets />} />
             <Route path="generators" element={<Generators />} />
+            <Route path="archivist" element={<Archivist />} />
             <Route path="settings" element={<WorldSettings />} />
             <Route path="boards" element={<Boards />} />
             <Route path="boards/:boardId" element={<BoardView />} />

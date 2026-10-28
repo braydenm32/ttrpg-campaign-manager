@@ -1,3 +1,4 @@
+import { ReadAloud } from '../ai/ReadAloud'
 import { useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Empty } from '../components'
@@ -293,8 +294,11 @@ function Overview({ ctx, campaigns, sessions, go }: { ctx: RoomContext; campaign
         <Card title="Previously on…" icon={Scroll} className="wide" to={last ? `${worldPath(worldId)}/s/${last.id}` : undefined}>
           {last ? (
             <>
-              <div className="muted small">
-                #{last.number} {last.title}
+              <div className="row spread muted small">
+                <span>
+                  #{last.number} {last.title}
+                </span>
+                <ReadAloud text={last.recap} id={`room-${last.id}`} />
               </div>
               <div className="recap-peek">
                 <Markdown text={last.recap} entities={entities} worldId={worldId} showSecrets={false} />

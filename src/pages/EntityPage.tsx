@@ -1,3 +1,4 @@
+import { NpcLines } from '../ai/Flavour'
 import { renameLinks } from '../links'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
@@ -175,6 +176,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
             </div>
           )}
+          {isGM && world && !e.template && e.type === 'npc' && <NpcLines world={world} entity={e} entities={entities} />}
           {(e.body || (isGM && e.gmNotes)) && <div className="fleuron" aria-hidden="true">❦</div>}
           {!e.template && <ClocksBox entity={e} isGM={isGM} worldId={worldId} />}
           {!e.template && <RelationsBox entity={e} entities={entities} isGM={isGM} worldId={worldId} />}

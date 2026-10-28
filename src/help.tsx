@@ -242,7 +242,20 @@ export const HELP = {
   tableDice: 'Rolls here show up for the whole table: the other players and your GM see who rolled what.',
   tableSignals:
     'A quiet word to your GM without interrupting: they get a pop-up with your character’s name, and you see when they’ve noticed. For something you’d rather not say out loud, use the X-card instead.',
-  aiTools: 'Keys for transcription and recaps. They stay on this device only: never synced and never in backups.',
+  aiTools: 'Keys for transcription, recaps and the Claude tools, and the voice for reading recaps aloud. They stay on this device only: never synced and never in backups.',
+  archivist:
+    'Claude, reading your own world. Ask it anything (“who would want the party dead?”) and it looks up the pages it needs, then answers with links, saying when something is secret. Or have it check your notes for contradictions. Uses your Anthropic API key, or “Copy for Claude” for free with a Claude subscription.',
+  continuity:
+    'Claude reads your pages and sessions and lists where they disagree: someone dead on one page and alive on another, dates that don’t add up, names spelled two ways. Each comes with a suggested fix. Tick “Done” once you’ve dealt with one. Checking the whole world reads everything, so it costs more than checking one page and its neighbours.',
+  prepHelper:
+    'Claude reads the last two sessions, the party, open threads and running clocks, and suggests a strong start, likely scenes, secrets and clues, and who to have ready. Untick what you don’t want; the rest goes onto your prep sheet, and the people to have ready are linked to the session so they’re at hand in the Lectern.',
+  flavour:
+    'Claude dresses up what you rolled so it fits your world: a short read-aloud description, rumours tied to people and places you already have, and one secret (kept GM only when you save).',
+  npcLines:
+    'Say what’s happening and Claude writes four lines this character might say, in their voice, using what their page says about them. Keep the ones you like in your GM notes.',
+  spotlight:
+    'Who got time at the table. With a transcript that tells speakers apart, it shows how long each person talked; it also counts how often each character came up (in the transcript, or in your notes and recap without one). Worked out on this device; nothing is sent anywhere.',
+  readAloud: 'Reads recaps aloud with your device’s own voices: free, private, and secret passages are never read. Pick a voice and speed here.',
 } as const
 
 export type HelpTopic = keyof typeof HELP

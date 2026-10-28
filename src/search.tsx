@@ -98,6 +98,7 @@ const PLACES: [string, string, string, boolean][] = [
   ['Handouts', 'handouts', 'shown', false],
   ['Safety tools', 'safety', 'lines veils x-card', false],
   ['Soundboard', 'sounds', 'music ambience', true],
+  ['The Archivist', 'archivist', 'ai claude ask question answer contradictions continuity check', true],
   ['Generators and random tables', 'generators', 'roll names tavern npc shop', true],
   ['Corkboards', 'boards', 'board pins strings', true],
   ['Files', 'assets', 'assets images uploads pictures', true],
