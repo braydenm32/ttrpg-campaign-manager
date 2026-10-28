@@ -348,16 +348,21 @@ export function drawRock(rm: RoomMap, d: Drawing, W: number, H: number, scale: n
   return out
 }
 
-/** Doors in the room library leave a gap in the wall they sit in. Returns the map with those gaps cut out, to clip walls to. */
-export function doorGaps(d: Drawing, W: number, H: number, depth: number): Path2D | undefined {
-  const doors = d.shapes.filter((s): s is Extract<Shape, { kind: 'asset' }> => s.kind === 'asset' && Atlas.assets[s.asset]?.category === 'dg-doors')
+/**
+ * Doors in the room library leave a gap in the wall they sit in, and gatehouses one in the town wall.
+ * Returns the map with those gaps cut out, to clip walls to.
+ */
+export function doorGaps(d: Drawing, W: number, H: number, depth: number, which: 'doors' | 'gates' = 'doors'): Path2D | undefined {
+  const cuts = (s: Shape) => s.kind === 'asset' && (which === 'gates' ? s.asset === 'ct-gatehouse' : Atlas.assets[s.asset]?.category === 'dg-doors')
+  const doors = d.shapes.filter((s): s is Extract<Shape, { kind: 'asset' }> => cuts(s))
   if (!doors.length) return undefined
   const p = new Path2D()
   p.rect(-50, -50, W + 100, H + 100)
   for (const s of doors) {
     const a = ((s.turn ?? 0) * Math.PI) / 180
     const [cos, sin] = [Math.cos(a), Math.sin(a)]
-    const hw = s.size * 0.47
+    // a gatehouse's towers cover the cut ends of the town wall a little further in than a door's jambs
+    const hw = s.size * (which === 'gates' ? 0.44 : 0.47)
     const hd = depth / 2
     const pts: Point[] = [
       [-hw, -hd],

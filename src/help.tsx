@@ -63,10 +63,16 @@ export const HELP = {
   fog:
     'Hide the map from players and uncover it as they explore. Uncover a circle, a box or any shape; switch to Cover to hide a part again. Players get a copy of the picture with the fog painted on, so covered areas and the pins in them can’t be peeked at.',
   mapBuilder: 'Draw a map from scratch: paint land and water, draw roads, rivers and borders, place mountains, forests and towns, and add labels. It then works like any uploaded map: pins, regions, fog and the player view.',
-  mapStyle:
-    'Classic is the hand-drawn look: old fantasy world maps (think Middle-earth or the Wheel of Time), or hand-drawn battle maps seen from above, in ink on parchment, ink on white or colour. Simple is the original flat-colour style. You can switch at any time.',
+  newMap:
+    'Pick what you are drawing. "World, region or city" is for continents, kingdoms and towns: start with open sea, all land, or a town seen from above. "Dungeon, building or battle map" is on a grid for fights: start with solid rock to dig a dungeon, or with grass, dirt or paving for an outdoor fight. Small, Medium or Large sets how much room you get; you can change your mind later in Map settings.',
   mapScene:
-    'A world or region map is seen from the side, the old fantasy-map way: mountains, forests and towns drawn as little pictures. A battle map is seen from above, on a grid, for fights: paint the ground, add fences and walls, and place trees, rocks, tents and buildings. Dungeons are battle maps too: dig rooms out of the rock with the Rooms tool.',
+    'A world or region map is seen from the side, the old fantasy-map way: mountains, forests and towns drawn as little pictures. A town map is seen from above, like a bird flying over: paint the ground, draw streets and town walls, and place houses, a castle, a cathedral, docks and fields. A battle map is seen from above on a grid, for fights: paint the ground, add fences and walls, and place trees, rocks, tents and buildings. Dungeons are battle maps too: dig rooms out of the rock with the Rooms tool.',
+  cityMap:
+    'A town seen from above. Paint grass, dirt, paving or water with Ground, shape the shore with Coast, draw streets and the town wall with Line, then place houses, a castle, churches, docks, farms and more from Place. Every square of the size note is 5 feet, so the pieces come out the right size next to each other.',
+  coastBrush:
+    'Paint land to push the shore out, or Sea to bring the water in. The coastline draws itself with an inked edge and stippled shallows, and your ground painting stays on the land side.',
+  cityLines:
+    'Street draws a road with inked edges and a worn middle, and River a band of water; pick how wide each is. A street drawn across a river reads as a bridge. Town wall draws a thick stone wall with battlements and puts towers on the corners and along long stretches; pick the tower or None, and finish near where you started to close the loop. Place a gatehouse on a town wall and it snaps on and opens a gap. Wall towers snap on too, if you want one somewhere else.',
   groundBrush:
     'Paint the ground with a soft brush: grass, dirt for paths, sand, rocky ground, mud, snow, paving stones, a smooth stone floor, wooden boards or water. Where two kinds meet they blend unevenly, like real ground. Water gets an inked bank, ripples and darker deep parts on its own. Paint over anything to change it.',
   rooms:
@@ -82,7 +88,7 @@ export const HELP = {
   pieceMix:
     'Tick this, then click several pieces (say trees, bushes and ferns) to put them all on the brush. Every click or scatter picks one of them at random, so a wood comes out mixed instead of all one kind. Click a piece again to take it out. The size slider scales them all together.',
   pieceTurn:
-    'Pieces seen from above can be turned to any angle; mountains, towns and other side-on pieces always stand upright. "Each one at random" is good for crates, barrels and camp gear. With a piece selected, press R to turn it a little, or Shift+R to turn it back. Shadows still fall the same way however a piece is turned.',
+    'Pieces seen from above can be turned to any angle; mountains, towns and other side-on pieces always stand upright. On town maps, houses and other buildings start on "Square to the nearest street": each one turns to face the closest street, river or wall, and scattered ones keep off the road. "Each one at random" is good for crates, barrels and camp gear. With a piece selected, press R to turn it a little, or Shift+R to turn it back. Shadows still fall the same way however a piece is turned.',
   linkedPieces:
     'Link a piece to a page and it works like a pin: click the cottage on the map to read about the cottage. Links start as GM only; click the lock to let players use it. Players never see a link you haven’t shared, a link under the fog, or a page you haven’t revealed. Moving, turning or deleting the piece takes its link along.',
   scatterBrush:
