@@ -478,7 +478,39 @@ export interface RecapDraft {
   players: string
   /** "claude-api" when made in the app, "pasted" when pasted back from claude.ai. */
   source: 'claude-api' | 'pasted'
+  /** Changes to the world Claude suggested from the session, for the GM to tick and apply. */
+  updates?: WorldUpdate[]
+  /** Set once the GM has applied (or skipped) the suggested changes. */
+  updatesDone?: boolean
   createdAt: number
+}
+
+/**
+ * One change to the world suggested from a session: a new page, a line on an existing page, a quest
+ * moving on, a relationship, a timeline event, a character's fate, loot changing hands, a loose
+ * thread, or something that doesn't match the notes. Names refer to pages by name (or nickname).
+ */
+export type WorldUpdate = { id: string; on: boolean; /** Also put this on the timeline. */ timeline?: boolean } & (
+  | { kind: 'new'; type: EntityType; name: string; summary: string; details: string; in?: string; sameAs?: string; useSameAs?: boolean }
+  | { kind: 'note'; page: string; note: string; players?: boolean }
+  | { kind: 'quest'; page: string; status: 'open' | 'active' | 'done' | 'failed'; note?: string }
+  | { kind: 'relation'; from: string; to: string; relation: string; note?: string }
+  | { kind: 'event'; name: string; summary: string; involves?: string[]; where?: string }
+  | { kind: 'status'; page: string; status: LifeStatus; note?: string }
+  | { kind: 'item'; item: string; to: string; quantity?: number }
+  | { kind: 'thread'; action: 'raised' | 'moved' | 'resolved' | 'dropped'; page?: string; name?: string; note?: string }
+  | { kind: 'conflict'; page: string; note: string }
+)
+
+/** A line in the Chronicle: one change made to the world from a session. Always GM-only. */
+export interface LedgerEntry {
+  id: string
+  at: number
+  text: string
+  /** The page it changed or made, when there is one. */
+  entityId?: string
+  /** "new" for a page that was made, so it reads differently from a change. */
+  made?: boolean
 }
 
 export interface Session {
@@ -497,6 +529,8 @@ export interface Session {
   recordings: Recording[]
   /** The last AI recap draft, kept until the GM uses or discards it. Always GM-only. */
   recapDraft?: RecapDraft
+  /** Changes made to the world from this session (the Chronicle). Always GM-only. */
+  ledger?: LedgerEntry[]
   /** The Lectern: live state while running this session at the table. Always GM-only. */
   lectern?: LecternState
   /** The GM's plan for this session. Always GM-only. */

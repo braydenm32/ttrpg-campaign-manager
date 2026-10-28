@@ -21,6 +21,7 @@ import {
   DiceFive,
   Plus,
   BookOpen,
+  BookBookmark,
 } from '@phosphor-icons/react'
 import { db, ENTITY_LABELS, ENTITY_TYPES, type CustomType, type Entity, type EntityType } from './db'
 import { useVisibleEntities, useWorld } from './hooks'
@@ -45,7 +46,7 @@ export function modeOf(pathname: string, isGM: boolean): WorldMode | undefined {
   const rest = pathname.replace(/^\/w\/[^/]+\/?/, '')
   const first = rest.split('/')[0]
   if (!rest) return 'home'
-  if (['maps', 'type', 'e', 'p', 'timeline', 'web', 'assets', ...SECTION_WORDS].includes(first)) return 'world'
+  if (['maps', 'type', 'e', 'p', 'timeline', 'chronicle', 'web', 'assets', ...SECTION_WORDS].includes(first)) return 'world'
   if (first === 'settings') return undefined
   if (!isGM) return 'table'
   if (first === 's' && rest.endsWith('/lectern')) return 'play'
@@ -287,6 +288,12 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
               <span className="nav-caret-space" />
               <NavLink to={`${worldPath(worldId)}/timeline`} title={HELP.timeline}><Ico as={Hourglass} /> Timeline</NavLink>
             </div>
+            {isGM && (
+              <div className="nav-row">
+                <span className="nav-caret-space" />
+                <NavLink to={`${worldPath(worldId)}/chronicle`} title={HELP.chronicle}><Ico as={BookBookmark} /> The Chronicle</NavLink>
+              </div>
+            )}
             {(isGM || hasLinks) && (
               <div className="nav-row">
                 <span className="nav-caret-space" />

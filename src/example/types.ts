@@ -1,4 +1,5 @@
 import type { CalDate, Clock, Combatant, Entity, EntityType, LifeStatus, Safety, ThreadStatus, WorldCalendar } from '../db'
+import type { Drawing } from '../mapDrawing'
 
 /**
  * The example world is written as plain data: every page, session and board has a short `key`, and
@@ -109,9 +110,39 @@ export interface ExWorld {
   campaign: { name: string; description: string }
 }
 
+/** A pin on an example map. */
+export interface ExMapPin {
+  /** The page it opens. Pins to GM-only pages (or on GM-only maps) are GM-only. */
+  page: string
+  /** Where it sits, in map pixels from the top left. */
+  at: [number, number]
+  /** The id of a piece in the drawing: the piece itself becomes the pin (a linked piece), instead of a marker. */
+  piece?: string
+  /** The key of another example map this pin leads into. */
+  map?: string
+  label?: string
+  note?: string
+}
+
+/** A map drawn in the classic style when the world loads, kept editable in the map builder. */
+export interface ExMap {
+  key: string
+  name: string
+  width: number
+  height: number
+  /** Builds the drawing. The same every time: pieces carry fixed seeds. */
+  drawing: () => Drawing
+  /** Revealed to players. Maps are GM only unless this is true. */
+  players?: boolean
+  /** The page this is a map of, so that page (and pins to it) can open it. */
+  location?: string
+  pins: ExMapPin[]
+}
+
 export interface ExampleContent {
   world: ExWorld
   pages: ExPage[]
   sessions: ExSession[]
   boards: ExBoard[]
+  maps?: ExMap[]
 }

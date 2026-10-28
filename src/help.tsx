@@ -12,9 +12,9 @@ export const HELP = {
     'The bar across the top splits the world into modes. Home is what needs you now. World is the atlas itself: maps, timeline and every codex page. Prep is getting sessions ready: campaigns, loose threads, handouts and generators. Play is running the table: the Lectern, clocks, sounds and safety tools. The sidebar lists the pages of the mode you’re in.',
   needsYou: 'Things waiting on you: questions your players asked, players asking to claim a character, and urgent loose threads. When it’s empty you’re all caught up.',
   sampleWorld:
-    'A small, simple world for a first look: a coast, a town, a handful of people and a map with pins. Good for learning the basics in a few minutes. Vael Ardith is the full example with a campaign ready to run.',
+    'A small, simple world for a first look: a coast, a town, a handful of people and two drawn maps with pins. Good for learning the basics in a few minutes. Vael Ardith is the full example with a campaign ready to run.',
   exampleWorld:
-    'A complete world to explore and learn from: places, people, factions, gods, history, handouts and a campaign ready to run. Open it, look around, borrow ideas, or run it for your group. It lives only on this device unless you switch on sync, and World settings can reset it to new.',
+    'A complete world to explore and learn from: places, people, factions, gods, history, maps (the continent, a region, the town of Cinderford, a battle map and a dungeon), handouts and a campaign ready to run. Open it, look around, borrow ideas, or run it for your group. It lives only on this device unless you switch on sync, and World settings can reset it to new.',
   worldLook: 'Give this world its own cover picture and colour. They show on Home and on the world’s book on your shelf of worlds. Players see them too.',
   theme: 'Candlelit is the dark look, Parchment the light one. “Match this device” follows your phone or computer’s own setting.',
   viewingAs:
@@ -135,9 +135,16 @@ export const HELP = {
   recording:
     'Record from one microphone for games at the table, or the microphone plus your Discord or Zoom audio for online games. Add bookmarks while you play to jump back to big moments. Recording carries on while you use the rest of the app (the Lectern, maps, pages), and is saved every few seconds, so if the app closes by accident you can recover it here. Always get everyone’s OK before recording. Recordings are big, so they stay on the device that made them; their transcripts sync to your other devices.',
   transcript:
-    'Turns a recording into text. "On this device" is free and private but slower, with no speaker names. "Cloud" uses AssemblyAI with your own key, is faster and tells speakers apart.',
+    'Turns a recording into text. "On this device" is free and private but slower, with no speaker names. "Cloud" uses AssemblyAI with your own key, is faster and tells speakers apart. Name the speakers once and “Same as last time” fills the names in for the next session.',
   recap:
-    'Claude drafts a GM summary and a player recap from the transcript. "Copy for Claude" works with a Claude subscription for free; "Write it now" uses your own API key. You review both before saving.',
+    'Claude drafts a GM summary, a player recap and updates for your pages from the transcript. "Copy for Claude" works with a Claude subscription for free; "Write it now" uses your own API key. You review both before saving.',
+  worldUpdates:
+    'Claude compares the session with your pages and suggests what to change: new NPCs, places and shops that came up, quests moving on, new relationships, timeline events, deaths and captures, loot changing hands and loose threads. Tick the ones you want and add them in one go. New pages start GM only, and lines on existing pages go in a “Session log” at the bottom of the page. Every change is listed in the Chronicle and can be undone from the page’s history.',
+  chronicle:
+    'Every change made to your world from a session, newest first: pages made, lines added, quests and fates that changed. Click a line to open the page. Only you see it.',
+  heardIn:
+    'Where this page’s name (or a nickname) was said out loud in a session’s transcript. Click a time to open the session and play that moment, if the recording is on this device.',
+  sessionMentions: 'Sessions whose notes or recap link to this page.',
   lectern:
     'The Lectern is your screen while you run the session: the current scene, who is there, loose threads, initiative, dice, quick notes and improvised names, all on one page.',
   prep:
