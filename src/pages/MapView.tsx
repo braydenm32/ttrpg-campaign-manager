@@ -237,6 +237,25 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                 select(p.id)
               },
             }
+            // a linked piece on a drawn map: the piece itself is what you click, so only its outline shows,
+            // faintly for the GM and on hover for players
+            if (p.pieceId && p.points)
+              return (
+                <Polygon
+                  key={`${p.id}-${p.id === selectedId}-${p.visibility}`}
+                  positions={p.points}
+                  pathOptions={{
+                    className: `piece-pin${p.id === selectedId ? ' on' : ''}${isGM ? ' for-gm' : ''}`,
+                    color: '#ffd36b',
+                    weight: 2,
+                    fillColor: '#ffd36b',
+                    dashArray: p.visibility === 'gm' ? '6 4' : undefined,
+                  }}
+                  eventHandlers={handlers}
+                >
+                  <Tooltip sticky>{label}</Tooltip>
+                </Polygon>
+              )
             if (p.kind === 'region' && p.points)
               return (
                 <Polygon
@@ -543,7 +562,7 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
   return (
     <div className="form pin-editor">
       <header>
-        <h2>Edit {pin.kind === 'region' ? 'region' : 'pin'}</h2>
+        <h2>Edit {pin.pieceId ? 'linked piece' : pin.kind === 'region' ? 'region' : 'pin'}</h2>
         <button className="ghost" onClick={onClose} aria-label="Close">
           ×
         </button>
@@ -552,9 +571,10 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
         Label
         <input value={pin.label} onChange={(e) => update({ label: e.target.value })} />
       </label>
+      {pin.pieceId && <p className="muted small">A piece drawn on this map. Move, turn or remove it in the map builder.</p>}
       <div className="row">
         <VisibilityToggle value={pin.visibility} onChange={(v) => update({ visibility: v })} />
-        <div className="swatches">
+        <div className="swatches" hidden={!!pin.pieceId}>
           {COLORS.map((c) => (
             <button key={c} className={`swatch ${c === pin.color ? 'on' : ''}`} style={{ background: c }} onClick={() => update({ color: c })} aria-label={`Colour ${c}`} />
           ))}

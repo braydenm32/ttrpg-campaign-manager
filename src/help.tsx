@@ -62,7 +62,29 @@ export const HELP = {
     'Click a pin or region to see what is there. "Enter" opens a more detailed map, such as a town inside a region. As GM, use the toolbar to add pins and regions.',
   fog:
     'Hide the map from players and uncover it as they explore. Uncover a circle, a box or any shape; switch to Cover to hide a part again. Players get a copy of the picture with the fog painted on, so covered areas and the pins in them can’t be peeked at.',
-  mapBuilder: 'Draw a map from scratch: paint land and water, drag out rooms, draw roads, rivers and walls, stamp symbols and add labels. It then works like any uploaded map.',
+  mapBuilder: 'Draw a map from scratch: paint land and water, draw roads, rivers and borders, place mountains, forests and towns, and add labels. It then works like any uploaded map: pins, regions, fog and the player view.',
+  mapStyle:
+    'Classic is the hand-drawn look: old fantasy world maps (think Middle-earth or the Wheel of Time), or hand-drawn battle maps seen from above, in ink on parchment, ink on white or colour. Simple is the original flat-colour style. You can switch at any time.',
+  mapScene:
+    'A world or region map is seen from the side, the old fantasy-map way: mountains, forests and towns drawn as little pictures. A battle map is seen from above, on a grid, for fights: paint the ground, add fences and walls, and place trees, rocks, tents and buildings.',
+  groundBrush:
+    'Paint the ground with a soft brush: grass, dirt for paths, sand, rocky ground, mud, snow, paving stones or water. Where two kinds meet they blend unevenly, like real ground. Water gets an inked bank, ripples and darker deep parts on its own. Paint over anything to change it.',
+  mapLayers:
+    'Each kind of thing sits on its own layer. Untick Show to hide a layer (it also disappears from the picture players get). Tick Lock to stop a layer being picked, moved or erased while you work on something else.',
+  landBrush:
+    'Paint land with the brush and the coastline draws itself, with ripple lines and stippled shallows. Switch to Water to carve out seas, bays and lakes. Bigger brush for continents, smaller for islands and inlets.',
+  mapPieces:
+    'Pick a piece and click the map to place it. Type in the search box to find one quickly (tree, tent, boat, church…). Each piece has 8 versions, drawn under Version so you can see them; pick one, or Any for a different one each time (best for ranges and forests). Click and hold to scatter lots at once. Click a placed piece with Select to resize, turn, mirror, swap its version or link it to a page.',
+  pieceMix:
+    'Tick this, then click several pieces (say trees, bushes and ferns) to put them all on the brush. Every click or scatter picks one of them at random, so a wood comes out mixed instead of all one kind. Click a piece again to take it out. The size slider scales them all together.',
+  pieceTurn:
+    'Pieces seen from above can be turned to any angle; mountains, towns and other side-on pieces always stand upright. "Each one at random" is good for crates, barrels and camp gear. With a piece selected, press R to turn it a little, or Shift+R to turn it back. Shadows still fall the same way however a piece is turned.',
+  linkedPieces:
+    'Link a piece to a page and it works like a pin: click the cottage on the map to read about the cottage. Links start as GM only; click the lock to let players use it. Players never see a link you haven’t shared, a link under the fog, or a page you haven’t revealed. Moving, turning or deleting the piece takes its link along.',
+  scatterBrush:
+    'Click and hold with Place, then drag, and pieces keep landing inside the dashed circle without piling on top of each other: quick forests, mountain ranges and hills. Trees, mountains and towns stay on land; ships and waves stay at sea. Spread is the size of the circle; How thick sets how close together they sit. Letting go makes it one step, so Undo takes the whole lot back. Erase works the same way: drag across pieces to remove several.',
+  curvedLabels:
+    'Click to place a label, or drag a line on the map and the words will follow it, like a river name or a mountain range. Region lettering is spaced capitals, place names are italic, Title is for the map name.',
 
   // Story
   timeline: 'Events in order: the history before your campaign, and what has happened during it. Filter by place to see one area’s story.',

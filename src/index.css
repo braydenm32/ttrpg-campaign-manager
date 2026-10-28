@@ -282,6 +282,13 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
 .map-pin { width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--c); border: 2px solid #1b1508; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0,0,0,.5); font-size: 14px; }
 .map-pin span { transform: rotate(45deg); line-height: 1; }
 .map-pin.active { outline: 3px solid var(--text); }
+/* Linked pieces on drawn maps: the piece is the pin, so its outline only shows on hover (faintly for the GM). */
+.leaflet-interactive.piece-pin { stroke-opacity: 0; fill-opacity: 0; transition: stroke-opacity .15s, fill-opacity .15s; }
+.leaflet-interactive.piece-pin.for-gm { stroke-opacity: .45; }
+.leaflet-interactive.piece-pin:hover, .leaflet-interactive.piece-pin.on { stroke-opacity: .95; fill-opacity: .14; }
+.piece-search { width: 100%; }
+.piece-link { border-top: 1px solid var(--border); padding-top: .6rem; display: grid; gap: .5rem; }
+.piece-link h3 { margin: 0; font-size: 1rem; }
 .map-pin.hidden-pin { border-style: dashed; opacity: .85; }
 .swatches { display: flex; gap: 4px; }
 .swatch { width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 2px solid transparent; }
@@ -342,6 +349,23 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
 .builder-tools button.on { background: var(--accent); color: var(--accent-ink); }
 .tool-icon { font-size: 1.3rem; line-height: 1.2; }
 .builder-canvas { flex: 1; min-width: 0; height: 100%; touch-action: none; user-select: none; cursor: crosshair; display: block; }
+.builder-stage { flex: 1; min-width: 0; position: relative; overflow: hidden; }
+.builder-stage .builder-canvas { position: absolute; inset: 0; width: 100%; }
+.builder-art { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; max-width: none; }
+.map-layers { margin-top: 1.2em; border-top: 1px solid var(--border); padding-top: .6em; }
+.map-layers h3 { margin: 0 0 .3em; font-size: 1rem; }
+.map-layers table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.map-layers th { font-weight: 500; font-size: .75rem; color: var(--muted); text-align: center; width: 3.2em; }
+.map-layers td { padding: .15em 0; }
+.map-layers td + td { text-align: center; }
+.map-layers input { margin: 0; }
+.piece-group summary { cursor: pointer; padding: .25em 0; font-weight: 500; }
+.piece-group .stamp-grid { margin-bottom: .4em; }
+.version-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.version-grid button { flex-direction: column; gap: 1px; padding: .2em; font-size: .68rem; line-height: 1.1; }
+.version-grid button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, var(--panel-2)); }
+.version-any { font-size: 1.5rem; height: 40px; display: grid; place-items: center; }
+.scatter-ring { display: none; }
 .builder-canvas.tool-hand, .builder-canvas.tool-select { cursor: grab; }
 .builder-canvas.tool-erase { cursor: not-allowed; }
 .builder-panel h2 { margin: 0; }
@@ -360,6 +384,7 @@ input[type=color] { width: 3em; height: 2.2em; padding: 2px; }
   .builder .map-body { flex-direction: column; }
   .builder-tools { flex-direction: row; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; }
   .builder-canvas { min-height: 50vh; }
+  .builder-stage { min-height: 50vh; flex: none; }
 }
 
 /* Cloud */

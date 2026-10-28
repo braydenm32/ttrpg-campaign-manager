@@ -26,6 +26,9 @@ export const LINE_STYLES = {
   wall: { label: 'Wall', color: '#1a1a1f', width: 10, dash: '' },
   border: { label: 'Border', color: '#8b2f3c', width: 4, dash: '18 6 4 6' },
   ink: { label: 'Ink', color: '#3a2e1c', width: 3, dash: '' },
+  fence: { label: 'Fence', color: '#6b4a2a', width: 4, dash: '3 7' },
+  hedge: { label: 'Hedge', color: '#4f6a35', width: 16, dash: '' },
+  cliff: { label: 'Cliff edge', color: '#5a5348', width: 7, dash: '' },
 } as const
 export type LineStyle = keyof typeof LINE_STYLES
 
@@ -55,11 +58,27 @@ export type StampKind = keyof typeof STAMPS
 
 export type Point = [number, number]
 
+/** Lettering for classic maps: a title, spaced capitals for regions, or italic place names. */
+export type LabelFont = 'title' | 'region' | 'place'
+
 export type Shape =
   | { id: string; kind: 'area'; terrain: Terrain; points: Point[]; smooth: boolean }
   | { id: string; kind: 'line'; style: LineStyle; points: Point[]; smooth: boolean }
   | { id: string; kind: 'stamp'; stamp: StampKind; at: Point; size: number }
-  | { id: string; kind: 'label'; text: string; at: Point; size: number; color: string; italic: boolean }
+  | {
+      id: string
+      kind: 'label'
+      text: string
+      at: Point
+      size: number
+      color: string
+      italic: boolean
+      /** Classic maps: the text follows this curve instead of sitting straight at `at`. */
+      curve?: Point[]
+      font?: LabelFont
+    }
+  /** Classic maps: a piece from the hand-inked library (src/mapArt). `seed` makes each copy its own. */
+  | { id: string; kind: 'asset'; asset: string; at: Point; size: number; seed: number; variant: number; flip?: boolean; turn?: number }
 
 export const BACKGROUNDS = {
   sea: { label: 'Open sea (draw land on it)', fill: 'url(#p-sea)' },
@@ -69,19 +88,84 @@ export const BACKGROUNDS = {
 } as const
 export type Background = keyof typeof BACKGROUNDS
 
+/** 'simple' is the original flat look; 'classic' is the hand-inked fantasy map look. Missing means simple. */
+export type MapStyle = 'simple' | 'classic'
+export type Look = 'parchment' | 'white' | 'colour'
+export type Biome = 'temperate' | 'autumn' | 'winter' | 'desert' | 'swamp' | 'tropical'
+export type LayerId = 'land' | 'rivers' | 'paths' | 'objects' | 'labels'
+/** Classic maps are either a world or region seen from the side (mountains, forests), or a battle map seen from above. */
+export type Scene = 'world' | 'battle'
+
+/** What the ground of a battle map is painted with. */
+export const GROUNDS = {
+  grass: 'Grass',
+  dirt: 'Dirt',
+  sand: 'Sand',
+  stone: 'Rocky ground',
+  mud: 'Mud',
+  snow: 'Snow',
+  paving: 'Paving stones',
+  water: 'Water',
+} as const
+export type GroundId = keyof typeof GROUNDS
+
+/** A soft-edged brush stroke of one kind of ground on a battle map; later strokes paint over earlier ones. */
+export interface GroundStroke {
+  id: string
+  ground: GroundId
+  size: number
+  points: Point[]
+}
+
+/** A brush stroke that paints land, or carves water (sea, lakes) back out of it. */
+export interface LandStroke {
+  id: string
+  mode: 'land' | 'water'
+  size: number
+  points: Point[]
+}
+
 export interface Drawing {
   background: Background
   grid: 'none' | 'square' | 'hex'
   gridSize: number
   shapes: Shape[]
+  style?: MapStyle
+  look?: Look
+  biome?: Biome
+  shadows?: boolean
+  /** Ruled border around the edge (classic). On unless false. */
+  frame?: boolean
+  /** Shapes the ragged coast and the paper stains; change it for a different hand. */
+  seed?: number
+  land?: LandStroke[]
+  scene?: Scene
+  /** Battle maps: the ground everything starts on, and what's been painted over it. */
+  groundBase?: GroundId
+  ground?: GroundStroke[]
+  hidden?: LayerId[]
+  locked?: LayerId[]
 }
 
-export const emptyDrawing = (background: Background): Drawing => ({
-  background,
-  grid: background === 'stone' ? 'square' : 'none',
-  gridSize: 70,
-  shapes: [],
-})
+export const LAYERS: { id: LayerId; label: string }[] = [
+  { id: 'land', label: 'Land & sea' },
+  { id: 'rivers', label: 'Rivers' },
+  { id: 'paths', label: 'Roads & borders' },
+  { id: 'objects', label: 'Objects' },
+  { id: 'labels', label: 'Labels' },
+]
+
+export const layerOf = (s: Shape): LayerId =>
+  s.kind === 'area' ? 'land' : s.kind === 'line' ? (s.style === 'river' ? 'rivers' : 'paths') : s.kind === 'label' ? 'labels' : 'objects'
+
+export const emptyDrawing = (background: Background, style: MapStyle = 'simple', scene: Scene = 'world', groundBase: GroundId = 'grass'): Drawing => {
+  const seed = 1 + Math.floor(Math.random() * 99999)
+  if (style !== 'classic')
+    return scene === 'battle' ? { background, grid: 'square', gridSize: 70, shapes: [], scene } : { background, grid: background === 'stone' ? 'square' : 'none', gridSize: 70, shapes: [] }
+  if (scene === 'battle')
+    return { background, grid: 'square', gridSize: 70, shapes: [], style, scene, look: 'colour', biome: 'temperate', shadows: true, frame: false, seed, groundBase, ground: [] }
+  return { background, grid: 'none', gridSize: 70, shapes: [], style, look: 'parchment', biome: 'temperate', shadows: true, frame: true, seed, land: [] }
+}
 
 /** Smooth closed or open path through the points (Catmull-Rom converted to Béziers). */
 export function pathFor(points: Point[], closed: boolean, smooth: boolean) {
@@ -188,6 +272,8 @@ export function shapeSvg(sh: Shape) {
     }
     case 'stamp':
       return `<use ${id} href="#s-${sh.stamp}" x="${sh.at[0] - sh.size / 2}" y="${sh.at[1] - sh.size / 2}" width="${sh.size}" height="${sh.size}"/>`
+    case 'asset':
+      return ''
     case 'label':
       return `<text ${id} x="${sh.at[0]}" y="${sh.at[1]}" text-anchor="middle" dominant-baseline="middle" font-family="Georgia, 'Times New Roman', serif" font-size="${sh.size}" fill="${sh.color}"${sh.italic ? ' font-style="italic"' : ''} letter-spacing="${sh.size > 40 ? sh.size * 0.12 : 1}" stroke="#f3ead2" stroke-opacity=".7" stroke-width="${Math.max(2, sh.size / 10)}" paint-order="stroke">${esc(sh.text)}</text>`
   }
@@ -215,7 +301,7 @@ function gridSvg(d: Drawing, w: number, h: number) {
 }
 
 /** Shapes drawn in a sensible order: terrain, then lines, then stamps, then labels on top. */
-const LAYER: Record<Shape['kind'], number> = { area: 0, line: 1, stamp: 2, label: 3 }
+const LAYER: Record<Shape['kind'], number> = { area: 0, line: 1, stamp: 2, asset: 2, label: 3 }
 export const ordered = (shapes: Shape[]) =>
   shapes.map((s, i) => [s, i] as const).sort((a, b) => LAYER[a[0].kind] - LAYER[b[0].kind] || a[1] - b[1]).map(([s]) => s)
 
