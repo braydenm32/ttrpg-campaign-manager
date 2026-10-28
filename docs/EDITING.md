@@ -39,6 +39,13 @@ edit files  →  commit (offline is fine)  →  push (online)  →  pull request
 
 Nothing you do on your own branch can break the live site. The worst case is a pull request with a red ✗, which you fix and push again.
 
+### Two ways to change Vael Ardith
+
+- **In the app** (wardedatlas.com or the desktop app): open Vael Ardith and edit pages like any world. This changes **only your own copy**, works offline, needs no setup, and nobody else sees it. Good for running the campaign at your table. A **Reset the example world** in World settings throws those changes away, so download a backup first if you want to keep them.
+- **In the repo** (this guide): changes the example **itself**, the one everyone gets when they open Vael Ardith from Home, including you after a reset. Good for improving the example for everyone.
+
+Changes made in the app don't flow back into the repo files by themselves. If you've written something in the app that belongs in the example, copy the text into the matching file here.
+
 ---
 
 ## 2. One-time setup
