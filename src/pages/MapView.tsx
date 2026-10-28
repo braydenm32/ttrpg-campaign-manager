@@ -304,7 +304,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
               isGM ? (
                 <PinEditor key={selected.id} pin={selected} entities={entities} maps={allMaps.filter((m) => m.id !== map.id)} onClose={() => select()} />
               ) : (
-                <PinDetails pin={selected} entity={selected.entityId ? byId.get(selected.entityId) : undefined} entities={entities} maps={allMaps} onClose={() => select()} />
+                <PinDetails pin={selected} entity={selected.entityId ? byId.get(selected.entityId) : undefined} entities={entities} maps={allMaps.filter((m) => m.id !== map.id)} onClose={() => select()} />
               )
             ) : null}
           </aside>
