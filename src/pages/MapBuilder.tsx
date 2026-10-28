@@ -1194,6 +1194,17 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                   ))}
                 </select>
               </label>
+              {city && (
+                <label>
+                  <span>
+                    Buildings <Help topic="birdsEye" />
+                  </span>
+                  <select value={drawing.birdsEye ? 'bird' : 'above'} onChange={(e) => commit({ ...drawing, birdsEye: e.target.value === 'bird' })}>
+                    <option value="above">From above (a town plan)</option>
+                    <option value="bird">Bird’s-eye (buildings stand up)</option>
+                  </select>
+                </label>
+              )}
               {top && (
                 <label>
                   Ground to start on

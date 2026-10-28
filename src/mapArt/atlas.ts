@@ -80,6 +80,13 @@ export interface AtlasApi {
   terrain: TerrainApi
   /** Set while a turned town piece draws: where the light comes from, in the piece's own turned frame. */
   light?: [number, number]
+  /** Set while a bird's-eye town map draws its pieces: how tall buildings stand (1 = as drawn), which way is up the screen in
+      the piece's own frame, and the light walls are shaded by (from the left, so the walls that face you aren't all in shade). */
+  bird?: number
+  up?: [number, number]
+  sideLight?: [number, number]
+  /** Set with bird: how tall the town wall stands, in map pixels, so gatehouses and wall towers can stand taller than it. */
+  wallHeight?: number
 }
 
 export const Atlas = (window as unknown as { Atlas: AtlasApi }).Atlas

@@ -216,6 +216,8 @@ export interface Drawing {
   /** Battle maps: rooms and passages, and whether what's outside them is solid rock (a dungeon) or the ground. */
   rooms?: RoomStroke[]
   outside?: 'rock' | 'ground'
+  /** Town maps: buildings, walls and trees stand up off the plan, seen from above at an angle, instead of straight down. */
+  birdsEye?: boolean
   hidden?: LayerId[]
   locked?: LayerId[]
 }

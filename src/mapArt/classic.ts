@@ -533,11 +533,155 @@ function outsideOf(pts: Point[]): 1 | -1 {
   return area > 0 ? -1 : 1
 }
 
+/** Something standing up on a bird's-eye town map, drawn back to front: `at` is how far down the map it stands. */
+export type Standing = { at: number; draw: () => void }
+/** How far down the map a piece stands, for drawing back to front. Towers and gatehouses come just after the wall they sit on. */
+const depthOf = (p: Piece) => p.at[1] + (p.asset === 'ct-wall-tower' || p.asset === 'ct-gatehouse' ? p.size * 0.3 : 0)
+/** How tall a town wall stands on a bird's-eye map, in map pixels. */
+export const townWallHeight = (d: Drawing) => 3.2 * townWallHalf(d)
+
+/**
+ * Town walls standing up: the ground shadow now, then each short length of wall (its face towards you, the wall walk on top
+ * and the merlons along the outer edge) queued to be drawn in depth order with the houses, so a wall hides what's behind it
+ * and is hidden by what's in front.
+ */
+function birdTownWalls(ctx: CanvasRenderingContext2D, walls: { pts: Point[]; closed: boolean; out: 1 | -1 }[], d: Drawing, st: InkStyle, stone: string, gates: Extract<Shape, { kind: 'asset' }>[], standing: Standing[], towers: { at: Point; r: number }[]) {
+  const colour = st.mode === 'colour'
+  const hw = townWallHalf(d)
+  const Hw = townWallHeight(d)
+  const step = 2.5 * hw
+  const inGate = (x: number, y: number) =>
+    gates.some((g) => {
+      const a = ((g.turn ?? 0) * Math.PI) / 180
+      const [dx, dy] = [x - g.at[0], y - g.at[1]]
+      const lx = dx * Math.cos(a) + dy * Math.sin(a)
+      const ly = -dx * Math.sin(a) + dy * Math.cos(a)
+      return Math.abs(lx) < g.size * 0.44 && Math.abs(ly) < g.size * 0.3
+    })
+  const lift = ([x, y]: Point, z: number): Point => [x, y - z]
+  const quad = (q: Point[]) => {
+    ctx.beginPath()
+    q.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+    ctx.closePath()
+  }
+  const shadeCol = colour ? mixHex(stone, '#3a3128', 0.35) : st.paper
+  const merlon = hw * 0.75
+  for (const w of walls) {
+    const pts = w.closed ? [...w.pts, w.pts[0]] : w.pts
+    // a soft shadow on the ground, thrown to the right like the houses'
+    if (st.shadows) {
+      ctx.save()
+      ctx.lineCap = 'butt'
+      ctx.strokeStyle = colour ? 'rgba(40,30,15,.22)' : 'rgba(35,26,16,.14)'
+      ctx.lineWidth = 2 * hw
+      ctx.beginPath()
+      pts.forEach(([x, y], i) => (i ? ctx.lineTo(x + Hw * 0.45, y + Hw * 0.14) : ctx.moveTo(x + Hw * 0.45, y + Hw * 0.14)))
+      ctx.stroke()
+      ctx.restore()
+    }
+    for (let i = 1; i < pts.length; i++) {
+      const [a, b] = [pts[i - 1], pts[i]]
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1])
+      if (len < 0.5) continue
+      const n = Math.max(1, Math.ceil(len / step))
+      const [ux, uy] = [(b[0] - a[0]) / len, (b[1] - a[1]) / len]
+      // to the right of the way the wall runs
+      const [nx, ny] = [-uy, ux]
+      for (let j = 0; j < n; j++) {
+        const p0: Point = [a[0] + ((b[0] - a[0]) * j) / n, a[1] + ((b[1] - a[1]) * j) / n]
+        const p1: Point = [a[0] + ((b[0] - a[0]) * (j + 1)) / n, a[1] + ((b[1] - a[1]) * (j + 1)) / n]
+        const mid: Point = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2]
+        if (inGate(mid[0], mid[1])) continue
+        // a hair longer than the step, so lengths meet without a seam
+        const e = 0.6
+        const q0: Point = [p0[0] - ux * e, p0[1] - uy * e]
+        const q1: Point = [p1[0] + ux * e, p1[1] + uy * e]
+        const R0: Point = [q0[0] + nx * hw, q0[1] + ny * hw]
+        const R1: Point = [q1[0] + nx * hw, q1[1] + ny * hw]
+        const L0: Point = [q0[0] - nx * hw, q0[1] - ny * hw]
+        const L1: Point = [q1[0] - nx * hw, q1[1] - ny * hw]
+        standing.push({
+          at: mid[1],
+          draw: () => {
+            // a length inside a wall tower is hidden by it (the towers are only all known once the walls are laid out)
+            if (towers.some((t) => Math.hypot(t.at[0] - mid[0], t.at[1] - mid[1]) < t.r)) return
+            ctx.save()
+            ctx.lineJoin = 'round'
+            // the face that turns towards you (the one whose outward side points down the map)
+            const [f0, f1, fn] = ny > 0 ? [R0, R1, [nx, ny]] : [L0, L1, [-nx, -ny]]
+            const away = fn[0] * SIDE_LIGHT[0] + fn[1] * SIDE_LIGHT[1]
+            quad([f0, f1, lift(f1, Hw), lift(f0, Hw)])
+            ctx.fillStyle = away > 0.35 ? shadeCol : stone
+            ctx.fill()
+            if (!colour || away > 0.35) {
+              // coursing, and vertical hatching on the shaded face
+              ctx.save()
+              ctx.clip()
+              ctx.strokeStyle = st.ink
+              ctx.lineWidth = 0.5 * st.line
+              ctx.globalAlpha = away > 0.35 ? 0.55 : 0.3
+              ctx.beginPath()
+              const g = away > 0.35 ? 2.2 : 4
+              for (let t = 0; t <= len / n + 1; t += g) {
+                const x = f0[0] + ux * t
+                const y = f0[1] + uy * t
+                ctx.moveTo(x, y)
+                ctx.lineTo(x, y - Hw)
+              }
+              ctx.stroke()
+              ctx.restore()
+            }
+            ctx.strokeStyle = st.ink
+            ctx.lineWidth = 1.1 * st.line
+            ctx.beginPath()
+            ctx.moveTo(...f0)
+            ctx.lineTo(...f1)
+            ctx.stroke()
+            // the wall walk on top, the parapet on the outer edge
+            const top = [lift(R0, Hw), lift(R1, Hw), lift(L1, Hw), lift(L0, Hw)]
+            quad(top)
+            ctx.fillStyle = colour ? mixHex(stone, '#ffffff', 0.12) : st.paper
+            ctx.fill()
+            ctx.lineWidth = 0.9 * st.line
+            ctx.beginPath()
+            ctx.moveTo(...top[0])
+            ctx.lineTo(...top[1])
+            ctx.moveTo(...top[3])
+            ctx.lineTo(...top[2])
+            ctx.stroke()
+            const [o0, o1] = w.out > 0 ? [R0, R1] : [L0, L1]
+            const segLen = Math.hypot(o1[0] - o0[0], o1[1] - o0[1])
+            ctx.fillStyle = colour ? mixHex(stone, '#3a3128', 0.12) : st.paper
+            for (let t = merlon * 0.3; t + merlon * 0.55 <= segLen; t += merlon * 1.35) {
+              const m0: Point = [o0[0] + ux * t, o0[1] + uy * t]
+              const m1: Point = [o0[0] + ux * (t + merlon * 0.75), o0[1] + uy * (t + merlon * 0.75)]
+              const block = [lift(m0, Hw), lift(m1, Hw), lift(m1, Hw + merlon), lift(m0, Hw + merlon)]
+              quad(block)
+              ctx.fill()
+              ctx.stroke()
+            }
+            // the side edges of the face
+            ctx.lineWidth = 0.9 * st.line
+            ctx.beginPath()
+            ctx.moveTo(...f0)
+            ctx.lineTo(...lift(f0, Hw))
+            ctx.moveTo(...f1)
+            ctx.lineTo(...lift(f1, Hw))
+            ctx.globalAlpha = 0.5
+            ctx.stroke()
+            ctx.restore()
+          },
+        })
+      }
+    }
+  }
+}
+
 /**
  * Town walls: a thick band of stone with a crenellated parapet on the outside and a walk along the
  * top, with towers at the corners and along long runs. Gatehouses leave a gap and stand in it.
  */
-function drawTownWalls(ctx: CanvasRenderingContext2D, lines: Line[], d: Drawing, W: number, H: number, st: InkStyle, k: number) {
+function drawTownWalls(ctx: CanvasRenderingContext2D, lines: Line[], d: Drawing, W: number, H: number, st: InkStyle, k: number, standing?: Standing[]) {
   if (!lines.length) return
   const colour = st.mode === 'colour'
   const hw = townWallHalf(d)
@@ -562,18 +706,26 @@ function drawTownWalls(ctx: CanvasRenderingContext2D, lines: Line[], d: Drawing,
     ctx.stroke()
   }
   const offset = (pts: Point[], by: number, closed: boolean) => (closed ? offsetLine([pts[pts.length - 1], ...pts, pts[0]], by).slice(1, -1) : offsetLine(pts, by))
-  if (st.shadows)
+  // wall towers the walls give way to in bird's-eye: the ones put down by hand now, the ones along the walls as they're placed
+  const towers = d.shapes.flatMap((s) => (s.kind === 'asset' && s.asset === 'ct-wall-tower' ? [{ at: s.at, r: s.size * 0.42 }] : []))
+  if (standing) {
+    ctx.restore()
+    birdTownWalls(ctx, walls, d, st, stone, gates, standing, towers)
+  }
+  if (standing) {
+    // the shadows went down with the walls; only the towers are left
+  } else if (st.shadows)
     for (const w of walls) {
       ctx.strokeStyle = colour ? 'rgba(40,30,15,.25)' : 'rgba(35,26,16,.16)'
       ctx.lineWidth = 2 * hw
       draw(w.pts.map(([x, y]) => [x + 0.6 * hw, y + 0.8 * hw] as Point), w.closed)
     }
-  for (const w of walls) {
+  for (const w of standing ? [] : walls) {
     ctx.strokeStyle = st.ink
     ctx.lineWidth = 2 * hw + 2.4 * st.line
     draw(w.pts, w.closed)
   }
-  for (const w of walls) {
+  for (const w of standing ? [] : walls) {
     ctx.strokeStyle = stone
     ctx.lineWidth = 2 * hw
     draw(w.pts, w.closed)
@@ -605,7 +757,7 @@ function drawTownWalls(ctx: CanvasRenderingContext2D, lines: Line[], d: Drawing,
       ctx.globalAlpha = 1
     }
   }
-  ctx.restore()
+  if (!standing) ctx.restore()
   // towers at the corners and every 160 ft or so, turned to the wall, kept clear of the gatehouses
   const size = towerSize(d)
   const spacing = 32 * (d.gridSize || 70)
@@ -648,8 +800,12 @@ function drawTownWalls(ctx: CanvasRenderingContext2D, lines: Line[], d: Drawing,
       placed.push(spot.at)
       // the tower's outward side (-y) faces out of the town
       const turn = ((spot.ang + (w.out > 0 ? Math.PI : 0)) * 180) / Math.PI
-      if (Atlas.assets['ct-wall-tower'])
-        drawPiece(ctx, { id: `${w.s.id}-t${placed.length}`, asset: 'ct-wall-tower', at: spot.at, size, seed: hashId(w.s.id) + placed.length, variant, flip: false, turn: ((turn % 360) + 360) % 360 }, st)
+      const tower: Piece = { id: `${w.s.id}-t${placed.length}`, asset: 'ct-wall-tower', at: spot.at, size, seed: hashId(w.s.id) + placed.length, variant, flip: false, turn: ((turn % 360) + 360) % 360 }
+      if (Atlas.assets['ct-wall-tower'] && standing) {
+        towers.push({ at: tower.at, r: size * 0.42 })
+        standing.push({ at: depthOf(tower), draw: () => drawPiece(ctx, tower, st) })
+      }
+      else if (Atlas.assets['ct-wall-tower']) drawPiece(ctx, tower, st)
       else {
         ctx.beginPath()
         ctx.arc(spot.at[0], spot.at[1], size * 0.4, 0, Math.PI * 2)
@@ -772,6 +928,7 @@ export function drawPiece(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle)
   const def = Atlas.assets[p.asset]
   if (!def) return
   const variant = ((p.variant % 8) + 8) % 8
+  if (Atlas.bird && def.category?.startsWith('bm-trees')) return drawStandingTree(ctx, p, st, variant)
   const a = turnOf(p)
   if (a) return drawTurned(ctx, p, st, a, variant)
   ctx.save()
@@ -780,8 +937,52 @@ export function drawPiece(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle)
     ctx.scale(-1, 1)
     ctx.translate(-p.at[0], 0)
   }
+  if (Atlas.bird) birdFrame(0, !!p.flip)
   try {
     def.draw(ctx, p.at[0], p.at[1], p.size, Atlas.rng(p.seed), st, variant)
+  } catch (e) {
+    console.warn('Map piece failed to draw', p.asset, e)
+  }
+  ctx.restore()
+}
+
+/** Bird's-eye town maps: the light walls are shaded by, from the left and a little behind, in map terms. */
+const SIDE_LIGHT: [number, number] = [0.95, 0.3]
+/** Tell a town piece which way is up the screen and where the wall light comes from, in its own (turned, mirrored) frame. */
+function birdFrame(a: number, flip: boolean) {
+  const [c, s] = [Math.cos(a), Math.sin(a)]
+  const [lx, ly] = [SIDE_LIGHT[0] * c + SIDE_LIGHT[1] * s, -SIDE_LIGHT[0] * s + SIDE_LIGHT[1] * c]
+  Atlas.up = [flip ? s : -s, -c]
+  Atlas.sideLight = [flip ? -lx : lx, ly]
+}
+
+/** A tree on a bird's-eye town map: its shadow on the ground, a trunk, and the crown seen from above, held up on the trunk. */
+function drawStandingTree(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle, variant: number) {
+  const def = Atlas.assets[p.asset]
+  const h = p.size * 0.42 * (Atlas.bird ?? 1)
+  const [x, y] = p.at
+  if (st.shadows) {
+    ctx.save()
+    ctx.fillStyle = st.mode === 'colour' ? 'rgba(40,30,15,.22)' : 'rgba(35,26,16,.14)'
+    ctx.beginPath()
+    ctx.ellipse(x + h * 0.55, y + h * 0.12, p.size * 0.42, p.size * 0.24, 0.25, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+  }
+  ctx.save()
+  ctx.strokeStyle = st.ink
+  ctx.lineCap = 'round'
+  ctx.lineWidth = Math.max(1.2, p.size * 0.07)
+  ctx.beginPath()
+  ctx.moveTo(x, y)
+  ctx.lineTo(x, y - h)
+  ctx.stroke()
+  ctx.translate(x, y - h)
+  const a = turnOf(p)
+  if (a) ctx.rotate(a)
+  if (p.flip) ctx.scale(-1, 1)
+  try {
+    def.draw(ctx, 0, 0, p.size, Atlas.rng(p.seed), { ...st, shadows: false }, variant)
   } catch (e) {
     console.warn('Map piece failed to draw', p.asset, e)
   }
@@ -808,6 +1009,7 @@ function drawTurned(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle, a: nu
     ctx.rotate(a)
     if (p.flip) ctx.scale(-1, 1)
     Atlas.light = [p.flip ? -lx : lx, ly]
+    if (Atlas.bird) birdFrame(a, !!p.flip)
     try {
       def.draw(ctx, 0, 0, p.size, Atlas.rng(p.seed), st, variant)
     } catch (e) {
@@ -1232,7 +1434,10 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
     }
   }
 
-  drawTownWalls(ctx, lines.filter((s) => s.style === 'townwall'), d, W, H, st, k)
+  // a bird's-eye town: walls, buildings and trees stand up, so they're drawn back to front
+  const bird = city && !!d.birdsEye
+  const standing: Standing[] | undefined = bird ? [] : undefined
+  drawTownWalls(ctx, lines.filter((s) => s.style === 'townwall'), d, W, H, st, k, standing)
 
   // pieces: on world maps lower ones stand in front; seen from above, the one put down last is on top
   // (the GM's marks go on last, over everything)
@@ -1240,7 +1445,17 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
   const marks = all.filter((p) => p.asset.startsWith('gm-'))
   const pieces = all.filter((p) => !p.asset.startsWith('gm-'))
   if (!top) pieces.sort((a, b) => a.at[1] - b.at[1])
-  pieces.forEach((p) => drawPiece(ctx, p, stLand))
+  if (standing) {
+    for (const p of pieces) standing.push({ at: depthOf(p), draw: () => drawPiece(ctx, p, stLand) })
+    standing.sort((a, b) => a.at - b.at)
+    Atlas.bird = 1
+    Atlas.wallHeight = townWallHeight(d)
+    try {
+      standing.forEach((s) => s.draw())
+    } finally {
+      Atlas.bird = Atlas.up = Atlas.sideLight = Atlas.wallHeight = undefined
+    }
+  } else pieces.forEach((p) => drawPiece(ctx, p, stLand))
 
   // colour washes over the land keep the ink lines
   if (colour && land && land.loops.length) {

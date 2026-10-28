@@ -79,6 +79,8 @@ export const HELP = {
     'Drag out rooms, round rooms, passages and caves. Anything that overlaps or touches joins up into one space, and the walls draw themselves round the outside. Fill in puts rock back, to trim a room or leave a pillar standing. Rooms snap to the squares unless you untick it; caves come out rough like real rock. Doors are in the Place tool: click near a wall and the door fits itself into it, opens into the room and leaves a gap; pick another version for open, broken or barred doors. Stairs, pillars, pits, altars, coffins and more are in the Dungeon groups. Undo takes back the last one.',
   roomOutside:
     'Solid rock makes a dungeon: everything outside the rooms is rock, hatched like an old hand-drawn dungeon map, and the grid only shows on the floors. The ground is for buildings and ruins on an outdoor map: the rooms get stone walls and the ground carries on outside them. Paint the floors with the Ground tool (smooth floor, paving, wooden boards, water…).',
+  birdsEye:
+    'Town maps only. From above draws a town plan, every roof seen straight down. Bird’s-eye stands the town up the way old engraved town views do: the plan stays exactly where you drew it, but houses, towers, castles, churches, town walls, trees, wells and market stalls rise up off it, so you see their roofs and the walls that face you. To pick a building with Select, click where it stands on the ground. Pins, regions and fog stay where they were, and you can switch back any time.',
   mapLayers:
     'Each kind of thing sits on its own layer. Untick Show to hide a layer (it also disappears from the picture players get). Tick Lock to stop a layer being picked, moved or erased while you work on something else.',
   landBrush:
