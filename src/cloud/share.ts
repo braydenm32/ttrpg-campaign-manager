@@ -1,5 +1,6 @@
 import { db, type Asset, type Campaign, type Entity, type Pin, type Session, type SharedInfo, type World, type WorldMap } from '../db'
 import { appLink, supabase, SUPABASE_URL } from './client'
+import { joinRoom, sendOnce } from './live'
 import { stableStringify } from './sync'
 
 /**
@@ -194,15 +195,10 @@ export async function refreshPlayerCopy(info: SharedInfo) {
   }
 }
 
-const openChannels = new Map<string, ReturnType<typeof supabase.channel>>()
-
 /** Tells everyone else watching a joined world that something changed (a player saved a group note). */
 export function tellOtherPlayers(cloudId: string) {
-  openChannels.get(`members:${cloudId}`)?.send({ type: 'broadcast', event: 'changed', payload: {} })
+  void sendOnce(`members:${cloudId}`, 'changed')
 }
-
-/** Live channels are private to the world: only its GM and players (or holders of a wiki link) can use them. */
-export const liveChannel = (name: string) => supabase.channel(name, { config: { private: true } })
 
 /** Players refresh at most this often while the GM is busy editing; the first change still arrives at once. */
 const REFRESH_GAP = 30_000
@@ -252,8 +248,8 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) 
     }, wait)
   }
   const name = info.token ? `share:${info.token}` : `members:${info.memberOf}`
-  const ch = liveChannel(name).on('broadcast', { event: 'changed' }, refresh).subscribe()
-  openChannels.set(name, ch)
+  const room = joinRoom(name)
+  room.on('changed', refresh)
   // The GM's broadcast is the main signal; this slow check only covers a missed one, and skips hidden tabs.
   const poll = setInterval(() => !document.hidden && refresh(), 5 * 60_000)
   const onVisible = () => {
@@ -265,8 +261,7 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) 
   document.addEventListener('visibilitychange', onVisible)
   return () => {
     clearTimeout(timer)
-    openChannels.delete(name)
-    supabase.removeChannel(ch)
+    room.leave()
     clearInterval(poll)
     window.removeEventListener('online', refresh)
     document.removeEventListener('visibilitychange', onVisible)

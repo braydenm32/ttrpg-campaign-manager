@@ -5,7 +5,7 @@ import { useWorld } from './hooks'
 import { modeOf, WorldNav, type WorldMode } from './Sidebar'
 import { Ico } from './icons'
 import logo from './assets/logo.svg'
-import { GlobeHemisphereWest, House, List, Play, Shield, SlidersHorizontal, UsersThree, X, Feather, type Icon } from '@phosphor-icons/react'
+import { Armchair, GlobeHemisphereWest, House, List, Play, Shield, SlidersHorizontal, UsersThree, X, Feather, type Icon } from '@phosphor-icons/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db'
 import { nextSessions, useCampaigns, useWorldSessions } from './threads'
@@ -54,6 +54,7 @@ const RelationWeb = lazy(() => import('./pages/RelationWeb'))
 import ClocksPage from './clocks'
 import SafetyPage, { XCardAlert, XCardButton } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
+import { PlayerTableLink, TableHost, TableSignals } from './atTheTable'
 import Handouts from './pages/Handouts'
 import { hashRouting, pagePath, setPages, tidyPath, usePathsVersion, worldPath } from './paths'
 
@@ -296,6 +297,10 @@ function WorldShell() {
     navigate(lastPath[m] ?? `${worldPath(worldId)}/${landing[m]}`)
   }
   const ownWorld = !shared
+  // Players' front page is the Common Room (a public wiki link keeps a plain Home).
+  const room = !isGM && !shared?.token
+  const label = (m: WorldMode) => (room && m === 'home' ? 'Common Room' : MODE_LABELS[m])
+  const icon = (m: WorldMode) => (room && m === 'home' ? Armchair : MODE_ICONS[m])
 
   return (
     <div className={`layout ${isGM ? '' : 'player-mode'}`}>
@@ -319,7 +324,7 @@ function WorldShell() {
         <nav className="mode-tabs" aria-label="Modes" title={HELP.modes}>
           {tabs.map((m) => (
             <button key={m} className={mode === m ? 'on' : ''} aria-current={mode === m ? 'page' : undefined} onClick={() => goTo(m)}>
-              <Ico as={MODE_ICONS[m]} /> {MODE_LABELS[m]}
+              <Ico as={icon(m)} /> {label(m)}
             </button>
           ))}
         </nav>
@@ -348,8 +353,8 @@ function WorldShell() {
               className={sideMode === m ? 'on' : ''}
               onClick={() => (m === 'home' ? navigate(`${worldPath(worldId)}`) : setDrawerPick(m))}
             >
-              <Ico as={MODE_ICONS[m]} size="1.35em" />
-              {MODE_LABELS[m]}
+              <Ico as={icon(m)} size="1.35em" />
+              {label(m)}
             </button>
           ))}
         </div>
@@ -409,6 +414,9 @@ function WorldShell() {
         {isGM && !shared && <ShowingBanner world={world} />}
         {isGM && !shared && world.cloud?.enabled && <ClaimRequestsBanner world={world} />}
         {!shared && <XCardAlert world={world} />}
+        {!shared && world.cloud?.enabled && <TableHost world={world} />}
+        {isGM && !shared && world.cloud?.enabled && <TableSignals world={world} />}
+        {memberOf && <PlayerTableLink world={world} />}
         {!isGM && !shared && (
           <div className="player-banner">
             {previewAs

@@ -80,6 +80,36 @@ function MemberNotes({ world, memberOf, entityId, big }: { world: World; memberO
   )
 }
 
+/** A player's own note (on a page, or '' for their scratchpad), as a small box. */
+export function MyNote({ world, entityId, placeholder }: { world: World; entityId: string; placeholder: string }) {
+  const memberOf = world.shared?.memberOf
+  if (!memberOf) return null
+  const saved = world.shared?.notes?.find((n) => n.entityId === entityId && !n.shared)?.body ?? ''
+  return (
+    <NoteEditor
+      key={`${entityId}:mine`}
+      rows={3}
+      saved={saved}
+      hint="Only you can see this."
+      placeholder={placeholder}
+      onSave={(body) => savePlayerNote(memberOf, entityId, false, body)}
+      nameOf={() => ''}
+    />
+  )
+}
+
+/**
+ * Adds a line to the party's shared scratchpad, signed with who wrote it. If someone else saved in
+ * the meantime the line goes on the end of their version, so nothing is lost.
+ */
+export async function addToPartyNotes(world: World, who: string, line: string) {
+  const memberOf = world.shared!.memberOf!
+  const note = world.shared?.notes?.find((n) => n.entityId === '' && n.shared)
+  const add = (body = '') => `${body.trimEnd()}${body.trim() ? '\n' : ''}- **${who}:** ${line}`
+  const clash = await savePlayerNote(memberOf, '', true, add(note?.body), note?.updatedAt ?? null)
+  if (clash) await savePlayerNote(memberOf, '', true, add(clash.body), null)
+}
+
 /**
  * A notes box that keeps what you're typing even if a refresh brings in a newer copy, and shows the
  * newest saved text whenever you aren't mid-edit. For group notes, if someone else saved while you
@@ -92,7 +122,9 @@ function NoteEditor({
   placeholder,
   onSave,
   nameOf,
+  rows = 6,
 }: {
+  rows?: number
   saved: string
   savedAt?: string
   hint: ReactNode
@@ -130,7 +162,7 @@ function NoteEditor({
   return (
     <>
       <textarea
-        rows={6}
+        rows={rows}
         value={text}
         onChange={(e) => {
           if (draft === null) setBase(savedAt ?? null)

@@ -11,7 +11,7 @@ import { nextSessions, URGENCY, useCampaigns } from '../threads'
 import { useViewMode } from '../viewMode'
 import { BackupReminder } from '../BackupReminder'
 import WikiHome from './WikiHome'
-import PlayerHome from './PlayerHome'
+import CommonRoom from './CommonRoom'
 import { showDate, upcoming } from '../players/Schedule'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ClockFace, useAllClocks } from '../clocks'
@@ -40,8 +40,8 @@ export default function Dashboard() {
   if (!world) return null
   // Opened from a public wiki link: a tidy front page for readers instead of the GM's overview.
   if (world.shared?.token) return <WikiHome world={world} />
-  // Players (and the GM previewing as one) get their own front page.
-  if (!isGM) return <PlayerHome world={world} />
+  // Players (and the GM previewing as one) get the Common Room.
+  if (!isGM) return <CommonRoom world={world} />
   return (
     <div className="page home-page">
       <WorldCover world={world}>

@@ -22,6 +22,9 @@ export function foeFromEntity(e: Entity): EncounterFoe {
   return { id: newId(), name: e.name, count: 1, hp: hpOf(e), ac: acOf(e), side: e.type === 'pc' ? 'pc' : 'foe', entityId: e.id }
 }
 
+/** Initiative order: highest first, unrolled at the bottom, ties keep the order they were added. */
+export const initiativeOrder = (cs: Combatant[]) => [...cs].sort((a, b) => (b.init ?? -Infinity) - (a.init ?? -Infinity))
+
 /** Adds combatants to the Lectern; two goblins become "Goblin" and "Goblin 2". */
 export function addCombatants(l: LecternState, cs: Omit<Combatant, 'id'>[]) {
   for (const c of cs) {

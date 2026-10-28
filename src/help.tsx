@@ -201,7 +201,6 @@ export const HELP = {
   partyCampaign: 'When a world has more than one group, pick which campaign this character plays in. The campaign page and the Lectern’s “Add the party” then only show that group.',
   trackAsThread: 'Quests are what the players know they’re doing. A loose thread is your own tracker for it: how pressing it is, and a warning when it goes cold.',
   claimRequests: 'A player asked to play one of your characters. Approve it and they can edit that character’s sheet and read passages written for them.',
-  playerHome: 'Your way into this world: the next session, what happened last time, your character, handouts from your GM and leads to follow.',
   gettingStarted: 'A few first steps for a new world. It goes away once you’ve made a campaign and a few pages.',
   home: 'Each world is kept on this device. Sign in to sync your worlds across devices, invite players, or open worlds you play in.',
   joining: 'An invite link from your GM lets you join their world as a player. Paste it here if it opened somewhere else, sign in, and you’re in.',
@@ -212,6 +211,15 @@ export const HELP = {
   editCharacter:
     'Keep your character’s details up to date: the one-line summary, stats and anything you want to write about them. Your GM sees your changes and can change them back.',
   character: 'Who plays this character. Players ask to play their character from here, and you approve it (here or in World settings) before it counts, so nobody can take someone else’s character or their secrets. You can release a claim later.',
+  commonRoom:
+    'Your seat at the table: what the GM is showing, your character, the party, leads, notes and last time’s recap. While your GM runs the session you also see the scene, whose turn it is and the music, roll dice everyone sees, and can quietly ask for a turn or a break.',
+  tableLink:
+    'While this Lectern is open, players’ Common Room shows which session is on, the scene (only if its page is revealed), the music and the turn order once combat starts. HP, conditions and your notes never go. Their rolls and signals (“I’d like to do something”, “I need a break”) come to you here and pop up wherever you are in the app.',
+  inspiration:
+    'Inspiration or hero points: tap + to hand one out. Players see how many they have in their Common Room and on their character page, and can ask to use one; you’ll get a pop-up with “Use it”.',
+  tableDice: 'Rolls here show up for the whole table: the other players and your GM see who rolled what.',
+  tableSignals:
+    'A quiet word to your GM without interrupting: they get a pop-up with your character’s name, and you see when they’ve noticed. For something you’d rather not say out loud, use the X-card instead.',
   aiTools: 'Keys for transcription and recaps. They stay on this device only: never synced and never in backups.',
 } as const
 
