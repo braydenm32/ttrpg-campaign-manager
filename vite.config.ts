@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { MAPS } from './src/example/maps/index.ts'
 import { describeProblems, parseExampleFiles } from './src/example/parse.ts'
 
 /**
@@ -20,7 +21,7 @@ function checkExampleWorld(): Plugin {
         .filter((p) => p.endsWith('.md'))
         .map((p) => [p, readFileSync(join(root, p), 'utf8')]),
     )
-    const { problems } = parseExampleFiles(files)
+    const { problems } = parseExampleFiles(files, MAPS)
     return { problems, report: describeProblems(problems, `${folder}/`) }
   }
   return {

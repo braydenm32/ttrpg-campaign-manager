@@ -20,6 +20,7 @@ The full step-by-step guide is [docs/EDITING.md](../../docs/EDITING.md).
 | The corkboard | `boards/` |
 | The GM's "Start here" page | `guides/` |
 | Page templates | `templates/` |
+| Maps (drawn by code; pins point at pages by key) | `src/example/maps/` |
 
 Can't find a page? Search for its name across the folder (Mac: Cmd+Shift+F in VS Code, Windows: Ctrl+Shift+F).
 The folders are only for tidiness: a page works in any folder.
@@ -58,7 +59,7 @@ Notes players never see.
 2. Indent with **spaces**, never tabs.
 3. If a value has **a colon and a space** in it (`summary: Wanted: Dannic Rook`), put the whole value in "double quotes".
 4. If a value has a `#` in it, put it in quotes too, or everything from the `#` on is dropped.
-5. File names: small letters, numbers and dashes only (`old-mill.md`). Renaming a file changes its key, so update anything that points at it.
+5. File names: small letters, numbers and dashes only (`old-mill.md`). Renaming a file changes its key, so update everything that points at it, map pins in `src/example/maps/` included (search the project for the old key; `npm run check` lists any you miss).
 
 ## Before you commit
 
