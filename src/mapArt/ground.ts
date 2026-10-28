@@ -8,7 +8,9 @@ import { loopArea, makeNoise, roughen, traceLoops } from './geometry'
 import type { Drawing, GroundId, Terrain } from '../mapDrawing'
 
 /** Drawing order of the blended grounds; water is drawn on top with a crisp bank. */
-const BLEND: GroundId[] = ['dirt', 'sand', 'grass', 'stone', 'mud', 'snow', 'paving']
+const BLEND: GroundId[] = ['dirt', 'sand', 'grass', 'stone', 'mud', 'snow', 'paving', 'floor', 'boards']
+/** Laid floors: crisp edges, and no pen line round them in ink (the joints already say where they stop). */
+const LAID: GroundId[] = ['paving', 'floor', 'boards']
 
 /** Areas from a map first drawn in the simple style become the nearest ground. */
 const AREA_GROUND: Record<Terrain, GroundId> = {
@@ -36,6 +38,8 @@ export function groundColour(g: GroundId, t: Tint): string {
     case 'mud': return mix(t.land, '#6a5434', 0.5)
     case 'snow': return t.snow
     case 'paving': return mix(t.rock, '#d3cab8', 0.4)
+    case 'floor': return mix(t.rock, '#d9d1c0', 0.5)
+    case 'boards': return mix(t.sand, t.roof, 0.42)
     case 'water': return t.water
   }
 }
@@ -43,7 +47,7 @@ export function groundColour(g: GroundId, t: Tint): string {
 /* ---------------- masks ---------------- */
 
 /** Separable box blur, run twice (close to a gaussian). */
-function blur(a: Float32Array, w: number, h: number, r: number): Float32Array {
+export function blur(a: Float32Array, w: number, h: number, r: number): Float32Array {
   r = Math.max(1, Math.round(r))
   let src: Float32Array = a
   let dst: Float32Array = new Float32Array(a.length)
@@ -111,13 +115,13 @@ function noiseField(mw: number, mh: number, ms: number, seed: number, wl: number
 }
 
 /** How soft each ground's edge is: blur radius (ft-scaled px), and how wide and uneven the blend is. */
-const EDGE = (g: GroundId) => (g === 'paving' ? { r: 3, half: 0.12, amp: 0.08 } : { r: 7, half: 0.2, amp: 0.3 })
+const EDGE = (g: GroundId) => (LAID.includes(g) ? { r: 3, half: 0.12, amp: 0.08 } : { r: 7, half: 0.2, amp: 0.3 })
 
 /**
  * Work out where each ground is. Only the painted grounds get masks, and only around their strokes
  * (the base is whatever's left), so a stroke costs about as much as the area it touches.
  */
-export function buildGround(d: Drawing, W: number, H: number, key: string): GroundMap {
+export function buildGround(d: Drawing, W: number, H: number, key: string, rooms?: Path2D): GroundMap {
   const u = (d.gridSize || 70) / 70
   const ms = Math.min(0.5, 900 / Math.max(W, H))
   const mw = Math.max(2, Math.ceil(W * ms))
@@ -174,6 +178,11 @@ export function buildGround(d: Drawing, W: number, H: number, key: string): Grou
     for (const st of d.ground ?? []) {
       if (!st.points.length) continue
       paint(st.ground, st.points, st.size / 2, (c) => {
+        // a floor painted "inside the rooms" stops at the walls
+        if (st.inside && rooms) {
+          c.save()
+          c.clip(rooms, 'evenodd')
+        }
         c.beginPath()
         if (st.points.length === 1) {
           c.arc(st.points[0][0], st.points[0][1], st.size / 2, 0, Math.PI * 2)
@@ -183,6 +192,7 @@ export function buildGround(d: Drawing, W: number, H: number, key: string): Grou
           st.points.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)))
           c.stroke()
         }
+        if (st.inside && rooms) c.restore()
       })
     }
   }
@@ -355,7 +365,7 @@ function layersOf(gm: GroundMap) {
 /* ---------------- textures ---------------- */
 
 /** Uneven watercolour: the wash is a little darker in some places and lighter in others, drifting slowly. */
-function mottle(ctx: CanvasRenderingContext2D, box: Box, fill: string, u: number, seed: number) {
+export function mottle(ctx: CanvasRenderingContext2D, box: Box, fill: string, u: number, seed: number) {
   const [x0, y0, x1, y1] = box
   const cell = 14 * u
   const w = Math.max(2, Math.ceil((x1 - x0) / cell) + 1)
@@ -618,6 +628,75 @@ function texture(ctx: CanvasRenderingContext2D, g: GroundId, box: Box, st: InkSt
         }
       break
     }
+    case 'floor': {
+      // dressed stone worn smooth: a few hairline cracks and specks of grit, mostly bare
+      ctx.globalAlpha = colour ? 0.45 : 0.4
+      ctx.lineWidth = 0.6 * st.line
+      ctx.beginPath()
+      for (let i = 0, n = Math.ceil(area / (130 * u) ** 2); i < n; i++) {
+        let x = R(r, x0, x1)
+        let y = R(r, y0, y1)
+        if (!keep(x, y)) continue
+        let a = R(r, 0, Math.PI * 2)
+        ctx.moveTo(x, y)
+        for (let k = 0, m = 2 + Math.floor(r() * 3); k < m; k++) {
+          a += R(r, -0.7, 0.7)
+          x += Math.cos(a) * R(r, 5, 11) * u
+          y += Math.sin(a) * R(r, 5, 11) * u
+          ctx.lineTo(x, y)
+        }
+      }
+      ctx.stroke()
+      dots(Math.ceil(area / (26 * u) ** 2), [0.25, 0.55], colour ? 0.3 : 0.35)
+      break
+    }
+    case 'boards': {
+      // planks running left to right, each its own shade, with staggered butt joints, grain and nails
+      const pw = 14 * u
+      const gy = Math.floor(y0 / pw) - 1
+      for (let j = gy; j * pw < y1 + pw; j++) {
+        const h = Atlas.rng((j + 7919) * 2654435761)
+        const top = j * pw
+        let x = x0 - R(h, 0, 140) * u
+        while (x < x1) {
+          const len = R(h, 90, 190) * u
+          if (keep(Math.max(x0, Math.min(x1, x + len / 2)), top + pw / 2) || keep(x + 4 * u, top + pw / 2)) {
+            if (colour) {
+              ctx.globalAlpha = 1
+              ctx.fillStyle = mix(fill, h() < 0.5 ? '#5a3e22' : '#f0ddb8', R(h, 0, 0.22))
+              ctx.fillRect(x, top, len, pw)
+            }
+            ctx.globalAlpha = colour ? 0.65 : 0.8
+            ctx.beginPath()
+            ctx.moveTo(x, top)
+            ctx.lineTo(x + len, top)
+            ctx.moveTo(x, top)
+            ctx.lineTo(x, top + pw)
+            ctx.stroke()
+            ctx.globalAlpha = colour ? 0.3 : 0.35
+            ctx.beginPath()
+            for (let g = 0; g < 2; g++) {
+              const gy2 = top + R(h, 0.25, 0.75) * pw
+              const a = x + R(h, 4, len * 0.3)
+              ctx.moveTo(a, gy2)
+              ctx.lineTo(a + R(h, len * 0.3, len * 0.6), gy2 + R(h, -0.6, 0.6) * u)
+            }
+            ctx.stroke()
+            ctx.globalAlpha = colour ? 0.55 : 0.6
+            ctx.fillStyle = pen
+            ctx.beginPath()
+            for (const nx of [x + 3 * u, x + len - 3 * u])
+              for (const ny of [top + pw * 0.3, top + pw * 0.7]) {
+                ctx.moveTo(nx + 0.6 * u, ny)
+                ctx.arc(nx, ny, 0.6 * u, 0, Math.PI * 2)
+              }
+            ctx.fill()
+          }
+          x += len
+        }
+      }
+      break
+    }
     case 'water':
       break
   }
@@ -744,7 +823,7 @@ export function drawGround(gm: GroundMap, d: Drawing, W: number, H: number, scal
   if (st.mode !== 'colour') {
     ctx.save()
     ctx.globalAlpha = 0.7
-    for (const L of layersOf(gm)) if (L.g !== 'paving') for (const loop of edgesOf(gm, L.g, u)) brokenEdge(ctx, loop, r, st, u)
+    for (const L of layersOf(gm)) if (!LAID.includes(L.g)) for (const loop of edgesOf(gm, L.g, u)) brokenEdge(ctx, loop, r, st, u)
     ctx.restore()
   }
 

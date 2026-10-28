@@ -62,9 +62,13 @@ export const HELP = {
   mapStyle:
     'Classic is the hand-drawn look: old fantasy world maps (think Middle-earth or the Wheel of Time), or hand-drawn battle maps seen from above, in ink on parchment, ink on white or colour. Simple is the original flat-colour style. You can switch at any time.',
   mapScene:
-    'A world or region map is seen from the side, the old fantasy-map way: mountains, forests and towns drawn as little pictures. A battle map is seen from above, on a grid, for fights: paint the ground, add fences and walls, and place trees, rocks, tents and buildings.',
+    'A world or region map is seen from the side, the old fantasy-map way: mountains, forests and towns drawn as little pictures. A battle map is seen from above, on a grid, for fights: paint the ground, add fences and walls, and place trees, rocks, tents and buildings. Dungeons are battle maps too: dig rooms out of the rock with the Rooms tool.',
   groundBrush:
-    'Paint the ground with a soft brush: grass, dirt for paths, sand, rocky ground, mud, snow, paving stones or water. Where two kinds meet they blend unevenly, like real ground. Water gets an inked bank, ripples and darker deep parts on its own. Paint over anything to change it.',
+    'Paint the ground with a soft brush: grass, dirt for paths, sand, rocky ground, mud, snow, paving stones, a smooth stone floor, wooden boards or water. Where two kinds meet they blend unevenly, like real ground. Water gets an inked bank, ripples and darker deep parts on its own. Paint over anything to change it.',
+  rooms:
+    'Drag out rooms, round rooms, passages and caves. Anything that overlaps or touches joins up into one space, and the walls draw themselves round the outside. Fill in puts rock back, to trim a room or leave a pillar standing. Rooms snap to the squares unless you untick it; caves come out rough like real rock. Doors are in the Place tool: click near a wall and the door fits itself into it, opens into the room and leaves a gap; pick another version for open, broken or barred doors. Stairs, pillars, pits, altars, coffins and more are in the Dungeon groups. Undo takes back the last one.',
+  roomOutside:
+    'Solid rock makes a dungeon: everything outside the rooms is rock, hatched like an old hand-drawn dungeon map, and the grid only shows on the floors. The ground is for buildings and ruins on an outdoor map: the rooms get stone walls and the ground carries on outside them. Paint the floors with the Ground tool (smooth floor, paving, wooden boards, water…).',
   mapLayers:
     'Each kind of thing sits on its own layer. Untick Show to hide a layer (it also disappears from the picture players get). Tick Lock to stop a layer being picked, moved or erased while you work on something else.',
   landBrush:

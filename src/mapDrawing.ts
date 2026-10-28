@@ -29,6 +29,7 @@ export const LINE_STYLES = {
   fence: { label: 'Fence', color: '#6b4a2a', width: 4, dash: '3 7' },
   hedge: { label: 'Hedge', color: '#4f6a35', width: 16, dash: '' },
   cliff: { label: 'Cliff edge', color: '#5a5348', width: 7, dash: '' },
+  dwall: { label: 'Inner wall', color: '#1a1a1f', width: 8, dash: '' },
 } as const
 export type LineStyle = keyof typeof LINE_STYLES
 
@@ -105,6 +106,8 @@ export const GROUNDS = {
   mud: 'Mud',
   snow: 'Snow',
   paving: 'Paving stones',
+  floor: 'Smooth floor',
+  boards: 'Wooden boards',
   water: 'Water',
 } as const
 export type GroundId = keyof typeof GROUNDS
@@ -115,6 +118,22 @@ export interface GroundStroke {
   ground: GroundId
   size: number
   points: Point[]
+  /** Only paints inside the rooms (a floor that stops at the walls). */
+  inside?: boolean
+}
+
+/**
+ * A room on a battle map: floor dug out of the rock (or filled back in), in the order drawn. Rooms
+ * that overlap or touch merge, and the walls run round the outside of them all.
+ * rect and round: two opposite corners (round is the oval inside them). corridor: the middle of a
+ * passage `size` wide. cave: a rough-edged brush stroke `size` wide.
+ */
+export interface RoomStroke {
+  id: string
+  mode: 'dig' | 'fill'
+  shape: 'rect' | 'round' | 'corridor' | 'cave'
+  points: Point[]
+  size?: number
 }
 
 /** A brush stroke that paints land, or carves water (sea, lakes) back out of it. */
@@ -143,6 +162,9 @@ export interface Drawing {
   /** Battle maps: the ground everything starts on, and what's been painted over it. */
   groundBase?: GroundId
   ground?: GroundStroke[]
+  /** Battle maps: rooms and passages, and whether what's outside them is solid rock (a dungeon) or the ground. */
+  rooms?: RoomStroke[]
+  outside?: 'rock' | 'ground'
   hidden?: LayerId[]
   locked?: LayerId[]
 }

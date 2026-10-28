@@ -26,18 +26,19 @@ import {
   type LineStyle,
   type Look,
   type Point,
+  type RoomStroke,
   type Scene,
   type Shape,
   type StampKind,
   type Terrain,
 } from '../mapDrawing'
 import { ASSET_GROUPS, Atlas, assetNamesIn, BATTLE_GROUPS } from '../mapArt/atlas'
-import { canTurn, classicBlob, classicHitSvg, drawPiece, FONTS, landTest, loadMapFonts, LOOKS, pieceOutline, renderClassic, styleFor } from '../mapArt/classic'
+import { canTurn, classicBlob, classicHitSvg, drawPiece, floorTest, FONTS, landTest, loadMapFonts, LOOKS, pieceOutline, renderClassic, roomTest, styleFor } from '../mapArt/classic'
 import { groundColour } from '../mapArt/ground'
 import { useViewMode } from '../viewMode'
 import { worldPath } from '../paths'
 
-type Tool = 'select' | 'hand' | 'land' | 'area' | 'rect' | 'line' | 'stamp' | 'label' | 'erase'
+type Tool = 'select' | 'hand' | 'land' | 'room' | 'area' | 'rect' | 'line' | 'stamp' | 'label' | 'erase'
 
 interface ToolDef {
   id: Tool
@@ -70,7 +71,8 @@ const CLASSIC_TOOLS: ToolDef[] = [
 const BATTLE_TOOLS: ToolDef[] = [
   { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a piece, line or label to edit it, drag to move it' },
   { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll to zoom' },
-  { id: 'land', icon: '🖌', label: 'Ground', hint: 'Drag to paint grass, dirt, sand, stone, mud, snow, paving or water. Where two kinds meet they blend softly' },
+  { id: 'land', icon: '🖌', label: 'Ground', hint: 'Drag to paint grass, dirt, sand, stone, mud, snow, floors or water. Where two kinds meet they blend softly' },
+  { id: 'room', icon: '🧱', label: 'Rooms', hint: 'Drag to dig out a room, passage or cave. Rooms that touch join up, and the walls draw themselves' },
   { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw fences, hedges, stone walls and cliff edges' },
   { id: 'stamp', icon: '🌳', label: 'Place', hint: 'Click to place a piece. Click and hold, then drag, to scatter lots of them' },
   { id: 'label', icon: '🔤', label: 'Label', hint: 'Click to place text, or drag to write it along a curve' },
@@ -79,7 +81,20 @@ const BATTLE_TOOLS: ToolDef[] = [
 
 /** Which kinds of line each kind of map offers. */
 const WORLD_LINES: LineStyle[] = ['river', 'road', 'path', 'border', 'wall', 'ink']
-const BATTLE_LINES: LineStyle[] = ['fence', 'hedge', 'wall', 'cliff', 'ink']
+const BATTLE_LINES: LineStyle[] = ['fence', 'hedge', 'wall', 'dwall', 'cliff', 'ink']
+
+/** The Ground brush: what it paints, how wide, and whether it stops at the walls of rooms. */
+type GroundBrush = { ground: GroundId; size: number; inside: boolean }
+/** Laid floors stop at the walls unless you say otherwise; natural ground goes everywhere. */
+const FLOORS: GroundId[] = ['paving', 'floor', 'boards']
+/** How the Rooms tool digs: its shape, digging out or filling in, passage width and cave brush size (px), and grid snapping. */
+type RoomBrush = { shape: RoomStroke['shape']; mode: RoomStroke['mode']; width: number; cave: number; snap: boolean }
+const ROOM_SHAPES: { id: RoomStroke['shape']; icon: string; label: string; hint: string }[] = [
+  { id: 'rect', icon: '▭', label: 'Room', hint: 'Drag from corner to corner' },
+  { id: 'round', icon: '◯', label: 'Round room', hint: 'Drag from corner to corner; the room is the oval inside' },
+  { id: 'corridor', icon: '═', label: 'Passage', hint: 'Drag along the way it goes; it straightens itself out' },
+  { id: 'cave', icon: '☁', label: 'Cave', hint: 'Drag freely; the walls come out rough, like rock' },
+]
 
 /** Starting sizes for battle-map pieces, at 70 px to a 5 ft square (scaled to the map's grid). */
 const BATTLE_SIZE: Record<string, number> = {
@@ -88,6 +103,10 @@ const BATTLE_SIZE: Record<string, number> = {
   'bm-tent': 150, 'bm-campfire': 70, 'bm-bedroll': 80, 'bm-cart': 210, 'bm-crate': 46, 'bm-barrel': 38, 'bm-sacks': 56, 'bm-woodpile': 90, 'bm-chest': 46,
   'bm-well': 95, 'bm-haystack': 110, 'bm-stall': 170, 'bm-table': 120, 'bm-gravestone': 36, 'bm-statue': 80, 'bm-signpost': 64, 'bm-rowboat': 160,
   'bm-cottage': 320, 'bm-house': 330, 'bm-barn': 430, 'bm-tower': 230, 'bm-chapel': 400, 'bm-ruin': 380, 'bm-bridge': 300, 'bm-tent-large': 290,
+  'dg-door': 70, 'dg-double-door': 140, 'dg-portcullis': 70, 'dg-arch': 70, 'dg-trapdoor': 70, 'dg-grate': 60,
+  'dg-stairs': 140, 'dg-spiral': 140, 'dg-pillar': 50, 'dg-pillar-square': 50, 'dg-pit': 140, 'dg-rubble': 100, 'dg-bones': 70,
+  'dg-brazier': 50, 'dg-torch': 50, 'dg-altar': 140, 'dg-sarcophagus': 140, 'dg-coffin': 120, 'dg-bookshelf': 140, 'dg-bed': 140,
+  'dg-throne': 90, 'dg-cage': 120, 'dg-rug': 200, 'dg-weapon-rack': 140, 'dg-cauldron': 70, 'dg-magic-circle': 280,
 }
 
 /** Starting sizes for library pieces, at a 1400 px map (scaled to the map's size). */
@@ -97,7 +116,7 @@ const PIECE_SIZE: Record<string, number> = {
   'city-dot': 9, 'compass-rose': 120, cartouche: 320, 'scale-bar': 160, ship: 50, 'sea-serpent': 56, cloud: 100, waves: 22, whirlpool: 30,
 }
 const pieceSize = (asset: string, W: number, H: number, gridSize = 70) => {
-  if (asset.startsWith('bm-')) return Math.round(((BATTLE_SIZE[asset] ?? 80) * (gridSize || 70)) / 70)
+  if (/^(bm|dg)-/.test(asset)) return Math.round(((BATTLE_SIZE[asset] ?? 80) * (gridSize || 70)) / 70)
   const def = Atlas.assets[asset]
   const base = PIECE_SIZE[asset] ?? (def?.category === 'settlements' ? 34 : def?.category === 'landmarks' ? 30 : 30)
   return Math.round(base * Math.max(1, Math.max(W, H) / 1400))
@@ -113,8 +132,12 @@ const randomSeed = () => 1 + Math.floor(Math.random() * 2 ** 30)
  */
 type PieceChoice = { asset: string; size: number; variant: number | 'random'; turn: number | 'random'; mix: string[] }
 /** Camp gear and loose things look best turned every which way; everything else starts as drawn. */
-const defaultTurn = (asset: string): number | 'random' => (['bm-camp', 'bm-objects'].includes(Atlas.assets[asset]?.category ?? '') ? 'random' : 0)
-const choose = (asset: string, W: number, H: number, gridSize?: number): PieceChoice => ({ asset, size: pieceSize(asset, W, H, gridSize), variant: 'random', turn: defaultTurn(asset), mix: [] })
+const defaultTurn = (asset: string): number | 'random' =>
+  ['bm-camp', 'bm-objects'].includes(Atlas.assets[asset]?.category ?? '') || ['dg-rubble', 'dg-bones'].includes(asset) ? 'random' : 0
+/** Doors start as a plain closed door; open, broken and barred ones are a pick away. */
+const choose = (asset: string, W: number, H: number, gridSize?: number): PieceChoice => ({
+  asset, size: pieceSize(asset, W, H, gridSize), variant: Atlas.assets[asset]?.category === 'dg-doors' ? 0 : 'random', turn: defaultTurn(asset), mix: [],
+})
 
 /** Other words people search the piece library with. */
 const KEYWORDS: Record<string, string> = {
@@ -124,6 +147,13 @@ const KEYWORDS: Record<string, string> = {
   'bm-haystack': 'hay farm', 'bm-well': 'water', 'bm-stall': 'market shop', 'bm-gravestone': 'grave tomb cemetery', 'bm-statue': 'fountain monument',
   'bm-signpost': 'sign road', 'bm-cottage': 'house hut', 'bm-house': 'home building', 'bm-barn': 'farm', 'bm-tower': 'castle keep',
   'bm-chapel': 'church temple shrine', 'bm-ruin': 'ruins', 'bm-tent-large': 'tent marquee', 'bm-tent': 'camp',
+  'dg-door': 'doorway plank wooden entrance', 'dg-double-door': 'doors gate grand entrance', 'dg-portcullis': 'gate bars iron grille', 'dg-arch': 'archway doorway opening curtain',
+  'dg-trapdoor': 'hatch trap floor ladder', 'dg-grate': 'drain sewer grille', 'dg-stairs': 'steps staircase up down descend ladder', 'dg-spiral': 'stairs steps winding staircase tower',
+  'dg-pillar': 'column post support colonnade', 'dg-pillar-square': 'column pier buttress post', 'dg-pit': 'hole trap chasm shaft well', 'dg-rubble': 'rocks stones collapse debris masonry',
+  'dg-bones': 'skeleton skull remains corpse', 'dg-altar': 'shrine temple sacrifice offering', 'dg-sarcophagus': 'tomb crypt grave effigy',
+  'dg-coffin': 'casket burial crypt undead', 'dg-bookshelf': 'library books scrolls study', 'dg-bed': 'cot bunk sleep barracks',
+  'dg-throne': 'seat chair king dais', 'dg-cage': 'prison cell bars jail', 'dg-rug': 'carpet mat fur hide',
+  'dg-weapon-rack': 'armoury armory arms swords shields', 'dg-cauldron': 'pot witch brew kitchen', 'dg-magic-circle': 'ritual summoning pentagram runes sigil', 'dg-brazier': 'fire coals firepit flame light', 'dg-torch': 'fire light sconce lantern candle flame',
   pine: 'tree', palm: 'tree', 'dead-tree': 'tree', 'forest-clump': 'trees woods', 'wood-stipple': 'trees woods', ship: 'boat', city: 'town',
   port: 'harbour harbor town', village: 'town', castle: 'fort keep', 'city-dot': 'town', 'compass-rose': 'north', cartouche: 'title',
 }
@@ -165,14 +195,16 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const [stamp, setStamp] = useState<StampKind>('town')
   const [stampSize, setStampSize] = useState(() => Math.round(Math.max(W, H) / 24))
   const [brush, setBrush] = useState<{ mode: 'land' | 'water'; size: number }>(() => ({ mode: 'land', size: Math.round(Math.max(W, H) / 16) }))
-  const [piece, setPieceState] = useState<PieceChoice>(() => choose(battle ? 'bm-tree' : 'mountain', W, H, drawing.gridSize))
+  const [piece, setPieceState] = useState<PieceChoice>(() => choose(battle ? (drawing.outside === 'rock' ? 'dg-pillar' : 'bm-tree') : 'mountain', W, H, drawing.gridSize))
   const [recent, setRecent] = useState<string[]>(() => [piece.asset])
   // the pieces picked lately, for the "Recently used" row
   const setPiece = (next: PieceChoice) => {
     setPieceState(next)
     setRecent((r) => [...new Set([next.asset, ...next.mix, ...r])].slice(0, 8))
   }
-  const [groundBrush, setGroundBrush] = useState<{ ground: GroundId; size: number }>(() => ({ ground: 'dirt', size: Math.round((drawing.gridSize || 70) * 2) }))
+  const [groundBrush, setGroundBrush] = useState<GroundBrush>(() => ({ ground: 'dirt', size: Math.round((drawing.gridSize || 70) * 2), inside: false }))
+  const [roomBrush, setRoomBrush] = useState<RoomBrush>(() => ({ shape: 'rect', mode: 'dig', width: drawing.gridSize || 70, cave: 2 * (drawing.gridSize || 70), snap: true }))
+  const [roomDraft, setRoomDraft] = useState<RoomStroke>()
   const [spray, setSpray] = useState(() => ({ spread: Math.round(Math.max(W, H) / 18), thickness: 3 }))
   const [labelText, setLabelText] = useState('')
   const [labelSize, setLabelSize] = useState(() => Math.round(Math.max(W, H) / 40))
@@ -188,6 +220,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     | { kind: 'pan'; client: Point; view: typeof view }
     | { kind: 'draw'; points: Point[] }
     | { kind: 'rect'; start: Point }
+    | { kind: 'room'; points: Point[] }
     | { kind: 'move'; id: string; start: Point; before: Drawing }
     | { kind: 'scatter'; before: Drawing; placed: Shape[]; start: Point; at: Point; t0: number; moved: boolean; fits: (asset: string, p: Point) => boolean }
     | { kind: 'erase'; before: Drawing; ids: Set<string> }
@@ -374,6 +407,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       } else if (e.key === 'Escape') {
         setSelectedId(undefined)
         setDraft([])
+        setRoomDraft(undefined)
         gesture.current = undefined
       }
     }
@@ -452,12 +486,14 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   /** Where the scatter brush may put each piece: trees ashore, boats on the water, and so on. */
   const scatterFits = (): ((asset: string, p: Point) => boolean) => {
     const isLand = landTest(drawing, W, H)
+    const indoors = floorTest(drawing, W, H)
     const rule = (asset: string): ((p: Point) => boolean) => {
       const cat = Atlas.assets[asset]?.category ?? ''
       if (battle) {
         if (asset === 'bm-bridge') return () => true
         const onWater = cat === 'bm-water' || asset === 'bm-rowboat'
-        return ([x, y]) => isLand(x, y) !== onWater
+        // underground, scattered things stay on the floor
+        return ([x, y]) => isLand(x, y) !== onWater && indoors(x, y)
       }
       const sea = cat === 'sea' && asset !== 'cloud'
       if (!sea && !ASHORE.includes(cat)) return () => true
@@ -531,6 +567,56 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     setLabelText('')
   }
 
+  // Rooms snap to the squares: corners to where grid lines cross, passages along the middle of their squares.
+  const gs = drawing.gridSize || 70
+  const snapping = roomBrush.snap && drawing.grid === 'square'
+  const corner = (p: Point): Point => (snapping ? [Math.round(p[0] / gs) * gs, Math.round(p[1] / gs) * gs] : p)
+  const along = (p: Point, w: number): Point => {
+    if (!snapping) return p
+    const off = Math.round(w / gs) % 2 ? gs / 2 : 0
+    return [Math.round((p[0] - off) / gs) * gs + off, Math.round((p[1] - off) / gs) * gs + off]
+  }
+  /** The room a drag makes, or nothing if it's too small to be one. */
+  const roomOf = (pts: Point[]): RoomStroke | undefined => {
+    const base = { id: newId(), mode: roomBrush.mode }
+    const { shape } = roomBrush
+    if (shape === 'rect' || shape === 'round') {
+      const a = corner(pts[0])
+      const b = corner(pts[pts.length - 1])
+      if (Math.abs(b[0] - a[0]) < gs / 4 || Math.abs(b[1] - a[1]) < gs / 4) return undefined
+      return { ...base, shape, points: [a, b] }
+    }
+    if (shape === 'cave') return { ...base, shape, points: simplify(pts, 0.12 * gs), size: roomBrush.cave }
+    // passages: straightened, then snapped; repeated and in-line points dropped
+    const w = roomBrush.width
+    const snapped = simplify(pts, snapping ? 0.6 * gs : 0.15 * gs).map((p) => along(p, w))
+    const path: Point[] = []
+    for (const p of snapped) if (!path.length || Math.hypot(p[0] - path[path.length - 1][0], p[1] - path[path.length - 1][1]) > 1) path.push(p)
+    for (let i = path.length - 2; i > 0; i--) {
+      const [a, b, c] = [path[i - 1], path[i], path[i + 1]]
+      const cross = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0])
+      const dot = (b[0] - a[0]) * (c[0] - b[0]) + (b[1] - a[1]) * (c[1] - b[1])
+      if (Math.abs(cross) < 1 && dot > 0) path.splice(i, 1)
+    }
+    return { ...base, shape, points: path, size: w }
+  }
+  /** Doors sit on the grid line nearest the click, turned to run along it. */
+  /** A door sits on the nearest grid line that has a room wall on it, or failing that the nearest line. */
+  const snapDoor = (p: Point, size: number): { at: Point; turn: number } => {
+    if (drawing.grid !== 'square') return { at: p, turn: 0 }
+    const off = Math.max(1, Math.round(size / gs)) % 2 ? gs / 2 : 0
+    const across: { at: Point; turn: number } = { at: [Math.round((p[0] - off) / gs) * gs + off, Math.round(p[1] / gs) * gs], turn: 0 }
+    const down: { at: Point; turn: number } = { at: [Math.round(p[0] / gs) * gs, Math.round((p[1] - off) / gs) * gs + off], turn: 90 }
+    const inRoom = roomTest(drawing, W, H)
+    if (inRoom) {
+      const h = gs / 2
+      const wallAcross = inRoom(across.at[0], across.at[1] - h) !== inRoom(across.at[0], across.at[1] + h)
+      const wallDown = inRoom(down.at[0] - h, down.at[1]) !== inRoom(down.at[0] + h, down.at[1])
+      if (wallAcross !== wallDown) return wallAcross ? across : down
+    }
+    return Math.abs(p[1] - across.at[1]) <= Math.abs(p[0] - down.at[0]) ? across : down
+  }
+
   const onPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
     const p = toMap(e)
     const hit = shapeAt(e.target)
@@ -542,11 +628,29 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       if (tool === 'label' && locked('labels')) return
       gesture.current = { kind: 'draw', points: [p] }
       setDraft([p])
+    } else if (tool === 'room') {
+      if (locked('paths')) return
+      gesture.current = { kind: 'room', points: [p] }
+      setRoomDraft(roomOf([p, p]))
     } else if (tool === 'rect') {
       gesture.current = { kind: 'rect', start: p }
       setDraft([p, p, p, p])
     } else if (tool === 'stamp' && classic) {
       if (locked('objects') || !Atlas.assets[piece.asset]) return
+      if (battle && Atlas.assets[piece.asset].category === 'dg-doors' && !piece.mix.length) {
+        // a door goes in one at a time, into the wall
+        const door = makePiece(p, { asset: piece.asset, size: piece.size }) as Extract<Shape, { kind: 'asset' }>
+        const snap = snapDoor(p, piece.size)
+        let turn = (snap.turn + (piece.turn === 'random' ? 0 : piece.turn)) % 360
+        // doors open into the room, never into solid rock
+        const inRoom = roomTest(drawing, W, H)
+        const a = (turn * Math.PI) / 180
+        const [dx, dy] = [-Math.sin(a) * gs * 0.4, Math.cos(a) * gs * 0.4]
+        if (inRoom && !inRoom(snap.at[0] + dx, snap.at[1] + dy) && inRoom(snap.at[0] - dx, snap.at[1] - dy)) turn = (turn + 180) % 360
+        const { turn: _, ...rest } = door
+        commit({ ...drawing, shapes: [...drawing.shapes, { ...rest, at: snap.at, ...(turn ? { turn } : {}) }] })
+        return
+      }
       const first = makePiece(p)
       gesture.current = { kind: 'scatter', before: drawing, placed: [first], start: p, at: p, t0: performance.now(), moved: false, fits: scatterFits() }
       setDrawing({ ...drawing, shapes: [...drawing.shapes, first] })
@@ -596,6 +700,11 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       if (Math.hypot(p[0] - last[0], p[1] - last[1]) < 3 * unitsPerPixel()) return
       g.points.push(p)
       setDraft([...g.points])
+    } else if (g.kind === 'room') {
+      const last = g.points[g.points.length - 1]
+      if (Math.hypot(p[0] - last[0], p[1] - last[1]) < 3 * unitsPerPixel()) return
+      g.points.push(p)
+      setRoomDraft(roomOf(roomBrush.shape === 'rect' || roomBrush.shape === 'round' ? [g.points[0], p] : g.points))
     } else if (g.kind === 'rect') {
       const [x0, y0] = g.start
       setDraft([g.start, [p[0], y0], p, [x0, p[1]]])
@@ -631,11 +740,18 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       }
       return
     }
+    if (g.kind === 'room') {
+      setRoomDraft(undefined)
+      const room = roomOf(roomBrush.shape === 'rect' || roomBrush.shape === 'round' ? [g.points[0], g.points[g.points.length - 1]] : g.points)
+      if (room) commit({ ...drawing, rooms: [...(drawing.rooms ?? []), room] })
+      return
+    }
     if (g.kind === 'draw') {
       const pts = simplify(g.points, 1.5 * unitsPerPixel())
       setDraft([])
       if (tool === 'land' && battle) {
-        const stroke = { id: newId(), ground: groundBrush.ground, size: groundBrush.size, points: pts.length > 1 ? pts : [g.points[0]] }
+        const inside = groundBrush.inside && !!drawing.rooms?.length
+        const stroke = { id: newId(), ground: groundBrush.ground, size: groundBrush.size, points: pts.length > 1 ? pts : [g.points[0]], ...(inside ? { inside } : {}) }
         commit({ ...drawing, ground: [...(drawing.ground ?? []), stroke] })
       } else if (tool === 'land') {
         const stroke = { id: newId(), mode: brush.mode, size: brush.size, points: pts.length > 1 ? pts : [g.points[0]] }
@@ -737,6 +853,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
             {classic && tool === 'stamp' && (
               <circle ref={ringRef} className="scatter-ring" r={spray.spread} fill="none" stroke="#e0b354" strokeOpacity={0.7} strokeWidth={1.5 * upp} strokeDasharray={`${5 * upp} ${4 * upp}`} pointerEvents="none" />
             )}
+            {roomDraft && <RoomPreview room={roomDraft} upp={upp} />}
             {draftPath &&
               (tool === 'land' ? (
                 <path
@@ -799,7 +916,8 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
               W={W}
               H={H}
               {...{ terrain, setTerrain, lineStyle, setLineStyle, stamp, setStamp, stampSize, setStampSize, labelText, setLabelText, labelSize, setLabelSize }}
-              {...{ brush, setBrush, piece, setPiece, recent, spray, setSpray, labelFont, setLabelFont, groundBrush, setGroundBrush }}
+              {...{ brush, setBrush, piece, setPiece, recent, spray, setSpray, labelFont, setLabelFont, groundBrush, setGroundBrush, roomBrush, setRoomBrush }}
+              setOutside={(outside) => commit({ ...drawing, outside })}
             />
           )}
           {classic && (
@@ -817,7 +935,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                 </thead>
                 <tbody>
                   {(battle
-                    ? LAYERS.filter((l) => l.id !== 'rivers').map((l) => ({ ...l, label: l.id === 'land' ? 'Ground & water' : l.id === 'paths' ? 'Fences, walls & hedges' : l.label }))
+                    ? LAYERS.filter((l) => l.id !== 'rivers').map((l) => ({ ...l, label: l.id === 'land' ? 'Ground & water' : l.id === 'paths' ? 'Rooms, walls & fences' : l.label }))
                     : LAYERS
                   ).map((l) => (
                     <tr key={l.id}>
@@ -1019,8 +1137,11 @@ function ToolOptions(p: {
   setSpray: (s: { spread: number; thickness: number }) => void
   labelFont: LabelFont
   setLabelFont: (f: LabelFont) => void
-  groundBrush: { ground: GroundId; size: number }
-  setGroundBrush: (b: { ground: GroundId; size: number }) => void
+  groundBrush: GroundBrush
+  setGroundBrush: (b: GroundBrush) => void
+  roomBrush: RoomBrush
+  setRoomBrush: (b: RoomBrush) => void
+  setOutside: (o: 'rock' | 'ground') => void
 }) {
   const classic = p.drawing.style === 'classic'
   const battle = classic && p.drawing.scene === 'battle'
@@ -1033,6 +1154,7 @@ function ToolOptions(p: {
       <h2>
         {def?.label}
         {classic && p.tool === 'land' && <Help topic={battle ? 'groundBrush' : 'landBrush'} />}
+        {p.tool === 'room' && <Help topic="rooms" />}
         {classic && p.tool === 'stamp' && <Help topic="mapPieces" />}
         {classic && p.tool === 'label' && <Help topic="curvedLabels" />}
       </h2>
@@ -1041,7 +1163,7 @@ function ToolOptions(p: {
         <>
           <div className="swatch-grid">
             {(Object.keys(GROUNDS) as GroundId[]).map((g) => (
-              <button key={g} className={p.groundBrush.ground === g ? 'on' : ''} onClick={() => p.setGroundBrush({ ...p.groundBrush, ground: g })}>
+              <button key={g} className={p.groundBrush.ground === g ? 'on' : ''} onClick={() => p.setGroundBrush({ ...p.groundBrush, ground: g, inside: FLOORS.includes(g) })}>
                 <span className="chip" style={{ width: 16, height: 16, background: groundColour(g, tint) }} /> {GROUNDS[g]}
               </button>
             ))}
@@ -1050,6 +1172,63 @@ function ToolOptions(p: {
             Brush size: {p.groundBrush.size}px ({Math.round((p.groundBrush.size / grid) * 5)} ft)
             <input type="range" min={Math.round(grid / 4)} max={grid * 8} value={p.groundBrush.size} onChange={(e) => p.setGroundBrush({ ...p.groundBrush, size: Number(e.target.value) })} />
           </label>
+          {!!p.drawing.rooms?.length && (
+            <label className="check">
+              <input type="checkbox" checked={p.groundBrush.inside} onChange={(e) => p.setGroundBrush({ ...p.groundBrush, inside: e.target.checked })} /> Keep inside the rooms
+            </label>
+          )}
+        </>
+      )}
+      {p.tool === 'room' && (
+        <>
+          <div className="swatch-grid">
+            {ROOM_SHAPES.map((r) => (
+              <button key={r.id} className={p.roomBrush.shape === r.id ? 'on' : ''} title={r.hint} onClick={() => p.setRoomBrush({ ...p.roomBrush, shape: r.id })}>
+                <span aria-hidden>{r.icon}</span> {r.label}
+              </button>
+            ))}
+          </div>
+          <div className="row">
+            <button className={p.roomBrush.mode === 'dig' ? 'primary' : ''} onClick={() => p.setRoomBrush({ ...p.roomBrush, mode: 'dig' })}>
+              Dig out
+            </button>
+            <button className={p.roomBrush.mode === 'fill' ? 'primary' : ''} onClick={() => p.setRoomBrush({ ...p.roomBrush, mode: 'fill' })}>
+              Fill in
+            </button>
+          </div>
+          {p.roomBrush.shape === 'corridor' && (
+            <label>
+              Passage width
+              <select value={p.roomBrush.width} onChange={(e) => p.setRoomBrush({ ...p.roomBrush, width: Number(e.target.value) })}>
+                {[1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n * grid}>
+                    {n * 5} ft
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {p.roomBrush.shape === 'cave' && (
+            <label>
+              Brush size: {Math.round((p.roomBrush.cave / grid) * 5)} ft
+              <input type="range" min={grid} max={grid * 8} step={grid / 2} value={p.roomBrush.cave} onChange={(e) => p.setRoomBrush({ ...p.roomBrush, cave: Number(e.target.value) })} />
+            </label>
+          )}
+          {p.drawing.grid === 'square' && p.roomBrush.shape !== 'cave' && (
+            <label className="check">
+              <input type="checkbox" checked={p.roomBrush.snap} onChange={(e) => p.setRoomBrush({ ...p.roomBrush, snap: e.target.checked })} /> Snap to the squares
+            </label>
+          )}
+          <label>
+            <span>
+              Outside the rooms <Help topic="roomOutside" />
+            </span>
+            <select value={p.drawing.outside ?? 'ground'} onChange={(e) => p.setOutside(e.target.value as 'rock' | 'ground')}>
+              <option value="rock">Solid rock (a dungeon)</option>
+              <option value="ground">The ground (buildings, ruins)</option>
+            </select>
+          </label>
+          <p className="muted small">Doors are in the Place tool: click a wall or a passage's end and the door fits itself to the grid line.</p>
         </>
       )}
       {p.tool === 'land' && !battle && (
@@ -1160,7 +1339,9 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
   const def = Atlas.assets[piece.asset]
   const big = Math.max(W, H)
   const battle = drawing.scene === 'battle'
-  const groups = battle ? BATTLE_GROUPS : ASSET_GROUPS
+  const dungeon = (g: { categories: string[] }) => g.categories.some((c) => c.startsWith('dg-'))
+  // underground, the dungeon pieces come first
+  const groups = !battle ? ASSET_GROUPS : drawing.outside === 'rock' ? [...BATTLE_GROUPS.filter(dungeon), ...BATTLE_GROUPS.filter((g) => !dungeon(g))] : BATTLE_GROUPS
   const [query, setQuery] = useState('')
   const [mixing, setMixing] = useState(piece.mix.length > 0)
   const pool = [piece.asset, ...piece.mix]
@@ -1172,7 +1353,7 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
   const matches = words.length
     ? groups.flatMap((g) =>
         assetNamesIn(g.categories).filter((n) => {
-          const hay = `${Atlas.assets[n].label} ${n.replace(/^bm-/, '').replace(/-/g, ' ')} ${KEYWORDS[n] ?? ''} ${g.label}`.toLowerCase()
+          const hay = `${Atlas.assets[n].label} ${n.replace(/^(bm|dg)-/, '').replace(/-/g, ' ')} ${KEYWORDS[n] ?? ''} ${g.label}`.toLowerCase()
           return words.every((w) => hay.includes(w))
         }),
       )
@@ -1212,7 +1393,7 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
               {grid(shown)}
             </div>
           )}
-          {groups.map((g) => (
+          {groups.filter((g) => assetNamesIn(g.categories).length).map((g) => (
             <details key={g.label} className="piece-group" open={g.categories.includes(def?.category ?? '') || undefined}>
               <summary>{g.label}</summary>
               {grid(assetNamesIn(g.categories))}
@@ -1554,4 +1735,29 @@ function TerrainChip({ terrain }: { terrain: Terrain }) {
 function StampPreview({ stamp }: { stamp: StampKind }) {
   const html = useMemo(() => drawingInnerSvg({ background: 'parchment', grid: 'none', gridSize: 70, shapes: [{ id: 'x', kind: 'stamp', stamp, at: [50, 50], size: 90 }] }, 100, 100), [stamp])
   return <svg viewBox="0 0 100 100" width="40" height="40" aria-hidden dangerouslySetInnerHTML={{ __html: html }} />
+}
+
+/** The outline of a room while it's being dragged out: gold to dig, red to fill in. */
+function RoomPreview({ room, upp }: { room: RoomStroke; upp: number }) {
+  const colour = room.mode === 'dig' ? '#e0b354' : '#d0604a'
+  const fill = room.mode === 'dig' ? 'rgba(224,179,84,.25)' : 'rgba(208,96,74,.25)'
+  const dash = `${6 * upp} ${4 * upp}`
+  const [[ax, ay], [bx, by]] = [room.points[0], room.points[room.points.length - 1]]
+  if (room.shape === 'rect')
+    return <rect x={Math.min(ax, bx)} y={Math.min(ay, by)} width={Math.abs(bx - ax)} height={Math.abs(by - ay)} fill={fill} stroke={colour} strokeWidth={2 * upp} strokeDasharray={dash} pointerEvents="none" />
+  if (room.shape === 'round')
+    return <ellipse cx={(ax + bx) / 2} cy={(ay + by) / 2} rx={Math.abs(bx - ax) / 2} ry={Math.abs(by - ay) / 2} fill={fill} stroke={colour} strokeWidth={2 * upp} strokeDasharray={dash} pointerEvents="none" />
+  const d = room.points.length > 1 ? `M${room.points.map(([x, y]) => `${x} ${y}`).join(' L')}` : `M${ax} ${ay} l0.01 0`
+  return (
+    <path
+      d={d}
+      fill="none"
+      stroke={colour}
+      strokeOpacity={0.45}
+      strokeWidth={room.size}
+      strokeLinecap={room.shape === 'corridor' ? 'square' : 'round'}
+      strokeLinejoin={room.shape === 'corridor' ? 'miter' : 'round'}
+      pointerEvents="none"
+    />
+  )
 }

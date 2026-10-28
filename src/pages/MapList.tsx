@@ -80,7 +80,7 @@ export default function MapList() {
 const SIZES = {
   region: { label: 'World or region (2400 × 1600)', w: 2400, h: 1600, bg: 'sea' as Background, style: 'classic' as MapStyle, scene: 'world' as Scene, ground: 'grass' as GroundId },
   city: { label: 'Town or city (1800 × 1200)', w: 1800, h: 1200, bg: 'grass' as Background, style: 'simple' as MapStyle, scene: 'world' as Scene, ground: 'grass' as GroundId },
-  dungeon: { label: 'Dungeon or building, 5 ft squares (1400 × 1400)', w: 1400, h: 1400, bg: 'stone' as Background, style: 'simple' as MapStyle, scene: 'battle' as Scene, ground: 'paving' as GroundId },
+  dungeon: { label: 'Dungeon, 5 ft squares (1400 × 1400)', w: 1400, h: 1400, bg: 'stone' as Background, style: 'classic' as MapStyle, scene: 'battle' as Scene, ground: 'floor' as GroundId },
   battle: { label: 'Battle map, 5 ft squares (2100 × 1400)', w: 2100, h: 1400, bg: 'grass' as Background, style: 'classic' as MapStyle, scene: 'battle' as Scene, ground: 'grass' as GroundId },
 }
 
@@ -99,6 +99,8 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
           e.preventDefault()
           const { w, h } = SIZES[size]
           const drawing = emptyDrawing(style === 'classic' && scene === 'world' && bg !== 'sea' ? 'parchment' : bg, style, scene, ground)
+          // a dungeon starts as solid rock to dig rooms out of
+          if (size === 'dungeon' && style === 'classic') drawing.outside = 'rock'
           let blob: Blob
           if (style === 'classic') {
             const { renderClassic, classicBlob, loadMapFonts } = await import('../mapArt/classic')
