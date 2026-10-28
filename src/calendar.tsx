@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom'
 import { Help } from './help'
 import { db, type CalDate, type Entity, type Session, type World, type WorldCalendar } from './db'
 import { Ico } from './icons'
-import { CalendarBlank, DiceFive } from '@phosphor-icons/react'
+import { CalendarBlank, Confetti, DiceFive } from '@phosphor-icons/react'
 import { pagePath, worldPath } from './paths'
 import { DraftText } from './components'
 
 /**
  * In-world calendars: month and day names, the era after the year, and moons. Dates are stored as
  * { year, month, day } and turned into a day count for sorting, weekdays and moon phases.
- * Calendars have no leap years, to keep things simple.
+ * Leap years add days to chosen months (or bring in a leap-year-only festival) every so many years.
  */
 
 const months = (list: [string, number][]) => list.map(([name, days]) => ({ name, days }))
@@ -22,9 +22,11 @@ export const CALENDAR_PRESETS: Record<string, { label: string; calendar: WorldCa
       preset: 'harptos',
       months: months([
         ['Hammer', 30], ['Midwinter', 1], ['Alturiak', 30], ['Ches', 30], ['Tarsakh', 30], ['Greengrass', 1], ['Mirtul', 30], ['Kythorn', 30],
-        ['Flamerule', 30], ['Midsummer', 1], ['Eleasis', 30], ['Eleint', 30], ['Highharvestide', 1], ['Marpenoth', 30], ['Uktar', 30],
+        ['Flamerule', 30], ['Midsummer', 1], ['Shieldmeet', 0], ['Eleasis', 30], ['Eleint', 30], ['Highharvestide', 1], ['Marpenoth', 30], ['Uktar', 30],
         ['Feast of the Moon', 1], ['Nightal', 30],
-      ]),
+      ]).map((m) => (m.days <= 1 ? { ...m, festival: true, leapDays: m.name === 'Shieldmeet' ? 1 : undefined } : m)),
+      // Shieldmeet, the day after Midsummer, comes every fourth year.
+      leapEvery: 4,
       // The Realms count days in tendays, without names.
       weekdays: [],
       era: 'DR',
@@ -39,7 +41,9 @@ export const CALENDAR_PRESETS: Record<string, { label: string; calendar: WorldCa
       months: months([
         ['Abadius', 31], ['Calistril', 28], ['Pharast', 31], ['Gozran', 30], ['Desnus', 31], ['Sarenith', 30], ['Erastus', 31], ['Arodus', 31],
         ['Rova', 30], ['Lamashan', 31], ['Neth', 30], ['Kuthona', 31],
-      ]),
+      ]).map((m) => (m.name === 'Calistril' ? { ...m, leapDays: 1 } : m)),
+      // Calistril gets a 29th day every eighth year.
+      leapEvery: 8,
       weekdays: ['Moonday', 'Toilday', 'Wealday', 'Oathday', 'Fireday', 'Starday', 'Sunday'],
       era: 'AR',
       moons: [{ name: 'Somal', cycle: 29.5, offset: 0 }],
@@ -67,7 +71,7 @@ export const CALENDAR_PRESETS: Record<string, { label: string; calendar: WorldCa
       months: months([
         ['Needfest', 7], ['Fireseek', 28], ['Readying', 28], ['Coldeven', 28], ['Growfest', 7], ['Planting', 28], ['Flocktime', 28], ['Wealsun', 28],
         ['Richfest', 7], ['Reaping', 28], ['Goodmonth', 28], ['Harvester', 28], ['Brewfest', 7], ['Patchwall', 28], ['Ready’reat', 28], ['Sunsebb', 28],
-      ]),
+      ]).map((m) => (m.days === 7 ? { ...m, festival: true } : m)),
       weekdays: ['Starday', 'Sunday', 'Moonday', 'Godsday', 'Waterday', 'Earthday', 'Freeday'],
       era: 'CY',
       moons: [
@@ -98,7 +102,8 @@ export const CALENDAR_PRESETS: Record<string, { label: string; calendar: WorldCa
       months: months([
         ['January', 31], ['February', 28], ['March', 31], ['April', 30], ['May', 31], ['June', 30], ['July', 31], ['August', 31],
         ['September', 30], ['October', 31], ['November', 30], ['December', 31],
-      ]),
+      ]).map((m) => (m.name === 'February' ? { ...m, leapDays: 1 } : m)),
+      leapEvery: 4,
       weekdays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
       era: '',
       moons: [{ name: 'The Moon', cycle: 29.53, offset: 0 }],
@@ -118,25 +123,58 @@ export const CALENDAR_PRESETS: Record<string, { label: string; calendar: WorldCa
   },
 }
 
-export const yearLength = (c: WorldCalendar) => c.months.reduce((n, m) => n + Math.max(1, m.days), 0) || 1
+/** A month's days in an ordinary year. Only a leap-year-only festival can have none. */
+const baseDays = (m: WorldCalendar['months'][number]) => (m.leapDays ? Math.max(0, m.days) : Math.max(1, m.days))
+
+/** Whether a year is a leap year (every leapEvery years, counting from year 0). */
+export function isLeap(c: WorldCalendar, year: number) {
+  const every = Math.round(c.leapEvery ?? 0)
+  return every > 0 && ((year % every) + every) % every === 0
+}
+
+/** How many days a month has in a given year (0 for a leap-year festival in an ordinary year). */
+export function monthDays(c: WorldCalendar, month: number, year: number) {
+  const m = c.months[month]
+  if (!m) return 0
+  return baseDays(m) + (isLeap(c, year) ? Math.max(0, m.leapDays ?? 0) : 0)
+}
+
+/** Days in an ordinary (not leap) year. */
+export const yearLength = (c: WorldCalendar) => c.months.reduce((n, m) => n + baseDays(m), 0) || 1
+const leapExtra = (c: WorldCalendar) => (Math.round(c.leapEvery ?? 0) > 0 ? c.months.reduce((n, m) => n + Math.max(0, m.leapDays ?? 0), 0) : 0)
 
 /** Days since day 1 of year 0. */
 export function toDays(c: WorldCalendar, d: CalDate) {
-  let n = d.year * yearLength(c)
-  for (let i = 0; i < Math.min(d.month, c.months.length); i++) n += Math.max(1, c.months[i].days)
+  const extra = leapExtra(c)
+  // Leap years before this one: 0, every, 2 × every… (and the same counting back before year 0).
+  const leaps = extra ? Math.ceil(d.year / Math.round(c.leapEvery!)) : 0
+  let n = d.year * yearLength(c) + leaps * extra
+  for (let i = 0; i < Math.min(d.month, c.months.length); i++) n += monthDays(c, i, d.year)
   return n + d.day - 1
 }
 
 export function fromDays(c: WorldCalendar, n: number): CalDate {
-  const len = yearLength(c)
-  const year = Math.floor(n / len)
-  let rest = n - year * len
+  const extra = leapExtra(c)
+  const start = (year: number) => toDays(c, { year, month: 0, day: 1 })
+  let year = Math.floor(n / (yearLength(c) + (extra ? extra / Math.round(c.leapEvery!) : 0)))
+  while (start(year) > n) year--
+  while (start(year + 1) <= n) year++
+  let rest = n - start(year)
   for (let month = 0; month < c.months.length; month++) {
-    const days = Math.max(1, c.months[month].days)
+    const days = monthDays(c, month, year)
     if (rest < days) return { year, month, day: rest + 1 }
     rest -= days
   }
   return { year, month: 0, day: 1 }
+}
+
+/** The named days (holidays) falling on a date. */
+export const holidaysOn = (c: WorldCalendar, d: CalDate) => (c.holidays ?? []).filter((h) => h.month === d.month && h.day === d.day).map((h) => h.name)
+
+const ordinal = (n: number) => {
+  const s = ['th', 'st', 'nd', 'rd']
+  const v = n % 100
+  return n + (s[(v - 20) % 10] || s[v] || s[0])
 }
 
 export const addDays = (c: WorldCalendar, d: CalDate, n: number) => fromDays(c, toDays(c, d) + n)
@@ -162,20 +200,28 @@ export function formatDate(c: WorldCalendar | undefined, d: CalDate | undefined,
   const m = c.months[d.month]
   if (!m) return `${d.year}`
   const wd = withWeekday ? weekday(c, d) : ''
-  // One-day months (festivals) read better without a day number.
-  const day = m.days <= 1 ? m.name : `${d.day} ${m.name}`
+  // One-day months and festivals read better without a day number; longer festivals count their days.
+  const day = monthDays(c, d.month, d.year) <= 1 ? m.name : m.festival ? `${ordinal(d.day)} day of ${m.name}` : `${d.day} ${m.name}`
   return `${wd ? `${wd}, ` : ''}${day} ${d.year}${c.era ? ` ${c.era}` : ''}`
 }
 
 /** Pick a year, month and day on the world's calendar. */
 export function CalDateInput({ calendar, value, onChange }: { calendar: WorldCalendar; value?: CalDate; onChange: (d: CalDate | undefined) => void }) {
   const d = value ?? calendar.today ?? { year: 1, month: 0, day: 1 }
-  const month = calendar.months[d.month]
+  // A leap-year-only festival in an ordinary year moves on to the next month.
+  const fit = (x: CalDate): CalDate => {
+    for (let i = 0; i < calendar.months.length; i++) {
+      const month = (x.month + i) % calendar.months.length
+      const days = monthDays(calendar, month, x.year)
+      if (days > 0) return { ...x, month, day: Math.min(Math.max(1, i ? 1 : x.day), days) }
+    }
+    return x
+  }
   return (
     <span className="row cal-input">
       <select value={value ? d.day : ''} onChange={(e) => onChange(e.target.value ? { ...d, day: Number(e.target.value) } : undefined)} aria-label="Day">
         <option value="">Day</option>
-        {Array.from({ length: Math.max(1, month?.days ?? 1) }, (_, i) => (
+        {Array.from({ length: Math.max(1, monthDays(calendar, d.month, d.year)) }, (_, i) => (
           <option key={i} value={i + 1}>
             {i + 1}
           </option>
@@ -185,24 +231,25 @@ export function CalDateInput({ calendar, value, onChange }: { calendar: WorldCal
         value={value ? d.month : ''}
         onChange={(e) => {
           if (e.target.value === '') return onChange(undefined)
-          const m = Number(e.target.value)
-          onChange({ ...d, month: m, day: Math.min(d.day, Math.max(1, calendar.months[m]?.days ?? 1)) })
+          onChange(fit({ ...d, month: Number(e.target.value) }))
         }}
         aria-label="Month"
       >
         <option value="">Month</option>
-        {calendar.months.map((m, i) => (
-          <option key={i} value={i}>
-            {m.name}
-          </option>
-        ))}
+        {calendar.months.map((m, i) =>
+          monthDays(calendar, i, d.year) > 0 || i === d.month ? (
+            <option key={i} value={i}>
+              {m.name}
+            </option>
+          ) : null,
+        )}
       </select>
       <input
         type="number"
         className="year-input"
         value={value ? d.year : ''}
         placeholder="Year"
-        onChange={(e) => onChange(e.target.value === '' ? undefined : { ...d, year: Math.round(Number(e.target.value)) })}
+        onChange={(e) => onChange(e.target.value === '' ? undefined : fit({ ...d, year: Math.round(Number(e.target.value)) }))}
         aria-label="Year"
       />
       {calendar.era && <span className="muted">{calendar.era}</span>}
@@ -271,20 +318,59 @@ export function CalendarEditor({ world }: { world: World }) {
           </div>
           <details>
             <summary>
-              Months ({c.months.length}, {yearLength(c)} days a year)
+              Months and festivals ({c.months.length}, {yearLength(c)} days a year{leapExtra(c) ? `, ${yearLength(c) + leapExtra(c)} in a leap year` : ''})
             </summary>
+            <label className="inline-check small">
+              Leap year every
+              <input
+                type="number"
+                min={0}
+                className="year-input"
+                value={c.leapEvery ?? 0}
+                onChange={(e) => change({ leapEvery: Math.max(0, Math.round(Number(e.target.value) || 0)) || undefined })}
+                aria-label="Leap year every how many years"
+              />
+              years (0 for none) <Help topic="leapYears" />
+            </label>
             {c.months.map((m, i) => (
-              <div key={i} className="row field-row">
+              <div key={i} className="row field-row wrap">
                 <DraftText value={m.name} onCommit={(name) => change({ months: c.months.map((x, j) => (j === i ? { ...x, name } : x)) })} aria-label="Month name" />
                 <input
                   type="number"
-                  min={1}
+                  min={m.leapDays ? 0 : 1}
                   className="year-input"
                   value={m.days}
-                  onChange={(e) => change({ months: c.months.map((x, j) => (j === i ? { ...x, days: Math.max(1, Number(e.target.value) || 1) } : x)) })}
+                  onChange={(e) => change({ months: c.months.map((x, j) => (j === i ? { ...x, days: Math.max(x.leapDays ? 0 : 1, Number(e.target.value) || 0) } : x)) })}
                   aria-label="Days"
                 />
                 <span className="muted small">days</span>
+                {!!c.leapEvery && (
+                  <>
+                    <span className="muted small">+</span>
+                    <input
+                      type="number"
+                      min={0}
+                      className="year-input"
+                      value={m.leapDays ?? 0}
+                      onChange={(e) =>
+                        change({
+                          months: c.months.map((x, j) => {
+                            if (j !== i) return x
+                            const leapDays = Math.max(0, Math.round(Number(e.target.value) || 0)) || undefined
+                            return { ...x, leapDays, days: leapDays ? x.days : Math.max(1, x.days) }
+                          }),
+                        })
+                      }
+                      aria-label="Extra days in a leap year"
+                      title="Extra days in a leap year"
+                    />
+                    <span className="muted small">in a leap year</span>
+                  </>
+                )}
+                <label className="inline-check small" title="A festival between months: its days read “Midwinter” or “3rd day of Needfest”">
+                  <input type="checkbox" checked={!!m.festival} onChange={(e) => change({ months: c.months.map((x, j) => (j === i ? { ...x, festival: e.target.checked || undefined } : x)) })} />
+                  festival
+                </label>
                 <button type="button" className="ghost" disabled={c.months.length < 2} onClick={() => change({ months: c.months.filter((_, j) => j !== i) })}>
                   ×
                 </button>
@@ -292,6 +378,35 @@ export function CalendarEditor({ world }: { world: World }) {
             ))}
             <button type="button" onClick={() => change({ months: [...c.months, { name: `Month ${c.months.length + 1}`, days: 30 }] })}>
               + Month
+            </button>
+          </details>
+          <details>
+            <summary>Holidays ({c.holidays?.length ?? 0})</summary>
+            <p className="muted small">Named days that come round every year. They show with the date and on the calendar.</p>
+            {(c.holidays ?? []).map((h, i) => (
+              <div key={i} className="row field-row wrap">
+                <DraftText value={h.name} onCommit={(name) => change({ holidays: c.holidays!.map((x, j) => (j === i ? { ...x, name } : x)) })} aria-label="Holiday name" />
+                <select value={h.day} onChange={(e) => change({ holidays: c.holidays!.map((x, j) => (j === i ? { ...x, day: Number(e.target.value) } : x)) })} aria-label="Day">
+                  {Array.from({ length: Math.max(1, baseDays(c.months[h.month] ?? { name: '', days: 1 }) + (c.months[h.month]?.leapDays ?? 0)) }, (_, d) => (
+                    <option key={d} value={d + 1}>
+                      {d + 1}
+                    </option>
+                  ))}
+                </select>
+                <select value={h.month} onChange={(e) => change({ holidays: c.holidays!.map((x, j) => (j === i ? { ...x, month: Number(e.target.value), day: 1 } : x)) })} aria-label="Month">
+                  {c.months.map((m, j) => (
+                    <option key={j} value={j}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" className="ghost" onClick={() => change({ holidays: c.holidays!.filter((_, j) => j !== i) })}>
+                  ×
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={() => change({ holidays: [...(c.holidays ?? []), { name: 'Holiday', month: c.today?.month ?? 0, day: c.today?.day ?? 1 }] })}>
+              + Holiday
             </button>
           </details>
           <details>
@@ -309,13 +424,19 @@ export function CalendarEditor({ world }: { world: World }) {
                   aria-label="Days per cycle"
                 />
                 <span className="muted small">days round</span>
+                <span className="muted small">full on</span>
+                <CalDateInput
+                  calendar={c}
+                  value={fromDays(c, Math.round(m.offset))}
+                  onChange={(d) => d && change({ moons: c.moons.map((x, j) => (j === i ? { ...x, offset: toDays(c, d) } : x)) })}
+                />
                 <button
                   type="button"
                   className="small"
                   title="Make today a full moon"
                   onClick={() => c.today && change({ moons: c.moons.map((x, j) => (j === i ? { ...x, offset: toDays(c, c.today!) } : x)) })}
                 >
-                  Full today
+                  Today
                 </button>
                 <button type="button" className="ghost" onClick={() => change({ moons: c.moons.filter((_, j) => j !== i) })}>
                   ×
@@ -361,6 +482,11 @@ export function WorldToday({ world, isGM }: { world: World; isGM: boolean }) {
       <span>
         <Ico as={CalendarBlank} /> <strong>{formatDate(c, c.today)}</strong> <Help topic="worldToday" />
       </span>
+      {holidaysOn(c, c.today).map((h) => (
+        <span key={h} className="holiday small">
+          <Ico as={Confetti} /> {h}
+        </span>
+      ))}
       {c.moons.map((m) => (
         <span key={m.name} className="muted small">
           {moonPhase(m, days)} {m.name.toLowerCase().startsWith('the ') ? m.name.toLowerCase() : m.name}
@@ -377,7 +503,7 @@ export function WorldToday({ world, isGM }: { world: World; isGM: boolean }) {
           <button className="small" onClick={() => move(week)}>
             +1 {c.weekdays.length ? 'week' : 'tenday'}
           </button>
-          <button className="small" onClick={() => move(Math.max(1, c.months[c.today!.month]?.days ?? 30))}>
+          <button className="small" onClick={() => move(Math.max(1, monthDays(c, c.today!.month, c.today!.year) || 30))}>
             +1 month
           </button>
         </span>
@@ -391,18 +517,24 @@ export function MonthGrid({ world, events, sessions }: { world: World; events: E
   const c = world.calendar!
   const [at, setAt] = useState<{ year: number; month: number }>(() => ({ year: c.today?.year ?? 1, month: c.today?.month ?? 0 }))
   const month = c.months[at.month] ?? c.months[0]
+  const days = Math.max(1, monthDays(c, at.month, at.year))
   const cols = c.weekdays.length || 10
   const first = toDays(c, { year: at.year, month: at.month, day: 1 })
   const lead = c.weekdays.length ? (((first + (c.weekdayOffset ?? 0)) % cols) + cols) % cols : 0
   const step = (dir: 1 | -1) => {
-    let m = at.month + dir
+    let m = at.month
     let y = at.year
-    if (m < 0) {
-      m = c.months.length - 1
-      y--
-    } else if (m >= c.months.length) {
-      m = 0
-      y++
+    // Skip a leap-year-only festival in an ordinary year.
+    for (let tries = 0; tries <= c.months.length; tries++) {
+      m += dir
+      if (m < 0) {
+        m = c.months.length - 1
+        y--
+      } else if (m >= c.months.length) {
+        m = 0
+        y++
+      }
+      if (monthDays(c, m, y) > 0) break
     }
     setAt({ year: y, month: m })
   }
@@ -417,6 +549,7 @@ export function MonthGrid({ world, events, sessions }: { world: World; events: E
         <strong>
           {month.name} {at.year}
           {c.era ? ` ${c.era}` : ''}
+          {month.festival && <span className="muted small"> · festival</span>}
         </strong>
         <button className="ghost" onClick={() => step(1)} aria-label="Next month">
           ›
@@ -431,13 +564,19 @@ export function MonthGrid({ world, events, sessions }: { world: World; events: E
         {Array.from({ length: lead }, (_, i) => (
           <div key={`x${i}`} />
         ))}
-        {Array.from({ length: Math.max(1, month.days) }, (_, i) => {
+        {Array.from({ length: days }, (_, i) => {
           const day = i + 1
           const evs = events.filter((e) => on(e.eventWhen, day))
           const ses = sessions.filter((s) => on(s.worldDate, day))
+          const named = holidaysOn(c, { year: at.year, month: at.month, day })
           return (
-            <div key={day} className={`month-day ${isToday(day) ? 'today' : ''}`}>
+            <div key={day} className={`month-day ${isToday(day) ? 'today' : ''} ${month.festival ? 'festival' : ''}`}>
               <span className="month-num">{day}</span>
+              {named.map((h) => (
+                <span key={h} className="month-item holiday">
+                  <Ico as={Confetti} /> {h}
+                </span>
+              ))}
               {ses.map((s) => (
                 <Link key={s.id} className="month-item session" to={`${worldPath(world.id)}/s/${s.id}`}>
                   <Ico as={DiceFive} /> #{s.number}

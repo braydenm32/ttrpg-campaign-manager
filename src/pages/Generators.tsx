@@ -16,6 +16,7 @@ import {
   type ShopKind,
 } from '../generators'
 import { useVisibleEntities, useWorld } from '../hooks'
+import { GeneratorFlavour, keepSecretsSecret } from '../ai/Flavour'
 import { Markdown } from '../Markdown'
 import { TablesPanel } from '../tables'
 import { Ico } from '../icons'
@@ -25,7 +26,7 @@ import { pagePath, typePath } from '../paths'
 type Kind = 'tavern' | 'shop' | 'npc'
 
 export default function Generators() {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const navigate = useNavigate()
   const entities = useVisibleEntities(worldId)
   const [kind, setKind] = useState<Kind>('tavern')
@@ -33,8 +34,10 @@ export default function Generators() {
   const [place, setPlace] = useState<GeneratedPlace>(() => generateTavern())
   const [npc, setNpc] = useState<GeneratedNpc>(() => generateNpc())
   const [parentId, setParentId] = useState('')
+  const [flavour, setFlavour] = useState('')
 
   const reroll = (k = kind, sk = shopKind) => {
+    setFlavour('')
     if (k === 'tavern') setPlace(generateTavern())
     else if (k === 'shop') setPlace(generateShop(sk))
     else setNpc(generateNpc())
@@ -42,14 +45,16 @@ export default function Generators() {
 
   const save = async () => {
     const created = kind === 'npc' ? [npcToEntity(worldId, npc, parentId || undefined)] : placeToEntities(worldId, place, parentId || undefined)
+    if (flavour) created[0].body = `${created[0].body.trim()}\n\n${keepSecretsSecret(flavour)}`
     await db.entities.bulkAdd(created)
     navigate(`${pagePath(worldId, created[0].id)}`)
   }
 
-  const preview =
+  const rolled =
     kind === 'npc'
       ? `## ${npc.name}\n\n${npcMarkdown(npc)}\n\n> ${npcGreeting(npc)}`
       : `## ${place.name}\n\n${place.body}\n\n> **${place.keeper.name}:** ${npcGreeting(place.keeper)}`
+  const preview = flavour ? `${rolled}\n\n${keepSecretsSecret(flavour)}` : rolled
 
   return (
     <div className="page">
@@ -111,6 +116,7 @@ export default function Generators() {
           Save to world
         </button>
       </div>
+      {world && !flavour && <GeneratorFlavour world={world} entities={entities} preview={rolled} parentId={parentId || undefined} onUse={setFlavour} />}
       <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
     </div>
   )

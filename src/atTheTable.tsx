@@ -6,7 +6,7 @@ import { answerSignal, gmIdOf, linkAsHost, linkAsPlayer, publishTable, sendSigna
 import { useCharacterOwners } from './players/owners'
 import { usePlaying } from './sound/player'
 import { Ico } from './icons'
-import { Coffee, DiceFive, HandWaving, Sparkle, Sword } from '@phosphor-icons/react'
+import { Coffee, DiceFive, HandWaving, Sparkle, Sword, Timer } from '@phosphor-icons/react'
 
 /**
  * The live table, both ends: the GM's app tells players what's happening (TableHost) and hears
@@ -246,6 +246,65 @@ export function RollDetail({ text }: { text: string }) {
   return (
     <>
       {text.split(/~~(\d+)~~/).map((part, i) => (i % 2 ? <s key={i}>{part}</s> : <span key={i}>{part}</span>))}
+    </>
+  )
+}
+
+/** The time now, updated every so often (for countdowns). */
+export function useNow(every = 1000, on = true) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (!on) return
+    const t = setInterval(() => setNow(Date.now()), every)
+    return () => clearInterval(t)
+  }, [every, on])
+  return now
+}
+
+/** Milliseconds left on a timer: counting down while running, frozen while paused. */
+export const timeLeft = (t: { endsAt?: number; left?: number }, now: number) => Math.max(0, t.endsAt !== undefined ? t.endsAt - now : (t.left ?? 0))
+
+/** "4:05", or "1:02:00" for long ones. */
+export function clockText(ms: number) {
+  const total = Math.ceil(ms / 1000)
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const sec = String(total % 60).padStart(2, '0')
+  return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`
+}
+
+/** Countdowns the GM is running, as players see them. */
+export function TimerList({ timers }: { timers: NonNullable<TableState['timers']> }) {
+  const now = useNow(500, timers.some((t) => t.endsAt !== undefined))
+  return (
+    <ul className="timer-list">
+      {timers.map((t) => {
+        const left = timeLeft(t, now)
+        return (
+          <li key={t.id} className={left === 0 ? 'done' : t.endsAt === undefined ? 'paused' : ''}>
+            <Ico as={Timer} /> <span>{t.label || 'Timer'}</span>
+            <b className="timer-time">{left === 0 ? 'Time’s up' : clockText(left)}</b>
+            {t.endsAt === undefined && left > 0 && <span className="small muted">paused</span>}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+/** Timers in a line, for the strip at the top of the Common Room. */
+export function TimerInline({ timers }: { timers: NonNullable<TableState['timers']> }) {
+  const now = useNow(1000, timers.some((t) => t.endsAt !== undefined))
+  return (
+    <>
+      {timers.map((t) => {
+        const left = timeLeft(t, now)
+        return (
+          <span key={t.id} className={left === 0 ? 'timer-done' : ''}>
+            <Ico as={Timer} /> {t.label || 'Timer'}: {left === 0 ? 'time’s up' : clockText(left)}
+          </span>
+        )
+      })}
     </>
   )
 }

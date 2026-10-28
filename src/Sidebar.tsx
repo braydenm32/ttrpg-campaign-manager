@@ -22,6 +22,7 @@ import {
   Plus,
   BookOpen,
   BookBookmark,
+  Books,
 } from '@phosphor-icons/react'
 import { db, ENTITY_LABELS, ENTITY_TYPES, type CustomType, type Entity, type EntityType } from './db'
 import { useVisibleEntities, useWorld } from './hooks'
@@ -50,7 +51,7 @@ export function modeOf(pathname: string, isGM: boolean): WorldMode | undefined {
   if (first === 'settings') return undefined
   if (!isGM) return 'table'
   if (first === 's' && rest.endsWith('/lectern')) return 'play'
-  if (['c', 's', 'threads', 'generators', 'boards', 'handouts'].includes(first)) return 'prep'
+  if (['c', 's', 'threads', 'generators', 'archivist', 'boards', 'handouts'].includes(first)) return 'prep'
   return 'play'
 }
 
@@ -337,6 +338,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
           'Tools',
           HELP.prepTools,
           <>
+            <NavLink to={`${worldPath(worldId)}/archivist`} title={HELP.archivist}><Ico as={Books} /> The Archivist</NavLink>
             <NavLink to={`${worldPath(worldId)}/generators`} title={HELP.generators}><Ico as={DiceFive} /> Generators &amp; tables</NavLink>
             <NavLink to={`${worldPath(worldId)}/boards`} title={HELP.boards}><Ico as={PushPin} /> Corkboards</NavLink>
           </>,

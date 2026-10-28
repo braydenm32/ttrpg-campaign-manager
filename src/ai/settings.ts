@@ -13,10 +13,14 @@ export interface AiSettings {
   deviceModel: 'base' | 'small'
   /** Language spoken at the table; "auto" lets the transcriber guess. */
   language: 'en' | 'auto'
+  /** The device voice for reading recaps aloud (its voiceURI); empty picks the device's default. */
+  voice: string
+  /** Reading speed, 1 is normal. */
+  voiceRate: number
 }
 
 const KEY = 'codex.ai'
-const DEFAULTS: AiSettings = { anthropicKey: '', assemblyKey: '', deviceModel: 'base', language: 'en' }
+const DEFAULTS: AiSettings = { anthropicKey: '', assemblyKey: '', deviceModel: 'base', language: 'en', voice: '', voiceRate: 1 }
 const listeners = new Set<() => void>()
 let cached: AiSettings | undefined
 

@@ -11,10 +11,11 @@ The order of these items is a starting point and will change as we see what matt
 - From the October review: a recently deleted bin, `.codex.zip` backups, search everywhere (Ctrl/⌘K), a folding phone menu, pictures inside text, GM-only details and tags, nicknames and rename-safe links, hidden campaigns, "what's new" for players, backup reminders and a tidy public wiki.
 - Round two: handouts and "reveal and show", an end-of-session checklist that starts the next session where you left off (leftover clues and scenes carry over), a player home page, recordings that save as they go and survive a crash, the party per campaign, "track as thread" on quests, a grouped menu and settings tabs, time zones for session dates, group notes that can't overwrite each other, private live channels, and a keep-alive for the free cloud.
 - The Common Room: players' front page and seat at the table, with tabs for the overview, the scene, their character, the party, leads and notes. While the GM runs a session from the Lectern it shows the scene, the music and the turn order (with a "your turn" alert), dice the whole table sees, "I'd like to do something" and "I need a break" signals, inspiration the GM hands out, and a countdown to the next session.
+- Typing `@` or `[[` to link a page, Lectern timers players can see, the GM replying in the party's notes, players writing up their own new characters for the GM to approve, calendar leap years, festivals and holidays (with moons set from a full-moon date), and a fuller "what's new" that also flags handouts, changed recaps and what changed on pages players already had.
 
 ## Next up
 
-- **Players, next steps:** invite links, claiming a character, per-player reveals (pages and `:::for` passages), and private or group notes plus a party scratchpad are built. Still to come: per-player map pins, and the GM replying in the group notes.
+- **Players, next steps:** invite links, claiming a character, per-player reveals (pages and `:::for` passages), and private or group notes plus a party scratchpad are built. Still to come: per-player map pins.
 - **Map builder, Dungeondraft-style (in stages):**
   - Stage 1 (built): classic hand-inked world maps. Paint land and sea, automatic ragged coastlines, rivers, roads and borders, a library of hand-drawn pieces (mountains, forests, towns, ships, compass roses) with 8 previewable versions each, a click-and-hold scatter brush, curved labels, layers to hide or lock, three looks (ink on parchment, ink on white, coloured) and biome tints.
   - Battle maps (built): the same hand-drawn style seen from above on a 5 ft grid. Paint the ground (grass, dirt, sand, rocky ground, mud, snow, paving, water) with soft uneven edges and inked banks, fences, hedges, stone walls and cliff edges, and 39 top-down pieces (trees, plants, rocks, camp gear, village things, buildings, bridges) with 8 versions of each made thing.
@@ -25,9 +26,8 @@ The order of these items is a starting point and will change as we see what matt
   - Stage 6 (built): GM-only secrets on drawn maps. Four red-ink marks with 8 versions each (secret door, trap, hidden treasure, danger), a "GM only" tick on any piece, line or label, and secret rooms and passages. Maps with secrets save a second, players' copy of the picture; players, fog of war and Show to players only ever get that one (the server never sends the GM's copy). "Players found it" turns a secret door into a normal door and opens the secret rooms behind it. Export asks which copy to download.
   - Stage 7 (built): bird's-eye town maps, a per-map switch under Map settings ("Buildings: From above / Bird's-eye"). The plan stays exactly where it was drawn; houses, manors, guildhalls, castles, churches, town walls with their towers and gatehouses, trees, wells, fences, garden walls, hedges, market stalls, tents and carts stand up off it, the way old engraved town views do. Each piece draws its flat ground first and then its standing parts far to near; the whole map sorts pieces the same way. Not yet standing: harbour and farmland pieces (docks, boats, field walls) and battle-map pieces other than trees placed on a town map, which stay flat.
   - Later: lighting, editing on phones, drawing on top of an uploaded map, custom colours.
-- **Rich text editor** with `@`-mention autocomplete for links.
-- **Lectern extras:** timers, and system-specific initiative rules once game systems arrive.
-- **Calendar extras:** leap years and festivals that don't count as months, and moons that line up with published dates.
+- **Rich text editor** (links already autocomplete as you type `@` or `[[`).
+- **Lectern extras:** system-specific initiative rules once game systems arrive.
 - **Mobile apps** (iOS and Android) built from the Tauri project.
 - **Imports and exports:** Foundry VTT journals and pins (Obsidian, Kanka and World Anvil imports are built).
 
@@ -36,7 +36,7 @@ The order of these items is a starting point and will change as we see what matt
 Ideas we looked at and chose to leave for later:
 
 - **Lectern and sessions:** stat blocks in the combat list (with the game-system packs), a "party is here" marker on maps, player notes on sessions.
-- **Players:** making their own character (with a portrait) for the GM to approve, one writing box on a player's own character instead of three, hiding empty sections from players' menus, page links you can copy for players, "what's new" also flagging recaps and pages that changed.
+- **Players:** a portrait on a player's new character, one writing box on a player's own character instead of three, hiding empty sections from players' menus, page links you can copy for players.
 - **Secrets (low risk):** a warning when a `:::for` first name matches two characters, and "recently updated" not hinting at secret edits.
 - **Bigger choices:** pages that belong to a campaign (we filter the party instead), merging quests and loose threads, desktop polish (saving files on a Mac, auto-updates) and the phone apps.
 - **Behind the scenes:** transcripts in their own table, smarter sync that only looks at changed rows, and storage limits per user before anyone pays.
@@ -51,14 +51,12 @@ Built: session transcripts (on-device with Whisper, or AssemblyAI in the cloud w
 
 Built: world updates from a session. In the same Claude run as the recap, Claude compares the transcript with every page (names, nicknames, one-line summaries, quest states and timeline dates) and suggests new pages for anything improvised, lines for existing pages, quest progress, relationships, timeline events, deaths and captures, loot changing hands, loose threads and things that contradict the notes. The GM ticks and edits them, then applies them in one go; each change is listed in the Chronicle (per session, GM-only) and kept in page history. Pages also show the sessions that link them and, for the GM, where their name was heard in a transcript (click to play that moment). Speaker names are remembered from the last session.
 
-Still parked (each needs an AI provider):
+Built: the Archivist (Prep → Tools). "Ask your world" is a chat with Claude that reads the pages and sessions it needs (with tools that run on the GM's device) and answers only from the GM's notes, with links. "Check for contradictions" reads the whole world, or one page and its neighbours, and lists where the notes disagree, with fixes to tick off.
+
+Built: a prep helper on each session's Prep tab (strong start, scenes, secrets and clues, who to have ready, from the last two sessions, the party, open threads and clocks), Claude flavour for generated taverns, shops and people, "lines in character" on NPC pages, recaps read aloud with the device's own voices (free, in the Common Room, on sessions and as "Previously on…" in the Lectern), and spotlight stats on each session (talk time per speaker and how often each character came up). Every Claude tool also works free with "Copy for Claude".
+
+Still parked:
 
 - Speaker names for on-device transcripts
-- A whole-world continuity check (per-session contradictions are already part of world updates)
-- AI flavour for generators, and improvised NPC dialogue in character
-- "Ask your world": chat that answers only from your own notes
-- A continuity checker that flags contradictions
-- A prep helper that gathers the relevant NPCs, hooks and secrets for next session
-- Reading recaps aloud ("Previously on…")
 - Portrait and location art generation
-- Spotlight stats (who got screen time), from transcripts
+- Letting players ask the Archivist about what they know

@@ -43,6 +43,7 @@ import Threads from './pages/Threads'
 import Scratchpad from './pages/Scratchpad'
 import Assets from './pages/Assets'
 const Generators = lazy(() => import('./pages/Generators'))
+const Archivist = lazy(() => import('./ai/Archivist'))
 import PartyLoot from './pages/PartyLoot'
 const WorldSettings = lazy(() => import('./pages/WorldSettings'))
 const PrintPage = lazy(() => import('./print'))
@@ -55,6 +56,7 @@ import ClocksPage from './clocks'
 import SafetyPage, { XCardAlert, XCardButton } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
 import { PlayerTableLink, TableHost, TableSignals } from './atTheTable'
+import { NewCharacterRequestsBanner } from './players/NewCharacters'
 import Handouts from './pages/Handouts'
 import { hashRouting, pagePath, setPages, tidyPath, usePathsVersion, worldPath } from './paths'
 
@@ -101,6 +103,7 @@ export default function App() {
             <Route path="s/:sessionId/lectern" element={<Lectern />} />
             <Route path="assets" element={<Assets />} />
             <Route path="generators" element={<Generators />} />
+            <Route path="archivist" element={<Archivist />} />
             <Route path="settings" element={<WorldSettings />} />
             <Route path="boards" element={<Boards />} />
             <Route path="boards/:boardId" element={<BoardView />} />
@@ -413,6 +416,7 @@ function WorldShell() {
         {memberOf && <ShowingPopup world={world} />}
         {isGM && !shared && <ShowingBanner world={world} />}
         {isGM && !shared && world.cloud?.enabled && <ClaimRequestsBanner world={world} />}
+        {isGM && !shared && world.cloud?.enabled && <NewCharacterRequestsBanner world={world} />}
         {!shared && <XCardAlert world={world} />}
         {!shared && world.cloud?.enabled && <TableHost world={world} />}
         {isGM && !shared && world.cloud?.enabled && <TableSignals world={world} />}

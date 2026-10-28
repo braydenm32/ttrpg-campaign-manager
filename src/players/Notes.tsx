@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Help } from '../help'
 import { useAuthSession } from '../cloud/auth'
-import { listGroupNotes, savePlayerNote, type NoteClash } from '../cloud/players'
+import { listGroupNotes, replyInGroupNotes, savePlayerNote, type NoteClash } from '../cloud/players'
+import { cloudErrorMessage } from '../cloud/client'
 import type { Entity, PlayerNote, World } from '../db'
 import { Markdown } from '../Markdown'
 import { Ico } from '../icons'
@@ -239,11 +240,67 @@ function GmGroupNotes({ world, entityId, entities, big }: { world: World; entity
       </span>
       {note?.body ? (
         <div className="side-box">
-          <Markdown text={note.body} entities={entities} worldId={world.id} showSecrets={false} />
+          <NotesText text={note.body} entities={entities} worldId={world.id} />
         </div>
       ) : (
         <p className="muted">{notes ? 'Nothing yet.' : user ? 'Loading…' : 'Sign in to see your players’ notes.'}</p>
       )}
+      {user && notes && <GmReply worldId={world.id} entityId={entityId} onSent={load} />}
     </section>
   )
 }
+
+/** The GM adds a line to the party's notes, signed "GM". */
+function GmReply({ worldId, entityId, onSent }: { worldId: string; entityId: string; onSent: () => void }) {
+  const [line, setLine] = useState('')
+  const [state, setState] = useState('')
+  return (
+    <form
+      className="row gm-reply"
+      onSubmit={async (e) => {
+        e.preventDefault()
+        if (!line.trim()) return
+        setState('Sending…')
+        try {
+          await replyInGroupNotes(worldId, entityId, line.trim())
+          setLine('')
+          setState('')
+          onSent()
+        } catch (err) {
+          setState(cloudErrorMessage(err))
+        }
+      }}
+    >
+      <input value={line} onChange={(e) => setLine(e.target.value)} placeholder="Reply in their notes (signed GM)" aria-label="Reply in the party’s notes" maxLength={2000} />
+      <button disabled={!line.trim()}>Reply</button>
+      <Help topic="gmReply" />
+      {state && <span className="small muted">{state}</span>}
+    </form>
+  )
+}
+
+/** The party's notes, with the GM's replies set apart. */
+export function NotesText({ text, entities, worldId }: { text: string; entities: Entity[]; worldId: string }) {
+  // Runs of ordinary lines render together (so lists and paragraphs hold); each GM line stands out.
+  const parts: { gm: boolean; text: string }[] = []
+  for (const line of text.split('\n')) {
+    const gm = GM_LINE.test(line)
+    const last = parts[parts.length - 1]
+    if (!gm && last && !last.gm) last.text += '\n' + line
+    else parts.push({ gm, text: gm ? line.replace(GM_LINE, '') : line })
+  }
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.gm ? (
+          <div key={i} className="gm-line">
+            <b>GM:</b> <Markdown text={p.text} entities={entities} worldId={worldId} showSecrets={false} />
+          </div>
+        ) : (
+          <Markdown key={i} text={p.text} entities={entities} worldId={worldId} showSecrets={false} />
+        ),
+      )}
+    </>
+  )
+}
+const GM_LINE = /^\s*[-*]\s+\*\*GM:\*\*\s*/

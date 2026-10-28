@@ -152,7 +152,18 @@ export interface SharedInfo {
   /** For joined worlds: your own questions to the GM, and the answers. */
   questions?: PlayerQuestion[]
   /** What arrived since the player last said "got it": newly revealed pages and sessions, and answers to their questions. */
-  news?: { entityIds: string[]; sessionIds: string[]; questionIds: string[] }
+  /**
+   * What's new since the player last said "got it": pages and sessions revealed, answers, and (by
+   * page) what changed on pages they already had, recaps that changed, and new handouts.
+   */
+  news?: {
+    entityIds: string[]
+    sessionIds: string[]
+    questionIds: string[]
+    changed?: Record<string, string[]>
+    recapIds?: string[]
+    handoutIds?: string[]
+  }
   /** A fingerprint of what last arrived, so a refresh that brings nothing new doesn't rewrite the copy. */
   hash?: string
 }
@@ -214,7 +225,16 @@ export interface CalDate {
 export interface WorldCalendar {
   /** Which ready-made calendar this started from, if any. */
   preset?: string
-  months: { name: string; days: number }[]
+  /**
+   * Months in order. A festival is a named stretch of days between months (Midwinter, Needfest):
+   * dates in it read "Midwinter" or "3rd day of Needfest". leapDays are added in leap years; a
+   * festival that only happens in leap years (Shieldmeet) has 0 days and 1 leap day.
+   */
+  months: { name: string; days: number; leapDays?: number; festival?: boolean }[]
+  /** Leap years come every this many years, counting from year 0. Unset or 0: no leap years. */
+  leapEvery?: number
+  /** Named days that come round every year (holidays, feast days), shown with the date. */
+  holidays?: { name: string; month: number; day: number }[]
   /** Day names, in order. Empty for calendars without named days (dates then show without one). */
   weekdays: string[]
   /** Written after the year, like "DR" or "AR". */
@@ -608,6 +628,16 @@ export interface LecternState {
    * that, with names, and the GM's own rolls kept private.
    */
   share?: { off?: boolean; hideNames?: boolean; noMusic?: boolean; rolls?: boolean }
+  /** Countdowns ("the bridge falls in 3 minutes"): endsAt while running, left (ms) while paused. Hidden ones aren't shown to players. */
+  timers?: LecternTimer[]
+}
+
+export interface LecternTimer {
+  id: string
+  label: string
+  endsAt?: number
+  left?: number
+  hidden?: boolean
 }
 
 export const blankLectern = (): LecternState => ({ sceneText: '', presentIds: [], combat: { round: 0, combatants: [] }, rolls: [] })

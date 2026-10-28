@@ -1,6 +1,7 @@
+import { PreviouslyOn } from '../ai/ReadAloud'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { partyOf } from '../sessions'
 import { DraftText, Empty } from '../components'
@@ -32,9 +33,9 @@ import { ShowPanel } from '../showing'
 import { WorldToday } from '../calendar'
 import { ClocksPanel } from '../clocks'
 import { Ico, TypeIcon } from '../icons'
-import { Armchair, BookOpen, CastleTurret, CloudFog, DiceFive, FlagCheckered, MapTrifold, Prohibit, Shield, Sparkle, Spiral, Sword, User } from '@phosphor-icons/react'
+import { Armchair, BookOpen, CastleTurret, CloudFog, DiceFive, FlagCheckered, MapTrifold, Eye, EyeSlash, Prohibit, Shield, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { RollDetail, RollLog } from '../atTheTable'
+import { clockText, RollDetail, RollLog, timeLeft, useNow } from '../atTheTable'
 import { setLiveSession, shareRoll, useTable } from '../cloud/table'
 
 /**
@@ -86,7 +87,10 @@ export default function Lectern() {
           <h1>
             <Ico as={BookOpen} /> The Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
           </h1>
-          {world && <WorldToday world={world} isGM />}
+          <div className="row wrap">
+            {world && <WorldToday world={world} isGM />}
+            <PreviouslyOn session={session} />
+          </div>
           {!!(world?.safety?.lines.length || world?.safety?.veils.length) && (
             <details className="small safety-reminder">
               <summary><Ico as={Shield} /> Lines and veils</summary>
@@ -106,6 +110,7 @@ export default function Lectern() {
         <div className="lectern-col">
           <LecternPrep session={session} worldId={worldId} />
           <Initiative lectern={lectern} edit={edit} entities={entities} campaignId={session.campaignId} />
+          <Timers lectern={lectern} edit={edit} shared={!!world?.cloud?.enabled && !lectern.share?.off} />
           <ClocksPanel worldId={worldId} entities={entities} />
         </div>
         <div className="lectern-col">
@@ -821,6 +826,138 @@ function Party({ entities, campaignId, worldId }: { entities: Entity[]; campaign
           </li>
         ))}
       </ul>
+    </section>
+  )
+}
+
+const TIMER_MINUTES = [1, 3, 5, 10, 30]
+
+/** A short beep when a timer runs out (quiet if the browser won't play sound yet). */
+function beep() {
+  try {
+    const ctx = new AudioContext()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.frequency.value = 880
+    gain.gain.setValueAtTime(0.2, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8)
+    osc.connect(gain).connect(ctx.destination)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.8)
+    osc.onended = () => void ctx.close()
+  } catch {
+    // No sound available: the timer still shows "Time's up".
+  }
+}
+
+/** Countdowns for the table: a ritual finishing, a fuse burning, a time limit on a puzzle. */
+function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {
+  const timers = lectern.timers ?? []
+  const running = timers.some((t) => t.endsAt !== undefined)
+  const now = useNow(500, running)
+  const [label, setLabel] = useState('')
+  const [custom, setCustom] = useState('')
+  // Beep once each time a timer runs out while the Lectern is open.
+  const rang = useRef(new Set<string>())
+  // (Only ones that just ran out: opening the Lectern later doesn't beep for old ones.)
+  const due = timers.filter((t) => t.endsAt !== undefined && timeLeft(t, now) === 0 && now - t.endsAt < 10_000).map((t) => `${t.id}:${t.endsAt}`)
+  const dueKey = due.join(',')
+  useEffect(() => {
+    const fresh = dueKey.split(',').filter((k) => k && !rang.current.has(k))
+    if (!fresh.length) return
+    fresh.forEach((k) => rang.current.add(k))
+    beep()
+  }, [dueKey])
+  const change = (id: string, fn: (t: NonNullable<LecternState['timers']>[number]) => void) =>
+    edit((l) => {
+      const t = l.timers?.find((x) => x.id === id)
+      if (t) fn(t)
+    })
+  const start = (minutes: number) => {
+    if (!(minutes > 0)) return
+    const name = label.trim() || `${minutes} minute${minutes === 1 ? '' : 's'}`
+    edit((l) => void (l.timers = [...(l.timers ?? []), { id: newId(), label: name, endsAt: Date.now() + minutes * 60_000 }]))
+    setLabel('')
+    setCustom('')
+  }
+  return (
+    <section className="card lectern-panel">
+      <h2>
+        <Ico as={Timer} /> Timers <Help topic="timers" />
+      </h2>
+      <ul className="timer-list">
+        {timers.map((t) => {
+          const left = timeLeft(t, now)
+          const paused = t.endsAt === undefined
+          return (
+            <li key={t.id} className={left === 0 ? 'done' : paused ? 'paused' : ''}>
+              <span>{t.label}</span>
+              <b className="timer-time">{left === 0 ? 'Time’s up' : clockText(left)}</b>
+              {left > 0 && (
+                <button
+                  className="ghost small"
+                  onClick={() =>
+                    change(t.id, (x) => {
+                      if (x.endsAt !== undefined) {
+                        x.left = Math.max(0, x.endsAt - Date.now())
+                        delete x.endsAt
+                      } else {
+                        x.endsAt = Date.now() + (x.left ?? 0)
+                        delete x.left
+                      }
+                    })
+                  }
+                >
+                  {paused ? 'Resume' : 'Pause'}
+                </button>
+              )}
+              <button
+                className="ghost small"
+                title="One more minute"
+                onClick={() =>
+                  change(t.id, (x) => {
+                    if (x.endsAt !== undefined) x.endsAt = Math.max(x.endsAt, Date.now()) + 60_000
+                    else x.left = (x.left ?? 0) + 60_000
+                  })
+                }
+              >
+                +1 min
+              </button>
+              {shared && (
+                <button
+                  className="ghost small"
+                  title={t.hidden ? 'Players can’t see this one. Show it to them' : 'Players see this one. Hide it from them'}
+                  onClick={() => change(t.id, (x) => void (x.hidden = !x.hidden || undefined))}
+                >
+                  <Ico as={t.hidden ? EyeSlash : Eye} />
+                </button>
+              )}
+              <button className="ghost small" title="Remove" onClick={() => edit((l) => void (l.timers = l.timers?.filter((x) => x.id !== t.id)))}>
+                ✕
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+      <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="What’s it for? (optional)" aria-label="Timer name" />
+      <div className="row wrap">
+        {TIMER_MINUTES.map((m) => (
+          <button key={m} onClick={() => start(m)}>
+            {m} min
+          </button>
+        ))}
+        <form
+          className="row"
+          onSubmit={(e) => {
+            e.preventDefault()
+            start(Number(custom))
+          }}
+        >
+          <input className="hp-input" type="number" min={1} value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="min" aria-label="Minutes" />
+          <button disabled={!(Number(custom) > 0)}>Start</button>
+        </form>
+      </div>
+      {shared && timers.length > 0 && <p className="muted small">Players see timers in their Common Room unless you hide them.</p>}
     </section>
   )
 }

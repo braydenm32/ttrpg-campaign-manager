@@ -1,0 +1,433 @@
+import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { Books, ChatCircleText, Check, ClipboardText, PaperPlaneRight, PenNib, Scales, Sparkle, X } from '@phosphor-icons/react'
+import { db, type Entity, type Session, type World } from '../db'
+import { Help } from '../help'
+import { useVisibleEntities, useWorld } from '../hooks'
+import { Ico } from '../icons'
+import { Markdown, findBacklinks } from '../Markdown'
+import { useViewMode } from '../viewMode'
+import { Empty } from '../components'
+import { askClaude, dollars, estimateTokens, claudeCost, usageCost, type ClaudeMessage } from './claude'
+import { ClaudeJob } from './ClaudeJob'
+import { useAiSettings } from './settings'
+import { describeStep, findPages, MARKUP_NOTE, pageByName, pageText, sessionIndex, sessionText, worldHeader, worldIndex, worldTools } from './worldText'
+
+/**
+ * The Archivist: Claude, reading the GM's own world. Ask it anything about your notes, or have it
+ * look for places where the notes disagree with each other. GM only.
+ */
+export default function Archivist() {
+  const { worldId, world } = useWorld()
+  const { isGM } = useViewMode()
+  const entities = useVisibleEntities(worldId)
+  const sessions = useLiveQuery(() => db.sessions.where({ worldId }).toArray(), [worldId]) ?? []
+  const [params, setParams] = useSearchParams()
+  const tab = params.get('tab') === 'check' ? 'check' : 'ask'
+  if (!world) return null
+  if (!isGM) return <Empty>The Archivist is for the GM.</Empty>
+  return (
+    <div className="page archivist">
+      <header className="page-header">
+        <h1>
+          <Ico as={Books} /> The Archivist <Help topic="archivist" />
+        </h1>
+      </header>
+      <p className="muted">Claude, reading your own world. It answers from your pages and sessions (secrets included), and links what it mentions. Nothing changes in your world unless you change it.</p>
+      <div className="segmented tabs">
+        <button className={tab === 'ask' ? 'on' : ''} onClick={() => setParams({}, { replace: true })}>
+          <Ico as={ChatCircleText} /> Ask your world
+        </button>
+        <button className={tab === 'check' ? 'on' : ''} onClick={() => setParams({ tab: 'check' }, { replace: true })}>
+          <Ico as={Scales} /> Check for contradictions
+        </button>
+      </div>
+      {tab === 'ask' ? <Ask world={world} entities={entities} sessions={sessions} /> : <Continuity world={world} entities={entities} sessions={sessions} />}
+    </div>
+  )
+}
+
+// ---------- Ask your world ----------
+
+function askSystem(world: World, entities: Entity[], sessions: Session[], copy?: { question: string }) {
+  const found = copy ? findPages(copy.question, entities, 20) : []
+  return `You are the Archivist for a tabletop roleplaying game master's world. The GM asks you questions about their own notes.
+
+How to answer:
+- Answer only from what is written in this world.${copy ? ' The pages most likely to matter are written out in full below.' : ' The index below lists every page; read the pages you need with read_pages (and search_world when the index doesn’t show where something is) before you answer. Don’t answer from the index alone.'}
+- If the notes don't say, say so plainly. You may then offer an idea that fits, clearly labelled as a suggestion.
+- Give the short answer first, then any detail. Keep it brief. Use Markdown.
+- Write the name of any page you mention exactly as listed, inside double square brackets like [[Name]], so it links.
+- Say when something is a secret the players don't know.
+
+${worldHeader(world)}
+${MARKUP_NOTE}
+
+Every page in the world (name, kind, other names, summary):
+${worldIndex(world, entities)}
+${sessions.length ? `\nSessions played:\n${sessionIndex(sessions)}\n` : ''}${found.length ? `\nPages that may matter, in full:\n\n${found.map((e) => pageText(e, world, entities)).join('\n\n---\n\n')}\n` : ''}`
+}
+
+interface Turn {
+  q: string
+  a: string
+  note?: string
+}
+
+const STARTERS = ['Who in the world would want the party dead, and why?', 'What do the players know about the main villain so far?', 'Which clues haven’t the players found yet?', 'What’s happening in the place the party is heading to?']
+
+function Ask({ world, entities, sessions }: { world: World; entities: Entity[]; sessions: Session[] }) {
+  const settings = useAiSettings()
+  const key = settings.anthropicKey.trim()
+  const [turns, setTurns] = useState<Turn[]>([])
+  const [question, setQuestion] = useState('')
+  const [writing, setWriting] = useState<{ q: string; text: string; step: string; abort: AbortController }>()
+  const [error, setError] = useState('')
+  const [copied, setCopied] = useState<string>()
+  const [pasted, setPasted] = useState('')
+  // The conversation as Claude saw it, including the pages it read, so follow-ups know what came before.
+  const history = useRef<ClaudeMessage[]>([])
+  const spent = useRef(0)
+  const running = useRef<AbortController>(undefined)
+  useEffect(() => () => running.current?.abort(), [])
+
+  const ask = async (q: string) => {
+    if (!q.trim() || writing) return
+    setError('')
+    const abort = new AbortController()
+    running.current = abort
+    setWriting({ q, text: '', step: '', abort })
+    try {
+      const res = await askClaude({
+        apiKey: key,
+        system: askSystem(world, entities, sessions),
+        messages: [...history.current, { role: 'user', content: q }],
+        tools: worldTools(world, entities, sessions),
+        describe: describeStep,
+        signal: abort.signal,
+        onText: (text) => setWriting((w) => w && { ...w, text }),
+        onStep: (step) => setWriting((w) => w && { ...w, step, text: '' }),
+      })
+      history.current = res.messages
+      const cost = usageCost(res.usage)
+      spent.current += cost
+      setTurns((t) => [...t, { q, a: res.text, note: `About ${dollars(cost)}${t.length ? `, ${dollars(spent.current)} so far` : ''}.` }])
+      setQuestion('')
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError' && !abort.signal.aborted) setError((err as Error).message || 'Something went wrong.')
+    } finally {
+      running.current = undefined
+      setWriting(undefined)
+    }
+  }
+
+  const copy = async () => {
+    const q = question.trim()
+    if (!q) return
+    setError('')
+    try {
+      await navigator.clipboard.writeText(`${askSystem(world, entities, sessions, { question: q })}\n\nThe GM asks: ${q}`)
+      setCopied(q)
+    } catch {
+      setError('Couldn’t copy. Your browser may have blocked the clipboard.')
+    }
+  }
+
+  const firstCost = claudeCost(estimateTokens(askSystem(world, entities, sessions)) * 1.4, 800)
+
+  return (
+    <section className="ask-world">
+      {turns.length === 0 && !writing && (
+        <div className="ask-starters">
+          <span className="muted small">Try:</span>
+          {STARTERS.map((s) => (
+            <button key={s} className="chip" onClick={() => setQuestion(s)}>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+      {turns.map((t, i) => (
+        <div key={i} className="ask-turn">
+          <p className="ask-q">{t.q}</p>
+          <div className="card ask-a">
+            <Markdown text={t.a} entities={entities} worldId={world.id} showSecrets />
+            <div className="row spread small muted">
+              <span>{t.note}</span>
+              <button className="ghost small" onClick={() => navigator.clipboard.writeText(t.a).catch(() => undefined)}>
+                <Ico as={ClipboardText} /> Copy
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+      {writing && (
+        <div className="ask-turn">
+          <p className="ask-q">{writing.q}</p>
+          <div className="card ask-a">
+            <div className="row spread small">
+              <span>
+                <Ico as={PenNib} /> {writing.step && !writing.text ? `${writing.step}…` : writing.text ? 'Writing…' : 'Looking through your world…'}
+              </span>
+              <button className="ghost small" onClick={() => writing.abort.abort()}>
+                Stop
+              </button>
+            </div>
+            {writing.text ? <Markdown text={writing.text} entities={entities} worldId={world.id} showSecrets /> : <progress />}
+          </div>
+        </div>
+      )}
+      <form
+        className="ask-box"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (key) ask(question)
+          else copy()
+        }}
+      >
+        <textarea
+          rows={2}
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              e.currentTarget.form?.requestSubmit()
+            }
+          }}
+          placeholder={turns.length ? 'Ask a follow-up…' : 'Ask anything about your world'}
+          disabled={!!writing}
+          aria-label="Your question"
+        />
+        <div className="row wrap">
+          <button className="primary" disabled={!question.trim() || !!writing || !key} title={key ? 'Uses your Anthropic API key' : 'Add an Anthropic API key in World settings first'}>
+            <Ico as={PaperPlaneRight} /> Ask{!turns.length && question.trim() ? ` (about ${dollars(firstCost)})` : ''}
+          </button>
+          <button type="button" onClick={copy} disabled={!question.trim() || !!writing} title="Copies your question with the pages that matter. Paste it into claude.ai.">
+            <Ico as={ClipboardText} /> Copy for Claude
+          </button>
+          {turns.length > 0 && !writing && (
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                history.current = []
+                spent.current = 0
+                setTurns([])
+              }}
+            >
+              New conversation
+            </button>
+          )}
+        </div>
+      </form>
+      {!key && <p className="muted small">“Copy for Claude” is free with your Claude subscription: it copies your question with the pages most likely to matter. For answers right here, add an Anthropic API key in World settings → AI tools.</p>}
+      {copied && (
+        <div className="recap-paste">
+          <p className="small">
+            ✓ Copied. Open{' '}
+            <a href="https://claude.ai/new" target="_blank" rel="noreferrer">
+              claude.ai
+            </a>
+            , paste it in and send. Paste the answer here to keep it with its links.
+          </p>
+          <textarea rows={4} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder="Paste Claude’s answer here" />
+          <div className="row">
+            <button
+              className="primary"
+              disabled={!pasted.trim()}
+              onClick={() => {
+                setTurns((t) => [...t, { q: copied, a: pasted, note: 'From claude.ai.' }])
+                setPasted('')
+                setCopied(undefined)
+                setQuestion('')
+              }}
+            >
+              Show it here
+            </button>
+            <button className="ghost" onClick={() => setCopied(undefined)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      {error && <p className="error small">{error}</p>}
+    </section>
+  )
+}
+
+// ---------- Continuity check ----------
+
+interface Issue {
+  id: string
+  title: string
+  text: string
+}
+interface CheckResult {
+  at: number
+  scope: string
+  issues: Issue[]
+  dismissed: string[]
+}
+
+const NONE = 'No contradictions found.'
+
+/** Splits Claude's list into one problem per bullet: "- **Title**: what's wrong…". */
+export function parseIssues(text: string): Issue[] {
+  const items: string[] = []
+  for (const line of text.replace(/\r\n/g, '\n').split('\n')) {
+    if (/^[-*]\s+/.test(line)) items.push(line.replace(/^[-*]\s+/, ''))
+    else if (items.length && line.trim() && !/^#/.test(line)) items[items.length - 1] += `\n${line.trim()}`
+  }
+  return items.map((raw) => {
+    const m = raw.match(/^\*\*(.+?)\*\*[:.\s—–-]*([\s\S]*)$/)
+    const title = (m ? m[1] : raw.split(/[.:]/)[0]).replace(/[:.]$/, '').trim()
+    const body = (m ? m[2] : raw).trim()
+    // The same problem found twice keeps the same id, so a dismissed one stays dismissed.
+    let h = 0
+    for (const c of title.toLowerCase()) h = (h * 31 + c.charCodeAt(0)) | 0
+    return { id: `i${(h >>> 0).toString(36)}`, title, text: body }
+  })
+}
+
+const storeKey = (worldId: string) => `codex.continuity.${worldId}`
+function loadCheck(worldId: string): CheckResult | undefined {
+  try {
+    return JSON.parse(localStorage.getItem(storeKey(worldId)) ?? 'null') ?? undefined
+  } catch {
+    return undefined
+  }
+}
+function saveCheck(worldId: string, r: CheckResult) {
+  try {
+    // Kept on this device only: it quotes secrets.
+    localStorage.setItem(storeKey(worldId), JSON.stringify(r))
+  } catch {
+    // Storage full or blocked: the result lasts until the page closes.
+  }
+}
+
+/** A page plus everything it links to, links to it, sits in or holds. */
+function neighbours(page: Entity, entities: Entity[]) {
+  const ids = new Set([page.id])
+  if (page.parentId) ids.add(page.parentId)
+  page.relations?.forEach((r) => ids.add(r.to))
+  for (const m of page.body.matchAll(/\[\[([^\]|]+)/g)) {
+    const e = pageByName(m[1], entities)
+    if (e) ids.add(e.id)
+  }
+  entities.filter((e) => e.parentId === page.id || e.relations?.some((r) => r.to === page.id)).forEach((e) => ids.add(e.id))
+  findBacklinks(page, entities).forEach((e) => ids.add(e.id))
+  return entities.filter((e) => ids.has(e.id))
+}
+
+function Continuity({ world, entities, sessions }: { world: World; entities: Entity[]; sessions: Session[] }) {
+  const [result, setResult] = useState<CheckResult | undefined>(() => loadCheck(world.id))
+  const [scope, setScope] = useState<'all' | 'page'>('all')
+  const [pageName, setPageName] = useState('')
+  const page = scope === 'page' ? pageByName(pageName, entities) : undefined
+  const update = (r: CheckResult) => {
+    setResult(r)
+    saveCheck(world.id, r)
+  }
+
+  const build = () => {
+    const pages = page ? neighbours(page, entities) : entities.filter((e) => !e.template && e.type !== 'table')
+    const system = `You check a tabletop roleplaying game master's world for continuity problems: places where the notes contradict each other.
+
+Look for things like: a character who is dead in one place and active in another; dates, ages or distances that don't add up; someone in two places at once; names spelled two ways for the same thing; relationships described differently on each side; a recap or session note that disagrees with a page; a quest or status that doesn't match what happened. Ignore things that are simply unknown or unwritten, deliberate mysteries, and rumours or lies that a page marks as untrue.
+
+Write each problem as one bullet starting with a short bold title, then say what disagrees and where, then suggest a fix, e.g.
+- **Brannoc's age**: [[Brannoc Saltash]] says he is 40, but [[The Burning of Saltmere]] has him fighting there 50 years ago. Make him older, or move the battle.
+
+Write the name of every page you mention inside double square brackets exactly as written, so it links. Put the most serious problems first. Write nothing before or after the list. If you find none, write exactly: ${NONE}
+
+${worldHeader(world)}
+${MARKUP_NOTE}`
+    const prompt = page
+      ? `Check ${page.name} against the pages around it.\n\n${pages.map((e) => pageText(e, world, entities)).join('\n\n---\n\n')}\n\nThe rest of the world, for reference (read any of it with read_pages if you need to):\n${worldIndex(world, entities)}`
+      : `Here is the whole world.\n\n${pages.map((e) => pageText(e, world, entities)).join('\n\n---\n\n')}${sessions.length ? `\n\n---\n\nSessions:\n\n${[...sessions].sort((a, b) => a.number - b.number).map((s) => sessionText(s, world)).join('\n\n---\n\n')}` : ''}`
+    return {
+      system,
+      prompt,
+      tools: page ? worldTools(world, entities, sessions) : undefined,
+      describe: describeStep,
+      maxTokens: 32000,
+      expectOut: 4000,
+    }
+  }
+
+  const shown = result?.issues.filter((i) => !result.dismissed.includes(i.id)) ?? []
+  return (
+    <section className="continuity">
+      <p className="muted small">
+        Claude reads {scope === 'all' ? 'every page and session' : 'one page and every page around it'} and lists where your notes disagree with each other, with a suggested fix. <Help topic="continuity" />
+      </p>
+      <ClaudeJob
+        worldId={world.id}
+        label="Check now"
+        build={build}
+        disabled={scope === 'page' && !page}
+        priceKey={`${scope}:${page?.id ?? ''}:${entities.length}`}
+        extra={
+          <>
+            <select value={scope} onChange={(e) => setScope(e.target.value as 'all' | 'page')} aria-label="What to check">
+              <option value="all">The whole world</option>
+              <option value="page">One page and its neighbours</option>
+            </select>
+            {scope === 'page' && (
+              <>
+                <input list="continuity-pages" value={pageName} onChange={(e) => setPageName(e.target.value)} placeholder="Which page?" aria-label="Page to check" />
+                <datalist id="continuity-pages">
+                  {entities.map((e) => (
+                    <option key={e.id} value={e.name} />
+                  ))}
+                </datalist>
+              </>
+            )}
+          </>
+        }
+        onResult={(text) =>
+          update({
+            at: Date.now(),
+            scope: page ? page.name : 'The whole world',
+            issues: text.includes(NONE) ? [] : parseIssues(text),
+            dismissed: result?.dismissed ?? [],
+          })
+        }
+      />
+      {result && (
+        <div className="continuity-results">
+          <h3>
+            {result.scope}, checked {new Date(result.at).toLocaleDateString()}
+          </h3>
+          {shown.length === 0 ? (
+            <p className="muted">
+              <Ico as={Check} /> {result.issues.length ? 'You’ve dealt with everything it found.' : 'No contradictions found.'}
+            </p>
+          ) : (
+            shown.map((i) => (
+              <div key={i.id} className="card continuity-issue">
+                <div className="row spread">
+                  <strong>
+                    <Ico as={Sparkle} /> {i.title}
+                  </strong>
+                  <button className="ghost small" title="Fixed, or not a problem: hide it" onClick={() => update({ ...result, dismissed: [...result.dismissed, i.id] })}>
+                    <Ico as={X} /> Done
+                  </button>
+                </div>
+                <Markdown text={i.text} entities={entities} worldId={world.id} showSecrets />
+              </div>
+            ))
+          )}
+          {result.dismissed.length > 0 && (
+            <button className="link small" onClick={() => update({ ...result, dismissed: [] })}>
+              Show the {result.dismissed.length} you hid
+            </button>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}

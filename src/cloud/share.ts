@@ -137,19 +137,42 @@ export async function storePlayerCopy(
   // first time a world arrives everything is new, so nothing is flagged.
   let news = before?.shared?.news
   if (before) {
-    const hadPages = new Set(await db.entities.where({ worldId }).primaryKeys())
-    const hadSessions = new Set(await db.sessions.where({ worldId }).primaryKeys())
+    const oldPages = new Map((await db.entities.where({ worldId }).toArray()).map((e) => [e.id, e]))
+    const oldSessions = new Map((await db.sessions.where({ worldId }).toArray()).map((s) => [s.id, s]))
+    const hadPages = new Set(oldPages.keys())
+    const hadSessions = new Set(oldSessions.keys())
     const wasAnswered = new Set((before.shared?.questions ?? []).filter((q) => q.answer).map((q) => q.id))
     const pageIds = p.entities.map((e) => id(e.id))
     const sessionIds = p.sessions.map((s) => id(s.id))
     const questionIds = (questions ?? []).map((q) => q.id)
     const keep = (old: string[] | undefined, now: string[], fresh: string[]) => [...new Set([...(old ?? []).filter((x) => now.includes(x)), ...fresh])]
+    // Pages they already had: what's different now (new writing, a status, a clock that moved…).
+    const changed: Record<string, string[]> = {}
+    for (const [k, v] of Object.entries(news?.changed ?? {})) if (pageIds.includes(k)) changed[k] = v
+    for (const e of p.entities) {
+      const was = oldPages.get(id(e.id))
+      if (!was) continue
+      const what = whatChanged(was, { ...e, heldBy: e.heldBy === 'party' ? 'party' : opt(e.heldBy), imageId: opt(e.imageId) })
+      if (what.length) changed[id(e.id)] = [...new Set([...(changed[id(e.id)] ?? []), ...what])]
+    }
+    const recaps = p.sessions.filter((s) => {
+      const was = oldSessions.get(id(s.id))
+      return was && s.recap.trim() && was.recap !== s.recap
+    })
+    const hadHandouts = new Set((before.handouts ?? []).map((h) => h.id))
+    const handoutIds = (p.world?.handouts ?? []).map((h) => h.id)
     news = {
       entityIds: keep(news?.entityIds, pageIds, pageIds.filter((x) => !hadPages.has(x))),
       sessionIds: keep(news?.sessionIds, sessionIds, sessionIds.filter((x) => !hadSessions.has(x))),
       questionIds: keep(news?.questionIds, questionIds, (questions ?? []).filter((q) => q.answer && !wasAnswered.has(q.id)).map((q) => q.id)),
+      changed,
+      recapIds: keep(news?.recapIds, sessionIds, recaps.map((s) => id(s.id))),
+      handoutIds: keep(news?.handoutIds, handoutIds, handoutIds.filter((x) => !hadHandouts.has(x))),
     }
-    if (!news.entityIds.length && !news.sessionIds.length && !news.questionIds.length) news = undefined
+    // A page that's new anyway doesn't also need "changed".
+    for (const x of news.entityIds) delete changed[x]
+    if (!news.entityIds.length && !news.sessionIds.length && !news.questionIds.length && !Object.keys(changed).length && !news.recapIds!.length && !news.handoutIds!.length)
+      news = undefined
   }
 
   await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
@@ -178,6 +201,24 @@ export async function storePlayerCopy(
     )
   })
   return worldId
+}
+
+/** What a player would notice changed on a page since their last copy, in a few words each. */
+function whatChanged(was: Entity, now: Entity): string[] {
+  const out: string[] = []
+  if (was.name !== now.name) out.push('renamed')
+  if (was.body !== now.body || (was.playerBody ?? '') !== (now.playerBody ?? '') || was.summary !== now.summary) out.push('new writing')
+  if (JSON.stringify(was.fields) !== JSON.stringify(now.fields)) out.push('details')
+  if ((was.status ?? '') !== (now.status ?? '') && now.status) out.push(now.status)
+  if (was.questStatus !== now.questStatus && now.questStatus) out.push(`quest ${now.questStatus}`)
+  if (was.threadStatus !== now.threadStatus && now.threadStatus) out.push(now.threadStatus)
+  const filled = (e: Entity) => (e.clocks ?? []).map((c) => `${c.id}:${c.filled}`).join()
+  if (filled(was) !== filled(now)) out.push('clock moved')
+  const insp = (now.inspiration ?? 0) - (was.inspiration ?? 0)
+  if (insp > 0) out.push('inspiration')
+  if ((was.heldBy ?? '') !== (now.heldBy ?? '') && now.heldBy) out.push('changed hands')
+  if (was.imageId !== now.imageId && now.imageId) out.push('new picture')
+  return out
 }
 
 /** A short fingerprint of a long text. */

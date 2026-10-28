@@ -1,3 +1,4 @@
+import { VoiceSettings } from './ReadAloud'
 import { useState } from 'react'
 import { Help } from '../help'
 import { DEVICE_MODELS, setAiSettings, useAiSettings } from './settings'
@@ -18,7 +19,7 @@ export function AiSettingsSection() {
       </p>
       <div className="form">
         <KeyField
-          label="Anthropic API key (for one-click recaps)"
+          label="Anthropic API key (for one-click recaps, the Archivist and other Claude tools)"
           value={s.anthropicKey}
           onChange={(v) => setAiSettings({ anthropicKey: v })}
           placeholder="sk-ant-…"
@@ -65,6 +66,7 @@ export function AiSettingsSection() {
             <option value="auto">Something else (detect it)</option>
           </select>
         </label>
+        <VoiceSettings />
       </div>
     </section>
   )

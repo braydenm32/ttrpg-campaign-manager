@@ -2,8 +2,8 @@ import { ENTITY_LABELS, type Entity, type Session, type World } from '../db'
 import { formatDate } from '../calendar'
 import { transcriptText } from './transcript'
 import { parseUpdates, UPDATES_HEADING, updatesInstructions } from './worldUpdates'
+import { MODEL } from './claude'
 
-const MODEL = 'claude-opus-5-5'
 export const GM_HEADING = '## GM summary'
 export const PLAYER_HEADING = '## Player recap'
 
