@@ -12,6 +12,9 @@ import './lib/furniture.js'
 import './lib/bm-nature.js'
 import './lib/bm-props.js'
 import './lib/bm-buildings.js'
+import './lib/dg-doors.js'
+import './lib/dg-features.js'
+import './lib/dg-furnishings.js'
 
 export type Point = [number, number]
 export type Rng = () => number
@@ -91,6 +94,9 @@ export const BATTLE_GROUPS: { label: string; categories: string[] }[] = [
   { label: 'Buildings', categories: ['bm-buildings'] },
   { label: 'Village', categories: ['bm-village'] },
   { label: 'Things', categories: ['bm-objects'] },
+  { label: 'Doors', categories: ['dg-doors'] },
+  { label: 'Dungeon', categories: ['dg-features'] },
+  { label: 'Dungeon furnishings', categories: ['dg-furnishings'] },
 ]
 
 export const assetNamesIn = (categories: string[]) => Object.keys(Atlas.assets).filter((n) => categories.includes(Atlas.assets[n].category))

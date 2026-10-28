@@ -6,6 +6,7 @@
 import { Atlas, type InkStyle, type Point, type Rng, type Tint } from './atlas'
 import { hashId, loopArea, makeNoise, roughen, scaleOf, smoothLine, traceLoops } from './geometry'
 import { buildGround, drawGround, groundColour, type GroundMap } from './ground'
+import { buildRooms, doorGaps, drawRock, type RoomMap } from './rooms'
 import { LAYERS, layerOf, type Drawing, type GroundId, type LayerId, type LabelFont, type Look, type Shape, type StampKind, type Terrain } from '../mapDrawing'
 
 export const LOOKS: Record<Look, { label: string; mode: 'ink' | 'colour'; paper?: string; ink?: string }> = {
@@ -362,8 +363,51 @@ function drawBattleLine(ctx: CanvasRenderingContext2D, s: Extract<Shape, { kind:
       }
       break
     }
+    case 'dwall':
+      // an inner wall drawn like the walls round rooms
+      ctx.strokeStyle = st.ink
+      ctx.lineWidth = Math.max(3, 8.4 * u)
+      stroke(ctx, Atlas.wobble(pts, r, 0.3 * u, 9 * u))
+      break
     default:
       Atlas.inkStroke(ctx, pts, r, { w: 1.8 * st.line, wob: 0.5, taper: 0.6, color: st.ink })
+  }
+  ctx.restore()
+}
+
+/**
+ * The walls round a battle map's rooms. Underground they're a heavy pen line, with the room's floor a
+ * little shadowed along them (colour); above ground they're stone walls. Doors leave gaps in them.
+ */
+function drawRoomWalls(ctx: CanvasRenderingContext2D, rm: RoomMap, d: Drawing, W: number, H: number, st: InkStyle, rock: boolean) {
+  const g = d.gridSize || 70
+  const u = g / 70
+  const r = Atlas.rng((d.seed ?? 1) * 17 + 5)
+  const loop = (l: Point[]): Point[] => [...l, l[0]]
+  ctx.save()
+  ctx.lineJoin = 'round'
+  ctx.lineCap = 'round'
+  if (rock && st.mode === 'colour' && st.shadows) {
+    ctx.save()
+    ctx.clip(rm.path, 'evenodd')
+    ctx.translate(0.05 * g, 0.07 * g)
+    ctx.strokeStyle = 'rgb(40,30,15)'
+    for (const [w, a] of [[0.55, 0.06], [0.36, 0.07], [0.2, 0.09]]) {
+      ctx.globalAlpha = a
+      ctx.lineWidth = w * g
+      for (const l of rm.walls) stroke(ctx, loop(l))
+    }
+    ctx.restore()
+  }
+  const gaps = doorGaps(d, W, H, rock ? 0.2 * g : 30 * u)
+  if (gaps) ctx.clip(gaps, 'evenodd')
+  if (rock) {
+    ctx.strokeStyle = st.ink
+    ctx.lineWidth = Math.max(3, 8.4 * u)
+    for (const l of rm.walls) stroke(ctx, Atlas.wobble(loop(l), r, 0.3 * u, 9 * u))
+  } else {
+    const wall = { id: 'room', kind: 'line', style: 'wall', points: [], smooth: false } as const
+    for (const l of rm.walls) drawBattleLine(ctx, { ...wall, points: [] }, loop(l), st, r, u)
   }
   ctx.restore()
 }
@@ -372,7 +416,7 @@ function drawLine(ctx: CanvasRenderingContext2D, s: Extract<Shape, { kind: 'line
   const r = Atlas.rng(hashId(s.id))
   const pts = smoothLine(s.points, s.smooth, 6 * k)
   const T = Atlas.terrain
-  if (battleUnit && ['fence', 'hedge', 'cliff', 'wall', 'ink'].includes(s.style)) return drawBattleLine(ctx, s, pts, st, r, battleUnit)
+  if (battleUnit && ['fence', 'hedge', 'cliff', 'wall', 'dwall', 'ink'].includes(s.style)) return drawBattleLine(ctx, s, pts, st, r, battleUnit)
   switch (s.style) {
     case 'river':
       T.river(ctx, pts, r, st, { w0: 0.5, w1: 3 })
@@ -672,6 +716,29 @@ function drawFrame(ctx: CanvasRenderingContext2D, W: number, H: number, st: InkS
 }
 
 let baseCache: { key: string; canvas: HTMLCanvasElement } | undefined
+let roomCache: RoomMap | undefined
+let rockCache: { key: string; canvas: HTMLCanvasElement } | undefined
+
+/** A battle map's rooms only change when they're drawn, or the grid or seed change. Underground maps always have them (all rock to start with). */
+function roomsFor(d: Drawing, W: number, H: number): RoomMap | undefined {
+  if (!d.rooms?.length && d.outside !== 'rock') return undefined
+  const key = `${W}x${H}|${d.gridSize}|${d.seed}|${(d.rooms ?? []).map((r) => r.id).join(',')}`
+  if (roomCache?.key !== key) roomCache = buildRooms(d, W, H, key)
+  return roomCache
+}
+
+/** Whether a point is on a room's floor (always true where there are no rooms), for keeping scattered pieces indoors. */
+/** Whether a map point is inside the rooms, or undefined when the map has none. */
+export const roomTest = (d: Drawing, W: number, H: number): ((x: number, y: number) => boolean) | undefined => {
+  const rm = d.scene === 'battle' && d.rooms?.length ? roomsFor(d, W, H) : undefined
+  if (!rm) return undefined
+  return (x, y) => rm.floor[Math.min(rm.mh - 1, Math.max(0, Math.floor(y * rm.ms))) * rm.mw + Math.min(rm.mw - 1, Math.max(0, Math.floor(x * rm.ms)))] >= 0.5
+}
+/** Where pieces can stand: underground, only inside the rooms; above ground, anywhere. */
+export const floorTest = (d: Drawing, W: number, H: number): ((x: number, y: number) => boolean) => {
+  if (d.outside !== 'rock') return () => true
+  return roomTest(d, W, H) ?? (() => false)
+}
 let landCache: (LandShape & { key: string }) | undefined
 
 /** The land only changes when the brush strokes, old area shapes, start or seed change. */
@@ -689,8 +756,10 @@ let groundCache: GroundMap | undefined
 function groundFor(d: Drawing, W: number, H: number): GroundMap {
   const areas = d.shapes.filter((s) => s.kind === 'area').map((s) => `${s.id}:${s.kind === 'area' ? s.terrain + s.points.length + s.points[0] : ''}`)
   const strokes = (d.ground ?? []).map((s) => s.id)
-  const key = `${W}x${H}|${d.groundBase}|${d.gridSize}|${d.seed}|${d.hidden?.includes('land') ? 'h' : ''}|${areas.join(',')}|${strokes.join(',')}`
-  if (groundCache?.key !== key) groundCache = buildGround(d, W, H, key)
+  // floors painted inside the rooms change when the rooms do
+  const rooms = d.ground?.some((s) => s.inside) ? roomsFor(d, W, H) : undefined
+  const key = `${W}x${H}|${d.groundBase}|${d.gridSize}|${d.seed}|${d.hidden?.includes('land') ? 'h' : ''}|${areas.join(',')}|${strokes.join(',')}|${rooms?.key ?? ''}`
+  if (groundCache?.key !== key) groundCache = buildGround(d, W, H, key, rooms?.path)
   return groundCache
 }
 
@@ -786,6 +855,22 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
   ctx.restore()
 
   const visible = (s: Shape) => !hidden.has(layerOf(s))
+  // rooms: underground, the rock round them and the grid on their floors, then their walls
+  const rooms = battle && !hidden.has('paths') ? roomsFor(d, W, H) : undefined
+  const rock = !!rooms && d.outside === 'rock'
+  if (rooms && rock) {
+    const rockKey = `${rooms.key}|${look}|${d.biome}|${scale}|${canvas.width}x${canvas.height}`
+    if (rockCache?.key !== rockKey) rockCache = { key: rockKey, canvas: drawRock(rooms, d, W, H, scale, st) }
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.drawImage(rockCache.canvas, 0, 0)
+    ctx.restore()
+    ctx.save()
+    ctx.clip(rooms.path, 'evenodd')
+    drawGrid(ctx, d, W, H, st)
+    ctx.restore()
+  }
+  if (rooms) drawRoomWalls(ctx, rooms, d, W, H, st, rock)
   // on battle maps old areas became ground, so only rooms keep an outline
   for (const s of d.shapes) if (s.kind === 'area' && visible(s) && (battle ? !s.smooth : marked(s))) drawArea(ctx, s, st, k)
 
@@ -793,7 +878,18 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
   const lines = d.shapes.filter((s): s is Extract<Shape, { kind: 'line' }> => s.kind === 'line' && visible(s))
   const bu = battle ? u : undefined
   for (const s of lines.filter((s) => s.style === 'river')) drawLine(ctx, s, st, k, bu)
-  for (const s of lines.filter((s) => s.style !== 'river')) drawLine(ctx, s, st, k, bu)
+  // doors leave a gap in walls drawn as lines too
+  const gaps = battle ? { dwall: doorGaps(d, W, H, 0.2 * u * 70), wall: doorGaps(d, W, H, 30 * u) } : undefined
+  for (const s of lines.filter((s) => s.style !== 'river')) {
+    const gap = s.style === 'dwall' || s.style === 'wall' ? gaps?.[s.style] : undefined
+    if (!gap) drawLine(ctx, s, st, k, bu)
+    else {
+      ctx.save()
+      ctx.clip(gap, 'evenodd')
+      drawLine(ctx, s, st, k, bu)
+      ctx.restore()
+    }
+  }
 
   // pieces: on world maps lower ones stand in front; seen from above, the one put down last is on top
   const pieces = d.shapes.filter(visible).map((s) => pieceOf(s, battle)).filter((p): p is Piece => !!p)
@@ -814,7 +910,7 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
     ctx.restore()
   }
 
-  drawGrid(ctx, d, W, H, st)
+  if (!rock) drawGrid(ctx, d, W, H, st)
 
   if (!hidden.has('labels')) for (const s of d.shapes) if (s.kind === 'label') drawLabel(ctx, s, st, battle && colour ? '#efe6cc' : landPaper, k)
 
