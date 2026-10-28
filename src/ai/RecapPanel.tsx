@@ -8,6 +8,7 @@ import { useAiSettings } from './settings'
 import { Ico } from '../icons'
 import { ClipboardText, Eye, Lock, PenNib, Sparkle } from '@phosphor-icons/react'
 import { worldPath } from '../paths'
+import { WorldUpdatesReview } from './WorldUpdatesReview'
 
 /**
  * Turns a session's transcript (and GM notes) into a GM summary and a player recap.
@@ -28,7 +29,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
   const transcribed = session.recordings.filter((r) => r.transcript && !r.transcript.pending).length
   const hasMaterial = transcribed > 0 || session.notes.trim().length > 0
   const prompt = () => buildRecapPrompt(world, session, entities)
-  const estimate = hasMaterial ? recapCost(estimateTokens(prompt()), 2500) : 0
+  const estimate = hasMaterial ? recapCost(estimateTokens(prompt()), 6000) : 0
 
   const saveDraft = (text: string, source: 'claude-api' | 'pasted') =>
     db.sessions.update(session.id, { recapDraft: { ...parseRecap(text), source, createdAt: Date.now() } })
@@ -62,7 +63,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
     }
   }
 
-  if (session.recapDraft) return <RecapDraftReview session={session} entities={entities} worldId={world.id} note={cost} />
+  if (session.recapDraft) return <RecapDraftReview world={world} session={session} entities={entities} note={cost} />
 
   return (
     <section className="recap-panel">
@@ -71,7 +72,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
       </h2>
       <p className="muted small">
         {transcribed
-          ? `Claude reads the transcript${transcribed > 1 ? 's' : ''} and your GM notes, then drafts a GM summary and a player recap for you to check.`
+          ? `Claude reads the transcript${transcribed > 1 ? 's' : ''} and your GM notes, then drafts a GM summary, a player recap and updates for your pages, for you to check.`
           : session.recordings.length
             ? 'Transcribe a recording above first (or write some GM notes), then Claude can draft a GM summary and a player recap.'
             : 'Record the session, or write GM notes, and Claude can draft a GM summary and a player recap from them.'}
@@ -150,7 +151,8 @@ export function RecapPanel({ world, session, entities }: { world: World; session
 }
 
 /** The GM checks and edits both drafts, then chooses where each one goes. Nothing reaches players until then. */
-function RecapDraftReview({ session, entities, worldId, note }: { session: Session; entities: Entity[]; worldId: string; note: string }) {
+function RecapDraftReview({ world, session, entities, note }: { world: World; session: Session; entities: Entity[]; note: string }) {
+  const worldId = world.id
   const draft = session.recapDraft!
   const [gm, setGm] = useState(draft.gm)
   const [players, setPlayers] = useState(draft.players)
@@ -158,8 +160,10 @@ function RecapDraftReview({ session, entities, worldId, note }: { session: Sessi
   const [done, setDone] = useState<{ gm?: boolean; players?: boolean }>({})
 
   const append = (existing: string, text: string) => (existing.trim() ? `${existing.trimEnd()}\n\n${text}` : text)
+  const updatesLeft = !!draft.updates?.length && !draft.updatesDone
   const finish = () => {
     if (!done.gm && !done.players && !confirm('Throw this draft away?')) return
+    if ((done.gm || done.players) && updatesLeft && !confirm('You haven’t added the suggested world updates yet. Close the draft anyway?')) return
     db.sessions.update(session.id, { recapDraft: undefined })
   }
 
@@ -211,6 +215,8 @@ function RecapDraftReview({ session, entities, worldId, note }: { session: Sessi
           <span className="muted small">Players will see it once you reveal this session.</span>
         )}
       </div>
+
+      <WorldUpdatesReview world={world} session={session} entities={entities} />
 
       <div className="row end">
         <button className={done.gm || done.players ? 'primary' : 'ghost'} onClick={finish}>

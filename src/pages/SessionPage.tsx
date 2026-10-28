@@ -350,14 +350,22 @@ function Playback({ sessionId, recording }: { sessionId: string; recording: Reco
   const url = useAssetUrl(assetId)
   const onThisDevice = useLiveQuery(() => db.assets.get(assetId).then((a) => !!a), [assetId])
   const audio = useRef<HTMLAudioElement>(null)
+  // "Heard in" on a page links here with ?play=<recording>&t=<seconds>: jump to that moment.
+  const [params] = useSearchParams()
+  const jumpTo = params.get('play') === assetId ? Number(params.get('t')) : undefined
+  const focus = jumpTo !== undefined && !Number.isNaN(jumpTo) ? jumpTo : undefined
+  const box = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (focus !== undefined) box.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [focus, onThisDevice])
   // Recordings are big, so they stay on the device that made them; the transcript travels.
   if (onThisDevice === false)
     return (
-      <div className="playback">
+      <div className="playback" ref={box}>
         <div className="muted small">
           Recorded {new Date(startedAt).toLocaleString()} on another device. The audio stays there; its transcript is here.
         </div>
-        <TranscriptPanel sessionId={sessionId} recording={recording} worldId={worldId} seek={() => {}} />
+        <TranscriptPanel sessionId={sessionId} recording={recording} worldId={worldId} seek={() => {}} focus={focus} />
       </div>
     )
   if (!url) return null
@@ -367,7 +375,7 @@ function Playback({ sessionId, recording }: { sessionId: string; recording: Reco
     audio.current.play()
   }
   return (
-    <div className="playback">
+    <div className="playback" ref={box}>
       <div className="muted small">Recorded {new Date(startedAt).toLocaleString()}</div>
       <audio
         ref={audio}
@@ -378,10 +386,22 @@ function Playback({ sessionId, recording }: { sessionId: string; recording: Reco
           // Browser-made WebM files have no duration header, which breaks seeking.
           // Jumping to the end forces the browser to work it out.
           const a = e.currentTarget
+          const start = () => {
+            if (focus === undefined) return
+            a.currentTime = focus
+            a.play().catch(() => {})
+          }
           if (a.duration === Infinity) {
             a.currentTime = 1e101
-            a.addEventListener('durationchange', () => (a.currentTime = 0), { once: true })
-          }
+            a.addEventListener(
+              'durationchange',
+              () => {
+                a.currentTime = 0
+                start()
+              },
+              { once: true },
+            )
+          } else start()
         }}
       />
       {bookmarks.length > 0 && (
@@ -399,7 +419,7 @@ function Playback({ sessionId, recording }: { sessionId: string; recording: Reco
           ))}
         </ul>
       )}
-      <TranscriptPanel sessionId={sessionId} recording={recording} worldId={worldId} seek={seek} />
+      <TranscriptPanel sessionId={sessionId} recording={recording} worldId={worldId} seek={seek} focus={focus} />
     </div>
   )
 }

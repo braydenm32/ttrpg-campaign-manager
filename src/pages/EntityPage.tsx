@@ -21,6 +21,7 @@ import { AskGmBox } from '../players/Questions'
 import { revealAndShow, ShowButton } from '../showing'
 import { CalDateInput, formatDate, toDays } from '../calendar'
 import { RelationsBox } from '../relations'
+import { SessionMentions } from '../sessionMentions'
 import { ClocksBox } from '../clocks'
 import { Ico, TypeIcon } from '../icons'
 import { Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Spiral, Television } from '@phosphor-icons/react'
@@ -209,6 +210,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               </ul>
             </section>
           )}
+          {!e.template && <SessionMentions entity={e} sessions={sessions} worldId={worldId} isGM={isGM} />}
         </div>
         <aside className="entity-side">
           <div className="infobox">

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Help } from '../help'
 import { Link } from 'react-router-dom'
 import { db, type Recording, type Transcript, type TranscriptLine } from '../db'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { formatTime } from '../recorder'
 import { DEVICE_MODELS, useAiSettings } from './settings'
 import { saveTranscript, speakerLabels, speakerName } from './transcript'
@@ -20,11 +21,14 @@ export function TranscriptPanel({
   recording,
   worldId,
   seek,
+  focus,
 }: {
   sessionId: string
   recording: Recording
   worldId: string
   seek: (t: number) => void
+  /** A moment (in seconds) to open the transcript at and highlight. */
+  focus?: number
 }) {
   const t = recording.transcript
   const [job, setJob] = useState<{ engine: Engine; detail: string; fraction: number; abort: AbortController }>()
@@ -163,24 +167,39 @@ export function TranscriptPanel({
       </div>
     )
 
-  return <TranscriptView sessionId={sessionId} recording={recording} transcript={t} seek={seek} onRedo={() => saveTranscript(sessionId, recording.assetId, undefined)} />
+  return (
+    <TranscriptView
+      sessionId={sessionId}
+      worldId={worldId}
+      recording={recording}
+      transcript={t}
+      seek={seek}
+      focus={focus}
+      onRedo={() => saveTranscript(sessionId, recording.assetId, undefined)}
+    />
+  )
 }
 
 function TranscriptView({
   sessionId,
+  worldId,
   recording,
   transcript: t,
   seek,
+  focus,
   onRedo,
 }: {
   sessionId: string
+  worldId: string
   recording: Recording
   transcript: Transcript
   seek: (t: number) => void
+  focus?: number
   onRedo: () => void
 }) {
   const [q, setQ] = useState('')
   const [naming, setNaming] = useState(false)
+  const known = useKnownSpeakers(worldId, sessionId, recording.assetId)
   const labels = speakerLabels(t)
   const query = q.trim().toLowerCase()
   const shown = query ? t.lines.filter((l) => l.text.toLowerCase().includes(query) || speakerName(t, l.speaker).toLowerCase().includes(query)) : t.lines
@@ -195,7 +214,7 @@ function TranscriptView({
       })
 
   return (
-    <details className="transcript">
+    <details className="transcript" open={focus !== undefined || undefined}>
       <summary>
         <Ico as={Scroll} /> Transcript <span className="muted small">({t.lines.length} lines, {t.engine === 'cloud' ? 'cloud' : 'this device'})</span>
       </summary>
@@ -216,12 +235,30 @@ function TranscriptView({
         </button>
       </div>
       {naming && (
-        <div className="speaker-names">
+        <div className="speaker-names" key={JSON.stringify(t.speakers ?? {})}>
+          {known.last && (
+            <p className="small">
+              <button className="small" onClick={() => setSpeakers(sessionId, recording.assetId, labels, known.last!)}>
+                Same as last time
+              </button>{' '}
+              <span className="muted">
+                Fills in {Object.values(known.last).filter(Boolean).slice(0, 4).join(', ')}
+                {Object.values(known.last).filter(Boolean).length > 4 ? '…' : ''} by speaker letter. AssemblyAI letters people in the order they first speak, so
+                check each one against what they first say.
+              </span>
+            </p>
+          )}
+          <datalist id={`speakers-${recording.assetId}`}>
+            {known.names.map((n) => (
+              <option key={n} value={n} />
+            ))}
+          </datalist>
           {labels.map((l) => (
             <label key={l} className="row small">
               <span className="speaker-chip">{l}</span>
               <input
                 defaultValue={t.speakers?.[l] ?? ''}
+                list={`speakers-${recording.assetId}`}
                 placeholder={`Who is speaker ${l}? e.g. "Sam (Wren)"`}
                 onBlur={(e) => rename(l, e.target.value)}
               />
@@ -235,7 +272,11 @@ function TranscriptView({
       ) : (
         <ol className="transcript-lines">
           {shown.slice(0, query ? 300 : undefined).map((l, i) => (
-            <li key={`${l.start}-${i}`}>
+            <li
+              key={`${l.start}-${i}`}
+              className={focus !== undefined && Math.floor(l.start) === focus ? 'focus' : undefined}
+              ref={focus !== undefined && Math.floor(l.start) === focus ? (el) => el?.scrollIntoView({ block: 'center' }) : undefined}
+            >
               <button className="link" onClick={() => seek(l.start)} title="Play from here">
                 <code>{formatTime(l.start)}</code>
               </button>
@@ -247,4 +288,37 @@ function TranscriptView({
       )}
     </details>
   )
+}
+
+/**
+ * Speaker names used before in this world: every name given in any transcript (for the name boxes'
+ * suggestions), and the names from the latest other transcript that has them ("Same as last time").
+ */
+function useKnownSpeakers(worldId: string, sessionId: string, assetId: string) {
+  return (
+    useLiveQuery(async () => {
+      const sessions = await db.sessions.where({ worldId }).toArray()
+      const named = sessions
+        .flatMap((s) => s.recordings.map((r) => ({ s, r })))
+        .filter(({ r }) => r.assetId !== assetId && r.transcript?.speakers && Object.values(r.transcript.speakers).some((n) => n.trim()))
+        .sort((a, b) => b.r.startedAt - a.r.startedAt)
+      const names = [...new Set(named.flatMap(({ r }) => Object.values(r.transcript!.speakers!).map((n) => n.trim()).filter(Boolean)))].sort()
+      const last = named.find(({ s }) => s.id !== sessionId)?.r.transcript?.speakers ?? named[0]?.r.transcript?.speakers
+      return { names, last }
+    }, [worldId, sessionId, assetId]) ?? { names: [] as string[], last: undefined as Record<string, string> | undefined }
+  )
+}
+
+/** Copies names onto this transcript's speakers by letter, keeping any already given. */
+function setSpeakers(sessionId: string, assetId: string, labels: string[], from: Record<string, string>) {
+  return db.sessions
+    .where('id')
+    .equals(sessionId)
+    .modify((s) => {
+      const tr = s.recordings.find((r) => r.assetId === assetId)?.transcript
+      if (!tr) return
+      const next = { ...tr.speakers }
+      for (const l of labels) if (!next[l]?.trim() && from[l]?.trim()) next[l] = from[l]
+      tr.speakers = next
+    })
 }

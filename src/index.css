@@ -504,6 +504,19 @@ button.social.facebook .social-icon { background: #1877f2; }
 .recap-panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 1em; display: flex; flex-direction: column; gap: .6em; }
 .recap-panel h2, .recap-panel h3 { margin: 0; }
 .recap-panel h3 { margin-top: .4em; }
+.world-updates { display: flex; flex-direction: column; gap: .5em; border-top: 1px solid var(--border); padding-top: .8em; margin-top: .4em; }
+.update-group h4 { margin: .3em 0; font-family: var(--font-book); font-size: 1.05rem; color: var(--heading); }
+.update-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .45em; }
+.update-list > li { padding: .45em .6em; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+.update-list > li.off { opacity: .55; }
+.update-list label.row { align-items: baseline; gap: .5em; }
+.update-extras { margin: .25em 0 0 1.8em; gap: .4em 1em; color: var(--muted); }
+.update-editor { display: grid; gap: .4em; margin: .5em 0 0 1.8em; }
+.update-editor label { display: flex; flex-direction: column; gap: .2em; }
+.world-updates .warn { margin: .3em 0 0 1.8em; color: var(--accent); }
+.badge.new { font-size: .75em; padding: .05em .5em; border-radius: 999px; background: color-mix(in srgb, var(--good) 20%, var(--panel)); color: var(--text); }
+.transcript-lines li.focus { background: color-mix(in srgb, var(--accent) 18%, transparent); border-radius: 4px; }
+.heard-in ul { list-style: none; padding-left: 1em; margin: .2em 0 .4em; }
 .recap-paste { display: flex; flex-direction: column; gap: .5em; }
 .recap-stream { white-space: pre-wrap; max-height: 18em; overflow-y: auto; font-family: inherit; font-size: .92em; margin: 0; }
 @media (max-width: 700px) { .speaker-names label { flex-wrap: wrap; } .speaker-names .muted { max-width: 100%; } }

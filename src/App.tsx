@@ -35,6 +35,7 @@ import MapList from './pages/MapList'
 const MapView = lazy(() => import('./pages/MapView'))
 const MapBuilder = lazy(() => import('./pages/MapBuilder'))
 const Timeline = lazy(() => import('./pages/Timeline'))
+const Chronicle = lazy(() => import('./pages/Chronicle'))
 import CampaignPage from './pages/CampaignPage'
 import SessionPage from './pages/SessionPage'
 const Lectern = lazy(() => import('./pages/Lectern'))
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="maps/:mapId" element={<MapView />} />
             <Route path="maps/:mapId/draw" element={<MapBuilder />} />
             <Route path="timeline" element={<Timeline />} />
+            <Route path="chronicle" element={<Chronicle />} />
             <Route path="threads" element={<Threads />} />
             <Route path="scratchpad" element={<Scratchpad />} />
             <Route path="c/:campaignId" element={<CampaignPage />} />
