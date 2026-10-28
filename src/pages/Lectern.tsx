@@ -395,7 +395,19 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
                 <option value="ally">Ally</option>
                 <option value="foe">Foe</option>
               </select>
-              <button className="ghost" title="Remove" onClick={() => edit((l) => void (l.combat.combatants = l.combat.combatants.filter((x) => x.id !== c.id)))}>
+              <button className="ghost" title="Remove" onClick={() =>
+                  edit((l) => {
+                    // Removing whoever's turn it is passes the turn on to the next one, not back to the top.
+                    if (l.combat.activeId === c.id) {
+                      const order = ordered(l.combat.combatants)
+                      const i = order.findIndex((x) => x.id === c.id)
+                      const rest = order.filter((x) => x.id !== c.id)
+                      if (rest.length && i === order.length - 1) l.combat.round++
+                      l.combat.activeId = rest.length ? rest[i % rest.length].id : undefined
+                    }
+                    l.combat.combatants = l.combat.combatants.filter((x) => x.id !== c.id)
+                  })
+                }>
                 ✕
               </button>
             </div>

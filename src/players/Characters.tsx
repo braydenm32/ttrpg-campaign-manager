@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { cloudErrorMessage } from '../cloud/client'
 import { Help } from '../help'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -28,7 +29,7 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
       await fn()
       await reload()
     } catch (e) {
-      setError((e as Error).message)
+      setError(cloudErrorMessage(e))
     } finally {
       setBusy(false)
     }
@@ -132,7 +133,7 @@ function EditMyCharacter({ entity, cloudId }: { entity: Entity; cloudId: string 
                 await editMyCharacter(cloudId, entity.id, { summary, fields, playerBody })
                 setOpen(false)
               } catch (err) {
-                setError((err as Error).message)
+                setError(cloudErrorMessage(err))
               } finally {
                 setBusy(false)
               }
@@ -247,7 +248,7 @@ export function ChooseCharacterBanner({ world }: { world: World }) {
                   try {
                     await claimCharacter(memberOf, e.id)
                   } catch (err) {
-                    setError((err as Error).message)
+                    setError(cloudErrorMessage(err))
                   } finally {
                     setBusy('')
                   }

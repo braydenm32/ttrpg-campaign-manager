@@ -45,11 +45,14 @@ export function parseUpdates(text: string): WorldUpdate[] {
   const out: WorldUpdate[] = []
   for (const r of raw as Record<string, unknown>[]) {
     if (!r || typeof r !== 'object') continue
-    const base = { id: newId(), on: r.kind !== 'conflict' }
+    // Claude may capitalise a kind or status ("Dead", "Resolved"); read them either way.
+    const low = (v: unknown) => str(v).toLowerCase()
+    const kind = low(r.kind)
+    const base = { id: newId(), on: kind !== 'conflict' }
     const note = str(r.note) || undefined
-    switch (r.kind) {
+    switch (kind) {
       case 'new': {
-        const type = (NEW_TYPES as readonly string[]).includes(str(r.type)) ? (str(r.type) as EntityType) : 'npc'
+        const type = (NEW_TYPES as readonly string[]).includes(low(r.type)) ? (low(r.type) as EntityType) : 'npc'
         // When Claude thinks a "new" name is really a known page misheard, adding to that page is the safer default.
         if (str(r.name))
           out.push({ ...base, kind: 'new', type, name: str(r.name), summary: str(r.summary), details: str(r.details), in: str(r.in) || undefined, sameAs: str(r.sameAs) || undefined, useSameAs: !!str(r.sameAs) })
@@ -59,8 +62,8 @@ export function parseUpdates(text: string): WorldUpdate[] {
         if (str(r.page) && note) out.push({ ...base, kind: 'note', page: str(r.page), note })
         break
       case 'quest':
-        if (str(r.page) && ['open', 'active', 'done', 'failed'].includes(str(r.status)))
-          out.push({ ...base, kind: 'quest', page: str(r.page), status: str(r.status) as 'open', note })
+        if (str(r.page) && ['open', 'active', 'done', 'failed'].includes(low(r.status)))
+          out.push({ ...base, kind: 'quest', page: str(r.page), status: low(r.status) as 'open', note })
         break
       case 'relation':
         if (str(r.from) && str(r.to) && str(r.relation)) out.push({ ...base, kind: 'relation', from: str(r.from), to: str(r.to), relation: str(r.relation).toLowerCase(), note })
@@ -77,14 +80,14 @@ export function parseUpdates(text: string): WorldUpdate[] {
           })
         break
       case 'status':
-        if (str(r.page) && str(r.status) in LIFE_STATUS) out.push({ ...base, kind: 'status', page: str(r.page), status: str(r.status) as LifeStatus, note })
+        if (str(r.page) && Object.hasOwn(LIFE_STATUS, low(r.status))) out.push({ ...base, kind: 'status', page: str(r.page), status: low(r.status) as LifeStatus, note })
         break
       case 'item':
         if (str(r.item) && str(r.to))
           out.push({ ...base, kind: 'item', item: str(r.item), to: str(r.to), quantity: typeof r.quantity === 'number' && r.quantity > 0 ? Math.round(r.quantity) : undefined })
         break
       case 'thread': {
-        const action = str(r.action)
+        const action = low(r.action)
         if (action === 'raised' ? str(r.name) : ['moved', 'resolved', 'dropped'].includes(action) && str(r.page))
           out.push({ ...base, kind: 'thread', action: action as 'raised', page: str(r.page) || undefined, name: str(r.name) || undefined, note })
         break
@@ -284,10 +287,11 @@ export async function applyUpdates(world: World, session: Session, updates: Worl
         break
       }
       case 'item': {
-        const item = lookup(u.item) ?? create('item', u.item)
         const toParty = /^(the )?party$/i.test(u.to.trim())
         const holder = toParty ? undefined : lookup(u.to)
+        // No one to give it to: skipped, as the checklist says, without making a blank item page.
         if (!toParty && !holder) break
+        const item = lookup(u.item) ?? create('item', u.item)
         item.heldBy = toParty ? 'party' : holder!.id
         seen.add(item.id)
         if (u.quantity) item.quantity = u.quantity

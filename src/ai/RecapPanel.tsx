@@ -158,6 +158,35 @@ function RecapDraftReview({ world, session, entities, note }: { world: World; se
   const [players, setPlayers] = useState(draft.players)
   const [preview, setPreview] = useState(false)
   const [done, setDone] = useState<{ gm?: boolean; players?: boolean }>({})
+  // Edits are kept with the draft (checked every second), so following a link and coming back doesn't lose them.
+  const latest = useRef({ gm, players, changed: false })
+  const sessionId = session.id
+  useEffect(() => {
+    const keep = () => {
+      if (!latest.current.changed) return
+      latest.current.changed = false
+      const { gm, players } = latest.current
+      void db.sessions
+        .where('id')
+        .equals(sessionId)
+        .modify((s) => {
+          if (s.recapDraft) Object.assign(s.recapDraft, { gm, players })
+        })
+    }
+    const timer = setInterval(keep, 1000)
+    return () => {
+      clearInterval(timer)
+      keep()
+    }
+  }, [sessionId])
+  const editGm = (v: string) => {
+    latest.current = { gm: v, players, changed: true }
+    setGm(v)
+  }
+  const editPlayers = (v: string) => {
+    latest.current = { gm, players: v, changed: true }
+    setPlayers(v)
+  }
 
   const append = (existing: string, text: string) => (existing.trim() ? `${existing.trimEnd()}\n\n${text}` : text)
   const updatesLeft = !!draft.updates?.length && !draft.updatesDone
@@ -193,7 +222,7 @@ function RecapDraftReview({ world, session, entities, note }: { world: World; se
       {preview ? (
         <Markdown text={gm} entities={entities} worldId={worldId} showSecrets />
       ) : (
-        <textarea rows={10} value={gm} onChange={(e) => setGm(e.target.value)} />
+        <textarea rows={10} value={gm} onChange={(e) => editGm(e.target.value)} />
       )}
       <div className="row">
         <button onClick={useGm} disabled={!gm.trim() || done.gm}>
@@ -205,7 +234,7 @@ function RecapDraftReview({ world, session, entities, note }: { world: World; se
       {preview ? (
         <Markdown text={players} entities={entities} worldId={worldId} showSecrets={false} />
       ) : (
-        <textarea rows={8} value={players} onChange={(e) => setPlayers(e.target.value)} />
+        <textarea rows={8} value={players} onChange={(e) => editPlayers(e.target.value)} />
       )}
       <div className="row">
         <button onClick={usePlayers} disabled={!players.trim() || done.players}>

@@ -5,7 +5,7 @@ import { Empty, Modal, VisibilityBadge } from '../components'
 import { blankEntity, db, newId, type Entity, type TimelineAge, type World } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
-import { formatDate, MonthGrid, WorldToday } from '../calendar'
+import { formatDate, MonthGrid, toDays, WorldToday } from '../calendar'
 import { useWorldSessions } from '../threads'
 import { Ico } from '../icons'
 import { Hourglass } from '@phosphor-icons/react'
@@ -26,9 +26,16 @@ export default function Timeline() {
     for (let p = e.parentId, n = 0; p && n < 12; p = byId.get(p)?.parentId, n++) if (p === placeId) return true
     return false
   }
+  const when = (e: Entity) => (world?.calendar && e.eventWhen ? toDays(world.calendar, e.eventWhen) : undefined)
   const events = entities
     .filter((e) => e.type === 'event' && (!place || isWithin(e, place)))
-    .sort((a, b) => (a.eventOrder ?? a.createdAt) - (b.eventOrder ?? b.createdAt))
+    .sort((a, b) => {
+      // Dated events go by their date, whatever order number they carry; same-day or undated ones by their order.
+      const wa = when(a)
+      const wb = when(b)
+      if (wa !== undefined && wb !== undefined && wa !== wb) return wa - wb
+      return (a.eventOrder ?? a.createdAt) - (b.eventOrder ?? b.createdAt)
+    })
   const [editingAges, setEditingAges] = useState(false)
   const ages = world?.ages ?? []
   const history = events.filter((e) => e.eventEra !== 'campaign')

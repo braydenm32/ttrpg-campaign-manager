@@ -108,6 +108,7 @@ export async function importWorld(file: File): Promise<string> {
       updatedAt: now,
       cloud: undefined,
       shared: undefined,
+      coverId: opt(b.world.coverId),
       showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId) } : undefined,
       handouts: b.world.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId) })),
     })
@@ -155,6 +156,7 @@ export async function importWorld(file: File): Promise<string> {
         recap: pics(s.recap),
         entityIds: s.entityIds.map(id),
         recordings: s.recordings.map((r) => ({ ...r, assetId: id(r.assetId) })),
+        ledger: s.ledger?.map((l) => ({ ...l, entityId: opt(l.entityId) })),
         // The Lectern points at pages: the scene, who's present and who's in the fight.
         lectern: s.lectern && {
           ...s.lectern,

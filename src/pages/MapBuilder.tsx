@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Empty, VisibilityToggle } from '../components'
+import { DraftText, Empty, VisibilityToggle } from '../components'
 import { blankEntity, db, ENTITY_LABELS, newId, type Entity, type Pin, type WorldMap } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { renderPlayerFog } from '../fog'
@@ -1762,7 +1762,7 @@ function PieceLink({ shape, pin, onLink }: { shape: Extract<Shape, { kind: 'asse
           </label>
           <label>
             Name on the map
-            <input value={pin.label} onChange={(e) => db.pins.update(pin.id, { label: e.target.value })} />
+            <DraftText value={pin.label} onCommit={(label) => db.pins.update(pin.id, { label })} />
           </label>
           <div className="row spread">
             <VisibilityToggle value={pin.visibility} onChange={(v) => db.pins.update(pin.id, { visibility: v })} />
