@@ -1,0 +1,329 @@
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import { blankLectern, newId, type Entity, type Session, type Sound } from '../db'
+import { initiativeOrder } from '../encounters'
+import { joinRoom, JOINED, sendOnce, type LiveRoom } from './live'
+
+/**
+ * The live link between the GM's Lectern and the players' Common Room, over the world's "members"
+ * room. Nothing here is saved anywhere: it's what's happening at the table right now.
+ *  - "table" (GM → players): the session being played, the scene, whose turn it is, the music.
+ *  - "hello" (player → GM): a player just opened the app; the GM's app answers with "table".
+ *  - "dice" (anyone): a roll the whole table sees.
+ *  - "signal" (player → GM): "I'd like to do something", "I need a break" or "I'll use inspiration".
+ *  - "signal-seen" (GM → players): the GM saw a signal.
+ * Only what the GM's own filters let through is ever sent: never HP, conditions, scene notes or
+ * a page players can't see.
+ */
+
+export interface TableTurn {
+  id: string
+  name: string
+  side: 'pc' | 'ally' | 'foe'
+  /** The GM's id of a player character's page, so its player gets "your turn". */
+  entityId?: string
+}
+
+export interface TableState {
+  session: { id: string; number: number; title: string; campaignId: string }
+  scene?: { name: string; entityId?: string }
+  music?: string[]
+  combat?: { round: number; turnId?: string; order: TableTurn[] }
+}
+
+export interface TableRoll {
+  id: string
+  who: string
+  expr: string
+  total: number
+  detail: string
+  crit?: 'high' | 'low'
+  at: number
+}
+
+export type SignalKind = 'act' | 'break' | 'inspiration'
+
+export interface TableSignal {
+  id: string
+  kind: SignalKind
+  who: string
+  /** The GM's id of the character (for inspiration). */
+  entityId?: string
+  at: number
+}
+
+interface TableStore {
+  table: TableState | null
+  /** When the last "table" message arrived (this device's clock). */
+  heard: number
+  rolls: TableRoll[]
+  /** For the GM: signals players sent that haven't been answered. */
+  signals: TableSignal[]
+  /** For a player: signals sent from here, and whether the GM saw them. */
+  sent: Record<string, 'sent' | 'seen'>
+}
+
+const empty: TableStore = { table: null, heard: 0, rolls: [], signals: [], sent: {} }
+const stores = new Map<string, TableStore>()
+const listeners = new Map<string, Set<() => void>>()
+const links = new Map<string, LiveRoom>()
+
+const get = (cloudId: string) => stores.get(cloudId) ?? empty
+function update(cloudId: string, fn: (s: TableStore) => TableStore) {
+  stores.set(cloudId, fn(get(cloudId)))
+  listeners.get(cloudId)?.forEach((l) => l())
+}
+
+/** The live table for a synced or joined world (its cloud id). */
+export function useTable(cloudId: string | undefined) {
+  const store = useSyncExternalStore(
+    (l) => {
+      if (!cloudId) return () => {}
+      const set = listeners.get(cloudId) ?? new Set()
+      listeners.set(cloudId, set)
+      set.add(l)
+      return () => set.delete(l)
+    },
+    () => (cloudId ? get(cloudId) : empty),
+  )
+  // "Playing now" fades if the GM's app goes quiet (it repeats itself every minute while open).
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(t)
+  }, [])
+  const live = !!store.table && now - store.heard < STALE_AFTER
+  return { ...store, table: live ? store.table : null }
+}
+
+const HEARTBEAT = 60_000
+const STALE_AFTER = 3 * HEARTBEAT
+
+const room = (cloudId: string) => `members:${cloudId}`
+const send = (cloudId: string, event: string, payload: object) => {
+  const link = links.get(cloudId)
+  return link ? link.send(event, payload) : sendOnce(room(cloudId), event, payload)
+}
+
+// ---------- reading what arrives (anyone in the room can send, so nothing is taken on trust) ----------
+
+const text = (x: unknown, max = 80) => (typeof x === 'string' ? x.slice(0, max) : '')
+const num = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : 0)
+const SIDES = ['pc', 'ally', 'foe'] as const
+const KINDS: SignalKind[] = ['act', 'break', 'inspiration']
+
+function readTable(p: Record<string, unknown>): TableState | null {
+  const s = p.session as Record<string, unknown> | undefined
+  if (p.off || !s || typeof s !== 'object') return null
+  const scene = p.scene as Record<string, unknown> | undefined
+  const combat = p.combat as Record<string, unknown> | undefined
+  return {
+    session: { id: text(s.id), number: num(s.number), title: text(s.title, 200), campaignId: text(s.campaignId) },
+    scene: scene && typeof scene === 'object' ? { name: text(scene.name, 200), entityId: text(scene.entityId) || undefined } : undefined,
+    music: Array.isArray(p.music) ? p.music.slice(0, 6).map((m) => text(m, 120)).filter(Boolean) : undefined,
+    combat:
+      combat && typeof combat === 'object' && Array.isArray(combat.order)
+        ? {
+            round: num(combat.round),
+            turnId: text(combat.turnId) || undefined,
+            order: (combat.order as Record<string, unknown>[]).slice(0, 60).map((t) => ({
+              id: text(t?.id),
+              name: text(t?.name),
+              side: SIDES.includes(t?.side as 'pc') ? (t.side as TableTurn['side']) : 'foe',
+              entityId: text(t?.entityId) || undefined,
+            })),
+          }
+        : undefined,
+  }
+}
+
+function readRoll(p: Record<string, unknown>): TableRoll | null {
+  if (!text(p.id) || !text(p.expr)) return null
+  return {
+    id: text(p.id),
+    who: text(p.who) || 'Someone',
+    expr: text(p.expr, 60),
+    total: num(p.total),
+    detail: text(p.detail, 300),
+    crit: p.crit === 'high' || p.crit === 'low' ? p.crit : undefined,
+    at: Date.now(),
+  }
+}
+
+const addRoll = (cloudId: string, r: TableRoll) =>
+  update(cloudId, (s) => (s.rolls.some((x) => x.id === r.id) ? s : { ...s, rolls: [r, ...s.rolls].slice(0, 30) }))
+
+// ---------- players ----------
+
+/** A player's side of the link, kept open while their world is on screen. */
+export function linkAsPlayer(cloudId: string) {
+  const r = joinRoom(room(cloudId))
+  links.set(cloudId, r)
+  const hello = () => void r.send('hello')
+  r.on(JOINED, hello)
+  if (r.connected()) hello()
+  r.on('table', (p) => update(cloudId, (s) => ({ ...s, table: readTable(p), heard: Date.now() })))
+  r.on('dice', (p) => {
+    const roll = readRoll(p)
+    if (roll) addRoll(cloudId, roll)
+  })
+  r.on<{ id?: unknown }>('signal-seen', (p) => {
+    const id = text(p.id)
+    update(cloudId, (s) => (s.sent[id] ? { ...s, sent: { ...s.sent, [id]: 'seen' } } : s))
+  })
+  return () => {
+    if (links.get(cloudId) === r) links.delete(cloudId)
+    r.leave()
+  }
+}
+
+/** Sends a signal to the GM. Returns its id, or '' if it couldn't be sent. */
+export async function sendSignal(cloudId: string, kind: SignalKind, who: string, entityId?: string) {
+  const sig: TableSignal = { id: newId(), kind, who, entityId, at: Date.now() }
+  update(cloudId, (s) => ({ ...s, sent: { ...s.sent, [sig.id]: 'sent' } }))
+  const ok = await send(cloudId, 'signal', sig)
+  if (!ok)
+    update(cloudId, (s) => {
+      const { [sig.id]: _gone, ...sent } = s.sent
+      return { ...s, sent }
+    })
+  return ok ? sig.id : ''
+}
+
+/** Shows a roll to everyone at the table (and here). */
+export async function shareRoll(cloudId: string, r: Omit<TableRoll, 'id' | 'at'>) {
+  const roll = { ...r, id: newId(), at: Date.now() }
+  addRoll(cloudId, roll)
+  return send(cloudId, 'dice', roll)
+}
+
+// ---------- the GM ----------
+
+/** The GM's side: answers players who arrive, and collects their rolls and signals. */
+export function linkAsHost(cloudId: string, current: () => TableState | null) {
+  const r = joinRoom(room(cloudId))
+  links.set(cloudId, r)
+  const tell = () => void r.send('table', current() ?? { off: true })
+  r.on('hello', tell)
+  // Nothing to say while no session is being run: players start from nothing anyway.
+  const remind = () => current() && tell()
+  r.on(JOINED, remind)
+  r.on('dice', (p) => {
+    const roll = readRoll(p)
+    if (roll) addRoll(cloudId, roll)
+  })
+  r.on('signal', (p) => {
+    const kind = p.kind as SignalKind
+    if (!KINDS.includes(kind) || !text(p.id)) return
+    const sig: TableSignal = { id: text(p.id), kind, who: text(p.who) || 'A player', entityId: text(p.entityId) || undefined, at: Date.now() }
+    update(cloudId, (s) => (s.signals.some((x) => x.id === sig.id) ? s : { ...s, signals: [...s.signals, sig].slice(-20) }))
+  })
+  // Players stop showing "playing now" if they hear nothing for a few minutes, so say it again now and then.
+  const beat = setInterval(remind, HEARTBEAT)
+  return () => {
+    clearInterval(beat)
+    if (links.get(cloudId) === r) links.delete(cloudId)
+    r.leave()
+  }
+}
+
+/** The GM's app sends what players should see now (null: nothing is being played). */
+export function publishTable(cloudId: string, state: TableState | null) {
+  const before = get(cloudId).table
+  if (JSON.stringify(before) === JSON.stringify(state)) return
+  // The GM's own copy, so previewing the Common Room shows it too.
+  update(cloudId, (s) => ({ ...s, table: state, heard: Date.now() }))
+  void send(cloudId, 'table', state ?? { off: true })
+}
+
+/** The GM has dealt with a signal: it goes away, and the player sees that it was seen. */
+export function answerSignal(cloudId: string, id: string) {
+  update(cloudId, (s) => ({ ...s, signals: s.signals.filter((x) => x.id !== id) }))
+  void send(cloudId, 'signal-seen', { id })
+}
+
+/**
+ * What players see of a session being run, filtered by the GM's choices on the Lectern. Only
+ * pages players can see are named or linked; foes appear only once combat has started.
+ */
+export function tableStateFor(session: Session, pages: Map<string, Entity>, sounds: Sound[], playing: string[]): TableState | null {
+  const l = { ...blankLectern(), ...session.lectern }
+  const share = l.share ?? {}
+  if (share.off) return null
+  const visible = (id?: string) => {
+    const e = id ? pages.get(id) : undefined
+    return e && e.visibility === 'players' && !e.template ? e : undefined
+  }
+  const place = visible(l.sceneId)
+  const order = initiativeOrder(l.combat.combatants)
+  const counts = { pc: 0, ally: 0, foe: 0 }
+  const music = share.noMusic
+    ? []
+    : sounds.filter((s) => playing.includes(s.id) && (s.loop || s.syrinscape?.kind === 'mood')).map((s) => s.name)
+  return {
+    session: {
+      id: session.id,
+      number: session.number,
+      title: session.visibility === 'players' ? session.title : `Session ${session.number}`,
+      campaignId: session.campaignId,
+    },
+    scene: place ? { name: place.name, entityId: place.id } : undefined,
+    music: music.length ? music : undefined,
+    // Nothing about a fight until the GM starts it, so setting one up gives nothing away.
+    combat:
+      l.combat.activeId && order.length
+        ? {
+            round: l.combat.round,
+            turnId: l.combat.activeId,
+            order: order.map((c) => {
+              const pc = c.side === 'pc' ? visible(c.entityId) : undefined
+              counts[c.side]++
+              const name = pc?.name ?? (share.hideNames && c.side !== 'pc' ? `${c.side === 'foe' ? 'Enemy' : 'Ally'} ${counts[c.side]}` : c.name)
+              return { id: c.id, name, side: c.side, entityId: pc?.id }
+            }),
+          }
+        : undefined,
+  }
+}
+
+// ---------- which session the GM is running ----------
+
+const liveKey = (worldId: string) => `codex.liveSession.${worldId}`
+const liveListeners = new Set<() => void>()
+const memory = new Map<string, string | undefined>()
+
+/** The session the GM is running in this world (the last Lectern opened), kept until it ends. */
+export function setLiveSession(worldId: string, sessionId: string | undefined) {
+  if (memory.get(worldId) === sessionId && memory.has(worldId)) return
+  memory.set(worldId, sessionId)
+  try {
+    // Kept for this tab, so a reload doesn't stop the table link.
+    if (sessionId) sessionStorage.setItem(liveKey(worldId), sessionId)
+    else sessionStorage.removeItem(liveKey(worldId))
+  } catch {
+    // Storage blocked: it lasts until the page reloads.
+  }
+  liveListeners.forEach((l) => l())
+}
+
+export function useLiveSession(worldId: string) {
+  return useSyncExternalStore(
+    (l) => {
+      liveListeners.add(l)
+      return () => liveListeners.delete(l)
+    },
+    () => {
+      if (memory.has(worldId)) return memory.get(worldId)
+      try {
+        return sessionStorage.getItem(liveKey(worldId)) ?? undefined
+      } catch {
+        return undefined
+      }
+    },
+  )
+}
+
+/** A page's GM id, from its id on this device (a joined world's local ids carry a suffix). */
+export const gmIdOf = (localId: string) => localId.replace(/@m[0-9a-f]{8}$/, '')
+
+/** A page's id on this device, from the GM's id. */
+export const localIdOf = (memberOf: string | undefined, gmId: string) => (memberOf ? `${gmId}@m${memberOf.slice(0, 8)}` : gmId)

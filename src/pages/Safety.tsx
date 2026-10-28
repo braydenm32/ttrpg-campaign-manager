@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../cloud/client'
-import { liveChannel } from '../cloud/share'
+import { joinRoom, sendOnce } from '../cloud/live'
 import { DraftText, Empty } from '../components'
 import { db, type Safety, type World } from '../db'
 import { Help } from '../help'
@@ -159,21 +159,7 @@ const channelName = (cloudWorldId: string) => `safety:${cloudWorldId}`
 async function sendXCard(cloudId: string) {
   const { error } = await supabase.rpc('tap_xcard', { wid: cloudId })
   if (error) throw new Error('Couldn’t reach your GM. Tell them in person, or check your connection.')
-  const ch = liveChannel(channelName(cloudId))
-  await new Promise<void>((resolve) => {
-    const t = setTimeout(resolve, 8000)
-    ch.subscribe((status) => {
-      if (status === 'SUBSCRIBED')
-        ch.send({ type: 'broadcast', event: 'xcard', payload: {} }).finally(() => {
-          clearTimeout(t)
-          resolve()
-        })
-      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        clearTimeout(t)
-        resolve()
-      }
-    })
-  }).finally(() => supabase.removeChannel(ch))
+  await sendOnce(channelName(cloudId), 'xcard', {}, 8000)
 }
 
 export function XCardButton({ cloudId, small }: { cloudId: string; small?: boolean }) {
@@ -232,13 +218,12 @@ export function XCardAlert({ world }: { world: World }) {
       if (t) setTap({ at: t, live: false })
     }
     check()
-    const ch = liveChannel(channelName(world.id))
-      .on('broadcast', { event: 'xcard' }, () => setTap({ at: 0, live: true }))
-      .subscribe()
+    const room = joinRoom(channelName(world.id))
+    room.on('xcard', () => setTap({ at: 0, live: true }))
     const onVisible = () => !document.hidden && check()
     document.addEventListener('visibilitychange', onVisible)
     return () => {
-      supabase.removeChannel(ch)
+      room.leave()
       document.removeEventListener('visibilitychange', onVisible)
     }
   }, [listening, world.id])

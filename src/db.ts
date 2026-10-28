@@ -337,6 +337,8 @@ export interface Entity {
   statusKnown?: boolean
   /** Player characters: the campaign they play in, when a world has several groups. Unset means any. */
   campaignId?: string
+  /** Player characters: inspiration or hero points the GM has handed out. Players can see it. */
+  inspiration?: number
   createdAt: number
   updatedAt: number
 }
@@ -600,6 +602,12 @@ export interface LecternState {
   presentIds: string[]
   combat: { round: number; activeId?: string; combatants: Combatant[] }
   rolls: { id: string; expr: string; total: number; detail: string; crit?: 'high' | 'low'; at: number }[]
+  /**
+   * What joined players see of this session in their Common Room while it's being run: the scene's
+   * name (if its page is revealed), the turn order and the music. Unset means the usual: all of
+   * that, with names, and the GM's own rolls kept private.
+   */
+  share?: { off?: boolean; hideNames?: boolean; noMusic?: boolean; rolls?: boolean }
 }
 
 export const blankLectern = (): LecternState => ({ sceneText: '', presentIds: [], combat: { round: 0, combatants: [] }, rolls: [] })

@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { WorldToday } from './calendar'
 import { db, type Session, type World } from './db'
@@ -8,6 +8,7 @@ import { createNextSession } from './sessions'
 import { Ico } from './icons'
 import { FlagCheckered } from '@phosphor-icons/react'
 import { worldPath } from './paths'
+import { setLiveSession, useLiveSession } from './cloud/table'
 
 /**
  * Wrapping up after play, in one place: transcribe the recording, write the recap with Claude,
@@ -18,6 +19,11 @@ import { worldPath } from './paths'
 export function EndSessionChecklist({ world, session, onClose }: { world: World; session: Session; onClose: () => void }) {
   const navigate = useNavigate()
   const [busy, setBusy] = useState(false)
+  // Wrapping up ends the live link: players' Common Room stops showing this session as being played.
+  const live = useLiveSession(world.id)
+  useEffect(() => {
+    if (live === session.id) setLiveSession(world.id, undefined)
+  }, [live, session.id, world.id])
   const later = useLiveQuery(
     () => db.sessions.where({ campaignId: session.campaignId }).filter((s) => s.number > session.number).sortBy('number'),
     [session.campaignId, session.number],

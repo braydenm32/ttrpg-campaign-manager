@@ -24,7 +24,7 @@ import { RelationsBox } from '../relations'
 import { SessionMentions } from '../sessionMentions'
 import { ClocksBox } from '../clocks'
 import { Ico, TypeIcon } from '../icons'
-import { Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Spiral, Television } from '@phosphor-icons/react'
+import { Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Sparkle, Spiral, Television } from '@phosphor-icons/react'
 import { initials } from '../text'
 import { pagePath, resolvePage, typePath, usePathsVersion, worldPath } from '../paths'
 
@@ -227,6 +227,14 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               </div>
             )}
             <dl className="facts">
+              {e.type === 'pc' && !!e.inspiration && (
+                <div>
+                  <dt>Inspiration</dt>
+                  <dd className="inspired">
+                    <Ico as={Sparkle} /> {e.inspiration}
+                  </dd>
+                </div>
+              )}
               {e.status && (
                 <div>
                   <dt>Status</dt>
@@ -488,6 +496,14 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
                   Players know this
                 </span>
               )}
+            </label>
+          )}
+          {d.type === 'pc' && (
+            <label>
+              <span>
+                Inspiration <Help topic="inspiration" />
+              </span>
+              <input type="number" min={0} value={d.inspiration ?? 0} onChange={(ev) => set('inspiration', Math.max(0, Number(ev.target.value) || 0) || undefined)} />
             </label>
           )}
           {d.type === 'pc' && campaigns.length > 1 && (

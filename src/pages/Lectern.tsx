@@ -1,12 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { partyOf } from '../sessions'
 import { DraftText, Empty } from '../components'
 import { ENTITY_LABELS, blankLectern, db, newId, type Combatant, type Entity, type LecternState } from '../db'
 import { modifierFrom, roll, rollDie } from '../dice'
-import { addCombatants, fieldOf, fromEntity, numberFrom } from '../encounters'
+import { addCombatants, fieldOf, fromEntity, initiativeOrder, numberFrom } from '../encounters'
 import {
   generateNpc,
   generateShop,
@@ -32,8 +32,10 @@ import { ShowPanel } from '../showing'
 import { WorldToday } from '../calendar'
 import { ClocksPanel } from '../clocks'
 import { Ico, TypeIcon } from '../icons'
-import { BookOpen, CastleTurret, CloudFog, DiceFive, FlagCheckered, MapTrifold, Prohibit, Shield, Spiral, Sword, User } from '@phosphor-icons/react'
+import { Armchair, BookOpen, CastleTurret, CloudFog, DiceFive, FlagCheckered, MapTrifold, Prohibit, Shield, Sparkle, Spiral, Sword, User } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
+import { RollDetail, RollLog } from '../atTheTable'
+import { setLiveSession, shareRoll, useTable } from '../cloud/table'
 
 /**
  * The Lectern: one screen for running a session at the table.
@@ -46,6 +48,10 @@ export default function Lectern() {
   const { isGM } = useViewMode()
   const session = useLiveQuery(() => db.sessions.get(sessionId), [sessionId])
   const entities = useVisibleEntities(worldId)
+  // Opening the Lectern starts the live link to players' Common Room for this session.
+  useEffect(() => {
+    if (isGM && session && session.worldId === worldId) setLiveSession(worldId, session.id)
+  }, [isGM, session?.id, session?.worldId, worldId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (session === undefined) return null
   if (!isGM) return <Empty>The Lectern is a GM tool. Switch back to the GM view to use it.</Empty>
@@ -94,6 +100,7 @@ export default function Lectern() {
         <div className="lectern-col">
           <Scene lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
           <Present lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
+          <Party entities={entities} campaignId={session.campaignId} worldId={worldId} />
           <LecternThreads lectern={lectern} entities={entities} worldId={worldId} sessionId={session.id} />
         </div>
         <div className="lectern-col">
@@ -102,9 +109,10 @@ export default function Lectern() {
           <ClocksPanel worldId={worldId} entities={entities} />
         </div>
         <div className="lectern-col">
+          {world?.cloud?.enabled && <CommonRoomPanel worldId={worldId} lectern={lectern} edit={edit} />}
           {world && <ShowPanel world={world} sceneText={lectern.sceneText} />}
           <Soundboard worldId={worldId} compact />
-          <Dice lectern={lectern} edit={edit} />
+          <Dice lectern={lectern} edit={edit} shareTo={world?.cloud?.enabled && lectern.share?.rolls && !lectern.share.off ? worldId : undefined} />
           <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
           <QuickNote sessionId={session.id} />
           <QuickGenerators lectern={lectern} edit={edit} worldId={worldId} parentId={lectern.sceneId} />
@@ -289,8 +297,7 @@ const CONDITIONS = ['Blinded', 'Charmed', 'Concentrating', 'Deafened', 'Frighten
 
 const field = fieldOf
 
-/** Initiative order: highest first, unrolled at the bottom, ties keep the order they were added. */
-const ordered = (cs: Combatant[]) => [...cs].sort((a, b) => (b.init ?? -Infinity) - (a.init ?? -Infinity))
+const ordered = initiativeOrder
 
 function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { entities: Entity[]; campaignId: string }) {
   const { round, activeId } = lectern.combat
@@ -543,7 +550,7 @@ const toNumber = (v: string) => {
 
 const QUICK_DICE = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100']
 
-function Dice({ lectern, edit }: PanelProps) {
+function Dice({ lectern, edit, shareTo }: PanelProps & { shareTo?: string }) {
   const [expr, setExpr] = useState('')
   const [error, setError] = useState('')
   const doRoll = (text: string) => {
@@ -551,6 +558,7 @@ function Dice({ lectern, edit }: PanelProps) {
       const r = roll(text)
       setError('')
       edit((l) => void (l.rolls = [{ ...r, id: newId(), at: Date.now() }, ...l.rolls].slice(0, 30)))
+      if (shareTo) void shareRoll(shareTo, { who: 'GM', expr: r.expr, total: r.total, detail: r.detail, crit: r.crit })
     } catch (err) {
       setError((err as Error).message)
     }
@@ -609,15 +617,6 @@ function Dice({ lectern, edit }: PanelProps) {
         </details>
       )}
     </section>
-  )
-}
-
-/** Shows dropped dice (from "keep highest/lowest") struck through. */
-function RollDetail({ text }: { text: string }) {
-  return (
-    <>
-      {text.split(/~~(\d+)~~/).map((part, i) => (i % 2 ? <s key={i}>{part}</s> : <span key={i}>{part}</span>))}
-    </>
   )
 }
 
@@ -739,6 +738,89 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
           {savedName ? '✓ Saved' : kind === 'npc' ? 'Save and add to scene' : 'Save and set as scene'}
         </button>
       </div>
+    </section>
+  )
+}
+
+/** What players' Common Room shows of this session, and what they're rolling. */
+function CommonRoomPanel({ worldId, lectern, edit }: PanelProps & { worldId: string }) {
+  const { rolls } = useTable(worldId)
+  const share = lectern.share ?? {}
+  const set = (key: keyof NonNullable<LecternState['share']>, on: boolean) =>
+    edit((l) => void (l.share = { ...l.share, [key]: on || undefined }))
+  const theirs = rolls.filter((r) => r.who !== 'GM')
+  return (
+    <section className="card lectern-panel">
+      <h2>
+        <Ico as={Armchair} /> Players’ Common Room <Help topic="tableLink" />
+      </h2>
+      <label className="row small">
+        <input type="checkbox" checked={!share.off} onChange={(e) => set('off', !e.target.checked)} />
+        Share this session live with players
+      </label>
+      {share.off ? (
+        <p className="muted small">Players see nothing live from this session. Their dice and signals still reach you.</p>
+      ) : (
+        <>
+          <p className="muted small">
+            They see the scene’s name (once its page is revealed), the music, and whose turn it is once you start combat. Never HP, conditions or your notes.
+          </p>
+          <label className="row small">
+            <input type="checkbox" checked={!share.hideNames} onChange={(e) => set('hideNames', !e.target.checked)} />
+            Show names of foes and allies in the turn order
+          </label>
+          <label className="row small">
+            <input type="checkbox" checked={!share.noMusic} onChange={(e) => set('noMusic', !e.target.checked)} />
+            Show what music is playing
+          </label>
+          <label className="row small">
+            <input type="checkbox" checked={!!share.rolls} onChange={(e) => set('rolls', e.target.checked)} />
+            Players see my dice rolls
+          </label>
+        </>
+      )}
+      {theirs.length > 0 ? (
+        <>
+          <h3 className="small">Players’ rolls</h3>
+          <RollLog rolls={theirs} limit={6} />
+        </>
+      ) : (
+        <p className="muted small">Players’ rolls show up here as they make them.</p>
+      )}
+    </section>
+  )
+}
+
+/** The party at a glance, with inspiration to hand out. */
+function Party({ entities, campaignId, worldId }: { entities: Entity[]; campaignId: string; worldId: string }) {
+  const party = partyOf(entities, campaignId)
+  if (!party.length) return null
+  const give = (e: Entity, n: number) => db.entities.update(e.id, { inspiration: Math.max(0, (e.inspiration ?? 0) + n) || undefined, updatedAt: Date.now() })
+  return (
+    <section className="card lectern-panel">
+      <h2>
+        <Ico as={Shield} /> The party <Help topic="inspiration" />
+      </h2>
+      <ul className="lectern-party">
+        {party.map((e) => (
+          <li key={e.id} className="row spread">
+            <span>
+              <Link to={pagePath(worldId, e.id)}>{e.name}</Link> <StatusBadge entity={e} />
+            </span>
+            <span className="row inspiration-control" title="Inspiration (players can see it)">
+              <button className="ghost small" aria-label={`Take inspiration from ${e.name}`} disabled={!e.inspiration} onClick={() => give(e, -1)}>
+                −
+              </button>
+              <span className={e.inspiration ? 'inspired' : 'muted'}>
+                <Ico as={Sparkle} /> {e.inspiration ?? 0}
+              </span>
+              <button className="ghost small" aria-label={`Give ${e.name} inspiration`} onClick={() => give(e, 1)}>
+                +
+              </button>
+            </span>
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }

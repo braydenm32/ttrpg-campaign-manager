@@ -10,10 +10,9 @@ The order of these items is a starting point and will change as we see what matt
 
 - From the October review: a recently deleted bin, `.codex.zip` backups, search everywhere (Ctrl/⌘K), a folding phone menu, pictures inside text, GM-only details and tags, nicknames and rename-safe links, hidden campaigns, "what's new" for players, backup reminders and a tidy public wiki.
 - Round two: handouts and "reveal and show", an end-of-session checklist that starts the next session where you left off (leftover clues and scenes carry over), a player home page, recordings that save as they go and survive a crash, the party per campaign, "track as thread" on quests, a grouped menu and settings tabs, time zones for session dates, group notes that can't overwrite each other, private live channels, and a keep-alive for the free cloud.
+- The Common Room: players' front page and seat at the table, with tabs for the overview, the scene, their character, the party, leads and notes. While the GM runs a session from the Lectern it shows the scene, the music and the turn order (with a "your turn" alert), dice the whole table sees, "I'd like to do something" and "I need a break" signals, inspiration the GM hands out, and a countdown to the next session.
 
 ## Next up
-
-- **The players' screen** (name still to pick): one screen for players during play, with what the GM is showing, their character in short, the party, leads and clocks, party notes with GM replies, the last recap and loot, plus a tab for each on its own.
 
 - **Players, next steps:** invite links, claiming a character, per-player reveals (pages and `:::for` passages), and private or group notes plus a party scratchpad are built. Still to come: per-player map pins, and the GM replying in the group notes.
 - **Map builder, Dungeondraft-style (in stages):**

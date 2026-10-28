@@ -1,6 +1,7 @@
 import Dexie from 'dexie'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { db, keepVersion, type Asset, type Entity, type SyncMeta, type World } from '../db'
+import { sendOnce } from './live'
 import { supabase, cloudErrorMessage } from './client'
 
 /**
@@ -452,20 +453,8 @@ async function notifyShareViewers(worldId: string) {
 export const tellPlayers = (worldId: string) => broadcastChanged(`members:${worldId}`)
 
 async function broadcastChanged(name: string) {
-  const ch = supabase.channel(name, { config: { private: true } })
   // Never wait more than a few seconds: a lost connection must not hold up syncing.
-  await new Promise<void>((resolve) => {
-    const giveUp = setTimeout(resolve, 5000)
-    const done = () => {
-      clearTimeout(giveUp)
-      resolve()
-    }
-    ch.subscribe((status) => {
-      if (status === 'SUBSCRIBED') ch.send({ type: 'broadcast', event: 'changed', payload: {} }).finally(done)
-      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') done()
-    })
-  })
-  void supabase.removeChannel(ch)
+  await sendOnce(name, 'changed')
 }
 
 /** Starts background syncing. Safe to call more than once. */
