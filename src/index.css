@@ -359,6 +359,8 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
 .map-layers td { padding: .15em 0; }
 .map-layers td + td { text-align: center; }
 .map-layers input { margin: 0; }
+.map-layers label.check { display: flex; flex-direction: row; align-items: center; gap: .5em; margin-top: .6em; font-size: .9rem; color: var(--text); }
+.map-layers label.check input { width: auto; }
 .piece-group summary { cursor: pointer; padding: .25em 0; font-weight: 500; }
 .piece-group .stamp-grid { margin-bottom: .4em; }
 .version-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }

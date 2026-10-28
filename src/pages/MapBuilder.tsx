@@ -1568,7 +1568,7 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
             <details key={g.label} className="piece-group" open={g.categories.includes(def?.category ?? '') || undefined}>
               <summary>
                 {g.label}
-                {g.categories.includes('gm-marks') && <Help topic="gmMarks" />}
+                {g.categories.includes('gm-marks') && <> <Help topic="gmMarks" /></>}
               </summary>
               {grid(assetNamesIn(g.categories))}
             </details>
