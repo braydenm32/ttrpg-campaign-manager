@@ -33,6 +33,7 @@ export interface ExPage {
   clocks?: Omit<Clock, 'id'>[]
   /** Events: the age of history (an ExAge key), or `campaign` for something that happens in play. */
   age?: string | 'campaign'
+  /** Events: the date on the world calendar. Months count from 1 here (1 = Hollowfrost, 9 = Ashfall). */
   when?: CalDate
   /** Events: when, in words ("0 AW", "the night of the Battle of Cinders"). */
   date?: string
@@ -73,6 +74,7 @@ export interface ExSession {
   title: string
   /** Revealed to players (sessions already played). */
   players?: boolean
+  /** Months count from 1 here, as on events. */
   worldDate?: CalDate
   /** The GM's notes or outline (Markdown). */
   notes: string

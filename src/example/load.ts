@@ -1,5 +1,5 @@
-import { blankEntity, blankLectern, blankPrep, db, newId, type Asset, type Board, type Entity, type Session, type World } from '../db'
-import type { ExampleContent } from './types'
+import { blankEntity, blankLectern, blankPrep, db, newId, type Asset, type Board, type CalDate, type Entity, type Session, type World } from '../db'
+import type { ExampleContent, ExPage } from './types'
 
 /**
  * Bumped whenever the example world's content changes, so Home can offer a fresh copy to anyone
@@ -21,7 +21,7 @@ export async function resetExampleWorld(worldId: string): Promise<string> {
   return loadExampleWorld()
 }
 
-async function addExample(content: ExampleContent, drawArt: (key: string) => Promise<Blob | undefined>): Promise<string> {
+async function addExample(content: ExampleContent, drawArt: (key: string, page?: ExPage) => Promise<Blob | undefined>): Promise<string> {
   const worldId = newId()
   const now = Date.now()
   const ids = new Map<string, string>()
@@ -39,10 +39,10 @@ async function addExample(content: ExampleContent, drawArt: (key: string) => Pro
   // Pictures: each drawing becomes one file, shared by every page that uses it.
   const assets: Asset[] = []
   const artIds = new Map<string, string>()
-  const art = async (key?: string) => {
+  const art = async (key?: string, page?: ExPage) => {
     if (!key) return undefined
     if (!artIds.has(key)) {
-      const blob = await drawArt(key)
+      const blob = await drawArt(key, page)
       if (!blob) return undefined
       const assetId = newId()
       artIds.set(key, assetId)
@@ -50,6 +50,9 @@ async function addExample(content: ExampleContent, drawArt: (key: string) => Pro
     }
     return artIds.get(key)
   }
+
+  // Content counts months from 1, the app from 0.
+  const date = (d?: CalDate) => d && { ...d, month: d.month - 1 }
 
   const ageIds = new Map(content.world.ages.map((a) => [a.key, newId()]))
   const entities: Entity[] = []
@@ -69,13 +72,13 @@ async function addExample(content: ExampleContent, drawArt: (key: string) => Pro
       gmTags: p.gmTags,
       fields: p.fields ?? [],
       aliases: p.aliases,
-      imageId: await art(p.image),
+      imageId: await art(p.image, p),
       status: p.status,
       statusKnown: p.statusKnown,
       relations: p.relations?.map((r) => ({ id: newId(), to: ref(r.to)!, kind: r.kind, note: r.note, known: r.known })),
       clocks: p.clocks?.map((c) => ({ ...c, id: newId() })),
       ...(p.type === 'event'
-        ? { eventEra: p.age === 'campaign' ? ('campaign' as const) : ('pre' as const), eventAge: age, eventWhen: p.when, eventDate: p.date, eventOrder: p.order ?? i }
+        ? { eventEra: p.age === 'campaign' ? ('campaign' as const) : ('pre' as const), eventAge: age, eventWhen: date(p.when), eventDate: p.date, eventOrder: p.order ?? i }
         : {}),
       questStatus: p.questStatus ?? e.questStatus,
       threadStatus: p.threadStatus ?? e.threadStatus,
@@ -108,7 +111,7 @@ async function addExample(content: ExampleContent, drawArt: (key: string) => Pro
     visibility: s.players ? 'players' : 'gm',
     entityIds: (s.pages ?? []).map((k) => ref(k)!),
     recordings: [],
-    worldDate: s.worldDate,
+    worldDate: date(s.worldDate),
     prep: s.prep && {
       ...blankPrep(),
       strongStart: s.prep.strongStart,

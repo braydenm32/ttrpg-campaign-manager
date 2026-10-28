@@ -49,7 +49,8 @@ export function nextSessions(campaigns: Campaign[], sessions: Session[]) {
     .filter((c) => c.status !== 'finished')
     .flatMap((c) => {
       const own = sessions.filter((s) => s.campaignId === c.id).sort((a, b) => a.number - b.number)
-      const next = own.find((s) => s.date >= today && !s.recap.trim()) ?? own.at(-1)
+      // a booked session still to come, else the first one not yet played (no date, no recap), else the newest
+      const next = own.find((s) => s.date >= today && !s.recap.trim()) ?? own.find((s) => !s.date && !s.recap.trim()) ?? own.at(-1)
       return next ? [{ campaign: c, session: next }] : []
     })
     .sort((a, b) => (a.session.date || '9999').localeCompare(b.session.date || '9999'))

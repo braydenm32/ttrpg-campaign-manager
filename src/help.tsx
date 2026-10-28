@@ -11,6 +11,8 @@ export const HELP = {
   modes:
     'The bar across the top splits the world into modes. Home is what needs you now. World is the atlas itself: maps, timeline and every codex page. Prep is getting sessions ready: campaigns, loose threads, handouts and generators. Play is running the table: the Lectern, clocks, sounds and safety tools. The sidebar lists the pages of the mode you’re in.',
   needsYou: 'Things waiting on you: questions your players asked, players asking to claim a character, and urgent loose threads. When it’s empty you’re all caught up.',
+  sampleWorld:
+    'A small, simple world for a first look: a coast, a town, a handful of people and a map with pins. Good for learning the basics in a few minutes. Vael Ardith is the full example with a campaign ready to run.',
   exampleWorld:
     'A complete world to explore and learn from: places, people, factions, gods, history, handouts and a campaign ready to run. Open it, look around, borrow ideas, or run it for your group. It lives only on this device unless you switch on sync, and World settings can reset it to new.',
   worldLook: 'Give this world its own cover picture and colour. They show on Home and on the world’s book on your shelf of worlds. Players see them too.',
@@ -74,7 +76,7 @@ export const HELP = {
   relations:
     'How this page connects to others: family, friends, enemies, who serves whom. Players only see a link when you tick “Players know”. Every link shows up on both pages.',
   relationWeb:
-    'Everyone and how they’re connected, drawn as a web. Drag people about, click one to focus on them, or switch to the family tree. Add links from any page’s Relationships box.',
+    'Everyone and how they’re connected, drawn as a web. Drag people about, click one to focus on them, or switch to the family tree. In a big world it starts with just people, factions and gods; switch to every kind of page to see places and items too. Add links from any page’s Relationships box.',
   clocks:
     'A progress clock is a circle cut into slices. Fill a slice when a villain’s plan moves on, a rival gets closer or danger grows; when it’s full, it happens. Players only see clocks you mark “Players know”.',
   safety:

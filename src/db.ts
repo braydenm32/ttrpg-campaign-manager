@@ -176,6 +176,8 @@ export interface World {
   ages?: TimelineAge[]
   /** Set on the ready-made example world (its content version), so Home can find it and offer a fresh copy. */
   example?: number
+  /** Set on the small intro sample world (the Shattered Coast), so Home offers its book only until it has been opened. */
+  sample?: boolean
   /** What the GM is showing every player right now (a handout, a page or some text). */
   showing?: Showing | null
   /** Everything the GM has shown, newest first, so players can read a handout again later. */
