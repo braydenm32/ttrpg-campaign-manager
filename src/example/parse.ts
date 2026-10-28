@@ -532,8 +532,21 @@ function readWorld(split: Split, report: Report): { world?: ExWorld; version: nu
     return e ? [e] : []
   })
   const today = readDate(cal.today, months.map((m) => m.name), 'calendar', report)
+  // Holidays are written "{ name: Doorsnight, day: 1 Leafrot }": a day and a month, no year.
+  const holidays = (Array.isArray(cal.holidays) ? (cal.holidays as unknown[]) : []).flatMap((h, i) => {
+    const where = `calendar: holiday ${i + 1}`
+    const e = entry<{ name: string; day: string }>(h, where, 'calendar', report, { name: 'text', day: 'text' })
+    if (!e) return []
+    const m = e.day.trim().match(/^(\d{1,2})\s+(.+)$/)
+    const month = m ? months.findIndex((n) => n.name.toLowerCase() === m[2].toLowerCase()) : -1
+    if (!m || month < 0) return report(`${where}: "day" should be a day and a month, like "1 ${months[0]?.name ?? 'Hollowfrost'}".`, 'calendar'), []
+    const d = { month: month + 1, day: Number(m[1]) }
+    if (d.day < 1 || d.day > months[month].days) return report(`${where}: ${months[month].name} has ${months[month].days} days.`, 'calendar'), []
+    return [{ name: e.name, month: d.month - 1, day: d.day }]
+  })
+  if (cal.holidays !== undefined && !Array.isArray(cal.holidays)) report('calendar: "holidays" should be a list.', 'calendar')
   for (const k of Object.keys(cal))
-    if (!['preset', 'months', 'weekdays', 'era', 'moons', 'weekdayOffset', 'today'].includes(k)) report(`calendar: unknown setting "${k}".`, 'calendar')
+    if (!['preset', 'months', 'weekdays', 'era', 'moons', 'weekdayOffset', 'today', 'holidays'].includes(k)) report(`calendar: unknown setting "${k}".`, 'calendar')
   const calendar: WorldCalendar = {
     preset: cal.preset === undefined ? undefined : String(cal.preset),
     months,
@@ -541,6 +554,7 @@ function readWorld(split: Split, report: Report): { world?: ExWorld; version: nu
     era: cal.era === undefined ? '' : String(cal.era),
     moons,
     weekdayOffset: typeof cal.weekdayOffset === 'number' ? cal.weekdayOffset : undefined,
+    holidays: holidays.length ? holidays : undefined,
     // The app counts months from 0.
     today: today && { ...today, month: today.month - 1 },
   }

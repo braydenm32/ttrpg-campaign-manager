@@ -133,7 +133,7 @@ Everything is in the folder **`worlds/vael-ardith/`**. Each page in the app is o
 | To change… | Edit |
 | --- | --- |
 | The world's name, the blurb on its book, the game system | `world.md` |
-| The calendar (months, weekdays, moons, today's date), the history ages on the timeline | `world.md` |
+| The calendar (months, weekdays, moons, holidays, today's date), the history ages on the timeline | `world.md` |
 | Safety tools (lines, veils, X-card) and the party's starting coin | `world.md` |
 | The campaign's name and description | `world.md` |
 | Player characters and NPCs | `people/` (PCs: `varra.md`, `ysse.md`, `borrin.md`, `tick.md`, `quorl.md`) |
@@ -368,6 +368,8 @@ What happened, in a paragraph or two.
 **Adding an age:** in `world.md`, add another entry under `ages:` with its own `key`, `name`, `span` and `summary`. Ages show in the order they're listed.
 
 **Changing the calendar or today's date:** `calendar:` in `world.md`. `today:` is the date the campaign starts. Moons have a `cycle` (days from full to full) and an `offset` that shifts which day they're full; the notes beside them say what they're set to.
+
+**Adding a holiday or festival:** under `holidays:` in the `calendar:` part of `world.md`, add a line like `- { name: Doorsnight, day: 1 Leafrot }` (a day and a month, no year). It comes round every year and shows beside that date on the calendar. Write about it on its own page too if it needs more than a name.
 
 ### 6f. Sessions, quests, loose threads and the corkboard
 

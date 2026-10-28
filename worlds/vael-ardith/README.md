@@ -7,7 +7,7 @@ The full step-by-step guide is [docs/EDITING.md](../../docs/EDITING.md).
 
 | To change… | Look in |
 | --- | --- |
-| The world's name, blurb, calendar, moons, history ages, safety tools, party coin | `world.md` |
+| The world's name, blurb, calendar, moons, holidays, history ages, safety tools, party coin | `world.md` |
 | Player characters and NPCs | `people/` |
 | Continents, nations, towns, taverns, shops, dungeons | `places/` |
 | Factions and companies | `factions/` |
