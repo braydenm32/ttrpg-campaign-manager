@@ -54,6 +54,19 @@ export function EndSessionChecklist({ world, session, onClose }: { world: World;
       ),
     },
     {
+      done: !!session.ledger?.length,
+      label: session.ledger?.length
+        ? `${session.ledger.length} change${session.ledger.length === 1 ? '' : 's'} made to the world`
+        : session.recapDraft?.updates?.length && !session.recapDraft.updatesDone
+          ? `Claude suggested ${session.recapDraft.updates.length} updates to your pages`
+          : 'Update your pages from the session',
+      detail: !session.ledger?.length && (
+        <button className="link" onClick={() => jump('session-recap')}>
+          {session.recapDraft?.updates?.length ? 'Tick the ones you want, below' : 'Claude suggests them along with the recap'}
+        </button>
+      ),
+    },
+    {
       done: session.entityIds.length > 0,
       label: session.entityIds.length ? `${session.entityIds.length} featured in this session` : 'Nobody featured yet',
       detail: !session.entityIds.length && 'People you add to the scene at the Lectern are listed automatically. Add others under “Featured in this session”.',

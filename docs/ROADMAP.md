@@ -13,6 +13,8 @@ The order of these items is a starting point and will change as we see what matt
 
 ## Next up
 
+- **The players' screen** (name still to pick): one screen for players during play, with what the GM is showing, their character in short, the party, leads and clocks, party notes with GM replies, the last recap and loot, plus a tab for each on its own.
+
 - **Players, next steps:** invite links, claiming a character, per-player reveals (pages and `:::for` passages), and private or group notes plus a party scratchpad are built. Still to come: per-player map pins, and the GM replying in the group notes.
 - **Map builder, Dungeondraft-style (in stages):**
   - Stage 1 (built): classic hand-inked world maps. Paint land and sea, automatic ragged coastlines, rivers, roads and borders, a library of hand-drawn pieces (mountains, forests, towns, ships, compass roses) with 8 previewable versions each, a click-and-hold scatter brush, curved labels, layers to hide or lock, three looks (ink on parchment, ink on white, coloured) and biome tints.
@@ -47,10 +49,12 @@ The core stays system-agnostic: stats are free-form "Details" fields. Later we'l
 
 Built: session transcripts (on-device with Whisper, or AssemblyAI in the cloud with speaker labels) and recaps (GM summary plus player recap, via "Copy for Claude" or the GM's own Anthropic API key, always reviewed before saving).
 
+Built: world updates from a session. In the same Claude run as the recap, Claude compares the transcript with every page (names, nicknames, one-line summaries, quest states and timeline dates) and suggests new pages for anything improvised, lines for existing pages, quest progress, relationships, timeline events, deaths and captures, loot changing hands, loose threads and things that contradict the notes. The GM ticks and edits them, then applies them in one go; each change is listed in the Chronicle (per session, GM-only) and kept in page history. Pages also show the sessions that link them and, for the GM, where their name was heard in a transcript (click to play that moment). Speaker names are remembered from the last session.
+
 Still parked (each needs an AI provider):
 
 - Speaker names for on-device transcripts
-- Suggested updates to pages from a transcript (new NPCs, places, items, quest progress), approved by the GM
+- A whole-world continuity check (per-session contradictions are already part of world updates)
 - AI flavour for generators, and improvised NPC dialogue in character
 - "Ask your world": chat that answers only from your own notes
 - A continuity checker that flags contradictions
