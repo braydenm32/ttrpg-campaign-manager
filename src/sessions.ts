@@ -11,6 +11,20 @@ const carried = (items: CheckItem[] | undefined, n: number) =>
   (items ?? []).filter((x) => !x.done && x.text.trim()).map((x) => ({ id: newId(), done: false, text: /\(from #\d+\)$/.test(x.text) ? x.text : `${x.text} (from #${n})` }))
 
 /**
+ * Books a date for the next session: the next one, if it's already made and not played or dated
+ * yet, takes the date; otherwise a new one is made.
+ */
+export async function bookNextSession(worldId: string, campaignId: string, date: string) {
+  const last = (await db.sessions.where({ campaignId }).sortBy('number')).at(-1)
+  const today = localDate()
+  if (last && !last.recap.trim() && !last.recordings.length && (!last.date || last.date > today)) {
+    await db.sessions.update(last.id, { date })
+    return { ...last, date }
+  }
+  return createNextSession(worldId, campaignId, date)
+}
+
+/**
  * Makes the next session of a campaign. The prep starts with the clues the players haven't found
  * and the scenes they didn't reach last time, and the Lectern starts where the party left off
  * (same place, same people around).

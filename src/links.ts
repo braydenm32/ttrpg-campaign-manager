@@ -43,10 +43,13 @@ export async function renameLinks(worldId: string, before: Entity, after: Entity
   const pc = after.type === 'pc'
   const first = (n: string) => n.split(/\s+/)[0]
   const fix = (t: string | undefined) => (t ? renameInText(t, from, to, pc ? first(from) : undefined, pc ? first(to) : undefined) : t)
+  // A renamed random table: "{Old name}" rolls in other tables follow it.
+  const rolls = new RegExp(`\\{\\s*${from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\}`, 'gi')
+  const fixRolls = (entries: string[] | undefined) => (after.type === 'table' && entries ? entries.map((x) => x.replace(rolls, `{${to}}`)) : entries)
   await db.transaction('rw', [db.entities, db.sessions, db.pins, db.history], async () => {
     for (const e of await db.entities.where({ worldId }).toArray()) {
-      const next = { ...e, body: fix(e.body)!, gmNotes: fix(e.gmNotes)!, summary: fix(e.summary)!, playerBody: fix(e.playerBody) }
-      if (next.body !== e.body || next.gmNotes !== e.gmNotes || next.summary !== e.summary || next.playerBody !== e.playerBody) {
+      const next = { ...e, body: fix(e.body)!, gmNotes: fix(e.gmNotes)!, summary: fix(e.summary)!, playerBody: fix(e.playerBody), entries: fixRolls(e.entries) }
+      if (next.body !== e.body || next.gmNotes !== e.gmNotes || next.summary !== e.summary || next.playerBody !== e.playerBody || JSON.stringify(next.entries) !== JSON.stringify(e.entries)) {
         await keepVersion(e, 'edit')
         await db.entities.put({ ...next, updatedAt: Date.now() })
       }

@@ -4,6 +4,7 @@ import type { Entity, Session } from './db'
 import { namesOf } from './links'
 import { formatTime } from './recorder'
 import { worldPath } from './paths'
+import { stripSecrets } from './Markdown'
 
 /** Words that start a name without being one ("Brother Tallow" isn't heard as "Brother"). */
 const TITLES = new Set(['the', 'old', 'young', 'brother', 'sister', 'father', 'mother', 'lord', 'lady', 'sir', 'dame', 'captain', 'king', 'queen', 'prince', 'princess', 'master', 'mistress', 'doctor', 'dr', 'saint', 'st'])
@@ -22,7 +23,8 @@ function spokenNames(e: Entity) {
 function linkingSessions(e: Entity, sessions: Session[], isGM: boolean) {
   const needles = new Set(namesOf(e))
   const links = (text: string) => [...text.matchAll(/\[\[([^\]|]+)/g)].some((m) => needles.has(m[1].trim().toLowerCase()))
-  return sessions.filter((s) => links(s.recap) || (isGM && links(s.notes)))
+  // In the GM's player preview, hidden passages of a recap don't count.
+  return sessions.filter((s) => links(isGM ? s.recap : stripSecrets(s.recap)) || (isGM && links(s.notes)))
 }
 
 /** Lines in session transcripts where the page's name was said. Names are matched as written (capitalised). */

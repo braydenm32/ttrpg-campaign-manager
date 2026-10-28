@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { RecapPanel } from '../ai/RecapPanel'
 import { TranscriptPanel } from '../ai/TranscriptPanel'
-import { Empty, VisibilityToggle } from '../components'
+import { DraftText, Empty, VisibilityToggle } from '../components'
 import { db, ENTITY_LABELS, type Entity, type Recording, type Session } from '../db'
 import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
@@ -71,13 +71,8 @@ export default function SessionPage() {
       <header className="page-header">
         <div className="row">
           <span className="session-number">#</span>
-          <input
-            className="num-input"
-            type="number"
-            value={session.number}
-            onChange={(e) => update({ number: Number(e.target.value) || 0 })}
-          />
-          <input className="title-input" value={session.title} onChange={(e) => update({ title: e.target.value })} />
+          <DraftText className="num-input" type="number" value={String(session.number)} onCommit={(v) => update({ number: Number(v) || 0 })} />
+          <DraftText className="title-input" value={session.title} onCommit={(title) => update({ title })} />
         </div>
         <div className="row">
           <input type="date" value={session.date} onChange={(e) => update({ date: e.target.value })} />
@@ -130,11 +125,12 @@ export default function SessionPage() {
       {tab === 'prep' ? (
         <PrepSheet session={session} entities={entities} worldId={worldId} />
       ) : tab === 'notes' ? (
-        <textarea
+        <DraftText
+          multiline
           rows={14}
           value={session.notes}
           placeholder="Prep, what happened, loose threads… Use [[Name]] to link pages."
-          onChange={(e) => update({ notes: e.target.value })}
+          onCommit={(notes) => update({ notes })}
         />
       ) : (
         <SecretTextarea

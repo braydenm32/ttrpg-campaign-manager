@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { cloudErrorMessage } from '../cloud/client'
 import { listAvailability, listPlayers, setAvailability, type Member } from '../cloud/players'
 import { db, newId, type Availability, type Campaign, type DateOption, type SharedInfo, type World } from '../db'
 import { Help } from '../help'
@@ -53,7 +54,7 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
       setMembers(p.members.filter((m) => m.role === 'player'))
       setAnswers(a)
     } catch (e) {
-      setError((e as Error).message)
+      setError(cloudErrorMessage(e))
     }
   }, [synced, world.id])
   useEffect(() => {
@@ -135,7 +136,7 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
                         className={mine === a.value ? 'on' : ''}
                         title={a.label}
                         onClick={() =>
-                          setAvailability(shared.memberOf!, o.id, mine === a.value ? null : a.value).catch((e) => setError((e as Error).message))
+                          setAvailability(shared.memberOf!, o.id, mine === a.value ? null : a.value).catch((e) => setError(cloudErrorMessage(e)))
                         }
                       >
                         {a.icon}

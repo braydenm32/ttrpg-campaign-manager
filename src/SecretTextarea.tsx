@@ -13,10 +13,20 @@ import { EyeClosed, Image, Lock, Shield } from '@phosphor-icons/react'
  */
 export function SecretTextarea({
   worldId,
-  value,
-  onChange,
+  value: saved,
+  onChange: save,
   ...rest
 }: { worldId: string; value: string; onChange: (v: string) => void } & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'>) {
+  // What's typed is kept here while the box is in use: a saved value comes back a moment later,
+  // and reading it straight back would drop letters and move the cursor (as DraftText does).
+  const [draft, setDraft] = useState<string | null>(null)
+  // Once the saved text catches up, follow it again (so changes from elsewhere show).
+  if (draft !== null && draft === saved) setDraft(null)
+  const value = draft ?? saved
+  const onChange = (v: string) => {
+    setDraft(v)
+    save(v)
+  }
   const ref = useRef<HTMLTextAreaElement>(null)
   const [caret, setCaret] = useState<number | null>(null)
   const pcs = useLiveQuery(() => db.entities.where({ worldId }).filter((e) => e.type === 'pc' && !e.template).sortBy('name'), [worldId]) ?? []

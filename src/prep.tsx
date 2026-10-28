@@ -107,7 +107,13 @@ function CheckList({
           >
             ↑
           </button>
-          <button className="ghost" title="Remove" onClick={() => onEdit((list) => void list.splice(list.findIndex((y) => y.id === x.id), 1))}>
+          <button className="ghost" title="Remove" onClick={() =>
+              onEdit((list) => {
+                // A second click finds nothing to remove (and must not remove the last one instead).
+                const j = list.findIndex((y) => y.id === x.id)
+                if (j >= 0) list.splice(j, 1)
+              })
+            }>
             ✕
           </button>
         </div>

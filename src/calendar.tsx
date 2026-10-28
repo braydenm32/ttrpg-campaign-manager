@@ -5,6 +5,7 @@ import { db, type CalDate, type Entity, type Session, type World, type WorldCale
 import { Ico } from './icons'
 import { CalendarBlank, DiceFive } from '@phosphor-icons/react'
 import { pagePath, worldPath } from './paths'
+import { DraftText } from './components'
 
 /**
  * In-world calendars: month and day names, the era after the year, and moons. Dates are stored as
@@ -252,7 +253,7 @@ export function CalendarEditor({ world }: { world: World }) {
           <div className="grid-2">
             <label>
               Written after the year
-              <input value={c.era} onChange={(e) => change({ era: e.target.value })} placeholder="e.g. DR" />
+              <DraftText value={c.era ?? ''} onCommit={(era) => change({ era })} placeholder="e.g. DR" />
             </label>
             <label>
               Day names, in order (comma separated)
@@ -274,7 +275,7 @@ export function CalendarEditor({ world }: { world: World }) {
             </summary>
             {c.months.map((m, i) => (
               <div key={i} className="row field-row">
-                <input value={m.name} onChange={(e) => change({ months: c.months.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)) })} aria-label="Month name" />
+                <DraftText value={m.name} onCommit={(name) => change({ months: c.months.map((x, j) => (j === i ? { ...x, name } : x)) })} aria-label="Month name" />
                 <input
                   type="number"
                   min={1}
@@ -297,7 +298,7 @@ export function CalendarEditor({ world }: { world: World }) {
             <summary>Moons ({c.moons.length})</summary>
             {c.moons.map((m, i) => (
               <div key={i} className="row field-row">
-                <input value={m.name} onChange={(e) => change({ moons: c.moons.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)) })} aria-label="Moon name" />
+                <DraftText value={m.name} onCommit={(name) => change({ moons: c.moons.map((x, j) => (j === i ? { ...x, name } : x)) })} aria-label="Moon name" />
                 <input
                   type="number"
                   min={1}

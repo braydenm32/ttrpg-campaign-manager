@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Empty, VisibilityToggle } from '../components'
+import { DraftText, Empty, VisibilityToggle } from '../components'
 import { ExportMap } from '../ExportMap'
 import { blankEntity, db, ENTITY_LABELS, newId, type Entity, type Pin, type WorldMap } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
@@ -1895,7 +1895,7 @@ function PieceLink({ shape, pin, onLink }: { shape: Extract<Shape, { kind: 'asse
           </label>
           <label>
             Name on the map
-            <input value={pin.label} onChange={(e) => db.pins.update(pin.id, { label: e.target.value })} />
+            <DraftText value={pin.label} onCommit={(label) => db.pins.update(pin.id, { label })} />
           </label>
           <div className="row spread">
             {gmOnly(shape) ? <span className="muted small">GM only, like the piece</span> : <VisibilityToggle value={pin.visibility} onChange={(v) => db.pins.update(pin.id, { visibility: v })} />}
@@ -1904,7 +1904,12 @@ function PieceLink({ shape, pin, onLink }: { shape: Extract<Shape, { kind: 'asse
             </button>
           </div>
           <p className="muted small">
-            {pin.visibility === 'gm' ? 'Only you can click it for now.' : linked?.visibility === 'gm' ? 'Players can click it, but they won’t see the page until you reveal that too.' : 'Players can click it to open the page.'} A note and
+            {pin.visibility === 'gm'
+              ? 'Only you can click it for now.'
+              : linked?.visibility === 'gm'
+                ? `Players can click it, but they won’t see the page until you reveal that too. They do see the name on the map${pin.label ? `, “${pin.label}”` : ''}, so change it if that gives too much away.`
+                : 'Players can click it to open the page.'}{' '}
+            A note and
             “opens map” are on the map itself, after you press Done.
           </p>
         </>

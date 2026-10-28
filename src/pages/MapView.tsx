@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ImageOverlay, MapContainer, Marker, Polygon, Polyline, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Empty, VisibilityBadge, VisibilityToggle } from '../components'
+import { DraftText, Empty, VisibilityBadge, VisibilityToggle } from '../components'
 import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type Pin, type WorldMap } from '../db'
 import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
@@ -582,7 +582,7 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
       </header>
       <label>
         Label
-        <input value={pin.label} onChange={(e) => update({ label: e.target.value })} />
+        <DraftText value={pin.label} onCommit={(label) => update({ label })} />
       </label>
       {pin.pieceId && <p className="muted small">A piece drawn on this map. Move, turn or remove it in the map builder.</p>}
       <div className="row">
@@ -674,7 +674,7 @@ function MapSettings({ map, entities, onClose, onDeleted }: { map: WorldMap; ent
       </header>
       <label>
         Name
-        <input value={map.name} onChange={(e) => update({ name: e.target.value })} />
+        <DraftText value={map.name} onCommit={(name) => update({ name })} />
       </label>
       <VisibilityToggle value={map.visibility} onChange={(v) => update({ visibility: v })} />
       <label>

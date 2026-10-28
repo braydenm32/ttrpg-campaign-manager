@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { cloudErrorMessage } from '../cloud/client'
 import { Link } from 'react-router-dom'
 import { useAuthSession } from '../cloud/auth'
 import { askQuestion, listQuestions, withdrawQuestion } from '../cloud/players'
@@ -45,7 +46,7 @@ export function AskForm({ memberOf, entityId, placeholder }: { memberOf: string;
           await askQuestion(memberOf, entityId, text.trim())
           setText('')
         } catch (err) {
-          setError((err as Error).message)
+          setError(cloudErrorMessage(err))
         } finally {
           setBusy(false)
         }
@@ -64,9 +65,16 @@ export function AskForm({ memberOf, entityId, placeholder }: { memberOf: string;
 }
 
 export function QuestionList({ questions, memberOf, pageName }: { questions: PlayerQuestion[]; memberOf: string; pageName?: (q: PlayerQuestion) => ReactNode }) {
+  const [error, setError] = useState('')
   if (!questions.length) return null
+  const takeBack = (id: string) => {
+    if (!confirm('Take this question back?')) return
+    setError('')
+    withdrawQuestion(memberOf, id).catch((e) => setError(cloudErrorMessage(e)))
+  }
   return (
     <ul className="questions">
+      {error && <li className="error small">{error}</li>}
       {[...questions]
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .map((q) => (
@@ -82,7 +90,7 @@ export function QuestionList({ questions, memberOf, pageName }: { questions: Pla
             ) : (
               <div className="muted small row spread">
                 Waiting for an answer.
-                <button className="link small" onClick={() => confirm('Take this question back?') && withdrawQuestion(memberOf, q.id)}>
+                <button className="link small" onClick={() => takeBack(q.id)}>
                   Take it back
                 </button>
               </div>
@@ -105,7 +113,7 @@ export function useGmQuestions(world: World | null | undefined) {
       setQuestions(await listQuestions(cloudId))
       setError('')
     } catch (e) {
-      setError((e as Error).message)
+      setError(cloudErrorMessage(e))
     }
   }, [cloudId])
   useEffect(() => {

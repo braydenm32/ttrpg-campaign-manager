@@ -311,7 +311,7 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
   .world-tile img { width: 26px; height: 26px; }
   .topbar .search-button { flex: none; width: 36px; height: 36px; padding: 0; justify-content: center; margin: 0; background: var(--panel-2); }
   .topbar .search-button .search-label, .topbar .search-button kbd { display: none; }
-  .layout-body > .sidebar, .layout-body.no-side > .sidebar { display: flex; position: fixed; z-index: 950; top: 0; bottom: 0; left: 0; width: min(86vw, 330px); height: auto; padding-top: calc(.7em + env(safe-area-inset-top)); padding-bottom: calc(.7em + env(safe-area-inset-bottom)); padding-left: max(.7em, env(safe-area-inset-left)); transform: translateX(-105%); transition: transform .2s ease; box-shadow: var(--shadow); }
+  .layout-body > .sidebar, .layout-body.no-side > .sidebar { display: flex; position: fixed; z-index: 950; top: calc(var(--topbar-h) + env(safe-area-inset-top)); bottom: 0; left: 0; width: min(86vw, 330px); height: auto; padding-top: .7em; padding-bottom: calc(.7em + env(safe-area-inset-bottom)); padding-left: max(.7em, env(safe-area-inset-left)); transform: translateX(-105%); transition: transform .2s ease; box-shadow: var(--shadow); }
   .layout-body > .sidebar.open { transform: none; }
   .drawer-scrim { display: block; position: fixed; inset: 0; z-index: 940; background: rgb(0 0 0 / .5); border: none; border-radius: 0; padding: 0; }
   .drawer-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 2px; padding-bottom: .5em; border-bottom: 1px solid var(--border); }
@@ -325,7 +325,8 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
   .map-page { height: calc(100dvh - var(--topbar-h) - env(safe-area-inset-top)); }
   .map-body { flex-direction: column; }
   .map-panel { width: 100%; max-height: 45%; border-left: none; border-top: 1px solid var(--border); }
-  .map-toolbar { flex-wrap: nowrap; overflow-x: auto; }
+  /* More tools off to the side: the strip fades at its edge so it's clear it scrolls. */
+  .map-toolbar { flex-wrap: nowrap; overflow-x: auto; mask-image: linear-gradient(to right, #000 85%, transparent); padding-right: 2.5em; }
   .map-toolbar > .row { flex-wrap: nowrap; }
   .player-banner { padding: .6em 1em; }
   /* Titles get their own line; the buttons wrap underneath instead of squeezing them. */
@@ -338,7 +339,9 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
   :where(button, .button):not(.help-button, .nav-caret, .swatch, .link, .ghost, .chip, .show-thumb) { min-height: 40px; }
   .nav-caret { width: 2em; min-height: 2em; }
   .help-button { position: relative; }
-  .help-button::after { content: ''; position: absolute; inset: -10px; }
+  .help-button::after { content: ''; position: absolute; inset: -12px; }
+  :where(button.small, button.ghost, button.link.small, .button.small) { min-height: 36px; min-width: 36px; }
+  .modal header button { min-width: 44px; min-height: 44px; }
 }
 .page-header > .row { flex-wrap: wrap; justify-content: flex-end; }
 
@@ -700,6 +703,7 @@ label.check-item { display: flex; gap: .4em; align-items: flex-start; font-size:
 .search-results { list-style: none; padding: 0; margin: .6em 0 0; max-height: 60vh; overflow: auto; }
 .search-results li button { display: flex; flex-direction: column; align-items: flex-start; gap: .1em; width: 100%; text-align: left; padding: .45em .6em; border-radius: 6px; }
 .search-results li.active button { background: var(--panel-2); }
+.news-banner .chip { flex: 0 1 auto; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .news-banner { border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); border-radius: var(--radius); padding: .6em .9em; margin-bottom: 1em; display: flex; flex-direction: column; gap: .4em; }
 .backup-reminder { display: flex; flex-wrap: wrap; gap: .5em 1em; align-items: center; justify-content: space-between; border: 1px dashed var(--border); border-radius: var(--radius); padding: .6em .9em; margin-bottom: 1em; }
 .wiki-hero { text-align: center; margin: 1em 0 1.5em; }
@@ -726,6 +730,8 @@ label.check-item { display: flex; gap: .4em; align-items: flex-start; font-size:
 .players-screen { min-height: 100vh; padding: 2em; display: flex; flex-direction: column; align-items: center; gap: 1em; font-size: 1.25rem; }
 .players-screen > h1 { font-size: 2.6rem; text-align: center; }
 .players-screen .showing-view { width: min(1200px, 100%); }
+.players-screen .lead { font-size: 1.5rem; color: var(--text); }
+.players-screen .showing-view .markdown :is(h2, h3) { font-size: 1.7rem; }
 .players-screen-idle { margin: auto; text-align: center; }
 
 /* Calendar */
@@ -848,17 +854,18 @@ a.card, .tile, .book, .wiki-card, .my-character, .home-clock, .search-results a 
 .theme-picker + .help { margin-bottom: .6em; }
 
 /* Help marks stay faint until you reach for them. */
-.help-button { opacity: .45; background: transparent; border-color: transparent; }
+.help-button { opacity: .7; background: transparent; border-color: transparent; }
 :is(h1, h2, h3, label, .nav-heading, .card):hover .help-button, .help-button:focus-visible, .help-button[aria-expanded='true'] { opacity: 1; border-color: var(--border); }
 
 /* Home */
 .home-page { display: flex; flex-direction: column; gap: 1.1em; }
 .home-page > * { margin: 0; }
-.world-cover { position: relative; border-radius: 14px; overflow: hidden; min-height: 190px; padding: 1.5em 1.6em; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1em; color: #f3e9d6;
+.world-cover { position: relative; border-radius: 14px; min-height: 190px; overflow-wrap: anywhere; padding: 1.5em 1.6em; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1em; color: #f3e9d6;
   background: radial-gradient(ellipse at 80% 20%, rgb(224 179 84 / .18), transparent 55%), linear-gradient(125deg, color-mix(in srgb, var(--world) 85%, #000), var(--world) 55%, color-mix(in srgb, var(--world) 60%, #000)); }
-.world-cover.has-picture { background: linear-gradient(to top, rgb(10 8 12 / .85), rgb(10 8 12 / .25) 70%), var(--cover) center / cover; }
+.world-cover.has-picture { background: linear-gradient(to top, rgb(10 8 12 / .88), rgb(10 8 12 / .6) 70%, rgb(10 8 12 / .45)), var(--cover) center / cover; }
+.world-cover.has-picture :is(h1, p, .world-cover-meta) { text-shadow: 0 1px 3px rgb(0 0 0 / .7); }
 .world-cover h1 { font-size: 2.2rem; margin: 0; color: #f6ecd8; }
-.world-cover p { margin: .3em 0 0; max-width: 60ch; opacity: .85; }
+.world-cover p { margin: .3em 0 0; max-width: 60ch; opacity: .95; }
 .world-cover-meta { font-size: .8rem; opacity: .7; }
 .world-cover-text { flex: 1 1 22em; min-width: 0; }
 .world-cover-side { display: flex; flex-direction: column; align-items: flex-end; gap: .6em; }
@@ -883,7 +890,7 @@ a.card, .tile, .book, .wiki-card, .my-character, .home-clock, .search-results a 
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .7em; }
 .tile { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel-2); color: var(--text); }
 .tile:hover { border-color: var(--accent); }
-.tile-picture { height: 84px; display: grid; place-items: center; background: linear-gradient(135deg, var(--panel-2), color-mix(in srgb, var(--accent) 12%, var(--panel))); font: 600 1.6rem var(--font-display); color: var(--accent); }
+.tile-picture { height: 84px; overflow: hidden; display: grid; place-items: center; background: linear-gradient(135deg, var(--panel-2), color-mix(in srgb, var(--accent) 12%, var(--panel))); font: 600 1.6rem var(--font-display); color: var(--accent); }
 .tile-picture img { width: 100%; height: 100%; object-fit: cover; }
 .tile-text { padding: .45em .6em .55em; display: flex; flex-direction: column; font-size: .92em; line-height: 1.3; }
 .tile-text small { color: var(--muted); display: flex; align-items: center; gap: .3em; margin-top: .15em; }
@@ -950,3 +957,12 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .player-home > .world-cover, .wiki-home > .world-cover { margin-bottom: 1.2em; }
 .web-wrap { flex: 1; min-width: 0; position: relative; }
 .web-zoom { position: absolute; top: .5em; right: .5em; display: flex; gap: .3em; }
+
+/* Corkboards on phones: the "Pin a page" list keeps its width and long board names wrap. */
+.board-toolbar select { flex: 0 0 auto; max-width: 100%; }
+.board-page h1 .title-input { min-width: 0; width: 100%; }
+@media (max-width: 700px) {
+  .board-page h1 { flex-wrap: wrap; }
+  .board-toolbar select { flex-basis: 100%; }
+}
+.modal:focus { outline: none; }

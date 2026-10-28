@@ -126,7 +126,8 @@ export function EndSessionChecklist({ world, session, onClose }: { world: World;
                   disabled={busy}
                   onClick={async () => {
                     setBusy(true)
-                    const s = await createNextSession(world.id, session.campaignId)
+                    // No date yet: it isn't played today, and booking a date later fills this one in.
+                    const s = await createNextSession(world.id, session.campaignId, '')
                     navigate(`${worldPath(world.id)}/s/${s.id}?tab=prep`)
                   }}
                 >
