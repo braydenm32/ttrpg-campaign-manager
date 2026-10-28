@@ -272,6 +272,7 @@ function picturesForPlayers(rows: Row[]) {
     }
     if (table === 'maps' && d.visibility === 'players') {
       add(d.imageId)
+      add(d.playerImageId)
       add((d.fog as { imageId?: string } | undefined)?.imageId)
     }
     if (table === 'entities' && playerPart(table, d)) {
