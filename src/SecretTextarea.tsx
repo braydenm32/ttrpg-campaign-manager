@@ -4,12 +4,13 @@ import { db } from './db'
 import { Help } from './help'
 import { saveFileAsAsset } from './hooks'
 import { forNames } from './Markdown'
-import { Ico } from './icons'
+import { Ico, TypeIcon } from './icons'
 import { EyeClosed, Image, Lock, Shield } from '@phosphor-icons/react'
 
 /**
  * A Markdown text box for GM writing, with buttons to add a GM secret or a secret for chosen
- * characters, and character-name suggestions while you type a ":::for" line.
+ * characters, character-name suggestions while you type a ":::for" line, and page suggestions
+ * while you type "@" or "[[" (picking one writes a [[link]]).
  */
 export function SecretTextarea({
   worldId,
@@ -29,7 +30,14 @@ export function SecretTextarea({
   }
   const ref = useRef<HTMLTextAreaElement>(null)
   const [caret, setCaret] = useState<number | null>(null)
-  const pcs = useLiveQuery(() => db.entities.where({ worldId }).filter((e) => e.type === 'pc' && !e.template).sortBy('name'), [worldId]) ?? []
+  const pages = useLiveQuery(
+    async () =>
+      (await db.entities.where({ worldId }).filter((e) => !e.template).sortBy('name')).map((e) => ({ id: e.id, name: e.name, type: e.type, aliases: e.aliases ?? [] })),
+    [worldId],
+  ) ?? []
+  const pcs = pages.filter((p) => p.type === 'pc')
+  const [active, setActive] = useState(0)
+  const [dismissed, setDismissed] = useState<number | null>(null)
 
   // Use first names ("Wren") unless two characters share one.
   const firsts = pcs.map((p) => p.name.trim().split(/\s+/)[0])
@@ -53,6 +61,31 @@ export function SecretTextarea({
       .map((p, i) => ({ label: p.name, insert: short(i) }))
       .filter((s, i) => !listed.has(s.insert.toLowerCase()) && !listed.has(pcs[i].name.trim().toLowerCase()))
       .filter((s) => !partial.trim() || s.label.toLowerCase().split(/\s+/).some((w) => w.startsWith(partial.trim().toLowerCase())) || s.label.toLowerCase().startsWith(partial.trim().toLowerCase()))
+  }
+
+  // "@Bro" or "[[Bro" just before the caret: suggest pages to link to.
+  const mention = !forLine && pos >= 0 ? (before.match(/(?:^|[\s(])(@|\[\[)([^@\n[\]|]{1,40})$/) ?? null) : null
+  const query = mention?.[2].toLowerCase() ?? ''
+  const mentionAt = mention ? lineStart + before.length - mention[2].length : -1
+  const pageHits =
+    mention && dismissed !== mentionAt
+      ? pages
+          .map((p) => {
+            const names = [p.name, ...p.aliases].map((n) => n.toLowerCase())
+            const score = names.some((n) => n.startsWith(query)) ? 0 : names.some((n) => n.split(/[\s'’-]+/).some((w) => w.startsWith(query))) ? 1 : names.some((n) => n.includes(query)) ? 2 : -1
+            return { p, score }
+          })
+          .filter((h) => h.score >= 0)
+          .sort((a, b) => a.score - b.score || a.p.name.length - b.p.name.length)
+          .slice(0, 8)
+          .map((h) => h.p)
+      : []
+  const linkTo = (name: string) => {
+    const typed = mention![1].length + mention![2].length
+    // "[[" already typed may already have its closing "]]" after the caret.
+    const close = mention![1] === '[[' && value.slice(pos, pos + 2) === ']]' ? 2 : 0
+    edit(pos - typed, pos + close, `[[${name}]]`)
+    setActive(0)
   }
 
   // Where to put the caret once an inserted value has rendered (before the next key press lands).
@@ -117,7 +150,23 @@ export function SecretTextarea({
         }}
         onSelect={track}
         onClick={track}
-        onKeyUp={track}
+        onKeyUp={(e) => {
+          if (!['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) track()
+        }}
+        onKeyDown={(e) => {
+          if (!pageHits.length) return
+          const n = pageHits.length
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault()
+            setActive((a) => (a + (e.key === 'ArrowDown' ? 1 : n - 1)) % n)
+          } else if (e.key === 'Enter' || e.key === 'Tab') {
+            e.preventDefault()
+            linkTo(pageHits[Math.min(active, n - 1)].name)
+          } else if (e.key === 'Escape') {
+            e.preventDefault()
+            setDismissed(mentionAt)
+          }
+        }}
         onPaste={(e) => {
           const files = [...e.clipboardData.files]
           if (files.some((f) => f.type.startsWith('image/'))) {
@@ -133,6 +182,27 @@ export function SecretTextarea({
           }
         }}
       />
+      {pageHits.length > 0 && (
+        <div className="name-suggestions page-suggestions" role="listbox" aria-label="Link to a page">
+          <span className="small muted">Link to:</span>
+          {pageHits.map((p, i) => (
+            <button
+              key={p.id}
+              type="button"
+              role="option"
+              aria-selected={i === Math.min(active, pageHits.length - 1)}
+              className={`chip ${i === Math.min(active, pageHits.length - 1) ? 'on' : ''}`}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => linkTo(p.name)}
+            >
+              <TypeIcon type={p.type} /> {p.name}
+              {/* Found by another name: say which. */}
+              {!p.name.toLowerCase().includes(query) && <span className="muted"> ({p.aliases.find((a) => a.toLowerCase().includes(query))})</span>}
+            </button>
+          ))}
+          <span className="small muted">↑↓ to choose, Enter to link, Esc to close</span>
+        </div>
+      )}
       {suggestions.length > 0 ? (
         <div className="name-suggestions" role="listbox" aria-label="Characters">
           <span className="small muted">Who is it for?</span>

@@ -352,3 +352,83 @@ export const pendingInvite = {
     }
   },
 }
+
+// ---- GM replies in the party's notes ----
+
+/** The GM adds a line, signed "GM", to the party's shared notes on a page ('' for the scratchpad). */
+export async function replyInGroupNotes(worldId: string, entityId: string, line: string) {
+  const { error } = await supabase.rpc('gm_note_reply', { wid: worldId, eid: entityId, line })
+  if (error) throw error
+  await tellPlayers(worldId)
+}
+
+// ---- Players' new characters ----
+
+export interface CharacterSheet {
+  name: string
+  summary: string
+  fields: { key: string; value: string }[]
+  playerBody: string
+}
+
+export interface CharacterRequest {
+  id: string
+  userId: string
+  sheet: CharacterSheet
+  status: 'pending' | 'approved' | 'declined'
+  gmNote: string
+  createdAt: string
+}
+
+const toRequest = (r: Record<string, unknown>): CharacterRequest => ({
+  id: r.id as string,
+  userId: r.user_id as string,
+  sheet: r.sheet as CharacterSheet,
+  status: r.status as CharacterRequest['status'],
+  gmNote: (r.gm_note as string) ?? '',
+  createdAt: r.created_at as string,
+})
+
+/** A player sends the GM a character they've written up. */
+export async function requestCharacter(cloudId: string, sheet: CharacterSheet) {
+  const { error } = await supabase.rpc('request_character', { wid: cloudId, sheet })
+  if (error) throw error
+}
+
+/** A player's own requests in a world (waiting or turned down; approved ones are just their character). */
+export async function listMyCharacterRequests(cloudId: string): Promise<CharacterRequest[]> {
+  const { data: auth } = await supabase.auth.getUser()
+  const { data, error } = await supabase
+    .from('character_requests')
+    .select('id, user_id, sheet, status, gm_note, created_at')
+    .eq('world_id', cloudId)
+    .eq('user_id', auth.user?.id ?? '')
+    .neq('status', 'approved')
+    .order('created_at')
+  if (error) throw error
+  return data.map(toRequest)
+}
+
+export async function withdrawCharacterRequest(id: string) {
+  const { error } = await supabase.rpc('withdraw_character_request', { rid: id })
+  if (error) throw error
+}
+
+/** New characters waiting for the GM. */
+export async function listCharacterRequests(worldId: string): Promise<CharacterRequest[]> {
+  const { data, error } = await supabase
+    .from('character_requests')
+    .select('id, user_id, sheet, status, gm_note, created_at')
+    .eq('world_id', worldId)
+    .eq('status', 'pending')
+    .order('created_at')
+  if (error) throw error
+  return data.map(toRequest)
+}
+
+/** The GM answers. Approving needs the id of the page the GM's app made for the character. */
+export async function answerCharacterRequest(worldId: string, id: string, approve: boolean, note: string, entityId = '') {
+  const { error } = await supabase.rpc('answer_character_request', { rid: id, approve, note, eid: entityId })
+  if (error) throw error
+  await tellPlayers(worldId)
+}

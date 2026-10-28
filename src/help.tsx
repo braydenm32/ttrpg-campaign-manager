@@ -29,7 +29,7 @@ export const HELP = {
 
   // Pages
   entityPage:
-    'A page in your codex. Link other pages by writing [[Their Name]]; hover over a link to peek at that page. The sidebar shows the picture, maps it appears on, details and tags; below are the places and people inside it and every page that mentions it.',
+    'A page in your codex. Link other pages by typing @ or [[ and the start of a name, then pick from the list (or write [[Their Name]] in full); hover over a link to peek at that page. The sidebar shows the picture, maps it appears on, details and tags; below are the places and people inside it and every page that mentions it.',
   secrets:
     'Hide part of a page with the 🔒 GM-only passage button: players never see it. Use 🤫 Secret for… to keep a passage for certain characters only, like ":::for Wren and Silas". Names are suggested as you type.',
   revealTo:
@@ -38,10 +38,11 @@ export const HELP = {
   fields: 'Free-form details like stats, prices or alignment. Add whatever your game needs. Click 👁 to make a detail 🔒 GM only: players never get it, even on a revealed page.',
   hiddenCampaign:
     'A campaign you’re still planning can stay 🔒 GM only: players don’t see it or any of its sessions until you switch it to 👁 players.',
-  pictures: 'Put pictures in the text: paste one, drop one in, or use 🖼️ Picture. Players see a picture once the text around it is revealed to them (not inside a secret passage).',
+  pictures:
+    'Type @ or [[ and the start of a page’s name to link to it: pick it from the list (arrow keys and Enter work too). Put pictures in the text: paste one, drop one in, or use 🖼️ Picture. Players see a picture once the text around it is revealed to them (not inside a secret passage).',
   search: 'Finds pages by name, nickname, summary, details, tags and the words in them, plus sessions and maps. It also does things: type “new npc” to make a page, or “clocks” to go there. Press Ctrl+K (⌘K on a Mac) anywhere to open it. In the player view it only searches what players can read.',
   phoneMenu: 'Open the menu. Its tabs (Home, World, Prep, Play) match the bar at the top on a computer; pick one to see its pages. It closes when you pick a page.',
-  news: 'What your GM has revealed since you last looked: new pages, session recaps and answers to your questions. Tap one to read it, and “Got it” when you’re done.',
+  news: 'What’s happened since you last looked: new pages, handouts and session recaps, answers to your questions, and what changed on pages you already had (new writing, someone’s fate, a clock that moved). Tap one to read it, and “Got it” when you’re done.',
   backupReminder: 'A reminder to download a backup of this world every two weeks (monthly with cloud sync on). Save the file somewhere safe, like Google Drive or a USB stick. “Later” asks again in a week.',
   aliases:
     'Other names this page goes by, like “the Harbourmaster” for Corvin Vane. A [[link]] to any of them finds this page. Nicknames are for you: players don’t see them. Renaming a page updates every link to it.',
@@ -115,7 +116,7 @@ export const HELP = {
     'Every hook, mystery, promise and grudge you’ve left dangling. Move them from dangling to in play to tied off. A thread that hasn’t moved in three sessions gets flagged so nothing is forgotten.',
   leads: 'The rumours, hooks and mysteries your GM has shared with the party.',
   calendar:
-    'Your world’s own calendar: month and day names, the year’s name (like DR) and moons. Pick a ready-made one (Forgotten Realms, Golarion, Eberron, Greyhawk, Exandria) or make your own. Events can then have real dates.',
+    'Your world’s own calendar: month and day names, the year’s name (like DR) moons, leap years, festivals and holidays. Pick a ready-made one (Forgotten Realms, Golarion, Eberron, Greyhawk, Exandria) or make your own. Events can then have real dates.',
   worldToday: 'Today’s date in your world. Move it on as time passes in the game; each session remembers the date it started on.',
   relations:
     'How this page connects to others: family, friends, enemies, who serves whom. Players only see a link when you tick “Players know”. Every link shows up on both pages.',
@@ -229,6 +230,15 @@ export const HELP = {
     'While this Lectern is open, players’ Common Room shows which session is on, the scene (only if its page is revealed), the music and the turn order once combat starts. HP, conditions and your notes never go. Their rolls and signals (“I’d like to do something”, “I need a break”) come to you here and pop up wherever you are in the app.',
   inspiration:
     'Inspiration or hero points: tap + to hand one out. Players see how many they have in their Common Room and on their character page, and can ask to use one; you’ll get a pop-up with “Use it”.',
+  newCharacter:
+    'Write up the character you’d like to play and send it to your GM. They can approve it (it becomes your character, ready to play) or get back to you with a note.',
+  newCharacterGm:
+    'A player wrote up a character they’d like to play. Approve it and the app makes a player character page from it, revealed and already theirs. Or turn it down with a note saying why.',
+  gmReply: 'Add a line to your players’ shared notes, signed “GM”: a nudge, a reminder of something they saw, an answer to a question they wrote down. They see it next time they look.',
+  leapYears:
+    'Every so many years, chosen months get extra days: February’s 29th, or a festival that only happens in leap years (give it 0 days and 1 leap day, like Shieldmeet). Tick “festival” for days between months, like Midwinter: their dates read “Midwinter” or “3rd day of Needfest”. To line a moon up with a published calendar, set a date it was full.',
+  timers:
+    'Countdowns for the table: a fuse burning, a ritual finishing, a time limit on a puzzle. Tap a length to start one (name it first if you like). It beeps when it runs out. Players see your timers in their Common Room unless you hide one with the eye.',
   tableDice: 'Rolls here show up for the whole table: the other players and your GM see who rolled what.',
   tableSignals:
     'A quiet word to your GM without interrupting: they get a pop-up with your character’s name, and you see when they’ve noticed. For something you’d rather not say out loud, use the X-card instead.',

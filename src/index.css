@@ -555,6 +555,7 @@ button.social.facebook .social-icon { background: #1877f2; }
 .secret-buttons { gap: .4em; }
 .name-suggestions { display: flex; flex-wrap: wrap; gap: .35em; align-items: center; padding: .4em .5em; border: 1px dashed color-mix(in srgb, var(--accent) 50%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
 .name-suggestions .chip { font-size: .85em; padding: .2em .6em; border-radius: 999px; }
+.name-suggestions .chip.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 22%, var(--panel)); }
 
 /* Help tips: a small "?" with a bubble on hover, focus or tap */
 .help { position: relative; display: inline-flex; vertical-align: middle; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-weight: normal; letter-spacing: normal; text-transform: none; }
@@ -737,7 +738,7 @@ label.check-item { display: flex; gap: .4em; align-items: flex-start; font-size:
 /* Calendar */
 .world-today { display: flex; flex-wrap: wrap; gap: .5em 1em; align-items: center; margin: .5em 0 1em; }
 .cal-input { flex-wrap: wrap; }
-.year-input { width: 6.5em; }
+.year-input, .calendar-editor input.year-input { width: 6.5em; flex: none; }
 .calendar-editor details { margin: .25em 0; }
 .month-grid-wrap { margin: 1em 0; }
 .month-grid { display: grid; gap: 4px; margin-top: .5em; }
@@ -1056,3 +1057,21 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 }
 .handout-paper p, .handout-paper li { color: inherit; font-size: inherit; }
 .room-card .room-party:not(.full) .muted { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.timer-list { list-style: none; padding: 0; margin: .2em 0 .5em; display: flex; flex-direction: column; gap: .3em; }
+.timer-list li { display: flex; align-items: center; gap: .5em; flex-wrap: wrap; padding: .35em .6em; border-radius: 8px; background: var(--panel-2); }
+.timer-list li > span:first-of-type { flex: 1; min-width: 6em; }
+.timer-time { font-variant-numeric: tabular-nums; font-size: 1.15rem; }
+.timer-list li.paused .timer-time { opacity: .6; }
+.timer-list li.done { background: color-mix(in srgb, var(--danger) 22%, var(--panel-2)); }
+.timer-list li.done .timer-time, .timer-done { color: var(--danger); font-weight: 600; }
+.gm-line { background: color-mix(in srgb, var(--accent) 12%, var(--panel-2)); border-radius: 6px; padding: .35em .6em; margin: .3em 0; display: flex; gap: .35em; align-items: baseline; }
+.gm-line > b { color: var(--accent); flex: none; }
+.gm-line p { margin: 0; color: var(--text); }
+.gm-reply { margin-top: .5em; align-items: center; }
+.new-character-status { margin: .2em 0; }
+.new-character-status.declined { color: var(--muted); }
+.my-new-characters { display: flex; flex-direction: column; align-items: flex-start; gap: .3em; margin-top: .4em; }
+.new-character .field-row input:first-child { max-width: 10em; }
+.holiday { color: var(--accent); display: inline-flex; align-items: center; gap: .3em; }
+.month-day.festival { background: color-mix(in srgb, var(--accent) 7%, var(--panel)); }
+.month-item.holiday { font-size: .78em; }

@@ -28,6 +28,8 @@ export interface TableState {
   scene?: { name: string; entityId?: string }
   music?: string[]
   combat?: { round: number; turnId?: string; order: TableTurn[] }
+  /** Running or paused countdowns. endsAt is on the sender's clock until it arrives, then on this device's. */
+  timers?: { id: string; label: string; endsAt?: number; left?: number }[]
 }
 
 export interface TableRoll {
@@ -116,7 +118,18 @@ function readTable(p: Record<string, unknown>): TableState | null {
   if (p.off || !s || typeof s !== 'object') return null
   const scene = p.scene as Record<string, unknown> | undefined
   const combat = p.combat as Record<string, unknown> | undefined
+  // Timers are sent with the sender's clock; shift them onto this device's clock.
+  const shift = Date.now() - num(p.sentAt)
+  const timers = Array.isArray(p.timers)
+    ? (p.timers as Record<string, unknown>[]).slice(0, 10).map((t) => ({
+        id: text(t?.id),
+        label: text(t?.label, 120),
+        endsAt: typeof t?.endsAt === 'number' && p.sentAt ? num(t.endsAt) + shift : undefined,
+        left: typeof t?.left === 'number' ? Math.max(0, num(t.left)) : undefined,
+      }))
+    : undefined
   return {
+    timers: timers?.length ? timers : undefined,
     session: { id: text(s.id), number: num(s.number), title: text(s.title, 200), campaignId: text(s.campaignId) },
     scene: scene && typeof scene === 'object' ? { name: text(scene.name, 200), entityId: text(scene.entityId) || undefined } : undefined,
     music: Array.isArray(p.music) ? p.music.slice(0, 6).map((m) => text(m, 120)).filter(Boolean) : undefined,
@@ -202,7 +215,7 @@ export async function shareRoll(cloudId: string, r: Omit<TableRoll, 'id' | 'at'>
 export function linkAsHost(cloudId: string, current: () => TableState | null) {
   const r = joinRoom(room(cloudId))
   links.set(cloudId, r)
-  const tell = () => void r.send('table', current() ?? { off: true })
+  const tell = () => void r.send('table', wire(current()))
   r.on('hello', tell)
   // Nothing to say while no session is being run: players start from nothing anyway.
   const remind = () => current() && tell()
@@ -232,8 +245,11 @@ export function publishTable(cloudId: string, state: TableState | null) {
   if (JSON.stringify(before) === JSON.stringify(state)) return
   // The GM's own copy, so previewing the Common Room shows it too.
   update(cloudId, (s) => ({ ...s, table: state, heard: Date.now() }))
-  void send(cloudId, 'table', state ?? { off: true })
+  void send(cloudId, 'table', wire(state))
 }
+
+/** A table state as sent: with the sender's clock, so timers can be shifted onto each player's. */
+const wire = (state: TableState | null) => (state ? { ...state, sentAt: Date.now() } : { off: true })
 
 /** The GM has dealt with a signal: it goes away, and the player sees that it was seen. */
 export function answerSignal(cloudId: string, id: string) {
@@ -267,6 +283,7 @@ export function tableStateFor(session: Session, pages: Map<string, Entity>, soun
       campaignId: session.campaignId,
     },
     scene: place ? { name: place.name, entityId: place.id } : undefined,
+    timers: l.timers?.some((t) => !t.hidden) ? l.timers.filter((t) => !t.hidden).map(({ id, label, endsAt, left }) => ({ id, label, endsAt, left })) : undefined,
     music: music.length ? music : undefined,
     // Nothing about a fight until the GM starts it, so setting one up gives nothing away.
     combat:

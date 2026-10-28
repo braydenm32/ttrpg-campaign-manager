@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { MyNewCharacters } from './NewCharacters'
 import { cloudErrorMessage } from '../cloud/client'
 import { Help } from '../help'
 import { useState } from 'react'
@@ -97,6 +98,7 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
         </button>
       )}
       {error && <p className="error small">{error}</p>}
+      <MyNewCharacters world={world} compact />
     </div>
   )
 }
@@ -233,7 +235,7 @@ export function ChooseCharacterBanner({ world }: { world: World }) {
       {free.length === 0 ? (
         <p className="muted small">
           {pcs.length ? 'Every character here already has a player.' : 'Your GM hasn’t revealed any player characters yet.'} Ask them to add or reveal
-          yours, and it will show up here.
+          yours, or make a new one and send it to them.
         </p>
       ) : (
         <div className="row wrap">

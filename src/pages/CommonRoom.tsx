@@ -6,7 +6,8 @@ import { Help } from '../help'
 import { useAssetUrl, useVisibleEntities } from '../hooks'
 import { Markdown, splitSecrets } from '../Markdown'
 import { useCharacterOwners } from '../players/owners'
-import { addToPartyNotes, MyNote, PlayerNotesBox } from '../players/Notes'
+import { addToPartyNotes, MyNote, NotesText, PlayerNotesBox } from '../players/Notes'
+import { MyNewCharacters } from '../players/NewCharacters'
 import { SessionScheduler, showDate, upcoming } from '../players/Schedule'
 import { searchWorld, useSearchable } from '../search'
 import { plainLinks, initials } from '../text'
@@ -17,7 +18,7 @@ import { WorldToday } from '../calendar'
 import { ClockFace, useAllClocks } from '../clocks'
 import { ShowingView } from '../showing'
 import { XCardButton } from './Safety'
-import { SignalButtons, TableDice, TurnOrder, useMe } from '../atTheTable'
+import { SignalButtons, TableDice, TimerInline, TimerList, TurnOrder, useMe } from '../atTheTable'
 import { gmIdOf, localIdOf, sendSignal, useTable, type TableState } from '../cloud/table'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
@@ -197,7 +198,8 @@ function LiveStrip({ ctx, onScene }: { ctx: RoomContext; onScene: () => void }) 
           <Ico as={Sword} /> Round {t.combat!.round}: {yours ? <b>your turn</b> : `${turn.name}’s turn`}
         </span>
       )}
-      {!t.scene && !t.music && !turn && <span>Your GM is running the session.</span>}
+      {t.timers && <TimerInline timers={t.timers} />}
+      {!t.scene && !t.music && !turn && !t.timers && <span>Your GM is running the session.</span>}
     </button>
   )
 }
@@ -536,7 +538,7 @@ function PartyNotesPeek({ ctx }: { ctx: RoomContext }) {
     <>
       {lines ? (
         <div className="notes-peek small">
-          <Markdown text={lines} entities={entities} worldId={world.id} showSecrets={false} />
+          <NotesText text={lines} entities={entities} worldId={world.id} />
         </div>
       ) : (
         <p className="muted small">Nothing yet. Clues, names, plans: anything the party wants to remember.</p>
@@ -587,6 +589,7 @@ function SceneTab({ ctx }: { ctx: RoomContext }) {
                   <Ico as={MusicNotes} /> {table.music.join(', ')}
                 </p>
               )}
+              {table.timers && <TimerList timers={table.timers} />}
               {table.combat ? <TurnOrder combat={table.combat} mine={ctx.mineIds} /> : <p className="muted small">No fight on right now.</p>}
             </>
           ) : (
@@ -613,7 +616,13 @@ function SceneTab({ ctx }: { ctx: RoomContext }) {
 }
 
 function MeTab({ ctx }: { ctx: RoomContext }) {
-  if (!ctx.mine.length) return <Empty>{ctx.memberOf ? 'Once your GM approves the character you play, it shows here.' : 'Preview as a player to see their character here.'}</Empty>
+  if (!ctx.mine.length)
+    return (
+      <>
+        <Empty>{ctx.memberOf ? 'Once your GM approves the character you play, it shows here.' : 'Preview as a player to see their character here.'}</Empty>
+        <MyNewCharacters world={ctx.world} />
+      </>
+    )
   return (
     <div className="room-grid">
       {ctx.mine.map((c) => (
@@ -627,6 +636,12 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
           )}
         </Card>
       ))}
+      {ctx.memberOf && (
+        <section className="card room-card">
+          <p className="muted small">Your character died, retired or left? Write up the next one for your GM.</p>
+          <MyNewCharacters world={ctx.world} />
+        </section>
+      )}
     </div>
   )
 }

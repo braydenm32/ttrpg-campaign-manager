@@ -55,6 +55,7 @@ import ClocksPage from './clocks'
 import SafetyPage, { XCardAlert, XCardButton } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
 import { PlayerTableLink, TableHost, TableSignals } from './atTheTable'
+import { NewCharacterRequestsBanner } from './players/NewCharacters'
 import Handouts from './pages/Handouts'
 import { hashRouting, pagePath, setPages, tidyPath, usePathsVersion, worldPath } from './paths'
 
@@ -413,6 +414,7 @@ function WorldShell() {
         {memberOf && <ShowingPopup world={world} />}
         {isGM && !shared && <ShowingBanner world={world} />}
         {isGM && !shared && world.cloud?.enabled && <ClaimRequestsBanner world={world} />}
+        {isGM && !shared && world.cloud?.enabled && <NewCharacterRequestsBanner world={world} />}
         {!shared && <XCardAlert world={world} />}
         {!shared && world.cloud?.enabled && <TableHost world={world} />}
         {isGM && !shared && world.cloud?.enabled && <TableSignals world={world} />}
