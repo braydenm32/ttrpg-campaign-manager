@@ -11,7 +11,7 @@ The one-page version for Vael Ardith is [worlds/vael-ardith/README.md](../worlds
 3. [The routine: edit offline, send later](#3-the-routine-edit-offline-send-later)
 4. [Where Vael Ardith lives](#4-where-vael-ardith-lives)
 5. [How a page file works](#5-how-a-page-file-works)
-6. [Recipes](#6-recipes): fix text, add a page, secrets, links, timeline, sessions and quests, tables, pictures
+6. [Recipes](#6-recipes): fix text, add a page, secrets, links, timeline, sessions and quests, tables, pictures, maps
 7. [Checking and previewing your work](#7-checking-and-previewing-your-work)
 8. [Getting it to everyone](#8-getting-it-to-everyone)
 9. [When something goes wrong](#9-when-something-goes-wrong)
@@ -157,7 +157,7 @@ Everything is in the folder **`worlds/vael-ardith/`**. Each page in the app is o
 
 The folders are only for tidiness. The app reads every `.md` file in `worlds/vael-ardith/` (except this README), so a page works wherever it sits.
 
-**Not in this folder:** the pictures (drawn by code in `src/example/art/`) and the maps (built in code in `src/example/maps/`). See [Pictures](#6h-pictures).
+**Not in this folder:** the pictures (drawn by code in `src/example/art/`) and the maps (built in code in `src/example/maps/`). See [Pictures](#6h-pictures) and [Maps](#6i-maps).
 
 ---
 
@@ -198,6 +198,8 @@ The GM notes box. Players never see it.
 ### The key
 
 The **file name is the page's key**: `people/fennick.md` is the page `fennick`. Keys are how files point at each other (`parent: lantern-keep`). They never show in the app, so they can be short. Use small letters, numbers and dashes only.
+
+**Renaming a file changes its key**, so everything pointing at the old key has to change too, including the pins on the maps in `src/example/maps/`. Search the whole project for the old key in quotes (Cmd+Shift+F, for example `'last-candle'`) and replace each one. `npm run check` lists anything you missed. Changing a page's `name:` is safe: only `[[links]]` use the name, and the checker warns about any that no longer match.
 
 Text links are different: inside the text you link by the page's **name** (or one of its aliases), exactly as in the app: `[[Fennick Bottlebrook]]`.
 
@@ -450,7 +452,22 @@ The example world's pictures aren't image files: they're drawn by code when the 
 | `item:<anything>` | An item sketch, chosen by words in the name (sword, coin, letter, bottle, key, lantern, stone, map…) | **Yes**, if the name has one of those words: `item:silver-dagger` |
 | `crest:…`, `holy:…`, `handout:…`, `cover` | Faction crests, holy symbols, handouts, the world cover | No: each is drawn by its own code. Reuse an existing one, or ask Claude for a new one |
 
-Maps are built in code in `src/example/maps/`. Ask Claude for map changes.
+### 6i. Maps
+
+Vael Ardith's five maps are drawn by code when the world loads, one file each in `src/example/maps/`: `continent.ts`, `ashenreach.ts`, `cinderford.ts`, `lip-of-rent.ts` (a battle map) and `glass-barrow.ts` (the dungeon). The Shattered Coast's maps are in `src/sampleMap.ts`.
+
+Most of each file is drawing code: ask Claude for changes to the land, buildings or labels. Each file has one block that starts like `export const CINDERFORD: ExMap = {`, holding the map's name, who can see it and its pins. Two small edits there are safe (search the file for `pins:` to find it):
+
+- **Which page a pin opens.** `pins:` is a list, one pin per line:
+
+  ```ts
+  { page: 'the-ford', at: [1250, 800] },
+  ```
+
+  `page` is a page key, in single quotes. Change it to another key and keep the rest of the line as it is. `at` is the position in pixels from the top left, if you want to nudge a pin.
+- **Whether players can see the map**: the line `players: true,` in the same block, as on pages. Without it the map is GM only (the Lip of the Rent and the Glass Barrow are, so players don't see the battle and the dungeon ahead of time).
+
+Run `npm run check` afterwards: it checks every pin's key too.
 
 ---
 
@@ -539,10 +556,10 @@ People who open Vael Ardith for the first time always get the latest version.
 | Folder or file | What's in it |
 | --- | --- |
 | `worlds/vael-ardith/` | The Vael Ardith example world (this guide) |
-| `src/sample.ts` | The small Shattered Coast sample world, written as code. Editable, but more fiddly: keep the punctuation exactly as it is around your changes |
+| `src/sample.ts`, `src/sampleMap.ts` | The small Shattered Coast sample world and its maps, written as code. Editable, but more fiddly: keep the punctuation exactly as it is around your changes |
 | `src/help.tsx` | The text of every **?** help tip |
 | `src/pages/` | Each screen of the app (Home, a page, the timeline, sessions, World settings…) |
-| `src/example/` | The code that reads Vael Ardith's files, its pictures (`art/`) and maps (`maps/`) |
+| `src/example/` | The code that reads Vael Ardith's files, its pictures (`art/`) and its maps (`maps/`, see [Maps](#6i-maps)) |
 | `src/db.ts` | How everything is stored on the device. **Leave to Claude** |
 | `src/cloud/`, `supabase/` | Sync, sharing and what players are allowed to see. **Leave to Claude**: mistakes here can show GM secrets to players |
 | `src/ai/` | Transcription and recaps |

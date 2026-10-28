@@ -55,7 +55,19 @@ interface Split {
 
 type Report = (message: string, setting?: string, level?: Problem['level']) => void
 
-export function parseExampleFiles(files: Record<string, string>): { content: ExampleContent; problems: Problem[]; version: number } {
+/** What the checker needs from a map (src/example/maps): the page keys its place and pins point at. */
+export interface MapRefs {
+  key: string
+  name: string
+  location?: string
+  pins: { page: string; map?: string }[]
+}
+
+/**
+ * Reads and checks the files. `maps` are the example's maps, which live in code but point at pages
+ * by key, so renaming a page file is caught there too.
+ */
+export function parseExampleFiles(files: Record<string, string>, maps: MapRefs[] = []): { content: ExampleContent; problems: Problem[]; version: number } {
   const problems: Problem[] = []
   const pages: (ExPage & { file: string })[] = []
   const sessions: (ExSession & { file: string })[] = []
@@ -105,7 +117,7 @@ export function parseExampleFiles(files: Record<string, string>): { content: Exa
     }
   }
 
-  checkReferences(pages, sessions, boards, world, problems, unreadable)
+  checkReferences(pages, sessions, boards, world, problems, unreadable, maps)
   sessions.sort((a, b) => a.number - b.number)
   boards.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
   const strip = <T extends { file: string }>({ file: _file, ...rest }: T) => rest
@@ -122,7 +134,7 @@ export function parseExampleFiles(files: Record<string, string>): { content: Exa
 export function describeProblems(problems: Problem[], folder = ''): string {
   return [...problems]
     .sort((a, b) => (a.level === b.level ? 0 : a.level === 'error' ? -1 : 1))
-    .map((p) => `${p.level === 'error' ? 'ERROR' : 'warning'}  ${folder}${p.file}${p.line ? `, line ${p.line}` : ''}: ${p.message}`)
+    .map((p) => `${p.level === 'error' ? 'ERROR' : 'warning'}  ${p.file.startsWith('src/') ? '' : folder}${p.file}${p.line ? `, line ${p.line}` : ''}: ${p.message}`)
     .join('\n')
 }
 
@@ -580,6 +592,7 @@ function checkReferences(
   world: ExWorld | undefined,
   problems: Problem[],
   unreadable: Set<string>,
+  maps: MapRefs[],
 ) {
   const err = (file: string, message: string, level: Problem['level'] = 'error') => void problems.push({ file, message, level })
   const byKey = new Map<string, string>()
@@ -626,6 +639,15 @@ function checkReferences(
     for (const k of s.lectern?.present ?? []) page(s.file, k, 'lectern "present"')
   }
   for (const b of boards) for (const c of b.cards) page(b.file, c.page, `card "${c.key}"`)
+  const mapKeys = new Set(maps.map((m) => m.key))
+  for (const m of maps) {
+    const file = `src/example/maps (the ${m.name} map)`
+    page(file, m.location, 'its place')
+    for (const [i, pin] of m.pins.entries()) {
+      page(file, pin.page, `pin ${i + 1}`)
+      if (pin.map && !mapKeys.has(pin.map)) err(file, `pin ${i + 1}: no map with the key "${pin.map}".`)
+    }
+  }
 
   // [[Links]] go by name or alias. A link to a page nobody has written yet is allowed, so only warn.
   // Until every page can be read, the names aren't all known, so this waits.
