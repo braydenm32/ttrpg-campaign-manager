@@ -1,11 +1,13 @@
 import { blankEntity, blankLectern, blankPrep, db, newId, type Asset, type Board, type CalDate, type Entity, type Session, type World } from '../db'
 import type { ExampleContent, ExPage } from './types'
+import worldFile from '../../worlds/vael-ardith/world.md?raw'
 
 /**
- * Bumped whenever the example world's content changes, so Home can offer a fresh copy to anyone
- * holding an older one.
+ * The "version" in worlds/vael-ardith/world.md. Raising it offers a fresh copy to anyone holding an
+ * older one (Home and World settings say an update is ready). Read here on its own, so Home doesn't
+ * have to download the whole world to know.
  */
-export const EXAMPLE_VERSION = 1
+export const EXAMPLE_VERSION = Number(worldFile.match(/^version:\s*(\d+)/m)?.[1] ?? 1)
 
 /** Loads the example world as a new world on this device and returns its id. */
 export async function loadExampleWorld(): Promise<string> {
