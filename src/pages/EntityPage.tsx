@@ -97,7 +97,8 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             {e.type === 'item' && e.heldBy && ` · carried by ${e.heldBy === 'party' ? 'the party' : (entities.find((x) => x.id === e.heldBy)?.name ?? 'someone')}`}
             {e.type === 'event' &&
               [formatDate(world?.calendar, e.eventWhen), e.eventDate].filter(Boolean).map((x) => ` · ${x}`)}
-            {e.type === 'event' && ` · ${e.eventEra === 'campaign' ? 'during the campaign' : 'before the campaign'}`}
+            {e.type === 'event' &&
+              ` · ${e.eventEra === 'campaign' ? 'during the campaign' : (world?.ages?.find((a) => a.id === e.eventAge)?.name ?? 'before the campaign')}`}
             {e.questStatus && ` · ${e.questStatus}`}
             {e.type === 'thread' && ` · ${THREAD_STATUS[e.threadStatus ?? 'open'].label}`}
             {e.type === 'thread' && e.threadUrgency && e.threadUrgency !== 'normal' && ` · ${URGENCY[e.threadUrgency].icon} ${URGENCY[e.threadUrgency].label}`}
@@ -423,6 +424,21 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
                   <option value="campaign">During the campaign</option>
                 </select>
               </label>
+              {d.eventEra !== 'campaign' && !!world?.ages?.length && (
+                <label>
+                  <span>
+                    Age of history <Help topic="ages" />
+                  </span>
+                  <select value={d.eventAge ?? ''} onChange={(ev) => set('eventAge', ev.target.value || undefined)}>
+                    <option value="">(no particular age)</option>
+                    {world.ages.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
             </>
           )}
           {d.type === 'thread' && <ThreadFields d={d} set={set} />}

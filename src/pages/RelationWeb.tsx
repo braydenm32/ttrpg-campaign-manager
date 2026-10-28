@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Empty } from '../components'
 import { ENTITY_LABELS, type Entity } from '../db'
@@ -38,11 +38,18 @@ export default function RelationWeb() {
   }
 
   const byId = useMemo(() => new Map(entities.map((e) => [e.id, e])), [entities])
-  const edges = useMemo(() => {
+  const allEdges = useMemo(() => {
     const out: Edge[] = []
     for (const e of entities) for (const r of e.relations ?? []) if (byId.has(r.to)) out.push({ id: r.id, from: e.id, to: r.to, kind: r.kind })
     return out
   }, [entities, byId])
+  // Which kinds of page to draw. A big world starts with just its people and factions, or the web is a tangle.
+  const big = new Set(allEdges.flatMap((x) => [x.from, x.to])).size > 60
+  const show = (params.get('show') ?? (big ? 'people' : 'all')) as keyof typeof SHOW
+  const edges = useMemo(() => {
+    const types = SHOW[show]?.types
+    return types ? allEdges.filter((x) => types.includes(byId.get(x.from)!.type) && types.includes(byId.get(x.to)!.type)) : allEdges
+  }, [allEdges, byId, show])
 
   const shownEdges = useMemo(() => {
     const list = mode === 'family' ? edges.filter((x) => familyOf(x.kind)) : edges
@@ -77,6 +84,13 @@ export default function RelationWeb() {
               🌳 Family tree
             </button>
           </div>
+          <select value={show} onChange={(e) => setParam('show', e.target.value)} aria-label="Which pages to show">
+            {Object.entries(SHOW).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v.label}
+              </option>
+            ))}
+          </select>
           <select value={focus} onChange={(e) => setParam('focus', e.target.value)}>
             <option value="">Everyone</option>
             {people.map((e) => (
@@ -129,6 +143,11 @@ export default function RelationWeb() {
       )}
     </div>
   )
+}
+
+const SHOW: Record<string, { label: string; types?: Entity['type'][] }> = {
+  people: { label: 'People and factions', types: ['npc', 'pc', 'faction', 'deity'] },
+  all: { label: 'Every kind of page' },
 }
 
 const NODE_W = 150
@@ -192,7 +211,14 @@ function layout(ids: string[], edges: Edge[]): Pos {
   return pos
 }
 
-function viewBoxOf(pos: Pos) {
+interface Box {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+function viewBoxOf(pos: Pos): Box {
   const xs = Object.values(pos).map((p) => p.x)
   const ys = Object.values(pos).map((p) => p.y)
   const pad = 40
@@ -209,8 +235,10 @@ function viewBoxOf(pos: Pos) {
     minY -= (560 - h) / 2
     h = 560
   }
-  return `${minX} ${minY} ${w} ${h}`
+  return { x: minX, y: minY, w, h }
 }
+
+const boxText = (b: Box) => `${b.x} ${b.y} ${b.w} ${b.h}`
 
 function NodeBox({ e, x, y, focus, onPointerDown }: { e: Entity; x: number; y: number; focus: boolean; onPointerDown: (ev: ReactPointerEvent) => void }) {
   const name = e.name.length > 18 ? `${e.name.slice(0, 17)}…` : e.name
@@ -228,9 +256,24 @@ function NodeBox({ e, x, y, focus, onPointerDown }: { e: Entity; x: number; y: n
 function WebGraph({ nodeIds, edges, byId, focus, onPick }: { nodeIds: string[]; edges: Edge[]; byId: Map<string, Entity>; focus: string; onPick: (id: string) => void }) {
   const initial = useMemo(() => layout(nodeIds, edges), [nodeIds, edges])
   const [pos, setPos] = useState<Pos>(initial)
-  const [box] = useState(() => viewBoxOf(initial))
+  const full = useMemo(() => viewBoxOf(initial), [initial])
+  // A big web opens zoomed in on its middle so names stay readable. The mouse wheel or the buttons zoom; dragging the background pans.
+  const [box, setBox] = useState(() => zoomBox(full, Math.max(1, full.w / READABLE_W)))
   const svg = useRef<SVGSVGElement>(null)
   const drag = useRef<{ id: string; moved: boolean } | null>(null)
+  const pan = useRef<{ x: number; y: number } | null>(null)
+  useEffect(() => {
+    const el = svg.current
+    if (!el) return
+    const onWheel = (ev: WheelEvent) => {
+      ev.preventDefault()
+      const m = el.getScreenCTM()?.inverse()
+      const at = m ? new DOMPoint(ev.clientX, ev.clientY).matrixTransform(m) : undefined
+      setBox((b) => zoomBox(b, ev.deltaY > 0 ? 1 / 1.15 : 1.15, at && { x: at.x, y: at.y }))
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [])
 
   const toSvg = (ev: { clientX: number; clientY: number }) => {
     const m = svg.current!.getScreenCTM()!.inverse()
@@ -240,70 +283,110 @@ function WebGraph({ nodeIds, edges, byId, focus, onPick }: { nodeIds: string[]; 
   // Pairs linked both ways are drawn as two curves so both labels show.
   const seen = new Set<string>()
   return (
-    <svg
-      ref={svg}
-      className="web-graph"
-      viewBox={box}
-      onPointerMove={(ev) => {
-        if (!drag.current) return
-        drag.current.moved = true
-        const p = toSvg(ev)
-        setPos((old) => ({ ...old, [drag.current!.id]: p }))
-      }}
-      onPointerUp={() => {
-        if (drag.current && !drag.current.moved) onPick(drag.current.id)
-        drag.current = null
-      }}
-      onPointerLeave={() => (drag.current = null)}
-    >
-      {edges.map((e) => {
-        const a = pos[e.from]
-        const b = pos[e.to]
-        if (!a || !b) return null
-        const pair = [e.from, e.to].sort().join(':')
-        const bend = seen.has(pair) ? 40 : 0
-        seen.add(pair)
-        const mx = (a.x + b.x) / 2
-        const my = (a.y + b.y) / 2
-        const dx = b.x - a.x
-        const dy = b.y - a.y
-        const len = Math.sqrt(dx * dx + dy * dy) || 1
-        const cx = mx - (dy / len) * bend
-        const cy = my + (dx / len) * bend
-        return (
-          <g key={e.id} className={`web-edge tone-${toneOf(e.kind)}`}>
-            <path d={`M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}`} markerEnd="url(#web-arrow)" />
-            <text x={(mx + cx) / 2} y={(my + cy) / 2 - 4} textAnchor="middle">
-              {e.kind}
-            </text>
-          </g>
-        )
-      })}
-      <defs>
-        <marker id="web-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" className="web-arrow" />
-        </marker>
-      </defs>
-      {nodeIds.map((id) => {
-        const e = byId.get(id)
-        const p = pos[id]
-        if (!e || !p) return null
-        return (
-          <NodeBox
-            key={id}
-            e={e}
-            x={p.x}
-            y={p.y}
-            focus={id === focus}
-            onPointerDown={(ev) => {
-              ;(ev.target as Element).setPointerCapture?.(ev.pointerId)
-              drag.current = { id, moved: false }
-            }}
-          />
-        )
-      })}
-    </svg>
+    <div className="web-wrap">
+      <div className="web-zoom">
+        <button className="small" aria-label="Zoom in" onClick={() => setBox((b) => zoomBox(b, 1.3))}>
+          +
+        </button>
+        <button className="small" aria-label="Zoom out" onClick={() => setBox((b) => zoomBox(b, 1 / 1.3))}>
+          −
+        </button>
+        <button className="small" onClick={() => setBox(full)}>
+          Fit
+        </button>
+      </div>
+      <svg
+        ref={svg}
+        className="web-graph"
+        viewBox={boxText(box)}
+        onPointerDown={(ev) => {
+          if (drag.current) return
+          ;(ev.currentTarget as Element).setPointerCapture?.(ev.pointerId)
+          pan.current = toSvg(ev)
+        }}
+        onPointerMove={(ev) => {
+          if (pan.current) {
+            const p = toSvg(ev)
+            const start = pan.current
+            setBox((b) => ({ ...b, x: b.x - (p.x - start.x), y: b.y - (p.y - start.y) }))
+            return
+          }
+          if (!drag.current) return
+          drag.current.moved = true
+          const p = toSvg(ev)
+          setPos((old) => ({ ...old, [drag.current!.id]: p }))
+        }}
+        onPointerUp={() => {
+          pan.current = null
+          if (drag.current && !drag.current.moved) onPick(drag.current.id)
+          drag.current = null
+        }}
+        onPointerLeave={() => {
+          pan.current = null
+          drag.current = null
+        }}
+      >
+        {edges.map((e) => {
+          const a = pos[e.from]
+          const b = pos[e.to]
+          if (!a || !b) return null
+          const pair = [e.from, e.to].sort().join(':')
+          const bend = seen.has(pair) ? 40 : 0
+          seen.add(pair)
+          const mx = (a.x + b.x) / 2
+          const my = (a.y + b.y) / 2
+          const dx = b.x - a.x
+          const dy = b.y - a.y
+          const len = Math.sqrt(dx * dx + dy * dy) || 1
+          const cx = mx - (dy / len) * bend
+          const cy = my + (dx / len) * bend
+          return (
+            <g key={e.id} className={`web-edge tone-${toneOf(e.kind)}`}>
+              <path d={`M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}`} markerEnd="url(#web-arrow)" />
+              <text x={(mx + cx) / 2} y={(my + cy) / 2 - 4} textAnchor="middle">
+                {e.kind}
+              </text>
+            </g>
+          )
+        })}
+        <defs>
+          <marker id="web-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" className="web-arrow" />
+          </marker>
+        </defs>
+        {nodeIds.map((id) => {
+          const e = byId.get(id)
+          const p = pos[id]
+          if (!e || !p) return null
+          return (
+            <NodeBox
+              key={id}
+              e={e}
+              x={p.x}
+              y={p.y}
+              focus={id === focus}
+              onPointerDown={(ev) => {
+                ;(ev.target as Element).setPointerCapture?.(ev.pointerId)
+                drag.current = { id, moved: false }
+              }}
+            />
+          )
+        })}
+      </svg>
+    </div>
   )
+}
+
+/** How wide a slice of the web to show at first: about six names across. */
+const READABLE_W = 1100
+
+/** The view box scaled by `k` (above 1 zooms in) around a point, or around its middle. */
+function zoomBox(b: Box, k: number, at?: { x: number; y: number }): Box {
+  const cx = at?.x ?? b.x + b.w / 2
+  const cy = at?.y ?? b.y + b.h / 2
+  const w = Math.min(20000, Math.max(300, b.w / k))
+  const h = (b.h * w) / b.w
+  return { x: cx - ((cx - b.x) * w) / b.w, y: cy - ((cy - b.y) * h) / b.h, w, h }
 }
 
 /** Family tree: generations in rows, partners side by side, children under their parents. */
@@ -388,7 +471,7 @@ function FamilyTree({ nodeIds, edges, byId, focus, onPick }: { nodeIds: string[]
   }, [nodeIds, edges])
 
   return (
-    <svg className="web-graph family" viewBox={viewBoxOf(pos)}>
+    <svg className="web-graph family" viewBox={boxText(viewBoxOf(pos))}>
       {partnerLinks.map(([a, b]) => (
         <line key={`${a}-${b}`} className="family-partner" x1={pos[a].x} y1={pos[a].y} x2={pos[b].x} y2={pos[b].y} />
       ))}

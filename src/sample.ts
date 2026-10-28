@@ -163,12 +163,18 @@ export async function loadSampleWorld(): Promise<string> {
   await db.transaction('rw', [db.worlds, db.entities, db.assets, db.maps, db.pins, db.campaigns, db.sessions], async () => {
     await db.worlds.add({
       id: worldId,
-      name: 'The Shattered Coast (sample)',
-      description: 'A sample world to explore. Try the map, switch to Player view, and open Saltmere.',
+      name: 'The Shattered Coast',
+      description: 'A small sample world to explore. Try the map, switch to Player view, and open Saltmere.',
+      sample: true,
       system: 'System agnostic',
       createdAt: now,
       updatedAt: now,
-      calendar: { ...structuredClone(CALENDAR_PRESETS.custom.calendar), today: { year: 312, month: 3, day: 14 }, era: 'AS' },
+      calendar: {
+        ...structuredClone(CALENDAR_PRESETS.custom.calendar),
+        months: ['Deepwinter', 'Thaw', 'Seedtide', 'Stormtide', 'Brightsun', 'Highsun', 'Harvest', 'Saltfall', 'Greymist', 'Frostcome', 'Longdark', 'Yearsend'].map((name) => ({ name, days: 30 })),
+        today: { year: 312, month: 3, day: 14 },
+        era: 'AS',
+      },
       safety: { lines: ['Harm to children'], veils: ['Torture'], notes: 'Anyone can call a break at any time.', xcard: true },
     })
     await db.entities.bulkAdd(entities)

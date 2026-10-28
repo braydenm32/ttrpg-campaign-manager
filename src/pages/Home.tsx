@@ -4,9 +4,10 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { importWorld } from '../backup'
 import { Empty, Modal } from '../components'
-import { Help } from '../help'
+import { Help, HELP } from '../help'
 import { db, GAME_SYSTEMS, newId, worldColor, type World } from '../db'
 import { useAssetUrl } from '../hooks'
+import { EXAMPLE_VERSION, loadExampleWorld } from '../example/load'
 import { loadSampleWorld } from '../sample'
 import { AccountModal, useAuthSession } from '../cloud/auth'
 import { listMyMemberships, loadMemberWorld, memberWorldId, pendingInvite } from '../cloud/players'
@@ -51,7 +52,6 @@ export default function Home() {
       </header>
       <div className="row">
         <button className="primary" onClick={() => setCreating(true)}>+ New world</button>
-        <button onClick={async () => navigate(`${worldPath(await loadSampleWorld())}`)}>Load sample world</button>
         <label className="button">
           Import backup…
           <input
@@ -71,18 +71,23 @@ export default function Home() {
         </label>
       </div>
       <InviteBox />
-      {worlds.length === 0 ? (
-        <Empty>No worlds yet. Create one, or load the sample world to look around. A player? Paste the invite link your GM sent you above.</Empty>
-      ) : (
-        <div className="shelf">
-          {worlds.map((w) => (
-            <WorldBook key={w.id} world={w} onOpen={() => navigate(`${worldPath(w.id)}`)} />
-          ))}
-          <button className="book book-new" onClick={() => setCreating(true)}>
-            + New world
-          </button>
-        </div>
+      {worlds.length === 0 && (
+        <Empty>No worlds of your own yet. Create one, or open one of the example worlds to look around. A player? Paste the invite link your GM sent you above.</Empty>
       )}
+      <div className="shelf">
+        {!worlds.some(isSample) && (
+          <ExampleBook name="The Shattered Coast" blurb="Sample world · a quick, simple first look" help={HELP.sampleWorld} load={loadSampleWorld} onOpen={(id) => navigate(`${worldPath(id)}`)} />
+        )}
+        {!worlds.some((w) => w.example) && (
+          <ExampleBook name="Vael Ardith" blurb="Example world · a ready-to-run campaign to explore" help={HELP.exampleWorld} load={loadExampleWorld} onOpen={(id) => navigate(`${worldPath(id)}`)} />
+        )}
+        {worlds.map((w) => (
+          <WorldBook key={w.id} world={w} onOpen={() => navigate(`${worldPath(w.id)}`)} />
+        ))}
+        <button className="book book-new" onClick={() => setCreating(true)}>
+          + New world
+        </button>
+      </div>
       {notHere.length > 0 && (
         <section>
           <h2>In your cloud, not on this device</h2>
@@ -254,6 +259,37 @@ function NewWorld({ onClose, onCreated }: { onClose: () => void; onCreated: (id:
   )
 }
 
+/** The old sample world had no flag, only its name. */
+const isSample = (w: World) => !!w.sample || w.name === 'The Shattered Coast (sample)'
+
+/**
+ * A ready-made world on the shelf: the small sample or the full example. It is only loaded the first time someone
+ * opens it, and then stays on this device like any world (it syncs only if they switch sync on).
+ */
+function ExampleBook({ name, blurb, help, load, onOpen }: { name: string; blurb: string; help: string; load: () => Promise<string>; onOpen: (worldId: string) => void }) {
+  const [loading, setLoading] = useState(false)
+  return (
+    <button
+      className="book book-example"
+      disabled={loading}
+      title={help}
+      onClick={async () => {
+        setLoading(true)
+        try {
+          onOpen(await load())
+        } catch (err) {
+          alert(`Couldn’t open ${name}: ${(err as Error).message}`)
+          setLoading(false)
+        }
+      }}
+    >
+      <img className="book-sigil" src={logo} alt="" />
+      <b>{name}</b>
+      <small>{loading ? 'Opening…' : blurb}</small>
+    </button>
+  )
+}
+
 /** A world on the shelf: a cloth-bound book in the world's colour, with its cover picture if it has one. */
 function WorldBook({ world: w, onOpen }: { world: World; onOpen: () => void }) {
   const cover = useAssetUrl(w.coverId)
@@ -262,7 +298,8 @@ function WorldBook({ world: w, onOpen }: { world: World; onOpen: () => void }) {
       <img className="book-sigil" src={logo} alt="" />
       <b>{w.name}</b>
       <small>
-        {w.shared?.memberOf ? 'You’re a player' : w.shared ? 'Shared with you (read only)' : w.system}
+        {w.shared?.memberOf ? 'You’re a player' : w.shared ? 'Shared with you (read only)' : w.example ? 'Example world' : isSample(w) ? 'Sample world' : w.system}
+        {w.example && w.example < EXAMPLE_VERSION && ' · update in World settings'}
         {w.cloud?.enabled && ' · synced'}
       </small>
     </button>

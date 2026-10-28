@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Help } from '../help'
 import { Link, useNavigate } from 'react-router-dom'
-import { Empty, VisibilityBadge } from '../components'
-import { blankEntity, db, type Entity } from '../db'
+import { Empty, Modal, VisibilityBadge } from '../components'
+import { blankEntity, db, newId, type Entity, type TimelineAge, type World } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
 import { formatDate, MonthGrid, WorldToday } from '../calendar'
@@ -29,10 +29,22 @@ export default function Timeline() {
   const events = entities
     .filter((e) => e.type === 'event' && (!place || isWithin(e, place)))
     .sort((a, b) => (a.eventOrder ?? a.createdAt) - (b.eventOrder ?? b.createdAt))
-  const eras = [
-    { key: 'pre', title: 'History (before the campaign)', items: events.filter((e) => e.eventEra !== 'campaign') },
-    { key: 'campaign', title: 'During the campaign', items: events.filter((e) => e.eventEra === 'campaign') },
-  ] as const
+  const [editingAges, setEditingAges] = useState(false)
+  const ages = world?.ages ?? []
+  const history = events.filter((e) => e.eventEra !== 'campaign')
+  // With named ages, history splits into one section per age, oldest first; events in no age (or a
+  // deleted one) gather under "Other history" so nothing goes missing.
+  const inNoAge = history.filter((e) => !e.eventAge || !ages.some((a) => a.id === e.eventAge))
+  const eras: { key: string; era: 'pre' | 'campaign'; age?: TimelineAge; title: string; items: Entity[] }[] = ages.length
+    ? [
+        ...ages.map((a) => ({ key: a.id, era: 'pre' as const, age: a, title: a.name, items: history.filter((e) => e.eventAge === a.id) })),
+        ...(inNoAge.length ? [{ key: 'pre', era: 'pre' as const, title: 'Other history', items: inNoAge }] : []),
+        { key: 'campaign', era: 'campaign', title: 'During the campaign', items: events.filter((e) => e.eventEra === 'campaign') },
+      ]
+    : [
+        { key: 'pre', era: 'pre', title: 'History (before the campaign)', items: history },
+        { key: 'campaign', era: 'campaign', title: 'During the campaign', items: events.filter((e) => e.eventEra === 'campaign') },
+      ]
 
   const move = async (list: Entity[], i: number, dir: -1 | 1) => {
     const j = i + dir
@@ -47,9 +59,10 @@ export default function Timeline() {
     ])
   }
 
-  const add = async (era: 'pre' | 'campaign') => {
+  const add = async (era: 'pre' | 'campaign', age?: TimelineAge) => {
     const e = blankEntity(worldId, 'event', 'New event')
     e.eventEra = era
+    if (age) e.eventAge = age.id
     e.eventOrder = Date.now()
     if (place) e.parentId = place
     await db.entities.add(e)
@@ -83,16 +96,27 @@ export default function Timeline() {
               </option>
             ))}
         </select>
+        {isGM && !world?.shared && (
+          <button onClick={() => setEditingAges(true)} title="Split history into named ages, like “The Age of Kings”">
+            Ages of history
+          </button>
+        )}
         </div>
       </header>
       {world && <WorldToday world={world} isGM={isGM} />}
       {view === 'month' && world?.calendar ? (
         <MonthGrid world={world} events={events} sessions={sessions} />
-      ) : eras.map((era) => (
+      ) : eras.filter((era) => isGM || !era.age || era.items.length > 0).map((era) => (
         <section key={era.key}>
           <div className="section-header">
-            <h2>{era.title}</h2>
-            {isGM && <button onClick={() => add(era.key)}>+ Event</button>}
+            <div>
+              <h2>
+                {era.title}
+                {era.age?.span && <span className="muted age-span"> · {era.age.span}</span>}
+              </h2>
+              {era.age?.summary && <p className="muted small age-summary">{era.age.summary}</p>}
+            </div>
+            {isGM && <button onClick={() => add(era.era, era.age)}>+ Event</button>}
           </div>
           {era.items.length === 0 ? (
             <Empty>No events.</Empty>
@@ -122,6 +146,57 @@ export default function Timeline() {
           )}
         </section>
       ))}
+      {editingAges && world && <AgesEditor world={world} onClose={() => setEditingAges(false)} />}
     </div>
+  )
+}
+
+/** Name the ages of history, oldest first. Each becomes its own section of the timeline. */
+function AgesEditor({ world, onClose }: { world: World; onClose: () => void }) {
+  const [ages, setAges] = useState<TimelineAge[]>(world.ages ?? [])
+  const edit = (i: number, changes: Partial<TimelineAge>) => setAges(ages.map((a, j) => (j === i ? { ...a, ...changes } : a)))
+  const swap = (i: number, j: number) => {
+    const next = [...ages]
+    ;[next[i], next[j]] = [next[j], next[i]]
+    setAges(next)
+  }
+  return (
+    <Modal title="Ages of history" onClose={onClose}>
+      <form
+        className="form"
+        onSubmit={async (e) => {
+          e.preventDefault()
+          const clean = ages.filter((a) => a.name.trim()).map((a) => ({ ...a, name: a.name.trim(), span: a.span?.trim() || undefined, summary: a.summary?.trim() || undefined }))
+          await db.worlds.update(world.id, { ages: clean, updatedAt: Date.now() })
+          onClose()
+        }}
+      >
+        <p className="muted small">
+          Oldest first. Each age becomes its own section of the timeline, and an event’s page lets you pick its age. <Help topic="ages" />
+        </p>
+        {ages.length === 0 && <Empty>No ages yet. History stays in one list until you add one.</Empty>}
+        <ol className="ages-list">
+          {ages.map((a, i) => (
+            <li key={a.id} className="card">
+              <div className="row">
+                <input aria-label="Name of the age" value={a.name} onChange={(e) => edit(i, { name: e.target.value })} placeholder="e.g. The Age of Kings" />
+                <input aria-label="When" value={a.span ?? ''} onChange={(e) => edit(i, { span: e.target.value })} placeholder="e.g. 940 to 1740 AW" />
+              </div>
+              <textarea aria-label="Summary" rows={2} value={a.summary ?? ''} onChange={(e) => edit(i, { summary: e.target.value })} placeholder="A line or two about this age (players see it)" />
+              <div className="row end">
+                <button type="button" className="ghost" onClick={() => swap(i, i - 1)} disabled={i === 0} aria-label="Earlier">↑</button>
+                <button type="button" className="ghost" onClick={() => swap(i, i + 1)} disabled={i === ages.length - 1} aria-label="Later">↓</button>
+                <button type="button" className="ghost" onClick={() => setAges(ages.filter((_, j) => j !== i))}>Remove</button>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div className="row end">
+          <button type="button" onClick={() => setAges([...ages, { id: newId(), name: '' }])}>+ Age</button>
+          <button type="button" onClick={onClose}>Cancel</button>
+          <button className="primary">Save</button>
+        </div>
+      </form>
+    </Modal>
   )
 }
