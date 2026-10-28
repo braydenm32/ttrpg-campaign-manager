@@ -26,6 +26,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # The example world's Markdown files (worlds/vael-ardith). The build checks them too; this step shows the report on its own.
+      - name: Check the example world
+        run: npm run check
       - run: npm run lint
       # The GitHub Pages copy lives in a folder (/ttrpg-campaign-manager/), so it loads files relative to the page.
       - run: npm run build -- --base ./

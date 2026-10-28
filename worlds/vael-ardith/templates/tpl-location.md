@@ -1,0 +1,39 @@
+---
+type: location
+name: Location (Vael Ardith style)
+summary: "One line: what this place is and why anyone goes there."
+tags: [ template ]
+template: true
+fields:
+  Region: ""
+  Population: ""
+  Held by: ""
+  Known for: ""
+gmFields:
+  Danger: ""
+---
+
+### Arriving
+> Read-aloud text: two or three short sentences. A sound, a smell, something moving.
+
+### What's here
+- A place to go inside.
+- Someone to talk to.
+- Something to do, buy or steal.
+
+### Rumours
+- Something true.
+- Something half true.
+- Something wrong but useful.
+
+:::gm
+### The truth
+What lies under it, who really runs it, and what the party could find.
+
+### If trouble starts
+Who comes running, how fast, and how many.
+:::
+
+== GM notes ==
+
+Set "Inside" (the parent) so the place sits in its town or region. Every place in Vael Ardith has a sensory hook and something to do.

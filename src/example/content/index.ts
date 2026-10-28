@@ -1,18 +1,14 @@
 import type { ExampleContent } from '../types'
-import { WORLD } from './world'
-import { LORE } from './lore'
-import { HISTORY } from './history'
-import { PLACES } from './places'
-import { PEOPLE } from './people'
-import { FACTIONS } from './factions'
-import { ITEMS } from './items'
-import { TABLES } from './tables'
-import { BOARDS, CAMPAIGN_PAGES, SESSIONS } from './campaign'
+import { describeProblems, parseExampleFiles } from '../parse'
 
-/** The whole example world. Each file owns one part; pages refer to each other by key. */
-export const EXAMPLE: ExampleContent = {
-  world: WORLD,
-  pages: [...CAMPAIGN_PAGES, ...PLACES, ...PEOPLE, ...FACTIONS, ...LORE, ...HISTORY, ...ITEMS, ...TABLES],
-  sessions: SESSIONS,
-  boards: BOARDS,
-}
+/**
+ * The whole example world, read from the Markdown files in worlds/vael-ardith (one file per page,
+ * session and board; see docs/EDITING.md). The build checks the same files first, so a mistake
+ * stops the build rather than reaching anyone's copy.
+ */
+const files = import.meta.glob<string>('/worlds/vael-ardith/**/*.md', { query: '?raw', import: 'default', eager: true })
+const read = parseExampleFiles(Object.fromEntries(Object.entries(files).map(([path, text]) => [path.replace('/worlds/vael-ardith/', ''), text])))
+const errors = read.problems.filter((p) => p.level === 'error')
+if (errors.length) throw new Error(`The example world has mistakes:\n${describeProblems(errors)}`)
+
+export const EXAMPLE: ExampleContent = read.content

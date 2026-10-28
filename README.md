@@ -52,7 +52,9 @@ Everything is stored on your device first, so it works with no internet. Sync ca
 
 ## For developers
 
-You'll need Node 22 or newer. The desktop app also needs Rust and the [Tauri prerequisites](https://tauri.app/start/prerequisites/).
+To edit the Vael Ardith example world (or make small changes) by hand, offline included, see **[docs/EDITING.md](docs/EDITING.md)**.
+
+You'll need Node 22.18 or newer (the current LTS is best). The desktop app also needs Rust and the [Tauri prerequisites](https://tauri.app/start/prerequisites/).
 
 ```bash
 npm install
@@ -60,6 +62,7 @@ npm run dev        # web app at http://localhost:5173
 npm run desktop    # desktop app window (needs Rust)
 npm run build      # production web build in dist/
 npm run lint
+npm run check      # checks the example world's files in worlds/vael-ardith
 ```
 
 | Piece | Choice |
@@ -72,4 +75,4 @@ npm run lint
 | Web hosting | GitHub Pages, with a PWA service worker for offline use |
 | Cloud | Supabase (Postgres + row-level security, Storage, Realtime, one edge function). Schema in `supabase/` |
 
-Main files: `src/db.ts` (data model), `src/pages/` (screens), `src/Markdown.tsx` (links and secrets), `src/generators.ts` (random tables), `src/recorder.ts` (session audio), `src/sample.ts` (sample world), `src/mapDrawing.ts` + `src/pages/MapBuilder.tsx` (map builder), `src/cloud/` (sign-in, sync, share links), `src/pages/Lectern.tsx` + `src/dice.ts` (the Lectern), `src/pages/Threads.tsx` + `src/threads.ts` (loose threads).
+Main files: `src/db.ts` (data model), `src/pages/` (screens), `src/Markdown.tsx` (links and secrets), `src/generators.ts` (random tables), `src/recorder.ts` (session audio), `src/sample.ts` (sample world), `worlds/vael-ardith/` + `src/example/` (the Vael Ardith example world), `src/mapDrawing.ts` + `src/pages/MapBuilder.tsx` (map builder), `src/cloud/` (sign-in, sync, share links), `src/pages/Lectern.tsx` + `src/dice.ts` (the Lectern), `src/pages/Threads.tsx` + `src/threads.ts` (loose threads).
