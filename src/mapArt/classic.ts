@@ -5,7 +5,7 @@
  */
 import { Atlas, type InkStyle, type Point, type Rng, type Tint } from './atlas'
 import { hashId, loopArea, makeNoise, roughen, scaleOf, smoothLine, traceLoops } from './geometry'
-import { buildGround, drawGround, groundColour, type GroundMap } from './ground'
+import { buildGround, drawGround, freeGroundSheet, groundColour, type GroundMap } from './ground'
 import { buildRooms, doorGaps, drawRock, type RoomMap } from './rooms'
 import { drawUnit, fromAbove, LAYERS, layerOf, type Drawing, type GroundId, type LayerId, type LabelFont, type Look, type Shape, type StampKind, type Terrain } from '../mapDrawing'
 
@@ -1011,7 +1011,10 @@ function roomsFor(d: Drawing, W: number, H: number): RoomMap | undefined {
   return roomCache
 }
 
-/** Whether a point is on a room's floor (always true where there are no rooms), for keeping scattered pieces indoors. */
+/** The walls round a battle map's rooms as drawn (none when the rooms are hidden), for exporting to virtual tabletops. */
+export const roomWalls = (d: Drawing, W: number, H: number): Point[][] =>
+  d.scene === 'battle' && !d.hidden?.includes('paths') ? (roomsFor(d, W, H)?.walls ?? []) : []
+
 /** Whether a map point is inside the rooms, or undefined when the map has none. */
 export const roomTest = (d: Drawing, W: number, H: number): ((x: number, y: number) => boolean) | undefined => {
   const rm = d.scene === 'battle' && d.rooms?.length ? roomsFor(d, W, H) : undefined
@@ -1246,6 +1249,21 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
   if (!battle || !colour) agePaper(ctx, W, H, look, Atlas.rng((d.seed ?? 1) + 99), battle ? u : k)
   if (d.frame !== false) drawFrame(ctx, W, H, st, k)
   return canvas
+}
+
+/**
+ * Draw a map once at any size, for exporting, without disturbing what the editor keeps between
+ * redraws: a copy at twice the size would push the editor's out, and hold on to a huge canvas.
+ */
+export function renderClassicOnce(d: Drawing, W: number, H: number, scale = 1): HTMLCanvasElement {
+  const keep = { base: baseCache, rock: rockCache }
+  try {
+    return renderClassic(d, W, H, scale)
+  } finally {
+    baseCache = keep.base
+    rockCache = keep.rock
+    freeGroundSheet()
+  }
 }
 
 /** Save the picture: WebP where the browser can make it, JPEG otherwise (PNG would be huge). */

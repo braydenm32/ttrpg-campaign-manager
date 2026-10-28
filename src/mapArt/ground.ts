@@ -752,6 +752,10 @@ function brokenEdge(ctx: CanvasRenderingContext2D, loop: Point[], r: Rng, st: In
 }
 
 let sheetCache: HTMLCanvasElement | undefined
+/** Let go of the scratch sheet after a one-off drawing at another size (an export), so it isn't held on to. */
+export const freeGroundSheet = () => {
+  sheetCache = undefined
+}
 
 /**
  * The whole ground of a battle map at `scale`: the base ground everywhere, each painted ground over

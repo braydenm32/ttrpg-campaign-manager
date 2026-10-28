@@ -3,6 +3,7 @@ import { Help } from '../help'
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Empty, VisibilityToggle } from '../components'
+import { ExportMap } from '../ExportMap'
 import { blankEntity, db, ENTITY_LABELS, newId, type Entity, type Pin, type WorldMap } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { renderPlayerFog } from '../fog'
@@ -230,6 +231,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const top = fromAbove(drawing)
   const TOOLS = battle ? BATTLE_TOOLS : city ? CITY_TOOLS : WORLD_TOOLS
   const [past, setPast] = useState<Drawing[]>([])
+  const [exporting, setExporting] = useState(false)
   const [future, setFuture] = useState<Drawing[]>([])
   const [tool, setTool] = useState<Tool>('land')
   const [lineStyle, setLineStyle] = useState<LineStyle>(battle ? 'fence' : city ? 'street' : 'river')
@@ -914,8 +916,12 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
             ↷ Redo
           </button>
           <button onClick={fit}>⤢ Fit</button>
+          <button onClick={() => setExporting(true)} title="Download as a picture or a virtual tabletop file">
+            ⤓ Export
+          </button>
         </div>
       </div>
+      {exporting && <ExportMap name={map.name} drawing={drawing} width={W} height={H} onClose={() => setExporting(false)} />}
       <div className="map-body">
         <div className="builder-tools">
           {TOOLS.map((t) => (
