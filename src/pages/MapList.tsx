@@ -227,7 +227,9 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
 }
 
 function MapCard({ map, worldId }: { map: WorldMap; worldId: string }) {
-  const url = useAssetUrl(map.imageId)
+  const { isGM } = useViewMode()
+  // Previewing as a player shows the fogged picture players get.
+  const url = useAssetUrl(!isGM && map.fog?.on ? map.fog.imageId : map.imageId)
   return (
     <Link className="card map-card" to={`${worldPath(worldId)}/maps/${map.id}`}>
       {url && <img src={url} alt="" />}

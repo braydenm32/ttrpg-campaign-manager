@@ -199,6 +199,13 @@ function TranscriptView({
 }) {
   const [q, setQ] = useState('')
   const [naming, setNaming] = useState(false)
+  // Scroll to the linked line once per link, not every time the session changes.
+  const scrolledTo = useRef<number>(undefined)
+  const scrollOnce = (el: HTMLLIElement | null) => {
+    if (!el || scrolledTo.current === focus) return
+    scrolledTo.current = focus
+    el.scrollIntoView({ block: 'center' })
+  }
   const known = useKnownSpeakers(worldId, sessionId, recording.assetId)
   const labels = speakerLabels(t)
   const query = q.trim().toLowerCase()
@@ -275,7 +282,7 @@ function TranscriptView({
             <li
               key={`${l.start}-${i}`}
               className={focus !== undefined && Math.floor(l.start) === focus ? 'focus' : undefined}
-              ref={focus !== undefined && Math.floor(l.start) === focus ? (el) => el?.scrollIntoView({ block: 'center' }) : undefined}
+              ref={focus !== undefined && Math.floor(l.start) === focus ? scrollOnce : undefined}
             >
               <button className="link" onClick={() => seek(l.start)} title="Play from here">
                 <code>{formatTime(l.start)}</code>

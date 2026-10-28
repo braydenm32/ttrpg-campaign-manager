@@ -1,7 +1,7 @@
 import { db, type Availability, type PlayerNote, type PlayerQuestion, type SharedInfo } from '../db'
 import { tellPlayers } from './sync'
-import { appLink, supabase, SUPABASE_URL } from './client'
-import { storePlayerCopy, tellOtherPlayers, type SharedPayload } from './share'
+import { appLink, supabase } from './client'
+import { downloadFiles, storePlayerCopy, tellOtherPlayers, type SharedPayload } from './share'
 
 /**
  * Players joining a world. The GM makes an invite link; a player opens it, signs in, and gets a
@@ -143,17 +143,13 @@ export async function loadMemberWorld(cloudId: string): Promise<string> {
   }
   const { data: session } = await supabase.auth.getSession()
   const access = session.session?.access_token
-  const fetchAsset = (assetId: string) =>
-    fetch(`${SUPABASE_URL}/functions/v1/shared-asset?world=${encodeURIComponent(cloudId)}&id=${encodeURIComponent(assetId)}`, {
-      headers: access ? { Authorization: `Bearer ${access}` } : {},
-    })
   const p = data as SharedPayload & Pick<SharedInfo, 'me' | 'members' | 'claims' | 'notes' | 'availability' | 'questions'>
   return storePlayerCopy(
     p,
     memberWorldId(cloudId),
     `@m${cloudId.slice(0, 8)}`,
     { memberOf: cloudId, me: p.me, members: p.members, claims: p.claims, notes: p.notes, availability: p.availability, questions: p.questions },
-    fetchAsset,
+    (ids) => downloadFiles({ world: cloudId }, ids, access),
   )
 }
 

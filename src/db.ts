@@ -153,6 +153,8 @@ export interface SharedInfo {
   questions?: PlayerQuestion[]
   /** What arrived since the player last said "got it": newly revealed pages and sessions, and answers to their questions. */
   news?: { entityIds: string[]; sessionIds: string[]; questionIds: string[] }
+  /** A fingerprint of what last arrived, so a refresh that brings nothing new doesn't rewrite the copy. */
+  hash?: string
 }
 
 export interface World {

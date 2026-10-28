@@ -234,14 +234,14 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
 }
 
-/** Entities whose page links to the given entity, for "mentioned in" backlinks. */
-export function findBacklinks(target: Entity, entities: Entity[]) {
+/** Entities whose page links to the given entity, for "mentioned in" backlinks. Links in hidden passages only count for the GM. */
+export function findBacklinks(target: Entity, entities: Entity[], isGM = true) {
   const needles = new Set(namesOf(target))
   if (!needles.size) return []
   return entities.filter(
     (e) =>
       e.id !== target.id &&
-      [...e.body.matchAll(/\[\[([^\]|]+)/g)].some((m) => needles.has(m[1].trim().toLowerCase())),
+      [...(isGM ? e.body : stripSecrets(e.body)).matchAll(/\[\[([^\]|]+)/g)].some((m) => needles.has(m[1].trim().toLowerCase())),
   )
 }
 

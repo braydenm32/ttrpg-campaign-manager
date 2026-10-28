@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { Help, HelpTipsToggle } from '../help'
 import { ThemePicker } from '../theme'
 import { RecentlyDeleted } from '../History'
@@ -18,6 +18,7 @@ import { Ico, PageIcon } from '../icons'
 import { Ruler } from '@phosphor-icons/react'
 import { pagePath, typePath, worldPath } from '../paths'
 import { EXAMPLE_VERSION, resetExampleWorld } from '../example/load'
+import { DraftText } from '../components'
 
 const TABS = [
   ['world', 'World'],
@@ -33,6 +34,8 @@ export default function WorldSettings() {
   const [params, setParams] = useSearchParams()
   const tab: Tab = TABS.find(([t]) => t === params.get('tab'))?.[0] ?? 'world'
   if (!world) return null
+  // A player's copy of someone else's world has no settings to change.
+  if (world.shared) return <Navigate to={worldPath(worldId)} replace />
   const update = (patch: Partial<World>) => db.worlds.update(worldId, { ...patch, updatedAt: Date.now() })
 
   return (
@@ -58,7 +61,7 @@ export default function WorldSettings() {
           <div className="form">
             <label>
               Name
-              <input value={world.name} onChange={(e) => update({ name: e.target.value })} />
+              <DraftText value={world.name} onCommit={(name) => update({ name })} />
             </label>
             <label>
               Default game system
@@ -70,7 +73,7 @@ export default function WorldSettings() {
             </label>
             <label>
               Description
-              <textarea rows={4} value={world.description} onChange={(e) => update({ description: e.target.value })} />
+              <DraftText multiline rows={4} value={world.description} onCommit={(description) => update({ description })} />
               <small className="muted">Players can read this. Keep secrets in GM notes or a :::gm block on a page.</small>
             </label>
           </div>
@@ -193,9 +196,9 @@ function CustomTypes({ world, update }: { world: World; update: (patch: Partial<
             const change = (patch: Partial<CustomType>) => set(types.map((x, j) => (j === i ? { ...x, ...patch } : x)))
             return (
               <li key={c.id} className="row">
-                <input className="icon-input" value={c.icon} onChange={(e) => change({ icon: e.target.value })} aria-label="Icon" />
-                <input value={c.one} onChange={(e) => change({ one: e.target.value })} aria-label="Name for one" />
-                <input value={c.many} onChange={(e) => change({ many: e.target.value })} aria-label="Name for several" />
+                <DraftText className="icon-input" value={c.icon} onCommit={(icon) => change({ icon })} aria-label="Icon" />
+                <DraftText value={c.one} onCommit={(one) => change({ one })} aria-label="Name for one" />
+                <DraftText value={c.many} onCommit={(many) => change({ many })} aria-label="Name for several" />
                 <Link className="small" to={`${typePath(world.id, 'custom', c.id)}`}>
                   {n} page{n === 1 ? '' : 's'}
                 </Link>
@@ -263,11 +266,9 @@ function Templates({ world }: { world: World }) {
 /** The world's cover picture and colour, shown on Home and on its book on the shelf of worlds. */
 function WorldLook({ world, update }: { world: World; update: (patch: Partial<World>) => void }) {
   const pictures = useLiveQuery(() => db.assets.where({ worldId: world.id }).filter((a) => a.mime.startsWith('image/')).toArray(), [world.id]) ?? []
-  // The cover is for everyone, so choosing a picture reveals it to players.
-  const choose = async (id: string | undefined) => {
-    if (id) await db.assets.update(id, { visibility: 'players', updatedAt: Date.now() })
-    update({ coverId: id })
-  }
+  // The cover is for everyone: players get the picture while it's the cover (the server adds it),
+  // and stop getting it if you pick another, unless it's marked for players in Files.
+  const choose = (id: string | undefined) => update({ coverId: id })
   return (
     <section className="world-look">
       <h2>

@@ -8,6 +8,7 @@ import { Markdown, stripSecrets } from './Markdown'
 import { schedule } from './cloud/sync'
 import { Ico } from './icons'
 import { Television } from '@phosphor-icons/react'
+import { useDialog } from './components'
 import { worldPath } from './paths'
 
 /**
@@ -62,9 +63,21 @@ export function ShowingView({ showing, worldId, big }: { showing: Showing; world
   const image = useAssetUrl(showing.kind === 'image' ? showing.assetId : undefined)
   const page = showing.kind === 'page' ? entities.find((e) => e.id === showing.entityId && e.visibility === 'players') : undefined
   const pageImage = useAssetUrl(page?.imageId)
+  // A picture that never arrives says so, rather than "Loading" forever.
+  const [slow, setSlow] = useState<string>()
+  useEffect(() => {
+    if (showing.kind !== 'image' || image) return
+    const t = setTimeout(() => setSlow(showing.id), 8000)
+    return () => clearTimeout(t)
+  }, [showing.kind, showing.id, image])
   return (
     <div className={`showing-view ${big ? 'big' : ''}`}>
-      {showing.kind === 'image' && (image ? <img src={image} alt={showing.title} /> : <p className="muted">Loading the picture…</p>)}
+      {showing.kind === 'image' &&
+        (image ? (
+          <img src={image} alt={showing.title} />
+        ) : (
+          <p className="muted">{slow === showing.id ? 'This picture hasn’t reached this device. Ask your GM to show it again.' : 'Loading the picture…'}</p>
+        ))}
       {showing.kind === 'text' && (
         <Markdown text={stripSecrets(showing.text ?? '')} entities={entities} worldId={worldId} showSecrets={false} stillLinks={big} />
       )}
@@ -96,6 +109,10 @@ export function ShowingPopup({ world }: { world: World }) {
   const showing = world.showing
   const [seen, setSeen] = useState(() => readSeen(world.id))
   if (!showing) return null
+  return <ShowingPopupInner world={world} showing={showing} seen={seen} setSeen={setSeen} />
+}
+
+function ShowingPopupInner({ world, showing, seen, setSeen }: { world: World; showing: Showing; seen: string; setSeen: (id: string) => void }) {
   const open = seen !== showing.id
   const close = () => {
     try {
@@ -111,16 +128,21 @@ export function ShowingPopup({ world }: { world: World }) {
         <Ico as={Television} /> Your GM is showing: {showing.title}
       </button>
     )
+  return <ShowingModal showing={showing} worldId={world.id} close={close} />
+}
+
+function ShowingModal({ showing, worldId, close }: { showing: Showing; worldId: string; close: () => void }) {
+  const ref = useDialog(close)
   return (
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && close()}>
-      <div className="modal showing-modal" role="dialog" aria-label={showing.title}>
+      <div className="modal showing-modal" role="dialog" aria-modal="true" aria-label={showing.title} ref={ref} tabIndex={-1}>
         <header>
           <h2><Ico as={Television} /> {showing.title}</h2>
           <button className="ghost" onClick={close} aria-label="Close">
             ×
           </button>
         </header>
-        <ShowingView showing={showing} worldId={world.id} />
+        <ShowingView showing={showing} worldId={worldId} />
       </div>
     </div>
   )
@@ -297,6 +319,9 @@ function Thumb({ asset, onClick }: { asset: Parameters<typeof useBlobUrl>[0]; on
 /** The players' screen: a full window showing only what's being shown. Opened from the Lectern for a TV. */
 export function PlayersScreen({ world }: { world: World }) {
   const showing = world.showing
+  const entities = useVisibleEntities(world.id)
+  // A page hidden again since it was shown keeps its name to itself too.
+  const hiddenPage = showing?.kind === 'page' && !entities.some((e) => e.id === showing.entityId && e.visibility === 'players')
   // Keep the screen awake while it's up, where the browser allows it.
   useEffect(() => {
     let lock: { release: () => Promise<void> } | undefined
@@ -308,7 +333,7 @@ export function PlayersScreen({ world }: { world: World }) {
     <div className="players-screen">
       {showing ? (
         <>
-          <h1>{showing.title}</h1>
+          {!hiddenPage && <h1>{showing.title}</h1>}
           <ShowingView showing={showing} worldId={world.id} big />
         </>
       ) : (

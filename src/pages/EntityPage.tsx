@@ -74,7 +74,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   for (let p = e.parentId && byId.get(e.parentId); p && ancestors.length < 12; p = p.parentId ? byId.get(p.parentId) : undefined)
     ancestors.unshift(p)
   const inside = entities.filter((x) => x.parentId === e.id)
-  const backlinks = findBacklinks(e, entities)
+  const backlinks = findBacklinks(e, entities, isGM)
   const groups = ENTITY_TYPES.map((t) => [t, inside.filter((x) => x.type === t)] as const).filter(([, xs]) => xs.length)
 
   return (
@@ -312,8 +312,9 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
   }, [dirty])
 
   const save = async () => {
-    // A calendar date puts the event in its place on the timeline.
-    const order = d.type === 'event' && d.eventWhen && world?.calendar ? { eventOrder: toDays(world.calendar, d.eventWhen) } : {}
+    // A new calendar date puts the event in its place on the timeline; an unchanged one keeps its order among same-day events.
+    const redated = JSON.stringify(d.eventWhen) !== JSON.stringify(entity.eventWhen)
+    const order = d.type === 'event' && d.eventWhen && world?.calendar && redated ? { eventOrder: toDays(world.calendar, d.eventWhen) } : {}
     const next = { ...d, ...order, name: d.name.trim() || 'Untitled', updatedAt: Date.now() }
     await saveEntity(next)
     // Renamed: links to the old name (and :::for passages, for a player character) follow it.

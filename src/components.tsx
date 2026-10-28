@@ -1,4 +1,4 @@
-import { useState, type InputHTMLAttributes, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type InputHTMLAttributes, type ReactNode } from 'react'
 import type { Visibility } from './db'
 import { Ico } from './icons'
 import { Lock } from '@phosphor-icons/react'
@@ -59,10 +59,34 @@ export function TagInput({ tags, onChange, placeholder = 'Add tag…' }: { tags:
   )
 }
 
+/**
+ * Keyboard care for a pop-up: it takes the focus when it opens (so Tab and screen readers start
+ * inside it), Escape closes it, and the focus goes back where it was afterwards.
+ */
+export function useDialog(onClose: () => void) {
+  const ref = useRef<HTMLDivElement>(null)
+  const close = useRef(onClose)
+  useEffect(() => {
+    close.current = onClose
+  })
+  useEffect(() => {
+    const before = document.activeElement as HTMLElement | null
+    if (!ref.current?.contains(document.activeElement)) ref.current?.focus()
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close.current()
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      before?.focus?.()
+    }
+  }, [])
+  return ref
+}
+
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  const ref = useDialog(onClose)
   return (
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-label={title}>
+      <div className="modal" role="dialog" aria-modal="true" aria-label={title} ref={ref} tabIndex={-1}>
         <header>
           <h2>{title}</h2>
           <button className="ghost" onClick={onClose} aria-label="Close">

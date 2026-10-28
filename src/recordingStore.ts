@@ -64,16 +64,24 @@ export function addBookmark(text: string) {
   emit()
 }
 
+/** Recordings being saved after Stop: their pieces are still there for a moment, but they aren't cut off. */
+const saving = new Set<string>()
+
 /** Stops the recording and saves it as one file on the session. */
 export async function endRecording() {
   const cur = live
   if (!cur) return
+  saving.add(cur.recordingId)
   live = undefined
   window.removeEventListener('beforeunload', warnOnLeave)
   emit()
-  const blob = await cur.rec.stop()
-  await attach(cur.sessionId, cur.worldId, cur.sessionNumber, cur.rec.startedAt, blob, cur.bookmarks)
-  await db.recordingChunks.where({ recordingId: cur.recordingId }).delete()
+  try {
+    const blob = await cur.rec.stop()
+    await attach(cur.sessionId, cur.worldId, cur.sessionNumber, cur.rec.startedAt, blob, cur.bookmarks)
+    await db.recordingChunks.where({ recordingId: cur.recordingId }).delete()
+  } finally {
+    saving.delete(cur.recordingId)
+  }
 }
 
 async function attach(sessionId: string, worldId: string, n: number, startedAt: number, blob: Blob, bookmarks: Bookmark[]) {
@@ -90,7 +98,7 @@ async function attach(sessionId: string, worldId: string, n: number, startedAt: 
 export async function unsavedRecordings(sessionId: string) {
   const pieces = await db.recordingChunks.where({ sessionId }).toArray()
   const byId = new Map<string, RecordingChunk[]>()
-  for (const p of pieces) if (p.recordingId !== live?.recordingId) byId.set(p.recordingId, [...(byId.get(p.recordingId) ?? []), p])
+  for (const p of pieces) if (p.recordingId !== live?.recordingId && !saving.has(p.recordingId)) byId.set(p.recordingId, [...(byId.get(p.recordingId) ?? []), p])
   return [...byId.entries()].map(([recordingId, list]) => {
     list.sort((a, b) => a.seq - b.seq)
     return { recordingId, startedAt: list[0].startedAt, bytes: list.reduce((n, p) => n + p.blob.size, 0), seconds: list.length * 5, pieces: list }

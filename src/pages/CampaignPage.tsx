@@ -2,9 +2,9 @@ import { binCampaign } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Empty, VisibilityBadge, VisibilityToggle } from '../components'
+import { DraftText, Empty, VisibilityBadge, VisibilityToggle } from '../components'
 import { db, GAME_SYSTEMS, type Campaign } from '../db'
-import { createNextSession, partyOf } from '../sessions'
+import { bookNextSession, createNextSession, partyOf } from '../sessions'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
 import { useViewMode } from '../viewMode'
@@ -41,7 +41,7 @@ export default function CampaignPage() {
       <header className="page-header">
         <div>
           {isGM ? (
-            <input className="title-input" value={campaign.name} onChange={(e) => update({ name: e.target.value })} />
+            <DraftText className="title-input" value={campaign.name} onCommit={(name) => update({ name })} />
           ) : (
             <h1>
               {campaign.name} <Help topic="campaign" />
@@ -77,11 +77,12 @@ export default function CampaignPage() {
       </header>
       {isGM ? (
         <>
-          <textarea
+          <DraftText
+            multiline
             rows={3}
             placeholder="Campaign pitch, themes, what the players should know…"
             value={campaign.description}
-            onChange={(e) => update({ description: e.target.value })}
+            onCommit={(description) => update({ description })}
           />
           <small className="muted">{campaign.visibility === 'gm' ? 'This campaign is hidden from players.' : 'Players can read this. Keep secrets out of it.'}</small>
         </>
@@ -89,7 +90,17 @@ export default function CampaignPage() {
         campaign.description && <p className="lead">{campaign.description}</p>
       )}
 
-      {world && <SessionScheduler world={world} campaign={campaign} isGM={isGM} onBook={newSession} />}
+      {world && (
+        <SessionScheduler
+          world={world}
+          campaign={campaign}
+          isGM={isGM}
+          onBook={async (date) => {
+            const s = await bookNextSession(worldId, campaignId, date)
+            navigate(`${worldPath(worldId)}/s/${s.id}`)
+          }}
+        />
+      )}
 
       <div className="two-col">
         <section>
