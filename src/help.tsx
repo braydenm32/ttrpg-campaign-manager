@@ -79,6 +79,8 @@ export const HELP = {
     'Drag out rooms, round rooms, passages and caves. Anything that overlaps or touches joins up into one space, and the walls draw themselves round the outside. Fill in puts rock back, to trim a room or leave a pillar standing. Rooms snap to the squares unless you untick it; caves come out rough like real rock. Doors are in the Place tool: click near a wall and the door fits itself into it, opens into the room and leaves a gap; pick another version for open, broken or barred doors. Stairs, pillars, pits, altars, coffins and more are in the Dungeon groups. Undo takes back the last one.',
   roomOutside:
     'Solid rock makes a dungeon: everything outside the rooms is rock, hatched like an old hand-drawn dungeon map, and the grid only shows on the floors. The ground is for buildings and ruins on an outdoor map: the rooms get stone walls and the ground carries on outside them. Paint the floors with the Ground tool (smooth floor, paving, wooden boards, water…).',
+  birdsEye:
+    'Town maps only. From above draws a town plan, every roof seen straight down. Bird’s-eye stands the town up the way old engraved town views do: the plan stays exactly where you drew it, but houses, towers, castles, churches, town walls, trees, wells and market stalls rise up off it, so you see their roofs and the walls that face you. To pick a building with Select, click where it stands on the ground. Pins, regions and fog stay where they were, and you can switch back any time.',
   mapLayers:
     'Each kind of thing sits on its own layer. Untick Show to hide a layer (it also disappears from the picture players get). Tick Lock to stop a layer being picked, moved or erased while you work on something else.',
   landBrush:
@@ -93,6 +95,16 @@ export const HELP = {
     'Link a piece to a page and it works like a pin: click the cottage on the map to read about the cottage. Links start as GM only; click the lock to let players use it. Players never see a link you haven’t shared, a link under the fog, or a page you haven’t revealed. Moving, turning or deleting the piece takes its link along.',
   scatterBrush:
     'Click and hold with Place, then drag, and pieces keep landing inside the dashed circle without piling on top of each other: quick forests, mountain ranges and hills. Trees, mountains and towns stay on land; ships and waves stay at sea. Spread is the size of the circle; How thick sets how close together they sit. Letting go makes it one step, so Undo takes the whole lot back. Erase works the same way: drag across pieces to remove several.',
+  gmMarks:
+    'Marks only you see, in red like the notes in a published adventure: secret doors (the old "S" on the wall), traps, hidden treasure and danger (ambushes, watchers, monsters). Players get a copy of the map picture without them, so they can’t peek. A secret door snaps onto a wall like a door; select it and press "Players found it" to turn it into a normal door they can see. Tick "Players can see this mark too" on a trap or treasure mark once they know about it.',
+  gmOnly:
+    'Tick this and the piece, line or label is only on your copy of the map: players get a picture without it. On your copy it has a red dashed line round it so you know. Handy for a cult’s hidden lair on a world map, a secret tunnel, or a label with a note to yourself. A piece linked to a page stays GM only too.',
+  secretRooms:
+    'Rooms and passages dug with this ticked are only on your copy, washed in red; players see solid rock (or plain ground) there. Put a secret door from the "GM only" pieces where a secret passage meets a room. When the players find the door, select it and press "Players found it": the door and the secret rooms behind it show up on their copy.',
+  playersCopy:
+    'Shows the map as players get it, without the secret doors, traps, secret rooms and anything ticked GM only. Untick to go back to your own copy. Players never receive your copy, only theirs (with the fog of war on top, if it’s on).',
+  exportMap:
+    'Download the map as a picture (PNG) to print, share or use anywhere. Pick a size: on battle maps that is pixels to a square, since virtual tabletops count that way (Roll20 uses 70, Foundry 100); bigger is sharper for printing but makes a bigger file. Tick Show the grid to draw the squares on. Battle maps and dungeons can also go out as a Universal VTT file (.dd2vtt): the picture with its walls, doors and lights already in it. In Foundry, open it with the Universal Battlemap Importer module; in Roll20 (Pro), use the UniversalVTTImporter script, which wants the PNG at the same size too. Fantasy Grounds and others read it as well. Room walls, Wall, Inner wall and Hedge lines become walls, doors leave a door in them, portcullises and iron gates become see-through bars, pillars and buildings block sight, and lit torches, braziers and campfires give light.',
   curvedLabels:
     'Click to place a label, or drag a line on the map and the words will follow it, like a river name or a mountain range. Region lettering is spaced capitals, place names are italic, Title is for the map name.',
 

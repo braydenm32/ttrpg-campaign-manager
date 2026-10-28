@@ -139,6 +139,7 @@ export async function importWorld(file: File): Promise<string> {
         id: id(m.id),
         worldId,
         imageId: id(m.imageId),
+        playerImageId: opt(m.playerImageId),
         locationId: opt(m.locationId),
         fog: m.fog && { ...m.fog, imageId: opt(m.fog.imageId), renderedFrom: undefined },
       })),

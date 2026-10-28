@@ -18,6 +18,7 @@ import './lib/dg-furnishings.js'
 import './lib/ct-houses.js'
 import './lib/ct-castle.js'
 import './lib/ct-harbour.js'
+import './lib/gm-marks.js'
 
 export type Point = [number, number]
 export type Rng = () => number
@@ -79,6 +80,13 @@ export interface AtlasApi {
   terrain: TerrainApi
   /** Set while a turned town piece draws: where the light comes from, in the piece's own turned frame. */
   light?: [number, number]
+  /** Set while a bird's-eye town map draws its pieces: how tall buildings stand (1 = as drawn), which way is up the screen in
+      the piece's own frame, and the light walls are shaded by (from the left, so the walls that face you aren't all in shade). */
+  bird?: number
+  up?: [number, number]
+  sideLight?: [number, number]
+  /** Set with bird: how tall the town wall stands, in map pixels, so gatehouses and wall towers can stand taller than it. */
+  wallHeight?: number
 }
 
 export const Atlas = (window as unknown as { Atlas: AtlasApi }).Atlas
@@ -89,6 +97,7 @@ export const ASSET_GROUPS: { label: string; categories: string[] }[] = [
   { label: 'Forests & plants', categories: ['vegetation'] },
   { label: 'Towns & landmarks', categories: ['settlements', 'landmarks', 'symbols'] },
   { label: 'Sea & map furniture', categories: ['furniture', 'sea'] },
+  { label: 'GM only: secrets', categories: ['gm-marks'] },
 ]
 
 /** The groups the stamp picker shows on battle maps (pieces seen from above). */
@@ -102,6 +111,7 @@ export const BATTLE_GROUPS: { label: string; categories: string[] }[] = [
   { label: 'Doors', categories: ['dg-doors'] },
   { label: 'Dungeon', categories: ['dg-features'] },
   { label: 'Dungeon furnishings', categories: ['dg-furnishings'] },
+  { label: 'GM only: secrets', categories: ['gm-marks'] },
 ]
 
 /** The groups the stamp picker shows on town and city maps: town pieces first, then the battle-map pieces (drawn smaller). */

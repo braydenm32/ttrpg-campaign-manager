@@ -13,6 +13,8 @@
   let LX = 0.62, LY = 0.78 // direction the shade and the cast shadows run (down and to the right); turned() rotates it
   let ctx, r, st, INK, PAPER, COL, T, SH, u, det, LW, ROW, TW, THA, EFF
   let KOV = {} // per-variant colour overrides by roof kind
+  // Bird's-eye look: UP is the way up the screen in the piece's own (turned) frame; buildings stand up along it, BH times as tall
+  let UP = null, BH = 1
   const rr = (a, b) => a + r() * (b - a)
   const jt = (a) => (r() - 0.5) * 2 * a
   const K = (px) => px / u // screen pixels to design units
@@ -22,6 +24,9 @@
   function open(c, x, y, s, rg, style, fs) {
     ctx = c; r = rg; st = style; INK = st.ink; PAPER = st.paper; COL = st.mode === 'colour'; T = st.tint; SH = !!st.shadows
     u = s / 100; KOV = {}; LX = A.light ? A.light[0] : 0.62; LY = A.light ? A.light[1] : 0.78
+    UP = A.bird ? A.up || [0, -1] : null; BH = A.bird || 1
+    // seen from the side, light from the upper left would leave every wall that faces you in shade: it comes from the left instead
+    if (UP) { const L = A.sideLight || [0.95, 0.3]; LX = L[0]; LY = L[1] }
     EFF = s * (fs || 1)
     det = EFF >= 210 ? 3 : EFF >= 120 ? 2 : EFF >= 52 ? 1 : 0
     LW = st.line * clamp(0.6 + EFF / 300, 0.75, 1.6)
@@ -223,10 +228,11 @@
   const tuft = (x, y, s) => { s = s || 1; sg(x - 0.7 * s, y, x - 1.5 * s, y - 2.1 * s); sg(x, y, x + 0.1 * s, y - 2.7 * s); sg(x + 0.7 * s, y, x + 1.6 * s, y - 2 * s) }
   /** Run fn with the drawing turned by ang about (x, y); the light is turned with it so shade and shadows still fall the right way. */
   function turned(x, y, ang, fn) {
-    const lx = LX, ly = LY, c = cos(ang || 0), s = sin(ang || 0)
+    const lx = LX, ly = LY, up = UP, c = cos(ang || 0), s = sin(ang || 0)
     ctx.save(); ctx.translate(x, y); if (ang) ctx.rotate(ang)
     LX = c * lx + s * ly; LY = -s * lx + c * ly
-    try { fn() } finally { ctx.restore(); LX = lx; LY = ly }
+    if (up) UP = [c * up[0] + s * up[1], -s * up[0] + c * up[1]]
+    try { fn() } finally { ctx.restore(); LX = lx; LY = ly; UP = up }
   }
   /** Run fn clipped to everything except `hole`. */
   function clipOut(hole, fn) {
@@ -520,10 +526,288 @@
     flush(0.5)
   }
 
+  /* ---------- bird's-eye ---------- */
+  /* The town plan stays where it is on the ground; walls rise from it straight up the screen and roofs sit on top, so a
+     building shows its roof and the walls that face you, the way old engraved town views do. In 3D terms the viewer looks
+     along (-UP, 1) scaled: a face shows when its outward normal turns towards that. */
+  const lift = (p, z) => [p[0] + UP[0] * z, p[1] + UP[1] * z]
+  const near = (p) => -(p[0] * UP[0] + p[1] * UP[1]) // how far down the screen: bigger is nearer, so drawn later
+  const centre = (pts) => { let x = 0, y = 0; for (const p of pts) { x += p[0]; y += p[1] } return [x / pts.length, y / pts.length] }
+  const faces = (n) => -(n[0] * UP[0] + n[1] * UP[1]) // > 0: a wall with this outward normal turns towards you
+  const wallCol = (kind) => { const t = texOf(kind); return t === 'slate' || t === 'stone' ? mix(STONE(), PAPER, 0.3) : t === 'shingle' || t === 'plank' ? mix(WOOD(), PAPER, 0.45) : mix(PAPER, T.sand, t === 'thatch' ? 0.4 : 0.22) }
+  /** One wall standing on the ground edge a-b (outward normal n), H tall, with a gable point `apex` above it if it's a gable end. */
+  function birdWall(a, b, n, H, apex, kind, o) {
+    const poly = apex ? [a, b, lift(b, H), apex, lift(a, H)] : [a, b, lift(b, H), lift(a, H)]
+    const away = n[0] * LX + n[1] * LY // > 0: turned away from the light
+    paint(poly, o.wall || wallCol(kind), clamp(0.3 + 0.6 * away, 0, 1), 0.6)
+    // shade by hatching up the wall; in ink even the lit walls get a few strokes, the way an engraver tones plaster
+    if (away > 0.35 || !COL) hatchIn(poly, Math.atan2(UP[1], UP[0]), K(away > 0.7 ? 2.0 : away > 0.35 ? 3.2 : 3.8), away > 0.35 ? 0.45 : 0.55, { keep: away > 0.35 ? 0.9 : away > 0 ? 0.6 : 0.4 })
+    const L = hyp(b[0] - a[0], b[1] - a[1])
+    if (det >= 1 && L > 5 && H > 4 && !o.blind) {
+      const e = [(b[0] - a[0]) / L, (b[1] - a[1]) / L], rows = H > 10 ? [0.3, 0.7] : [0.55], ww = clamp(L * 0.07, 1.1, 2.0), wh = clamp(H * 0.13, 1.3, 2.4)
+      const m = Math.max(1, Math.floor(L / 7.5)), door = o.door !== false && faces(n) > 0.6 ? Math.floor(rr(0, m)) : -1
+      const quad = (c, hw, z0, z1) => path([lift([c[0] - e[0] * hw, c[1] - e[1] * hw], z0), lift([c[0] + e[0] * hw, c[1] + e[1] * hw], z0), lift([c[0] + e[0] * hw, c[1] + e[1] * hw], z1), lift([c[0] - e[0] * hw, c[1] - e[1] * hw], z1)])
+      ctx.fillStyle = INK
+      for (let j = 0; j < m; j++) {
+        const t = (j + 0.5) / m, c = [a[0] + (b[0] - a[0]) * t + e[0] * jt(0.4), a[1] + (b[1] - a[1]) * t + e[1] * jt(0.4)]
+        for (let k = 0; k < rows.length; k++) {
+          if (j === door && k === 0) { ctx.globalAlpha = 0.85; quad(c, ww, 0, Math.min(H * 0.48, 4.2)); ctx.fill(); continue }
+          if (r() < 0.12) continue
+          const z = H * rows[k]
+          ctx.globalAlpha = 0.7; quad(c, ww * 0.75, z - wh / 2, z + wh / 2); ctx.fill()
+        }
+      }
+      ctx.globalAlpha = 1
+      if (det >= 2 && texOf(kind) !== 'slate' && texOf(kind) !== 'stone' && H > 6) { // timber frame: posts, and a rail between the storeys
+        const n2 = Math.max(1, Math.round(L / 6))
+        for (let j = 0; j <= n2; j++) { const p = [a[0] + e[0] * (L * j) / n2, a[1] + e[1] * (L * j) / n2], q = lift(p, H); sg(p[0], p[1], q[0], q[1]) }
+        if (rows.length > 1) { const p = lift(a, H * 0.5), q = lift(b, H * 0.5); sg(p[0], p[1], q[0], q[1]) }
+        flush(0.4)
+      }
+    }
+    outline(poly, 1.05, { noext: true })
+  }
+  /** Roof planes, back ones first, the ones that turn away skipped. Each: pts (on screen), d (the way down the slope on the
+     ground plan), run (how far that slope runs on the plan), eave (its lower edge) and top (its upper edge or point). */
+  function birdRoof(planes, rise, kind, o) {
+    const shown = planes.filter((pl) => rise * -(pl.d[0] * UP[0] + pl.d[1] * UP[1]) + pl.run > 0.01)
+    shown.sort((p, q) => near(centre(p.pts)) - near(centre(q.pts)))
+    for (const pl of shown) {
+      const [ex, ey] = centre(pl.eave), [rx, ry] = centre(pl.top), L = hyp(ex - rx, ey - ry) || 1
+      plane(pl.pts, [(ex - rx) / L, (ey - ry) / L], { ...o, kind, shade: shadeOf(pl.d) })
+    }
+    return shown
+  }
+  /** Roof height at a ground point, for a gable roof (ridge along ax) of the given box. */
+  function roofZ(b, p) {
+    const across = Math.abs((b.sw ? p[0] : p[1]) - b.Dm), along = b.sw ? p[1] : p[0]
+    let f = 1 - across / b.hd
+    if (b.h0) f = Math.min(f, (along - b.L0) / b.h0)
+    if (b.h1) f = Math.min(f, (b.L1 - along) / b.h1)
+    return b.H + b.RH * clamp(f, 0, 1)
+  }
+  /** A roofed house standing up: its near walls (gable ends where the ridge meets them), then its roof, then its chimneys.
+     o.v0 / o.v1: that end runs into a bigger roof, so it has no gable and its ridge carries on in a valley (true: as far as a
+     roof of the same pitch needs). o.open: a roof on posts, no walls (o.posts draws the corner posts). o.pitch: rise per run. */
+  function birdHouse(x0, y0, x1, y1, ax, o) {
+    o = o || {}
+    const kind = o.kind || 'tile', tex = texOf(kind), sw = ax === 'y', M = sw ? (p) => [p[1], p[0]] : (p) => p
+    const L0 = sw ? y0 : x0, L1 = sw ? y1 : x1, D0 = sw ? x0 : y0, D1 = sw ? x1 : y1, Dm = (D0 + D1) / 2, hd = (D1 - D0) / 2
+    const h0 = o.hip0 ? Math.min(hd, (L1 - L0) / 2) : 0, h1 = o.hip1 ? Math.min(hd, (L1 - L0) / 2) : 0
+    const v0 = o.v0 === true ? hd : o.v0 || 0, v1 = o.v1 === true ? hd : o.v1 || 0
+    const H = (o.sh || 7) * 1.25 * BH, RH = hd * (o.pitch || (tex === 'thatch' ? 0.95 : 0.75)), Z = H + RH
+    const r0 = lift(M([L0 + h0 - v0, Dm]), Z), r1 = lift(M([L1 - h1 + v1, Dm]), Z)
+    const C = rect(x0, y0, x1, y1), NRM = [N, E, S, WD]
+    const end = (i) => (sw ? (i === 0 && !h0 ? r0 : i === 2 && !h1 ? r1 : null) : i === 3 && !h0 ? r0 : i === 1 && !h1 ? r1 : null)
+    const inside = (i) => (sw ? (i === 0 && v0) || (i === 2 && v1) : (i === 3 && v0) || (i === 1 && v1))
+    if (o.posts) for (const p of C.slice().sort((a, b) => near(a) - near(b))) pole(p, 0, H, K(1.4))
+    if (!o.open) for (let i = 0; i < 4; i++) if (faces(NRM[i]) > 0.02 && !inside(i)) birdWall(C[i], C[(i + 1) % 4], NRM[i], H, end(i), kind, o)
+    const E0 = lift(M([L0, D0]), H), E1 = lift(M([L1, D0]), H), E2 = lift(M([L1, D1]), H), E3 = lift(M([L0, D1]), H)
+    const planes = [
+      { pts: [E0, E1, r1, r0], eave: [E0, E1], top: [r0, r1], d: sw ? WD : N, run: hd },
+      { pts: [E3, E2, r1, r0], eave: [E3, E2], top: [r0, r1], d: sw ? E : S, run: hd },
+    ]
+    if (h0) planes.push({ pts: [E0, E3, r0], eave: [E0, E3], top: [r0], d: sw ? N : WD, run: h0 })
+    if (h1) planes.push({ pts: [E1, E2, r1], eave: [E1, E2], top: [r1], d: sw ? S : E, run: h1 })
+    birdRoof(planes, RH, kind, o)
+    if (h0 || v0) { crease(E0, r0, 1); crease(E3, r0, 1) }
+    if (h1 || v1) { crease(E1, r1, 1); crease(E2, r1, 1) }
+    ridge(r0, r1, tex)
+    if (v0 || v1) { // the eaves, leaving out the ends that run into the other roof
+      for (const [a, b, keep] of [[E0, E1, 1], [E1, E2, !v1], [E2, E3, 1], [E3, E0, !v0]]) if (keep) ln(a, b, 1.3, { taper: 0.3 })
+    } else outline([E0, E1, E2, E3], 1.25, { noext: true })
+    if (tex === 'thatch') ragged([E0, E1, E2, E3])
+    const box = { sw, L0, L1, Dm, hd, h0, h1, H, RH }
+    if (o.ch) for (const c of o.ch) birdStack(c[0], c[1], c[2], roofZ(box, [c[0], c[1]]))
+    return box
+  }
+  /** A chimney stack standing on the roof at height z. */
+  function birdStack(cx, cy, w, z) {
+    if (det < 1) return
+    w = w || 3.4
+    const sq = rect(cx - w / 2, cy - w / 2, cx + w / 2, cy + w / 2), zt = z + w * 1.5, NRM = [N, E, S, WD]
+    for (let i = 0; i < 4; i++) {
+      if (faces(NRM[i]) <= 0.02) continue
+      const a = sq[i], b = sq[(i + 1) % 4], f = [lift(a, z - w * 0.6), lift(b, z - w * 0.6), lift(b, zt), lift(a, zt)]
+      paint(f, STONE(), clamp(0.3 + 0.6 * (NRM[i][0] * LX + NRM[i][1] * LY), 0, 1)); outline(f, 0.9, { noext: true })
+    }
+    const top = sq.map((p) => lift(p, zt))
+    paint(top, lighter(STONE(), 0.15), 0.1); outline(top, 0.9, { noext: true })
+    if (det >= 2) { const c = lift([cx, cy], zt); fillPoly(rect(c[0] - w * 0.2, c[1] - w * 0.2, c[0] + w * 0.2, c[1] + w * 0.2), INK) }
+  }
+  /** A square tower under a pyramid roof, standing up. */
+  function birdTower(x0, y0, x1, y1, kind, H) {
+    const C = rect(x0, y0, x1, y1), NRM = [N, E, S, WD]
+    for (let i = 0; i < 4; i++) if (faces(NRM[i]) > 0.02) birdWall(C[i], C[(i + 1) % 4], NRM[i], H, null, 'stone', { door: false })
+    const run = Math.min(x1 - x0, y1 - y0) / 2, top = lift([(x0 + x1) / 2, (y0 + y1) / 2], H + run * 1.6), E4 = C.map((p) => lift(p, H))
+    birdRoof(NRM.map((d, i) => ({ pts: [E4[i], E4[(i + 1) % 4], top], eave: [E4[i], E4[(i + 1) % 4]], top: [top], d, run })), run * 1.6, kind, {})
+    for (const p of E4) crease(p, top, 1)
+    outline(E4, 1.3, { noext: true })
+    return top
+  }
+  /** A round tower: a stone drum with a cone on top (or a flat top behind battlements when kind is 'flat'). */
+  function birdRound(cx, cy, R, kind, H) {
+    const up = Math.atan2(UP[1], UP[0]), hz = [-UP[1], UP[0]]
+    const arc = (c, rad, from, to, n) => { const o = []; for (let k = 0; k <= n; k++) { const a = from + ((to - from) * k) / n; o.push([c[0] + cos(a) * rad, c[1] + sin(a) * rad]) } return o }
+    const g = [cx, cy], top = lift(g, H)
+    const drum = [...arc(g, R, up + PI / 2, up + PI * 1.5, 20), ...arc(top, R, up + PI * 1.5, up + PI / 2, 20)]
+    paint(drum, STONE(), 0.3)
+    const sgn = Math.sign(hz[0] * LX + hz[1] * LY) || 1, far = [hz[0] * sgn * R * 2, hz[1] * sgn * R * 2]
+    const shade = [lift([cx + hz[0] * sgn * R * 0.15, cy + hz[1] * sgn * R * 0.15], -R), lift([cx + hz[0] * sgn * R * 0.15, cy + hz[1] * sgn * R * 0.15], H + R)]
+    ctx.save(); path(drum); ctx.clip()
+    hatchIn([shade[0], shade[1], [shade[1][0] + far[0], shade[1][1] + far[1]], [shade[0][0] + far[0], shade[0][1] + far[1]]], up, K(2.4), 0.45, { keep: 0.9 })
+    ctx.restore()
+    if (det >= 1 && H > 8) {
+      ctx.fillStyle = INK; ctx.globalAlpha = 0.75
+      for (const [f, z] of [[-0.25, 0.42], [0.2, 0.72]]) { const a = up + PI + f, p = lift([cx + cos(a) * R, cy + sin(a) * R], H * z); path(rect(p[0] - 0.7, p[1] - 1.3, p[0] + 0.7, p[1] + 1.3)); ctx.fill() }
+      ctx.globalAlpha = 1
+    }
+    outline(drum, 1.3, { noext: true })
+    if (kind === 'flat') {
+      const rim = oval(top[0], top[1], R * 1.06, R * 1.06, 28)
+      paint(rim, lighter(STONE(), 0.1), 0.15); loop(rim, 1.2)
+      if (det >= 1) { const inner = oval(top[0], top[1], R * 0.7, R * 0.7, 20); paint(inner, darker(STONE(), 0.1), 0.4); loop(inner, 0.8) }
+      return top
+    }
+    // the cone in gores, each toned by the light, with a slight overhang at the eaves
+    return birdCone(cx, cy, R * 1.12, H, R * 2.3, 12, 0, (pts, k, f) => {
+      paint(pts, kindCol(kind || 'slate'), clamp(0.25 + 0.5 * f, 0, 1))
+      if (f > 0.2 || !COL) hatchIn(pts, up, K(f > 0.55 ? 2.2 : 3.4), 0.45, { keep: f > 0.2 ? 0.85 : 0.4 })
+    })
+  }
+
+  /* Standing things wait in a queue while the piece lays its flat ground, then draw far to near. Each keeps the drawing frame
+     (and the turned light and up) it was queued in, and sorts by how far down the screen its ground point lands. */
+  let Q = null, SEQ = 0, LIFT = 0
+  const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
+  /** Draw fn standing at ground point p, in turn; nudge moves it nearer (+) or further (-) in the order. */
+  function later(p, fn, nudge) {
+    if (!Q) { fn(); return }
+    const m = ctx.getTransform(), k = nudge || 0, x = p[0] - UP[0] * k, y = p[1] - UP[1] * k
+    Q.push({ key: m.b * x + m.d * y + m.f, seq: SEQ++, fn, m, up: UP, lx: LX, ly: LY })
+  }
+  function flushQ() {
+    const q = Q, up = UP, lx = LX, ly = LY
+    Q = null
+    q.sort((a, b) => a.key - b.key || a.seq - b.seq)
+    for (const it of q) { ctx.save(); ctx.setTransform(it.m); UP = it.up; LX = it.lx; LY = it.ly; try { it.fn() } finally { ctx.restore() } }
+    UP = up; LX = lx; LY = ly
+  }
+  /** Run a top-down drawing raised z up the screen (the top of something standing), with no cast shadow. */
+  function lifted(z, fn) {
+    const sh = SH, lf = LIFT
+    ctx.save(); ctx.translate(UP[0] * z, UP[1] * z); SH = false; LIFT = 1
+    try { fn() } finally { ctx.restore(); SH = sh; LIFT = lf }
+  }
+  /** True when a helper should stand its thing up rather than draw it flat (bird's-eye, and not already drawing a raised top). */
+  const standing = () => !!UP && !LIFT
+  /** The sides of a solid on a convex footprint, from height z0 to z1: the faces that turn towards you, toned by the light. Up to
+     eight sides each face gets its own tone (a box, a step); a round footprint is one band, hatched on the side away from the light. */
+  function sides(base, z0, z1, col, o) {
+    o = o || {}
+    const n = base.length, sgn = orient(base), f = [], up = Math.atan2(UP[1], UP[0])
+    for (let i = 0; i < n; i++) {
+      const p = base[i], q = base[(i + 1) % n], L = hyp(q[0] - p[0], q[1] - p[1]) || 1, nx = ((q[1] - p[1]) / L) * sgn, ny = (-(q[0] - p[0]) / L) * sgn
+      f.push(faces([nx, ny]) > 0.001 ? nx * LX + ny * LY : null)
+    }
+    const quad = (i) => { const p = base[i], q = base[(i + 1) % n]; return [lift(p, z0), lift(q, z0), lift(q, z1), lift(p, z1)] }
+    const tone = (pts, k, band) => {
+      if (o.leaf) stippleIn(pts, k > 0.35 ? 3.2 : 1.6, K(0.5))
+      else if (band || k > 0.35 || !COL) hatchIn(pts, up, K(band ? 2.4 : k > 0.7 ? 2.0 : k > 0.35 ? 3.0 : 3.8), 0.45, { keep: band || k > 0.35 ? 0.88 : 0.5 })
+    }
+    if (n <= 8) {
+      for (let i = 0; i < n; i++) {
+        if (f[i] == null) continue
+        const qd = quad(i)
+        if (o.leaf) fillPoly(qd, COL ? darker(mix(col, PAPER, 0.12), 0.12 + 0.2 * f[i]) : PAPER); else paint(qd, col, clamp(0.3 + 0.6 * f[i], 0, 1), 0.6)
+        tone(qd, f[i])
+        if (o.leaf) ln(qd[0], qd[1], 0.8, { taper: 0.3, wob: 0.3 }); else outline(qd, o.w || 0.9, { noext: true }) // a hedge shows no joins
+      }
+      return
+    }
+    let s = -1
+    for (let i = 0; i < n; i++) if (f[i] != null && f[(i + n - 1) % n] == null) { s = i; break }
+    if (s < 0) return
+    const chain = [base[s]]
+    for (let k = 0; k < n; k++) { const i = (s + k) % n; if (f[i] == null) break; chain.push(base[(i + 1) % n]) }
+    const band = [...chain.map((p) => lift(p, z0)), ...chain.slice().reverse().map((p) => lift(p, z1))]
+    paint(band, col, 0.3, 0.6)
+    ctx.save(); ctx.beginPath()
+    for (let i = 0; i < n; i++) if (f[i] != null && f[i] > 0.3) { quad(i).forEach((p, k) => (k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath() }
+    ctx.clip(); tone(band, 1, true); ctx.restore()
+    outline(band, o.w || 1, { noext: true })
+  }
+  /** A small solid standing on `base`: its shadow on the ground now, then in turn its sides h tall and top() drawn on them. */
+  function standUp(at, base, h, col, top, sh, nudge) {
+    if (sh) castShadow([base], sh)
+    later(at, () => { sides(base, 0, h, col); lifted(h, top) }, nudge)
+  }
+  /** A straight run of wall t thick and h tall on a-b: its sides, then top() drawn lifted onto it. */
+  function slab(a, b, t, h, col, top, o) {
+    const L = hyp(b[0] - a[0], b[1] - a[1]) || 1, nx = (-(b[1] - a[1]) / L) * t / 2, ny = ((b[0] - a[0]) / L) * t / 2
+    sides([[a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], [b[0] - nx, b[1] - ny], [a[0] - nx, a[1] - ny]], 0, h, col, o)
+    lifted(h, top)
+  }
+  /** A run from a to b cut into pieces about `step` long (so each sorts with what stands beside it), the ends pushed out by `ext`. */
+  function pieces(a, b, step, ext, fn) {
+    const L = hyp(b[0] - a[0], b[1] - a[1]) || 1, k = Math.max(1, Math.ceil(L / step)), v = [(b[0] - a[0]) / L, (b[1] - a[1]) / L]
+    for (let i = 0; i < k; i++) {
+      const p = lerp(a, b, i / k), q = lerp(a, b, (i + 1) / k)
+      if (i === 0) { p[0] -= v[0] * ext; p[1] -= v[1] * ext }
+      if (i === k - 1) { q[0] += v[0] * ext; q[1] += v[1] * ext }
+      fn(p, q, lerp(p, q, 0.5))
+    }
+  }
+  /** A pole from height z0 to z1 at ground point p, w thick. */
+  function pole(p, z0, z1, w) {
+    const a = lift(p, z0), b = lift(p, z1)
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineWidth = Math.max(w || 1, K(1)); ctx.strokeStyle = INK; ctx.lineCap = 'round'; ctx.stroke()
+  }
+  /** A cone or spire of n gores on a ring of radius R at height z0, hc tall: the gores that face you, far ones first, each
+     coloured by gore(pts, k, f) where f > 0 means it turns away from the light. flat: straight-sided (a spire) rather than round. */
+  function birdCone(cx, cy, R, z0, hc, n, a0, gore, flat) {
+    const apex = lift([cx, cy], z0 + hc), out = [], tilt = hc / (R * (flat ? cos(PI / n) : 1))
+    for (let k = 0; k < n; k++) {
+      const g0 = a0 + (TAU * k) / n, g1 = a0 + (TAU * (k + 1)) / n, mid = (g0 + g1) / 2
+      if (1 - tilt * (cos(mid) * UP[0] + sin(mid) * UP[1]) <= 0.01) continue
+      const pts = [apex], m = flat ? 1 : 4
+      for (let q = 0; q <= m; q++) { const a = g0 + ((g1 - g0) * q) / m; pts.push(lift([cx + cos(a) * R, cy + sin(a) * R], z0)) }
+      out.push({ pts, k, f: cos(mid) * LX + sin(mid) * LY, d: near([cx + cos(mid) * R, cy + sin(mid) * R]) })
+    }
+    out.sort((p, q) => p.d - q.d)
+    for (const g of out) { gore(g.pts, g.k, g.f); outline(g.pts, 0.8, { noext: true }) }
+    return apex
+  }
+  /** A dark doorway (arched when round) in the wall standing on a-b with outward normal nrm, h tall; only if that wall faces you. */
+  function doorIn(a, b, nrm, h, round) {
+    if (!UP) return
+    later(lerp(a, b, 0.5), () => {
+      if (faces(nrm) <= 0.02) return
+      const w = hyp(b[0] - a[0], b[1] - a[1]) || 1, e = [(b[0] - a[0]) / w, (b[1] - a[1]) / w], c = lerp(a, b, 0.5), s = round ? h - w / 2 : h
+      const pts = [a, b, lift(b, s)]
+      if (round) for (let k = 1; k < 12; k++) { const t = (PI * k) / 12; pts.push(lift([c[0] + (e[0] * cos(t) * w) / 2, c[1] + (e[1] * cos(t) * w) / 2], s + (sin(t) * w) / 2)) }
+      pts.push(lift(a, s))
+      ctx.globalAlpha = 0.88; fillPoly(pts, INK); ctx.globalAlpha = 1
+    }, 0.05)
+  }
+  /** The shade under an open roof (a market hall, a colonnade): a dark band below the eaves on the sides that face you. */
+  function underRoof(x0, y0, x1, y1, H) {
+    later([(x0 + x1) / 2, (y0 + y1) / 2], () => {
+      const C = rect(x0, y0, x1, y1), NRM = [N, E, S, WD]
+      for (let i = 0; i < 4; i++) {
+        if (faces(NRM[i]) <= 0.02) continue
+        const a = C[i], b = C[(i + 1) % 4], qd = [a, b, lift(b, H), lift(a, H)]
+        if (COL) { ctx.globalAlpha = 0.42; fillPoly(qd, '#3a2c1a'); ctx.globalAlpha = 1 }
+        hatchIn(qd, Math.atan2(UP[1], UP[0]), K(2.2), 0.45, { keep: 0.9 })
+      }
+    }, -2e3)
+  }
+
   /* ---------- buildings ---------- */
   const baseOf = (sil, kind) => fillPoly(sil, COL ? mix(kindCol(kind || 'tile'), PAPER, 0.4) : PAPER)
   /** One roofed footprint: opaque base, a gable roof (ridge along ax), the outline. o: kind, col, hip0, hip1, w. */
   function house(x0, y0, x1, y1, ax, o) {
+    if (UP) { later([(x0 + x1) / 2, (y0 + y1) / 2], () => birdHouse(x0, y0, x1, y1, ax, o), o && o.nudge); return }
     o = o || {}
     const sil = rect(x0, y0, x1, y1), kind = o.kind || 'tile'
     baseOf(sil, kind)
@@ -536,13 +820,20 @@
     const same = hs.filter((h) => !h.sh).map((h) => rect(h.x0, h.y0, h.x1, h.y1))
     if (same.length) castShadow(same, sh || 7)
     for (const h of hs) if (h.sh) castShadow([rect(h.x0, h.y0, h.x1, h.y1)], h.sh)
+    if (UP) { for (const h of hs) house(h.x0, h.y0, h.x1, h.y1, h.ax || 'y', h); return } // in turn, each with its own chimneys
     for (const h of hs) house(h.x0, h.y0, h.x1, h.y1, h.ax || 'y', h)
     for (const h of hs) if (h.ch) for (const c of h.ch) stack(c[0], c[1], c[2])
   }
   /** Square tower under a pyramid roof (taller than a house: longer shadow). */
   function sqTower(x0, y0, x1, y1, kind, sh) {
     const p = rect(x0, y0, x1, y1)
-    castShadow([p], sh || 13); baseOf(p, kind)
+    castShadow([p], sh || 13)
+    if (UP) { // gives back how high its point stands, for a flag
+      const H = (sh || 13) * 1.6 * BH
+      later([(x0 + x1) / 2, (y0 + y1) / 2], () => birdTower(x0, y0, x1, y1, kind, H))
+      return H + (Math.min(x1 - x0, y1 - y0) / 2) * 1.6
+    }
+    baseOf(p, kind)
     const c = pyramid(x0, y0, x1, y1, { kind })
     outline(p, 1.7, { noext: true })
     fillPoly(oval(c[0], c[1], Math.max(0.9, K(0.9)), Math.max(0.9, K(0.9)), 6), INK)
@@ -552,6 +843,7 @@
   function roundTower(cx, cy, R, kind, sh, seams) {
     const base = oval(cx, cy, R, R, 0, 0.004)
     castShadow([base], sh || 13)
+    if (UP) { const H = (sh || 13) * 1.6 * BH; later([cx, cy], () => birdRound(cx, cy, R, kind, H)); return H + R * 2.3 }
     paint(base, STONE(), 0.25); loop(base, 1.7)
     const cone = fan(cx, cy, R * 0.86, 0, TAU, { kind, seams: seams || 10 })
     loop(cone, 1.2)
@@ -563,6 +855,12 @@
     const h = t / 2, ix0 = x0 + t, iy0 = y0 + t, ix1 = x1 - t, iy1 = y1 - t
     const sil = rect(x0, y0, x1, y1), court = rect(ix0, iy0, ix1, iy1), sh = o.sh || 8
     ground(court, o.floor || 'cobble')
+    if (UP) { // four ranges, the far one first
+      clipOut(court, () => castShadow([sil], sh))
+      const ranges = [[x0, y0, x1, iy0, 'x'], [x0, iy1, x1, y1, 'x'], [x0, iy0, ix0, iy1, 'y'], [ix1, iy0, x1, iy1, 'y']]
+      for (const g of ranges) house(g[0], g[1], g[2], g[3], g[4], { ...o, sh, hip0: true, hip1: true })
+      return court
+    }
     if (SH) { ctx.save(); path(court); ctx.clip(); castShadow([rect(ix0 - 1, iy0 - 1, ix1 + 1, iy0), rect(ix0 - 1, iy0 - 1, ix0, iy1 + 1)], sh); ctx.restore() }
     clipOut(court, () => castShadow([sil], sh))
     ctx.beginPath(); for (let i = 0; i < 4; i++) i ? ctx.lineTo(sil[i][0], sil[i][1]) : ctx.moveTo(sil[i][0], sil[i][1]); ctx.closePath()
@@ -580,7 +878,7 @@
   }
   /** A small gabled dormer (ridge along y) on a roof slope; it throws its own little shadow on the roof. */
   function dormer(cx, y0, y1, w, o) {
-    if (det < 1) return
+    if (det < 1 || UP) return
     const p = rect(cx - w / 2, y0, cx + w / 2, y1)
     castShadow([p], 2.6); baseOf(p, o.kind)
     gable(cx - w / 2, y0, cx + w / 2, y1, 'y', o)
@@ -589,7 +887,7 @@
 
   /* ---------- small things ---------- */
   function stack(cx, cy, w) {
-    if (det < 1) return
+    if (det < 1 || UP) return // in bird's-eye a house draws its own chimneys
     w = w || 3.4
     const sq = rect(cx - w / 2, cy - w / 2, cx + w / 2, cy + w / 2)
     castShadow([sq], w * 0.9)
@@ -598,11 +896,13 @@
     outline(sq, det >= 2 ? 1.4 : 1.0, { noext: true, flat: det < 2 })
   }
   function post(x, y, rad) {
+    if (standing()) { const w = Math.max((rad || 0.8) * 1.2, K(1.3)); later([x, y], () => { pole([x, y], 0, 3 * BH, w); lifted(3 * BH, () => post(x, y, rad)) }); return }
     ctx.beginPath(); ctx.arc(x, y, Math.max(rad || 0.8, K(1.0)), 0, TAU); ctx.fillStyle = INK; ctx.fill()
   }
   /** Pale column top with an ink ring (a pillar seen from above). */
-  function pillar(x, y, rad) {
+  function pillar(x, y, rad, h) {
     rad = Math.max(rad || 1.3, K(1.2))
+    if (standing() && h) { const c = oval(x, y, rad, rad, 12); later([x, y], () => sides(c, 0, h, lighter(STONE(), 0.25)), -1e3); return } // under a roof: drawn before it
     if (det < 1) { post(x, y, rad * 0.8); return }
     const c = oval(x, y, rad, rad, 8); castShadow([c], rad * 1.2); fillPoly(c, PAPER); loop(c, 0.9, { flat: true })
   }
@@ -610,6 +910,17 @@
   function fenceSeg(a, b, o) {
     o = o || {}
     const L = hyp(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.round(L / (o.gap || 6)))
+    if (standing()) { // posts and two rails, in short runs
+      const h = 3.6 * BH, w = Math.max((o.rad || 0.8) * 0.9, K(1.2)), per = Math.max(1, Math.round(8 / (L / n)))
+      for (let i = 0; i < n; i += per) {
+        const j = Math.min(n, i + per), p = lerp(a, b, i / n), q = lerp(a, b, j / n)
+        later(lerp(p, q, 0.5), () => {
+          for (let k = i === 0 ? i : i + 1; k <= j; k++) pole(lerp(a, b, k / n), 0, h, w)
+          for (const z of [h * 0.45, h * 0.88]) ln(lift(p, z), lift(q, z), 0.8, { taper: 0.2, wob: 0.15 })
+        })
+      }
+      return
+    }
     ln(a, b, 0.9, { taper: 0.25, wob: 0.2 })
     for (let i = 0; i <= n; i++) post(a[0] + ((b[0] - a[0]) * i) / n, a[1] + ((b[1] - a[1]) * i) / n, o.rad || 0.8)
   }
@@ -632,23 +943,33 @@
   /** Rain barrel / tub seen from above. */
   function tub(x, y, rad, water) {
     const c = oval(x, y, rad, rad, 10)
+    if (standing()) return standUp([x, y], c, rad * 1.1 * BH, WOOD(), () => tub(x, y, rad, water), rad * 0.6)
     castShadow([c], rad * 0.6)
     paint(c, WOOD(), 0.2); loop(c, 1.1)
     if (det >= 1) { const c2 = oval(x, y, rad * 0.7, rad * 0.7, 10); fillPoly(c2, water && COL ? mix(T.water, PAPER, 0.15) : PAPER); loop(c2, 0.6, { flat: true }); sg(x - rad, y, x + rad, y); flush(0.3) }
   }
   function crate(x, y, w) {
     const p = rect(x - w / 2, y - w / 2, x + w / 2, y + w / 2)
+    if (standing()) return standUp([x, y], p, w * 0.8 * BH, WOOD(), () => crate(x, y, w), w * 0.5)
     castShadow([p], w * 0.5); paint(p, WOOD(), 0.15); outline(p, 0.9, { noext: true })
     if (det >= 1) { sg(x - w / 2, y - w / 2, x + w / 2, y + w / 2); sg(x + w / 2, y - w / 2, x - w / 2, y + w / 2); flush(0.4) }
   }
+  /** A low wooden or stone block (a trough, a bench): flat in plan, h tall in bird's-eye. */
+  function box(p, h, col, sh, w) {
+    const top = () => { paint(p, col, 0.2); outline(p, w || 0.9, { noext: true }) }
+    if (standing()) return standUp(centre(p), p, h * BH, col, top, sh)
+    castShadow([p], sh); top()
+  }
   function basket(x, y, rad) {
     const c = oval(x, y, rad, rad * 0.85, 9)
+    if (standing()) return standUp([x, y], c, rad * 0.8 * BH, mix(T.sand, '#8a7236', 0.3), () => basket(x, y, rad), rad * 0.5)
     castShadow([c], rad * 0.5); paint(c, mix(T.sand, '#8a7236', 0.3), 0.2); loop(c, 0.8)
     if (det >= 2) { sg(x - rad * 0.6, y - rad * 0.2, x + rad * 0.6, y - rad * 0.2); sg(x - rad * 0.6, y + rad * 0.25, x + rad * 0.6, y + rad * 0.25); flush(0.35) }
   }
   /** Stack of logs seen from above. */
   function woodpile(x0, y0, x1, y1) {
     const p = rect(x0, y0, x1, y1), h = y1 - y0, n = Math.max(2, Math.round(h / 2.4))
+    if (standing()) return standUp([(x0 + x1) / 2, (y0 + y1) / 2], p, 2.6 * BH, WOOD(), () => woodpile(x0, y0, x1, y1), 1.4)
     castShadow([p], 1.4); paint(p, WOOD(), 0.25)
     if (det >= 1) for (let i = 1; i < n; i++) ln([x0 + jt(0.3), y0 + (h * i) / n], [x1 + jt(0.3), y0 + (h * i) / n], 0.6, { taper: 0.3, wob: 0.15 })
     outline(p, 1.1, { noext: true })
@@ -656,6 +977,17 @@
   /** Round stone well: ring of blocks around dark water. */
   function well(x, y, rad) {
     const o1 = oval(x, y, rad, rad), o2 = oval(x, y, rad * 0.6, rad * 0.6)
+    if (standing()) { // a stone drum, and a winch on two posts over it
+      const h = 2.4 * BH
+      castShadow([o1], rad * 0.7)
+      later([x, y], () => {
+        sides(o1, 0, h, STONE()); lifted(h, () => well(x, y, rad))
+        if (det < 1) return
+        const hz = [-UP[1], UP[0]], p = [x - hz[0] * rad * 0.85, y - hz[1] * rad * 0.85], q = [x + hz[0] * rad * 0.85, y + hz[1] * rad * 0.85], zt = h + rad * 1.2
+        pole(p, h, zt, K(1.3)); pole(q, h, zt, K(1.3)); ln(lift(p, zt - rad * 0.15), lift(q, zt - rad * 0.15), 1.2, { taper: 0.2 })
+      })
+      return
+    }
     castShadow([o1], rad * 0.7)
     paint(o1, STONE(), 0.1); loop(o1, 1.4)
     if (det >= 1) { const n = Math.max(6, Math.round(rad * 2.2)); for (let i = 0; i < n; i++) { const a = (TAU * i) / n + jt(0.05); sg(x + cos(a) * rad * 0.6, y + sin(a) * rad * 0.6, x + cos(a) * rad, y + sin(a) * rad) } flush(0.5) }
@@ -664,6 +996,7 @@
   /** Round haystack seen from above. */
   function haystack(x, y, rad) {
     const c = oval(x, y, rad, rad)
+    if (standing()) return standUp([x, y], c, rad * 0.6 * BH, mix(T.sand, '#8a7236', 0.3), () => haystack(x, y, rad), rad * 0.6)
     castShadow([c], rad * 0.6)
     paint(c, mix(T.sand, '#8a7236', 0.3), 0.2)
     shadeBands(c, x, y, rad, 3)
@@ -713,24 +1046,39 @@
     t = t || 2.6
     const L = hyp(b[0] - a[0], b[1] - a[1]), vx = (b[0] - a[0]) / L, vy = (b[1] - a[1]) / L, nx = -vy * t / 2, ny = vx * t / 2
     const p = [[a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], [b[0] - nx, b[1] - ny], [a[0] - nx, a[1] - ny]]
-    castShadow([p], 1.8); paint(p, STONE(), 0.1)
+    castShadow([p], 1.8)
+    if (standing()) { const h = (t >= 3 ? 5 : 3.4) * BH; pieces(a, b, 7, t / 2, (p0, q0, m) => later(m, () => slab(p0, q0, t, h, STONE(), () => wallRun(p0, q0, t)))); return }
+    paint(p, STONE(), 0.1)
     if (det >= 2) { const g = Math.max(K(5), 3); for (let s = g * 0.5; s < L; s += g * rr(0.85, 1.2)) sg(a[0] + vx * s + nx, a[1] + vy * s + ny, a[0] + vx * s - nx, a[1] + vy * s - ny); flush(0.45) }
     outline(p, 1.1, { noext: true, wob: 0.15 })
   }
   /** Clipped hedge between two points: a dark green band with a lumpy edge. */
-  function hedge(a, b, t) {
+  function hedge(a, b, t, open) {
     t = t || 2.6
     const L = hyp(b[0] - a[0], b[1] - a[1]), vx = (b[0] - a[0]) / L, vy = (b[1] - a[1]) / L, nx = -vy, ny = vx, hw = t / 2
     const top = [], bot = [], m = Math.max(2, Math.round(L / Math.max(K(3), 2)))
     for (let i = 0; i <= m; i++) { const s = (L * i) / m, k = hw * (1 + jt(0.18)), k2 = hw * (1 + jt(0.18)); top.push([a[0] + vx * s + nx * k, a[1] + vy * s + ny * k]); bot.push([a[0] + vx * s - nx * k2, a[1] + vy * s - ny * k2]) }
     const p = top.concat(bot.reverse())
     castShadow([p], t * 0.5)
+    if (standing()) { const h = t * 1.6 * BH; pieces(a, b, 7, t / 2, (p0, q0, m) => later(m, () => slab(p0, q0, t, h, GREEN(), () => hedge(p0, q0, t, true), { leaf: true }))); return }
+    if (open) { // one length of a standing hedge's top: flat colour and the long edges only, so the lengths join up unseen
+      fillPoly(p, COL ? mix(GREEN(), PAPER, 0.12) : PAPER)
+      if (det >= 1) stippleIn(p, det >= 2 ? 3 : 1.6, K(0.5))
+      pl(top, 0.9, { wob: 0.3, taper: 0.1 }); pl(bot, 0.9, { wob: 0.3, taper: 0.1 })
+      return
+    }
     if (COL) { fillPoly(p, mix(GREEN(), PAPER, 0.3)); wash(p, GREEN(), 0.6) } else fillPoly(p, PAPER)
     if (det >= 1) stippleIn(p, det >= 2 ? 3 : 1.6, K(0.5))
     outline(p, 0.9, { noext: true, wob: 0.3 })
   }
   /** Round tree canopy. */
   function tree(x, y, R) {
+    if (standing()) { // a trunk, and the crown held up on it; its shadow falls a little way off
+      const h = R * 1.4 * BH
+      castShadow([blob(x + LX * h * 0.25, y + LY * h * 0.25, R * 0.85)], R * 0.3)
+      later([x, y], () => { pole([x, y], 0, h - R * 0.4, Math.max(K(1.6), R * 0.2)); lifted(h, () => tree(x, y, R)) })
+      return
+    }
     const c = blob(x, y, R)
     castShadow([c], R * 0.55)
     if (COL) { fillPoly(c, mix(GREEN(), PAPER, 0.35)); wash(c, GREEN(), 0.6); if (det >= 1) bloom(c, GREEN()) } else fillPoly(c, PAPER)
@@ -755,8 +1103,13 @@
     if (det >= 2 && rad > 2.1) hatchIn([[x, y - rad * 0.1], [x + rad * 0.9, y + rad * 0.2], [x + rad * 0.5, y + rad * 0.8 * el], [x - rad * 0.2, y + rad * 0.8 * el]], 2.0, K(2.2), 0.4)
   }
   /** A pennant streaming from a pole at (x, y), seen from above. */
-  function pennant(x, y, L, ang, col) {
+  function pennant(x, y, L, ang, col, z0) {
     if (det < 1) return
+    if (standing()) { // on a pole from the ground, or from z0 (the top of a tower)
+      const zt = (z0 || 0) + (z0 ? 5 : 12) * BH
+      later([x, y], () => { pole([x, y], z0 || 0, zt, K(1.2)); lifted(zt, () => pennant(x, y, L, ang, col)) }, z0 ? 0.02 : 0)
+      return
+    }
     const ux = cos(ang), uy = sin(ang), nx = -uy, ny = ux, w0 = L * 0.13, amp = L * 0.07, top = [], bot = []
     for (let i = 0; i <= 8; i++) {
       const t = i / 8, cx = x + ux * L * t + nx * amp * sin(t * 5.2), cy = y + uy * L * t + ny * amp * sin(t * 5.2), hw = w0 * (1 - 0.55 * t)
@@ -793,6 +1146,11 @@
   function awning(x0, x1, y, dpt, v) {
     const p = rect(x0, y, x1, y + dpt)
     castShadow([p], 1.8)
+    if (standing()) { // held out on two posts, below the eaves
+      const h = 4.6 * BH
+      later([(x0 + x1) / 2, y + dpt], () => { pole([x0 + 0.7, y + dpt - 0.7], 0, h, K(1.2)); pole([x1 - 0.7, y + dpt - 0.7], 0, h, K(1.2)); lifted(h, () => awning(x0, x1, y, dpt, v)) })
+      return
+    }
     stripes(p, 'y', v)
     outline(p, 0.9, { noext: true, flat: true })
     if (det >= 1) { post(x0 + 0.7, y + dpt - 0.7, 0.7); post(x1 - 0.7, y + dpt - 0.7, 0.7) }
@@ -803,17 +1161,30 @@
     turned(x, y, ang, () => {
       const p = rect(-w / 2, -h / 2, w / 2, h / 2)
       castShadow([p], o.sh || 2.4)
-      stripes(p, 'y', v)
-      if (det >= 1) hatchIn(rect(-w / 2, 0, w / 2, h / 2), 0.9, Math.max(K(3.4), 2.6), 0.36, { keep: 0.6 })
-      ln([-w / 2, 0], [w / 2, 0], 0.9, { taper: 0.3 })
-      outline(p, 1, { noext: true })
-      if (det >= 2) for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) post(sx * (w / 2 - 0.8), sy * (h / 2 - 0.8), 0.6)
+      const roof = () => {
+        stripes(p, 'y', v)
+        if (det >= 1) hatchIn(rect(-w / 2, 0, w / 2, h / 2), 0.9, Math.max(K(3.4), 2.6), 0.36, { keep: 0.6 })
+        ln([-w / 2, 0], [w / 2, 0], 0.9, { taper: 0.3 })
+        outline(p, 1, { noext: true })
+        if (det >= 2 && !UP) for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) post(sx * (w / 2 - 0.8), sy * (h / 2 - 0.8), 0.6)
+      }
+      if (!standing()) return roof()
+      later([0, 0], () => { // the back posts, a counter along the side that faces you, the front posts, the canvas on top
+        const H = 4.4 * BH, fy = faces(S) >= faces(N) ? 1 : -1, ps = [-1, 1].map((sx) => (sy) => [sx * (w / 2 - 0.8), sy * (h / 2 - 0.8)])
+        for (const f of ps) pole(f(-fy), 0, H, K(1.2))
+        const cn = rect(-w / 2 + 0.7, fy > 0 ? h / 2 - 2.6 : -h / 2 + 0.7, w / 2 - 0.7, fy > 0 ? h / 2 - 0.7 : -h / 2 + 2.6), ch = 1.9 * BH
+        sides(cn, 0, ch, WOOD()); lifted(ch, () => { paint(cn, lighter(WOOD(), 0.25), 0.1); outline(cn, 0.8, { noext: true }) })
+        for (const f of ps) pole(f(fy), 0, H, K(1.2))
+        lifted(H, roof)
+      })
     })
   }
   /** Covered stall: a little plank-roofed shed open at the sides. */
   function shedStall(x0, y0, x1, y1, kind) {
     const p = rect(x0, y0, x1, y1)
-    castShadow([p], 3); baseOf(p, kind || 'plank')
+    castShadow([p], 3)
+    if (UP) { underRoof(x0, y0, x1, y1, 3.6 * 1.25 * BH); return house(x0, y0, x1, y1, x1 - x0 >= y1 - y0 ? 'x' : 'y', { kind: kind || 'plank', sh: 3.6, open: true, posts: true }) }
+    baseOf(p, kind || 'plank')
     gable(x0, y0, x1, y1, x1 - x0 >= y1 - y0 ? 'x' : 'y', { kind: kind || 'plank' })
     outline(p, 1.2, { noext: true })
     if (det >= 1) for (const q of [[x0 + 1, y0 + 1], [x1 - 1, y0 + 1], [x1 - 1, y1 - 1], [x0 + 1, y1 - 1]]) post(q[0], q[1], 0.7)
@@ -822,6 +1193,18 @@
   function tent(x, y, R, v) {
     const base = oval(x, y, R, R, 0, 0.004)
     castShadow([base], R * 0.7)
+    if (standing()) { // a low canvas wall and a cone of gores, striped ones in turn
+      later([x, y], () => {
+        const hw = R * 0.3 * BH, up = Math.atan2(UP[1], UP[0])
+        sides(oval(x, y, R, R, 24, 0.004), 0, hw, canvasCol())
+        const apex = birdCone(x, y, R, hw, R * 0.95 * BH, 8, 0.2, (pts, k, f) => {
+          canvasFill(pts, v != null && k % 2 === 0 ? v : undefined)
+          if (f > 0.25) hatchIn(pts, up, Math.max(K(2.6), 1.6), 0.4, { keep: 0.75 })
+        })
+        fillPoly(oval(apex[0], apex[1], Math.max(0.8, K(0.8)), Math.max(0.8, K(0.8)), 6), INK)
+      })
+      return
+    }
     paint(base, canvasCol(), 0.15)
     const n = 8
     if (det >= 1) {
@@ -842,11 +1225,26 @@
   function cart(x, y, w, h, ang) {
     turned(x, y, ang, () => {
       const p = rect(-w / 2, -h / 2, w / 2, h / 2)
-      castShadow([p], 1.6); paint(p, WOOD(), 0.15)
-      if (det >= 1) { for (let i = 1; i < 3; i++) sg(-w / 2, -h / 2 + (h * i) / 3, w / 2, -h / 2 + (h * i) / 3); flush(0.4) }
-      outline(p, 1.0, { noext: true })
-      for (const sy of [-1, 1]) fillPoly(oval(w * 0.08, sy * (h / 2 + 0.9), Math.max(2.2, K(2.2)), Math.max(0.7, K(0.7)), 8), INK)
-      ln([-w / 2, -h * 0.3], [-w / 2 - w * 0.45, -h * 0.25], 0.8, { taper: 0.2 }); ln([-w / 2, h * 0.3], [-w / 2 - w * 0.45, h * 0.25], 0.8, { taper: 0.2 })
+      castShadow([p], 1.6)
+      const body = () => {
+        paint(p, WOOD(), 0.15)
+        if (det >= 1) { for (let i = 1; i < 3; i++) sg(-w / 2, -h / 2 + (h * i) / 3, w / 2, -h / 2 + (h * i) / 3); flush(0.4) }
+        outline(p, 1.0, { noext: true })
+      }
+      const shafts = () => { ln([-w / 2, -h * 0.3], [-w / 2 - w * 0.45, -h * 0.25], 0.8, { taper: 0.2 }); ln([-w / 2, h * 0.3], [-w / 2 - w * 0.45, h * 0.25], 0.8, { taper: 0.2 }) }
+      const bed = () => { body(); shafts() }
+      if (!standing()) { body(); for (const sy of [-1, 1]) fillPoly(oval(w * 0.08, sy * (h / 2 + 0.9), Math.max(2.2, K(2.2)), Math.max(0.7, K(0.7)), 8), INK); shafts(); return }
+      later([0, 0], () => { // the far wheel, the bed up on its axle, the near wheel
+        const Rw = Math.max(2.2, K(2.2)), zb = Rw * 1.15
+        const wheel = (sy) => {
+          const c = [w * 0.08, sy * (h / 2 + 0.5)], pts = []
+          for (let k = 0; k < 16; k++) { const t = (TAU * k) / 16; pts.push(lift([c[0] + cos(t) * Rw, c[1]], Rw + sin(t) * Rw)) }
+          paint(pts, darker(WOOD(), 0.35), 0.4); loop(pts, 0.9, { flat: true })
+          const hub = lift(c, Rw); fillPoly(oval(hub[0], hub[1], Rw * 0.22, Rw * 0.22, 6), INK)
+        }
+        const order = [-1, 1].sort((a, b) => near([0, a]) - near([0, b]))
+        wheel(order[0]); sides(p, zb * 0.55, zb, WOOD()); lifted(zb, bed); wheel(order[1])
+      })
     })
   }
   /** A fenced pen with a gate gap in the middle of the side facing `open` ('n' | 's' | 'e' | 'w'). */
@@ -863,12 +1261,29 @@
     if (det < 1) { if (dark) post(x, y, L * 0.4); return }
     const o = ovalR(x, y, L, L * 0.5, ang, 8)
     castShadow([o], L * 0.3)
+    if (standing()) { // up on four legs
+      const h = L * 0.55 * BH, ux = cos(ang), uy = sin(ang)
+      later([x, y], () => {
+        for (const [a, b] of [[-0.55, -0.22], [-0.55, 0.22], [0.55, -0.22], [0.55, 0.22]]) pole([x + ux * a * L - uy * b * L, y + uy * a * L + ux * b * L], 0, h, K(0.9))
+        lifted(h, () => beast(x, y, L, dark, ang))
+      })
+      return
+    }
     fillPoly(o, dark ? (COL ? mix('#4a3a2a', PAPER, 0.3) : INK) : PAPER); loop(o, 0.7, { flat: true })
   }
   /** Round fountain: stone basin, water, a column in the middle. */
   function fountain(x, y, R) {
     const o1 = oval(x, y, R, R), o2 = oval(x, y, R * 0.74, R * 0.74)
     castShadow([o1], R * 0.25)
+    if (standing()) { // a raised basin, and the column standing up out of the water
+      later([x, y], () => {
+        const hb = Math.max(1.6, R * 0.2) * BH, hc = R * 0.75 * BH, c = oval(x, y, R * 0.22, R * 0.22, 12)
+        sides(o1, 0, hb, STONE()); lifted(hb, () => fountain(x, y, R))
+        sides(c, hb, hb + hc, STONE())
+        lifted(hb + hc, () => { paint(c, lighter(STONE(), 0.1), 0.15); loop(c, 0.9); fillPoly(oval(x, y, R * 0.07, R * 0.07, 6), INK) })
+      })
+      return
+    }
     paint(o1, STONE(), 0.1); loop(o1, 1.4)
     if (det >= 1) { const n = Math.max(8, Math.round(R * 1.8)); for (let i = 0; i < n; i++) { const a = (TAU * i) / n + jt(0.04); sg(x + cos(a) * R * 0.74, y + sin(a) * R * 0.74, x + cos(a) * R, y + sin(a) * R) } flush(0.45) }
     fillPoly(o2, COL ? mix(T.water, PAPER, 0.25) : PAPER); loop(o2, 0.8, { flat: true })
@@ -878,6 +1293,23 @@
   }
   /** Market cross: three octagonal steps and a tall shaft throwing a long shadow. */
   function cross(x, y, R) {
+    if (standing()) { // three steps, the shaft, and the arms of the cross near its top
+      castShadow([octagon(x, y, R)], R * 0.3); castShadow([rect(x - R * 0.15, y - R * 0.15, x + R * 0.15, y + R * 0.15)], R * 1.4)
+      later([x, y], () => {
+        const s = R * 0.16 * BH
+        let z = 0
+        ;[1, 0.7, 0.42].forEach((k, i) => {
+          const o = octagon(x, y, R * k)
+          sides(o, z, z + s, STONE()); z += s
+          lifted(z, () => { paint(o, STONE(), 0.08 + i * 0.05); outline(o, i === 0 ? 1.2 : 0.8, { noext: true }) })
+        })
+        const sq = rect(x - R * 0.15, y - R * 0.15, x + R * 0.15, y + R * 0.15), zt = z + R * 1.5 * BH, hz = [-UP[1], UP[0]]
+        sides(sq, z, zt, STONE()); lifted(zt, () => { paint(sq, STONE(), 0.2); outline(sq, 0.9, { noext: true }) })
+        const za = zt - R * 0.38, k = R * 0.4
+        ln(lift([x - hz[0] * k, y - hz[1] * k], za), lift([x + hz[0] * k, y + hz[1] * k], za), 2.4, { taper: 0.1 })
+      })
+      return
+    }
     ;[1, 0.7, 0.42].forEach((k, i) => {
       const o = octagon(x, y, R * k)
       castShadow([o], i === 0 ? R * 0.3 : R * 0.18); paint(o, STONE(), 0.08 + i * 0.05); outline(o, i === 0 ? 1.2 : 0.8, { noext: true })
@@ -925,6 +1357,7 @@
   }
   /** Roofless walls: floors, then the standing wall pieces (polylines) as stone bands with rubble at their broken ends. */
   function ruinWalls(rooms, pieces, t, sh) {
+    if (UP) return birdRuins(rooms, pieces, t, sh)
     for (const rm of rooms) {
       ground(rm, 'floor')
       if (det >= 2) { const [bx0, by0, bx1, by1] = bbox(rm); ctx.save(); path(rm); ctx.clip(); const nT = Math.round(((bx1 - bx0) * (by1 - by0)) / 300); for (let i = 0; i < nT; i++) tuft(rr(bx0, bx1), rr(by0, by1), rr(0.7, 1.2)); flush(0.5); ctx.restore() }
@@ -958,6 +1391,61 @@
       }
     }
   }
+  /** Bird's-eye ruins: the same floors, and the wall pieces standing in short lengths whose tops have broken off at different
+     heights, lowest towards the fallen ends. */
+  function birdRuins(rooms, runs, t, sh) {
+    for (const rm of rooms) {
+      ground(rm, 'floor')
+      if (det >= 2) { const [bx0, by0, bx1, by1] = bbox(rm); ctx.save(); path(rm); ctx.clip(); const nT = Math.round(((bx1 - bx0) * (by1 - by0)) / 300); for (let i = 0; i < nT; i++) tuft(rr(bx0, bx1), rr(by0, by1), rr(0.7, 1.2)); flush(0.5); ctx.restore() }
+    }
+    castShadow(runs.map((c) => bandPoly(c, t, 0, 0)), sh || 3.5)
+    const col = lighter(STONE(), 0.1), hmax = 6.5 * BH, up = () => Math.atan2(UP[1], UP[0])
+    /** One length of the broken wall from p to q, its top sloping from h0 to h1; ends are only closed off where the run ends. */
+    const length = (p, q, h0, h1, cap0, cap1) => {
+      const L = hyp(q[0] - p[0], q[1] - p[1]) || 1, v = [(q[0] - p[0]) / L, (q[1] - p[1]) / L], n = [-v[1], v[0]], nx = (n[0] * t) / 2, ny = (n[1] * t) / 2
+      const A = [p[0] + nx, p[1] + ny], B = [q[0] + nx, q[1] + ny], C = [q[0] - nx, q[1] - ny], D = [p[0] - nx, p[1] - ny]
+      const face = (a, b, ha, hb, nrm, cap) => {
+        if (faces(nrm) <= 0.001) return
+        const k = nrm[0] * LX + nrm[1] * LY, qd = [a, b, lift(b, hb), lift(a, ha)]
+        paint(qd, col, clamp(0.3 + 0.6 * k, 0, 1), 0.6)
+        if (k > 0.35 || !COL) hatchIn(qd, up(), K(k > 0.35 ? 2.4 : 3.8), 0.45, { keep: k > 0.35 ? 0.88 : 0.5 })
+        if (cap) outline(qd, 0.9, { noext: true }); else ln(a, b, 0.9, { taper: 0.2, wob: 0.15 })
+      }
+      face(A, B, h0, h1, n, false); face(C, D, h1, h0, [-n[0], -n[1]], false)
+      if (cap1) face(B, C, h1, h1, v, true)
+      if (cap0) face(D, A, h0, h0, [-v[0], -v[1]], true)
+      const top = [lift(A, h0), lift(B, h1), lift(C, h1), lift(D, h0)]
+      paint(top, lighter(col, 0.15), 0.1, 0.65); if (det >= 2) stippleIn(top, 0.9, K(0.55))
+      ln(top[0], top[1], 0.9, { taper: 0.2, wob: 0.2 }); ln(top[2], top[3], 0.9, { taper: 0.2, wob: 0.2 })
+      if (cap1) ln(top[1], top[2], 0.9, { taper: 0.2 }); if (cap0) ln(top[3], top[0], 0.9, { taper: 0.2 })
+    }
+    for (const c of runs) {
+      let total = 0
+      for (let k = 0; k < c.length - 1; k++) total += hyp(c[k + 1][0] - c[k][0], c[k + 1][1] - c[k][1])
+      // the height along the run: lowest at the broken ends, a slow swell and a ragged edge in between
+      const ph = rr(0, TAU), hAt = (s) => hmax * clamp((0.3 + 0.7 * Math.min(1, Math.min(s, total - s) / 10)) * (0.78 + 0.18 * sin(s * 0.35 + ph)) + jt(0.07), 0.15, 1)
+      let along = 0
+      for (let k = 0; k < c.length - 1; k++) {
+        const L = hyp(c[k + 1][0] - c[k][0], c[k + 1][1] - c[k][1]), last = k === c.length - 2
+        const hs = []
+        pieces(c[k], c[k + 1], 4, t / 2, (p, q, m) => hs.push({ p, q, m }))
+        let h0 = hAt(along)
+        hs.forEach((it, i) => {
+          const s1 = along + Math.min(L, hyp(it.q[0] - c[k][0], it.q[1] - c[k][1])), h1 = hAt(s1), a = h0
+          later(it.m, () => length(it.p, it.q, a, h1, k === 0 && i === 0, last && i === hs.length - 1))
+          h0 = h1
+        })
+        along += L
+      }
+    }
+    if (det < 1) return
+    for (const c of runs) {
+      for (const k of [0, 1]) {
+        const a = k === 0 ? c[0] : c[c.length - 1], b = k === 0 ? c[1] : c[c.length - 2], d = hyp(a[0] - b[0], a[1] - b[1]) || 1, vx = (a[0] - b[0]) / d, vy = (a[1] - b[1]) / d
+        for (let i = 0; i < (det >= 2 ? 3 : 1); i++) { const along = rr(1, 6), side = jt(t * 0.9); stone(a[0] + vx * along - vy * side, a[1] + vy * along + vx * side, rr(1.1, 2.4)) }
+      }
+    }
+  }
   /** A fallen column lying on the ground: a long rounded shaft with drum lines. */
   function fallenColumn(x, y, L, rad, ang) {
     turned(x, y, ang, () => {
@@ -973,7 +1461,11 @@
       label, category, kind: 'fixed', view: 'top', variants: fns.length,
       draw(c, x, y, s, rg, style, v) {
         open(c, x, y, s, rg, style, fs)
-        try { fns[(((v | 0) % fns.length) + fns.length) % fns.length]() } finally { ctx.restore() }
+        try {
+          if (UP) { Q = []; SEQ = 0 }
+          fns[(((v | 0) % fns.length) + fns.length) % fns.length]()
+          if (Q) flushQ()
+        } finally { Q = null; ctx.restore() }
       },
     })
   }
@@ -1105,13 +1597,18 @@
     const main = rect(-30, -10, 30, 10), wl = rect(-50, -27, -30, 27), wr = rect(30, -27, 50, 27)
     const sil = [[-50, -27], [-30, -27], [-30, -10], [30, -10], [30, -27], [50, -27], [50, 27], [30, 27], [30, 10], [-30, 10], [-30, 27], [-50, 27]]
     castShadow([main, wl, wr], 9)
-    baseOf(sil, 'slate')
-    gable(-30, -10, 30, 10, 'x', SLATE)
-    gable(-50, -27, -30, 27, 'y', SLATE); gable(30, -27, 50, 27, 'y', SLATE)
-    ln([-30, -10], [-30, 10], 1.3, { taper: 0.3 }); ln([30, -10], [30, 10], 1.3, { taper: 0.3 })
-    outline(sil, 1.6); eaveBand(sil)
-    if (det >= 2) { dormer(-14, 2, 11.5, 6, SLATE); dormer(14, 2, 11.5, 6, SLATE) }
-    stack(-20, 0, 4); stack(20, 0, 4); stack(-40, -14, 4); stack(40, 16, 4)
+    if (UP) { // the hall runs into the wings' roofs
+      house(-50, -27, -30, 27, 'y', { ...SLATE, ch: [[-40, -14, 4]] }); house(30, -27, 50, 27, 'y', { ...SLATE, ch: [[40, 16, 4]] })
+      house(-30, -10, 30, 10, 'x', { ...SLATE, v0: true, v1: true, nudge: 1, ch: [[-20, 0, 4], [20, 0, 4]] })
+    } else {
+      baseOf(sil, 'slate')
+      gable(-30, -10, 30, 10, 'x', SLATE)
+      gable(-50, -27, -30, 27, 'y', SLATE); gable(30, -27, 50, 27, 'y', SLATE)
+      ln([-30, -10], [-30, 10], 1.3, { taper: 0.3 }); ln([30, -10], [30, 10], 1.3, { taper: 0.3 })
+      outline(sil, 1.6); eaveBand(sil)
+      if (det >= 2) { dormer(-14, 2, 11.5, 6, SLATE); dormer(14, 2, 11.5, 6, SLATE) }
+      stack(-20, 0, 4); stack(20, 0, 4); stack(-40, -14, 4); stack(40, 16, 4)
+    }
     wallRun([-50, 27], [-50, 44]); wallRun([50, 27], [50, 44]); wallRun([-50, 44], [-7, 44]); wallRun([7, 44], [50, 44])
     post(-7, 44, 1.3); post(7, 44, 1.3)
     step(0, 11.8, 7, 2.6)
@@ -1125,12 +1622,17 @@
     const range = rect(-50, -24, 50, -6), wl = rect(-50, -6, -34, 22), wr = rect(34, -6, 50, 22), porch = rect(-7, -6, 7, 8)
     const sil = [[-50, -24], [50, -24], [50, 22], [34, 22], [34, -6], [7, -6], [7, 8], [-7, 8], [-7, -6], [-34, -6], [-34, 22], [-50, 22]]
     castShadow([range, wl, wr, porch], 9)
-    baseOf(sil, 'tile')
-    gable(-50, -24, 50, -6, 'x', TILE)
-    gable(-50, -6, -34, 22, 'y', TILE); gable(34, -6, 50, 22, 'y', TILE); gable(-7, -6, 7, 8, 'y', TILE)
-    ln([-34, -6], [-7, -6], 1.3, { taper: 0.3 }); ln([7, -6], [34, -6], 1.3, { taper: 0.3 })
-    outline(sil, 1.6); eaveBand(sil)
-    stack(-40, -15, 4); stack(-14, -15, 4); stack(14, -15, 4); stack(40, -15, 4)
+    if (UP) { // the wings and the porch run into the range's roof
+      house(-50, -24, 50, -6, 'x', { ...TILE, ch: [[-40, -15, 4], [-14, -15, 4], [14, -15, 4], [40, -15, 4]] })
+      house(-50, -6, -34, 22, 'y', { ...TILE, v0: true }); house(34, -6, 50, 22, 'y', { ...TILE, v0: true }); house(-7, -6, 7, 8, 'y', { ...TILE, v0: true })
+    } else {
+      baseOf(sil, 'tile')
+      gable(-50, -24, 50, -6, 'x', TILE)
+      gable(-50, -6, -34, 22, 'y', TILE); gable(34, -6, 50, 22, 'y', TILE); gable(-7, -6, 7, 8, 'y', TILE)
+      ln([-34, -6], [-7, -6], 1.3, { taper: 0.3 }); ln([7, -6], [34, -6], 1.3, { taper: 0.3 })
+      outline(sil, 1.6); eaveBand(sil)
+      stack(-40, -15, 4); stack(-14, -15, 4); stack(14, -15, 4); stack(40, -15, 4)
+    }
     step(0, 9.8, 7, 2.6)
     if (det >= 1) { tree(-44, 26, 5); tree(44, 26, 5) }
   }
@@ -1138,7 +1640,7 @@
   function mn2() {
     courtyard(-50, -36, 50, 36, 16, { kind: 'tile', sh: 9 })
     sqTower(-9, 20, 9, 40, 'slate', 12)
-    fillPoly(rect(-3, 36.2, 3, 41), INK)
+    if (UP) doorIn([-3.2, 40], [3.2, 40], S, 7 * BH, true); else fillPoly(rect(-3, 36.2, 3, 41), INK)
     well(6, 0, 4.5)
     stack(-30, -28, 4); stack(30, -28, 4); stack(-42, 10, 4); stack(42, -10, 4); stack(-22, 28, 4)
     if (det >= 1) { tub(-24, -16, 2.2, true); crate(24, 14, 3.4) }
@@ -1153,11 +1655,16 @@
     const main = rect(-50, -30, -6, -8), wing = rect(-50, -8, -30, 24)
     const sil = [[-50, -30], [-6, -30], [-6, -8], [-30, -8], [-30, 24], [-50, 24]]
     castShadow([main, wing], 9)
-    baseOf(sil, 'tile')
-    gable(-50, -30, -6, -8, 'x', { kind: 'tile', hip1: true }); gable(-50, -8, -30, 24, 'y', TILE)
-    ln([-30, -8], [-6, -8], 1.3, { taper: 0.3 })
-    outline(sil, 1.6); eaveBand(sil)
-    stack(-40, -19, 4); stack(-14, -19, 4); stack(-40, 10, 4)
+    if (UP) {
+      house(-50, -30, -6, -8, 'x', { kind: 'tile', hip1: true, ch: [[-40, -19, 4], [-14, -19, 4]] })
+      house(-50, -8, -30, 24, 'y', { ...TILE, v0: true, ch: [[-40, 10, 4]] })
+    } else {
+      baseOf(sil, 'tile')
+      gable(-50, -30, -6, -8, 'x', { kind: 'tile', hip1: true }); gable(-50, -8, -30, 24, 'y', TILE)
+      ln([-30, -8], [-6, -8], 1.3, { taper: 0.3 })
+      outline(sil, 1.6); eaveBand(sil)
+      stack(-40, -19, 4); stack(-14, -19, 4); stack(-40, 10, 4)
+    }
     wallRun([-6, -30], [50, -30]); wallRun([50, -30], [50, 30]); wallRun([50, 30], [14, 30]); wallRun([6, 30], [-30, 30]); wallRun([-30, 24], [-30, 30])
     post(6, 30, 1.2); post(14, 30, 1.2)
     step(-20, -6.2, 6, 2.4)
@@ -1165,35 +1672,40 @@
   /** 4: fortified manor: a hall with a round tower at one corner inside a curtain wall, a gatehouse and a stable in the yard. */
   function mn4() {
     ground(rect(-50, -40, 50, 34), 'earth')
-    const hall = rect(-34, -26, 26, -2)
-    castShadow([hall], 9); baseOf(hall, 'slate')
-    gable(-34, -26, 26, -2, 'x', SLATE)
-    outline(hall, 1.6); eaveBand(hall)
-    stack(-20, -14, 4); stack(10, -14, 4)
-    roundTower(30, -20, 11, 'slate', 14, 10)
-    const stable = rect(-46, 2, -32, 26)
-    castShadow([stable], 6); baseOf(stable, 'plank'); gable(-46, 2, -32, 26, 'y', { kind: 'plank' }); outline(stable, 1.4, { noext: true })
+    const hall = rect(-34, -26, 26, -2), stable = rect(-46, 2, -32, 26)
+    castShadow([hall], 9)
+    if (UP) house(-34, -26, 26, -2, 'x', { ...SLATE, nudge: -8, ch: [[-20, -14, 4], [10, -14, 4]] }) // drawn before the tower at its end
+    else { baseOf(hall, 'slate'); gable(-34, -26, 26, -2, 'x', SLATE); outline(hall, 1.6); eaveBand(hall); stack(-20, -14, 4); stack(10, -14, 4) }
+    const zt = roundTower(30, -20, 11, 'slate', 14, 10)
+    castShadow([stable], 6)
+    if (UP) house(-46, 2, -32, 26, 'y', { kind: 'plank', sh: 5 })
+    else { baseOf(stable, 'plank'); gable(-46, 2, -32, 26, 'y', { kind: 'plank' }); outline(stable, 1.4, { noext: true }) }
     well(2, 14, 4)
     wallRun([-50, -40], [50, -40], 3); wallRun([50, -40], [50, 34], 3); wallRun([-50, -40], [-50, 34], 3); wallRun([-50, 34], [-9, 34], 3); wallRun([9, 34], [50, 34], 3)
     sqTower(-9, 28, 9, 40, 'slate', 11)
-    fillPoly(rect(-3, 34.2, 3, 41), INK)
+    if (UP) doorIn([-3.2, 40], [3.2, 40], S, 7 * BH, true); else fillPoly(rect(-3, 34.2, 3, 41), INK)
     if (det >= 1) { haystack(38, 20, 5); woodpile(-30, -36, -16, -30) }
-    pennant(30, -20, 9, 0.3)
+    pennant(30, -20, 9, 0.3, undefined, UP ? zt : 0)
   }
   /** 5: timber hall under thatch with a kitchen, barn and stable round a fenced yard. */
   function mn5() {
     ground(rect(-50, -36, 50, 38), 'earth')
-    const hall = rect(-48, -16, -4, 10)
-    castShadow([hall], 8); baseOf(hall, 'thatch'); gable(-48, -16, -4, 10, 'x', { kind: 'thatch', hip0: true, hip1: true }); outline(hall, 1.6); ragged(hall)
-    stack(-26, -3, 4)
-    const kit = rect(6, -32, 24, -16)
-    castShadow([kit], 6); baseOf(kit, 'thatch2'); gable(6, -32, 24, -16, 'x', { kind: 'thatch2' }); outline(kit, 1.4, { noext: true }); ragged(kit)
-    stack(10, -24, 3.4)
-    const barn = rect(14, -6, 48, 18)
-    castShadow([barn], 7); baseOf(barn, 'plank'); gable(14, -6, 48, 18, 'x', { kind: 'plank' }); outline(barn, 1.5, { noext: true }); eaveBand(barn)
-    fillPoly(rect(28, 17.5, 36, 19.5), INK)
-    const stab = rect(-44, 18, -14, 34)
-    castShadow([stab], 6); baseOf(stab, 'shingle'); gable(-44, 18, -14, 34, 'x', { kind: 'shingle' }); outline(stab, 1.4, { noext: true })
+    const hall = rect(-48, -16, -4, 10), kit = rect(6, -32, 24, -16), barn = rect(14, -6, 48, 18), stab = rect(-44, 18, -14, 34)
+    if (UP) {
+      castShadow([hall], 8); castShadow([kit], 6); castShadow([barn], 7); castShadow([stab], 6)
+      house(-48, -16, -4, 10, 'x', { kind: 'thatch', hip0: true, hip1: true, ch: [[-26, -3, 4]] })
+      house(6, -32, 24, -16, 'x', { kind: 'thatch2', sh: 5, ch: [[10, -24, 3.4]] })
+      house(14, -6, 48, 18, 'x', { kind: 'plank', sh: 6, door: false }); doorIn([27, 18], [37, 18], S, 6.5 * BH)
+      house(-44, 18, -14, 34, 'x', { kind: 'shingle', sh: 5 })
+    } else {
+      castShadow([hall], 8); baseOf(hall, 'thatch'); gable(-48, -16, -4, 10, 'x', { kind: 'thatch', hip0: true, hip1: true }); outline(hall, 1.6); ragged(hall)
+      stack(-26, -3, 4)
+      castShadow([kit], 6); baseOf(kit, 'thatch2'); gable(6, -32, 24, -16, 'x', { kind: 'thatch2' }); outline(kit, 1.4, { noext: true }); ragged(kit)
+      stack(10, -24, 3.4)
+      castShadow([barn], 7); baseOf(barn, 'plank'); gable(14, -6, 48, 18, 'x', { kind: 'plank' }); outline(barn, 1.5, { noext: true }); eaveBand(barn)
+      fillPoly(rect(28, 17.5, 36, 19.5), INK)
+      castShadow([stab], 6); baseOf(stab, 'shingle'); gable(-44, 18, -14, 34, 'x', { kind: 'shingle' }); outline(stab, 1.4, { noext: true })
+    }
     haystack(36, 30, 6); well(2, 26, 3.6)
     if (det >= 1) { woodpile(-46, -30, -32, -22); tub(-2, -18, 2, true) }
     const fo = { gap: 6 }
@@ -1205,21 +1717,26 @@
     ground(rect(-3, -16, 3, -2), 'gravel')
     furrows(-40, -40, -12, -30, 0); furrows(12, -40, 40, -30, 0); furrows(-40, -18, -12, -8, 0); furrows(12, -18, 40, -8, 0)
     hedge([-44, -42], [44, -42], 2.2); hedge([-44, -42], [-44, -6], 2.2); hedge([44, -42], [44, -6], 2.2)
-    const o1 = oval(0, -24, 8, 8), o2 = oval(0, -24, 6.4, 6.4)
-    paint(o1, STONE(), 0.1); loop(o1, 1.2); fillPoly(o2, COL ? mix(T.water, PAPER, 0.25) : PAPER); loop(o2, 0.7, { flat: true })
+    const o1 = oval(0, -24, 8, 8), o2 = oval(0, -24, 6.4, 6.4), pond = () => { paint(o1, STONE(), 0.1); loop(o1, 1.2); fillPoly(o2, COL ? mix(T.water, PAPER, 0.25) : PAPER); loop(o2, 0.7, { flat: true }) }
+    if (UP) later([0, -24], () => { sides(o1, 0, 1.4 * BH, STONE()); lifted(1.4 * BH, pond) }); else pond()
     if (det >= 1) { tree(-47, -40, 4.5); tree(47, -40, 4.5) }
     wallRun([-50, -44], [50, -44]); wallRun([-50, -44], [-50, -2]); wallRun([50, -44], [50, -2])
     const main = rect(-22, 2, 22, 28), pl0 = rect(-42, -2, -22, 30), pr = rect(22, -2, 42, 30)
     const sil = [[-42, -2], [-22, -2], [-22, 2], [22, 2], [22, -2], [42, -2], [42, 30], [-42, 30]]
     castShadow([main, pl0, pr], 10)
-    baseOf(sil, 'slate')
-    gable(-22, 2, 22, 28, 'x', SLATE)
-    pyramid(-42, -2, -22, 30, SLATE); pyramid(22, -2, 42, 30, SLATE)
-    ln([-22, 2], [-22, 28], 1.3, { taper: 0.3 }); ln([22, 2], [22, 28], 1.3, { taper: 0.3 })
-    outline(sil, 1.6); eaveBand(sil)
-    dormer(0, 19, 30.5, 10, SLATE)
-    if (det >= 2) { dormer(-12, 20, 29.5, 5, SLATE); dormer(12, 20, 29.5, 5, SLATE) }
-    stack(-10, 15, 4); stack(10, 15, 4)
+    if (UP) { // steep-roofed pavilions, the main range running into them (its valleys meet their steeper roofs)
+      house(-42, -2, -22, 30, 'y', { ...SLATE, hip0: true, hip1: true, pitch: 1 }); house(22, -2, 42, 30, 'y', { ...SLATE, hip0: true, hip1: true, pitch: 1 })
+      house(-22, 2, 22, 28, 'x', { ...SLATE, v0: 9.75, v1: 9.75, nudge: 1, ch: [[-10, 15, 4], [10, 15, 4]] })
+    } else {
+      baseOf(sil, 'slate')
+      gable(-22, 2, 22, 28, 'x', SLATE)
+      pyramid(-42, -2, -22, 30, SLATE); pyramid(22, -2, 42, 30, SLATE)
+      ln([-22, 2], [-22, 28], 1.3, { taper: 0.3 }); ln([22, 2], [22, 28], 1.3, { taper: 0.3 })
+      outline(sil, 1.6); eaveBand(sil)
+      dormer(0, 19, 30.5, 10, SLATE)
+      if (det >= 2) { dormer(-12, 20, 29.5, 5, SLATE); dormer(12, 20, 29.5, 5, SLATE) }
+      stack(-10, 15, 4); stack(10, 15, 4)
+    }
     steps(-7, 30, 7, 35, 3, 'x')
     if (det >= 1) { post(-15, 33, 1.1); post(15, 33, 1.1) }
   }
@@ -1234,7 +1751,9 @@
     ]
     ruinWalls(rooms, pieces, 3, 3.5)
     const wing = rect(-49.5, -27.5, -28.5, -2)
-    castShadow([wing], 8); baseOf(wing, 'slate'); gable(-49.5, -27.5, -28.5, -2, 'y', SLATE); outline(wing, 1.5, { noext: true })
+    castShadow([wing], 8)
+    if (UP) house(-49.5, -27.5, -28.5, -2, 'y', { ...SLATE, ch: [[-39, -22, 4]] })
+    else { baseOf(wing, 'slate'); gable(-49.5, -27.5, -28.5, -2, 'y', SLATE); outline(wing, 1.5, { noext: true }) }
     if (det >= 1) { tree(10, 0, 7); stone(-12, 4, 2.2); stone(20, -4, 1.8); stone(40, 6, 2.4) }
     stack(-39, -22, 4)
   }
@@ -1246,26 +1765,37 @@
   /** 0: long hall with a bell tower at the west end, buttresses down the sides and steps to the door. */
   function gh0() {
     const hall = rect(-30, -16, 50, 16)
-    castShadow([hall], 10); baseOf(hall, 'slate')
-    gable(-30, -16, 50, 16, 'x', { kind: 'slate', hip1: true })
-    outline(hall, 1.7); eaveBand(hall)
-    if (det >= 1) for (const bx of [-18, -2, 14, 30]) for (const sy of [-1, 1]) { const bu = rect(bx - 1.6, sy > 0 ? 16 : -19, bx + 1.6, sy > 0 ? 19 : -16); castShadow([bu], 2); paint(bu, STONE(), 0.1); outline(bu, 1, { noext: true, flat: true }) }
-    sqTower(-50, -12, -30, 12, 'slate', 15)
-    pennant(-40, 0, 10, 0.3)
+    castShadow([hall], 10)
+    if (UP) house(-30, -16, 50, 16, 'x', { kind: 'slate', hip1: true, sh: 8, ch: [[36, 0, 4.2]] })
+    else { baseOf(hall, 'slate'); gable(-30, -16, 50, 16, 'x', { kind: 'slate', hip1: true }); outline(hall, 1.7); eaveBand(hall) }
+    if (det >= 1) for (const bx of [-18, -2, 14, 30]) for (const sy of [-1, 1]) {
+      const bu = rect(bx - 1.6, sy > 0 ? 16 : -19, bx + 1.6, sy > 0 ? 19 : -16), top = () => { paint(bu, STONE(), 0.1); outline(bu, 1, { noext: true, flat: true }) }
+      if (UP) standUp([bx, sy * 17.5], bu, 8 * BH, STONE(), top, 2); else { castShadow([bu], 2); top() }
+    }
+    const zt = sqTower(-50, -12, -30, 12, 'slate', 15)
+    pennant(-40, 0, 10, 0.3, undefined, UP ? zt : 0)
     steps(-4, 16, 12, 21, 3, 'x')
     stack(36, 0, 4.2)
+    doorIn([0.5, 16], [7.5, 16], S, 6.5 * BH, true)
   }
   /** 1: market hall: a big hipped roof standing on pillars, a lantern on the ridge, stalls spilling out from under the eaves. */
   function gh1() {
-    const roof = rect(-46, -22, 46, 22)
-    castShadow([roof], 8); baseOf(roof, 'tile')
-    gable(-46, -22, 46, 22, 'x', { kind: 'tile', hip0: true, hip1: true })
-    outline(roof, 1.6); eaveBand(roof)
-    const cu = rect(-6, -6, 6, 6)
-    castShadow([cu], 4); baseOf(cu, 'slate'); pyramid(-6, -6, 6, 6, SLATE); outline(cu, 1.3, { noext: true })
-    fillPoly(oval(0, 0, Math.max(0.9, K(0.9)), Math.max(0.9, K(0.9)), 6), INK)
-    for (let x = -44; x <= 44.1; x += 11) { pillar(x, -22, 1.3); pillar(x, 22, 1.3) }
-    for (let y = -11; y <= 11.1; y += 11) { pillar(-46, y, 1.3); pillar(46, y, 1.3) }
+    const roof = rect(-46, -22, 46, 22), H = 8 * 1.25 * BH
+    castShadow([roof], 8)
+    if (UP) { // open on all sides: the paved floor, the shade under the roof, the pillars, the roof, a lantern on its ridge
+      ground(roof, 'cobble'); underRoof(-46, -22, 46, 22, H)
+      house(-46, -22, 46, 22, 'x', { kind: 'tile', hip0: true, hip1: true, sh: 8, open: true })
+      later([0, 0], () => lifted(H + 22 * 0.75 - 4.5, () => birdTower(-6, -6, 6, 6, 'slate', 4.5 * BH)), 1)
+    } else {
+      baseOf(roof, 'tile')
+      gable(-46, -22, 46, 22, 'x', { kind: 'tile', hip0: true, hip1: true })
+      outline(roof, 1.6); eaveBand(roof)
+      const cu = rect(-6, -6, 6, 6)
+      castShadow([cu], 4); baseOf(cu, 'slate'); pyramid(-6, -6, 6, 6, SLATE); outline(cu, 1.3, { noext: true })
+      fillPoly(oval(0, 0, Math.max(0.9, K(0.9)), Math.max(0.9, K(0.9)), 6), INK)
+    }
+    for (let x = -44; x <= 44.1; x += 11) { pillar(x, -22, 1.3, H); pillar(x, 22, 1.3, H) }
+    for (let y = -11; y <= 11.1; y += 11) { pillar(-46, y, 1.3, H); pillar(46, y, 1.3, H) }
     awning(-38, -26, 22, 5, 1); awning(-6, 6, 22, 5, 3); awning(24, 36, 22, 5, 2)
     if (det >= 1) { crate(-16, 25, 3); tub(14, 25, 2, false) }
   }
@@ -1273,64 +1803,129 @@
   function gh2() {
     courtyard(-50, -34, 50, 34, 15, { kind: 'slate', sh: 10, floor: 'cobble' })
     const gh = rect(-10, 17, 10, 40)
-    castShadow([gh], 13); baseOf(gh, 'tile'); gable(-10, 17, 10, 40, 'y', TILE); outline(gh, 1.6, { noext: true })
-    fillPoly(rect(-3.5, 34.2, 3.5, 41), INK)
-    const pl1 = rect(-2.5, -2.5, 2.5, 2.5); castShadow([pl1], 7); paint(pl1, STONE(), 0.2); outline(pl1, 1, { noext: true })
+    castShadow([gh], 13)
+    const pl1 = rect(-2.5, -2.5, 2.5, 2.5), plinth = () => { paint(pl1, STONE(), 0.2); outline(pl1, 1, { noext: true }) }
+    if (UP) { // the gatehouse stands taller than the ranges, its arch facing the street; a statue on a plinth in the court
+      house(-10, 17, 10, 40, 'y', { ...TILE, sh: 13, door: false }); doorIn([-3.5, 40], [3.5, 40], S, 8 * BH, true)
+      standUp([0, 0], pl1, 3 * BH, STONE(), plinth, 2)
+      const zs = 3 * BH, fig = oval(0, 0, 1.3, 1.3, 10)
+      later([0, 0.1], () => { sides(fig, zs, zs + 5 * BH, lighter(STONE(), 0.2)); lifted(zs + 5 * BH, () => { paint(fig, lighter(STONE(), 0.2), 0.1); loop(fig, 0.8) }) })
+    } else {
+      baseOf(gh, 'tile'); gable(-10, 17, 10, 40, 'y', TILE); outline(gh, 1.6, { noext: true })
+      fillPoly(rect(-3.5, 34.2, 3.5, 41), INK)
+      castShadow([pl1], 7); plinth()
+    }
     stack(-30, -27, 4); stack(30, -27, 4); stack(-42, 8, 4); stack(42, -8, 4)
-    pennant(0, 28.5, 9, 0.3)
+    pennant(0, 28.5, 9, 0.3, undefined, UP ? 13 * 1.25 * BH + 7.5 : 0)
   }
   /** 3: town hall on a square: a broad tiled roof, a tower over the middle, a wide flight of steps onto the paving. */
   function gh3() {
     ground(rect(-50, 8, 50, 24), 'cobble')
     const b = rect(-50, -24, 50, 8)
-    castShadow([b], 10); baseOf(b, 'tile')
-    gable(-50, -24, 50, 8, 'x', { kind: 'tile', hip0: true, hip1: true })
-    outline(b, 1.7); eaveBand(b)
-    if (det >= 2) { dormer(-30, 0, 9.5, 7, TILE); dormer(30, 0, 9.5, 7, TILE) }
-    sqTower(-8, -16, 8, 0, 'slate', 14)
-    pennant(0, -8, 10, 0.3)
+    castShadow([b], 10)
+    let zt = 0
+    if (UP) { // the tower rises out of the roof: its front wall starts where it comes through the roof slope
+      house(-50, -24, 50, 8, 'x', { kind: 'tile', hip0: true, hip1: true, ch: [[-38, -8, 4], [38, -8, 4]] })
+      const zr = 7 * 1.25 * BH + 16 * 0.75 * 0.5, Ht = 14 * 1.6 * BH
+      castShadow([rect(-8, -16, 8, 0)], 14)
+      later([0, -8], () => lifted(zr, () => birdTower(-8, -16, 8, 0, 'slate', Ht - zr)), 1)
+      zt = Ht + 8 * 1.6
+      doorIn([-4, 8], [4, 8], S, 6.5 * BH, true)
+    } else {
+      baseOf(b, 'tile')
+      gable(-50, -24, 50, 8, 'x', { kind: 'tile', hip0: true, hip1: true })
+      outline(b, 1.7); eaveBand(b)
+      if (det >= 2) { dormer(-30, 0, 9.5, 7, TILE); dormer(30, 0, 9.5, 7, TILE) }
+      sqTower(-8, -16, 8, 0, 'slate', 14)
+    }
+    pennant(0, -8, 10, 0.3, undefined, zt)
     stack(-38, -8, 4); stack(38, -8, 4)
     steps(-30, 8, 30, 18, 5, 'x')
-    for (const sx of [-1, 1]) { const pb = rect(sx > 0 ? 30 : -35, 8, sx > 0 ? 35 : -30, 18); castShadow([pb], 2.5); paint(pb, STONE(), 0.15); outline(pb, 1.1, { noext: true }) }
+    for (const sx of [-1, 1]) {
+      const pb = rect(sx > 0 ? 30 : -35, 8, sx > 0 ? 35 : -30, 18), top = () => { paint(pb, STONE(), 0.15); outline(pb, 1.1, { noext: true }) }
+      if (UP) standUp([sx * 32.5, 13], pb, 2.6 * BH, STONE(), top, 2.5); else { castShadow([pb], 2.5); top() }
+    }
     if (det >= 1) { post(-42, 16, 1.1); post(42, 16, 1.1); pennant(-42, 16, 7, 0.4); pennant(42, 16, 7, 0.4) }
   }
   /** 4: trade hall: a long shingled roof with two loading gables and hoists on the street side, goods stacked outside. */
   function gh4() {
     const b = rect(-50, -22, 50, 12), gl = rect(-40, 4, -20, 20), gr = rect(20, 4, 40, 20)
     const sil = [[-50, -22], [50, -22], [50, 12], [40, 12], [40, 20], [20, 20], [20, 12], [-20, 12], [-20, 20], [-40, 20], [-40, 12], [-50, 12]]
-    castShadow([b, gl, gr], 10); baseOf(sil, 'shingle')
-    gable(-50, -22, 50, 12, 'x', { kind: 'shingle' })
-    gable(-40, 4, -20, 20, 'y', { kind: 'shingle' }); gable(20, 4, 40, 20, 'y', { kind: 'shingle' })
-    ln([-40, 4], [-20, 4], 0.9, { taper: 0.3 }); ln([20, 4], [40, 4], 0.9, { taper: 0.3 })
-    outline(sil, 1.7); eaveBand(sil)
-    for (const cx of [-30, 30]) {
-      ln([cx, 20], [cx, 25], 1.3, { taper: 0.2 }); fillPoly(oval(cx, 25, Math.max(0.9, K(0.9)), Math.max(0.9, K(0.9)), 6), INK)
-      fillPoly(rect(cx - 4, 18.5, cx + 4, 20.3), INK)
+    castShadow([b, gl, gr], 10)
+    if (UP) { // the loading gables run into the main roof; a hoist beam juts out over each loading door
+      house(-50, -22, 50, 12, 'x', { kind: 'shingle', ch: [[-10, -5, 4], [12, -5, 4]] })
+      for (const cx of [-30, 30]) {
+        house(cx - 10, 12, cx + 10, 20, 'y', { kind: 'shingle', v0: true, door: false }); doorIn([cx - 4, 20], [cx + 4, 20], S, 6 * BH)
+        const zb = 7 * 1.25 * BH + 5
+        later([cx, 20], () => { ln(lift([cx, 20], zb), lift([cx, 25], zb), 1.6, { taper: 0.15 }); ln(lift([cx, 25], zb), lift([cx, 25], 2.5 * BH), 0.6, { taper: 0.1 }) }, 0.1)
+      }
+    } else {
+      baseOf(sil, 'shingle')
+      gable(-50, -22, 50, 12, 'x', { kind: 'shingle' })
+      gable(-40, 4, -20, 20, 'y', { kind: 'shingle' }); gable(20, 4, 40, 20, 'y', { kind: 'shingle' })
+      ln([-40, 4], [-20, 4], 0.9, { taper: 0.3 }); ln([20, 4], [40, 4], 0.9, { taper: 0.3 })
+      outline(sil, 1.7); eaveBand(sil)
+      for (const cx of [-30, 30]) {
+        ln([cx, 20], [cx, 25], 1.3, { taper: 0.2 }); fillPoly(oval(cx, 25, Math.max(0.9, K(0.9)), Math.max(0.9, K(0.9)), 6), INK)
+        fillPoly(rect(cx - 4, 18.5, cx + 4, 20.3), INK)
+      }
     }
     stack(-10, -5, 4); stack(12, -5, 4)
     if (det >= 1) { tub(-8, 16, 2.4, false); tub(-3, 17.5, 2.4, false); crate(4, 15.5, 4); crate(9, 17, 3); cart(46, 24, 11, 6.5, 0.15) }
   }
   /** 5: hall with a clock tower: a slate hall and a square tower under an eight-sided spire. */
   function gh5() {
-    const hall = rect(-50, -18, 20, 18)
-    castShadow([hall], 10); baseOf(hall, 'slate')
-    gable(-50, -18, 20, 18, 'x', { kind: 'slate', hip0: true })
-    outline(hall, 1.7); eaveBand(hall)
-    const tw = rect(20, -15, 50, 15)
-    castShadow([tw], 17); paint(tw, STONE(), 0.25)
-    if (det >= 1) for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) post(35 + sx * 13.5, sy * 13.5, 1.1)
-    outline(tw, 1.8)
-    const sp = fan(35, 0, 13, 0, TAU, { kind: 'slate2', sides: 8, seams: 8 })
-    outline(sp, 1.4, { noext: true })
-    fillPoly(oval(35, 0, Math.max(1, K(1)), Math.max(1, K(1)), 6), INK)
-    pennant(35, 0, 11, 0.3)
+    const hall = rect(-50, -18, 20, 18), tw = rect(20, -15, 50, 15)
+    castShadow([hall], 10)
+    if (UP) house(-50, -18, 20, 18, 'x', { kind: 'slate', hip0: true, ch: [[-30, 0, 4], [0, 0, 4]] })
+    else { baseOf(hall, 'slate'); gable(-50, -18, 20, 18, 'x', { kind: 'slate', hip0: true }); outline(hall, 1.7); eaveBand(hall) }
+    castShadow([tw], 17)
+    if (UP) { // the tower, a clock high on the face that turns to you, corner pinnacles and an eight-sided spire
+      const Ht = 17 * 1.6 * BH, hs = 13 * 2.1
+      later([35, 0], () => {
+        const NRM = [N, E, S, WD]
+        for (let i = 0; i < 4; i++) if (faces(NRM[i]) > 0.02) birdWall(tw[i], tw[(i + 1) % 4], NRM[i], Ht, null, 'stone', { door: false })
+        lifted(Ht, () => { paint(tw, lighter(STONE(), 0.1), 0.15); outline(tw, 1.4, { noext: true }) })
+        let best = 0; for (let i = 1; i < 4; i++) if (faces(NRM[i]) > faces(NRM[best])) best = i
+        const a = tw[best], b = tw[(best + 1) % 4], c = lift(lerp(a, b, 0.5), Ht * 0.8), cr = 3.6
+        const face = []; for (let k = 0; k < 20; k++) { const t = (TAU * k) / 20, e = [(b[0] - a[0]) / 30, (b[1] - a[1]) / 30]; face.push([c[0] + e[0] * cos(t) * cr - UP[0] * sin(t) * cr, c[1] + e[1] * cos(t) * cr - UP[1] * sin(t) * cr]) }
+        fillPoly(face, PAPER); loop(face, 0.9, { flat: true }); ln(c, [c[0] - UP[0] * cr * 0.7, c[1] - UP[1] * cr * 0.7], 0.8); ln(c, [c[0] + ((b[0] - a[0]) / 30) * cr * 0.5, c[1] + ((b[1] - a[1]) / 30) * cr * 0.5], 0.8)
+        for (const p of tw.slice().sort((p, q) => near(p) - near(q))) if (det >= 1) pole([p[0] + (35 - p[0]) * 0.1, p[1] - p[1] * 0.1], Ht, Ht + 5 * BH, K(1.8))
+        birdCone(35, 0, 13, Ht, hs, 8, PI / 8, (pts, k, f) => { paint(pts, kindCol('slate2'), clamp(0.3 + 0.5 * f, 0, 1)); if (f > 0.2 || !COL) hatchIn(pts, Math.atan2(UP[1], UP[0]), K(f > 0.6 ? 2.2 : 3.2), 0.45, { keep: 0.85 }) }, true)
+      })
+      pennant(35, 0, 11, 0.3, undefined, Ht + hs)
+    } else {
+      paint(tw, STONE(), 0.25)
+      if (det >= 1) for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) post(35 + sx * 13.5, sy * 13.5, 1.1)
+      outline(tw, 1.8)
+      const sp = fan(35, 0, 13, 0, TAU, { kind: 'slate2', sides: 8, seams: 8 })
+      outline(sp, 1.4, { noext: true })
+      fillPoly(oval(35, 0, Math.max(1, K(1)), Math.max(1, K(1)), 6), INK)
+      pennant(35, 0, 11, 0.3)
+    }
     stack(-30, 0, 4); stack(0, 0, 4)
     steps(-20, 18, -8, 23, 3, 'x')
   }
   /** 6: temple-like hall: a tiled roof over the cella with a lower colonnade roof all round, columns under its eaves, steps in front. */
   function gh6() {
     const outer = rect(-50, -28, 50, 28), inner = rect(-36, -18, 36, 18)
-    castShadow([outer], 9); baseOf(outer, 'tile')
+    castShadow([outer], 9)
+    if (UP) { // columns under a lean-to roof all round, and the cella rising out of it under its own gable
+      const H1 = 7 * 1.25 * BH, rise = 7.5
+      underRoof(-50, -28, 50, 28, H1)
+      for (let x = -46; x <= 46.1; x += 9.2) { pillar(x, -28, 1.3, H1); pillar(x, 28, 1.3, H1) }
+      for (let y = -18.4; y <= 18.5; y += 9.2) { pillar(-50, y, 1.3, H1); pillar(50, y, 1.3, H1) }
+      later([0, 0], () => {
+        const NRM = [N, E, S, WD], Eo = outer.map((q) => lift(q, H1)), Ii = inner.map((q) => lift(q, H1 + rise))
+        birdRoof(NRM.map((d, i) => ({ pts: [Eo[i], Eo[(i + 1) % 4], Ii[(i + 1) % 4], Ii[i]], eave: [Eo[i], Eo[(i + 1) % 4]], top: [Ii[i], Ii[(i + 1) % 4]], d, run: i % 2 ? 14 : 10 })), rise, 'tile', {})
+        for (let i = 0; i < 4; i++) crease(Eo[i], Ii[i], 1)
+        outline(Eo, 1.4, { noext: true })
+        lifted(H1 + rise, () => birdHouse(-36, -18, 36, 18, 'x', { ...TILE, sh: 4, blind: true, wall: mix(STONE(), PAPER, 0.35) }))
+      })
+      steps(-40, 28, 40, 34, 3, 'x')
+      return
+    }
+    baseOf(outer, 'tile')
     plane([[-50, -28], [50, -28], [36, -18], [-36, -18]], N, TILE); plane([[50, -28], [50, 28], [36, 18], [36, -18]], E, TILE)
     plane([[50, 28], [-50, 28], [-36, 18], [36, 18]], S, TILE); plane([[-50, 28], [-50, -28], [-36, -18], [-36, 18]], WD, TILE)
     for (let i = 0; i < 4; i++) crease(outer[i], inner[i], 1)
@@ -1349,7 +1944,9 @@
     ruinWalls(rooms, pieces, 3.2, 3.5)
     for (const sy of [-1, 1]) for (const x of [-36, -24, -12, 0, 12, 24, 36]) {
       const up = (x + sy * 12 + 48) % 5 !== 0
-      if (up) { const c = oval(x, sy * 11, 2.2, 2.2, 10); castShadow([c], 5); paint(c, lighter(STONE(), 0.1), 0.2); loop(c, 1) }
+      if (!up) continue
+      const c = oval(x, sy * 11, 2.2, 2.2, 10), top = () => { paint(c, lighter(STONE(), 0.1), 0.2); loop(c, 1) }
+      if (UP) standUp([x, sy * 11], c, rr(2, 9) * BH, lighter(STONE(), 0.1), top, 5); else { castShadow([c], 5); top() }
     }
     fallenColumn(8, 2, 16, 2, 0.35); fallenColumn(-26, 0, 12, 1.9, -0.2)
     if (det >= 1) { tree(30, 4, 8); stone(-6, 14, 2); stone(40, -14, 2.4); stone(-40, -10, 1.8) }
@@ -1394,7 +1991,7 @@
     const p = [[-50, -36], [50, -36], [50, 28], [42, 36], [-42, 36], [-50, 28]]
     ground(p, 'cobble'); plazaEdge(p)
     ln([-50, -36], [50, -36], 1.6, { taper: 0.15, wob: 0.2 }); if (det >= 1) ln([-50, -33.4], [50, -33.4], 0.7, { taper: 0.2, wob: 0.2 })
-    for (const x of [-42, -26, -10, 6, 22, 38]) { const c = oval(x, -34.6, 1.3, 1.3, 8); if (det >= 1) castShadow([c], 2); fillPoly(c, INK) }
+    for (const x of [-42, -26, -10, 6, 22, 38]) { const c = oval(x, -34.6, 1.3, 1.3, 8); if (UP) { post(x, -34.6, 1.3); continue } if (det >= 1) castShadow([c], 2); fillPoly(c, INK) }
     for (const x of [-34, -18, 0, 18, 34]) stall(x, -22, 12, 7, [2, null, 2, null, 2][(x + 34) / 17 | 0], jt(0.04))
     stall(-20, 14, 12, 7, null, 0.06); stall(2, 15, 12, 7, 2, -0.04); stall(24, 13, 12, 7, null, 0.03)
     if (det >= 1) {
@@ -1414,8 +2011,7 @@
     const sheep = (x0, y0, x1, y1, n) => { for (let i = 0; i < n; i++) beast(rr(x0 + 2, x1 - 2), rr(y0 + 2, y1 - 2), 2.1, false, r() * PI) }
     const cows = (x0, y0, x1, y1, n) => { for (let i = 0; i < n; i++) beast(rr(x0 + 2.5, x1 - 2.5), rr(y0 + 2.5, y1 - 2.5), 3.2, true, r() * PI) }
     sheep(-46, -31, -26, -5, 10); sheep(-22, 5, -2, 31, 9); cows(-22, -31, -2, -5, 4); cows(8, -31, 46, -1, 6); sheep(8, 8, 46, 31, 12)
-    const tr = rect(12, -30, 24, -27); castShadow([tr], 1.4); paint(tr, WOOD(), 0.2); outline(tr, 0.9, { noext: true })
-    const tr2 = rect(-44, 10, -41, 22); castShadow([tr2], 1.4); paint(tr2, WOOD(), 0.2); outline(tr2, 0.9, { noext: true })
+    for (const tr of [rect(12, -30, 24, -27), rect(-44, 10, -41, 22)]) box(tr, 1.8, WOOD(), 1.4)
     cart(28, 3.5, 12, 6.5, 0); if (det >= 1) haystack(42, 4, 3)
     if (det >= 1) { post(-24, 36, 1.1); pennant(-24, 36, 6, 0.4) }
   }
@@ -1436,7 +2032,7 @@
     well(-8, 2, 6.5)
     stall(-34, -16, 12, 7, 1, 0.1); stall(-30, 20, 11, 7, 3, -0.1); stall(14, -22, 12, 7, 2, 0.05)
     tree(32, 2, 10)
-    const bench = rect(28, 15, 36, 17.4); castShadow([bench], 1); paint(bench, WOOD(), 0.2); outline(bench, 0.8, { noext: true })
+    box(rect(28, 15, 36, 17.4), 1.6, WOOD(), 1, 0.8)
     cart(42, -22, 11, 6.5, 0.4)
     if (det >= 1) { tub(-44, 4, 2.2, true); basket(-2, -10, 1.6); basket(1, -8, 1.5); crate(10, 22, 3) }
   }

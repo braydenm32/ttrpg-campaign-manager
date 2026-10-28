@@ -3,13 +3,17 @@ import { Help } from '../help'
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { DraftText, Empty, VisibilityToggle } from '../components'
+import { ExportMap } from '../ExportMap'
 import { blankEntity, db, ENTITY_LABELS, newId, type Entity, type Pin, type WorldMap } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { renderPlayerFog } from '../fog'
 import {
   CITY_GRID,
+  forPlayers,
   fromAbove,
+  gmOnly,
   GROUNDS,
+  hasSecrets,
   LAYERS,
   LINE_STYLES,
   pathFor,
@@ -103,7 +107,7 @@ const FLOORS: GroundId[] = ['paving', 'floor', 'boards']
 /** The grounds a map offers: town maps are outdoors, so no floors or boards. */
 const groundsFor = (city: boolean) => (Object.keys(GROUNDS) as GroundId[]).filter((g) => !city || (g !== 'floor' && g !== 'boards'))
 /** How the Rooms tool digs: its shape, digging out or filling in, passage width and cave brush size (px), and grid snapping. */
-type RoomBrush = { shape: RoomStroke['shape']; mode: RoomStroke['mode']; width: number; cave: number; snap: boolean }
+type RoomBrush = { shape: RoomStroke['shape']; mode: RoomStroke['mode']; width: number; cave: number; snap: boolean; secret: boolean }
 const ROOM_SHAPES: { id: RoomStroke['shape']; icon: string; label: string; hint: string }[] = [
   { id: 'rect', icon: '▭', label: 'Room', hint: 'Drag from corner to corner' },
   { id: 'round', icon: '◯', label: 'Round room', hint: 'Drag from corner to corner; the room is the oval inside' },
@@ -122,6 +126,7 @@ const BATTLE_SIZE: Record<string, number> = {
   'dg-stairs': 140, 'dg-spiral': 140, 'dg-pillar': 50, 'dg-pillar-square': 50, 'dg-pit': 140, 'dg-rubble': 100, 'dg-bones': 70,
   'dg-brazier': 50, 'dg-torch': 50, 'dg-altar': 140, 'dg-sarcophagus': 140, 'dg-coffin': 120, 'dg-bookshelf': 140, 'dg-bed': 140,
   'dg-throne': 90, 'dg-cage': 120, 'dg-rug': 200, 'dg-weapon-rack': 140, 'dg-cauldron': 70, 'dg-magic-circle': 280,
+  'gm-secret-door': 70, 'gm-trap': 70, 'gm-treasure': 46, 'gm-danger': 46,
 }
 
 /** Starting sizes for town pieces, at 7 px to a 5 ft square (scaled to the map's grid). */
@@ -139,6 +144,8 @@ const PIECE_SIZE: Record<string, number> = {
 const pieceSize = (asset: string, W: number, H: number, gridSize = 70) => {
   if (asset.startsWith('ct-')) return Math.round(((CITY_SIZE[asset] ?? 120) * (gridSize || CITY_GRID)) / CITY_GRID)
   if (/^(bm|dg)-/.test(asset)) return Math.round(((BATTLE_SIZE[asset] ?? 80) * (gridSize || 70)) / 70)
+  // the GM's marks are a square across on battle maps, and much the same on others (where a square is tiny or not there)
+  if (asset.startsWith('gm-')) return Math.round(((BATTLE_SIZE[asset] ?? 60) * (gridSize >= 20 ? gridSize : 70)) / 70)
   const def = Atlas.assets[asset]
   const base = PIECE_SIZE[asset] ?? (def?.category === 'settlements' ? 34 : def?.category === 'landmarks' ? 30 : 30)
   return Math.round(base * Math.max(1, Math.max(W, H) / 1400))
@@ -165,10 +172,12 @@ const defaultTurn = (asset: string, d: Pick<Drawing, 'scene'>): Turn =>
     : ['bm-camp', 'bm-objects'].includes(Atlas.assets[asset]?.category ?? '') || ['dg-rubble', 'dg-bones'].includes(asset)
       ? 'random'
       : 0
-/** Doors start as a plain closed door; open, broken and barred ones are a pick away. */
+/** Doors start as a plain closed door, and the GM's marks as the plainest one; other versions are a pick away. */
 const choose = (asset: string, W: number, H: number, d: Pick<Drawing, 'scene' | 'gridSize'>): PieceChoice => ({
-  asset, size: pieceSize(asset, W, H, d.gridSize), variant: Atlas.assets[asset]?.category === 'dg-doors' ? 0 : 'random', turn: defaultTurn(asset, d), mix: [],
+  asset, size: pieceSize(asset, W, H, d.gridSize), variant: isDoor(asset) || asset.startsWith('gm-') ? 0 : 'random', turn: defaultTurn(asset, d), mix: [],
 })
+/** Doors (and secret doors) go into walls one at a time. */
+const isDoor = (asset: string) => Atlas.assets[asset]?.category === 'dg-doors' || asset === 'gm-secret-door'
 
 /** Other words people search the piece library with. */
 const KEYWORDS: Record<string, string> = {
@@ -178,6 +187,8 @@ const KEYWORDS: Record<string, string> = {
   'bm-haystack': 'hay farm', 'bm-well': 'water', 'bm-stall': 'market shop', 'bm-gravestone': 'grave tomb cemetery', 'bm-statue': 'fountain monument',
   'bm-signpost': 'sign road', 'bm-cottage': 'house hut', 'bm-house': 'home building', 'bm-barn': 'farm', 'bm-tower': 'castle keep',
   'bm-chapel': 'church temple shrine', 'bm-ruin': 'ruins', 'bm-tent-large': 'tent marquee', 'bm-tent': 'camp',
+  'gm-secret-door': 'hidden concealed passage wall secret', 'gm-trap': 'pit snare plate darts glyph secret', 'gm-treasure': 'loot gold hoard coins gem key secret',
+  'gm-danger': 'ambush monster skull warning watcher patrol encounter secret',
   'dg-door': 'doorway plank wooden entrance', 'dg-double-door': 'doors gate grand entrance', 'dg-portcullis': 'gate bars iron grille', 'dg-arch': 'archway doorway opening curtain',
   'dg-trapdoor': 'hatch trap floor ladder', 'dg-grate': 'drain sewer grille', 'dg-stairs': 'steps staircase up down descend ladder', 'dg-spiral': 'stairs steps winding staircase tower',
   'dg-pillar': 'column post support colonnade', 'dg-pillar-square': 'column pier buttress post', 'dg-pit': 'hole trap chasm shaft well', 'dg-rubble': 'rocks stones collapse debris masonry',
@@ -230,6 +241,13 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const top = fromAbove(drawing)
   const TOOLS = battle ? BATTLE_TOOLS : city ? CITY_TOOLS : WORLD_TOOLS
   const [past, setPast] = useState<Drawing[]>([])
+  const [exporting, setExporting] = useState(false)
+  // see the map as players get it, without the secrets
+  const [seePlayers, setSeePlayers] = useState(false)
+  const playersView = useRef(false)
+  useEffect(() => {
+    playersView.current = seePlayers
+  }, [seePlayers])
   const [future, setFuture] = useState<Drawing[]>([])
   const [tool, setTool] = useState<Tool>('land')
   const [lineStyle, setLineStyle] = useState<LineStyle>(battle ? 'fence' : city ? 'street' : 'river')
@@ -243,7 +261,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     setRecent((r) => [...new Set([next.asset, ...next.mix, ...r])].slice(0, 8))
   }
   const [groundBrush, setGroundBrush] = useState<GroundBrush>(() => ({ ground: 'dirt', size: Math.round(groundStep(drawing) * 2), inside: false }))
-  const [roomBrush, setRoomBrush] = useState<RoomBrush>(() => ({ shape: 'rect', mode: 'dig', width: drawing.gridSize || 70, cave: 2 * (drawing.gridSize || 70), snap: true }))
+  const [roomBrush, setRoomBrush] = useState<RoomBrush>(() => ({ shape: 'rect', mode: 'dig', width: drawing.gridSize || 70, cave: 2 * (drawing.gridSize || 70), snap: true, secret: false }))
   const [roomDraft, setRoomDraft] = useState<RoomStroke>()
   const [spray, setSpray] = useState(() => ({ spread: Math.round(Math.max(W, H) / 18), thickness: 3 }))
   const [labelText, setLabelText] = useState('')
@@ -290,6 +308,36 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   }, [future, drawing])
   const updateShape = (id: string, patch: Partial<Shape>) =>
     commit({ ...drawing, shapes: drawing.shapes.map((s) => (s.id === id ? ({ ...s, ...patch } as Shape) : s)) })
+  /**
+   * The players found a secret door: it becomes a plain door, and the secret rooms and passages it
+   * leads into (those touching it, and the secret ones touching those) are shown to them too.
+   */
+  const revealDoor = (id: string) => {
+    const door = drawing.shapes.find((s): s is Extract<Shape, { kind: 'asset' }> => s.id === id && s.kind === 'asset')
+    if (!door) return
+    const g = drawing.gridSize || 70
+    const boxOf = (r: RoomStroke): [number, number, number, number] => {
+      const pad = r.shape === 'rect' || r.shape === 'round' ? 0 : (r.size ?? (r.shape === 'cave' ? 2 * g : g)) / 2
+      const xs = r.points.map((q) => q[0])
+      const ys = r.points.map((q) => q[1])
+      return [Math.min(...xs) - pad, Math.min(...ys) - pad, Math.max(...xs) + pad, Math.max(...ys) + pad]
+    }
+    const touch = (a: number[], b: number[], m: number) => a[0] - m < b[2] && b[0] - m < a[2] && a[1] - m < b[3] && b[1] - m < a[3]
+    const secret = (drawing.rooms ?? []).filter((r) => gmOnly(r))
+    const h = door.size * 0.6
+    let found = secret.filter((r) => touch(boxOf(r), [door.at[0] - h, door.at[1] - h, door.at[0] + h, door.at[1] + h], 0))
+    for (let more = true; more; ) {
+      const next = secret.filter((r) => !found.includes(r) && found.some((f) => touch(boxOf(r), boxOf(f), 0.1 * g)))
+      more = next.length > 0
+      found = [...found, ...next]
+    }
+    const ids = new Set(found.map((r) => r.id))
+    commit({
+      ...drawing,
+      shapes: drawing.shapes.map((s) => (s.id === id && s.kind === 'asset' ? { ...s, asset: 'dg-door', variant: 0, gm: undefined } : s)),
+      rooms: drawing.rooms?.map((r) => (ids.has(r.id) ? { ...r, gm: undefined } : r)),
+    })
+  }
   const removeShape = useCallback(
     (id: string) => {
       commit({ ...drawing, shapes: drawing.shapes.filter((s) => s.id !== id) })
@@ -304,7 +352,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
 
   // Classic maps are painted on a canvas under the editor. It's redrawn shortly after each change,
   // and at a steady pace while changes keep coming (the scatter brush), always with the latest drawing.
-  const lastArt = useRef<{ drawing: Drawing; canvas: HTMLCanvasElement }>(undefined)
+  const lastArt = useRef<{ drawing: Drawing; canvas: HTMLCanvasElement; players: boolean }>(undefined)
   const nextArt = useRef<Drawing>(undefined)
   const artTimer = useRef<number>(undefined)
   useEffect(() => {
@@ -317,14 +365,15 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       const el = artRef.current
       if (!d || !el) return
       const t0 = performance.now()
-      const art = renderClassic(d, W, H)
+      const players = playersView.current
+      const art = renderClassic(players ? forPlayers(d) : d, W, H)
       if (import.meta.env.DEV) console.debug(`map drawn in ${Math.round(performance.now() - t0)} ms`)
-      lastArt.current = { drawing: d, canvas: art }
+      lastArt.current = { drawing: d, canvas: art, players }
       el.width = art.width
       el.height = art.height
       el.getContext('2d')!.drawImage(art, 0, 0)
     }, 40)
-  }, [drawing, W, H])
+  }, [drawing, W, H, seePlayers])
   useEffect(
     () => () => {
       window.clearTimeout(artTimer.current)
@@ -360,6 +409,8 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
         live.add(pin.pieceId!)
         const points = outlineOf(s)
         if (JSON.stringify(points) !== JSON.stringify(pin.points)) await db.pins.update(pin.id, { points })
+        // a piece only the GM sees can't be clicked by players either
+        if (gmOnly(s) && pin.visibility !== 'gm') await db.pins.update(pin.id, { visibility: 'gm' })
       }
       for (const [id, pin] of removedPins.current) {
         const s = pieces.get(id)
@@ -378,16 +429,41 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const save = useCallback(
     async (d: Drawing) => {
       await loadMapFonts()
-      const art = lastArt.current?.drawing === d ? lastArt.current.canvas : renderClassic(d, W, H)
+      const art = lastArt.current?.drawing === d && !lastArt.current.players ? lastArt.current.canvas : renderClassic(d, W, H)
       const blob = await classicBlob(art)
+      // with secrets on it, the players get a picture of their own without them
+      const forThem = hasSecrets(d) ? await classicBlob(renderClassic(forPlayers(d), W, H)) : undefined
+      const now = Date.now()
       await db.transaction('rw', [db.maps, db.assets], async () => {
-        await db.maps.update(map.id, { drawing: d })
-        await db.assets.update(map.imageId, { blob, size: blob.size, mime: blob.type, updatedAt: Date.now() })
+        let playerImageId = (await db.maps.get(map.id))?.playerImageId
+        if (forThem && playerImageId && (await db.assets.get(playerImageId))) {
+          await db.assets.update(playerImageId, { blob: forThem, size: forThem.size, mime: forThem.type, updatedAt: now })
+        } else if (forThem) {
+          playerImageId = newId()
+          await db.assets.add({
+            id: playerImageId,
+            worldId,
+            name: `${map.name} (players’ copy).${forThem.type === 'image/webp' ? 'webp' : 'jpg'}`,
+            mime: forThem.type,
+            size: forThem.size,
+            blob: forThem,
+            tags: ['map', 'drawn', 'players'],
+            // Only reaches players through the map; never listed for them on its own.
+            visibility: 'gm',
+            createdAt: now,
+            updatedAt: now,
+          })
+        } else if (playerImageId) {
+          await db.assets.delete(playerImageId)
+          playerImageId = undefined
+        }
+        await db.maps.update(map.id, { drawing: d, playerImageId })
+        await db.assets.update(map.imageId, { blob, size: blob.size, mime: blob.type, updatedAt: now })
       })
       lastSaved.current = d
       await syncPiecePins(d)
     },
-    [map.id, map.imageId, W, H, syncPiecePins],
+    [map.id, map.imageId, map.name, worldId, W, H, syncPiecePins],
   )
   useEffect(() => {
     if (drawing === lastSaved.current) return
@@ -657,7 +733,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   }
   /** The room a drag makes, or nothing if it's too small to be one. */
   const roomOf = (pts: Point[]): RoomStroke | undefined => {
-    const base = { id: newId(), mode: roomBrush.mode }
+    const base = { id: newId(), mode: roomBrush.mode, ...(roomBrush.secret && roomBrush.mode === 'dig' ? { gm: true } : {}) }
     const { shape } = roomBrush
     if (shape === 'rect' || shape === 'round') {
       const a = corner(pts[0])
@@ -680,12 +756,12 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     return { ...base, shape, points: path, size: w }
   }
   /** A door sits on the nearest grid line that has a room wall on it, or failing that the nearest line. */
-  const snapDoor = (p: Point, size: number): { at: Point; turn: number } => {
-    if (drawing.grid !== 'square') return { at: p, turn: 0 }
+  const snapDoor = (p: Point, size: number, d: Drawing = drawing): { at: Point; turn: number } => {
+    if (d.grid !== 'square') return { at: p, turn: 0 }
     const off = Math.max(1, Math.round(size / gs)) % 2 ? gs / 2 : 0
     const across: { at: Point; turn: number } = { at: [Math.round((p[0] - off) / gs) * gs + off, Math.round(p[1] / gs) * gs], turn: 0 }
     const down: { at: Point; turn: number } = { at: [Math.round(p[0] / gs) * gs, Math.round((p[1] - off) / gs) * gs + off], turn: 90 }
-    const inRoom = roomTest(drawing, W, H)
+    const inRoom = roomTest(d, W, H)
     if (inRoom) {
       const h = gs / 2
       const wallAcross = inRoom(across.at[0], across.at[1] - h) !== inRoom(across.at[0], across.at[1] + h)
@@ -748,10 +824,10 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
         commit({ ...drawing, shapes: [...drawing.shapes, { ...rest, at: wall.at, ...(turn ? { turn } : {}) }] })
         return
       }
-      if (battle && Atlas.assets[piece.asset].category === 'dg-doors' && !piece.mix.length) {
-        // a door goes in one at a time, into the wall
+      if (battle && isDoor(piece.asset) && !piece.mix.length) {
+        // a door goes in one at a time, into the wall (a secret one into the wall players see)
         const door = makePiece(p, { asset: piece.asset, size: piece.size }) as Extract<Shape, { kind: 'asset' }>
-        const snap = snapDoor(p, piece.size)
+        const snap = snapDoor(p, piece.size, piece.asset === 'gm-secret-door' ? forPlayers(drawing) : drawing)
         let turn = (snap.turn + (typeof piece.turn === 'number' ? piece.turn : 0)) % 360
         // doors open into the room, never into solid rock
         const inRoom = roomTest(drawing, W, H)
@@ -914,8 +990,12 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
             ↷ Redo
           </button>
           <button onClick={fit}>⤢ Fit</button>
+          <button onClick={() => setExporting(true)} title="Download as a picture or a virtual tabletop file">
+            ⤓ Export
+          </button>
         </div>
       </div>
+      {exporting && <ExportMap name={map.name} drawing={drawing} width={W} height={H} onClose={() => setExporting(false)} />}
       <div className="map-body">
         <div className="builder-tools">
           {TOOLS.map((t) => (
@@ -1013,6 +1093,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                 })
               }}
               onChange={(patch) => updateShape(selected.id, patch)}
+              onReveal={battle ? () => revealDoor(selected.id) : undefined}
               onDelete={() => removeShape(selected.id)}
               onClose={() => setSelectedId(undefined)}
             />
@@ -1059,6 +1140,11 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                 ))}
               </tbody>
             </table>
+            {hasSecrets(drawing) && (
+              <label className="check">
+                <input type="checkbox" checked={seePlayers} onChange={(e) => setSeePlayers(e.target.checked)} /> See the players’ copy <Help topic="playersCopy" />
+              </label>
+            )}
           </section>
           <details className="map-settings" open>
             <summary>Map settings</summary>
@@ -1108,6 +1194,17 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                   ))}
                 </select>
               </label>
+              {city && (
+                <label>
+                  <span>
+                    Buildings <Help topic="birdsEye" />
+                  </span>
+                  <select value={drawing.birdsEye ? 'bird' : 'above'} onChange={(e) => commit({ ...drawing, birdsEye: e.target.value === 'bird' })}>
+                    <option value="above">From above (a town plan)</option>
+                    <option value="bird">Bird’s-eye (buildings stand up)</option>
+                  </select>
+                </label>
+              )}
               {top && (
                 <label>
                   Ground to start on
@@ -1285,6 +1382,11 @@ function ToolOptions(p: {
               <input type="checkbox" checked={p.roomBrush.snap} onChange={(e) => p.setRoomBrush({ ...p.roomBrush, snap: e.target.checked })} /> Snap to the squares
             </label>
           )}
+          {p.roomBrush.mode === 'dig' && (
+            <label className="check">
+              <input type="checkbox" checked={p.roomBrush.secret} onChange={(e) => p.setRoomBrush({ ...p.roomBrush, secret: e.target.checked })} /> Secret: only you see it <Help topic="secretRooms" />
+            </label>
+          )}
           <label>
             <span>
               Outside the rooms <Help topic="roomOutside" />
@@ -1433,7 +1535,7 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
   const matches = words.length
     ? groups.flatMap((g) =>
         assetNamesIn(g.categories).filter((n) => {
-          const hay = `${Atlas.assets[n].label} ${n.replace(/^(bm|dg|ct)-/, '').replace(/-/g, ' ')} ${KEYWORDS[n] ?? ''} ${g.label}`.toLowerCase()
+          const hay = `${Atlas.assets[n].label} ${n.replace(/^(bm|dg|ct|gm)-/, '').replace(/-/g, ' ')} ${KEYWORDS[n] ?? ''} ${g.label}`.toLowerCase()
           return words.every((w) => hay.includes(w))
         }),
       )
@@ -1475,7 +1577,10 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
           )}
           {groups.filter((g) => assetNamesIn(g.categories).length).map((g) => (
             <details key={g.label} className="piece-group" open={g.categories.includes(def?.category ?? '') || undefined}>
-              <summary>{g.label}</summary>
+              <summary>
+                {g.label}
+                {g.categories.includes('gm-marks') && <> <Help topic="gmMarks" /></>}
+              </summary>
               {grid(assetNamesIn(g.categories))}
             </details>
           ))}
@@ -1573,13 +1678,15 @@ function PieceThumb({ asset, look, biome, variant = 0, seed = 7, px = 48 }: { as
   return <canvas ref={ref} style={{ width: px, height: px, borderRadius: 4 }} aria-hidden />
 }
 
-function ShapeProps({ shape, drawing, pin, onLink, onChange, onDelete, onClose }: {
+function ShapeProps({ shape, drawing, pin, onLink, onChange, onReveal, onDelete, onClose }: {
   shape: Shape
   drawing: Drawing
   /** The pin a linked piece works as, if it's linked to a page. */
   pin?: Pin
   onLink: (entity: Entity) => void
   onChange: (p: Partial<Shape>) => void
+  /** A secret door the players have found becomes a plain door. */
+  onReveal?: () => void
   onDelete: () => void
   onClose: () => void
 }) {
@@ -1587,6 +1694,29 @@ function ShapeProps({ shape, drawing, pin, onLink, onChange, onDelete, onClose }
     shape.kind === 'area' ? 'Area' : shape.kind === 'line' ? 'Line' : shape.kind === 'stamp' ? STAMPS[shape.stamp] : shape.kind === 'asset' ? (Atlas.assets[shape.asset]?.label ?? 'Piece') : 'Label'
   const way = shape.kind === 'line' ? wayOf(shape.style, drawing) : undefined
   const wayFt = shape.kind === 'line' && way ? Math.round(((way === 'street' ? streetWidth : riverWidth)(shape, drawing) / (drawing.gridSize || 70)) * 5) : 0
+  // who sees it: on its own copy of the map for the GM, or for everyone
+  const secret = (shape.kind === 'asset' || shape.kind === 'line' || shape.kind === 'label') && (
+    <section className="gm-only">
+      {shape.kind === 'asset' && shape.asset === 'gm-secret-door' ? (
+        <>
+          <p className="muted small">Players see plain wall here until they find it.</p>
+          {onReveal && (
+            <button type="button" onClick={onReveal}>
+              Players found it: make it a door
+            </button>
+          )}
+        </>
+      ) : shape.kind === 'asset' && shape.asset.startsWith('gm-') ? (
+        <label className="check">
+          <input type="checkbox" checked={shape.gm === false} onChange={(e) => onChange({ gm: e.target.checked ? false : undefined })} /> Players can see this mark too
+        </label>
+      ) : (
+        <label className="check">
+          <input type="checkbox" checked={!!shape.gm} onChange={(e) => onChange({ gm: e.target.checked || undefined })} /> GM only: players don’t see it <Help topic="gmOnly" />
+        </label>
+      )}
+    </section>
+  )
   return (
     <div className="form">
       <header>
@@ -1637,6 +1767,7 @@ function ShapeProps({ shape, drawing, pin, onLink, onChange, onDelete, onClose }
             </label>
           )}
           {shape.style === 'townwall' && <TowerPicker drawing={drawing} value={shape.towers ?? 0} onPick={(towers) => onChange({ towers })} />}
+          {secret}
         </>
       )}
       {shape.kind === 'stamp' && (
@@ -1693,6 +1824,7 @@ function ShapeProps({ shape, drawing, pin, onLink, onChange, onDelete, onClose }
               </div>
             </label>
           )}
+          {secret}
           <PieceLink shape={shape} pin={pin} onLink={onLink} />
         </>
       )}
@@ -1721,6 +1853,7 @@ function ShapeProps({ shape, drawing, pin, onLink, onChange, onDelete, onClose }
               Straighten it
             </button>
           )}
+          {secret}
         </>
       )}
       <p className="muted small">
@@ -1765,7 +1898,7 @@ function PieceLink({ shape, pin, onLink }: { shape: Extract<Shape, { kind: 'asse
             <DraftText value={pin.label} onCommit={(label) => db.pins.update(pin.id, { label })} />
           </label>
           <div className="row spread">
-            <VisibilityToggle value={pin.visibility} onChange={(v) => db.pins.update(pin.id, { visibility: v })} />
+            {gmOnly(shape) ? <span className="muted small">GM only, like the piece</span> : <VisibilityToggle value={pin.visibility} onChange={(v) => db.pins.update(pin.id, { visibility: v })} />}
             <button type="button" onClick={() => db.pins.delete(pin.id)}>
               Unlink
             </button>

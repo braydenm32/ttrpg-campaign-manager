@@ -76,6 +76,7 @@ export type Shape =
       width?: number
       /** Town walls: which version of tower stands at the corners, or -1 for none. */
       towers?: number
+      gm?: boolean
     }
   | { id: string; kind: 'stamp'; stamp: StampKind; at: Point; size: number }
   | {
@@ -89,9 +90,10 @@ export type Shape =
       /** Classic maps: the text follows this curve instead of sitting straight at `at`. */
       curve?: Point[]
       font?: LabelFont
+      gm?: boolean
     }
   /** Classic maps: a piece from the hand-inked library (src/mapArt). `seed` makes each copy its own. */
-  | { id: string; kind: 'asset'; asset: string; at: Point; size: number; seed: number; variant: number; flip?: boolean; turn?: number }
+  | { id: string; kind: 'asset'; asset: string; at: Point; size: number; seed: number; variant: number; flip?: boolean; turn?: number; gm?: boolean }
 
 export const BACKGROUNDS = {
   sea: { label: 'Open sea (draw land on it)', fill: 'url(#p-sea)' },
@@ -117,6 +119,22 @@ export type Scene = 'world' | 'city' | 'battle'
 
 /** On town maps a 5 ft square is this many pixels (about 1.4 px to a foot), so a house is a few dozen pixels. */
 export const CITY_GRID = 7
+
+/**
+ * Marks only the GM sees: anything ticked "GM only", and the GM marks (secret doors, traps, hidden
+ * treasure, ambushes), which are GM only unless the GM shows them to the players.
+ */
+export const gmOnly = (s: Shape | RoomStroke) => {
+  if (!('kind' in s)) return !!s.gm
+  if (s.kind === 'asset') return s.asset.startsWith('gm-') ? s.gm !== false : !!s.gm
+  return (s.kind === 'line' || s.kind === 'label') && !!s.gm
+}
+
+/** Whether a drawing has anything players mustn't see, so they need a picture of their own. */
+export const hasSecrets = (d: Drawing) => d.shapes.some(gmOnly) || !!d.rooms?.some(gmOnly)
+
+/** The drawing as players get it: without anything only the GM sees. */
+export const forPlayers = (d: Drawing): Drawing => (hasSecrets(d) ? { ...d, shapes: d.shapes.filter((s) => !gmOnly(s)), rooms: d.rooms?.filter((r) => !gmOnly(r)) } : d)
 
 /** Maps seen from above: whether the map is a town plan, battle map or dungeon rather than a side-on world map. */
 export const fromAbove = (d: Pick<Drawing, 'scene'>) => d.scene === 'battle' || d.scene === 'city'
@@ -165,6 +183,8 @@ export interface RoomStroke {
   shape: 'rect' | 'round' | 'corridor' | 'cave'
   points: Point[]
   size?: number
+  /** A secret room or passage: only the GM sees it until the players find it. */
+  gm?: boolean
 }
 
 /** A brush stroke that paints land, or carves water (sea, lakes) back out of it. */
@@ -196,6 +216,8 @@ export interface Drawing {
   /** Battle maps: rooms and passages, and whether what's outside them is solid rock (a dungeon) or the ground. */
   rooms?: RoomStroke[]
   outside?: 'rock' | 'ground'
+  /** Town maps: buildings, walls and trees stand up off the plan, seen from above at an angle, instead of straight down. */
+  birdsEye?: boolean
   hidden?: LayerId[]
   locked?: LayerId[]
 }

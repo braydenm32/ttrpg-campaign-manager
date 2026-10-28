@@ -13,10 +13,12 @@ import { Markdown } from '../Markdown'
 import { StatusBadge, statusIcon } from '../status'
 import { SecretTextarea } from '../SecretTextarea'
 import { useViewMode } from '../viewMode'
-import { circleShape, fogOverlay, pinRevealed, rectShape, removeFog, renderPlayerFog } from '../fog'
+import { circleShape, fogOverlay, pinRevealed, playersImageId, rectShape, removeFog, renderPlayerFog } from '../fog'
 import { Ico, TypeIcon } from '../icons'
-import { CloudFog, Eye, HandPalm, MapPin, PencilSimple, SlidersHorizontal } from '@phosphor-icons/react'
+import { CloudFog, DownloadSimple, Eye, HandPalm, MapPin, PencilSimple, SlidersHorizontal } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
+import { ExportMap } from '../ExportMap'
+import { toClassic } from '../mapDrawing'
 
 type Tool = 'select' | 'pin' | 'region' | 'fog-rect' | 'fog-shape' | 'fog-circle'
 const COLORS = ['#e0b354', '#d9534f', '#5bc0de', '#5cb85c', '#a678de', '#f0f0f0']
@@ -24,9 +26,10 @@ const COLORS = ['#e0b354', '#d9534f', '#5bc0de', '#5cb85c', '#a678de', '#f0f0f0'
 export default function MapView() {
   const { worldId } = useWorld()
   const { mapId = '' } = useParams()
-  const { canSee } = useViewMode()
+  const { canSee, isGM } = useViewMode()
   const map = useLiveQuery(() => db.maps.get(mapId), [mapId])
-  const url = useAssetUrl(map?.imageId)
+  // previewing as a player shows their copy of a map with secrets on it
+  const url = useAssetUrl(map && (isGM ? map.imageId : playersImageId(map)))
 
   if (map === undefined) return null
   if (map === null || map.worldId !== worldId || !canSee(map.visibility)) return <Empty>Map not found.</Empty>
@@ -52,6 +55,8 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const [draft, setDraft] = useState<[number, number][]>([])
   const [showSettings, setShowSettings] = useState(false)
   const [fogBar, setFogBar] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const exportDrawing = useMemo(() => (map.drawing ? toClassic(map.drawing) : undefined), [map.drawing])
   const [fogMode, setFogMode] = useState<'reveal' | 'hide'>('reveal')
   const [fogCorner, setFogCorner] = useState<[number, number]>()
   const [fogSize, setFogSize] = useState(0.06)
@@ -79,7 +84,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
     fogPending.current = map.id
     const t = setTimeout(flushFog, 1500)
     return () => clearTimeout(t)
-  }, [isGM, fog, fogShapes, map.id, map.imageId])
+  }, [isGM, fog, fogShapes, map.id, map.imageId, map.playerImageId])
   useEffect(() => () => flushFog(), [])
 
   const addFog = (shape: ReturnType<typeof rectShape>) =>
@@ -167,9 +172,14 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
               </>
             )}
             {map.drawing && (
-              <Link className="button" to={`${worldPath(worldId)}/maps/${map.id}/draw`}>
-                <Ico as={PencilSimple} /> Draw
-              </Link>
+              <>
+                <Link className="button" to={`${worldPath(worldId)}/maps/${map.id}/draw`}>
+                  <Ico as={PencilSimple} /> Draw
+                </Link>
+                <button onClick={() => setExporting(true)} title="Download as a picture or a virtual tabletop file">
+                  <Ico as={DownloadSimple} /> Export
+                </button>
+              </>
             )}
             <button
               className={fogBar ? 'on' : ''}
@@ -185,6 +195,9 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
           </div>
         )}
       </div>
+      {isGM && exporting && exportDrawing && (
+        <ExportMap name={map.name} drawing={exportDrawing} width={map.width} height={map.height} onClose={() => setExporting(false)} />
+      )}
       {isGM && fogBar && (
         <FogBar
           map={map}

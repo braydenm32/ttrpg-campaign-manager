@@ -10,6 +10,7 @@ import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { MapTrifold, PencilSimple } from '@phosphor-icons/react'
 import { worldPath } from '../paths'
+import { playersImageId } from '../fog'
 
 export default function MapList() {
   const { worldId } = useWorld()
@@ -228,8 +229,8 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
 
 function MapCard({ map, worldId }: { map: WorldMap; worldId: string }) {
   const { isGM } = useViewMode()
-  // Previewing as a player shows the fogged picture players get.
-  const url = useAssetUrl(!isGM && map.fog?.on ? map.fog.imageId : map.imageId)
+  // Previewing as a player shows the picture players get: fogged, or without the GM's secrets.
+  const url = useAssetUrl(isGM ? map.imageId : map.fog?.on ? map.fog.imageId : playersImageId(map))
   return (
     <Link className="card map-card" to={`${worldPath(worldId)}/maps/${map.id}`}>
       {url && <img src={url} alt="" />}
