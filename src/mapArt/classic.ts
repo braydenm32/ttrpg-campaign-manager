@@ -420,11 +420,13 @@ export interface Piece {
   seed: number
   variant: number
   flip: boolean
+  /** Degrees clockwise. Only pieces seen from above (or map furniture) turn; side-on ones stay upright. */
+  turn?: number
 }
 
 const pieceOf = (s: Shape, battle = false): Piece | undefined =>
   s.kind === 'asset'
-    ? { id: s.id, asset: s.asset, at: s.at, size: s.size, seed: s.seed, variant: s.variant, flip: !!s.flip }
+    ? { id: s.id, asset: s.asset, at: s.at, size: s.size, seed: s.seed, variant: s.variant, flip: !!s.flip, turn: s.turn }
     : s.kind === 'stamp'
       ? {
           id: s.id,
@@ -449,9 +451,34 @@ export function pieceBox(p: Piece): [number, number, number, number] {
   return [p.at[0] - s / 2, p.at[1] - h / 2, s, h]
 }
 
+/** Whether a piece can be turned: side-on pieces (mountains, towns) always stand upright. */
+export const canTurn = (asset: string) => !!Atlas.assets[asset] && Atlas.assets[asset].view !== 'side'
+
+/** How far a piece is turned, in radians, or 0 when it isn't (or can't be). */
+const turnOf = (p: Piece) => (p.turn && canTurn(p.asset) ? ((((p.turn % 360) + 360) % 360) * Math.PI) / 180 : 0)
+
+/** The outline of the area a piece covers, as map points, turned with it. Used for clicking it as a pin. */
+export function pieceOutline(p: Piece): Point[] {
+  const [x, y, w, h] = pieceBox(p)
+  const a = turnOf(p)
+  const cx = x + w / 2
+  const cy = y + h / 2
+  // a little inside the box, so neighbouring linked pieces don't overlap much
+  const k = Atlas.assets[p.asset]?.view === 'side' ? 1 : 0.85
+  return [
+    [-w / 2, -h / 2],
+    [w / 2, -h / 2],
+    [w / 2, h / 2],
+    [-w / 2, h / 2],
+  ].map(([dx, dy]) => [cx + (dx * Math.cos(a) - dy * Math.sin(a)) * k, cy + (dx * Math.sin(a) + dy * Math.cos(a)) * k] as Point)
+}
+
 export function drawPiece(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle) {
   const def = Atlas.assets[p.asset]
   if (!def) return
+  const variant = ((p.variant % 8) + 8) % 8
+  const a = turnOf(p)
+  if (a) return drawTurned(ctx, p, st, a, variant)
   ctx.save()
   if (p.flip) {
     ctx.translate(p.at[0], 0)
@@ -459,10 +486,66 @@ export function drawPiece(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle)
     ctx.translate(-p.at[0], 0)
   }
   try {
-    def.draw(ctx, p.at[0], p.at[1], p.size, Atlas.rng(p.seed), st, ((p.variant % 8) + 8) % 8)
+    def.draw(ctx, p.at[0], p.at[1], p.size, Atlas.rng(p.seed), st, variant)
   } catch (e) {
     console.warn('Map piece failed to draw', p.asset, e)
   }
+  ctx.restore()
+}
+
+/**
+ * A turned piece. Its own cast shadow would turn with it and fall the wrong way, so the piece is
+ * drawn without one on a little canvas of its own, and a shadow of its outline is laid down-right
+ * under it, where the light says it belongs.
+ */
+function drawTurned(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle, a: number, variant: number) {
+  const m = ctx.getTransform()
+  const k = Math.hypot(m.a, m.b)
+  const px = Math.max(2, Math.ceil(p.size * 1.8 * k))
+  const off = document.createElement('canvas')
+  off.width = off.height = px
+  const o = off.getContext('2d')!
+  o.setTransform(k, 0, 0, k, px / 2, px / 2)
+  o.rotate(a)
+  if (p.flip) o.scale(-1, 1)
+  o.lineJoin = 'round'
+  o.lineCap = 'round'
+  try {
+    Atlas.assets[p.asset].draw(o, 0, 0, p.size, Atlas.rng(p.seed), { ...st, shadows: false }, variant)
+  } catch (e) {
+    console.warn('Map piece failed to draw', p.asset, e)
+    return
+  }
+  const cx = m.a * p.at[0] + m.c * p.at[1] + m.e
+  const cy = m.b * p.at[0] + m.d * p.at[1] + m.f
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  if (st.shadows) {
+    const sh = document.createElement('canvas')
+    sh.width = sh.height = px
+    const c = sh.getContext('2d')!
+    c.drawImage(off, 0, 0)
+    c.globalCompositeOperation = 'source-in'
+    if (st.mode === 'colour') c.fillStyle = 'rgba(40,30,15,.25)'
+    else {
+      // ink: close diagonal hatching instead of a wash
+      const tile = document.createElement('canvas')
+      const step = Math.max(3, Math.round(3.2 * st.line * k))
+      tile.width = tile.height = step
+      const t = tile.getContext('2d')!
+      t.strokeStyle = st.ink
+      t.globalAlpha = 0.5
+      t.lineWidth = Math.max(0.6, 0.55 * st.line * k)
+      t.beginPath()
+      t.moveTo(-1, step + 1)
+      t.lineTo(step + 1, -1)
+      t.stroke()
+      c.fillStyle = c.createPattern(tile, 'repeat')!
+    }
+    c.fillRect(0, 0, px, px)
+    ctx.drawImage(sh, cx - px / 2 + p.size * 0.06 * k, cy - px / 2 + p.size * 0.08 * k)
+  }
+  ctx.drawImage(off, cx - px / 2, cy - px / 2)
   ctx.restore()
 }
 
@@ -773,7 +856,8 @@ export function classicHitSvg(d: Drawing): string {
     }
     const p = pieceOf(s)
     const box = p ? pieceBox(p) : s.kind === 'label' ? labelBox(measure, s) : undefined
-    if (box) out.push(`<rect data-id="${s.id}" class="hit-box" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}" fill="transparent"/>`)
+    const turn = p && turnOf(p) ? ` transform="rotate(${f(p.turn!)} ${f(box![0] + box![2] / 2)} ${f(box![1] + box![3] / 2)})"` : ''
+    if (box) out.push(`<rect data-id="${s.id}" class="hit-box" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}" fill="transparent"${turn}/>`)
   }
   return out.join('')
 }

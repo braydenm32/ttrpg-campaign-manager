@@ -70,7 +70,13 @@ export const HELP = {
   landBrush:
     'Paint land with the brush and the coastline draws itself, with ripple lines and stippled shallows. Switch to Water to carve out seas, bays and lakes. Bigger brush for continents, smaller for islands and inlets.',
   mapPieces:
-    'Pick a piece and click the map to place it. Each piece has 8 versions, drawn under Version so you can see them; pick one, or Any for a different one each time (best for ranges and forests). Click and hold to scatter lots at once. Click a placed piece with Select to resize, mirror or swap its version.',
+    'Pick a piece and click the map to place it. Type in the search box to find one quickly (tree, tent, boat, church…). Each piece has 8 versions, drawn under Version so you can see them; pick one, or Any for a different one each time (best for ranges and forests). Click and hold to scatter lots at once. Click a placed piece with Select to resize, turn, mirror, swap its version or link it to a page.',
+  pieceMix:
+    'Tick this, then click several pieces (say trees, bushes and ferns) to put them all on the brush. Every click or scatter picks one of them at random, so a wood comes out mixed instead of all one kind. Click a piece again to take it out. The size slider scales them all together.',
+  pieceTurn:
+    'Pieces seen from above can be turned to any angle; mountains, towns and other side-on pieces always stand upright. "Each one at random" is good for crates, barrels and camp gear. With a piece selected, press R to turn it a little, or Shift+R to turn it back. Shadows still fall the same way however a piece is turned.',
+  linkedPieces:
+    'Link a piece to a page and it works like a pin: click the cottage on the map to read about the cottage. Links start as GM only; click the lock to let players use it. Players never see a link you haven’t shared, a link under the fog, or a page you haven’t revealed. Moving, turning or deleting the piece takes its link along.',
   scatterBrush:
     'Click and hold with Place, then drag, and pieces keep landing inside the dashed circle without piling on top of each other: quick forests, mountain ranges and hills. Trees, mountains and towns stay on land; ships and waves stay at sea. Spread is the size of the circle; How thick sets how close together they sit. Letting go makes it one step, so Undo takes the whole lot back. Erase works the same way: drag across pieces to remove several.',
   curvedLabels:

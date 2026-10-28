@@ -278,6 +278,13 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
 .map-pin { width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--c); border: 2px solid #1b1508; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0,0,0,.5); font-size: 14px; }
 .map-pin span { transform: rotate(45deg); line-height: 1; }
 .map-pin.active { outline: 3px solid var(--text); }
+/* Linked pieces on drawn maps: the piece is the pin, so its outline only shows on hover (faintly for the GM). */
+.leaflet-interactive.piece-pin { stroke-opacity: 0; fill-opacity: 0; transition: stroke-opacity .15s, fill-opacity .15s; }
+.leaflet-interactive.piece-pin.for-gm { stroke-opacity: .45; }
+.leaflet-interactive.piece-pin:hover, .leaflet-interactive.piece-pin.on { stroke-opacity: .95; fill-opacity: .14; }
+.piece-search { width: 100%; }
+.piece-link { border-top: 1px solid var(--border); padding-top: .6rem; display: grid; gap: .5rem; }
+.piece-link h3 { margin: 0; font-size: 1rem; }
 .map-pin.hidden-pin { border-style: dashed; opacity: .85; }
 .swatches { display: flex; gap: 4px; }
 .swatch { width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 2px solid transparent; }

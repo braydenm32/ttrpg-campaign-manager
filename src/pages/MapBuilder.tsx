@@ -2,9 +2,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Empty } from '../components'
-import { db, newId, type WorldMap } from '../db'
-import { useWorld } from '../hooks'
+import { Empty, VisibilityToggle } from '../components'
+import { blankEntity, db, ENTITY_LABELS, newId, type Entity, type Pin, type WorldMap } from '../db'
+import { useVisibleEntities, useWorld } from '../hooks'
 import { renderPlayerFog } from '../fog'
 import {
   BACKGROUNDS,
@@ -32,7 +32,7 @@ import {
   type Terrain,
 } from '../mapDrawing'
 import { ASSET_GROUPS, Atlas, assetNamesIn, BATTLE_GROUPS } from '../mapArt/atlas'
-import { classicBlob, classicHitSvg, drawPiece, FONTS, landTest, loadMapFonts, LOOKS, renderClassic, styleFor } from '../mapArt/classic'
+import { canTurn, classicBlob, classicHitSvg, drawPiece, FONTS, landTest, loadMapFonts, LOOKS, pieceOutline, renderClassic, styleFor } from '../mapArt/classic'
 import { groundColour } from '../mapArt/ground'
 import { useViewMode } from '../viewMode'
 import { worldPath } from '../paths'
@@ -107,7 +107,26 @@ const flips = (asset: string) => ['mountains', 'hills', 'vegetation', 'bm-trees'
 /** Natural pieces are drawn fresh from a seed; versions 1 to 8 are fixed seeds, so they can be previewed and picked. */
 const versionSeed = (v: number) => 1000 + v * 7919
 const randomSeed = () => 1 + Math.floor(Math.random() * 2 ** 30)
-type PieceChoice = { asset: string; size: number; variant: number | 'random' }
+/**
+ * What the Place tool puts down: a piece, its size and version, how it's turned, and any other
+ * pieces mixed in with it (the brush then picks one of them at random each time).
+ */
+type PieceChoice = { asset: string; size: number; variant: number | 'random'; turn: number | 'random'; mix: string[] }
+/** Camp gear and loose things look best turned every which way; everything else starts as drawn. */
+const defaultTurn = (asset: string): number | 'random' => (['bm-camp', 'bm-objects'].includes(Atlas.assets[asset]?.category ?? '') ? 'random' : 0)
+const choose = (asset: string, W: number, H: number, gridSize?: number): PieceChoice => ({ asset, size: pieceSize(asset, W, H, gridSize), variant: 'random', turn: defaultTurn(asset), mix: [] })
+
+/** Other words people search the piece library with. */
+const KEYWORDS: Record<string, string> = {
+  'bm-pine': 'tree conifer fir', 'bm-bush': 'shrub', 'bm-dead-tree': 'dead', 'bm-log': 'tree', 'bm-rock': 'stone', 'bm-rocks': 'stones boulders',
+  'bm-lilypads': 'pond lake', 'bm-reeds': 'pond marsh swamp', 'bm-campfire': 'fire', 'bm-bedroll': 'bed sleeping', 'bm-woodpile': 'logs firewood',
+  'bm-cart': 'wagon', 'bm-sacks': 'bags grain', 'bm-chest': 'treasure loot', 'bm-table': 'tavern chairs', 'bm-rowboat': 'boat ship',
+  'bm-haystack': 'hay farm', 'bm-well': 'water', 'bm-stall': 'market shop', 'bm-gravestone': 'grave tomb cemetery', 'bm-statue': 'fountain monument',
+  'bm-signpost': 'sign road', 'bm-cottage': 'house hut', 'bm-house': 'home building', 'bm-barn': 'farm', 'bm-tower': 'castle keep',
+  'bm-chapel': 'church temple shrine', 'bm-ruin': 'ruins', 'bm-tent-large': 'tent marquee', 'bm-tent': 'camp',
+  pine: 'tree', palm: 'tree', 'dead-tree': 'tree', 'forest-clump': 'trees woods', 'wood-stipple': 'trees woods', ship: 'boat', city: 'town',
+  port: 'harbour harbor town', village: 'town', castle: 'fort keep', 'city-dot': 'town', 'compass-rose': 'north', cartouche: 'title',
+}
 
 /** How close the scatter brush packs pieces, as a share of their size. */
 const THICKNESS = [
@@ -146,10 +165,13 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const [stamp, setStamp] = useState<StampKind>('town')
   const [stampSize, setStampSize] = useState(() => Math.round(Math.max(W, H) / 24))
   const [brush, setBrush] = useState<{ mode: 'land' | 'water'; size: number }>(() => ({ mode: 'land', size: Math.round(Math.max(W, H) / 16) }))
-  const [piece, setPiece] = useState<PieceChoice>(() => {
-    const asset = battle ? 'bm-tree' : 'mountain'
-    return { asset, size: pieceSize(asset, W, H, drawing.gridSize), variant: 'random' }
-  })
+  const [piece, setPieceState] = useState<PieceChoice>(() => choose(battle ? 'bm-tree' : 'mountain', W, H, drawing.gridSize))
+  const [recent, setRecent] = useState<string[]>(() => [piece.asset])
+  // the pieces picked lately, for the "Recently used" row
+  const setPiece = (next: PieceChoice) => {
+    setPieceState(next)
+    setRecent((r) => [...new Set([next.asset, ...next.mix, ...r])].slice(0, 8))
+  }
   const [groundBrush, setGroundBrush] = useState<{ ground: GroundId; size: number }>(() => ({ ground: 'dirt', size: Math.round((drawing.gridSize || 70) * 2) }))
   const [spray, setSpray] = useState(() => ({ spread: Math.round(Math.max(W, H) / 18), thickness: 3 }))
   const [labelText, setLabelText] = useState('')
@@ -167,7 +189,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     | { kind: 'draw'; points: Point[] }
     | { kind: 'rect'; start: Point }
     | { kind: 'move'; id: string; start: Point; before: Drawing }
-    | { kind: 'scatter'; before: Drawing; placed: Shape[]; start: Point; at: Point; t0: number; moved: boolean; fits: (p: Point) => boolean }
+    | { kind: 'scatter'; before: Drawing; placed: Shape[]; start: Point; at: Point; t0: number; moved: boolean; fits: (asset: string, p: Point) => boolean }
     | { kind: 'erase'; before: Drawing; ids: Set<string> }
   >(undefined)
   const scatterTimer = useRef<number>(undefined)
@@ -240,29 +262,86 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     [],
   )
 
+  // Pieces linked to a page are pins on the map (so players see them by the usual rules). Their
+  // outlines follow the pieces; a removed piece takes its pin with it, and Undo brings both back.
+  const piecePins = useLiveQuery(() => db.pins.where({ mapId: map.id }).filter((p) => !!p.pieceId).toArray(), [map.id]) ?? []
+  const removedPins = useRef(new Map<string, Pin>())
+  const outlineOf = useCallback(
+    (s: Extract<Shape, { kind: 'asset' }>): [number, number][] =>
+      pieceOutline({ id: s.id, asset: s.asset, at: s.at, size: s.size, seed: s.seed, variant: s.variant, flip: !!s.flip, turn: s.turn }).map(([x, y]) => [
+        Math.round((H - y) * 10) / 10,
+        Math.round(x * 10) / 10,
+      ]),
+    [H],
+  )
+  const syncPiecePins = useCallback(
+    async (d: Drawing) => {
+      const pieces = new Map(d.shapes.filter((s): s is Extract<Shape, { kind: 'asset' }> => s.kind === 'asset').map((s) => [s.id, s]))
+      const pins = await db.pins.where({ mapId: map.id }).filter((p) => !!p.pieceId).toArray()
+      const live = new Set<string>()
+      for (const pin of pins) {
+        const s = pieces.get(pin.pieceId!)
+        if (!s) {
+          removedPins.current.set(pin.pieceId!, pin)
+          await db.pins.delete(pin.id)
+          continue
+        }
+        live.add(pin.pieceId!)
+        const points = outlineOf(s)
+        if (JSON.stringify(points) !== JSON.stringify(pin.points)) await db.pins.update(pin.id, { points })
+      }
+      for (const [id, pin] of removedPins.current) {
+        const s = pieces.get(id)
+        if (!s || live.has(id)) continue
+        await db.pins.put({ ...pin, points: outlineOf(s) })
+        removedPins.current.delete(id)
+      }
+    },
+    [map.id, outlineOf],
+  )
+
   // Autosave: the drawing is kept on the map, and the rendered picture replaces the map image.
+  // A change still waiting to be saved is saved on the way out too (pressing Done straight away).
   const lastSaved = useRef(map.drawing)
+  const unsaved = useRef<Drawing>(undefined)
+  const save = useCallback(
+    async (d: Drawing) => {
+      let blob: Blob
+      if (d.style === 'classic') {
+        await loadMapFonts()
+        const art = lastArt.current?.drawing === d ? lastArt.current.canvas : renderClassic(d, W, H)
+        blob = await classicBlob(art)
+      } else {
+        blob = new Blob([renderDrawing(d, W, H)], { type: 'image/svg+xml' })
+      }
+      await db.transaction('rw', [db.maps, db.assets], async () => {
+        await db.maps.update(map.id, { drawing: d })
+        await db.assets.update(map.imageId, { blob, size: blob.size, mime: blob.type, updatedAt: Date.now() })
+      })
+      lastSaved.current = d
+      await syncPiecePins(d)
+    },
+    [map.id, map.imageId, W, H, syncPiecePins],
+  )
   useEffect(() => {
     if (drawing === lastSaved.current) return
     setSaved(false)
+    unsaved.current = drawing
     const t = setTimeout(async () => {
-      let blob: Blob
-      if (drawing.style === 'classic') {
-        await loadMapFonts()
-        const art = lastArt.current?.drawing === drawing ? lastArt.current.canvas : renderClassic(drawing, W, H)
-        blob = await classicBlob(art)
-      } else {
-        blob = new Blob([renderDrawing(drawing, W, H)], { type: 'image/svg+xml' })
-      }
-      await db.transaction('rw', [db.maps, db.assets], async () => {
-        await db.maps.update(map.id, { drawing })
-        await db.assets.update(map.imageId, { blob, size: blob.size, mime: blob.type, updatedAt: Date.now() })
-      })
-      lastSaved.current = drawing
+      unsaved.current = undefined
+      await save(drawing)
       setSaved(true)
     }, 800)
     return () => clearTimeout(t)
-  }, [drawing, map.id, map.imageId, W, H])
+  }, [drawing, save])
+  useEffect(
+    () => () => {
+      const d = unsaved.current
+      unsaved.current = undefined
+      if (d) void save(d).then(() => renderPlayerFog(map.id).catch(() => {}))
+    },
+    [save, map.id],
+  )
 
   useEffect(() => {
     if (saved) return
@@ -285,6 +364,13 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
         redo()
       } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
         removeShape(selectedId)
+      } else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey && selectedId) {
+        // R turns the selected piece a little clockwise, Shift+R the other way
+        const s = drawing.shapes.find((x) => x.id === selectedId)
+        if (s?.kind === 'asset' && canTurn(s.asset)) {
+          const turn = ((((s.turn ?? 0) + (e.shiftKey ? -15 : 15)) % 360) + 360) % 360
+          commit({ ...drawing, shapes: drawing.shapes.map((x) => (x.id === s.id ? { ...s, turn } : x)) })
+        }
       } else if (e.key === 'Escape') {
         setSelectedId(undefined)
         setDraft([])
@@ -300,7 +386,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       window.removeEventListener('keydown', down)
       window.removeEventListener('keyup', up)
     }
-  }, [undo, redo, removeShape, selectedId])
+  }, [undo, redo, removeShape, selectedId, drawing, commit])
 
   const toMap = (e: { clientX: number; clientY: number }): Point => {
     const svg = svgRef.current!
@@ -338,51 +424,70 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const shapeAt = (target: EventTarget) => (target as Element).closest?.('[data-id]')?.getAttribute('data-id') ?? undefined
   const locked = (layer: LayerId) => !!drawing.locked?.includes(layer) || !!drawing.hidden?.includes(layer)
 
-  const makePiece = (at: Point, size = piece.size): Shape => {
-    const pinned = piece.variant !== 'random'
+  /** One of the pieces in the current choice, at its own starting size scaled like the chosen one. */
+  const pickPiece = () => {
+    const pool = [piece.asset, ...piece.mix]
+    const asset = pool[Math.floor(Math.random() * pool.length)]
+    const size = asset === piece.asset ? piece.size : Math.round((pieceSize(asset, W, H, drawing.gridSize) * piece.size) / pieceSize(piece.asset, W, H, drawing.gridSize))
+    return { asset, size }
+  }
+  const makePiece = (at: Point, { asset, size } = pickPiece()): Shape => {
+    // a version picked in the panel belongs to the chosen piece; mixed-in pieces are always a surprise
+    const pinned = piece.variant !== 'random' && asset === piece.asset
     const variant = pinned ? (piece.variant as number) : Math.floor(Math.random() * 8)
+    const turn = !canTurn(asset) ? 0 : piece.turn === 'random' ? Math.floor(Math.random() * 360) : piece.turn
     return {
       id: newId(),
       kind: 'asset',
-      asset: piece.asset,
+      asset,
       at,
       size,
-      seed: pinned && Atlas.assets[piece.asset]?.kind === 'recipe' ? versionSeed(variant) : randomSeed(),
+      seed: pinned && Atlas.assets[asset]?.kind === 'recipe' ? versionSeed(variant) : randomSeed(),
       variant,
-      ...(flips(piece.asset) && Math.random() < 0.5 ? { flip: true } : {}),
+      ...(flips(asset) && Math.random() < 0.5 ? { flip: true } : {}),
+      ...(turn ? { turn } : {}),
     }
   }
 
-  const scatterFits = (): ((p: Point) => boolean) => {
-    const cat = Atlas.assets[piece.asset]?.category ?? ''
-    if (battle) {
-      if (piece.asset === 'bm-bridge') return () => true
-      const onWater = cat === 'bm-water' || piece.asset === 'bm-rowboat'
-      const dry = landTest(drawing, W, H)
-      return ([x, y]) => dry(x, y) !== onWater
-    }
-    const sea = cat === 'sea' && piece.asset !== 'cloud'
-    if (!sea && !ASHORE.includes(cat)) return () => true
+  /** Where the scatter brush may put each piece: trees ashore, boats on the water, and so on. */
+  const scatterFits = (): ((asset: string, p: Point) => boolean) => {
     const isLand = landTest(drawing, W, H)
-    return ([x, y]) => isLand(x, y) !== sea
+    const rule = (asset: string): ((p: Point) => boolean) => {
+      const cat = Atlas.assets[asset]?.category ?? ''
+      if (battle) {
+        if (asset === 'bm-bridge') return () => true
+        const onWater = cat === 'bm-water' || asset === 'bm-rowboat'
+        return ([x, y]) => isLand(x, y) !== onWater
+      }
+      const sea = cat === 'sea' && asset !== 'cloud'
+      if (!sea && !ASHORE.includes(cat)) return () => true
+      return ([x, y]) => isLand(x, y) !== sea
+    }
+    const rules = new Map<string, (p: Point) => boolean>()
+    return (asset, p) => {
+      let f = rules.get(asset)
+      if (!f) rules.set(asset, (f = rule(asset)))
+      return f(p)
+    }
   }
   // Click and hold with Place: pieces keep landing under the brush, spaced so they don't pile up.
   const scatterTick = () => {
     const g = gesture.current
     if (g?.kind !== 'scatter' || (!g.moved && performance.now() - g.t0 < 300)) return
-    const side = Atlas.assets[piece.asset]?.view === 'side'
     const gap = THICKNESS[spray.thickness].gap
     const others = [...g.before.shapes, ...g.placed].filter((s): s is Extract<Shape, { kind: 'asset' }> => s.kind === 'asset')
     for (let tries = 0; tries < 12; tries++) {
       const a = Math.random() * Math.PI * 2
       const d = spray.spread * Math.sqrt(Math.random())
       const at: Point = [g.at[0] + Math.cos(a) * d, g.at[1] + Math.sin(a) * d]
-      if (at[0] < 0 || at[1] < 0 || at[0] > W || at[1] > H || !g.fits(at)) continue
-      const size = Math.round(piece.size * (0.82 + Math.random() * 0.36))
+      const pick = pickPiece()
+      if (at[0] < 0 || at[1] < 0 || at[0] > W || at[1] > H || !g.fits(pick.asset, at)) continue
+      const size = Math.round(pick.size * (0.82 + Math.random() * 0.36))
       // side-on pieces may sit closer one behind another than side by side
+      const side = Atlas.assets[pick.asset]?.view === 'side'
       const clear = others.every((o) => Math.hypot(o.at[0] - at[0], (o.at[1] - at[1]) * (side ? 1.8 : 1)) >= ((o.size + size) / 2) * gap)
       if (!clear) continue
-      g.placed.push(makePiece(at, size))
+      g.placed.push(makePiece(at, { asset: pick.asset, size }))
       setDrawing({ ...g.before, shapes: [...g.before.shapes, ...g.placed] })
       return
     }
@@ -665,6 +770,23 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
               shape={selected}
               classic={classic}
               drawing={drawing}
+              pin={piecePins.find((p) => p.pieceId === selected.id)}
+              onLink={(entity) => {
+                if (selected.kind !== 'asset') return
+                void db.pins.add({
+                  id: newId(),
+                  worldId,
+                  mapId: map.id,
+                  label: entity.name,
+                  kind: 'region',
+                  points: outlineOf(selected),
+                  color: '#e0b354',
+                  visibility: 'gm',
+                  entityId: entity.id,
+                  note: '',
+                  pieceId: selected.id,
+                })
+              }}
               onChange={(patch) => updateShape(selected.id, patch)}
               onDelete={() => removeShape(selected.id)}
               onClose={() => setSelectedId(undefined)}
@@ -677,7 +799,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
               W={W}
               H={H}
               {...{ terrain, setTerrain, lineStyle, setLineStyle, stamp, setStamp, stampSize, setStampSize, labelText, setLabelText, labelSize, setLabelSize }}
-              {...{ brush, setBrush, piece, setPiece, spray, setSpray, labelFont, setLabelFont, groundBrush, setGroundBrush }}
+              {...{ brush, setBrush, piece, setPiece, recent, spray, setSpray, labelFont, setLabelFont, groundBrush, setGroundBrush }}
             />
           )}
           {classic && (
@@ -744,10 +866,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                     setTool(style === 'classic' ? 'land' : 'area')
                     if (style === 'classic') setLineStyle(scene === 'battle' ? 'fence' : 'river')
                     else setLineStyle('road')
-                    if (style === 'classic') {
-                      const asset = scene === 'battle' ? 'bm-tree' : 'mountain'
-                      setPiece({ asset, size: pieceSize(asset, W, H, drawing.gridSize), variant: 'random' })
-                    }
+                    if (style === 'classic') setPiece(choose(scene === 'battle' ? 'bm-tree' : 'mountain', W, H, drawing.gridSize))
                   }}
                 >
                   <option value="classic">Classic fantasy map (hand-inked)</option>
@@ -771,8 +890,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                         )
                         setTool('land')
                         setLineStyle(scene === 'battle' ? 'fence' : 'river')
-                        const asset = scene === 'battle' ? 'bm-tree' : 'mountain'
-                        setPiece({ asset, size: pieceSize(asset, W, H, drawing.gridSize), variant: 'random' })
+                        setPiece(choose(scene === 'battle' ? 'bm-tree' : 'mountain', W, H, drawing.gridSize))
                       }}
                     >
                       <option value="world">World or region (seen from the side)</option>
@@ -896,6 +1014,7 @@ function ToolOptions(p: {
   setBrush: (b: { mode: 'land' | 'water'; size: number }) => void
   piece: PieceChoice
   setPiece: (b: PieceChoice) => void
+  recent: string[]
   spray: { spread: number; thickness: number }
   setSpray: (s: { spread: number; thickness: number }) => void
   labelFont: LabelFont
@@ -972,7 +1091,7 @@ function ToolOptions(p: {
       )}
       {p.tool === 'stamp' && classic && (
         <>
-          <PiecePicker drawing={p.drawing} W={p.W} H={p.H} piece={p.piece} setPiece={p.setPiece} />
+          <PiecePicker drawing={p.drawing} W={p.W} H={p.H} piece={p.piece} setPiece={p.setPiece} recent={p.recent} />
           <h3>
             Scatter brush <Help topic="scatterBrush" />
           </h3>
@@ -1030,31 +1149,113 @@ function ToolOptions(p: {
   )
 }
 
-/** The library, grouped, with a little drawing of each piece in the map's own look. */
-function PiecePicker({ drawing, W, H, piece, setPiece }: { drawing: Drawing; W: number; H: number; piece: PieceChoice; setPiece: (b: PieceChoice) => void }) {
+/** Turning a piece when it's placed: at random, as drawn, or a set angle. */
+const TURNS: (number | 'random')[] = ['random', 0, 45, 90, 135, 180, 225, 270, 315]
+
+/**
+ * The library: search it, or browse it by group, with a little drawing of each piece in the map's
+ * own look. With "Mix several pieces" on, clicking pieces adds them to the brush or takes them out.
+ */
+function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Drawing; W: number; H: number; piece: PieceChoice; setPiece: (b: PieceChoice) => void; recent: string[] }) {
   const def = Atlas.assets[piece.asset]
   const big = Math.max(W, H)
   const battle = drawing.scene === 'battle'
+  const groups = battle ? BATTLE_GROUPS : ASSET_GROUPS
+  const [query, setQuery] = useState('')
+  const [mixing, setMixing] = useState(piece.mix.length > 0)
+  const pool = [piece.asset, ...piece.mix]
+  const words = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => (w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w))
+  const matches = words.length
+    ? groups.flatMap((g) =>
+        assetNamesIn(g.categories).filter((n) => {
+          const hay = `${Atlas.assets[n].label} ${n.replace(/^bm-/, '').replace(/-/g, ' ')} ${KEYWORDS[n] ?? ''} ${g.label}`.toLowerCase()
+          return words.every((w) => hay.includes(w))
+        }),
+      )
+    : []
+  const pick = (n: string) => {
+    if (!mixing) return setPiece(choose(n, W, H, drawing.gridSize))
+    if (n === piece.asset) {
+      // taking out the main piece hands its place to the next one in the mix
+      if (piece.mix.length) setPiece({ ...choose(piece.mix[0], W, H, drawing.gridSize), turn: piece.turn, mix: piece.mix.slice(1) })
+    } else setPiece({ ...piece, variant: 'random', mix: piece.mix.includes(n) ? piece.mix.filter((m) => m !== n) : [...piece.mix, n] })
+  }
+  const grid = (names: string[]) => (
+    <div className="stamp-grid">
+      {names.map((n) => (
+        <button key={n} className={pool.includes(n) ? 'on' : ''} title={Atlas.assets[n].label} aria-pressed={pool.includes(n)} onClick={() => pick(n)}>
+          <PieceThumb asset={n} look={drawing.look} biome={drawing.biome} />
+          <span>{Atlas.assets[n].label}</span>
+        </button>
+      ))}
+    </div>
+  )
+  const shown = recent.filter((n) => Atlas.assets[n] && groups.some((g) => g.categories.includes(Atlas.assets[n].category)))
   return (
     <>
-      {(battle ? BATTLE_GROUPS : ASSET_GROUPS).map((g) => (
-        <details key={g.label} className="piece-group" open={g.categories.includes(def?.category ?? '') || undefined}>
-          <summary>{g.label}</summary>
-          <div className="stamp-grid">
-            {assetNamesIn(g.categories).map((n) => (
-              <button key={n} className={piece.asset === n ? 'on' : ''} title={Atlas.assets[n].label} onClick={() => setPiece({ asset: n, size: pieceSize(n, W, H, drawing.gridSize), variant: 'random' })}>
-                <PieceThumb asset={n} look={drawing.look} biome={drawing.biome} />
-                <span>{Atlas.assets[n].label}</span>
-              </button>
-            ))}
-          </div>
-        </details>
-      ))}
+      <input type="search" className="piece-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={battle ? 'Find a piece: tree, tent, boat…' : 'Find a piece: mountain, ship, town…'} aria-label="Find a piece" />
+      {words.length ? (
+        matches.length ? (
+          grid(matches)
+        ) : (
+          <p className="muted small">Nothing called that. Try another word, or clear the search to browse.</p>
+        )
+      ) : (
+        <>
+          {shown.length > 1 && (
+            <div className="label">
+              <span>Recently used</span>
+              {grid(shown)}
+            </div>
+          )}
+          {groups.map((g) => (
+            <details key={g.label} className="piece-group" open={g.categories.includes(def?.category ?? '') || undefined}>
+              <summary>{g.label}</summary>
+              {grid(assetNamesIn(g.categories))}
+            </details>
+          ))}
+        </>
+      )}
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={mixing}
+          onChange={(e) => {
+            setMixing(e.target.checked)
+            if (!e.target.checked && piece.mix.length) setPiece({ ...piece, mix: [] })
+          }}
+        />{' '}
+        Mix several pieces <Help topic="pieceMix" />
+      </label>
+      {mixing && (
+        <p className="muted small">
+          {pool.length > 1 ? `Mixing ${pool.map((n) => Atlas.assets[n]?.label ?? n).join(', ')}.` : `${def?.label ?? 'This piece'} so far.`} Click pieces above to add them or take them out; each
+          click or scatter picks one at random.
+        </p>
+      )}
       <label>
-        Size: {piece.size}px
+        Size: {piece.size}px{pool.length > 1 ? ' (the others scale with it)' : ''}
         <input type="range" min={Math.max(4, Math.round(big / 300))} max={Math.round(big / 3)} value={piece.size} onChange={(e) => setPiece({ ...piece, size: Number(e.target.value) })} />
       </label>
-      {def && (
+      {pool.some(canTurn) && (
+        <label>
+          <span>
+            Turn <Help topic="pieceTurn" />
+          </span>
+          <select value={String(piece.turn)} onChange={(e) => setPiece({ ...piece, turn: e.target.value === 'random' ? 'random' : Number(e.target.value) })}>
+            {TURNS.map((t) => (
+              <option key={t} value={String(t)}>
+                {t === 'random' ? 'Each one at random' : t === 0 ? 'As drawn' : `${t}°`}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {def && pool.length === 1 && (
         <div className="label">
           <span>Version: {piece.variant === 'random' ? 'a different one each time' : piece.variant + 1}</span>
           <VersionPicker asset={piece.asset} drawing={drawing} value={piece.variant} any onPick={(v) => setPiece({ ...piece, variant: v })} />
@@ -1111,10 +1312,13 @@ function PieceThumb({ asset, look, biome, variant = 0, seed = 7, px = 48 }: { as
   return <canvas ref={ref} style={{ width: px, height: px, borderRadius: 4 }} aria-hidden />
 }
 
-function ShapeProps({ shape, classic, drawing, onChange, onDelete, onClose }: {
+function ShapeProps({ shape, classic, drawing, pin, onLink, onChange, onDelete, onClose }: {
   shape: Shape
   classic: boolean
   drawing: Drawing
+  /** The pin a linked piece works as, if it's linked to a page. */
+  pin?: Pin
+  onLink: (entity: Entity) => void
   onChange: (p: Partial<Shape>) => void
   onDelete: () => void
   onClose: () => void
@@ -1199,6 +1403,20 @@ function ShapeProps({ shape, classic, drawing, onChange, onDelete, onClose }: {
           <label className="check">
             <input type="checkbox" checked={!!shape.flip} onChange={(e) => onChange({ flip: e.target.checked })} /> Mirror it
           </label>
+          {canTurn(shape.asset) && (
+            <label>
+              <span>
+                Turn: {shape.turn ?? 0}° <Help topic="pieceTurn" />
+              </span>
+              <div className="row">
+                <input type="range" min={0} max={355} step={5} value={shape.turn ?? 0} onChange={(e) => onChange({ turn: Number(e.target.value) })} />
+                <button type="button" title="Turn a quarter clockwise" onClick={() => onChange({ turn: ((shape.turn ?? 0) + 90) % 360 })}>
+                  ↻ 90°
+                </button>
+              </div>
+            </label>
+          )}
+          <PieceLink shape={shape} pin={pin} onLink={onLink} />
         </>
       )}
       {shape.kind === 'label' && (
@@ -1239,11 +1457,92 @@ function ShapeProps({ shape, classic, drawing, onChange, onDelete, onClose }: {
           )}
         </>
       )}
-      <p className="muted small">Drag it on the map to move it. Press Delete to remove it.</p>
+      <p className="muted small">
+        Drag it on the map to move it. Press Delete to remove it{shape.kind === 'asset' && canTurn(shape.asset) ? ', or R to turn it (Shift+R turns it back)' : ''}.
+      </p>
       <button className="danger" onClick={onDelete}>
         Delete
       </button>
     </div>
+  )
+}
+
+/**
+ * Link a piece to a page and it works like a pin on the map: click the cottage, read about the
+ * cottage. The link is a real pin, so who can see it follows the same rules as any other pin.
+ */
+function PieceLink({ shape, pin, onLink }: { shape: Extract<Shape, { kind: 'asset' }>; pin?: Pin; onLink: (entity: Entity) => void }) {
+  const { worldId } = useWorld()
+  const entities = useVisibleEntities(worldId)
+  const linked = pin?.entityId ? entities.find((e) => e.id === pin.entityId) : undefined
+  const label = Atlas.assets[shape.asset]?.label ?? 'Piece'
+  return (
+    <section className="piece-link">
+      <h3>
+        Link to a page <Help topic="linkedPieces" />
+      </h3>
+      {pin ? (
+        <>
+          <label>
+            Linked page
+            <select value={pin.entityId ?? ''} onChange={(e) => db.pins.update(pin.id, { entityId: e.target.value || undefined, label: entities.find((x) => x.id === e.target.value)?.name ?? pin.label })}>
+              <option value="">(none)</option>
+              {entities.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {ENTITY_LABELS[e.type].icon} {e.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Name on the map
+            <input value={pin.label} onChange={(e) => db.pins.update(pin.id, { label: e.target.value })} />
+          </label>
+          <div className="row spread">
+            <VisibilityToggle value={pin.visibility} onChange={(v) => db.pins.update(pin.id, { visibility: v })} />
+            <button type="button" onClick={() => db.pins.delete(pin.id)}>
+              Unlink
+            </button>
+          </div>
+          <p className="muted small">
+            {pin.visibility === 'gm' ? 'Only you can click it for now.' : linked?.visibility === 'gm' ? 'Players can click it, but they won’t see the page until you reveal that too.' : 'Players can click it to open the page.'} A note and
+            “opens map” are on the map itself, after you press Done.
+          </p>
+        </>
+      ) : (
+        <>
+          <label>
+            Linked page
+            <select
+              value=""
+              onChange={(e) => {
+                const entity = entities.find((x) => x.id === e.target.value)
+                if (entity) onLink(entity)
+              }}
+            >
+              <option value="">(none)</option>
+              {entities.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {ENTITY_LABELS[e.type].icon} {e.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            onClick={async () => {
+              const name = prompt(`Name the new page for this ${label.toLowerCase()}`, label)?.trim()
+              if (!name) return
+              const entity = blankEntity(worldId, 'location', name)
+              await db.entities.add(entity)
+              onLink(entity)
+            }}
+          >
+            + New place page for it
+          </button>
+        </>
+      )}
+    </section>
   )
 }
 
