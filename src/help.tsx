@@ -12,9 +12,9 @@ export const HELP = {
     'The bar across the top splits the world into modes. Home is what needs you now. World is the atlas itself: maps, timeline and every codex page. Prep is getting sessions ready: campaigns, loose threads, handouts and generators. Play is running the table: the Lectern, clocks, sounds and safety tools. The sidebar lists the pages of the mode you’re in.',
   needsYou: 'Things waiting on you: questions your players asked, players asking to claim a character, and urgent loose threads. When it’s empty you’re all caught up.',
   sampleWorld:
-    'A small, simple world for a first look: a coast, a town, a handful of people and a map with pins. Good for learning the basics in a few minutes. Vael Ardith is the full example with a campaign ready to run.',
+    'A small, simple world for a first look: a coast, a town, a handful of people and two drawn maps with pins. Good for learning the basics in a few minutes. Vael Ardith is the full example with a campaign ready to run.',
   exampleWorld:
-    'A complete world to explore and learn from: places, people, factions, gods, history, handouts and a campaign ready to run. Open it, look around, borrow ideas, or run it for your group. It lives only on this device unless you switch on sync, and World settings can reset it to new.',
+    'A complete world to explore and learn from: places, people, factions, gods, history, maps (the continent, a region, the town of Cinderford, a battle map and a dungeon), handouts and a campaign ready to run. Open it, look around, borrow ideas, or run it for your group. It lives only on this device unless you switch on sync, and World settings can reset it to new.',
   worldLook: 'Give this world its own cover picture and colour. They show on Home and on the world’s book on your shelf of worlds. Players see them too.',
   theme: 'Candlelit is the dark look, Parchment the light one. “Match this device” follows your phone or computer’s own setting.',
   viewingAs:

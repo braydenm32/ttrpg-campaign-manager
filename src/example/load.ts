@@ -1,5 +1,5 @@
-import { blankEntity, blankLectern, blankPrep, db, newId, type Asset, type Board, type CalDate, type Entity, type Session, type World } from '../db'
-import type { ExampleContent, ExPage } from './types'
+import { blankEntity, blankLectern, blankPrep, db, newId, type Asset, type Board, type CalDate, type Entity, type Pin, type Session, type World, type WorldMap } from '../db'
+import type { ExampleContent, ExMap, ExPage } from './types'
 import worldFile from '../../worlds/vael-ardith/world.md?raw'
 
 /**
@@ -37,6 +37,9 @@ async function addExample(content: ExampleContent, drawArt: (key: string, page?:
     if (!known.has(key)) throw new Error(`Example world: no page with key "${key}"`)
     return id(key)
   }
+
+  // The maps take longest, so they start drawing first; the pictures are saved while the rest is built.
+  const mapsDrawn = drawMaps(content.maps ?? [], worldId, now, ref, (key) => content.pages.find((p) => p.key === key)!)
 
   // Pictures: each drawing becomes one file, shared by every page that uses it.
   const assets: Asset[] = []
@@ -163,13 +166,74 @@ async function addExample(content: ExampleContent, drawArt: (key: string, page?:
   const cover = assets.find((a) => a.id === world.coverId)
   if (cover) cover.visibility = 'players'
 
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.sessions, db.assets, db.boards], async () => {
+  // Maps: drawn in the classic style (started early, see above; drawing is async, so it can't happen inside the transaction).
+  const { maps, pins } = await mapsDrawn
+  for (const m of maps) assets.push(m.asset)
+
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.sessions, db.assets, db.boards, db.maps, db.pins], async () => {
     await db.worlds.add(world)
     await db.assets.bulkAdd(assets)
     await db.entities.bulkAdd(entities)
     await db.campaigns.add({ id: campaignId, worldId, name: w.campaign.name, description: w.campaign.description, system: w.system, status: 'active', createdAt: now })
     await db.sessions.bulkAdd(sessions)
     await db.boards.bulkAdd(boards)
+    await db.maps.bulkAdd(maps.map((m) => m.map))
+    await db.pins.bulkAdd(pins)
   })
   return worldId
+}
+
+/**
+ * Draws each example map (the drawing stays on the map, so it opens in the map builder) and makes
+ * its pins. Pin positions are [y, x] with y measured up from the bottom of the picture, as on every map.
+ */
+async function drawMaps(
+  defs: ExMap[],
+  worldId: string,
+  now: number,
+  ref: (key?: string) => string | undefined,
+  page: (key: string) => ExPage,
+): Promise<{ maps: { map: WorldMap; asset: Asset }[]; pins: Pin[] }> {
+  if (!defs.length) return { maps: [], pins: [] }
+  const { renderClassic, classicBlob, loadMapFonts, pieceOutline } = await import('../mapArt/classic')
+  await loadMapFonts()
+  const mapIds = new Map(defs.map((m) => [m.key, newId()]))
+  const maps: { map: WorldMap; asset: Asset }[] = []
+  const pins: Pin[] = []
+  // each picture is saved (encoded) in the background while the next map is drawn
+  const saving: Promise<void>[] = []
+  for (const def of defs) {
+    const drawing = def.drawing()
+    const canvas = renderClassic(drawing, def.width, def.height)
+    const visibility = def.players ? ('players' as const) : ('gm' as const)
+    const asset: Asset = { id: newId(), worldId, name: def.name, mime: '', size: 0, blob: new Blob(), tags: ['map', 'drawn', 'example'], visibility, createdAt: now }
+    saving.push(
+      classicBlob(canvas).then((blob) => {
+        Object.assign(asset, { name: `${def.name}.${blob.type === 'image/webp' ? 'webp' : 'jpg'}`, mime: blob.type, size: blob.size, blob })
+      }),
+    )
+    const mapId = mapIds.get(def.key)!
+    maps.push({
+      asset,
+      map: { id: mapId, worldId, name: def.name, imageId: asset.id, width: def.width, height: def.height, visibility, locationId: ref(def.location), drawing, createdAt: now },
+    })
+    const H = def.height
+    for (const p of def.pins) {
+      const target = page(p.page)
+      if (!target) throw new Error(`Example map "${def.name}": no page with key "${p.page}"`)
+      // a pin is only for players when both the map and the page are
+      const shown = def.players && target.players ? ('players' as const) : ('gm' as const)
+      const childMapId = p.map ? mapIds.get(p.map) : undefined
+      if (p.map && !childMapId) throw new Error(`Example map "${def.name}": no map with key "${p.map}"`)
+      const base = { id: newId(), worldId, mapId, label: p.label ?? target.name, entityId: ref(p.page), childMapId, note: p.note ?? '', visibility: shown }
+      const shape = p.piece ? drawing.shapes.find((s) => s.id === p.piece) : undefined
+      if (p.piece && shape?.kind !== 'asset') throw new Error(`Example map "${def.name}": no piece "${p.piece}"`)
+      if (shape?.kind === 'asset') {
+        const outline = pieceOutline({ id: shape.id, asset: shape.asset, at: shape.at, size: shape.size, seed: shape.seed, variant: shape.variant, flip: !!shape.flip, turn: shape.turn })
+        pins.push({ ...base, kind: 'region', color: '#e0b354', pieceId: shape.id, points: outline.map(([x, y]) => [Math.round((H - y) * 10) / 10, Math.round(x * 10) / 10]) })
+      } else pins.push({ ...base, kind: 'point', color: shown === 'gm' ? '#d9534f' : '#e0b354', position: [H - p.at[1], p.at[0]] })
+    }
+  }
+  await Promise.all(saving)
+  return { maps, pins }
 }

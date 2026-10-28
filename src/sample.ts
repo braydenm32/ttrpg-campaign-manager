@@ -146,11 +146,21 @@ export async function loadSampleWorld(): Promise<string> {
   })
   const entities = [ring, brother, tremors, coast, saltmere, keep, wood, lighthouse, docks, temple, tavern, smith, marta, dorn, corvin, wardens, choir, thalassa, sundering, founding, relit, arrival, quest, pc]
 
+  // The region map is drawn in the classic style, from a drawing that stays editable in the map builder.
+  const [{ shatteredCoast, saltmere: saltmereTown, COAST_W, COAST_H, SALTMERE_W, SALTMERE_H }, { renderClassic, classicBlob, loadMapFonts }] = await Promise.all([
+    import('./sampleMap'),
+    import('./mapArt/classic'),
+  ])
+  await loadMapFonts()
+  const regionDrawing = shatteredCoast()
+  const townDrawing = saltmereTown()
+  const [regionBlob, townBlob] = await Promise.all([classicBlob(renderClassic(regionDrawing, COAST_W, COAST_H)), classicBlob(renderClassic(townDrawing, SALTMERE_W, SALTMERE_H))])
+  const ext = (b: Blob) => (b.type === 'image/webp' ? 'webp' : 'jpg')
+
   const regionImg = newId()
   const townImg = newId()
   const regionMap = newId()
   const townMap = newId()
-  const svgBlob = (s: string) => new Blob([s], { type: 'image/svg+xml' })
   const pin = (p: Omit<Pin, 'id' | 'worldId' | 'note' | 'color' | 'visibility'> & Partial<Pin>): Pin => ({
     id: newId(),
     worldId,
@@ -179,12 +189,12 @@ export async function loadSampleWorld(): Promise<string> {
     })
     await db.entities.bulkAdd(entities)
     await db.assets.bulkAdd([
-      { id: regionImg, worldId, name: 'Shattered Coast map.svg', mime: 'image/svg+xml', size: REGION_SVG.length, blob: svgBlob(REGION_SVG), tags: ['map'], visibility: 'players', createdAt: now },
-      { id: townImg, worldId, name: 'Saltmere map.svg', mime: 'image/svg+xml', size: TOWN_SVG.length, blob: svgBlob(TOWN_SVG), tags: ['map'], visibility: 'players', createdAt: now },
+      { id: regionImg, worldId, name: `Shattered Coast map.${ext(regionBlob)}`, mime: regionBlob.type, size: regionBlob.size, blob: regionBlob, tags: ['map', 'drawn'], visibility: 'players', createdAt: now },
+      { id: townImg, worldId, name: `Saltmere map.${ext(townBlob)}`, mime: townBlob.type, size: townBlob.size, blob: townBlob, tags: ['map', 'drawn'], visibility: 'players', createdAt: now },
     ])
     await db.maps.bulkAdd([
-      { id: regionMap, worldId, name: 'The Shattered Coast', imageId: regionImg, width: 1600, height: 1000, visibility: 'players', locationId: coast.id, createdAt: now },
-      { id: townMap, worldId, name: 'Saltmere', imageId: townImg, width: 1200, height: 800, visibility: 'players', locationId: saltmere.id, createdAt: now },
+      { id: regionMap, worldId, name: 'The Shattered Coast', imageId: regionImg, width: COAST_W, height: COAST_H, visibility: 'players', locationId: coast.id, drawing: regionDrawing, createdAt: now },
+      { id: townMap, worldId, name: 'Saltmere', imageId: townImg, width: SALTMERE_W, height: SALTMERE_H, visibility: 'players', locationId: saltmere.id, drawing: townDrawing, createdAt: now },
     ])
     // Map coordinates are [y, x] with y measured from the bottom of the image.
     await db.pins.bulkAdd([
@@ -231,50 +241,3 @@ export async function loadSampleWorld(): Promise<string> {
   })
   return worldId
 }
-
-const REGION_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
-<defs>
-<radialGradient id="sea" cx="30%" cy="70%" r="90%"><stop offset="0" stop-color="#2d5f73"/><stop offset="1" stop-color="#173544"/></radialGradient>
-<pattern id="waves" width="60" height="30" patternUnits="userSpaceOnUse"><path d="M0 15 q15 -8 30 0 t30 0" fill="none" stroke="#ffffff" stroke-opacity=".07" stroke-width="2"/></pattern>
-</defs>
-<rect width="1600" height="1000" fill="url(#sea)"/><rect width="1600" height="1000" fill="url(#waves)"/>
-<path d="M420 0 L1600 0 L1600 1000 L760 1000 C700 930 640 900 600 820 C560 740 470 720 470 640 C470 560 560 540 540 470 C520 400 400 380 380 300 C360 220 450 160 430 80 Z" fill="#c9b78a" stroke="#8a7650" stroke-width="4"/>
-<path d="M450 90 C470 160 380 220 400 300 C420 380 540 400 560 470 C580 540 490 560 490 640 C490 720 580 740 620 820" fill="none" stroke="#e8dcb8" stroke-width="6" stroke-opacity=".6"/>
-<path d="M240 700 C280 660 340 680 330 740 C320 800 250 800 240 760 Z" fill="#c9b78a" stroke="#8a7650" stroke-width="3"/>
-<path d="M980 330 C1050 270 1200 270 1330 380 C1300 520 1100 580 1060 560 C970 500 950 420 980 330 Z" fill="#6f8f4e" opacity=".85"/>
-${Array.from({ length: 40 }, (_, i) => {
-  const x = 1000 + ((i * 73) % 300)
-  const y = 340 + ((i * 41) % 200)
-  return `<path d="M${x} ${y} l10 -22 l10 22 z" fill="#3f6131"/>`
-}).join('')}
-${Array.from({ length: 9 }, (_, i) => {
-  const x = 700 + i * 70
-  const y = 140 + (i % 2) * 30
-  return `<path d="M${x} ${y + 60} l40 -80 l40 80 z" fill="#8c8270" stroke="#5a5244" stroke-width="3"/><path d="M${x + 28} ${y + 4} l12 -24 l12 24 z" fill="#f2efe6"/>`
-}).join('')}
-<path d="M560 640 C700 560 760 380 820 200" fill="none" stroke="#7a5a33" stroke-width="5" stroke-dasharray="14 10"/>
-<g font-family="Georgia, serif" fill="#3a2e1c" text-anchor="middle">
-<text x="1100" y="760" font-size="54" letter-spacing="10" opacity=".55">THE SHATTERED COAST</text>
-<text x="200" y="460" font-size="34" fill="#cfe3ea" opacity=".6" font-style="italic">The Grey Sea</text>
-<text x="1160" y="470" font-size="26" font-style="italic" fill="#1e3315">Whisperwood</text>
-<text x="980" y="110" font-size="26" font-style="italic">Ashspine Mountains</text>
-</g>
-<g transform="translate(1460 860)" font-family="Georgia, serif" fill="#3a2e1c"><circle r="60" fill="none" stroke="#3a2e1c" stroke-width="2"/><path d="M0 -70 L12 0 L0 70 L-12 0 Z" fill="#3a2e1c"/><text y="-78" text-anchor="middle" font-size="22">N</text></g>
-</svg>`
-
-const TOWN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
-<rect width="1200" height="800" fill="#2b5566"/>
-<path d="M0 0 H1200 V800 H700 C640 700 520 680 420 640 C300 590 200 620 0 560 Z" fill="#cbbd92"/>
-<path d="M0 560 C200 620 300 590 420 640 C520 680 640 700 700 800 H0 Z" fill="#a89a74" opacity=".5"/>
-${Array.from({ length: 14 }, (_, i) => `<rect x="${330 + i * 22}" y="${560 + (i % 3) * 10}" width="10" height="140" fill="#6b4f2e"/>`).join('')}
-<rect x="300" y="580" width="340" height="24" fill="#8a6a40"/>
-${Array.from({ length: 36 }, (_, i) => {
-  const x = 200 + ((i * 97) % 820)
-  const y = 120 + ((i * 59) % 380)
-  return `<rect x="${x}" y="${y}" width="${34 + (i % 3) * 10}" height="${26 + (i % 2) * 12}" fill="#9c5b3c" stroke="#5e3522" stroke-width="2"/>`
-}).join('')}
-<path d="M120 420 C400 380 700 420 1100 300" fill="none" stroke="#e8dcb8" stroke-width="22" stroke-linecap="round"/>
-<path d="M600 60 C600 250 560 420 520 600" fill="none" stroke="#e8dcb8" stroke-width="16" stroke-linecap="round"/>
-<circle cx="820" cy="600" r="46" fill="#d9d2bf" stroke="#6e6553" stroke-width="4"/>
-<g font-family="Georgia, serif" fill="#3a2e1c" text-anchor="middle"><text x="900" y="760" font-size="46" letter-spacing="8" opacity=".6">SALTMERE</text><text x="200" y="720" font-size="24" fill="#d8e8ee" font-style="italic">Tidal Flats</text></g>
-</svg>`
