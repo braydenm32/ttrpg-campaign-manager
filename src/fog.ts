@@ -109,13 +109,17 @@ function loadImage(blob: Blob) {
   })
 }
 
+/** The map picture players get before any fog: a drawn map with secrets has one of its own, without them. */
+export const playersImageId = (map: WorldMap) => map.playerImageId ?? map.imageId
+
 /** What the players' picture depends on; when this changes it has to be made again. */
 export async function fogKey(map: WorldMap) {
-  const base = await db.assets.get(map.imageId)
+  const id = playersImageId(map)
+  const base = await db.assets.get(id)
   const shapes = JSON.stringify(map.fog?.shapes ?? [])
   let h = 0
   for (let i = 0; i < shapes.length; i++) h = (h * 31 + shapes.charCodeAt(i)) | 0
-  return `${map.imageId}:${base?.updatedAt ?? base?.createdAt ?? 0}:${base?.size ?? 0}:${h}`
+  return `${id}:${base?.updatedAt ?? base?.createdAt ?? 0}:${base?.size ?? 0}:${h}`
 }
 
 /**
@@ -127,7 +131,7 @@ export async function renderPlayerFog(mapId: string) {
   if (!map?.fog?.on) return
   const key = await fogKey(map)
   if (map.fog.renderedFrom === key && map.fog.imageId && (await db.assets.get(map.fog.imageId))) return
-  const base = await db.assets.get(map.imageId)
+  const base = await db.assets.get(playersImageId(map))
   if (!base) return
   const img = await loadImage(base.blob)
   try {

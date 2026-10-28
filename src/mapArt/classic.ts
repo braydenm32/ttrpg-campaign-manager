@@ -7,7 +7,7 @@ import { Atlas, type InkStyle, type Point, type Rng, type Tint } from './atlas'
 import { hashId, loopArea, makeNoise, roughen, scaleOf, smoothLine, traceLoops } from './geometry'
 import { buildGround, drawGround, freeGroundSheet, groundColour, type GroundMap } from './ground'
 import { buildRooms, doorGaps, drawRock, type RoomMap } from './rooms'
-import { drawUnit, fromAbove, LAYERS, layerOf, type Drawing, type GroundId, type LayerId, type LabelFont, type Look, type Shape, type StampKind, type Terrain } from '../mapDrawing'
+import { drawUnit, fromAbove, gmOnly, LAYERS, layerOf, type Drawing, type GroundId, type LayerId, type LabelFont, type Look, type Shape, type StampKind, type Terrain } from '../mapDrawing'
 
 export const LOOKS: Record<Look, { label: string; mode: 'ink' | 'colour'; paper?: string; ink?: string }> = {
   parchment: { label: 'Ink on parchment', mode: 'ink', paper: '#ead9b0', ink: '#3a2814' },
@@ -999,16 +999,28 @@ function drawFrame(ctx: CanvasRenderingContext2D, W: number, H: number, st: InkS
   ctx.restore()
 }
 
-let baseCache: { key: string; canvas: HTMLCanvasElement } | undefined
-let roomCache: RoomMap | undefined
-let rockCache: { key: string; canvas: HTMLCanvasElement } | undefined
+/**
+ * Keeps the last two of something slow to make, by key. A map with secrets is drawn twice in a row,
+ * once for the GM and once for the players (without the secret rooms), and each keeps its own.
+ */
+function keep2<T extends { key: string }>(slots: T[], key: string, make: () => T): T {
+  const i = slots.findIndex((x) => x.key === key)
+  if (i === 0) return slots[0]
+  const hit = i > 0 ? slots.splice(i, 1)[0] : make()
+  slots.unshift(hit)
+  slots.length = Math.min(slots.length, 2)
+  return hit
+}
+
+const baseCache: { key: string; canvas: HTMLCanvasElement }[] = []
+const roomCache: RoomMap[] = []
+const rockCache: { key: string; canvas: HTMLCanvasElement }[] = []
 
 /** A battle map's rooms only change when they're drawn, or the grid or seed change. Underground maps always have them (all rock to start with). */
 function roomsFor(d: Drawing, W: number, H: number): RoomMap | undefined {
   if (!d.rooms?.length && d.outside !== 'rock') return undefined
   const key = `${W}x${H}|${d.gridSize}|${d.seed}|${(d.rooms ?? []).map((r) => r.id).join(',')}`
-  if (roomCache?.key !== key) roomCache = buildRooms(d, W, H, key)
-  return roomCache
+  return keep2(roomCache, key, () => buildRooms(d, W, H, key))
 }
 
 /** The walls round a battle map's rooms as drawn (none when the rooms are hidden), for exporting to virtual tabletops. */
@@ -1037,7 +1049,7 @@ function landFor(d: Drawing, W: number, H: number): LandShape & { key: string } 
   return landCache
 }
 
-let groundCache: GroundMap | undefined
+const groundCache: GroundMap[] = []
 
 /** A battle map's ground only changes when its strokes, old area shapes, starting ground or seed change. */
 function groundFor(d: Drawing, W: number, H: number): GroundMap {
@@ -1046,8 +1058,7 @@ function groundFor(d: Drawing, W: number, H: number): GroundMap {
   // floors painted inside the rooms change when the rooms do
   const rooms = d.ground?.some((s) => s.inside) ? roomsFor(d, W, H) : undefined
   const key = `${W}x${H}|${d.groundBase}|${d.gridSize}|${d.seed}|${d.hidden?.includes('land') ? 'h' : ''}|${areas.join(',')}|${strokes.join(',')}|${rooms?.key ?? ''}`
-  if (groundCache?.key !== key) groundCache = buildGround(d, W, H, key, rooms?.path)
-  return groundCache
+  return keep2(groundCache, key, () => buildGround(d, W, H, key, rooms?.path))
 }
 
 /** Whether a point is on land, so the scatter brush can keep trees ashore and ships at sea. */
@@ -1166,19 +1177,20 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
   // the ground, or sea then land with its coast: the slow part, so it's kept until it or the look changes
   const land = top ? undefined : landFor(d, W, H)
   let shore: Path2D | undefined
+  let base: HTMLCanvasElement
   if (land) {
     const baseKey = `${land.key}|${look}|${d.biome}|${scale}|${canvas.width}x${canvas.height}`
-    if (baseCache?.key !== baseKey) baseCache = { key: baseKey, canvas: drawBase(d, W, H, scale, st, land, landPaper, r) }
+    base = keep2(baseCache, baseKey, () => ({ key: baseKey, canvas: drawBase(d, W, H, scale, st, land, landPaper, r) })).canvas
   } else {
     const gm = groundFor(d, W, H)
     const coast = city ? landFor(d, W, H) : undefined
     if (coast?.loops.length) shore = coast.path
     const baseKey = `${gm.key}|${coast?.key ?? ''}|${look}|${d.biome}|${scale}|${canvas.width}x${canvas.height}`
-    if (baseCache?.key !== baseKey) baseCache = { key: baseKey, canvas: coast ? drawCityBase(gm, coast, d, W, H, scale, st, r) : drawGround(gm, d, W, H, scale, st, r) }
+    base = keep2(baseCache, baseKey, () => ({ key: baseKey, canvas: coast ? drawCityBase(gm, coast, d, W, H, scale, st, r) : drawGround(gm, d, W, H, scale, st, r) })).canvas
   }
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
-  ctx.drawImage(baseCache.canvas, 0, 0)
+  ctx.drawImage(base, 0, 0)
   ctx.restore()
 
   const visible = (s: Shape) => !hidden.has(layerOf(s))
@@ -1187,10 +1199,10 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
   const rock = !!rooms && d.outside === 'rock'
   if (rooms && rock) {
     const rockKey = `${rooms.key}|${look}|${d.biome}|${scale}|${canvas.width}x${canvas.height}`
-    if (rockCache?.key !== rockKey) rockCache = { key: rockKey, canvas: drawRock(rooms, d, W, H, scale, st) }
+    const rockArt = keep2(rockCache, rockKey, () => ({ key: rockKey, canvas: drawRock(rooms, d, W, H, scale, st) })).canvas
     ctx.save()
     ctx.setTransform(1, 0, 0, 1, 0, 0)
-    ctx.drawImage(rockCache.canvas, 0, 0)
+    ctx.drawImage(rockArt, 0, 0)
     ctx.restore()
     ctx.save()
     ctx.clip(rooms.path, 'evenodd')
@@ -1223,7 +1235,10 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
   drawTownWalls(ctx, lines.filter((s) => s.style === 'townwall'), d, W, H, st, k)
 
   // pieces: on world maps lower ones stand in front; seen from above, the one put down last is on top
-  const pieces = d.shapes.filter(visible).map((s) => pieceOf(s, top)).filter((p): p is Piece => !!p)
+  // (the GM's marks go on last, over everything)
+  const all = d.shapes.filter(visible).map((s) => pieceOf(s, top)).filter((p): p is Piece => !!p)
+  const marks = all.filter((p) => p.asset.startsWith('gm-'))
+  const pieces = all.filter((p) => !p.asset.startsWith('gm-'))
   if (!top) pieces.sort((a, b) => a.at[1] - b.at[1])
   pieces.forEach((p) => drawPiece(ctx, p, stLand))
 
@@ -1247,8 +1262,49 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
 
   // battle maps in colour stay clean for the table and virtual tabletops; ink ones get the old paper
   if (!battle || !colour) agePaper(ctx, W, H, look, Atlas.rng((d.seed ?? 1) + 99), battle ? u : k)
+  // what only the GM sees: secret rooms washed red, other GM-only things ringed in red, then the GM's marks
+  drawSecretHints(ctx, d, W, H, st, k, battle && !hidden.has('paths') ? rooms : undefined, visible)
+  marks.forEach((p) => drawPiece(ctx, p, stLand))
   if (d.frame !== false) drawFrame(ctx, W, H, st, k)
   return canvas
+}
+
+/** The red the GM's own marks and hints are in, like the notes in a published adventure. */
+export const GM_RED = '#b0242a'
+
+function drawSecretHints(ctx: CanvasRenderingContext2D, d: Drawing, W: number, H: number, st: InkStyle, k: number, rooms: RoomMap | undefined, visible: (s: Shape) => boolean) {
+  const secretRooms = rooms && d.rooms?.some(gmOnly)
+  const marked = d.shapes.filter((s) => visible(s) && gmOnly(s) && !(s.kind === 'asset' && s.asset.startsWith('gm-')))
+  if (!secretRooms && !marked.length) return
+  ctx.save()
+  if (rooms && secretRooms) {
+    // where the floor differs from the players' (rooms and passages only the GM knows about)
+    const open = roomsFor({ ...d, rooms: d.rooms!.filter((r) => !gmOnly(r)) }, W, H)
+    const diff = new Path2D(rooms.path)
+    if (open) diff.addPath(open.path)
+    ctx.fillStyle = GM_RED
+    ctx.globalAlpha = 0.16
+    ctx.fill(diff, 'evenodd')
+    ctx.globalAlpha = 1
+  }
+  const dash = d.scene === 'battle' ? drawUnit(d) * 10 : k * 7
+  ctx.strokeStyle = GM_RED
+  ctx.lineWidth = Math.max(1.2, 1.6 * st.line)
+  ctx.setLineDash([dash, dash * 0.6])
+  for (const s of marked) {
+    ctx.beginPath()
+    if (s.kind === 'asset') {
+      const p = pieceOf(s, fromAbove(d))
+      if (!p) continue
+      Atlas.poly(ctx, pieceOutline(p))
+      ctx.closePath()
+    } else if (s.kind === 'label') {
+      const [x, y, w, h] = labelBox(ctx, s)
+      ctx.rect(x - 4 * k, y - 4 * k, w + 8 * k, h + 8 * k)
+    } else if (s.kind === 'line') smoothLine(s.points, s.smooth, 6 * k).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+    ctx.stroke()
+  }
+  ctx.restore()
 }
 
 /**
@@ -1256,12 +1312,12 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
  * redraws: a copy at twice the size would push the editor's out, and hold on to a huge canvas.
  */
 export function renderClassicOnce(d: Drawing, W: number, H: number, scale = 1): HTMLCanvasElement {
-  const keep = { base: baseCache, rock: rockCache }
+  const keep = { base: [...baseCache], rock: [...rockCache] }
   try {
     return renderClassic(d, W, H, scale)
   } finally {
-    baseCache = keep.base
-    rockCache = keep.rock
+    baseCache.splice(0, baseCache.length, ...keep.base)
+    rockCache.splice(0, rockCache.length, ...keep.rock)
     freeGroundSheet()
   }
 }

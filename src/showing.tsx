@@ -159,7 +159,8 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
   const entities = useVisibleEntities(world.id)
   const images = useLiveQuery(async () => {
     // The clean picture of a fogged map would show players everything under the fog.
-    const fogged = new Set((await db.maps.where({ worldId: world.id }).toArray()).filter((m) => m.fog?.on).map((m) => m.imageId))
+    // So would the GM's copy of a map with secrets on it.
+    const fogged = new Set((await db.maps.where({ worldId: world.id }).toArray()).filter((m) => m.fog?.on || m.playerImageId).map((m) => m.imageId))
     return db.assets
       .where({ worldId: world.id })
       .filter((a) => a.mime.startsWith('image/') && !a.tags.includes('fog') && !fogged.has(a.id))

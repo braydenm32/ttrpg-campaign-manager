@@ -13,7 +13,7 @@ import { Markdown } from '../Markdown'
 import { StatusBadge, statusIcon } from '../status'
 import { SecretTextarea } from '../SecretTextarea'
 import { useViewMode } from '../viewMode'
-import { circleShape, fogOverlay, pinRevealed, rectShape, removeFog, renderPlayerFog } from '../fog'
+import { circleShape, fogOverlay, pinRevealed, playersImageId, rectShape, removeFog, renderPlayerFog } from '../fog'
 import { Ico, TypeIcon } from '../icons'
 import { CloudFog, DownloadSimple, Eye, HandPalm, MapPin, PencilSimple, SlidersHorizontal } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
@@ -26,9 +26,10 @@ const COLORS = ['#e0b354', '#d9534f', '#5bc0de', '#5cb85c', '#a678de', '#f0f0f0'
 export default function MapView() {
   const { worldId } = useWorld()
   const { mapId = '' } = useParams()
-  const { canSee } = useViewMode()
+  const { canSee, isGM } = useViewMode()
   const map = useLiveQuery(() => db.maps.get(mapId), [mapId])
-  const url = useAssetUrl(map?.imageId)
+  // previewing as a player shows their copy of a map with secrets on it
+  const url = useAssetUrl(map && (isGM ? map.imageId : playersImageId(map)))
 
   if (map === undefined) return null
   if (map === null || map.worldId !== worldId || !canSee(map.visibility)) return <Empty>Map not found.</Empty>
@@ -83,7 +84,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
     fogPending.current = map.id
     const t = setTimeout(flushFog, 1500)
     return () => clearTimeout(t)
-  }, [isGM, fog, fogShapes, map.id, map.imageId])
+  }, [isGM, fog, fogShapes, map.id, map.imageId, map.playerImageId])
   useEffect(() => () => flushFog(), [])
 
   const addFog = (shape: ReturnType<typeof rectShape>) =>

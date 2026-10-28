@@ -392,6 +392,11 @@ export interface WorldMap {
   locationId?: string
   /** Set for maps made with the in-app map builder; the image is re-rendered from it on every edit. */
   drawing?: Drawing
+  /**
+   * A drawn map with secrets on it (secret doors, traps, anything ticked GM only): the picture
+   * players get, drawn without them. The GM's picture (imageId) then never reaches players.
+   */
+  playerImageId?: string
   /** Fog of war: players see only the areas the GM has uncovered. */
   fog?: MapFog
   createdAt: number

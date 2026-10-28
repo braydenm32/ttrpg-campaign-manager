@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Modal } from './components'
 import { Help } from './help'
-import type { Drawing } from './mapDrawing'
+import { forPlayers, hasSecrets, type Drawing } from './mapDrawing'
 import type { VttParts } from './mapArt/vtt'
 
-type Parts = VttParts & { feet: number }
+type Parts = VttParts & { feet: number; from: Drawing }
 
 /** The most we'll try to draw: past this, browsers run short of memory or quietly hand back a blank picture. */
 const MAX_PIXELS = 40_000_000
@@ -39,21 +39,26 @@ export function ExportMap({ name, drawing, width, height, onClose }: { name: str
   const [grid, setGrid] = useState(drawing.grid !== 'none')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [parts, setParts] = useState<Parts>()
+  const secrets = hasSecrets(drawing)
+  // a map with secrets on it goes out as the players' copy unless you ask for your own
+  const [copy, setCopy] = useState<'players' | 'gm'>('players')
+  const chosen = useMemo(() => (copy === 'players' ? forPlayers(drawing) : drawing), [copy, drawing])
+  const [found, setParts] = useState<Parts>()
+  const parts = found?.from === chosen ? found : undefined
   const size = sizes.find((s) => s.scale === scale) ?? sizes[0]
 
   useEffect(() => {
-    if (format !== 'vtt' || parts) return
+    if (format !== 'vtt') return
     let live = true
     import('./mapArt/vtt').then((m) => {
       if (!live) return
-      const p = m.vttParts(drawing, width, height)
-      setParts({ ...p, feet: Math.round((p.walls.reduce((n, w) => n + m.length(w), 0) / (drawing.gridSize || 70)) * 5) })
+      const p = m.vttParts(chosen, width, height)
+      setParts({ ...p, from: chosen, feet: Math.round((p.walls.reduce((n, w) => n + m.length(w), 0) / (chosen.gridSize || 70)) * 5) })
     })
     return () => {
       live = false
     }
-  }, [format, parts, drawing, width, height])
+  }, [format, chosen, width, height])
 
   const download = async () => {
     setBusy(true)
@@ -62,7 +67,7 @@ export function ExportMap({ name, drawing, width, height, onClose }: { name: str
     await new Promise((r) => setTimeout(r, 30))
     try {
       const { exportMap } = await import('./mapArt/export')
-      await exportMap(name, drawing, width, height, { format, scale: size.scale, grid })
+      await exportMap(copy === 'gm' ? `${name} (GM)` : name, chosen, width, height, { format, scale: size.scale, grid })
       onClose()
     } catch (e) {
       console.warn('Map export failed', e)
@@ -100,6 +105,22 @@ export function ExportMap({ name, drawing, width, height, onClose }: { name: str
                 </button>
               ))}
             </div>
+          </div>
+        )}
+        {secrets && (
+          <div className="label">
+            <span>Which copy</span>
+            <div className="segmented">
+              <button type="button" className={copy === 'players' ? 'on' : ''} onClick={() => setCopy('players')}>
+                Players’ copy
+              </button>
+              <button type="button" className={copy === 'gm' ? 'on' : ''} onClick={() => setCopy('gm')}>
+                Yours, with the secrets
+              </button>
+            </div>
+            <span className="muted small">
+              {copy === 'players' ? 'Without the secret doors, traps and anything else only you see.' : 'Keep this one to yourself: secret doors go in a tabletop file as doors players can see.'}
+            </span>
           </div>
         )}
         <label>

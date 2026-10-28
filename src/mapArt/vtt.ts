@@ -25,6 +25,8 @@ const OPENINGS: Record<string, (variant: number) => Opening> = {
   'dg-portcullis': (v) => (v === 1 || v === 5 ? 'gap' : v === 7 ? 'door' : 'window'),
   // 4 is a curtain: it hides what's beyond, so it's a door you can push aside
   'dg-arch': (v) => (v === 4 ? 'door' : 'gap'),
+  // only on the GM's copy: the players' copy has plain wall there
+  'gm-secret-door': () => 'door',
 }
 
 /** Lights, by piece and version: how far they reach in squares, and their colour (AARRGGBB). */

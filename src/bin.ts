@@ -66,7 +66,7 @@ export async function binSound(id: string) {
   ])
 }
 
-/** Deletes a map with its pins, its picture (unless something else uses it) and the players' fogged copy. */
+/** Deletes a map with its pins, its picture (unless something else uses it) and the players' copies (fogged, or without the secrets). */
 export async function binMap(id: string) {
   const m = await db.maps.get(id)
   if (!m) return
@@ -74,7 +74,7 @@ export async function binMap(id: string) {
   const usedElsewhere =
     (await db.maps.where({ worldId: m.worldId }).filter((x) => x.id !== id && x.imageId === m.imageId).count()) +
     (await db.entities.where({ worldId: m.worldId }).filter((e) => e.imageId === m.imageId).count())
-  const files = present(await db.assets.bulkGet([usedElsewhere ? undefined : m.imageId, m.fog?.imageId].filter((x): x is string => !!x)))
+  const files = present(await db.assets.bulkGet([usedElsewhere ? undefined : m.imageId, m.fog?.imageId, m.playerImageId].filter((x): x is string => !!x)))
   await db.pins.filter((p) => p.childMapId === id).modify({ childMapId: undefined })
   await moveToBin(m.worldId, 'map', m.name, [
     { table: 'maps', rows: [m] },
