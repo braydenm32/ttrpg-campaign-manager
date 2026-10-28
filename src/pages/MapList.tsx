@@ -1,11 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Empty, Modal, VisibilityBadge } from '../components'
 import { db, newId, type WorldMap } from '../db'
 import { imageSize, saveFileAsAsset, useAssetUrl, useWorld } from '../hooks'
-import { BACKGROUNDS, emptyDrawing, GROUNDS, renderDrawing, type Background, type GroundId, type MapStyle, type Scene } from '../mapDrawing'
+import { emptyDrawing, GROUNDS, toClassic, type Background, type GroundId, type Scene } from '../mapDrawing'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { MapTrifold, PencilSimple } from '@phosphor-icons/react'
@@ -18,6 +18,7 @@ export default function MapList() {
   const maps = useLiveQuery(() => db.maps.where({ worldId }).filter((m) => canSee(m.visibility)).sortBy('name'), [worldId, isGM]) ?? []
   const [busy, setBusy] = useState(false)
   const [drawing, setDrawing] = useState(false)
+  useRedrawOldMaps(isGM ? maps : [])
 
   const upload = async (file: File) => {
     setBusy(true)
@@ -77,37 +78,73 @@ export default function MapList() {
   )
 }
 
-const SIZES = {
-  region: { label: 'World or region (2400 × 1600)', w: 2400, h: 1600, bg: 'sea' as Background, style: 'classic' as MapStyle, scene: 'world' as Scene, ground: 'grass' as GroundId },
-  city: { label: 'Town or city (1800 × 1200)', w: 1800, h: 1200, bg: 'grass' as Background, style: 'simple' as MapStyle, scene: 'world' as Scene, ground: 'grass' as GroundId },
-  dungeon: { label: 'Dungeon, 5 ft squares (1400 × 1400)', w: 1400, h: 1400, bg: 'stone' as Background, style: 'classic' as MapStyle, scene: 'battle' as Scene, ground: 'floor' as GroundId },
-  battle: { label: 'Battle map, 5 ft squares (2100 × 1400)', w: 2100, h: 1400, bg: 'grass' as Background, style: 'classic' as MapStyle, scene: 'battle' as Scene, ground: 'grass' as GroundId },
+/**
+ * Maps drawn in the old flat-colour style are redrawn by hand, once: the drawing becomes a classic
+ * one (its shapes all carry over) and the picture players see is rendered again from it.
+ */
+function useRedrawOldMaps(maps: WorldMap[]) {
+  const done = useRef(new Set<string>())
+  useEffect(() => {
+    const old = maps.filter((m) => m.drawing && m.drawing.style !== 'classic' && !done.current.has(m.id))
+    if (!old.length) return
+    for (const m of old) done.current.add(m.id)
+    ;(async () => {
+      const { renderClassic, classicBlob, loadMapFonts } = await import('../mapArt/classic')
+      await loadMapFonts()
+      for (const m of old) {
+        const drawing = toClassic(m.drawing!)
+        const blob = await classicBlob(renderClassic(drawing, m.width, m.height))
+        await db.transaction('rw', [db.maps, db.assets], async () => {
+          await db.maps.update(m.id, { drawing })
+          await db.assets.update(m.imageId, { blob, size: blob.size, mime: blob.type, updatedAt: Date.now() })
+        })
+      }
+    })().catch((err) => console.error('Could not redraw an old map', err))
+  }, [maps])
 }
+
+type Kind = 'world' | 'battle'
+type Size = 'small' | 'medium' | 'large'
+/** How big each kind of map starts. Battle maps are whole 5 ft squares of 70 px. */
+const SIZES: Record<Scene, Record<Size, [number, number]>> = {
+  world: { small: [1600, 1100], medium: [2400, 1600], large: [3600, 2400] },
+  city: { small: [1800, 1200], medium: [2400, 1600], large: [3600, 2400] },
+  battle: { small: [1400, 1050], medium: [2100, 1400], large: [2800, 2100] },
+}
+const SIZE_LABEL: Record<Size, string> = { small: 'Small', medium: 'Medium', large: 'Large' }
+/** What the size means, in words a GM can picture. */
+function sizeNote(scene: Scene, [w, h]: [number, number]) {
+  if (scene === 'battle') return `${w / 70} × ${h / 70} squares`
+  // a town map has a 5 ft square every 7 px
+  if (scene === 'city') return `about ${(Math.round((w / 7) * 5 / 50) * 50).toLocaleString()} × ${(Math.round((h / 7) * 5 / 50) * 50).toLocaleString()} ft`
+  return `${w} × ${h} px`
+}
+
+/** What a new map starts with: for a world map, sea, land or a town; for a battle map, rock or a ground. */
+type Start = 'sea' | 'land' | 'town' | 'rock' | GroundId
 
 function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose: () => void; onCreated: (id: string) => void }) {
   const [name, setName] = useState('')
-  const [size, setSize] = useState<keyof typeof SIZES>('region')
-  const [bg, setBg] = useState<Background>('sea')
-  const [style, setStyle] = useState<MapStyle>('classic')
-  const [ground, setGround] = useState<GroundId>('grass')
-  const scene = SIZES[size].scene
+  const [kind, setKind] = useState<Kind>('world')
+  const [start, setStart] = useState<Start>('sea')
+  const [size, setSize] = useState<Size>('medium')
+  const scene: Scene = kind === 'battle' ? 'battle' : start === 'town' ? 'city' : 'world'
+  const [w, h] = SIZES[scene][size]
   return (
     <Modal title="Draw a new map" onClose={onClose}>
       <form
         className="form"
         onSubmit={async (e) => {
           e.preventDefault()
-          const { w, h } = SIZES[size]
-          const drawing = emptyDrawing(style === 'classic' && scene === 'world' && bg !== 'sea' ? 'parchment' : bg, style, scene, ground)
+          const bg: Background = start === 'sea' ? 'sea' : start === 'rock' ? 'stone' : scene === 'world' ? 'parchment' : 'grass'
+          const ground: GroundId = start === 'rock' ? 'floor' : start === 'sea' || start === 'land' || start === 'town' ? 'grass' : start
+          const drawing = emptyDrawing(bg, scene, ground)
           // a dungeon starts as solid rock to dig rooms out of
-          if (size === 'dungeon' && style === 'classic') drawing.outside = 'rock'
-          let blob: Blob
-          if (style === 'classic') {
-            const { renderClassic, classicBlob, loadMapFonts } = await import('../mapArt/classic')
-            await loadMapFonts()
-            blob = await classicBlob(renderClassic(drawing, w, h))
-          } else blob = new Blob([renderDrawing(drawing, w, h)], { type: 'image/svg+xml' })
-          const ext = blob.type === 'image/svg+xml' ? 'svg' : blob.type === 'image/webp' ? 'webp' : 'jpg'
+          if (start === 'rock') drawing.outside = 'rock'
+          const { renderClassic, classicBlob, loadMapFonts } = await import('../mapArt/classic')
+          await loadMapFonts()
+          const blob = await classicBlob(renderClassic(drawing, w, h))
+          const ext = blob.type === 'image/webp' ? 'webp' : blob.type === 'image/png' ? 'png' : 'jpg'
           const imageId = await saveFileAsAsset(worldId, blob, `${name.trim() || 'Map'}.${ext}`, ['map', 'drawn'])
           const id = newId()
           await db.maps.add({ id, worldId, name: name.trim() || 'Untitled map', imageId, width: w, height: h, visibility: 'gm', drawing, createdAt: Date.now() })
@@ -116,61 +153,68 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
       >
         <label>
           Name
-          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. The Sword Coast" />
+          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={kind === 'battle' ? 'e.g. The Sunken Crypt' : 'e.g. The Sword Coast'} />
         </label>
-        <label>
-          Kind of map
-          <select
-            value={size}
-            onChange={(e) => {
-              const k = e.target.value as keyof typeof SIZES
-              setSize(k)
-              setBg(SIZES[k].bg)
-              setStyle(SIZES[k].style)
-              setGround(SIZES[k].ground)
-            }}
-          >
-            {Object.entries(SIZES).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
+        <div className="label">
           <span>
-            Style <Help topic="mapStyle" />
+            What are you drawing? <Help topic="newMap" />
           </span>
-          <select value={style} onChange={(e) => setStyle(e.target.value as MapStyle)}>
-            <option value="classic">Classic fantasy map (hand-inked)</option>
-            <option value="simple">Simple (flat colours)</option>
-          </select>
-        </label>
+          <div className="map-kinds" role="radiogroup" aria-label="Kind of map">
+            {(
+              [
+                ['world', 'World, region or city', 'Coasts, mountains, forests and towns, or a town seen from above'],
+                ['battle', 'Dungeon, building or battle map', 'On 5 ft squares, for fights and exploring'],
+              ] as const
+            ).map(([k, title, note]) => (
+              <button
+                key={k}
+                type="button"
+                role="radio"
+                aria-checked={kind === k}
+                className={kind === k ? 'on' : ''}
+                onClick={() => {
+                  setKind(k)
+                  setStart(k === 'battle' ? 'rock' : 'sea')
+                }}
+              >
+                <strong>{title}</strong>
+                <small>{note}</small>
+              </button>
+            ))}
+          </div>
+        </div>
         <label>
           Start with
-          {style === 'classic' && scene === 'battle' ? (
-            <select value={ground} onChange={(e) => setGround(e.target.value as GroundId)}>
-              {(Object.keys(GROUNDS) as GroundId[]).map((g) => (
-                <option key={g} value={g}>
-                  {GROUNDS[g]} everywhere (paint the rest)
-                </option>
-              ))}
-            </select>
-          ) : style === 'classic' ? (
-            <select value={bg === 'sea' ? 'sea' : 'parchment'} onChange={(e) => setBg(e.target.value as Background)}>
-              <option value="sea">Open sea (paint the land)</option>
-              <option value="parchment">All land (carve out the water)</option>
-            </select>
-          ) : (
-            <select value={bg} onChange={(e) => setBg(e.target.value as Background)}>
-              {Object.entries(BACKGROUNDS).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v.label}
-                </option>
-              ))}
-            </select>
-          )}
+          <select value={start} onChange={(e) => setStart(e.target.value as Start)}>
+            {kind === 'world' ? (
+              <>
+                <option value="sea">Open sea (paint the land)</option>
+                <option value="land">All land (carve out the water)</option>
+                <option value="town">A town or city seen from above</option>
+              </>
+            ) : (
+              <>
+                <option value="rock">Solid rock (dig out a dungeon)</option>
+                {(Object.keys(GROUNDS) as GroundId[]).map((g) => (
+                  <option key={g} value={g}>
+                    {GROUNDS[g]} everywhere (paint the rest)
+                  </option>
+                ))}
+              </>
+            )}
+          </select>
         </label>
+        <div className="label">
+          Size
+          <div className="segmented">
+            {(Object.keys(SIZE_LABEL) as Size[]).map((k) => (
+              <button key={k} type="button" className={size === k ? 'on' : ''} onClick={() => setSize(k)}>
+                {SIZE_LABEL[k]}
+              </button>
+            ))}
+          </div>
+          <span className="muted">{sizeNote(scene, [w, h])}</span>
+        </div>
         <div className="row end">
           <button type="button" onClick={onClose}>
             Cancel

@@ -15,6 +15,9 @@ import './lib/bm-buildings.js'
 import './lib/dg-doors.js'
 import './lib/dg-features.js'
 import './lib/dg-furnishings.js'
+import './lib/ct-houses.js'
+import './lib/ct-castle.js'
+import './lib/ct-harbour.js'
 
 export type Point = [number, number]
 export type Rng = () => number
@@ -74,6 +77,8 @@ export interface AtlasApi {
   inkStroke(ctx: CanvasRenderingContext2D, pts: Point[], r: Rng, opts?: { w?: number; wob?: number; taper?: number; color?: string }): void
   poly(ctx: CanvasRenderingContext2D, pts: Point[]): void
   terrain: TerrainApi
+  /** Set while a turned town piece draws: where the light comes from, in the piece's own turned frame. */
+  light?: [number, number]
 }
 
 export const Atlas = (window as unknown as { Atlas: AtlasApi }).Atlas
@@ -97,6 +102,14 @@ export const BATTLE_GROUPS: { label: string; categories: string[] }[] = [
   { label: 'Doors', categories: ['dg-doors'] },
   { label: 'Dungeon', categories: ['dg-features'] },
   { label: 'Dungeon furnishings', categories: ['dg-furnishings'] },
+]
+
+/** The groups the stamp picker shows on town and city maps: town pieces first, then the battle-map pieces (drawn smaller). */
+export const CITY_GROUPS: { label: string; categories: string[] }[] = [
+  { label: 'Town houses', categories: ['ct-houses'] },
+  { label: 'Castles, churches & walls', categories: ['ct-castle'] },
+  { label: 'Harbour & farmland', categories: ['ct-harbour'] },
+  ...BATTLE_GROUPS.filter((g) => !g.categories.some((c) => c.startsWith('dg-'))),
 ]
 
 export const assetNamesIn = (categories: string[]) => Object.keys(Atlas.assets).filter((n) => categories.includes(Atlas.assets[n].category))

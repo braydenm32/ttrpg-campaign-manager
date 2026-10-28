@@ -364,6 +364,12 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
 .version-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
 .version-grid button { flex-direction: column; gap: 1px; padding: .2em; font-size: .68rem; line-height: 1.1; }
 .version-grid button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, var(--panel-2)); }
+.map-kinds { display: grid; grid-template-columns: 1fr 1fr; gap: .5em; }
+.map-kinds button { flex-direction: column; align-items: flex-start; text-align: left; gap: .2em; padding: .7em .8em; color: var(--text); white-space: normal; min-width: 0; }
+.form .label > .segmented { align-self: flex-start; }
+.map-kinds button small { color: var(--muted); font-size: .85em; }
+.map-kinds button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, var(--panel-2)); }
+@media (max-width: 520px) { .map-kinds { grid-template-columns: 1fr; } }
 .version-any { font-size: 1.5rem; height: 40px; display: grid; place-items: center; }
 .scatter-ring { display: none; }
 .builder-canvas.tool-hand, .builder-canvas.tool-select { cursor: grab; }

@@ -7,7 +7,7 @@ import { Atlas, type InkStyle, type Point, type Rng, type Tint } from './atlas'
 import { hashId, loopArea, makeNoise, roughen, scaleOf, smoothLine, traceLoops } from './geometry'
 import { buildGround, drawGround, groundColour, type GroundMap } from './ground'
 import { buildRooms, doorGaps, drawRock, type RoomMap } from './rooms'
-import { LAYERS, layerOf, type Drawing, type GroundId, type LayerId, type LabelFont, type Look, type Shape, type StampKind, type Terrain } from '../mapDrawing'
+import { drawUnit, fromAbove, LAYERS, layerOf, type Drawing, type GroundId, type LayerId, type LabelFont, type Look, type Shape, type StampKind, type Terrain } from '../mapDrawing'
 
 export const LOOKS: Record<Look, { label: string; mode: 'ink' | 'colour'; paper?: string; ink?: string }> = {
   parchment: { label: 'Ink on parchment', mode: 'ink', paper: '#ead9b0', ink: '#3a2814' },
@@ -412,6 +412,257 @@ function drawRoomWalls(ctx: CanvasRenderingContext2D, rm: RoomMap, d: Drawing, W
   ctx.restore()
 }
 
+type Line = Extract<Shape, { kind: 'line' }>
+
+/** A street is 20 ft wide unless it says otherwise, a river on a town map 50 ft; a town wall is 10 ft thick and its towers 30 ft across. */
+export const streetWidth = (s: Line, d: Drawing) => s.width ?? 4 * (d.gridSize || 70)
+export const riverWidth = (s: Line, d: Drawing) => s.width ?? 10 * (d.gridSize || 70)
+export const townWallHalf = (d: Drawing) => (d.gridSize || 70)
+const towerSize = (d: Drawing) => 6 * (d.gridSize || 70)
+
+/**
+ * Streets: a band of beaten earth or cobbles between inked edges. All the edges go down before any
+ * of the surfaces, so where streets meet or cross they open into one another.
+ */
+function drawStreets(ctx: CanvasRenderingContext2D, lines: Line[], d: Drawing, st: InkStyle, k: number) {
+  if (!lines.length) return
+  const colour = st.mode === 'colour'
+  const ways = lines.map((s) => {
+    const r = Atlas.rng(hashId(s.id))
+    const w = streetWidth(s, d)
+    return { r, w, pts: Atlas.wobble(smoothLine(s.points, s.smooth, 6 * k), r, Math.min(1.2, w * 0.03), Math.max(6, w * 0.6)) }
+  })
+  const surface = colour ? mixHex(groundColour('dirt', st.tint), groundColour('paving', st.tint), 0.45) : st.paper
+  ctx.save()
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = st.ink
+  for (const w of ways) {
+    ctx.lineWidth = w.w + 2.4 * st.line
+    stroke(ctx, w.pts)
+  }
+  ctx.strokeStyle = surface
+  for (const w of ways) {
+    ctx.lineWidth = w.w
+    stroke(ctx, w.pts)
+  }
+  // worn into the middle in colour; a light stipple of cobbles in both looks
+  if (colour) {
+    ctx.strokeStyle = mixHex(surface, '#f4ead2', 0.25)
+    ctx.globalAlpha = 0.5
+    for (const w of ways) {
+      ctx.lineWidth = w.w * 0.45
+      stroke(ctx, w.pts)
+    }
+    ctx.globalAlpha = 1
+  }
+  ctx.fillStyle = colour ? mixHex(surface, '#3a2c1c', 0.45) : st.ink
+  for (const w of ways) {
+    ctx.globalAlpha = colour ? 0.35 : 0.4
+    const dot = Math.max(0.5, 0.45 * st.line)
+    for (const p of along(w.pts, Math.max(2, 9 / Math.max(1, w.w / 12)))) {
+      const off = (w.r() - 0.5) * w.w * 0.8
+      ctx.beginPath()
+      ctx.arc(p.x - Math.sin(p.ang) * off, p.y + Math.cos(p.ang) * off, dot * (0.6 + w.r() * 0.6), 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+  ctx.restore()
+}
+
+/**
+ * Rivers on a town map: a band of water at its true width between inked banks, with a darker
+ * channel down the middle in colour and broken ripple lines in both looks. Streets drawn over one
+ * read as bridges.
+ */
+function drawTownRivers(ctx: CanvasRenderingContext2D, lines: Line[], d: Drawing, st: InkStyle, k: number, land?: Path2D) {
+  if (!lines.length) return
+  const colour = st.mode === 'colour'
+  const water = colour ? groundColour('water', st.tint) : st.paper
+  const ways = lines.map((s) => {
+    const r = Atlas.rng(hashId(s.id))
+    const w = riverWidth(s, d)
+    return { r, w, pts: Atlas.wobble(smoothLine(s.points, s.smooth, 6 * k), r, Math.min(2, w * 0.03), Math.max(10, w * 0.8)) }
+  })
+  ctx.save()
+  // a river ends where it meets the sea
+  if (land) ctx.clip(land, 'evenodd')
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = st.ink
+  for (const w of ways) {
+    ctx.lineWidth = w.w + 2.6 * st.line
+    stroke(ctx, w.pts)
+  }
+  ctx.strokeStyle = water
+  for (const w of ways) {
+    ctx.lineWidth = w.w
+    stroke(ctx, w.pts)
+  }
+  if (colour) {
+    ctx.strokeStyle = mixHex(water, '#1f3f55', 0.35)
+    ctx.globalAlpha = 0.35
+    for (const w of ways) {
+      ctx.lineWidth = w.w * 0.45
+      stroke(ctx, w.pts)
+    }
+    ctx.globalAlpha = 1
+  }
+  // ripples: broken strokes along the flow, closer together in ink where there's no colour to say water
+  ctx.strokeStyle = colour ? mixHex(water, '#1f3f55', 0.6) : st.ink
+  ctx.lineWidth = 0.7 * st.line
+  for (const w of ways) {
+    ctx.globalAlpha = colour ? 0.45 : 0.6
+    for (const f of colour ? [-0.3, 0.3] : [-0.34, -0.12, 0.1, 0.32]) {
+      ctx.setLineDash([w.w * (colour ? 0.5 : 0.3), w.w * (0.3 + w.r() * 0.3)])
+      ctx.lineDashOffset = w.r() * w.w
+      stroke(ctx, offsetLine(w.pts, f * w.w))
+    }
+  }
+  ctx.restore()
+}
+
+/** Which side of a wall is outside the town: the side away from the ground it closes round. +1 is to the right of the way it was drawn. */
+function outsideOf(pts: Point[]): 1 | -1 {
+  let area = 0
+  for (let i = 0; i < pts.length; i++) {
+    const [a, b] = [pts[i], pts[(i + 1) % pts.length]]
+    area += a[0] * b[1] - b[0] * a[1]
+  }
+  // drawn clockwise on screen (y down), the inside is to the right
+  return area > 0 ? -1 : 1
+}
+
+/**
+ * Town walls: a thick band of stone with a crenellated parapet on the outside and a walk along the
+ * top, with towers at the corners and along long runs. Gatehouses leave a gap and stand in it.
+ */
+function drawTownWalls(ctx: CanvasRenderingContext2D, lines: Line[], d: Drawing, W: number, H: number, st: InkStyle, k: number) {
+  if (!lines.length) return
+  const colour = st.mode === 'colour'
+  const hw = townWallHalf(d)
+  const stone = colour ? mixHex(groundColour('stone', st.tint), '#efe7d6', 0.35) : st.paper
+  const gaps = doorGaps(d, W, H, 3 * hw, 'gates')
+  const gates = d.shapes.filter((s): s is Extract<Shape, { kind: 'asset' }> => s.kind === 'asset' && s.asset === 'ct-gatehouse')
+  ctx.save()
+  ctx.lineCap = 'butt'
+  ctx.lineJoin = 'miter'
+  if (gaps) ctx.clip(gaps, 'evenodd')
+  const walls = lines.map((s) => {
+    let pts = smoothLine(s.points, s.smooth, 6 * k)
+    // a wall that comes back to where it started goes all the way round, with no join showing
+    const closed = pts.length > 3 && Math.hypot(pts[0][0] - pts[pts.length - 1][0], pts[0][1] - pts[pts.length - 1][1]) < hw * 2
+    if (closed) pts = pts.slice(0, -1)
+    return { s, pts, closed, out: outsideOf(pts), r: Atlas.rng(hashId(s.id)) }
+  })
+  const draw = (pts: Point[], closed: boolean) => {
+    ctx.beginPath()
+    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+    if (closed) ctx.closePath()
+    ctx.stroke()
+  }
+  const offset = (pts: Point[], by: number, closed: boolean) => (closed ? offsetLine([pts[pts.length - 1], ...pts, pts[0]], by).slice(1, -1) : offsetLine(pts, by))
+  if (st.shadows)
+    for (const w of walls) {
+      ctx.strokeStyle = colour ? 'rgba(40,30,15,.25)' : 'rgba(35,26,16,.16)'
+      ctx.lineWidth = 2 * hw
+      draw(w.pts.map(([x, y]) => [x + 0.6 * hw, y + 0.8 * hw] as Point), w.closed)
+    }
+  for (const w of walls) {
+    ctx.strokeStyle = st.ink
+    ctx.lineWidth = 2 * hw + 2.4 * st.line
+    draw(w.pts, w.closed)
+  }
+  for (const w of walls) {
+    ctx.strokeStyle = stone
+    ctx.lineWidth = 2 * hw
+    draw(w.pts, w.closed)
+    // the parapet: merlons along the outer edge, and the inner edge of the wall walk
+    ctx.strokeStyle = colour ? mixHex(stone, '#3a3128', 0.55) : st.ink
+    ctx.lineWidth = hw * 0.55
+    ctx.setLineDash([hw * 0.7, hw * 0.55])
+    draw(offset(w.pts, w.out * hw * 0.62, w.closed), w.closed)
+    ctx.setLineDash([])
+    ctx.strokeStyle = st.ink
+    ctx.lineWidth = 0.8 * st.line
+    ctx.globalAlpha = 0.7
+    draw(offset(w.pts, -w.out * hw * 0.25, w.closed), w.closed)
+    ctx.globalAlpha = 1
+    // the shaded face: a few hatch strokes along the side away from the light
+    if (!colour) {
+      ctx.lineWidth = 0.6 * st.line
+      ctx.globalAlpha = 0.55
+      for (const p of along(w.closed ? [...w.pts, w.pts[0]] : w.pts, Math.max(2.2, 1.6 * st.line))) {
+        const facing = -Math.sin(p.ang) * 0.62 + Math.cos(p.ang) * 0.78
+        if (Math.abs(facing) < 0.2) continue
+        const nx = -Math.sin(p.ang) * Math.sign(facing)
+        const ny = Math.cos(p.ang) * Math.sign(facing)
+        ctx.beginPath()
+        ctx.moveTo(p.x + nx * hw * 0.55, p.y + ny * hw * 0.55)
+        ctx.lineTo(p.x + nx * hw * 0.95, p.y + ny * hw * 0.95)
+        ctx.stroke()
+      }
+      ctx.globalAlpha = 1
+    }
+  }
+  ctx.restore()
+  // towers at the corners and every 160 ft or so, turned to the wall, kept clear of the gatehouses
+  const size = towerSize(d)
+  const spacing = 32 * (d.gridSize || 70)
+  for (const w of walls) {
+    const variant = w.s.towers ?? 0
+    if (variant < 0) continue
+    const { closed } = w
+    const pts = closed ? [...w.pts, w.pts[0]] : w.pts
+    const spots: { at: Point; ang: number }[] = []
+    for (let i = 0; i < pts.length; i++) {
+      const prev = pts[i - 1] ?? (closed ? pts[pts.length - 2] : undefined)
+      const next = pts[i + 1] ?? (closed ? pts[1] : undefined)
+      if (closed && i === pts.length - 1) continue
+      if (!prev || !next) {
+        // the ends of a wall that doesn't close
+        const [a, b] = prev ? [prev, pts[i]] : [pts[i], next!]
+        spots.push({ at: pts[i], ang: Math.atan2(b[1] - a[1], b[0] - a[0]) })
+        continue
+      }
+      const a0 = Math.atan2(pts[i][1] - prev[1], pts[i][0] - prev[0])
+      const a1 = Math.atan2(next[1] - pts[i][1], next[0] - pts[i][0])
+      let bend = Math.abs(a1 - a0)
+      if (bend > Math.PI) bend = 2 * Math.PI - bend
+      if (bend > 0.4) spots.push({ at: pts[i], ang: Math.atan2(Math.sin(a0) + Math.sin(a1), Math.cos(a0) + Math.cos(a1)) })
+    }
+    // along long straight runs
+    for (let i = 1; i < pts.length; i++) {
+      const [a, b] = [pts[i - 1], pts[i]]
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1])
+      const n = Math.floor(len / spacing)
+      for (let j = 1; j <= n; j++) {
+        const t = j / (n + 1)
+        spots.push({ at: [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], ang: Math.atan2(b[1] - a[1], b[0] - a[0]) })
+      }
+    }
+    const placed: Point[] = []
+    for (const spot of spots) {
+      if (gates.some((g) => Math.hypot(g.at[0] - spot.at[0], g.at[1] - spot.at[1]) < (g.size + size) * 0.55)) continue
+      if (placed.some((q) => Math.hypot(q[0] - spot.at[0], q[1] - spot.at[1]) < size * 1.2)) continue
+      placed.push(spot.at)
+      // the tower's outward side (-y) faces out of the town
+      const turn = ((spot.ang + (w.out > 0 ? Math.PI : 0)) * 180) / Math.PI
+      if (Atlas.assets['ct-wall-tower'])
+        drawPiece(ctx, { id: `${w.s.id}-t${placed.length}`, asset: 'ct-wall-tower', at: spot.at, size, seed: hashId(w.s.id) + placed.length, variant, flip: false, turn: ((turn % 360) + 360) % 360 }, st)
+      else {
+        ctx.beginPath()
+        ctx.arc(spot.at[0], spot.at[1], size * 0.4, 0, Math.PI * 2)
+        ctx.fillStyle = stone
+        ctx.fill()
+        ctx.strokeStyle = st.ink
+        ctx.lineWidth = 1.6 * st.line
+        ctx.stroke()
+      }
+    }
+  }
+}
+
 function drawLine(ctx: CanvasRenderingContext2D, s: Extract<Shape, { kind: 'line' }>, st: InkStyle, k: number, battleUnit?: number) {
   const r = Atlas.rng(hashId(s.id))
   const pts = smoothLine(s.points, s.smooth, 6 * k)
@@ -537,12 +788,36 @@ export function drawPiece(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle)
   ctx.restore()
 }
 
+let hatchTile: { key: string; tile: HTMLCanvasElement } | undefined
+/** The way shade and cast shadows fall on the map: down and to the right. */
+const LIGHT: [number, number] = [0.62, 0.78]
+
 /**
  * A turned piece. Its own cast shadow would turn with it and fall the wrong way, so the piece is
  * drawn without one on a little canvas of its own, and a shadow of its outline is laid down-right
- * under it, where the light says it belongs.
+ * under it, where the light says it belongs. Town pieces know how to shade themselves for any
+ * light, so they are drawn straight onto the map, turned, with the light turned back the other way.
  */
 function drawTurned(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle, a: number, variant: number) {
+  const def = Atlas.assets[p.asset]
+  if (def.category?.startsWith('ct-')) {
+    const [c, s] = [Math.cos(a), Math.sin(a)]
+    const [lx, ly] = [LIGHT[0] * c + LIGHT[1] * s, -LIGHT[0] * s + LIGHT[1] * c]
+    ctx.save()
+    ctx.translate(p.at[0], p.at[1])
+    ctx.rotate(a)
+    if (p.flip) ctx.scale(-1, 1)
+    Atlas.light = [p.flip ? -lx : lx, ly]
+    try {
+      def.draw(ctx, 0, 0, p.size, Atlas.rng(p.seed), st, variant)
+    } catch (e) {
+      console.warn('Map piece failed to draw', p.asset, e)
+    } finally {
+      Atlas.light = undefined
+      ctx.restore()
+    }
+    return
+  }
   const m = ctx.getTransform()
   const k = Math.hypot(m.a, m.b)
   const px = Math.max(2, Math.ceil(p.size * 1.8 * k))
@@ -555,41 +830,50 @@ function drawTurned(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle, a: nu
   o.lineJoin = 'round'
   o.lineCap = 'round'
   try {
-    Atlas.assets[p.asset].draw(o, 0, 0, p.size, Atlas.rng(p.seed), { ...st, shadows: false }, variant)
+    def.draw(o, 0, 0, p.size, Atlas.rng(p.seed), { ...st, shadows: false }, variant)
   } catch (e) {
     console.warn('Map piece failed to draw', p.asset, e)
     return
   }
   const cx = m.a * p.at[0] + m.c * p.at[1] + m.e
   const cy = m.b * p.at[0] + m.d * p.at[1] + m.f
+  const [x0, y0] = [cx - px / 2, cy - px / 2]
+  const [dx, dy] = [p.size * 0.06 * k, p.size * 0.08 * k]
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
-  if (st.shadows) {
+  if (st.shadows && st.mode === 'colour') {
+    // a wash: the canvas's own shadow of the piece's outline
+    ctx.shadowColor = 'rgba(40,30,15,.25)'
+    ctx.shadowOffsetX = dx
+    ctx.shadowOffsetY = dy
+  } else if (st.shadows) {
+    // ink: close diagonal hatching instead of a wash
+    const step = Math.max(3, Math.round(3.2 * st.line * k))
+    const lw = Math.max(0.6, 0.55 * st.line * k)
+    const key = `${step}|${lw}|${st.ink}`
+    if (hatchTile?.key !== key) {
+      const tile = document.createElement('canvas')
+      tile.width = tile.height = step
+      const t = tile.getContext('2d')!
+      t.strokeStyle = st.ink
+      t.globalAlpha = 0.5
+      t.lineWidth = lw
+      t.beginPath()
+      t.moveTo(-1, step + 1)
+      t.lineTo(step + 1, -1)
+      t.stroke()
+      hatchTile = { key, tile }
+    }
     const sh = document.createElement('canvas')
     sh.width = sh.height = px
     const c = sh.getContext('2d')!
     c.drawImage(off, 0, 0)
     c.globalCompositeOperation = 'source-in'
-    if (st.mode === 'colour') c.fillStyle = 'rgba(40,30,15,.25)'
-    else {
-      // ink: close diagonal hatching instead of a wash
-      const tile = document.createElement('canvas')
-      const step = Math.max(3, Math.round(3.2 * st.line * k))
-      tile.width = tile.height = step
-      const t = tile.getContext('2d')!
-      t.strokeStyle = st.ink
-      t.globalAlpha = 0.5
-      t.lineWidth = Math.max(0.6, 0.55 * st.line * k)
-      t.beginPath()
-      t.moveTo(-1, step + 1)
-      t.lineTo(step + 1, -1)
-      t.stroke()
-      c.fillStyle = c.createPattern(tile, 'repeat')!
-    }
+    c.fillStyle = c.createPattern(hatchTile.tile, 'repeat')!
     c.fillRect(0, 0, px, px)
-    ctx.drawImage(sh, cx - px / 2 + p.size * 0.06 * k, cy - px / 2 + p.size * 0.08 * k)
+    ctx.drawImage(sh, x0 + dx, y0 + dy)
   }
-  ctx.drawImage(off, cx - px / 2, cy - px / 2)
+  ctx.drawImage(off, x0, y0)
   ctx.restore()
 }
 
@@ -765,9 +1049,11 @@ function groundFor(d: Drawing, W: number, H: number): GroundMap {
 
 /** Whether a point is on land, so the scatter brush can keep trees ashore and ships at sea. */
 export const landTest = (d: Drawing, W: number, H: number): ((x: number, y: number) => boolean) => {
-  if (d.scene === 'battle') {
+  if (fromAbove(d)) {
     const gm = groundFor(d, W, H)
-    return (x, y) => gm.at(x, y) !== 'water'
+    // a town's coast is painted like a world map's
+    const coast = d.scene === 'city' ? landFor(d, W, H) : undefined
+    return (x, y) => gm.at(x, y) !== 'water' && (!coast || coast.isLand(x, y))
   }
   return landFor(d, W, H).isLand
 }
@@ -818,6 +1104,38 @@ function drawBase(d: Drawing, W: number, H: number, scale: number, st: InkStyle,
 }
 
 /**
+ * A town's ground with its coast: the sea and its ripples as on a world map, and the painted ground
+ * wherever there's land, with the coast inked over the top.
+ */
+function drawCityBase(gm: GroundMap, coast: LandShape, d: Drawing, W: number, H: number, scale: number, st: InkStyle, r: Rng) {
+  const ground = drawGround(gm, d, W, H, scale, st, r)
+  if (!coast.loops.length && d.background !== 'sea') return ground
+  const canvas = document.createElement('canvas')
+  canvas.width = ground.width
+  canvas.height = ground.height
+  const ctx = canvas.getContext('2d')!
+  ctx.scale(scale, scale)
+  ctx.lineJoin = 'round'
+  ctx.lineCap = 'round'
+  const k = scaleOf(W, H)
+  const colour = st.mode === 'colour'
+  const T = Atlas.terrain
+  ctx.fillStyle = colour ? st.tint.water : st.paper
+  ctx.fillRect(0, 0, W, H)
+  if (!coast.loops.length) return canvas
+  T.ripples(ctx, coast.path, W, H, st, { rings: [6 * k, 12 * k, 19 * k], alpha: colour ? 0.35 : 0.5, lw: 0.9 * st.line })
+  ctx.save()
+  ctx.clip(coast.path, 'evenodd')
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.drawImage(ground, 0, 0)
+  ctx.restore()
+  const coastLen = coast.loops.reduce((n, l) => n + l.length, 0)
+  T.coastStipple(ctx, coast.loops, coast.isLand, r, st, { n: Math.round(coastLen * 1.2), spread: 14 * k, size: 0.7 * st.line })
+  for (const l of coast.loops) Atlas.inkStroke(ctx, [...l, l[0]], r, { w: 2.2 * st.line, wob: 0.3, taper: 0.15, color: st.ink })
+  return canvas
+}
+
+/**
  * Draw a classic map at full size. `scale` < 1 renders a smaller copy (same look) for quick previews.
  */
 export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTMLCanvasElement {
@@ -838,16 +1156,22 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
   const stLand = { ...st, paper: landPaper }
 
   const battle = d.scene === 'battle'
-  const u = (d.gridSize || 70) / 70
+  const city = d.scene === 'city'
+  // battle maps, dungeons and town plans are seen from above; world maps from the side
+  const top = fromAbove(d)
+  const u = drawUnit(d)
   // the ground, or sea then land with its coast: the slow part, so it's kept until it or the look changes
-  const land = battle ? undefined : landFor(d, W, H)
+  const land = top ? undefined : landFor(d, W, H)
+  let shore: Path2D | undefined
   if (land) {
     const baseKey = `${land.key}|${look}|${d.biome}|${scale}|${canvas.width}x${canvas.height}`
     if (baseCache?.key !== baseKey) baseCache = { key: baseKey, canvas: drawBase(d, W, H, scale, st, land, landPaper, r) }
   } else {
     const gm = groundFor(d, W, H)
-    const baseKey = `${gm.key}|${look}|${d.biome}|${scale}|${canvas.width}x${canvas.height}`
-    if (baseCache?.key !== baseKey) baseCache = { key: baseKey, canvas: drawGround(gm, d, W, H, scale, st, r) }
+    const coast = city ? landFor(d, W, H) : undefined
+    if (coast?.loops.length) shore = coast.path
+    const baseKey = `${gm.key}|${coast?.key ?? ''}|${look}|${d.biome}|${scale}|${canvas.width}x${canvas.height}`
+    if (baseCache?.key !== baseKey) baseCache = { key: baseKey, canvas: coast ? drawCityBase(gm, coast, d, W, H, scale, st, r) : drawGround(gm, d, W, H, scale, st, r) }
   }
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
@@ -871,16 +1195,18 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
     ctx.restore()
   }
   if (rooms) drawRoomWalls(ctx, rooms, d, W, H, st, rock)
-  // on battle maps old areas became ground, so only rooms keep an outline
-  for (const s of d.shapes) if (s.kind === 'area' && visible(s) && (battle ? !s.smooth : marked(s))) drawArea(ctx, s, st, k)
+  // on maps seen from above old areas became ground, so only rooms keep an outline
+  for (const s of d.shapes) if (s.kind === 'area' && visible(s) && (top ? !s.smooth : marked(s))) drawArea(ctx, s, st, k)
 
-  // lines: rivers under roads and borders
-  const lines = d.shapes.filter((s): s is Extract<Shape, { kind: 'line' }> => s.kind === 'line' && visible(s))
-  const bu = battle ? u : undefined
-  for (const s of lines.filter((s) => s.style === 'river')) drawLine(ctx, s, st, k, bu)
+  // lines: rivers, then streets, then walls, fences, roads and borders, then town walls over them all
+  const lines = d.shapes.filter((s): s is Line => s.kind === 'line' && visible(s))
+  const bu = top ? u : undefined
+  if (city) drawTownRivers(ctx, lines.filter((s) => s.style === 'river'), d, st, k, shore)
+  else for (const s of lines.filter((s) => s.style === 'river')) drawLine(ctx, s, st, k, bu)
+  drawStreets(ctx, lines.filter((s) => s.style === 'street'), d, st, k)
   // doors leave a gap in walls drawn as lines too
   const gaps = battle ? { dwall: doorGaps(d, W, H, 0.2 * u * 70), wall: doorGaps(d, W, H, 30 * u) } : undefined
-  for (const s of lines.filter((s) => s.style !== 'river')) {
+  for (const s of lines.filter((s) => s.style !== 'river' && s.style !== 'street' && s.style !== 'townwall')) {
     const gap = s.style === 'dwall' || s.style === 'wall' ? gaps?.[s.style] : undefined
     if (!gap) drawLine(ctx, s, st, k, bu)
     else {
@@ -891,9 +1217,11 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
     }
   }
 
+  drawTownWalls(ctx, lines.filter((s) => s.style === 'townwall'), d, W, H, st, k)
+
   // pieces: on world maps lower ones stand in front; seen from above, the one put down last is on top
-  const pieces = d.shapes.filter(visible).map((s) => pieceOf(s, battle)).filter((p): p is Piece => !!p)
-  if (!battle) pieces.sort((a, b) => a.at[1] - b.at[1])
+  const pieces = d.shapes.filter(visible).map((s) => pieceOf(s, top)).filter((p): p is Piece => !!p)
+  if (!top) pieces.sort((a, b) => a.at[1] - b.at[1])
   pieces.forEach((p) => drawPiece(ctx, p, stLand))
 
   // colour washes over the land keep the ink lines
@@ -912,7 +1240,7 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
 
   if (!rock) drawGrid(ctx, d, W, H, st)
 
-  if (!hidden.has('labels')) for (const s of d.shapes) if (s.kind === 'label') drawLabel(ctx, s, st, battle && colour ? '#efe6cc' : landPaper, k)
+  if (!hidden.has('labels')) for (const s of d.shapes) if (s.kind === 'label') drawLabel(ctx, s, st, top && colour ? '#efe6cc' : landPaper, k)
 
   // battle maps in colour stay clean for the table and virtual tabletops; ink ones get the old paper
   if (!battle || !colour) agePaper(ctx, W, H, look, Atlas.rng((d.seed ?? 1) + 99), battle ? u : k)

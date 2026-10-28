@@ -5,7 +5,7 @@
  */
 import { Atlas, type InkStyle, type Point, type Rng, type Tint } from './atlas'
 import { loopArea, makeNoise, roughen, traceLoops } from './geometry'
-import type { Drawing, GroundId, Terrain } from '../mapDrawing'
+import { drawUnit, type Drawing, type GroundId, type Terrain } from '../mapDrawing'
 
 /** Drawing order of the blended grounds; water is drawn on top with a crisp bank. */
 const BLEND: GroundId[] = ['dirt', 'sand', 'grass', 'stone', 'mud', 'snow', 'paving', 'floor', 'boards']
@@ -122,7 +122,7 @@ const EDGE = (g: GroundId) => (LAID.includes(g) ? { r: 3, half: 0.12, amp: 0.08 
  * (the base is whatever's left), so a stroke costs about as much as the area it touches.
  */
 export function buildGround(d: Drawing, W: number, H: number, key: string, rooms?: Path2D): GroundMap {
-  const u = (d.gridSize || 70) / 70
+  const u = drawUnit(d)
   const ms = Math.min(0.5, 900 / Math.max(W, H))
   const mw = Math.max(2, Math.ceil(W * ms))
   const mh = Math.max(2, Math.ceil(H * ms))
@@ -758,7 +758,7 @@ let sheetCache: HTMLCanvasElement | undefined
  * it, then water on top, then the banks. Returns a full-size canvas.
  */
 export function drawGround(gm: GroundMap, d: Drawing, W: number, H: number, scale: number, st: InkStyle, r: Rng): HTMLCanvasElement {
-  const u = (d.gridSize || 70) / 70
+  const u = drawUnit(d)
   const out = document.createElement('canvas')
   out.width = Math.max(1, Math.round(W * scale))
   out.height = Math.max(1, Math.round(H * scale))
