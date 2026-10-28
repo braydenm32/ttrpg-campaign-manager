@@ -263,11 +263,9 @@ function Templates({ world }: { world: World }) {
 /** The world's cover picture and colour, shown on Home and on its book on the shelf of worlds. */
 function WorldLook({ world, update }: { world: World; update: (patch: Partial<World>) => void }) {
   const pictures = useLiveQuery(() => db.assets.where({ worldId: world.id }).filter((a) => a.mime.startsWith('image/')).toArray(), [world.id]) ?? []
-  // The cover is for everyone, so choosing a picture reveals it to players.
-  const choose = async (id: string | undefined) => {
-    if (id) await db.assets.update(id, { visibility: 'players', updatedAt: Date.now() })
-    update({ coverId: id })
-  }
+  // The cover is for everyone: players get the picture while it's the cover (the server adds it),
+  // and stop getting it if you pick another, unless it's marked for players in Files.
+  const choose = (id: string | undefined) => update({ coverId: id })
   return (
     <section className="world-look">
       <h2>

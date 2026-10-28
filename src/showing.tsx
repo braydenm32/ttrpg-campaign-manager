@@ -297,6 +297,9 @@ function Thumb({ asset, onClick }: { asset: Parameters<typeof useBlobUrl>[0]; on
 /** The players' screen: a full window showing only what's being shown. Opened from the Lectern for a TV. */
 export function PlayersScreen({ world }: { world: World }) {
   const showing = world.showing
+  const entities = useVisibleEntities(world.id)
+  // A page hidden again since it was shown keeps its name to itself too.
+  const hiddenPage = showing?.kind === 'page' && !entities.some((e) => e.id === showing.entityId && e.visibility === 'players')
   // Keep the screen awake while it's up, where the browser allows it.
   useEffect(() => {
     let lock: { release: () => Promise<void> } | undefined
@@ -308,7 +311,7 @@ export function PlayersScreen({ world }: { world: World }) {
     <div className="players-screen">
       {showing ? (
         <>
-          <h1>{showing.title}</h1>
+          {!hiddenPage && <h1>{showing.title}</h1>}
           <ShowingView showing={showing} worldId={world.id} big />
         </>
       ) : (

@@ -186,6 +186,9 @@ export async function applyUpdates(world: World, session: Session, updates: Worl
   const original = new Map(all.map((e) => [e.id, e]))
   const working = new Map(all.map((e) => [e.id, structuredClone(e)]))
   const made = new Set<string>()
+  // Pages that were part of the session as players saw it. GM-only notes, relationships and
+  // "check this" lines don't count, so a secret doesn't show up as "seen in session N".
+  const seen = new Set<string>()
   const logs = new Map<string, { text: string; players?: boolean }[]>()
   const ledger: LedgerEntry[] = []
   const now = Date.now()
@@ -223,6 +226,7 @@ export async function applyUpdates(world: World, session: Session, updates: Worl
     if (u.kind !== 'new') continue
     const same = u.useSameAs ? lookup(u.sameAs) : undefined
     if (same) {
+      seen.add(same.id)
       log(same, u.details || u.summary)
       record(`${same.name}: ${u.details || u.summary} (heard as “${u.name}”)`, same)
       continue
@@ -241,6 +245,7 @@ export async function applyUpdates(world: World, session: Session, updates: Worl
         const e = lookup(u.page)
         if (!e) break
         log(e, u.note, u.players)
+        if (u.players) seen.add(e.id)
         record(`${e.name}: ${u.note}`, e)
         if (u.timeline) timelineEvent(`${e.name}: ${u.note}`.slice(0, 80), u.note, [e.name])
         break
@@ -249,6 +254,7 @@ export async function applyUpdates(world: World, session: Session, updates: Worl
         const e = lookup(u.page)
         if (!e) break
         if (e.type === 'quest') e.questStatus = u.status
+        seen.add(e.id)
         log(e, u.note ? `${u.note} (now ${u.status})` : `Now ${u.status}.`)
         record(describe({ ...u, page: e.name }), e)
         if (u.timeline) timelineEvent(`${e.name} ${u.status === 'done' ? 'completed' : u.status}`, u.note ?? '', [e.name])
@@ -271,6 +277,7 @@ export async function applyUpdates(world: World, session: Session, updates: Worl
         const e = lookup(u.page)
         if (!e) break
         e.status = u.status
+        if (e.statusKnown) seen.add(e.id)
         log(e, u.note ? `${u.note} (${LIFE_STATUS[u.status].label.toLowerCase()})` : `${LIFE_STATUS[u.status].label}.`)
         record(describe({ ...u, page: e.name }), e)
         if (u.timeline) timelineEvent(`${e.name} ${u.status === 'alive' ? 'returns' : u.status === 'dead' ? 'dies' : `goes ${u.status}`}`, u.note ?? '', [e.name])
@@ -282,6 +289,7 @@ export async function applyUpdates(world: World, session: Session, updates: Worl
         const holder = toParty ? undefined : lookup(u.to)
         if (!toParty && !holder) break
         item.heldBy = toParty ? 'party' : holder!.id
+        seen.add(item.id)
         if (u.quantity) item.quantity = u.quantity
         const who = toParty ? 'the party' : holder!.name
         log(item, `Now with ${who}.`)
@@ -326,9 +334,9 @@ export async function applyUpdates(world: World, session: Session, updates: Worl
     e.updatedAt = Math.max(e.updatedAt, now)
     if (made.has(e.id)) await db.entities.add(e)
     else await saveEntity(e)
-    if (e.type !== 'event' && e.type !== 'thread') touched.push(e.id)
+    if (e.type !== 'event' && e.type !== 'thread' && (made.has(e.id) || seen.has(e.id))) touched.push(e.id)
   }
-  // Everyone and everywhere that changed was "in" this session, which also sets their "last seen".
+  // Everyone and everywhere that came up was "in" this session, which also sets their "last seen".
   await db.sessions
     .where('id')
     .equals(session.id)

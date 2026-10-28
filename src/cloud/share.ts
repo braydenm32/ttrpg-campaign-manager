@@ -1,5 +1,6 @@
 import { db, type Asset, type Campaign, type Entity, type Pin, type Session, type SharedInfo, type World, type WorldMap } from '../db'
 import { appLink, supabase, SUPABASE_URL } from './client'
+import { stableStringify } from './sync'
 
 /**
  * Player share links. The GM turns on a link for a synced world; anyone with the link gets a
@@ -53,9 +54,38 @@ export async function loadSharedWorld(token: string): Promise<string> {
   const { data, error } = await supabase.rpc('shared_world', { token })
   if (error) throw error
   if (!data) throw new Error('This share link has been turned off or replaced. Ask your GM for a new one.')
-  const fetchAsset = (assetId: string) =>
-    fetch(`${SUPABASE_URL}/functions/v1/shared-asset?token=${encodeURIComponent(token)}&id=${encodeURIComponent(assetId)}`)
-  return storePlayerCopy(data as SharedPayload, sharedWorldId(token), `@${token.slice(0, 8)}`, { token }, fetchAsset)
+  return storePlayerCopy(data as SharedPayload, sharedWorldId(token), `@${token.slice(0, 8)}`, { token }, (ids) => downloadFiles({ token }, ids))
+}
+
+/**
+ * Downloads a world's player-safe files. The server is asked once for links to all of them (one
+ * check of what players may see), then each comes straight from storage. One request per file
+ * is the fallback if that fails.
+ */
+export async function downloadFiles(from: { token: string } | { world: string }, ids: string[], access?: string): Promise<Map<string, Blob>> {
+  const files = new Map<string, Blob>()
+  if (!ids.length) return files
+  const endpoint = `${SUPABASE_URL}/functions/v1/shared-asset`
+  const headers: Record<string, string> = access ? { Authorization: `Bearer ${access}` } : {}
+  let urls: Record<string, string> | undefined
+  try {
+    const res = await fetch(endpoint, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ ...from, ids }) })
+    if (res.ok) urls = ((await res.json()) as { urls?: Record<string, string> }).urls
+  } catch {
+    // Older server or a blip: fetch one at a time below.
+  }
+  const query = 'token' in from ? `token=${encodeURIComponent(from.token)}` : `world=${encodeURIComponent(from.world)}`
+  await Promise.all(
+    ids.map(async (id) => {
+      try {
+        const res = urls ? (urls[id] ? await fetch(urls[id]) : undefined) : await fetch(`${endpoint}?${query}&id=${encodeURIComponent(id)}`, { headers })
+        if (res?.ok) files.set(id, await res.blob())
+      } catch {
+        // Skipped files are tried again on the next refresh.
+      }
+    }),
+  )
+  return files
 }
 
 /**
@@ -67,25 +97,33 @@ export async function storePlayerCopy(
   worldId: string,
   suffix: string,
   info: Omit<SharedInfo, 'fetchedAt'>,
-  fetchAsset: (assetId: string) => Promise<Response>,
+  download: (assetIds: string[]) => Promise<Map<string, Blob>>,
 ) {
   const id = (x: string) => x + suffix
   const opt = (x?: string | null) => (x ? id(x) : undefined)
 
+  // Nothing changed for players (the GM only edited their own notes, say): keep the copy as it is,
+  // so pictures and pages on screen don't reload.
+  const { updatedAt: _u, ...content } = p as SharedPayload & { updatedAt?: string }
+  const hash = await digest(stableStringify({ content, info }))
+  const before = await db.worlds.get(worldId)
+  if (before?.shared?.hash === hash && (await db.assets.where({ worldId }).count()) === p.assets.length) {
+    await db.worlds.update(worldId, { shared: { ...before.shared, fetchedAt: Date.now() } })
+    return worldId
+  }
+
   // Download only files that are new or changed since the last refresh.
   const existing = new Map((await db.assets.where({ worldId }).toArray()).map((a) => [a.id, a]))
-  const assets: Asset[] = []
-  for (const a of p.assets) {
-    const localId = id(a.id)
-    const have = existing.get(localId)
-    if (have && have.size === a.size && have.updatedAt === a.updatedAt) {
-      assets.push({ ...have, ...a, id: localId, worldId })
-      continue
-    }
-    const res = await fetchAsset(a.id)
-    if (!res.ok) continue
-    assets.push({ ...a, id: localId, worldId, blob: await res.blob() } as Asset)
+  const unchanged = (a: Omit<Asset, 'blob'>) => {
+    const have = existing.get(id(a.id))
+    return have && have.size === a.size && have.updatedAt === a.updatedAt ? have : undefined
   }
+  const fresh = await download(p.assets.filter((a) => !unchanged(a)).map((a) => a.id))
+  const assets: Asset[] = p.assets.flatMap((a) => {
+    const have = unchanged(a)
+    const blob = have?.blob ?? fresh.get(a.id)
+    return blob ? [{ ...a, id: id(a.id), worldId, blob } as Asset] : []
+  })
   const now = Date.now()
   const claims = info.claims?.map((c) => ({ ...c, entityId: id(c.entityId) }))
   const notes = info.notes?.map((n) => ({ ...n, entityId: n.entityId ? id(n.entityId) : '' }))
@@ -93,7 +131,6 @@ export async function storePlayerCopy(
 
   // What's new since the last refresh: pages and sessions revealed, and questions answered. The
   // first time a world arrives everything is new, so nothing is flagged.
-  const before = await db.worlds.get(worldId)
   let news = before?.shared?.news
   if (before) {
     const hadPages = new Set(await db.entities.where({ worldId }).primaryKeys())
@@ -121,7 +158,7 @@ export async function storePlayerCopy(
       id: worldId,
       updatedAt: now,
       cloud: undefined,
-      shared: { ...info, claims, notes, questions, news, fetchedAt: now },
+      shared: { ...info, claims, notes, questions, news, fetchedAt: now, hash: assets.length === p.assets.length ? hash : undefined },
     } as World)
     await db.assets.bulkPut(assets)
     await db.campaigns.bulkPut(p.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))
@@ -137,6 +174,12 @@ export async function storePlayerCopy(
     )
   })
   return worldId
+}
+
+/** A short fingerprint of a long text. */
+async function digest(text: string) {
+  const bytes = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))
+  return btoa(String.fromCharCode(...bytes))
 }
 
 /** Re-fetches a read-only copy from wherever it came from. */
@@ -191,7 +234,13 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) 
       }
     }
   }
+  // A tab nobody is looking at doesn't download anything; it catches up when it's opened again.
+  let missed = false
   const refresh = () => {
+    if (document.hidden) {
+      missed = true
+      return
+    }
     if (timer) return
     const wait = Math.max(0, last + REFRESH_GAP - Date.now())
     timer = setTimeout(() => {
@@ -204,7 +253,11 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) 
   openChannels.set(name, ch)
   // The GM's broadcast is the main signal; this slow check only covers a missed one, and skips hidden tabs.
   const poll = setInterval(() => !document.hidden && refresh(), 5 * 60_000)
-  const onVisible = () => !document.hidden && refresh()
+  const onVisible = () => {
+    if (document.hidden || !(missed || Date.now() - last > 5 * 60_000)) return
+    missed = false
+    refresh()
+  }
   window.addEventListener('online', refresh)
   document.addEventListener('visibilitychange', onVisible)
   return () => {

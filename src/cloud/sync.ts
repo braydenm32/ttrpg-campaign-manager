@@ -226,13 +226,74 @@ async function applyRemote(worldId: string, table: SyncedTable, id: string, data
   return true
 }
 
-/** Uploads everything that changed on this device. Returns how many rows were sent. */
-async function pushWorld(worldId: string): Promise<number> {
+/**
+ * The part of a row that can reach players (roughly what `player_view` sends), or undefined when
+ * they get none of it. Comparing it before and after a push tells whether players need to refresh:
+ * GM-only pages, notes, prep and the Lectern change often and shouldn't make every player reload.
+ */
+function playerPart(table: string, data: Record<string, unknown> | null | undefined): unknown {
+  if (!data) return undefined
+  const without = (...keys: string[]) => Object.fromEntries(Object.entries(data).filter(([k]) => !keys.includes(k)))
+  switch (table) {
+    case 'worlds':
+      return without('updatedAt')
+    case 'campaigns':
+      return data.visibility === 'gm' ? undefined : data
+    case 'entities':
+      if (data.visibility !== 'players' && !(data.revealedTo as unknown[] | undefined)?.length) return undefined
+      return without('gmNotes', 'gmTags', 'aliases', 'updatedAt')
+    case 'maps':
+      return data.visibility === 'players' ? without('drawing', 'updatedAt') : undefined
+    case 'pins':
+      return data.visibility === 'players' ? data : undefined
+    case 'sessions': {
+      if (data.visibility !== 'players') return undefined
+      const { campaignId, number, title, date, worldDate, recap, entityIds } = data
+      return { campaignId, number, title, date, worldDate, recap, entityIds }
+    }
+    default:
+      return undefined
+  }
+}
+const playersCare = (table: string, before: Record<string, unknown> | null | undefined, after: Record<string, unknown> | null | undefined) =>
+  stableStringify(playerPart(table, before)) !== stableStringify(playerPart(table, after))
+
+/** Pictures players can receive: ones marked for players, plus those used by something they can see (map pictures are redrawn in place). */
+function picturesForPlayers(rows: Row[]) {
+  const ids = new Set<string>()
+  const add = (id: unknown) => typeof id === 'string' && ids.add(id)
+  const inText = (text: unknown) => typeof text === 'string' && [...text.matchAll(/asset:([0-9a-fA-F-]{36})/g)].forEach((m) => ids.add(m[1]))
+  for (const { table, id, data: d } of rows) {
+    if (table === 'assets' && d.visibility === 'players') ids.add(id)
+    if (table === 'worlds') {
+      add(d.coverId)
+      add((d.showing as { assetId?: string } | null)?.assetId)
+      ;((d.handouts as { assetId?: string }[] | undefined) ?? []).forEach((h) => add(h.assetId))
+    }
+    if (table === 'maps' && d.visibility === 'players') {
+      add(d.imageId)
+      add((d.fog as { imageId?: string } | undefined)?.imageId)
+    }
+    if (table === 'entities' && playerPart(table, d)) {
+      add(d.imageId)
+      inText(d.body)
+      inText(d.playerBody)
+    }
+    if (table === 'sessions' && d.visibility === 'players') inText(d.recap)
+  }
+  return ids
+}
+
+/** Uploads everything that changed on this device. Says how many rows were sent, and whether any of them can reach players. */
+async function pushWorld(worldId: string): Promise<{ sent: number; forPlayers: boolean }> {
   const rows = await localRows(worldId)
   const metas = new Map((await db.syncMeta.where({ worldId }).toArray()).map((m) => [m.key, m]))
   const upserts: { world_id: string; table_name: string; id: string; data: unknown; deleted: boolean }[] = []
   const newMetas: SyncMeta[] = []
   const failures: string[] = []
+  let forPlayers = false
+  let pictures: Set<string> | undefined
+  const pictureForPlayers = (id: string) => (pictures ??= picturesForPlayers(rows)).has(id)
   // Session recordings are big, so new ones stay on the device that made them (their transcripts
   // sync with the session). Ones uploaded before this rule keep syncing as they were.
   const recordings = new Set((await db.sessions.where({ worldId }).toArray()).flatMap((x) => x.recordings.map((r) => r.assetId)))
@@ -257,6 +318,14 @@ async function pushWorld(worldId: string): Promise<number> {
     }
     upserts.push({ world_id: worldId, table_name: r.table, id: r.id, data: r.data, deleted: false })
     newMetas.push({ key, worldId, hash, base: r.data })
+    // A row synced before this device kept its last version can't be compared, so count it.
+    if (!forPlayers)
+      forPlayers =
+        r.table === 'assets'
+          ? pictureForPlayers(r.id) || meta?.base?.visibility === 'players'
+          : meta && !meta.deleted && !meta.base
+            ? true
+            : playersCare(r.table, meta?.deleted ? undefined : meta?.base, r.data)
   }
   // Anything synced before but gone now was deleted on this device.
   for (const meta of metas.values()) {
@@ -266,6 +335,7 @@ async function pushWorld(worldId: string): Promise<number> {
     if (table === 'assets') await supabase.storage.from('assets').remove([storagePath(worldId, id)])
     upserts.push({ world_id: worldId, table_name: table, id, data: null, deleted: true })
     newMetas.push({ key: meta.key, worldId, hash: '', deleted: true })
+    if (!forPlayers) forPlayers = !meta.base || (table === 'assets' ? meta.base.visibility === 'players' : playersCare(table, meta.base, undefined))
   }
   // Parents before children doesn't matter (no foreign keys between records), so send in chunks.
   for (let i = 0; i < upserts.length; i += 200) {
@@ -280,7 +350,7 @@ async function pushWorld(worldId: string): Promise<number> {
   const worldRow = upserts.find((u) => u.table_name === 'worlds' && !u.deleted)
   if (worldRow) await supabase.from('cloud_worlds').update({ name: (worldRow.data as World).name }).eq('id', worldId)
   if (failures.length) setState({ message: `Some files couldn't upload (free plan limit is 50 MB per file): ${failures.join('; ')}` })
-  return upserts.length
+  return { sent: upserts.length, forPlayers }
 }
 
 // ---------- engine ----------
@@ -321,8 +391,9 @@ export async function syncNow() {
         } finally {
           suppress--
         }
-        const sent = await pushWorld(id)
-        if (sent) await notifyShareViewers(id)
+        // Players only refresh when something they can see changed.
+        const { forPlayers } = await pushWorld(id)
+        if (forPlayers) await notifyShareViewers(id)
       } catch (err) {
         const name = (await db.worlds.get(id))?.name ?? 'A world'
         problems.push(`${name}: ${(err as Error).message}`)
@@ -381,13 +452,19 @@ export const tellPlayers = (worldId: string) => broadcastChanged(`members:${worl
 
 async function broadcastChanged(name: string) {
   const ch = supabase.channel(name, { config: { private: true } })
+  // Never wait more than a few seconds: a lost connection must not hold up syncing.
   await new Promise<void>((resolve) => {
+    const giveUp = setTimeout(resolve, 5000)
+    const done = () => {
+      clearTimeout(giveUp)
+      resolve()
+    }
     ch.subscribe((status) => {
-      if (status === 'SUBSCRIBED') ch.send({ type: 'broadcast', event: 'changed', payload: {} }).finally(() => resolve())
-      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') resolve()
+      if (status === 'SUBSCRIBED') ch.send({ type: 'broadcast', event: 'changed', payload: {} }).finally(done)
+      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') done()
     })
   })
-  supabase.removeChannel(ch)
+  void supabase.removeChannel(ch)
 }
 
 /** Starts background syncing. Safe to call more than once. */

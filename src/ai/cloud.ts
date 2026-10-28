@@ -44,6 +44,8 @@ export async function startCloudJob(blob: Blob, key: string, language: 'en' | 'a
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         audio_url: upload_url,
+        // The best model ($0.21 an hour), falling back to Universal-2 for languages it doesn't cover.
+        speech_models: ['universal-3-5-pro', 'universal-2'],
         speaker_labels: true,
         ...(language === 'auto' ? { language_detection: true } : { language_code: 'en' }),
       }),

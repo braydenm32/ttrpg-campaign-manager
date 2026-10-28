@@ -1771,7 +1771,12 @@ function PieceLink({ shape, pin, onLink }: { shape: Extract<Shape, { kind: 'asse
             </button>
           </div>
           <p className="muted small">
-            {pin.visibility === 'gm' ? 'Only you can click it for now.' : linked?.visibility === 'gm' ? 'Players can click it, but they won’t see the page until you reveal that too.' : 'Players can click it to open the page.'} A note and
+            {pin.visibility === 'gm'
+              ? 'Only you can click it for now.'
+              : linked?.visibility === 'gm'
+                ? `Players can click it, but they won’t see the page until you reveal that too. They do see the name on the map${pin.label ? `, “${pin.label}”` : ''}, so change it if that gives too much away.`
+                : 'Players can click it to open the page.'}{' '}
+            A note and
             “opens map” are on the map itself, after you press Done.
           </p>
         </>
