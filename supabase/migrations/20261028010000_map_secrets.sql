@@ -2,7 +2,8 @@
 -- "GM only"). A drawn map with secrets on it has a second picture for the players, drawn without them
 -- (maps.playerImageId). Players get that one (or its fogged copy) as the map's picture; the GM's copy
 -- with the secrets is never sent, like the clean picture of a fogged map.
--- player_view is as it was in 20261026000000_round_two.sql apart from the map pictures.
+-- player_view is as in 20261028000000_cover_without_reveal.sql (round_two plus the world's cover) apart from
+-- the map pictures; this file comes after it, so whichever order the two are merged in, this is the one that stays.
 
 create or replace function public.player_view(wid uuid, viewer uuid default null) returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
@@ -72,6 +73,7 @@ begin
   assets as (
     select id, data from live a where a.table_name = 'assets' and (
       a.data->>'visibility' = 'players'
+      or a.id = (select data->>'coverId' from wrow)
       or a.id in (select data->>'imageId' from ents where data->>'imageId' is not null)
       or a.id in (select img from mapimg where img is not null)
       or a.id = (select img from shown)
