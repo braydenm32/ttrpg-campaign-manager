@@ -14,7 +14,7 @@ Across the Glass Sea from [[Qerath]], a fortnight's sail on a good wind and a mo
 
 Their temples are kept swept and empty. Their priests are historians. Their ships have mirrored hulls to throw the sun back into the eyes of anything watching from below the water, which they do not explain. They make the best steel anyone on Vael Ardith has handled, and sell very little of it.
 
-Iskaveth has sent missionaries of the Unburnt Saint east every spring since 3007, to bring the godless a living god. Forty-one men and women have gone. None has written home. Qerath's harbourmaster keeps the list on the wall of his office, and adds to it.
+Iskaveth has sent missionaries of the Unburnt Saint east every spring since 3007, to bring the godless a living god. Forty-one men and women have gone, eight or nine a sailing. None has written home. Qerath's harbourmaster keeps the list on the wall of his office, and adds to it.
 
 ### Hooks
 - An Ostrakai trader in Sevenhaven, asked how his people killed their gods, answered: "We didn't. We stopped feeding them." Then he sold a sword for eight hundred gold and left on the tide.
@@ -22,5 +22,5 @@ Iskaveth has sent missionaries of the Unburnt Saint east every spring since 3007
 - An Ostrakai mirror-ship was seen off [[Qerath]] last Reaping, heading south-west, which is to say toward the Ashenreach's nearest coast.
 
 :::gm
-Ostrakai starved its gods by stopping all worship and all magic, generations ago, and lived. It is the continent's proof that Ending A can be survived, and its people know more about buried gods than anyone on Vael Ardith; a surviving missionary, turned, could bring that knowledge back in a sequel. Their mirrored hulls are against things in the Glass Sea that look up.
+Ostrakai starved its gods to near-death by stopping all worship and all magic, generations ago, and lived. It is the continent's proof that a buried god can be starved and the living survive it, and its people know more about buried gods than anyone on Vael Ardith; a surviving missionary, turned, could bring that knowledge back in a sequel. Their mirrored hulls are against things in the Glass Sea that look up.
 :::

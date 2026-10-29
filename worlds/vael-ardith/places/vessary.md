@@ -16,3 +16,7 @@ The pearl-divers of Vessary are famous and short-lived. Its other trade is peopl
 
 ### Hook
 A refugee priest of the old Iskavethi hearth-faith, hiding in Vessary's Lower Town, claims to have been the healer who trained [[Ilyra of Halcyra]] before the war, and to know what she was before the fire. He wants passage to the Ashenreach and protection when he gets there. He has not said from whom.
+
+:::gm
+He is being hunted by Lamp-Wardens in plain clothes, who have already been seen on the Lower Town stairs.
+:::

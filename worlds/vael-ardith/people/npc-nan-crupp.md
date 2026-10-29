@@ -23,14 +23,19 @@ relations:
   - to: borrin
     kind: has seen
     note: On the ford at midnight, when he was in his bunk.
+  - to: npc-posy-reedmarsh
+    kind: cousin of
+    known: true
 ---
 
-Tiny, toothless, brown and wrinkled as a walnut, Nan Crupp has poled the ferry across the Cinder since the bridge was a wreck. She charges a penny, the same as the bridge, and there is no gate-watch at her landing asking your business. She claims to have taken more secrets across the river than the Velvet Ledger has in its book, "and cheaper".
+Tiny, toothless, brown and wrinkled as a walnut, Nan Crupp has poled the ferry across the Cinder since the bridge was a wreck. She charges a penny, the same as the bridge, or something true, and there is no gate-watch at her landing asking your business. She lives in a tarred hulk-hut at the landing, crosses from first light until the Ember is up (some nights not at all), and watches the river from her door the rest of the time. She claims to have taken more secrets across the river than the Velvet Ledger has in its book, "and cheaper".
 
-> "Penny a crossing, love. Two if you're crying. Three if you're bleeding on my boat."
+> "Penny a crossing, duck. Two if you're crying. Three if you're bleeding on my boat."
 
-She calls [[Kettle Brindlewake]] "that girl" and is sure she'll hang. She knows the river's moods, which bodies come up where, and how long a drowned man takes to rise.
+She calls [[Kettle Brindlewake]] "that girl" and is sure she'll hang. She is cousin to [[Barge-Mother Posy Reedmarsh]], who has been forecasting a bad end for Kettle for thirty years. She knows the river's moods, which bodies come up where, and how long a drowned man takes to rise.
 
 :::gm
-Nan saw [[Borrin Halt]] standing on the ford in the middle of the river at midnight, a week before session 1, looking down into the water. It wasn't Borrin: he was in his bunk. She'll mention it to the PCs, cheerfully, the first time Borrin rides her ferry. She also saw a man in a scarf on the bridge on 7 Ashfall, and heard a splash, and minded her own business, which she now regrets.
+Nan saw [[Borrin Halt]] standing on the ford in the middle of the river at midnight, a week before session 1, looking down into the water. It wasn't Borrin: he was in his bunk. She'll mention it to the PCs, cheerfully, the first time Borrin rides her ferry. She also saw a scarfed man on the bridge on the night of 7 Ashfall from her hut door, and heard a splash, and minded her own business, which she now regrets. Ghosts and corpses "seen standing in the ford" since the 7th are, she says, true; she has stopped crossing after dark.
+
+In Frostcall 2981 she ferried a very tall, silent orc with a pike for a staff, who stood at the stern and paid a penny. It was [[Grashka]]. The penny is on the shelf above her door, and she has never spent it.
 :::

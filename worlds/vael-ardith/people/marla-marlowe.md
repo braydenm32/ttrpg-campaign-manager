@@ -51,7 +51,7 @@ Who [[The Dreaming Widow]] is. What the Widow wants with Tick. That the red moon
 :::gm
 **Running Marla.** She's real, and only Tick's player should ever be told what she says (pass notes). She cannot touch anything but Tick and loose ash (she can scratch a few words in ash, slowly, which anyone can then read), can't be heard by anyone else (except through Quorl's [[Hathe]]-gifts or a speak with dead), and can't go more than a stone's throw from him.
 
-Her last words, in the Rook-Court ledger: "Wenna, hold his hand. Don't look up." Quorl can read them to Tick if Tick ever asks.
+Her last words, in the Rook-Court ledger: "Wenna, hold his hand. Don't look up." They were told, not heard: [[Ottilie Marlowe]] gave them to the Raveler fledgling who came for the body at dawn, [[Quorl Many-Words]], who wrote them down marked "told". Quorl can read them to Tick if Tick ever asks.
 
 If the ward is resealed, Hathe's old doors steady enough for her to pass. Give Tick a goodbye.
 :::

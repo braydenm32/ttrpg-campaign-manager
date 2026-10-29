@@ -30,7 +30,7 @@ Hathe was the god you met once. He stood at the door between the last breath and
 He died at [[The Battle of Cinders]] in 3002 AW. Nobody knows how. Priests who had served him for forty years felt the keys drop out of their hands at the same moment, all across the continent, and that night the first soldier who should have died at Cinderford did not go anywhere. See [[The Death of Hathe]].
 
 ### Worship across the nations
-Before 3002 he had a small, respected priesthood everywhere and a chapel by every graveyard. Since then his worship has become the [[Ravelers]]' alone: the crow-folk undertakers who followed armies as his lay clergy took up the keys when the priests dropped them, and now every [[The Doorkeeper's Chapel]] in Vael Ardith is a Raveler chapel. Humans still say his name at a graveside out of habit. Most add "wherever he is."
+Before 3002 he had a small, respected priesthood everywhere and a chapel by every graveyard. Since then his worship has become the [[Ravelers]]' alone: the crow-folk undertakers who followed the armies. His lay clergy took up the keys when the priests dropped them, and now every [[The Doorkeeper's Chapel]] in Vael Ardith is a Raveler chapel. Humans still say his name at a graveside out of habit. Most add "wherever he is."
 
 ### The priesthood
 The Rook-Court's Doorkeepers: [[Quorl Many-Words]] in Cinderford, under [[Mother Corvane]]. They keep the rites exactly as they were, open a door at every burial, speak the words, and record what the dying said last, because a dead god cannot hear it and someone should. They are the only priests on the continent who serve knowing nobody is listening, and they will tell you, a little sharply, that it has made them better at it.
@@ -47,7 +47,7 @@ Doorsnight, 1 Leafrot, the first night of the dying month, when every door in a 
 :::gm
 Hathe did not die by accident. He was at Cinders because every god is where the dying are thickest, and the battle sorcery that cracked the Ninth Ward broke him open with it; and [[Ilyra of Halcyra]], a camp healer, walked into the fire where he lay dying and drank what was left. She walked out unburnt because the Keeper of Doors was inside her. She is ascending on him. Her church knows and calls it a bequest.
 
-The other thing nobody has worked out: Hathe's doors held both ways. He was the one god who kept the rest of the pantheon from the Sleeper's grave, not out of virtue but out of office; the dead and the gods passed through him or not at all. He is dead, and the door is open, and the gods began to plan the morning after. [[Hathe's Door-Key]] is one of his keys, dropped at Cinders. It still turns.
+The other thing nobody has worked out: Hathe's doors held both ways. He was the one god who kept the rest of the pantheon from the Sleeper's grave, not out of virtue but out of office; the dead and the gods passed through him or not at all. He is dead, and the door is open, and the gods began to plan the morning after. [[Hathe's Door-Key]] is one of his keys, dropped at Cinders. It still turns. [[Mother Corvane]] keeps it in the reliquary at [[Corvel Rise]] and lends it for funerals.
 :::
 
 == GM notes ==

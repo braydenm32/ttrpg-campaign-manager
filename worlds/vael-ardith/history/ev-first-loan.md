@@ -13,7 +13,7 @@ order: 50
 
 In the winter of 2650 AW, the Imperial Treasury found itself eleven thousand crowns short of the cost of repairing the Great Road. It sent a clerk to [[Sevenhaven]] with a letter, and the letter was answered.
 
-**The loan.** Eleven thousand crowns from a counting-house run by [[Shellbacks]], at a modest rate, over a long and agreeable term. The empire put up as collateral the western marches along the Cinder, a thin strip of farmland of no great value. The Treasury was delighted. The Shellbacks were not surprised.
+**The loan.** Eleven thousand crowns from a counting-house run by [[Shellbacks]], at a modest rate, over a long and agreeable term. The empire put up as collateral the marches along the Cinder, a thin strip of farmland of no great value. The Treasury was delighted. The Shellbacks were not surprised.
 
 **What followed.** Within a generation the empire borrowed again, to pay the first loan. Then again, to pay for a campaign. Then for a harvest, a flood, a marriage, a funeral and a statue of the previous Emperor. By 2979 the empire owed the Concord more than it earned in a year.
 
@@ -22,7 +22,7 @@ In the winter of 2650 AW, the Imperial Treasury found itself eleven thousand cro
 **How it is told now.** In the Regency: as a shameful secret. In the Concord: as a prudent investment. By the Shellbacks themselves, not at all. They say only that a loan is a long conversation, and that they are still in the middle of it.
 
 :::gm
-The western marches along the Cinder, put up as collateral in 2650, include the ground where Cinderford stands. When the Concord buys the Ashenreach's debts, it is also collecting on this one.
+The marches along the Cinder, put up as collateral in 2650, include the ground where Cinderford stands. When the Concord buys the Ashenreach's debts, it is also collecting on this one.
 :::
 
 == GM notes ==

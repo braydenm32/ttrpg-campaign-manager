@@ -13,7 +13,7 @@ order: 80
 
 The red moon was not in the sky at dusk. It was in the sky at midnight.
 
-**What was seen.** Survivors on the ash, in the river, on the walls of [[Cinderford]], all agree on the order of events. The fire was at its height. The smoke had hidden the stars. And then the smoke thinned and the Ember was there: large, low, the colour of a coal. It has not left since.
+**What was seen.** The most trusted account is a sentry's chalk slate from the east gate, found in the ash a week later, wiped by the weather to one smeared column. *Third hour: smoke thick, no stars. Fourth: smoke thins. Red light low on the plain, not fire, not a lantern. A moon, I think. Asked the corporal what moon. Corporal says there is no red moon. Corporal went up to look.* The slate stops there. Survivors on the ash, in the river and on the walls of [[Cinderford]] all agree on the order of events: the fire at its height, the smoke over the stars, and then the Ember, low and red, the colour of a coal, and big as a cartwheel near the horizon. It has crossed the sky every month since.
 
 **What the scholars say.** [[The Ember]] is impossible. A moon cannot rise from nowhere, cannot keep a twenty-three-day cycle and cannot cast a light that makes dead soil weep. The scholars have written eleven papers on this and are working on a twelfth.
 

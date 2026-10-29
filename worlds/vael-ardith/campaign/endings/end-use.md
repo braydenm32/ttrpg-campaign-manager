@@ -29,6 +29,18 @@ Whoever holds it (a PC, the company, a faction leader) can do terrible, useful t
 - **The pantheon** can't reach the Sleeper and can't reach the holder. They begin working through mortals instead, more openly than they have in a thousand years.
 - **The Sleeper's clock** doesn't fill. It doesn't need to. It has someone to speak for it now.
 
+### Epilogue: one line per thread
+- **Mutiny and Sallow.** The company never stands down; the holder is obeyed, and Sallow either kneels or is the first to be made an example.
+- **The Sleepless.** The Widow knows what the holder is, and the cult sings to them like a household god.
+- **Tick and Marla.** Marla's ghost walks beside the holder now, and Tick cannot tell whether she is warning him or watching.
+- **Borrin's shadow.** It circles the holder at a distance, patient, curious, a beat late.
+- **The Reeve's charter.** Odile seals it, because the Concord will be the only buyer left, or tears it up and holds Cinderford for the holder.
+- **Pell.** He sends Vell a report he will not be able to unsend.
+- **Kettle.** She sells the holder's whereabouts to three parties the same week, and keeps one of them honest.
+- **Hennet's Candle.** She does not shut her doors; she leaves the lantern over the bar lit and serves everyone.
+- **Corvane.** She has the holder's name written in the ledger already, in advance.
+- **Spoons's pool and Keld's stake.** "Never" wins. The pool pays out on Keld's stake, and Spoons does not know who to give it to. ([[The Wager on Never]])
+
 ### Hooks for a second arc
 Being the most powerful people in the world, and the most hunted. Watching a friend become the Sleeper's voice, and deciding when to stop them. Discovering that the Shellbacks left the Ness of Thurm because of something just like this.
 

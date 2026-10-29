@@ -11,19 +11,19 @@ fields:
   Weight: 1 lb the set
   Rarity: Unique
 gmFields:
-  5e: "Thieves' tools DC 20 to pick any lock, but the cage is warded: opening it without a key triggers a faint chime audible throughout the Keep."
+  5e: "Thieves' tools DC 20 to pick any lock, but the cage is warded: turning any key, or picking any lock, sounds a faint chime audible throughout the Keep. The oil-port at the cage's foot needs no key."
 ---
 
 Three keys, hand-forged, stamped with a stylised flame. Each fits one of the three locks on the iron cage in the Lantern Keep. By custom, one is kept by the lamp-keeper, one by the captain, and one by the Second Blade, and the cage is never opened unless all three are present.
 
 ### What they are used for
-Opening the cage to tend the flame, to pour the dawn measure, and to clean the soot from the bars. This happens once a day. Tallow carries the first key on a cord around his neck; [[Captain Marrow]] carries the second; [[Sergeant Vosk]] carries the third.
+Opening the cage to tend the flame, trim the soot from the bars and look at the lamp in the bowl. The dawn measure of oil does not need a key: it goes in through the oil-port at the cage's foot, from the oil-room below. Turning any of the keys makes a chime heard through the Keep. Tallow carries the first key on a cord around his neck; [[Captain Marrow]] carries the second; [[Sergeant Vosk]] carries the third.
 
 ### Who wants them
 Anyone planning to steal, douse, or move the flame. The keys also work as a test of trust: whoever refuses to hand theirs over has something to hide.
 
 :::gm
-Sallow has had a copy of the second key made by the Quiet Office. Mote has a copy of the third. Neither works on the first lock, which is why Tallow's key is the one that matters. If Tallow collapses in session 3, someone will need to take his key from his neck.
+Three locks, three keys (Tallow the first, Marrow the second, Vosk the third). Sallow has had a copy of the second made by the Quiet Office; Mote has a copy of the third. Neither fits the first lock, so even together they cannot open the cage without the lamp-keeper's key. In session 3, when Tallow collapses, Marrow takes his key from his neck and gives it to Ysse.
 :::
 
 == GM notes ==

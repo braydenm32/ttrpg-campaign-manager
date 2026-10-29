@@ -30,12 +30,21 @@ relations:
   - to: tick
     kind: grew up with
     known: true
+  - to: npc-ada-pennock
+    kind: is fed free by
+    known: true
+  - to: q-bakers-hoard
+    kind: is needed by
 ---
 
 ### Who he is
 Quorl is a priest of a god who has been dead for nine years. He finds this less of a problem than people expect. "Hathe kept doors," he says. "Somebody still has to stand at them." He is [[The Ninth Lantern]]'s undertaker, its chaplain, and its ledger of last words, and he takes all three jobs very seriously and himself not at all.
 
-[[Ravelers]] earn their deed-names at their first burial. Quorl earned his at six years old at [[Corvel Rise]] by talking back to a dying sergeant: at such length, and so well, that the sergeant lived another hour out of sheer irritation and died mid-argument. He has never stopped talking, or collecting.
+[[Ravelers]] earn their deed-names at their first burial. Quorl earned his at six years old at an army burial, in the last years of the war, by talking back to a dying sergeant: at such length, and so well, that the sergeant lived another hour out of sheer irritation and died mid-argument. He has never stopped talking, or collecting.
+
+> "Three coppers for the grave, a sentence for the stone, and a receipt for the trouble. Nobody ever argues with a receipt."
+
+> "Hold still, there's a good lad. It's only a measure. It's the same measure either way, and I like to be ready."
 
 ### Look
 Tall, stooped, black-feathered, with a long grey beak notched near the tip and bright black eyes that tilt to look at you sideways. His feathers go iridescent in lamplight. He wears a priest's grey doorkeeper's stole, much mended, over a chain shirt, and carries a ring of old iron keys that open nothing, in honour of the god. Ravelers smell faintly of cold earth and cloves; Quorl smells more of cloves, because he is vain.
@@ -44,7 +53,7 @@ Tall, stooped, black-feathered, with a long grey beak notched near the tip and b
 Morbid, cheerful, curious. Asks people's last words in advance, "in case". Does voices: he can repeat any voice he has heard, perfectly, which he uses for comfort at gravesides and for comedy everywhere else. Tilts his head when interested. Charges for secrets, as all Ravelers do, but his prices are reasonable and he always gives a receipt.
 
 ### Background
-Fledged at the rookery on Corvel Rise in the last years of the war, Quorl was taught by [[Mother Corvane]] to lay out the dead, keep Hathe's doors, and write down every final word in the Rook-Court's great ledger. He was a fledgling the night of [[The Battle of Cinders]], carrying bodies off the ash until his feathers smoked. The next morning the priests found that Hathe's doors would not open. The dead had begun, sometimes, to stay.
+Fledged at the rookery on Corvel Rise in the last years of the war, Quorl was taught by [[Mother Corvane]] to lay out the dead, keep Hathe's doors, and write down every final word in the Rook-Court's great ledger. He was a fledgling the night of [[The Battle of Cinders]], carrying bodies off the ash until his feathers smoked. At dawn he was sent to the Smokes for one body in particular, Marla Marlowe's, and her mother [[Ottilie Marlowe|Ottilie]] told him the last words her daughter had said, which he wrote down in the ledger marked *told*, not *heard*. The next morning the priests found that Hathe's doors would not open. The dead had begun, sometimes, to stay.
 
 Since then the Rook-Court has buried more carefully. Quorl's prayers are still answered. He has stopped asking by whom.
 
@@ -53,7 +62,7 @@ He's from here, more or less. The Ninth Lantern pays him to bury its dead proper
 
 ### Ties
 - **[[Mother Corvane]]**, head of the Rook-Court, is his teacher and superior. He reports every last word to her. Almost every last word.
-- **[[Tick]]** grew up behind the Doorkeeper's Chapel, where Quorl ran errands as a fledgling. Quorl keeps Tick's mother's last words in the ledger and is waiting for Tick to ask.
+- **[[Tick]]** grew up a short run from the Doorkeeper's Chapel, where Quorl ran errands as a fledgling. Quorl was the fledgling who came for Tick's mother's body at dawn, and he keeps her last words in the ledger, marked *told*. He is waiting for Tick to ask.
 - **[[Ysse Lampwright]]** shares his night watch. She is the only living person who has asked him what Hathe was like.
 - **[[Borrin Halt]]**: Quorl wants his last words on record early. Borrin keeps asking if a Raveler can tell whether a man's alive. Quorl keeps saying "Mostly."
 - **[[Varra Nine-Knuckles]]**: he measured her for a coffin on her first day. She asked for a roomy one. He liked her at once.
@@ -71,9 +80,10 @@ You have written all seven in your own notebook. You have not written them in th
 
 :::gm
 **How his secret pays off.**
-- The Rook-Court's ledger, read together, spells out the same words. [[Mother Corvane]] has already guessed, and hasn't told Quorl, just as he hasn't told her. When old Halloran Pike sits up at his own funeral ([[The Funeral That Would Not End]], end of session 4 or start of session 5), his last words make it eight, said aloud in front of Corvane. In **Last Words** (session 5), putting Quorl's notebook beside the ledger confirms the message.
+- The Rook-Court's ledger, read together, spells out the same words. [[Mother Corvane]] has already guessed, and hasn't told Quorl, just as he hasn't told her. When old [[Halloran Pike]] sits up at his own funeral ([[The Funeral That Would Not End]], session 5), his last words make it eight, said aloud in front of Corvane. In **Last Words** (session 5), putting Quorl's notebook beside the ledger confirms the message.
 - "Don't let them put it out" is the dead warning him, among others, about Mother Corvane: she believes that putting the lamp out would open Hathe's doors and let the dead rest. She is wrong, and sincere.
 - Quorl's prayers are answered, and Hathe is dead. The truth, if you want it: Hathe's dying power went into Ilyra, so prayers to Hathe now reach her, and she has been answering them. She knows Quorl's name. In session 4 [[Sister Seraphine]] can greet him by it, and know what he last prayed for.
+- [[Ambercote]]'s roll of two hundred and twelve, dictated by [[Cass Marrowick]], is a day's work and the largest single entry the Court's ledger has taken since the battle ([[The Standing Village]]).
 :::
 
 == GM notes ==

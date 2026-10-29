@@ -24,7 +24,9 @@ Nobody knows who struck first. By midnight the plain was fire: villages fused to
 **How it is told now.** Every soldier who was there has a different story, and every story has a dog in it. The Regency says it was a defeat for all. The Church of the Unburnt Saint says it was a miracle. Veterans say it was a Restday, and they were owed one.
 
 :::gm
-The ninth lantern was lit from a shard of the Ninth Stone blown loose in the blast. Its flame is part of what holds the crack shut. Ilyra drank [[Hathe]]'s dying power in the fire, and her church wants the crack to finish the job. Nobody who was at the lantern's lighting knows any of this. [[Brother Tallow]] suspects.
+The ninth lantern was lit from a shard of the Ninth Stone blown loose in the blast. Its flame is part of what holds the crack shut. Ilyra drank [[Hathe]]'s dying power in the fire, and her church wants the crack to finish the job. Nobody who was at the lantern's lighting understands any of this: [[Mother Hennet]] carried the shard up the hill in a soup-pot and will say only that the soup lit it. [[Brother Tallow]] suspects.
+
+Nobody ordered a battle. Regency battle-magi, still working to the old Digs orders the Quiet Office had never cancelled, were posted to watch the ward; when the parley bunched at the ford, one of them cast first, out of nerves. Everyone has blamed someone else since, and the Quiet Office knows it was theirs and has buried it.
 :::
 
 == GM notes ==

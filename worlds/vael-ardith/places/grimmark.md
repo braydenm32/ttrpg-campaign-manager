@@ -27,9 +27,13 @@ The Moot of Holds meets at [[Skarn]] when it must and agrees on nothing but the 
 The Holds have no claim and want none. But Hold clansmen fill half the mercenary companies, and the Returned have started walking south, one or two a season, toward the Rent, and will not say why.
 
 ### Rumours
-- The Returned do not sleep. (False. They sleep. They do not dream.)
-- Hollowhall's deep gates are sealed from the inside. (True.)
-- A Grimmark Hold will sell a pass to anyone who can name its grandmother. (More or less true.)
+- The Returned do not sleep.
+- Hollowhall's deep gates are sealed from the inside.
+- A Grimmark Hold will sell a pass to anyone who can name its grandmother.
+
+:::gm
+**Which are true.** 1. False. They sleep. They do not dream. 2. True. 3. More or less true.
+:::
 
 :::gm
 Under the Grimmark the Returned found the Eighth Ward, breached. Something there took their shadows as the price of passage. One of those shadows followed [[Borrin Halt]] up and is wearing the hole where his should be.

@@ -17,6 +17,6 @@ relations:
 
 **What the GM knows.** Cipher reports to [[The Quiet Office]], written on the blank reverse of sealed Regency forms so they travel in the official post unopened. Every report goes to [[Marius Vell]]. The cipher is a tax table: column widths are letters.
 
-**Where the answer lies.** [[The Assessor's Lost Form]]; the post bag that leaves every Coinday; Pell himself, who has noticed that Mote's handwriting is much smaller than any form requires.
+**Where the answer lies.** [[The Assessor's Lost Form]]; the post bag that leaves every Coinday (Kettle can copy it); Pell himself, who has noticed that Mote's handwriting is much smaller than any form requires.
 
 **Payoff.** Session 7, when the Quiet Office moves and the party can read what's coming.

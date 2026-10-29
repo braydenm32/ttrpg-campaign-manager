@@ -13,7 +13,7 @@ relations:
 
 **The question.** [[Borrin Halt]] came up from the deep without a shadow, like all the Returned. So why, in the lantern light at the muster, did somebody see one behind him, moving a heartbeat late?
 
-**What the GM knows.** Something from the Eighth Ward followed Borrin up. It wears his shadow. It is patient and curious, and close to the Ninth Ward's crack it grows bold. Each session, let one NPC notice the shadow once: a dog barks at it, a Vesh lamp-keeper stares, a child waves at it.
+**What the GM knows.** Something from the Eighth Ward followed Borrin up. It wears his shadow. It is patient and curious, and close to the Ninth Ward's crack it grows bold. Each session, let one NPC notice the shadow once. Session 1: [[Gerda Hollin]] on the gatehouse. Session 2: [[Mardle Ock]] at Fort Mercy. Session 3: a Sleepless child waves at it. Session 4: a dog at the House of Unburnt Light barks at it. Session 5: Mother Hennet. Session 7: [[Mirrit]], Hesk's apprentice. It is a door-warden of the Eighth Ward, and it follows him a beat late, not always where he walks.
 
 **Where the answer lies.** [[Warden Uthrem]] recognises what it is (session 6). The Returned in Gutter Market won't talk about it, but will leave town if they see it.
 

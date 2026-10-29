@@ -2,7 +2,7 @@
 type: event
 name: The Drowning of Stillwater
 players: true
-summary: A farming village on a grey lake went under in a night. Its Hollowborn survivors built a new one on the shore.
+summary: A farming village on a grey lake went under in a night. Its survivors, most of them Hollowborn children, joined the shore settlement that Smokes families had begun.
 parent: stillwater
 tags: [ hollowborn, stillwater ]
 age: ashen
@@ -11,18 +11,16 @@ date: 9 Frostcall 3006 AW
 order: 180
 ---
 
-Stillwater was a farming village of about three hundred, set on the shore of a grey lake in the eastern ash. On a night in Frostcall 3006 AW, it was not there in the morning.
+A barge-hand who tied up three miles off that night has told it so often in Cinderford taverns that it has worn smooth. *I saw nothing. That's what I tell them. Stars over the water, flickering like someone was walking in front of them. In the morning the lake was flat as a plate and there was a bell going under it. One note. Slow.*
 
-**What happened.** The lake rose. Neighbours three miles off saw nothing and heard nothing, only that the stars over the water flickered. At dawn the village was under the grey, and the lake lay as still as a plate. Seventy people came out of it alive. Almost every one was a child, and almost every child was Hollowborn.
+Stillwater had been a farming village of about three hundred, on the shore of a grey lake in the eastern ash. On a night in Frostcall 3006 AW, 9 Frostcall, it was not there in the morning. Seventy people came out of the water alive: parents, a few Ravelers who had been passing, and most of the village's Hollowborn children. A handful of grown survivors woke on the shore with one eye gone the grey of ash in water, and have been known since as the late-eyed. Among the children was a girl of twelve, newly run away from the Smokes, who had come to Stillwater a week before and did not say why. She is [[The Dreaming Widow]] now.
 
-**The aftermath.** The survivors were taken in by Cinderford, by passing barge-folk and by [[Ravelers]] who arrived uninvited. Within a year the Hollowborn among them had gone back to the shore and begun to build, a stone's throw above the waterline. They named the new place Stillwater and said no more about it.
+Cinderford took the survivors in, along with passing barge-folk and the Ravelers, who arrived uninvited and stayed. Within a year most of the Hollowborn had gone back to the shore and joined the settlement Smokes families had begun there in 3004, a stone's throw above the waterline. They kept the name and said no more about it.
 
-**What it left.** A hamlet with a bell that rings itself under the lake at red moon. A tradition that no one fishes after dusk. A rumour that the drowned are still in the water, standing, looking up.
-
-**How it is told now.** The Hollowborn of Stillwater treat it as a family matter. Strangers are welcome, within reason, as long as they leave the lake alone. The Regency, which was once asked to investigate, wrote to say the village did not exist on its maps.
+**What it left.** A hamlet with a bell that rings itself under the lake at red moon. A rule that no one fishes after dusk. A rumour that the drowned are still in the water, standing, looking up. The Regency, once asked to investigate, wrote to say the village did not exist on its maps, and the Hollowborn of Stillwater, who treat it as a family matter, have never corrected it.
 
 :::gm
-The lake rose on a night when the Sleeper's dream was strong enough to reach the surface of the world. The children who lived were the ones who dreamed it with open eyes. A girl among them, twelve years old and newly run away from the Smokes, is now called the Dreaming Widow. She still sits on the shore at red moon.
+The lake rose on a night when the Sleeper's dream was strong enough to reach the surface of the world. The children who lived were the ones who dreamed it with open eyes. A girl among them, twelve years old and newly run away from the Smokes, is now called the Dreaming Widow. She is Wenna Marlowe, Marla's sister and Tick's aunt, and she gave her first sermon on the jetty before the year was out. She still sits on the shore at red moon.
 :::
 
 == GM notes ==

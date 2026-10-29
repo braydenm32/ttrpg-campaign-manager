@@ -13,9 +13,9 @@ order: 10
 
 On the afternoon of 14 Frostcall 2981 AW, in the middle of an audience for petitions on the bean tax, the Emperor [[Aurel IX]] was killed by his own bodyguard.
 
-**What is known.** The Iron Guard stood the Gilded Gallery that day as they had stood it for eight centuries. A petitioner was speaking. A single guard stepped forward, and then it was over. The Emperor was dead before he reached the floor. The rest of the Guard did not move. They did not run, nor draw, nor speak. The petitioner is said to have finished his sentence, then asked whether the bean tax would still be due.
+**What is known.** The Iron Guard stood the Gilded Gallery that day as they had stood it for nearly nine centuries. A petitioner was speaking. A single guard stepped forward, and then it was over. The Emperor was dead before he reached the floor. The rest of the Guard did not move. They did not run, nor draw, nor speak. The petitioner is said to have finished his sentence, then asked whether the bean tax would still be due.
 
-**What followed.** The Guard walked out, unchallenged, and went home to their Mothers. Within the week the [[The Regency Council|Regency Council]] had formed "until an heir is found". The Council has ruled ever since. The throne is empty, dusted daily by a clerk who is not permitted to sit on it, and who is said to have tried.
+**What followed.** The Guard walked out, unchallenged, and went home to their Mothers. Within the week the [[The Regency Council|Regency Council]] had formed "until an heir is found", and on 3 Longnight it declared the throne vacant. The Council has ruled ever since. The throne is empty, dusted daily by a clerk who is not permitted to sit on it, and who is said to have tried.
 
 **What it left.** The War of the Empty Throne. A hatred of [[Orcs]] that never quite finds a place to land, because nobody can afford to fight them. And a mystery that the Regency has had thirty years to investigate and has chosen not to.
 

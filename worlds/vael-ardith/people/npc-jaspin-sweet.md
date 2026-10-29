@@ -22,6 +22,10 @@ relations:
   - to: fennick
     kind: buys from
     note: Company salvage, quietly.
+  - to: npc-ferrow-gant
+    kind: has offered fifty silver a seal to
+    note: Twice, and been refused.
+    known: true
 ---
 
 Slim, dapper and soft-spoken, Jaspin wears grey kid gloves at all times, a silk cravat the colour of a bruise, and a smile that makes you check your pockets. His stall under the blue awning at [[Gutter Market]] sells nothing much: a few rings, some glass beads, a dented helmet. What he buys is the real business. Anything from the glass, from anyone, no questions, cash.
@@ -31,5 +35,5 @@ Slim, dapper and soft-spoken, Jaspin wears grey kid gloves at all times, a silk 
 He buys company salvage from [[Fennick Bottlebrook]] and is scrupulously fair to him, because a quartermaster in debt is a supplier for life.
 
 :::gm
-In the last week Jaspin has bought a great deal of fresh Concord coin from Glassers at a discount: the pay wagon's strongbox, broken up and sold off a handful at a time. A sharp PC who sees him paying out shiny Concord silver in session 2 has a lead straight to [[Fort Mercy]].
+In the last week Jaspin has bought fresh Concord silver from Glasser runners at a discount: the escort's travelling purse, sold off a handful at a time. It is not the strongbox's coin. A sharp PC who sees him paying out shiny Concord silver in session 2 has a lead straight to the Glassers and [[Fort Mercy]]. He has twice offered [[Ferrow Gant]] fifty silver a seal for the 11th Foot's roll, and will go to a hundred; [[Cousin Pennamund]] is the buyer behind him ([[Old Tally's Coin]]).
 :::

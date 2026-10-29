@@ -133,7 +133,7 @@ Everything is in the folder **`worlds/vael-ardith/`**. Each page in the app is o
 | To change… | Edit |
 | --- | --- |
 | The world's name, the blurb on its book, the game system | `world.md` |
-| The calendar (months, weekdays, moons, today's date), the history ages on the timeline | `world.md` |
+| The calendar (months, weekdays, moons, holidays, today's date), the history ages on the timeline | `world.md` |
 | Safety tools (lines, veils, X-card) and the party's starting coin | `world.md` |
 | The campaign's name and description | `world.md` |
 | Player characters and NPCs | `people/` (PCs: `varra.md`, `ysse.md`, `borrin.md`, `tick.md`, `quorl.md`) |
@@ -321,6 +321,8 @@ From most hidden to least:
 
 Every `:::gm` or `:::for` needs its closing `:::` line. If one is missing, everything after it stays hidden (so nothing leaks), and the checker warns you.
 
+**Rumours.** Rumour lists are player-visible. Write the rumours plain and put the truth key in a `:::gm` block straight after the list ("Which are true: 1. … 2. …"). Never put a verdict in brackets inside the list.
+
 ### 6d. Links and relationships
 
 - **In the text**, link by name: `[[Lantern Keep]]`, or with different words: `[[Lantern Keep|the Keep]]`. A link to a page that doesn't exist yet is allowed (it shows as a "no page yet" link), and the checker mentions it as a warning in case it's a typo.
@@ -339,6 +341,7 @@ Every `:::gm` or `:::for` needs its closing `:::` line. If one is missing, every
 
   `kind` is the label on the line between them. `note` and `known` are optional. You only need to write a relationship on one of the two pages.
 - **Aliases** let links find a page by other names: `aliases: [ The Captain, Old Marrow ]`.
+- **Links and secrets.** A link from player text to a GM-only page shows players a locked name. Use it only for places they will find; otherwise write the name as plain text.
 
 ### 6e. The timeline: events, ages and dates
 
@@ -368,6 +371,8 @@ What happened, in a paragraph or two.
 **Adding an age:** in `world.md`, add another entry under `ages:` with its own `key`, `name`, `span` and `summary`. Ages show in the order they're listed.
 
 **Changing the calendar or today's date:** `calendar:` in `world.md`. `today:` is the date the campaign starts. Moons have a `cycle` (days from full to full) and an `offset` that shifts which day they're full; the notes beside them say what they're set to.
+
+**Adding a holiday or festival:** under `holidays:` in the `calendar:` part of `world.md`, add a line like `- { name: Doorsnight, day: 1 Leafrot }` (a day and a month, no year). It comes round every year and shows beside that date on the calendar. Write about it on its own page too if it needs more than a name.
 
 ### 6f. Sessions, quests, loose threads and the corkboard
 

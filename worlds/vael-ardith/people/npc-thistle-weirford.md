@@ -28,8 +28,10 @@ A small, sharp-faced halfling girl with a drum on her back, ink on her fingers a
 
 > "Not reading it. Just *checking it's the right one*."
 
-She thinks [[Tick]] is the most exciting person alive, and follows him around asking what he's going to blow up next.
+She beats the company's calls; the card in the guardroom and what each call means are in [[Signals of Cinderford]].
+
+She thinks [[Tick]] is the most exciting person alive, and follows him around asking what he's going to blow up next. **Wants:** to be the fastest in the March and to be told so. **Fears:** being sent back to a barge. She drums the Keep's alarms, and when the signal tower repeats them in lamp-code, [[Noume Flarewick]] and Thistle are the closest thing the company has to a telegraph.
 
 :::gm
-She sells what she reads to [[Kettle Brindlewake]], for toffee and gossip, and Kettle sells it on. If the PCs want to plant false news, Thistle is the pipe. If someone in the company wants to silence a runner, she's the obvious victim. Keep her alive if you can bear it.
+She sells what she reads to [[Kettle Brindlewake]], for toffee and gossip, and Kettle sells it on. If the PCs want to plant false news, Thistle is the pipe. If someone in the company wants to silence a runner, she's the obvious victim. Keep her alive if you can bear it. **Beat.** Session 2, she is the first to hear the pay wagon is missing and sells it before the Captain does. Session 7, she runs the news of the mutiny to the Ford, and is nearly caught by Bray. She has noticed that Sallow's men beat Rations with one beat dropped to mean "the Hock's back room, tonight", and has sold that to Kettle too (see [[Signals of Cinderford]]).
 :::

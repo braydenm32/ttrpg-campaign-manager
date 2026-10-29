@@ -23,12 +23,17 @@ relations:
     kind: rival of
     note: Messengers' feud.
     known: true
+  - to: bellwether
+    kind: collects jars at
+    note: "Coinday dusk, in the Office's handcart; he thinks it is blotting-sand."
 ---
 
-A grubby, gap-toothed orphan of nine or ten with a cap too big for him and pockets full of crumbs. Nib runs errands for [[The Assessor's Office]] and is paid in biscuits, which he considers an excellent arrangement and the office considers a budget triumph. He knows every alley in town, and is locked in a bitter feud with the company runner [[Thistle Weirford]] over who is faster.
+A grubby, gap-toothed orphan of nine or ten with a cap too big for him and pockets full of crumbs. Nib runs errands for [[The Assessor's Office]] and is paid in biscuits, which he considers an excellent arrangement and the office considers a budget triumph. He knows every alley in town, and is locked in a bitter feud with the company runner [[Thistle Weirford]] over who is faster. **Wants:** biscuits, and to be believed. **Fears:** the clerk.
 
 > "Four biscuits. Five if it's up a hill. Six if it's the clerk. I don't like going near the clerk."
 
 :::gm
-Nib has noticed that Mote keeps a second ledger, a small black one, which he never leaves on his desk. Nib has seen him write in it at night, by the window, and then look out at Lantern Hill for a long time. For a sack of biscuits, Nib will try to get it. This could easily get him killed.
+Nib has noticed that Mote keeps a second ledger, a small black one, which he never leaves on his desk. Nib has seen him write in it at night, by the window, and then look out at Lantern Hill for a long time. It holds the Quiet Office's payments to [[Garrick Sallow]] and the key to Mote's cipher. For a sack of biscuits, Nib will try to get it. This could easily get him killed.
+
+**Beat.** Sessions 3 to 5, he is the way into the ledger. In session 7 he is in the office when Mote burns it. On Coinday dusks (2, 8, 14, 20, 26) he takes the Office's handcart to the Tollivers' goat-shed at [[Bellwether]] and collects clay jars of pale ash for "blotting-sand". He is paid a biscuit. He does not know what they are.
 :::

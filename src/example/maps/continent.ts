@@ -20,17 +20,17 @@ const PLACE_PAGES: Record<string, string> = {
   Ilmareth: 'ilmareth',
   Ardmere: 'ardmere',
   Fallowden: 'fallowden',
+  Dunmeer: 'dunmeer',
   Halcyra: 'halcyra',
   Qerath: 'qerath',
   Cinderford: 'cinderford',
-  'the Lantern Keep': 'lantern-keep',
 }
 const townId = (name: string) => `town-${name.toLowerCase().replace(/[^a-z]+/g, '-')}`
 
 const rentEnd = (): Point => [RENT.spine[RENT.spine.length - 2], RENT.spine[RENT.spine.length - 1]]
 
-/** The Nine Great Wards: a loose ring through the interior. The ninth leans over the Rent's northern end. */
-const WARDS: Point[] = [[470, 292], [690, 212], [1100, 194], [1235, 452], [1285, 724], [1000, 774], [640, 802], [380, 500], [rentEnd()[0] + 8, rentEnd()[1] - 2]]
+/** The Nine Great Wards, where lore-wards puts them: under the capital, north of Ardmere, south of Fallowden, in the Saelwood, at Sevenhaven, near Qerath, in the Standing Fields, above Hollowhall, and the Ninth leaning over the Rent's north-eastern end. */
+const WARDS: Point[] = [[746, 600], [800, 372], [846, 552], [380, 500], [838, 832], [1238, 572], [1050, 640], [688, 284], [rentEnd()[0] + 8, rentEnd()[1] - 2]]
 
 function continent(): Drawing {
   const shapes: Shape[] = []
@@ -108,10 +108,13 @@ function continent(): Drawing {
     L(text, [x, y], size, 'place')
   L('to Qal Merrow', [218, 904], 13, 'place')
   L('to Ostrakai', [1510, 770], 13, 'place')
+  // Dunmeer crowds Fallowden and Cinderford: small lettering, set to the side of its piece. (Whitepost, halfway along the
+  // road between them, is too close to show at this scale; it's on its own page.)
+  const TIGHT: Record<string, Point> = { Dunmeer: [909, 571] }
   for (const [name, p] of Object.entries(TOWNS)) {
     const big = name === 'Caer Ardith' || name === 'Sevenhaven' || name === 'Cinderford'
     const dy = p.asset === 'temple' ? 14 : p.asset === 'tower' ? 10 : 12
-    L(name, [p.at[0], p.at[1] + dy], big ? 16 : 13, 'place', undefined, true)
+    L(name, TIGHT[name] ?? [p.at[0], p.at[1] + dy], big ? 16 : TIGHT[name] ? 11 : 13, 'place', undefined, true)
   }
   L('one of the Nine Great Wards', [1381, 1073], 12, 'place')
   L('play begins here', [1354, 1100], 12, 'place')

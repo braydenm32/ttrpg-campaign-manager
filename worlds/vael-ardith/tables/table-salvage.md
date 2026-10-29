@@ -11,6 +11,8 @@ Roll when a PC browses the stalls, or when a Glasser tries to sell them somethin
 
 Most items are mundane or junk; a few are leads. The Lithic fragment ties to Vexa's writing; the shimmer-coin is a hook to the Weeping Orchard. Prices in silver unless stated.
 
+Keys. The shimmer-coins are Orchard sap, set in a coin-mould by Glassers. The rusted lantern is an iron copy from Corvel Rise, one of the poles in the Field of Lanterns; somebody has been stealing them. The crate of Concord coin stamped with a Regency die is a Quiet Office decoy: the die is too clean, and the coin is not from the Ninth's strongbox, which sits unopened in Fort Mercy. For what the town's own shops have on the shelf, [[What the Shop Has Today]].
+
 == Entries ==
 
 - 3x A cracked glass bowl, still warm: 4 silver. The stallholder swears it hums when full.
@@ -24,7 +26,7 @@ Most items are mundane or junk; a few are leads. The Lithic fragment ties to Vex
 - A cracked bell the size of a fist, rings in a minor key: 20 silver. Rings on its own at night.
 - A handful of shimmer-coins, minted nowhere, with a faceless head on one side: 10 silver for six.
 - A map fragment drawn on a flayed scrap of leather, the Rent in thick lines: 25 silver. Half the symbols are crossed out.
-- A rusted lantern, unlit, bearing an eight-dot ring: 18 silver. It was one of the eight.
+- A rusted lantern, unlit, bearing an eight-dot ring: 18 silver. The seller says it was one of the eight.
 - A flask of "glass water", clear and thick: 5 silver. Do not drink. Do not pour on stone.
 - A cracked Lithic fingerbone, polished smooth: 40 silver. The seller will not meet your eye.
 - A letter case with the seal of Aurel IX, empty: 30 silver. It smells of lavender and rot.

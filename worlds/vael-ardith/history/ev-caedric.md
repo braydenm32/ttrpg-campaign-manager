@@ -17,7 +17,7 @@ On the night of full Pallas, 15 Highsun 1740 AW, a minor king of the Ardis valle
 
 **What it meant.** For eight centuries the human kingdoms of the Ardis had squabbled, bargained and fought. Caedric ended it by outlasting everyone else and then having the good sense to look surprised. He took the title Emperor in the name of [[Aurelan]], whose church promptly adopted him.
 
-**What it left.** The empire: roads, coinage, a legal code, and a bureaucracy of a size and pettiness that has outlived the throne itself. The iron circlet, which hangs in the Hall of Seals under glass. A line of Emperors, from Caedric the First to Aurel the Ninth.
+**What it left.** The empire: roads, coinage, a legal code, and a bureaucracy of a size and pettiness that has outlived the throne itself. The iron circlet, which hangs in the Hall of Seals under glass. A line of emperors, from Caedric the First to Aurel, ninth of that name.
 
 **How it is told now.** The Regency tells it as destiny. The Iskavethi tell it as theft. Soldiers tell it as the story of a man who learned that sitting still, with enough patience, beats most swords.
 

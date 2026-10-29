@@ -16,7 +16,7 @@ In 940 AW the tax-collectors of [[Ul-Tarran]] stopped returning to their offices
 
 **The tellings.** The humans of the Ardis valley say the Lithic simply gave up, and wrote it off as a lesson in pride. The Lithic say the court *stood*, all at once, to hold something that was slipping. The dwarves say it was an honour, and send a delegation to the hall each year with salt and bread. The Saelish say nothing, since the Silence began around the time their own memory first thinned.
 
-**What it left.** The end of the last Lithic realm. A power vacuum along the Ardis, filled over the next centuries by human kings. A great many stories about the Hall of Standing Kings, which maps disagree on and which no honest cartographer claims to have found.
+**What it left.** The end of the last Lithic realm. A power vacuum along the Ardis, filled over the next centuries by human kings. A great many stories about the Hall of Standing Kings, which maps disagree on and which no outsider has reached since.
 
 **How it is told now.** As a ghost story, mostly, and as a joke about the Regency: *at least they stand up for their taxes*.
 

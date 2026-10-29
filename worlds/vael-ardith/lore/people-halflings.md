@@ -21,8 +21,11 @@ The barge is the family and the river is the country. A clan is a flotilla: anyw
 
 They are nosy. It is not a flaw; it is a cargo. A halfling who has poled through your town knows who is sleeping with whom, who owes whom, and which cellar has the good brandy, and will trade all three at the next stop for the same about somebody else. Nothing is written down. Everything is remembered. See [[The Barge Clans]].
 
+### Customs and superstitions
+A true thing for the ferry: Nan Crupp's price, and every barge-family's custom for a stranger's first crossing. Letters are tied by destination, not sender, a knot a town, and a halfling reads the knot from across a deck. Never a thirteenth barrel: a halfling counts a cargo to twelve and starts again at one, since the Salt Feud, and a shipper who writes "13" on a manifest has his barrels counted very slowly in front of him. "Sunk without it" is the nearest they come to thank you. A barge is never named for a living person and never renamed; the *Grey Dumpling* was named before the dumplings, Kettle says. The Quay-Moot at the Turning, 7 Bloomtide, empties every quay on the Ardis for a month ([[Feasts, Fasts and Holy Days]]).
+
 ### Names
-Given names are small things: tools, plants, weather. Family names are the water they came from. Thimble Fairlock, Bushel Tarrowdown, Posy Reedmarsh, Cobb Latchwater, Pim Silverweed, Wick Bottlebrook, Marigold Dunmow, Tansy Mossbrook, Jory Pennyford, Dilly Eavesham. [[Kettle Brindlewake]] is a typical one, down to the name.
+Given names are small things: tools, plants, weather. Family names are the water they came from. Thimble Fairlock, Bushel Tarrowdown, [[Barge-Mother Posy Reedmarsh|Posy Reedmarsh]], Cobb Latchwater (keeper of [[The Thirteenth Barrel]]), Pim Silverweed, Wick Bottlebrook, Marigold Dunmow, Tansy Mossbrook, Jory Pennyford, Dilly Eavesham. [[Kettle Brindlewake]] is a typical one, down to the name.
 
 ### Where they live
 On the water. The Ardis from [[Ardmere]] to [[Sevenhaven]] is theirs; the Cinder below [[Cinderford]] has a floating market at [[The Low Quay]] that moves when the reeve comes to tax it. There are halfling families ashore in every river town, usually running the inn and listening.
@@ -31,10 +34,10 @@ On the water. The Ardis from [[Ardmere]] to [[Sevenhaven]] is theirs; the Cinder
 Useful, cheerful, untrustworthy in exactly the way you would expect and no other. Everyone uses them. Everyone assumes they are being sold to the other side as well, and they are right, and they keep using them, because the alternative is walking. Soldiers like them; quartermasters fear them.
 
 ### Playing a halfling
-You are small, overlooked and listening. Decide your clan and your boat and which Mother of the Water you answer to, because you do answer to one, wherever you are. You know a little about everyone and you can get a letter anywhere for a price, and you are honest about what you sell, which is everything. Play the warmth as real and the neutrality as a weapon.
+You are small, overlooked and listening. Decide your clan and your boat and which Mother of the Water you answer to, because you do answer to one, wherever you are. You know a little about everyone and you can get a letter anywhere for a price, and you are honest about what you sell, which is everything. The warmth is real and so is the neutrality, and the second is the sharper tool.
 
 :::gm
-The Barge Clans run the best courier and intelligence network on the continent and sell to all sides, and the sides know it, and still buy, because the Clans have never once lied about what they carry; they only charge both parties. The Mothers of the Water meet once a year on the water at [[Sevenhaven]] and decide what the continent will know next season. The Quiet Office, the Concord Houses and the Mothers of the Iron all pay them. [[Fennick Bottlebrook]]'s cooked books are balanced by a halfling loan he has not told the captain about, and the lender is a clan, and the clan sells to [[Grandmother Tollamund]].
+The Barge Clans run the best courier and intelligence network on the continent and sell to all sides, and the sides know it, and still buy, because the Clans have never once lied about what they carry; they only charge both parties. The Mothers of the Water meet once a year on the water at [[Sevenhaven]] and decide what the continent will know next season. The Quiet Office, the Concord Houses and the Mothers of the Iron all pay them. [[Fennick Bottlebrook]]'s cooked books are balanced by a loan he has not told the captain about, in order: a clan loan he hid from her; the clan sold the paper to [[Grandmother Tollamund]]; later he borrowed against Ferrowyn paper.
 :::
 
 == GM notes ==

@@ -11,6 +11,8 @@ Roll when the party travels the plain for more than an hour, or when you want a 
 
 Heavier weights go to the common things (patrols, scavengers, weather). The rare entries (the Grey Procession, the Standing Man) are for when the table needs a jolt. Re-roll anything that repeats within a session.
 
+Keys. The burnt wagon is the empty pay wagon, stripped and burnt by the Glassers at the Burned Mill turn-off; the box went on to Fort Mercy, and the bootprint is Thistle Weirford's (she followed the wagon out of curiosity). The Grey Procession is Hathe's door, carried by the dead who have not been let through. The Standing Man's "Not yet" is the Ninth's word, echoed by the Cinders dead (see Ambercote, where two hundred and twelve say it at once). For faces on the road rather than the plain, use Travellers on the Ash Road.
+
 == Entries ==
 
 - 3x A Ninth Lantern patrol of {1d4} soldiers, tired and short of rations, who will trade news for tobacco.
@@ -30,7 +32,7 @@ Heavier weights go to the common things (patrols, scavengers, weather). The rare
 - A Raveler on a fat grey pony, pulling a cart of bodies with a cheerful whistle. The cart is full. He is looking for a place to put the next one.
 - A priest of the Unburnt Saint on a mule, handing out candle-stubs to anyone who will stop. She blesses the party's wounds without being asked.
 - A shimmer on the horizon that resolves into the old village of Haldane, standing whole, empty, cold. It is gone when anyone looks away.
-- {1d4} orc scouts of the Iron Guard, very still, watching the road. They do not wave. They do not leave until the party does.
+- {1d4} orc scouts of the Mothers, very still, watching the road. They do not wave. They do not leave until the party does.
 - A shrine of stacked stones, fresh flowers on top. Someone has carved a name into it in the last hour. The name is the party's.
 - 2x A mercenary band of {1d4} Concord-hired lances, polite and well-fed, who ask where the Ninth keeps its paper.
 - A glass-fused cart on its side, a man's arm sticking out of the green, fingers still moving. {Greywind Weather}

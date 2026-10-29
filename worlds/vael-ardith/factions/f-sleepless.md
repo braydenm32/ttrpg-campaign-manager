@@ -8,7 +8,7 @@ gmFields:
   Crest: An open eye behind a closed lid, scratched in chalk on doors
   Leader: The Dreaming Widow
   Meeting place: Cellars in the Smokes, and the dry fountain
-  Strength: About sixty, mostly Hollowborn
+  Strength: About sixty adults, and their Hollowborn children
 relations:
   - to: dreaming-widow
     kind: follows
@@ -21,6 +21,9 @@ relations:
   - to: f-rook-court
     kind: fears
     note: Ravelers hear the dream spoken aloud.
+    known: false
+  - to: npc-nell-harrow
+    kind: holds the son of
     known: false
 clocks:
   - name: The Sleepless rise
@@ -55,9 +58,10 @@ The Smokes, a growing congregation, an unusual number of Hollowborn who can see 
 - **A kindness:** a free meal, a lost child returned, a debt forgiven.
 - **A march:** quiet crowds through the Smokes at midnight.
 - **A convert:** a soldier, a clerk, a child the party knows is suddenly smiling.
+- **A cutting:** a Caller finds a dreamless charm on a sleeping soldier and cuts it off ([[A Dreamless Charm]]).
 
 :::gm
-Secret aim: wake the Sleeper. The Widow is Tick's mother's sister and has seen the Sleeper's face. She is not mad; she is exhausted, and persuaded. The cult does not know that the Sleeper wants to be used, not woken: its dreams are bait. The clock ticks with each full red moon, each new convert, each night the lantern gutters. At 6 the Sleepless march in force on the Rent.
+Secret aim: wake the Sleeper. The Widow is Tick's mother's sister and has seen the Sleeper's face. She is not mad; she is exhausted, and persuaded. The cult does not know that the Sleeper wants to be used, not woken: its dreams are bait. The clock ticks with each full red moon, each new convert, each night the lantern gutters. At 6 the Sleepless march in force on the Rent. Two Glasser crews at [[Tally's Cut]] are Wakers; the Widow has told them the standing of [[Ambercote]] hold the door, and they mean to cut two of them out at the next red moon ([[The Standing Village]]).
 :::
 
 == GM notes ==

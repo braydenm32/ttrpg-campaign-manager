@@ -21,7 +21,7 @@ relations:
     known: true
   - to: lore-nine
     kind: grieves for
-    note: They are still awake in the stone. He can hear them. He has not answered in nine thousand years.
+    note: They are still awake in the stone. He can hear them. He has not answered in three thousand years.
   - to: god-sleeper
     kind: wants devoured, and the wards fallen
     note: All nine. It would free his children and kill the Lithic. He has decided he can bear it.
@@ -48,7 +48,7 @@ He taught [[Grum]] the forge and never forgave him for making it loud. He is the
 Wardday every week, when nothing is built or dug and the surface dwarves walk to the nearest standing Lithic and sit with it. The Long Hold on 1 Hollowfrost, the first day of the year, a day and a night of total silence in every dwarven hold. Stonefast on 1 Frostcall, when oaths are renewed on bare rock.
 
 :::gm
-Tharos wants every one of the Nine Great Wards to fall. Not the Ninth alone: all of them. His children are awake inside the stones, nine thousand years into a punishment he gave them, and he can hear them, and the only thing that will let them out is the wards breaking and the Sleeper, which they are holding, being finished at last. He would devour it himself for what it cost him, and he does not care who else is at the table.
+Tharos wants every one of the Nine Great Wards to fall. Not the Ninth alone: all of them. His children are awake inside the stones, three thousand years into a punishment he gave them, and he can hear them, and the only thing that will let them out is the wards breaking and the Sleeper, which they are holding, being finished at last. He would devour it himself for what it cost him, and he does not care who else is at the table.
 
 He knows what that means. The living Lithic are kept alive by the wards they stand in; when the wards fall, the last of his line goes with them, and the Returned's shadows, and whatever the Grimmark's Eighth is holding back. He has decided he can bear it. His hold-priests do not know this. They have noticed that the surface dwarves' prayers for the Lithic have not been answered in living memory and that the Returned stand at his shrines like men outside a door that will not open. Of all the pantheon, Tharos is the one [[Warden Uthrem]] would most like to speak with, and the one who will never answer.
 

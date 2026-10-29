@@ -9,7 +9,7 @@ Roll for a name when you need one fast. Each entry gives a name, a nickname, a p
 
 == GM notes ==
 
-Mix freely: a Vesh called "Mud" is funnier than a Vesh called "Lumen". If you roll a name twice in a session, they are cousins.
+Mix freely: a Vesh called "Mud" is funnier than a Vesh called "Lumen". If you roll a name twice in a session, they are cousins. Townsfolk, Hollowborn and barge-hands are on [[Names: Humans, Hollowborn and Halflings]]; company peoples and the far peoples on [[Names: Orcs, Dwarves, Vesh, Ravelers and the Far Peoples]].
 
 == Entries ==
 
@@ -42,3 +42,5 @@ Mix freely: a Vesh called "Mud" is funnier than a Vesh called "Lumen". If you ro
 - Jory Lamplight, Vesh child of the camp. Eleven. Knows every soldier's last name and secret.
 - Tarn Greyfeather, Raveler scribe. Records the minutes of company meetings in sarcasm.
 - Calla Redwater, Hollowborn cartwright. Dreams of a river that is not there.
+- Hob "Nosebag" Garrity, human ostler's mate (on loan to the company, unpaid). Knows every mule's opinion and gives his own last.
+- Wenna Pike-Foot, orc spear-carrier. Gets her spears re-pointed at Ninefingers' for 2 cp and has never been charged twice.

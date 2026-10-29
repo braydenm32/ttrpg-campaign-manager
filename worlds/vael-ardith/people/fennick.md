@@ -25,9 +25,25 @@ relations:
     known: true
   - to: kettle
     kind: sold oil to
-    note: Six casks of the good oil, for bread.
+    note: Four casks of the good oil, for bread.
   - to: f-barge-clans
     kind: born into
+    known: true
+  - to: npc-aurelio-bask
+    kind: buys boots from
+    known: true
+  - to: npc-ada-pennock
+    kind: owes nine days of bread to
+    known: true
+  - to: q-bakers-hoard
+    kind: has an interest in
+  - to: npc-marn-tolliver
+    kind: buys goats from
+    note: Forty goats a quarter, on account.
+    known: true
+  - to: npc-mother-hennet
+    kind: quarrels with
+    note: About rations, every time he comes in.
     known: true
 ---
 
@@ -47,15 +63,21 @@ Fennick Bottlebrook was born on a barge on the river Cinder and ran away to be a
 For the books to balance. They won't. Failing that, for the company to eat. He would also like, very much, for nobody to look closely at the books.
 
 ### What he knows
-Exactly how much food is left (eleven days, nine if the new recruits eat like [[Varra Nine-Knuckles]]). Which salvage can be sold at [[Gutter Market]] without questions. That the company has been drawing from three different credit lines, one of which is in his own name. Exactly how much lantern oil the company has bought this quarter, and how much he has written down that it burned, which are not the same number.
+Exactly how much food is left (eleven days, nine if the new recruits eat like [[Varra Nine-Knuckles]]). Which salvage can be sold at [[Gutter Market]] without questions. Exactly how much lantern oil the company has bought this quarter, and how much he has written down that it burned, which are not the same number.
 
 ### How he treats the PCs
 Fussy, friendly and transactional. He will find them gear if they find him something to sell. He keeps a small separate ledger of favours owed, and honours it scrupulously.
 
 :::gm
-**Secret.** Fennick cooks the books to feed the company: double-entry with three sets of doubles, salvage sold through his cousin [[Kettle Brindlewake]], and loans he has signed personally with [[Grandmother Tollamund]] at [[Tollamund & Daughters]]. He owes the counting-house more than he will earn in his life. Tollamund has not called it in. Tollamund is waiting for something.
+**Secret.** Fennick cooks the books to feed the company: double-entry with three sets of doubles, salvage sold through his cousin [[Kettle Brindlewake]], and loans he has signed personally with a halfling clan, whose paper [[Grandmother Tollamund]] at [[Tollamund & Daughters]] now holds. He countersigned Marrow's credit line with her in Thawmere 3009, and he owes the counting-house more than he will earn in his life. Tollamund has not called it in. Tollamund is waiting for something.
 
-**The red herring.** Last month Fennick sold six casks of the company's good lantern oil to Kettle to buy bread, and wrote them up as burned: twelve casks bought, twelve burned, says the ledger. When the lantern gutters he will be certain it's his fault, and he will act exactly like a guilty man. It isn't his fault. The oil he sold was good; the poisoned oil came from [[Garrick Sallow]] and [[Dannic Rook]]. He is the obvious suspect, and the wrong one.
+He noticed the captain's savings going into the wages by arithmetic, and hid it in the books. He has also noticed that every Coinday a small anonymous credit from "a friend of the company" turns up in the accounts, and has decided not to ask.
+
+**The red herring.** Last month Fennick sold four casks of the company's good lantern oil to Kettle to buy bread, and wrote them up as burned: twelve casks bought, twelve burned, says the ledger, when eight were really burned. When the lantern gutters he will be certain it's his fault, and he will act exactly like a guilty man. It isn't his fault. The oil he sold was good; the poisoned oil came from [[Garrick Sallow]] and [[Dannic Rook]]. He is the obvious suspect, and the wrong one.
+
+**The other book.** Hennet's slate-book and Fennick's ledger disagree for four quarters, Ashfall 3010 to Highsun 3011: he wrote the Captain's own coin in as "advance on the line" so nobody would feel like charity. Read side by side, the two books give away Marrow's savings, which is why Fennick begs the party not to show Hennet's book to the company ([[The Price Was an Arm]]). [[Wendel Hoop]]'s boy pushed the four "empties" to the Low Quay for him one night in Reaping, and said they were the heaviest empties he ever pushed.
+
+**The pay order.** The pay order of 3009 was addressed to him: a private warning from Paymaster Corin Blythe of Fallowden, lost in the post-stair in Thawmere 3009. He never received it. He has gone through the post-books four times, and he is not pleased to learn it went missing at his cousin Kettle's quay ([[The Lost Pay Order]]). Cobb Latchwater's cord at [[The Thirteenth Barrel]] has a red knot for his four casks.
 :::
 
 == GM notes ==
@@ -63,7 +85,7 @@ Fussy, friendly and transactional. He will find them gear if they find him somet
 **Voice:** fast, fussy, digressive; keeps doing sums aloud.
 
 **Across the arc:**
-1. Gets shifty about oil. The ledger says twelve casks bought and twelve burned. Let the PCs suspect him; it's what he's for.
+1. Gets shifty about oil. The ledger says twelve casks bought and twelve burned; eight really burned. Let the PCs suspect him; it's what he's for.
 2. Desperately needs the pay wagon found; offers a bonus he can't pay.
 3–4. Tollamund's clerk visits him; he comes back grey-faced. The counting-house is starting to collect.
 5. If the PCs uncover his debts, he confesses everything in one long breathless paragraph.

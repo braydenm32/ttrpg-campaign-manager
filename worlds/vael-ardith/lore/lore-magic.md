@@ -11,7 +11,7 @@ fields:
 ---
 
 ### Where it comes from
-Magic in Vael Ardith is drawn, not made. A caster reaches for power and the power comes from the nearest of [[The Nine Great Wards]], which were made of divinity and have been bleeding it, a thread at a time, for nine thousand years. Scholars call the draw the Tithe. A hedge-witch calls it the cold, because that is what it feels like: a chill up the arm as the spell goes out, as if something far away had noticed.
+Magic in Vael Ardith is drawn, not made. A caster reaches for power and the power comes from the nearest of [[The Nine Great Wards]], which were made of divinity and have been bleeding it, a thread at a time, for three thousand years. Scholars call the draw the Tithe. A hedge-witch calls it the cold, because that is what it feels like: a chill up the arm as the spell goes out, as if something far away had noticed.
 
 Nobody is charged. Nobody sends a bill. That is why magic is common: anyone with the knack and a teacher can learn, and the cost falls somewhere else, on a stone in a fen or under a mountain, and on the Lithic who stand there. The Vesh, who can feel a spell the way you feel a draught, say that the whole continent has been quietly spending down an inheritance and calling it weather.
 
@@ -27,7 +27,7 @@ Raise the dead. Hathe could have, perhaps, and did not; since his death the dead
 Near a weak ward, magic comes easier and the cold is sharper; near [[The Rent]] a cantrip feels like a shout and a real spell leaves frost on the caster's teeth. At full red moon every caster in the March of Cinders dreams, and some of them dream the same thing. The Lithic ask casters not to cast near a ward. They are rarely obeyed and never rude about it.
 
 :::gm
-Rules of thumb for the table. Within a mile of a ward, spells of 1st level and up tick a GM tally; every ten ticks the Sleeper stirs clock gains a notch of pressure the GM may spend as a dream, an omen or a rising corpse. Within sight of the Rent, casters may cast one spell per long rest at one level higher than the slot spent, and must succeed on a DC 12 Wisdom save afterward or take a level of exhaustion and dream that night. At full Ember the DC is 15 and the dream is the Sleeper's. Battle sorcery (any spell of 5th level or higher cast in anger) near the Ninth Stone cracks it visibly; let the players hear it.
+Rules of thumb for the table. Within a mile of the Ninth Stone, or anywhere in the Rent, each spell frosts the nearest wall. If the GM is running the Sleeper's clock fast, roll a d6 per spell and tick it on a 1 (see "Speeding it up" on the Sleeper's page). Minor ward-nodes (the Glass Barrow, the Cold Seam) frost but do not tick the clock. Within sight of the Rent, casters may cast one spell per long rest at one level higher than the slot spent, and must succeed on a DC 12 Wisdom save afterward or take a level of exhaustion and dream that night. At full Ember the DC is 15 and the dream is the Sleeper's. Battle sorcery (any spell of 5th level or higher cast in anger) near the Ninth Stone cracks it visibly; let the players hear it.
 
 Prayer is not free either: a priest who leans on their god for a big miracle owes the god a favour, and the gods of this pantheon call them in.
 :::

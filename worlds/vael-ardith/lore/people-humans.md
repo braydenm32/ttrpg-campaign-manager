@@ -21,6 +21,9 @@ Humans built the empire and broke it and are currently arguing about who gets th
 
 What a human respects: holding a place. What a human fears: being forgotten, which is why they carve names on everything, including other people's monuments.
 
+### Customs and superstitions
+A bell on the door, rung twice going in and twice coming out, since the Night of Open Eyes; a Smokes house without one is a house the neighbours watch. "Evening, four-and-six": you are greeted by what you owe and are not insulted. Count the stakes on the way out and count them again coming back, and if the numbers differ do not look behind you. Pallas pies on the fifteenth, when everyone is owed something and nobody is paid. Nobody is hanged on a Restday, because the Corporal was, and the one Reeve who tried found the rope gone in the morning. A penny for the Emperor on a dead man's eye, so he can pay the first toll ([[An Emperor's Penny]]). See [[Sayings, Oaths and Curses of the March]] and [[Feasts, Fasts and Holy Days]].
+
 ### Names
 Given names are plain and old; family names come from a place, a trade or a thing. Men: Osric Vane, Hollis Penrow, Lucan Dray, Corin Blythe, Ruadh Fell. Women: Tamsin Crake, Jessamy Harl, Edwen Tarrow, Maud Severin, Bettany Coyle. Plateau names end soft (Ilyra, Seraphine, Amaris); Grimmark names are short and hard (Hesk, Brann, Ulla).
 
@@ -34,7 +37,7 @@ Many, loud, brief. The elves find them touching. The Shellbacks find them a reas
 You are the default and nobody notices you, which is useful. Decide where you are from, because it decides your god, your accent and who you owe. A Regency human carries paper; a Concord human carries debt; an Iskavethi carries a flame; a clansman carries a grudge. Pick the one thing you would hold a wall for.
 
 :::gm
-The imperial bloodlines were bred, over three centuries of magi and marriages, for ward-sensitivity: an emperor was meant to feel the wards and so keep them. It worked. No living heir can sit the throne in [[Caer Ardith]] without hearing [[The Sleeper Below]]; [[Aurel IX]] heard it for twenty years and started digging. The Regency's genealogists have a list of eleven surviving ward-sensitive bloodlines, and three of them have a cousin in the Ninth Lantern's muster, and one of those three is [[Ilse Marrow]]'s mother's line. Whether the GM uses that is up to the GM.
+The imperial bloodlines were bred since Caedric, over twelve centuries of magi and marriages, for ward-sensitivity: an emperor was meant to feel the wards and so keep them. It worked. No living heir can sit the throne in [[Caer Ardith]] without hearing [[The Sleeper Below]]; [[Aurel IX]] heard it for twenty years and started digging. The Regency's genealogists have a list of eleven surviving ward-sensitive bloodlines, and three of them have a cousin in the Ninth Lantern's muster, and one of those three is [[Ilse Marrow]]'s mother's line. Whether the GM uses that is up to the GM.
 :::
 
 == GM notes ==

@@ -29,9 +29,13 @@ Sael claims nothing. It sends scholars. Remembrancer [[Aelith Sorn]] arrived in 
 From the middle of the forest's west coast a broad wedge of mountains runs out into the Hollow Sea: [[The Ness of Thurm]]. The elves bar the way to it with a wall across its root and do not explain. Old Shellback charts show ruins on its southern slopes. Newer charts say: here the charts fail.
 
 ### Rumours
-- The elves burned a whole generation's skins in a single night, long ago. (No elf will discuss it.)
-- Sael's queen is a thousand years old and remembers everything. (There is no queen.)
-- There are elves on the Ness who never came to Ilmareth and still remember. (Nobody knows.)
+- The elves burned a whole generation's skins in a single night, long ago.
+- Sael's queen is a thousand years old and remembers everything.
+- There are elves on the Ness who never came to Ilmareth and still remember.
+
+:::gm
+**Which are true.** 1. Near enough: they were ordered burned, and not all of them were. No elf will discuss it. 2. False. There is no queen. 3. Nobody knows.
+:::
 
 :::gm
 Sael tried to open the Fourth Ward in 1102 AW ([[The Saelish Trespass]]), failed horribly, and chose to forget: the skins that recorded it were burned. Not all of them. [[Sorrel Vey]] carries the surviving record on her own body and does not know what it says. Aelith Sorn suspects, and will betray anyone to read it.

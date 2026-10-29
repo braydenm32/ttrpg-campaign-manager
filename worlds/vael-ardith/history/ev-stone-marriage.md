@@ -13,7 +13,7 @@ order: 30
 [[Tharos]], the Stone-Under, god of mountains and endurance, took mortal lovers. Their children were [[The Nine]], demi-gods of stone and fire. That much is agreed. Everything else is argument.
 
 ### The dwarves say
-It was an honour. Tharos walked up out of the rock and chose from among the first stone-cutters, men and women both, and asked each of them a single question: *can you stay?* Those who said yes were married to the mountain. Dwarven weddings still include the question, and the answer is traditionally a grunt.
+It was an honour. Tharos walked up out of the rock and chose from among the first stone-cutters, men and women both, nine to marry the mountain. He asked each of them a single question: *can you stay?* All nine said yes, and the nine bore the Nine. Dwarven weddings still include the question, and the answer is traditionally a grunt.
 
 ### The Saelish say
 It was hunger. A god of stone knows nothing of change, and wanted to see what a short life looked like from the inside. His children were curiosities that grew too large for their cabinet.

@@ -24,6 +24,14 @@ relations:
   - to: f-mothers
     kind: writes to
     note: Her mother is Mother Hesha, of the Mothers' council.
+  - to: npc-hurkul-ninefingers
+    kind: argues with
+    known: true
+  - to: npc-nell-harrow
+    kind: buys burn salve from
+    known: true
+  - to: npc-mother-hesha
+    kind: daughter of
 ---
 
 In the orc way she is **Skarra, Hesha's daughter**; the company calls her Burnbrow, because she has had no eyebrows since 2996 and has stopped pretending they'll grow back. A thick, patient orc woman of forty with scorched gauntlets and a pipe she is forbidden to light within fifty paces of her own store.
@@ -33,5 +41,5 @@ In the orc way she is **Skarra, Hesha's daughter**; the company calls her Burnbr
 She thinks [[Tick]] is a genius who will die young and take a wall with him. He thinks she's a coward who uses three times the fuse she needs. She sends him a jar of burn salve every Restday without a note.
 
 :::gm
-Skarra's mother is Mother Hesha, who sits on the Mothers' council. Skarra writes home every month. Her last letter mentioned that "an exile with nine knuckles" has signed with the company. The Mothers now know where [[Varra Nine-Knuckles]] is. Whether they act, and how, is the GM's lever for sessions 5 to 8.
+Skarra's mother is Mother Hesha, who sits on the Mothers' council. Skarra writes home every month. Her last letter mentioned that "an exile with nine knuckles" has signed with the company. The Mothers now know where [[Varra Nine-Knuckles]] is. Whether they act, and how, is the GM's lever for sessions 5 to 8; the Mothers' lever in session 7 is Grashka's letter. [[Mother Hesha]] reads every one of Skarra's letters aloud to the council.
 :::

@@ -13,18 +13,18 @@ order: 170
 
 The riot in the Smokes began, as these things do, with a kindness.
 
-**The spark.** A Hollowborn girl of seven, selling matches at the Low Quay, told a woman in the queue that her husband was standing behind her and wanted her to know the roof was fixed. The woman's husband had died at Cinders. She screamed. A crowd formed. In the heat of an August evening, in a town on edge, it did not take long for someone to shout *witch*.
+**The spark.** A Hollowborn girl who was four by the calendar and looked seven, one of the six born the night of Cinders, was selling matches at the Low Quay when she told a woman in the queue that her husband was standing behind her and wanted her to know the roof was fixed. The woman's husband had died at Cinders. She screamed. A crowd formed. In the heat of a late-summer evening, in a town on edge, it did not take long for someone to shout *witch*.
 
-**The night.** Three hours of fighting between Hollowborn families and the neighbours who had lived beside them for years. Tanneries were burned, shutters smashed and a well poisoned with a dead dog. [[Captain Marrow|Ilse Marrow]] marched the company down from the Keep and stood her people between the two crowds with their weapons held low. She held them there until dawn, and a man died on her sword arm's side of the line, which she has never discussed.
+**The night.** Three hours of fighting between Hollowborn families and the neighbours who had lived beside them for years. Tanneries were burned, shutters smashed and a well poisoned with a dead dog. [[Captain Marrow|Ilse Marrow]], not yet captain but the one officer in the Keep still sober, marched the watch down and stood her people between the two crowds with their weapons held low. She held them there until dawn, and a man died on her sword arm's side of the line, which she has never discussed.
 
 **The toll.** Eleven dead, forty hurt, nine households burned out. The company arrested thirty and hanged none, an act of mercy the Regency noted in a file marked *irregular*.
 
-**What it left.** A wary peace. A tradition of the Smokes' door-bells, rung twice for safety. An understanding between the Hollowborn and the company that neither will say aloud: *if it happens again, we come.* And a girl, now eighteen, who still sells matches and no longer tells anyone what she sees.
+**What it left.** A wary peace. A tradition of the Smokes' door-bells, rung twice for safety. An understanding between the Hollowborn and the company that neither will say aloud: *if it happens again, we come.* And a girl, now grown, who is [[Mirrit]], Hesk the chandler's apprentice, and no longer tells anyone what she sees.
 
 **How it is told now.** The Smokes remember it as the night the soldiers stood in the street. The Quarter above it remembers it as the night the Smokes burned.
 
 :::gm
-The first shout of *witch* came from a man who had arrived in town three days earlier, spent two nights at the Velvet Ledger, and left the day after. He was never found. The Ledger kept his name; Sorrel Vey has not shared it.
+The first shout of *witch* came from a man who had arrived in town three days earlier, spent two nights at the Velvet Ledger, and left the day after. He was never found. He may only have been a frightened stranger; the Ledger kept his name, and Sorrel Vey has not shared it.
 :::
 
 == GM notes ==

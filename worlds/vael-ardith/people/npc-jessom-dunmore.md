@@ -29,10 +29,12 @@ Identical to [[Jory Dunmore]] except in every way that matters: quicker to laugh
 
 > "You're wrong." "I haven't said anything yet." "You were about to."
 
-He is a superb shot and a bad loser, and lately he has been drinking with the Lieutenant's friends.
+He is a superb shot and a bad loser, and lately he has been drinking with the Lieutenant's friends. **Wants:** to be paid, and to be the elder. **Fears:** being the one who is wrong.
 
 :::gm
 Jessom has sided with [[Garrick Sallow]]: he's hungry, angry and owes money, and Sallow listens. Jory doesn't know yet. When the mutiny breaks in session 7, the twins end up on opposite walls, crossbows loaded, finally disagreeing about something that matters. Whether one shoots the other is up to the PCs.
+
+Like his brother he is a cousin of [[Ilse Marrow]]'s mother's line, a ward-sensitive family; neither twin knows it. The cage hums in his teeth, and it is partly why he drinks.
 :::
 
 == GM notes ==

@@ -37,16 +37,16 @@ Grum is the sound an anvil makes. He is drawn with a soldier's body and a smith'
 Prayers to the Old Iron are not prayers. They are what a soldier says when the strap breaks, when the line holds, when the pay does not come. The faithful hold that any sentence with his name in it and real feeling behind it reaches him, and that he prefers the short ones.
 
 ### Worship across the nations
-Every army, every forge, every company. The Regency's old imperial legions had his shrine at the gate of every camp and [[The Regency of Ardith]] still sends a chaplain of Grum to the front, in triplicate. The orc companies swear by him in every contract and by the Mothers in every quarrel, and [[Mirrel Vosk]] says there is a difference. In the Grimmark he is a smith first, a soldier second, and the clans call him Uncle. The Concord pays him in weapons contracts. Iskaveth's Saint has tried to replace him in her armies and has had to settle for sharing: a soldier will pray to the Saint for mercy and to Grum for a clean edge.
+Every army, every forge, every company. The Regency's old imperial legions had his shrine at the gate of every camp and [[The Regency of Ardith]] still sends a chaplain of Grum to the front, with a sermon and no pay. The orc companies swear by him in every contract and by the Mothers in every quarrel, and [[Mirrel Vosk]] says there is a difference. In the Grimmark he is a smith first, a soldier second, and the clans call him Uncle. The Concord pays him in weapons contracts. Iskaveth's Saint has tried to replace him in her armies and has had to settle for sharing: a soldier will pray to the Saint for mercy and to Grum for a clean edge.
 
 ### The priesthood
-Sergeants, farriers, armourers, and anyone who has buried more than ten. There is no ordination; there is seniority. A priest of Grum is whoever the company looks at when it needs a word said over a grave and nobody has a Raveler to hand. In [[Cinderford]] his shrine is the back wall of the drill yard on [[Lantern Hill]], and his altar is the whetstone.
+Sergeants, farriers, armourers, and anyone who has buried more than ten. There is no ordination; there is seniority. A priest of Grum is whoever the company looks at when it needs a word said over a grave and nobody has a Raveler to hand. In [[Cinderford]] his shrine is the back wall of the drill yard on [[Lantern Hill]] and an anvil on [[Temple Row]], and his altar is the whetstone.
 
 ### What the faithful believe
 That he learned the forge from [[Tharos]] and the fight from nobody. That he never asked anyone to win, only to stand. That he was at Cinders, in the line, and the eight dark lanterns are the only thing he has ever been heard to weep for.
 
 ### Relations
-[[Aurelan]]'s priests call him the sun's hound; his own say that the sun has never carried a shield. He drinks with [[The Hanged Corporal]], and the drinking is half fond and half a quarrel, because the Corporal is poaching his congregation one refusal at a time. He owes [[Maelis]] sons and knows it.
+[[Aurelan]]'s priests call him the sun's hound; his own say that the sun has never carried a shield. He drinks with [[The Hanged Corporal]], half fond and half in quarrel, because the Corporal is poaching his congregation one refusal at a time. He owes [[Maelis]] sons and knows it.
 
 ### Holy days
 Ironday every week, when blades are oiled and nobody is flogged. Anvil Night, 30 Emberwane, when forges are let go cold and relit at midnight with a prayer that is one syllable long. And in the Ashenreach, the night of the Battle of Cinders, when every company lights a lantern and [[The Ninth Lantern]] does not need to.

@@ -9,7 +9,7 @@ image: crest:f-rook-court
 fields:
   Crest: A black rook perched on a closed door, a single white feather in its beak, on dusk grey
   Seat: The Doorkeeper's Chapel and Corvel Rise
-  Head in town: Mother Corvane
+  Head: Mother Corvane, at Corvel Rise
   Strength: Hundreds of Ravelers, spread across every battlefield
 relations:
   - to: f-church-saint
@@ -36,8 +36,12 @@ Cheerful, morbid undertakers with a gift for black humour. They take payment in 
 **Fledglings** learn the work. **Rooks** are the field undertakers. **Elder Rooks** lead a rookery. The head of a Court is called a **Mother** or **Father Rook**. Everyone keeps a **ledger** of what the dead said, and the ledgers are copied up the chain.
 
 ### Notable members
-- [[Mother Corvane]]: head of the Rook-Court in town, shrewd, funny, careful.
+- [[Mother Corvane]]: head of the Court, who lives on Corvel Rise and has not come down to town in a year; shrewd, funny, careful.
 - [[Quorl Many-Words]]: the company's undertaker, who answers to Corvane.
+
+### Others you will meet
+- [[Skrell Already-Gone]]: Corvane's runner, who runs her errands and carries the Ninth's dead to the Rise at a flat sprint.
+- [[Mourn]]: the doorkeeper of the Velvet Ledger, once of the Court, who laughs at the wrong things.
 
 ### What they want in the Ashenreach
 To bury the dead decently, to keep the doors of [[The Doorkeeper's Chapel]] swinging, and to read the ledger. Since Hathe died, the dead do not always pass, and the Court would very much like to know why.
@@ -59,7 +63,7 @@ A web of rookeries, the ledger of last words, the Doorkeeper's Chapel, a trusted
 - **A warning:** "somebody is going to die soon, and you should be there."
 
 :::gm
-Secret aim: decode the message in the last words. Read together, the ledger says "the lamp is the lock". Corvane has already guessed. She has not told Quorl, because she is unsure what the lock holds, and she suspects that any answer will be worse than the question. The clock ticks when new words are collected, when a veteran confesses, when someone says the sentence aloud. At 4, the message is complete, and the Court must decide what to do with it.
+Secret aim: decode the message in the last words. Read together, the ledger says "the lamp is the lock". Corvane has built four of the five words from the ledgers and has guessed the fifth. She has not told Quorl, because she is unsure what the lock holds, and she suspects that any answer will be worse than the question. Quorl's seven whispers are in his own notebook, not the Court's ledger; [[Halloran Pike]] will be the eighth. The clock ticks when new words are collected, when a veteran confesses, when someone says the sentence aloud. At 4, the message is complete, and the Court must decide what to do with it.
 :::
 
 == GM notes ==

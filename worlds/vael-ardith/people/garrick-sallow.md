@@ -24,7 +24,7 @@ relations:
     known: true
   - to: ansel-mote
     kind: paid by
-    note: Quiet Office silver, for a mutiny.
+    note: New Regency silver, for a mutiny.
   - to: f-quiet-office
     kind: secretly serves
   - to: npc-dunstan-bray
@@ -33,12 +33,15 @@ relations:
   - to: dannic-rook
     kind: paid
     note: To swap the oil. "One more swap and you're square."
+  - to: npc-brother-audit
+    kind: prayed through
+    note: "Two prayers, dated, in his own words: 17 Reaping and 8 Ashfall."
 ---
 
 ### Look and voice
 Thirty, tall, fair, and handsome in the way of a portrait commissioned by his mother. His uniform is the only one in the company that fits, and he keeps it that way. He has a soldier's scars, two of them, in places that show. He smiles a great deal and almost always means it, which is what makes him dangerous.
 
-He speaks warmly and reasonably and never raises his voice. He is always the calmest person in the room.
+He uses your first name early and often, as though you'd been friends for years, and he is always the calmest person in the room.
 
 > "Nobody wants a mutiny. Nobody. I'm only saying that a company that isn't paid isn't a company. It's a crowd with swords, waiting for somebody to tell it what to do."
 
@@ -59,9 +62,9 @@ Charming. He buys new recruits a drink at [[The Last Candle]] in their first wee
 :::gm
 **Secret.** Sallow is paid by [[The Quiet Office]], through [[Ansel Mote]], to break the company: mutiny, then a new captain (him), then the lantern handed to the Regency "for safekeeping". He was promised a captaincy under the Regency and a seat on the March's council. He tells himself he's saving the company. The money is very good.
 
-He paid [[Dannic Rook]], who owed money all over the company, to swap the lantern's good oil for tins cut with ash (the tins came from Mote; the ash, Sallow has never asked, came from [[The Dreaming Widow]] and smells of lake water). The idea: frighten the soldiers, make the flame look like it's failing on Marrow's watch. He does not know what the flame is. He thinks it's a symbol. He would be appalled to learn he has been strangling a ward. Mote has given him a copy of one of the cage keys.
+He paid [[Dannic Rook]], who owed money all over the company, to swap the lantern's good oil for tins cut with ash (the tins came from Mote; the ash, Sallow has never asked, came from [[The Dreaming Widow]] and smells of lake water). The idea: frighten the soldiers, make the flame look like it's failing on Marrow's watch. He does not know what the flame is. He thinks it's a symbol. He would be appalled to learn he has been strangling a ward. Mote has given him a Quiet Office copy of the second cage key (Marrow's). It will not open the first lock, so it is useless without the lamp-keeper's key.
 
-He does not know that Mote drowned Rook. He thinks Rook simply ran, and he is relieved. His man in the ranks, [[Dunstan Bray]], counts heads for the mutiny.
+He does not know that Mote drowned Rook. He thinks Rook simply ran, and he is relieved. His corporal and man in the ranks, [[Dunstan Bray]], counts heads for the mutiny.
 :::
 
 == GM notes ==

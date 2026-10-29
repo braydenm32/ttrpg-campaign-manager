@@ -16,4 +16,11 @@ Where the Ardis finally reaches the sea it spreads into the Bay of Tolls, and Se
 The city is loud, salt-stained, polyglot, and honest in a way that has nothing to do with virtue: the weights are true because false weights are bad for business, and the contracts are binding because [[Corvex]] audits them personally. The temple of Corvex is the biggest building in the city. The temple of [[Sefra]] is the oldest, and her face here is the Toll-Keeper, who takes a tenth of every drowning.
 
 ### Hook
-A clerk of the Long Counting-House, drunk at a quayside tavern, told a halfling barge-captain that the Table had "bought the ash", meaning the Ashenreach's debts, Regency share and all, "down to the last candle". The halfling was [[Kettle Brindlewake]]. She has been thinking about what it means ever since.
+A clerk of the Long Counting-House, drunk at [[The Seventh Chair]] on the Ledger Island causeway, told a halfling barge-captain that the Table had "bought the ash", meaning the Ashenreach's debts, Regency share and all, "down to the last candle". The halfling was [[Kettle Brindlewake]]. She has been thinking about what it means ever since. The clerk, [[Fallon Wrass]], has since been promoted to a room with no window.
+
+:::gm
+The clerk was right, and the Table knows it. It also knows that the chart on [[Grandmother Tollamund]]'s wall is missing a corner, and has decided that is Tollamund's affair for now.
+:::
+
+### Where to drink and buy
+[[The Seventh Chair]] under the causeway's fourth arch, where the clerks drink and the barge-captains listen and a seventh chair is kept empty with a drink on it. [[The Ledger Island Assay]], Grandfather Veramund's weigh-house, where coin is rung, weights are stamped and debt is chalked for sale at noon; the last line of the slate names the Ninth Lantern and says *not for sale*. The Mothers of the Water tie up at the post-stair under the causeway each Turning for the Quay-Moot, which [[Barge-Mother Thimble Fairlock]] convenes.

@@ -32,5 +32,5 @@ A rangy, weather-burned woman of forty with a brass-bound cudgel, a laugh like g
 She knows every face that has ever bought or sold on her stones.
 
 :::gm
-Tam has noticed Jaspin Sweet paying out new Concord silver and is annoyed she isn't getting her cut. Ask her the right way and she'll tell the PCs exactly which Glasser crew sold it to him, and that they came in from Fort Mercy.
+Tam has noticed Jaspin Sweet paying out new Concord silver (the escort's travelling purse, though she doesn't know that) and is annoyed she isn't getting her cut. Ask her the right way and she'll tell the PCs exactly which Glasser crew sold it to him, and that they came in from Fort Mercy.
 :::

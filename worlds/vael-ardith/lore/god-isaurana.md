@@ -26,7 +26,7 @@ relations:
     known: true
   - to: god-sleeper
     kind: wants the dreams of
-    note: "Not the whole god: its domain. Dreams were Ysmereth's, and the Veiled One has wanted them for nine thousand years."
+    note: "Not the whole god: its domain. Dreams were Ysmereth's, and the Veiled One has wanted them for three thousand years."
 ---
 
 ### What is known
@@ -50,7 +50,7 @@ She loved the Doorkeeper, and her houses wore black for a year after Cinders wit
 The Unveiling, on the thirtieth night of every month when the pale moon is dark: the veil is lifted a finger's width and one true thing is said aloud in every house of hers. The Long Veil on 30 Longnight, which begins when Hearthnight's doors close and lasts until a dawn that is in no hurry.
 
 :::gm
-Isaurana is the most particular of the pantheon about what she wants from the crack. She does not want the Sleeper's corpse. She wants its domain. Dreams were Ysmereth's before the Godslaying, and for nine thousand years nobody has held them; night is hers already, and she thinks dreams belong with it. If the others devour [[The Sleeper Below]] whole, the domain is scattered among them like a dead man's coat. So she wants the crack open and the Sleeper reached, but reached by her first, through the one door she knows best: the dreamers. Her priestesses are told to gather what the Hollowborn say in their sleep, and [[Sorrel Vey]] has a book of it. She is also the one god who finds the Sleepless useful rather than mad.
+Isaurana is the most particular of the pantheon about what she wants from the crack. She does not want the Sleeper's corpse. She wants its domain. Dreams were Ysmereth's before the Godslaying, and for three thousand years nobody has held them; night is hers already, and she thinks dreams belong with it. If the others devour [[The Sleeper Below]] whole, the domain is scattered among them like a dead man's coat. So she wants the crack open and the Sleeper reached, but reached by her first, through the one door she knows best: the dreamers. Her priestesses are told to gather what the Hollowborn say in their sleep, and [[Sorrel Vey]] has a book of it. She is also the one god who finds the Sleepless useful rather than mad.
 
 Her menace is the menace of being perfectly known. A priestess of Isaurana who has decided she wants something from a PC does not seduce; she describes the PC to themself, accurately, and waits.
 :::

@@ -23,8 +23,11 @@ The real business is last words. A Raveler who hears you die remembers what you 
 
 Their humour is black and constant. A Raveler at a funeral is the one making the jokes, and the family laughs, and that is the service.
 
+### Customs and superstitions
+The joke at the funeral is the service; a Raveler who stops joking at a graveside is frightened, and the family should be too. A stone pear on a grave means the Ravelers asked and were given leave ([[Stone Pears]]); one on a doorstep means they are coming for somebody inside. The crows are consulted, and lately answer. Never touch the key except to lend it for a funeral, and never ask what it is for, which is the question Corvane is waiting for. The long verse of the Corporal's Song ("and neither was he") is the only human hymn the Court has asked for twice ([[Songs of the March]]). A last word is kept, sold or told to the mother, as agreed; the second-to-last costs more.
+
 ### Names
-A croak of a given name and a deed-name earned at the first burial. Krael Last-Breath, Abek Counts-Twice, Rhauk Hush-Wing, Tessik Buried-Kings, Vorl Half-Ledger, Issk No-Second-Word, Caddock Pale-Beak, Orrick Three-Graves, Mirl Owes-Nothing, Skree Who-Laughed. [[Quorl Many-Words]] got his name for talking back to a dying sergeant. [[Mother Corvane]] has not used her deed-name in forty years and nobody dares ask it.
+A croak of a given name and a deed-name. Raveler children help at burials from six and earn the deed-name at the first they work. Krael Last-Breath, Abek Counts-Twice, Rhauk Hush-Wing, Tessik Buried-Kings, Vorl Half-Ledger, Issk No-Second-Word, Caddock Pale-Beak, Orrick Three-Graves, Mirl Owes-Nothing, Skree Who-Laughed. [[Quorl Many-Words]] got his name for talking back to a dying sergeant. [[Mother Corvane]] has not used her deed-name in forty years and nobody dares ask it.
 
 ### Where they live
 Rookeries: stilt-houses and roofed platforms beside burial grounds, built high because they like a view of the field. [[Corvel Rise]] outside Cinderford is the largest in the Ashenreach. Smaller rookeries follow every company. A Raveler in a town without a graveyard is a Raveler passing through.
@@ -36,7 +39,7 @@ Bad luck, good undertakers, and the only people who will touch the dead after Ci
 You are the funniest person at every graveside and you mean it as kindness. Decide what last words you carry that you have not sold, and whose. You cannot be bought but you can be hired, and you are honest about the difference. You are morbid, loyal to the Court, and quietly furious that your god is dead and you are keeping his doors anyway. Play the jokes as the prayer.
 
 :::gm
-The Rook-Court keeps a ledger of every last word heard since the war: nine years, forty thousand entries, cross-indexed by the Mothers. Read in order, the words the dying have said in the Ashenreach form a sentence that repeats, with gaps, and the gaps are closing. [[Mother Corvane]] already guesses it: "the lamp is the lock." [[Quorl Many-Words]] has heard seven soldiers say the same sentence as they died, and has not yet told her, because he is not sure whose side she is on. The Sleeper is speaking through the dying, and the Ravelers, who were made to listen, are the only people on the continent taking dictation.
+The Rook-Court keeps a ledger of every last word heard since the war: nine years, forty thousand entries, cross-indexed by the Mothers. Read in order, the words the dying have said in the Ashenreach form a sentence that repeats, with gaps, and the gaps are closing. [[Mother Corvane]] has four of its five words and has guessed the fifth: "the lamp is the lock." [[Quorl Many-Words]] has heard seven soldiers say the same sentence as they died, and has not yet told her, because he is not sure whose side she is on. The Sleeper is speaking through the dying, and the Ravelers, who were made to listen, are the only people on the continent taking dictation.
 :::
 
 == GM notes ==

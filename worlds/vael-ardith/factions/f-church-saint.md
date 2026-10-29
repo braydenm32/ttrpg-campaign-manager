@@ -35,7 +35,7 @@ clocks:
     known: false
 ---
 
-The Church of the Unburnt Saint arrived in the Ashenreach with a hand outstretched. [[Iskaveth]] declared Ilyra of Halcyra a living saint in 3007, when she walked out of the Battle of Cinders unburnt. Now her faith feeds the poor, dresses wounds, and offers fire as comfort: a candle for the dying, a hearth for the cold. It is warm, kind and very persuasive.
+The Church of the Unburnt Saint arrived in the Ashenreach with a hand outstretched. [[Iskaveth]] declared Ilyra of Halcyra a living saint in 3007, five years after she walked out of the Battle of Cinders unburnt. Now her faith feeds the poor, dresses wounds, and offers fire as comfort: a candle for the dying, a hearth for the cold. It is warm, kind and very persuasive.
 
 ### Public face
 A mission of mercy. [[The House of Unburnt Light]] stands outside Cinderford with a kitchen, a hospital ward, and more cushions than any soldier has seen since the war. Its priests ask no price. They simply ask you to stay a while.
@@ -54,7 +54,7 @@ To "save" the Ninth Lantern, which means taking it into the Church's keeping. Th
 With affection. The envoy remembers names and birthdays, and always finds something the PC needs. The warmth is real, and the hunger behind it is just as real.
 
 ### Resources
-Gold from Iskaveth, food, medicine, a standing army of devoted volunteers, and the ear of the poor. And Ilyra, who can reach anyone she has touched.
+Gold from Iskaveth, food, medicine, a standing army of devoted volunteers, and the ear of the poor.
 
 ### How they act
 - **A gift:** a warm meal, a healer, a letter from home.
@@ -63,7 +63,7 @@ Gold from Iskaveth, food, medicine, a standing army of devoted volunteers, and t
 - **An offer:** "Let us hold the flame for you, until the pay comes."
 
 :::gm
-Secret aim: feed the Saint the Ninth Ward's power so she becomes a full god. Ilyra drank dying Hathe's power in the fire and is ascending on it; she needs the crack open to finish. Her church does not all know. The envoy does. The Saint speaks through Seraphine and wants the PCs; she has felt something in them, and she is very patient. The clock ticks when the flame dims, when the Church gains a foothold in the Keep, when the Smokes riot, when a soldier prays to her instead of the company.
+Secret aim: feed the Saint the Ninth Ward's power so she becomes a full god. Ilyra took what was left of dying Hathe in the fire (she did not choose to) and is ascending on it; she needs the crack open to finish. She can reach anyone she has touched, which is why the House's warmth has hands. Her church does not all know. The envoy does. The Saint speaks through Seraphine and wants the PCs; she has felt something in them, and she is very patient. The clock ticks when the flame dims, when the Church gains a foothold in the Keep, when the Smokes riot, when a soldier prays to her instead of the company.
 :::
 
 == GM notes ==

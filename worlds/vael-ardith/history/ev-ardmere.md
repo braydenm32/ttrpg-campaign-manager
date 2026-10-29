@@ -2,16 +2,21 @@
 type: event
 name: The Siege of Ardmere
 players: true
-summary: A 211-day siege that ended when mercenary companies took the town themselves, and the Regency learned who really commanded its armies.
+summary: A 211-day siege that ended when three mercenary companies relieved the town, the Long Spoons first through the water-gate, and the Regency learned who really commanded its armies.
 parent: ardmere
 tags: [ war, siege, mercenaries ]
+relations:
+  - to: npc-orla-quist
+    kind: left a ledger with
+    note: Helmar Quist's daughter holds his book of the siege's broken promises.
+    known: true
 age: ashen
 when: 6 Bloomtide 2994
 date: Bloomtide to Frostcall 2994 AW
 order: 40
 ---
 
-Ardmere, the river town north of [[Caer Ardith]], was held for the Regency by a garrison of levies and a commander named Helmar Quist. In Bloomtide 2994 AW it was surrounded by the Free Host of the pretender Hallam Ostrey. It held for two hundred and eleven days.
+Ardmere, the river town north of [[Caer Ardith]], was held for the Regency by a garrison of levies and a commander named Helmar Quist. In Bloomtide 2994 AW it was surrounded by the Free Host, a hired army of three claimants' contingents under a hired general, Hallam Ostrey. It held for two hundred and eleven days.
 
 **The siege.** The usual horrors: starvation, disease, the water-gate, the dead thrown from the walls and the dead thrown back. Quist wrote to the Regency every week for relief. The Regency sent forms. Eventually it sent a wagon of forms, to be completed on arrival.
 
@@ -22,7 +27,7 @@ Ardmere, the river town north of [[Caer Ardith]], was held for the Regency by a 
 **How it is told now.** In Ardmere, by the old, in tones of fond horror. In the companies, as the day they stopped being employees. In the Regency's records, not at all. The official report of the siege, in nineteen pages, says only that it was *concluded satisfactorily*.
 
 :::gm
-Quist survived, and later signed the Treaty of Ashes as a Regency observer. He keeps a ledger of every promise made to Ardmere. Most were broken. The Concord bought the Free Host's unpaid wages that winter, and that is how the Concord first learned it could buy an army by the pound.
+Ilse Marrow, twenty-seven and a mercenary supply clerk, was inside the walls for all 211 days, and the Long Spoons' pot-boy who came through the water-gate with the first pot was Spoons Aldane. Quist survived, signed the Treaty of Ashes as a Regency observer, and died in 3009. He kept a ledger of every promise made to Ardmere. Most were broken. His daughter [[Orla Quist]] holds it. The Concord bought the Free Host's unpaid wages that winter, and that is how the Concord first learned it could buy an army by the pound.
 :::
 
 == GM notes ==

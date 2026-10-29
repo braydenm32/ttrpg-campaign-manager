@@ -27,9 +27,13 @@ The Concord Table meets in Sevenhaven, one chair for each port, decisions by a m
 Since the Regency stopped paying the treaty garrison, Concord banks have been quietly buying the debt: the company's, the town's, the Regency's share of the treaty. Whoever holds the debt holds the March. [[Tollamund & Daughters]] in Cinderford is their hand on the table.
 
 ### Rumours
-- The Concord trades with drowned [[Qal Merrow]] and lies about what it brings back. (True.)
-- The Shellbacks own the Regency Council outright. (Not quite. Only seven seats.)
-- No Shellback has ever been seen to die. (False. They just take a long time about it.)
+- The Concord trades with drowned [[Qal Merrow]] and lies about what it brings back.
+- The Shellbacks own the Regency Council outright.
+- No Shellback has ever been seen to die.
+
+:::gm
+**Which are true.** 1. True. 2. Not quite. Only seven seats. 3. False. They just take a long time about it.
+:::
 
 :::gm
 The Concord wants the Ashenreach for what is under it as much as for the land: the Shellbacks believe the lantern's flame is the key that will let them go home to the Ness of Thurm. Grandmother Tollamund is acting for herself as much as for the Table.

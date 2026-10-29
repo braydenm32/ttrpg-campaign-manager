@@ -17,7 +17,7 @@ In 2231 AW the Mothers of the Iron presented the Emperor Teodric III with a docu
 
 **Why the Emperor agreed.** He was told it would earn the empire coin from soldiers it was paying to sit idle. He was not told that the seal would become the most trusted promise in the world.
 
-**What it left.** The free companies. The Mothers' licence system, still the basis of every mercenary contract on the continent. A culture of oath-keeping among orc soldiers that other peoples have mocked, envied and failed to imitate. And a hunger in the Regency, three centuries later, to find a way to break it.
+**What it left.** The free companies. The Mothers' licence system, still the basis of every mercenary contract on the continent. A culture of oath-keeping among orc soldiers that other peoples have mocked, envied and failed to imitate. And a hunger in the Regency, now, to find a way to break it.
 
 **How it is told now.** In barracks, as a point of pride: *the Emperor signed it and thought he'd won.* Among clerks it is held up as an example of why one should always read the second page.
 

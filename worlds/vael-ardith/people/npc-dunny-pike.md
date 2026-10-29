@@ -28,8 +28,10 @@ A skinny, solemn boy of twelve with a bowl haircut, enormous ears and a rope-bur
 
 > "That's three rings for a fire, two for a death and one for the ford. Four is for the end of the world. I've never done four. I practise it in my head."
 
-He knows everyone who crosses the square and when, and is a better source than the toll-clerk, for the price of a pear. He rang the bell at noon on 14 Ashfall when the ford-watch hooked the drowned man out of the shallows, and he has not stopped thinking about it.
+He strikes his signals with a mallet from the bell-house stair; the rope stays knotted up out of reach and is pulled only on the Keep's order, which has happened nine times in nine years. All the town's codes, his and the company's, are set down in [[Signals of Cinderford]]. One stroke closes the ford; two is a death; three is a fire; three and three means someone is in the water. Dunny learned the codes from old [[Halloran Pike]], whose pipe Dunny fetches from the Candle each evening, and who is no relation: "there are a great many Pikes".
+
+He knows everyone who crosses the square and when, and is a better source than the toll-clerk, for the price of a pear. At noon on 14 Ashfall he struck three and three when the ford-watch hooked the drowned man out of the shallows, and he has not stopped thinking about it.
 
 == GM notes ==
 
-A lovely source and a lovely hostage. On the red moon night, Dunny rings four. He doesn't know why he did it.
+A lovely source and a lovely hostage. Four is for the end of the world, and it is never struck until the night the lantern leaves the Hill (session 8): then Dunny hauls down the knotted rope, against orders, and pulls the tenth ring of the Treaty Bell's life. He doesn't know why he does it; he only knows it is time.

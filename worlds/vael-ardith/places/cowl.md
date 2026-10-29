@@ -16,3 +16,7 @@ Cowl's position on smuggling is that it is trade the Table has not caught up wit
 
 ### Hook
 A Cowl factor has been asking the barge clans to quote for "a sealed cargo, man-sized, not to be opened, from the ash country to the Bight, Frostcall delivery". The pay is very good. The Brindlewakes turned it down. Someone else will not.
+
+:::gm
+The cargo is a Lithic statue fragment, man-sized, and it is [[Aelith Sorn]]'s: she wants it out of the March before the Church takes closer notice of what she collects, and Cowl is where nobody opens a crate. It is bound for her, by the long way round. The factor is paid out of a Remembrancer's purse. After session 8 the quote is asked again, at a better price, and who is asking depends on the ending: see [[What is the sealed cargo for Frostcall?]].
+:::

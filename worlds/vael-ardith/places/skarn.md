@@ -17,3 +17,7 @@ The Moot Stone in the hall's yard is a slab of Lithic stone, a standing figure w
 
 ### Hook
 Skarn's Book of Grudges, in which the Holds have recorded every debt and insult since the founding, has a page torn out. The page covered the winter of 3004, when the Returned came up out of Hollowhall. Nobody admits to tearing it and nobody can remember what it said.
+
+:::gm
+The page was torn in the winter of 3004 by Clan Harl's tallyman, who read what the Hold had written about the Returned and decided the Holds would sooner not have it on record.
+:::

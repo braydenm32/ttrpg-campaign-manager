@@ -2,7 +2,7 @@
 type: event
 name: The Godsdawn
 players: true
-summary: How the gods began, told three ways by three peoples who each swear theirs is the oldest.
+summary: How the gods began, told four ways by four peoples who each swear theirs is the oldest.
 parent: vael-ardith
 tags: [ myth ]
 age: myth
