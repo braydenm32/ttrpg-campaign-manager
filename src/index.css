@@ -1160,3 +1160,6 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .page-picker-list li > button { display: block; width: 100%; text-align: left; border: none; background: transparent; padding: .35em .5em; border-radius: 6px; }
 .page-picker-list li.active > button { background: var(--panel-2); }
 .page-picker-list li.muted { padding: .3em .5em; }
+
+/* A warning under a text box: players would read the name of a GM-only page */
+.secret-names { margin: .3em 0; padding: .35em .6em; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 4px; color: var(--text); }

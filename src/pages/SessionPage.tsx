@@ -14,6 +14,7 @@ import { db, ENTITY_LABELS, type Entity, type Recording, type Session } from '..
 import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
+import { SecretNamesWarning } from '../SecretNamesWarning'
 import { formatTime, recordingSupported, systemAudioSupported, type RecordSource } from '../recorder'
 import { RecordingSaveWarning } from '../RecordingBar'
 import { addBookmark, beginRecording, discardRecording, endRecording, recoverRecording, unsavedRecordings, useLiveRecording } from '../recordingStore'
@@ -156,6 +157,7 @@ export default function SessionPage() {
           onChange={(v) => update({ recap: v })}
         />
       )}
+      {tab === 'recap' && <SecretNamesWarning worldId={worldId} texts={[session.recap]} />}
       {tab === 'recap' && session.recap.trim() && <ReadAloud text={session.recap} id={`recap-${session.id}`} className="small" />}
       {tab === 'recap' && session.recap.trim() && (
         <DiscordButton
@@ -370,7 +372,7 @@ function Playback({ sessionId, recording }: { sessionId: string; recording: Reco
     return (
       <div className="playback" ref={box}>
         <div className="muted small">
-          Recorded {new Date(startedAt).toLocaleString()} on another device. The audio stays there; its transcript is here.
+          Recorded {new Date(startedAt).toLocaleString()} on another device, or left out of a backup. The audio isn’t on this device; its transcript is here.
         </div>
         <TranscriptPanel sessionId={sessionId} recording={recording} worldId={worldId} seek={() => {}} focus={focus} />
       </div>

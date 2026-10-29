@@ -12,6 +12,7 @@ import { newThread, threadLinks, URGENCY, useCampaigns, useWorldSessions } from 
 import { asPlayerSees, saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
+import { SecretNamesWarning } from '../SecretNamesWarning'
 import { CharacterOwnerBox } from '../players/Characters'
 import { PlayerNotesBox } from '../players/Notes'
 import { RevealedToBadge, RevealToPicker } from '../players/Secrets'
@@ -696,6 +697,7 @@ function EntityEditor({ entity, fresh, onDone }: { entity: Entity; fresh: boolea
             some characters only (:::for Wren and Silas). Names are suggested as you type.
           </small>
         </label>
+        <SecretNamesWarning worldId={worldId} texts={[d.summary, d.body, d.playerBody]} show={d.visibility === 'players' && !d.template} />
         {d.type === 'pc' && (
           <label>
             <span>

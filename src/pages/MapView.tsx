@@ -12,6 +12,7 @@ import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { StatusBadge, statusIcon } from '../status'
 import { SecretTextarea } from '../SecretTextarea'
+import { SecretNamesWarning } from '../SecretNamesWarning'
 import { useViewMode } from '../viewMode'
 import { circleShape, fogOverlay, pinRevealed, playersImageId, rectShape, removeFog, renderPlayerFog } from '../fog'
 import { Ico, TypeIcon } from '../icons'
@@ -741,6 +742,7 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
         Note
         <SecretTextarea worldId={pin.worldId} rows={4} value={pin.note} onChange={(v) => update({ note: v })} placeholder="Shown when the pin is clicked. Markdown and [[links]] work." />
       </label>
+      <SecretNamesWarning worldId={pin.worldId} texts={[pin.note]} show={pin.visibility === 'players'} />
       <div className="row spread">
         <button
           className="danger"

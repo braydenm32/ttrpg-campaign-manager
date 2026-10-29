@@ -21,6 +21,8 @@ interface WorldBackup {
   /** Added later; older backups don't have them. */
   boards?: Board[]
   sounds?: Sound[]
+  /** Set when the session recordings' audio was left out on purpose. The sessions, bookmarks and transcripts are all still here. */
+  recordingsLeftOut?: { count: number; bytes: number }
 }
 
 /** When this device last downloaded a backup of a world, and when a reminder was put off until (device-only). */
@@ -44,15 +46,20 @@ export const backupStore = {
 /**
  * Downloads a backup of a world. The zip is built a piece at a time, so a world with hours of
  * recordings doesn't have to fit in memory two or three times over (which could crash a phone or
- * tablet). `onProgress` hears how many files are in so far.
+ * tablet). `onProgress` hears how many files are in so far. Recording audio is the bulk of a big
+ * world, so it is only included when `recordings` is true (transcripts and bookmarks always are).
  */
-export async function exportWorld(worldId: string, onProgress?: (done: number, total: number) => void) {
+export async function exportWorld(worldId: string, onProgress?: (done: number, total: number) => void, { recordings = false }: { recordings?: boolean } = {}) {
   const world = await db.worlds.get(worldId)
   if (!world) throw new Error('World not found')
   const campaigns = await db.campaigns.where({ worldId }).toArray()
   const maps = await db.maps.where({ worldId }).toArray()
   const { cloud: _cloud, shared: _shared, ...plainWorld } = world
-  const assets = await db.assets.where({ worldId }).toArray()
+  const sessions = await db.sessions.where({ worldId }).toArray()
+  const recorded = await recordingAssetIds(worldId, sessions)
+  const all = await db.assets.where({ worldId }).toArray()
+  const left = recordings ? [] : all.filter((a) => recorded.has(a.id))
+  const assets = recordings ? all : all.filter((a) => !recorded.has(a.id))
   const backup: WorldBackup = {
     format: 'campaign-codex-world',
     version: 2,
@@ -62,10 +69,11 @@ export async function exportWorld(worldId: string, onProgress?: (done: number, t
     entities: await db.entities.where({ worldId }).toArray(),
     maps,
     pins: await db.pins.where({ worldId }).toArray(),
-    sessions: await db.sessions.where({ worldId }).toArray(),
+    sessions,
     boards: await db.boards.where({ worldId }).toArray(),
     sounds: await db.sounds.where({ worldId }).toArray(),
     assets: assets.map(({ blob: _blob, ...a }) => a),
+    ...(left.length ? { recordingsLeftOut: { count: left.length, bytes: left.reduce((n, a) => n + a.size, 0) } } : {}),
   }
 
   // The zip comes out in pieces; every so often they're joined into one Blob, which the browser can
@@ -112,6 +120,17 @@ export async function exportWorld(worldId: string, onProgress?: (done: number, t
   link.click()
   setTimeout(() => URL.revokeObjectURL(link.href), 60_000)
   backupStore.write(worldId, 'last', Date.now())
+}
+
+/** The ids of the files that are session recordings (audio), which are by far the biggest. */
+async function recordingAssetIds(worldId: string, sessions?: Session[]) {
+  return new Set((sessions ?? (await db.sessions.where({ worldId }).toArray())).flatMap((s) => s.recordings.map((r) => r.assetId)))
+}
+
+/** How much space this world's session recordings take (for the backup's "include recordings" choice). */
+export async function recordingsSize(worldId: string) {
+  const ids = [...(await recordingAssetIds(worldId))]
+  return (await db.assets.bulkGet(ids)).reduce((n, a) => n + (a?.size ?? 0), 0)
 }
 
 /** Imports a backup as a new copy of the world (fresh ids), so importing twice never overwrites anything. */
