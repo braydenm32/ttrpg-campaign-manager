@@ -4,13 +4,18 @@ import { initiativeOrder } from '../encounters'
 import { joinRoom, JOINED, sendOnce, type LiveRoom } from './live'
 
 /**
- * The live link between the GM's Lectern and the players' Common Room, over the world's "members"
- * room. Nothing here is saved anywhere: it's what's happening at the table right now.
- *  - "table" (GM → players): the session being played, the scene, whose turn it is, the music.
- *  - "hello" (player → GM): a player just opened the app; the GM's app answers with "table".
- *  - "dice" (anyone): a roll the whole table sees.
- *  - "signal" (player → GM): "I'd like to do something", "I need a break" or "I'll use inspiration".
- *  - "signal-seen" (GM → players): the GM saw a signal.
+ * The live link between the GM's Lectern and the players' Common Room. Nothing here is saved
+ * anywhere: it's what's happening at the table right now. Two rooms per world:
+ *  - "members:<world>", where anyone in the world can send:
+ *    - "hello" (player → GM): a player just opened the app; the GM's app answers with "table".
+ *    - "dice" (players): a roll the whole table sees.
+ *    - "signal" (player → GM): "I'd like to do something", "I need a break" or "I'll use inspiration".
+ *  - "table:<world>", where only a GM can send (public.channel_allowed), so players can trust it:
+ *    - "table" (GM → players): the session being played, the scene, whose turn it is, the music.
+ *    - "dice" (GM): the GM's own rolls.
+ *    - "signal-seen" (GM → players): the GM saw a signal.
+ * The GM's messages go to the members' room too, for a server that doesn't have the GM's room yet.
+ * Once a player's app gets into the GM's room it stops believing GM messages from the members' room.
  * Only what the GM's own filters let through is ever sent: never HP, conditions, scene notes or
  * a page players can't see.
  */
@@ -67,7 +72,7 @@ interface TableStore {
 const empty: TableStore = { table: null, heard: 0, rolls: [], signals: [], sent: {} }
 const stores = new Map<string, TableStore>()
 const listeners = new Map<string, Set<() => void>>()
-const links = new Map<string, LiveRoom>()
+const links = new Map<string, { members: LiveRoom; table: LiveRoom; host: boolean }>()
 
 const get = (cloudId: string) => stores.get(cloudId) ?? empty
 function update(cloudId: string, fn: (s: TableStore) => TableStore) {
@@ -101,12 +106,25 @@ const HEARTBEAT = 60_000
 const STALE_AFTER = 3 * HEARTBEAT
 
 const room = (cloudId: string) => `members:${cloudId}`
+const gmRoom = (cloudId: string) => `table:${cloudId}`
+
+/** A player's message: to the members' room, where everyone listens. */
 const send = (cloudId: string, event: string, payload: object) => {
   const link = links.get(cloudId)
-  return link ? link.send(event, payload) : sendOnce(room(cloudId), event, payload)
+  return link ? link.members.send(event, payload) : sendOnce(room(cloudId), event, payload)
 }
 
-// ---------- reading what arrives (anyone in the room can send, so nothing is taken on trust) ----------
+/** The GM's message: to the GM's room, and to the members' room for a server without the GM's room yet. */
+async function sendAsGM(cloudId: string, event: string, payload: object) {
+  const link = links.get(cloudId)
+  const sent = await Promise.all([
+    link ? link.table.send(event, payload) : sendOnce(gmRoom(cloudId), event, payload),
+    link ? link.members.send(event, payload) : sendOnce(room(cloudId), event, payload),
+  ])
+  return sent.some(Boolean)
+}
+
+// ---------- reading what arrives (nothing is taken on trust, not even from the GM's room) ----------
 
 const text = (x: unknown, max = 80) => (typeof x === 'string' ? x.slice(0, max) : '')
 const num = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : 0)
@@ -162,6 +180,9 @@ function readRoll(p: Record<string, unknown>): TableRoll | null {
   }
 }
 
+/** Signed "GM". From the members' room, where any player can send, that's a player posing as the GM once the GM's room works. */
+const posingAsGM = (p: Record<string, unknown>) => /^\s*gm\s*$/i.test(text(p.who))
+
 const addRoll = (cloudId: string, r: TableRoll) =>
   update(cloudId, (s) => (s.rolls.some((x) => x.id === r.id) ? s : { ...s, rolls: [r, ...s.rolls].slice(0, 30) }))
 
@@ -169,23 +190,39 @@ const addRoll = (cloudId: string, r: TableRoll) =>
 
 /** A player's side of the link, kept open while their world is on screen. */
 export function linkAsPlayer(cloudId: string) {
-  const r = joinRoom(room(cloudId))
-  links.set(cloudId, r)
-  const hello = () => void r.send('hello')
-  r.on(JOINED, hello)
-  if (r.connected()) hello()
-  r.on('table', (p) => update(cloudId, (s) => ({ ...s, table: readTable(p), heard: Date.now() })))
-  r.on('dice', (p) => {
-    const roll = readRoll(p)
-    if (roll) addRoll(cloudId, roll)
+  const members = joinRoom(room(cloudId))
+  const table = joinRoom(gmRoom(cloudId))
+  const link = { members, table, host: false }
+  links.set(cloudId, link)
+  // Set once the GM's room works: from then on the GM's messages count only from there.
+  let gmRoomWorks = table.connected()
+  const hello = () => void members.send('hello')
+  members.on(JOINED, hello)
+  table.on(JOINED, () => {
+    gmRoomWorks = true
+    hello()
   })
-  r.on<{ id?: unknown }>('signal-seen', (p) => {
-    const id = text(p.id)
-    update(cloudId, (s) => (s.sent[id] ? { ...s, sent: { ...s.sent, [id]: 'seen' } } : s))
-  })
+  if (members.connected()) hello()
+  for (const [r, fromGM] of [
+    [table, true],
+    [members, false],
+  ] as const) {
+    r.on('table', (p) => (fromGM || !gmRoomWorks) && update(cloudId, (s) => ({ ...s, table: readTable(p), heard: Date.now() })))
+    r.on('dice', (p) => {
+      if (!fromGM && gmRoomWorks && posingAsGM(p)) return
+      const roll = readRoll(p)
+      if (roll) addRoll(cloudId, roll)
+    })
+    r.on<{ id?: unknown }>('signal-seen', (p) => {
+      if (!fromGM && gmRoomWorks) return
+      const id = text(p.id)
+      update(cloudId, (s) => (s.sent[id] ? { ...s, sent: { ...s.sent, [id]: 'seen' } } : s))
+    })
+  }
   return () => {
-    if (links.get(cloudId) === r) links.delete(cloudId)
-    r.leave()
+    if (links.get(cloudId) === link) links.delete(cloudId)
+    members.leave()
+    table.leave()
   }
 }
 
@@ -204,27 +241,43 @@ export async function sendSignal(cloudId: string, kind: SignalKind, who: string,
 
 /** Shows a roll to everyone at the table (and here). */
 export async function shareRoll(cloudId: string, r: Omit<TableRoll, 'id' | 'at'>) {
-  const roll = { ...r, id: newId(), at: Date.now() }
+  const link = links.get(cloudId)
+  // A player whose name happens to be "GM" still reads as a player.
+  const who = link && !link.host && posingAsGM(r) ? `${r.who.trim()} (a player)` : r.who
+  const roll = { ...r, who, id: newId(), at: Date.now() }
   addRoll(cloudId, roll)
-  return send(cloudId, 'dice', roll)
+  return link?.host ? sendAsGM(cloudId, 'dice', roll) : send(cloudId, 'dice', roll)
 }
 
 // ---------- the GM ----------
 
 /** The GM's side: answers players who arrive, and collects their rolls and signals. */
 export function linkAsHost(cloudId: string, current: () => TableState | null) {
-  const r = joinRoom(room(cloudId))
-  links.set(cloudId, r)
-  const tell = () => void r.send('table', wire(current()))
-  r.on('hello', tell)
+  const members = joinRoom(room(cloudId))
+  const table = joinRoom(gmRoom(cloudId))
+  const link = { members, table, host: true }
+  links.set(cloudId, link)
+  let gmRoomWorks = table.connected()
+  const tell = () => void sendAsGM(cloudId, 'table', wire(current()))
+  members.on('hello', tell)
   // Nothing to say while no session is being run: players start from nothing anyway.
   const remind = () => current() && tell()
-  r.on(JOINED, remind)
-  r.on('dice', (p) => {
-    const roll = readRoll(p)
-    if (roll) addRoll(cloudId, roll)
+  members.on(JOINED, remind)
+  table.on(JOINED, () => {
+    gmRoomWorks = true
+    remind()
   })
-  r.on('signal', (p) => {
+  // Players' rolls, and a co-GM's from the GM's room.
+  for (const [r, fromGM] of [
+    [table, true],
+    [members, false],
+  ] as const)
+    r.on('dice', (p) => {
+      if (!fromGM && gmRoomWorks && posingAsGM(p)) return
+      const roll = readRoll(p)
+      if (roll) addRoll(cloudId, roll)
+    })
+  members.on('signal', (p) => {
     const kind = p.kind as SignalKind
     if (!KINDS.includes(kind) || !text(p.id)) return
     const sig: TableSignal = { id: text(p.id), kind, who: text(p.who) || 'A player', entityId: text(p.entityId) || undefined, at: Date.now() }
@@ -234,8 +287,9 @@ export function linkAsHost(cloudId: string, current: () => TableState | null) {
   const beat = setInterval(remind, HEARTBEAT)
   return () => {
     clearInterval(beat)
-    if (links.get(cloudId) === r) links.delete(cloudId)
-    r.leave()
+    if (links.get(cloudId) === link) links.delete(cloudId)
+    members.leave()
+    table.leave()
   }
 }
 
@@ -245,7 +299,7 @@ export function publishTable(cloudId: string, state: TableState | null) {
   if (JSON.stringify(before) === JSON.stringify(state)) return
   // The GM's own copy, so previewing the Common Room shows it too.
   update(cloudId, (s) => ({ ...s, table: state, heard: Date.now() }))
-  void send(cloudId, 'table', wire(state))
+  void sendAsGM(cloudId, 'table', wire(state))
 }
 
 /** A table state as sent: with the sender's clock, so timers can be shifted onto each player's. */
@@ -254,7 +308,7 @@ const wire = (state: TableState | null) => (state ? { ...state, sentAt: Date.now
 /** The GM has dealt with a signal: it goes away, and the player sees that it was seen. */
 export function answerSignal(cloudId: string, id: string) {
   update(cloudId, (s) => ({ ...s, signals: s.signals.filter((x) => x.id !== id) }))
-  void send(cloudId, 'signal-seen', { id })
+  void sendAsGM(cloudId, 'signal-seen', { id })
 }
 
 /**

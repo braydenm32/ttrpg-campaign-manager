@@ -106,9 +106,11 @@ export function MyNote({ world, entityId, placeholder }: { world: World; entityI
 export async function addToPartyNotes(world: World, who: string, line: string) {
   const memberOf = world.shared!.memberOf!
   const note = world.shared?.notes?.find((n) => n.entityId === '' && n.shared)
-  const add = (body = '') => `${body.trimEnd()}${body.trim() ? '\n' : ''}- **${who}:** ${line}`
+  // "GM" is how the GM's replies are signed, so a player of that name signs as a player.
+  const name = /^\s*gm\s*$/i.test(who) ? `${who.trim()} (a player)` : who
+  const add = (body = '') => `${body.trimEnd()}${body.trim() ? '\n' : ''}- **${name}:** ${line}`
   const clash = await savePlayerNote(memberOf, '', true, add(note?.body), note?.updatedAt ?? null)
-  if (clash) await savePlayerNote(memberOf, '', true, add(clash.body), null)
+  if (clash) await savePlayerNote(memberOf, '', true, add(clash.body), clash.updatedAt)
 }
 
 /**
@@ -181,10 +183,11 @@ function NoteEditor({
           </p>
           <pre className="note-clash-theirs">{clash.body}</pre>
           <div className="row wrap">
-            <button className="primary" onClick={() => save(`${clash.body.trimEnd()}\n\n${draft.trim()}`, null)}>
+            {/* Saved over the version shown here (a later one would be caught again). */}
+            <button className="primary" onClick={() => save(`${clash.body.trimEnd()}\n\n${draft.trim()}`, clash.updatedAt)}>
               Keep both
             </button>
-            <button onClick={() => save(draft, null)}>Use mine</button>
+            <button onClick={() => save(draft, clash.updatedAt)}>Use mine</button>
             <button
               onClick={() => {
                 setDraft(null)
@@ -279,7 +282,10 @@ function GmReply({ worldId, entityId, onSent }: { worldId: string; entityId: str
   )
 }
 
-/** The party's notes, with the GM's replies set apart. */
+/**
+ * The party's notes, with the GM's replies set apart. Only the GM can add a "- **GM:**" line: the
+ * server relabels one a player types or changes (public.save_player_note).
+ */
 export function NotesText({ text, entities, worldId }: { text: string; entities: Entity[]; worldId: string }) {
   // Runs of ordinary lines render together (so lists and paragraphs hold); each GM line stands out.
   const parts: { gm: boolean; text: string }[] = []

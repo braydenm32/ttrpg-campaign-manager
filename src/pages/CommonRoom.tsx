@@ -49,7 +49,7 @@ export default function CommonRoom({ world }: { world: World }) {
   // The GM previewing their own synced world sees the live table their Lectern is sending.
   const cloudId = memberOf ?? (!world.shared && world.cloud?.enabled ? world.id : undefined)
   const { previewAs } = useViewMode()
-  const { table } = useTable(cloudId)
+  const { table: anyTable } = useTable(cloudId)
   const entities = useVisibleEntities(worldId)
   const sessions = useWorldSessions(worldId)
   const campaigns = useCampaigns(worldId)
@@ -65,6 +65,9 @@ export default function CommonRoom({ world }: { world: World }) {
     : entities.filter((e) => e.type === 'pc' && previewAs?.characterNames.some((n) => n.toLowerCase() === e.name.toLowerCase()))
   const mineIds = new Set(mine.map((c) => gmIdOf(c.id)))
   const who = memberOf ? me.who : 'GM'
+  // A world with several groups: another campaign's session isn't yours to see as "playing now".
+  const table =
+    anyTable && (!mine.length || mine.some((c) => !c.campaignId || gmIdOf(c.campaignId) === anyTable.session.campaignId)) ? anyTable : null
 
   const liveCampaign = table && campaigns.find((c) => gmIdOf(c.id) === table.session.campaignId)
   const campaign = liveCampaign ?? campaigns.find((c) => upcoming(c)) ?? (campaigns.length === 1 ? campaigns[0] : undefined)

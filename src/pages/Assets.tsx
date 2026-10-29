@@ -5,13 +5,14 @@ import { useState } from 'react'
 import { Empty, TagInput, VisibilityToggle } from '../components'
 import { db, type Asset } from '../db'
 import { formatBytes, saveFileAsAsset, useBlobUrl, useWorld } from '../hooks'
-import { ShowButton } from '../showing'
+import { ShowButton, unshowableImages } from '../showing'
 import { Ico } from '../icons'
 import { File, Folder } from '@phosphor-icons/react'
 
 export default function Assets() {
   const { worldId } = useWorld()
   const assets = useLiveQuery(() => db.assets.where({ worldId }).reverse().sortBy('createdAt'), [worldId]) ?? []
+  const unshowable = useLiveQuery(() => unshowableImages(worldId), [worldId])
   const [filter, setFilter] = useState('')
   const q = filter.trim().toLowerCase()
   const shown = assets.filter((a) => !q || a.name.toLowerCase().includes(q) || a.tags.some((t) => t.toLowerCase().includes(q)))
@@ -47,7 +48,7 @@ export default function Assets() {
       ) : (
         <div className="card-grid">
           {shown.map((a) => (
-            <AssetCard key={a.id} asset={a} />
+            <AssetCard key={a.id} asset={a} unshowable={unshowable} />
           ))}
         </div>
       )}
@@ -55,7 +56,7 @@ export default function Assets() {
   )
 }
 
-function AssetCard({ asset }: { asset: Asset }) {
+function AssetCard({ asset, unshowable }: { asset: Asset; unshowable?: Map<string, string | undefined> }) {
   const url = useBlobUrl(asset)
   const update = (patch: Partial<Asset>) => db.assets.update(asset.id, patch)
   const kind = asset.mime.split('/')[0]
@@ -67,8 +68,20 @@ function AssetCard({ asset }: { asset: Asset }) {
       <input value={asset.name} onChange={(e) => update({ name: e.target.value })} />
       <div className="muted small">{formatBytes(asset.size)}</div>
       <TagInput tags={asset.tags} onChange={(tags) => update({ tags })} />
-      {kind === 'image' && !asset.tags.includes('fog') && (
-        <ShowButton worldId={asset.worldId} what={{ kind: 'image', title: asset.name.replace(/\.[^.]+$/, ''), assetId: asset.id }} />
+      {/* A map picture players mustn't see shows their copy instead (showToPlayers swaps it). */}
+      {kind === 'image' && !asset.tags.includes('fog') && unshowable && (
+        <>
+          <ShowButton
+            worldId={asset.worldId}
+            what={{ kind: 'image', title: asset.name.replace(/\.[^.]+$/, ''), assetId: asset.id }}
+            disabled={unshowable.has(asset.id) && !unshowable.get(asset.id) ? 'Open the map once to make the players’ fogged copy first.' : undefined}
+          />
+          {unshowable.has(asset.id) && (
+            <div className="muted small">
+              {unshowable.get(asset.id) ? 'Your copy of a map: players are shown theirs, without the hidden parts.' : 'The full picture of a fogged map: players can’t be shown it.'}
+            </div>
+          )}
+        </>
       )}
       <div className="row spread">
         <VisibilityToggle value={asset.visibility} onChange={(visibility) => update({ visibility })} />

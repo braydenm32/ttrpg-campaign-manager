@@ -8,6 +8,7 @@ import { BookOpen, MagnifyingGlass, MapTrifold, Plus, ArrowRight } from '@phosph
 import { useCreatePage } from './NewPage'
 import { useVisibleEntities } from './hooks'
 import { stripSecrets } from './Markdown'
+import { listedEntries } from './tables'
 import { plainLinks } from './text'
 import { useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
@@ -55,7 +56,7 @@ export function searchWorld(
     const tags = [...e.tags, ...(isGM ? (e.gmTags ?? []) : [])]
     const fields = e.fields.filter((f) => isGM || !f.gm).map((f) => `${f.key}: ${f.value}`)
     const body = text(e.body)
-    const extra = plainLinks([isGM ? e.gmNotes : '', text(e.playerBody), ...(e.entries ?? [])].join('\n'))
+    const extra = plainLinks([isGM ? e.gmNotes : '', text(e.playerBody), ...(isGM ? (e.entries ?? []) : listedEntries(e, false))].join('\n'))
     let score = 0
     let snippet = ''
     if (names.some((n) => n.toLowerCase() === q)) score = 100

@@ -160,8 +160,8 @@ export const HELP = {
   syrinscape:
     'Control Syrinscape from here: keep its online player open, add your auth token once on this device, then paste the remote control link of any mood or element.',
   showPlayers:
-    'Put a picture, a page or some text on every player’s screen right now, like handing round a letter or showing a monster. It pops up for players who joined; open the Players’ screen on a TV or second monitor for the table. Pick a page that isn’t revealed yet and it’s revealed as you show it. Everything you show is kept in Handouts.',
-  handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove one to take it back.',
+    'Put a picture, a page or some text on every player’s screen right now, like handing round a letter or showing a monster. It pops up for players who joined; open the Players’ screen on a TV or second monitor for the table. Pick a page that isn’t revealed yet and it’s revealed as you show it. A map’s picture always goes out as the players’ copy, never yours with the secrets or the fog lifted. Everything you show is kept in Handouts.',
+  handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove a picture or text to take it back. A page you remove stays revealed unless you choose to hide it again.',
   handoutsReady: 'Handouts you’ve prepared but not shown yet: any GM-only page tagged “handout”. Players can’t see them. “Reveal and show” reveals the page to everyone and puts it on their screens, and it moves to Shown so far.',
   playersScreen: 'A clean screen for a TV or second monitor at the table. It shows whatever you’re showing players, and nothing else.',
   initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go.',
@@ -255,7 +255,9 @@ export const HELP = {
     'Say what’s happening and Claude writes four lines this character might say, in their voice, using what their page says about them. Keep the ones you like in your GM notes.',
   spotlight:
     'Who got time at the table. With a transcript that tells speakers apart, it shows how long each person talked; it also counts how often each character came up (in the transcript, or in your notes and recap without one). Worked out on this device; nothing is sent anywhere.',
-  readAloud: 'Reads recaps aloud with your device’s own voices: free, private, and secret passages are never read. Pick a voice and speed here.',
+  readAloud: 'Reads recaps aloud with your device’s own voices: free, private, and secret passages are never read, not even ones meant only for you (the whole table would hear them). Pick a voice and speed here.',
+  newCharacterName:
+    'Secret passages written “for” a character reach whoever plays a character with that full name or first name. If the new character shares a name with another, those secrets would reach both players, so give one of them a different name.',
 } as const
 
 export type HelpTopic = keyof typeof HELP
