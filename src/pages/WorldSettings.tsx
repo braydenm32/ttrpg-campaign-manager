@@ -92,7 +92,7 @@ export default function WorldSettings() {
 
       {tab === 'device' && (
         <>
-          <p className="muted">These settings stay on this device: they aren’t synced or put in backups.</p>
+          <p className="muted">These settings stay on this device: they aren’t synced or put in backups (except AI keys you choose to save to your account).</p>
           <ThemePicker /> <Help topic="theme" />
           <HelpTipsToggle />
           <DiscordSettings worldId={worldId} />

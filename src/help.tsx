@@ -243,7 +243,7 @@ export const HELP = {
   tableDice: 'Rolls here show up for the whole table: the other players and your GM see who rolled what.',
   tableSignals:
     'A quiet word to your GM without interrupting: they get a pop-up with your character’s name, and you see when they’ve noticed. For something you’d rather not say out loud, use the X-card instead.',
-  aiTools: 'Keys for transcription, recaps and the Claude tools, and the voice for reading recaps aloud. They stay on this device only: never synced and never in backups.',
+  aiTools: 'Keys for transcription, recaps and the Claude tools, and the voice for reading recaps aloud. They stay on this device and are never in worlds or backups, unless you save the keys to your account.',
   archivist:
     'Claude, reading your own world. Ask it anything (“who would want the party dead?”) and it looks up the pages it needs, then answers with links, saying when something is secret. Or have it check your notes for contradictions. Uses your Anthropic API key, or “Copy for Claude” for free with a Claude subscription.',
   continuity:
@@ -273,6 +273,8 @@ export const HELP = {
     'Keeps the names of pins and regions showing on the map instead of only when you hover. They appear once you zoom in a little, so a zoomed-out map isn’t covered in labels. Each map remembers its own setting on this device. Players only get names for the pins they can see. On a phone, tap a pin once to see its name and again to open it.',
   fogRoom:
     'Click inside a room to uncover just that room, right up to its walls. It stops at walls drawn across the room and at doors, gates and bars, so click in the next room to open that one too. Secret rooms are left alone until you mark their door as found. With Cover chosen, it covers the room again. Only on maps with rooms drawn in the map builder.',
+  keysInAccount:
+    'Keeps your AssemblyAI and Anthropic keys in your Warded Atlas account, so any device you sign in on gets them without pasting. Only you can read them: they never go into worlds, backups, share links or anything players or co-GMs receive. A key you change or remove here reaches your other devices the next time they open the app. Signing out takes the keys off that device. Untick to take them out of your account. Tip: keep a monthly spending limit in the Anthropic Console, since anyone who gets into your account could use them.',
   keepAtAssembly:
     'Once a cloud transcript is saved in your world, the app deletes it from AssemblyAI, so your table’s talk isn’t kept by another company. Tick this to leave a copy in your AssemblyAI account instead (for example, to look at it on their website). Applies on this device only.',
   claudeJobs:

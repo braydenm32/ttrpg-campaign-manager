@@ -2,13 +2,13 @@
 
 A step-by-step guide to switching on the app's AI features: turning session recordings into transcripts, and the Claude tools (recaps, world updates, the Archivist, prep, flavour and NPC lines). It covers what each one needs, what it costs and where your keys and recordings go.
 
-**The short version:** everything is optional, and most of it works free. If you want one-click results, make two accounts (AssemblyAI and the Anthropic Console), copy a key from each, and paste them into **World settings → This device → AI tools**. That's the whole setup: there's nothing to change in Supabase, Cloudflare or the code.
+**The short version:** everything is optional, and most of it works free. If you want one-click results, make two accounts (AssemblyAI and the Anthropic Console), copy a key from each, and paste them into **World settings → This device → AI tools**. Tick **Save my keys to my account** and every device you sign in on gets them too. That's the whole setup: there's nothing to change in Supabase, Cloudflare or the code.
 
 **Contents**
 
 1. [What there is, and what it costs](#1-what-there-is-and-what-it-costs)
 2. [AssemblyAI: cloud transcripts with speaker names](#2-assemblyai-cloud-transcripts-with-speaker-names)
-3. [Claude: the Anthropic API key](#3-claude-the-anthropic-api-key)
+3. [Claude: the Anthropic API key](#3-claude-the-anthropic-api-key), and [saving your keys to your account](#save-the-keys-to-your-account-optional)
 4. [The free ways (no keys at all)](#4-the-free-ways-no-keys-at-all)
 5. [Using each feature](#5-using-each-feature): record, transcribe, recap, world updates, the Archivist, prep, flavour, NPC lines, read aloud, spotlight
 6. [Which Claude does which job](#6-which-claude-does-which-job)
@@ -23,7 +23,7 @@ A step-by-step guide to switching on the app's AI features: turning session reco
 
 A few words you'll see:
 
-- **API key:** a long password that lets the app use a service on your account, so the service can bill you. You paste it into the app once per device.
+- **API key:** a long password that lets the app use a service on your account, so the service can bill you. You paste it into the app once, and either save it to your Warded Atlas account (so every device you sign in on has it) or paste it again on each device.
 - **AssemblyAI:** a company that turns speech into text. It's what "Transcribe in the cloud" uses.
 - **Anthropic Console:** where you buy Claude by the job for apps like this one (the "API"). It is **separate from your Claude subscription** on claude.ai: a different bill, with its own prepaid credit.
 - **Copy for Claude:** the free way. The app copies everything Claude needs; you paste it into claude.ai (using your subscription) and paste the answer back.
@@ -74,6 +74,17 @@ Skip this if you'll always use Copy for Claude (see [section 4](#4-the-free-ways
 6. In The Warded Atlas: **World settings → This device → AI tools → Anthropic API key**. Paste it and press **Show** once to check it.
 
 That one key powers every Claude button in the app. New Anthropic accounts start with low rate limits, so if a big job says you're "over your limit for now", wait a minute and try again; the limits rise as you use it.
+
+### Save the keys to your account (optional)
+
+Under the two keys in **World settings → This device → AI tools**, tick **Save my keys to my account** (you need to be signed in). From then on:
+
+- Any computer, phone or the desktop app you sign in on gets both keys by itself, the next time it opens the app. No more pasting.
+- Change or remove a key on one device and the others follow the next time they open the app.
+- Signing out takes the keys off that device. Sign back in and they come back.
+- Untick it to take the keys out of your account. Each device keeps the copy it already has until you remove it there.
+
+Only your login can read them. They never go into a world, a backup, a share link or anything players or co-GMs receive, and deleting your account deletes them too. The one thing to know: anyone who gets into your Warded Atlas account could use your keys, so keep a monthly limit and auto-reload off in the Anthropic Console (steps 3 and 4 above), and use a password you don't use anywhere else (or Google sign-in).
 
 ---
 
@@ -170,7 +181,7 @@ If Claude ever declines a job on safety grounds (rare; usually a very dark scene
 
 ## 7. Privacy: where keys, recordings and transcripts go
 
-- **API keys stay on the device you typed them into.** They're kept in that browser (or the desktop app) only: never synced, never in backups, never in a world, and only ever sent to AssemblyAI or Anthropic themselves.
+- **API keys stay on the device you typed them into,** in that browser (or the desktop app), unless you tick **Save my keys to my account**. Then they're also kept with your account in the Warded Atlas cloud, where only your login can read them. Either way they're never in a world, a backup or anything players see, and they're only ever sent to AssemblyAI or Anthropic themselves.
 - **Recordings stay on the device that recorded them.** Audio isn't uploaded to the cloud sync. Backups leave audio out unless you tick it.
 - **Transcripts and recap drafts sync** to your other devices so you can review them anywhere. They're **GM only**: players never receive them.
 - **On-device transcription** never sends audio anywhere.
@@ -182,7 +193,7 @@ If Claude ever declines a job on safety grounds (rare; usually a very dark scene
 
 ## 8. A second computer, a phone, or a co-GM
 
-- **Your other devices:** paste the keys again on each one (**World settings → This device → AI tools**). On a phone, the free on-device transcription is very slow; use AssemblyAI or transcribe on the laptop that recorded.
+- **Your other devices:** with **Save my keys to my account** ticked, just sign in and they're there. Otherwise paste the keys again on each one (**World settings → This device → AI tools**). On a phone, the free on-device transcription is very slow; use AssemblyAI or transcribe on the laptop that recorded.
 - **A co-GM:** they need their own keys on their own devices (and pay for their own use), or they can use Copy for Claude with their own Claude subscription. Your keys never reach them.
 - **Players:** none of the AI features are open to players. They see the player recap you approved and can have it read aloud.
 
@@ -192,7 +203,8 @@ If Claude ever declines a job on safety grounds (rare; usually a very dark scene
 
 | What the app says | What to do |
 | --- | --- |
-| "Add an AssemblyAI key in World settings first" / "Add an Anthropic API key in World settings first" | The key isn't on this device yet. See [section 2](#2-assemblyai-cloud-transcripts-with-speaker-names) or [3](#3-claude-the-anthropic-api-key) |
+| "Add an AssemblyAI key in World settings first" / "Add an Anthropic API key in World settings first" | The key isn't on this device yet. If you saved your keys to your account, check you're signed in and reopen the app; otherwise see [section 2](#2-assemblyai-cloud-transcripts-with-speaker-names) or [3](#3-claude-the-anthropic-api-key) |
+| An error under **Save my keys to my account** | Usually you're offline or the free server is asleep. The keys on this device still work; it saves them when you change a key again or reopen the app online |
 | "AssemblyAI didn't accept the API key" | Copy it again from the AssemblyAI dashboard (API Keys) and paste it, with no spaces at either end |
 | "Could not reach AssemblyAI" | Check your internet. If it keeps happening with good internet, tell Claude in the project |
 | "AssemblyAI couldn't transcribe this recording" | Usually the recording is empty or very short. Play it back first to check there's sound |
@@ -214,11 +226,12 @@ If Claude is writing and you close the tab or the app, the job stops (and you're
 
 ## 10. For Claude: where it lives in the code
 
-Everything is in `src/ai/`, all client-side. There is no server part: no Supabase edge function, no secrets in Supabase or Cloudflare, and nothing in `player_view`.
+Everything is in `src/ai/`, all client-side: no Supabase edge function and no secrets in Supabase or Cloudflare. The only server part is the opt-in `ai_keys` table (migration `20261029020000_ai_keys.sql`): one row per person, readable and writable only by its owner, removed with the account, and never in `player_view`.
 
 | File | What it does |
 | --- | --- |
-| `settings.ts`, `AiSettingsSection.tsx` | The device-only settings (`localStorage` key `codex.ai`): both keys, Keep a copy at AssemblyAI, on-device model, language, voice |
+| `settings.ts`, `AiSettingsSection.tsx` | The device's settings (`localStorage` key `codex.ai`): both keys, Save to my account, Keep a copy at AssemblyAI, on-device model, language, voice |
+| `accountKeys.ts` | Save my keys to my account: loads the keys on sign-in, saves changes, clears them on sign-out |
 | `claude.ts` | Every Claude call: the two models and their prices (`MODEL`, `QUICK_MODEL`), cost estimates, tool loop, caching, refusal fallback, friendly errors |
 | `cloud.ts` | AssemblyAI: upload, start, wait, delete |
 | `device.ts`, `whisper.worker.ts` | On-device Whisper |
@@ -227,4 +240,4 @@ Everything is in `src/ai/`, all client-side. There is no server part: no Supabas
 | `jobs.ts`, `LeaveGuard.tsx`, `kept.ts` | Jobs that keep writing while the GM is on another page |
 | `ReadAloud.tsx`, `Spotlight.tsx` | The free features |
 
-When a model, price or setup step changes, update this guide, the help tips in `src/help.tsx` (`aiTools`, `claudeJobs`, `transcript`, `keepAtAssembly`) and the AI section of `docs/ROADMAP.md`.
+When a model, price or setup step changes, update this guide, the help tips in `src/help.tsx` (`aiTools`, `keysInAccount`, `claudeJobs`, `transcript`, `keepAtAssembly`) and the AI section of `docs/ROADMAP.md`.

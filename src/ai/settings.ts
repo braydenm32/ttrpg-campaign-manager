@@ -1,8 +1,9 @@
 import { useSyncExternalStore } from 'react'
 
 /**
- * AI settings live on this device only (browser storage), never in a world, a backup or the cloud,
- * so API keys stay with the person who pays for them.
+ * AI settings live on this device (browser storage), never in a world or a backup, so API keys stay
+ * with the person who pays for them. The keys alone can also be saved to the person's own account
+ * if they tick "Save to my account" (see accountKeys.ts).
  */
 export interface AiSettings {
   /** Anthropic API key (console.anthropic.com), for one-click recaps. */
@@ -19,10 +20,12 @@ export interface AiSettings {
   voice: string
   /** Reading speed, 1 is normal. */
   voiceRate: number
+  /** This device keeps its keys in step with the signed-in account (see accountKeys.ts). */
+  keysInAccount: boolean
 }
 
 const KEY = 'codex.ai'
-const DEFAULTS: AiSettings = { anthropicKey: '', assemblyKey: '', keepAtAssembly: false, deviceModel: 'base', language: 'en', voice: '', voiceRate: 1 }
+const DEFAULTS: AiSettings = { anthropicKey: '', assemblyKey: '', keepAtAssembly: false, deviceModel: 'base', language: 'en', voice: '', voiceRate: 1, keysInAccount: false }
 const listeners = new Set<() => void>()
 let cached: AiSettings | undefined
 
@@ -47,14 +50,16 @@ export function setAiSettings(patch: Partial<AiSettings>) {
   listeners.forEach((l) => l())
 }
 
+/** Called after every change to the settings; returns a function that stops listening. */
+export function onAiSettings(listener: () => void) {
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
 export function useAiSettings() {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l)
-      return () => listeners.delete(l)
-    },
-    getAiSettings,
-  )
+  return useSyncExternalStore(onAiSettings, getAiSettings)
 }
 
 export const DEVICE_MODELS = {
