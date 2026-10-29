@@ -5,7 +5,7 @@ worldDate: 14 Ashfall 3011
 pages: [ q-lantern-gutters, q-payday, q-drowned-man, q-poisoned-flame, q-kettles-cargo, h-pay-notice, h-wanted, ilse-marrow, mirrel-vosk, brother-tallow, fennick, garrick-sallow, spoons, kettle, dannic-rook, marla-marlowe, varra, ysse, borrin, tick, quorl, npc-mother-hennet, npc-halloran-pike, npc-dunstan-bray, npc-dunny-pike, npc-gerda-hollin, npc-skrell, npc-nan-crupp, mother-corvane, aelith-sorn, lantern-hill, lantern-keep, last-candle, the-ford, treaty-bell, low-quay, hesks-chandlery, glass-barrow, item-lantern, item-oil-tin, item-lantern-token, item-grumblers, item-marigolds, f-ninth-lantern, h-noticeboard, lore-festivals, item-aurels-penny, lore-songs, bellwether, npc-keld-owes-nothing, sedgemere, ford-street, the-bakers-wife, npc-ada-pennock, q-bakers-hoard, the-hock, table-street-events, h-dannic-note ]
 encounters:
   - name: The drowned walk
-    notes: "Ash-drowned (zombie, scaled for level 1): grey, bloated, coughing ash, speed 20. They walk toward the Keep and fight only what blocks them. Dannic: slam +3, 1d6+1 bludgeoning; a creature he hits makes a DC 11 Con save or is poisoned until the end of its next turn (the ash). Undead Fortitude: dropped to 0 by anything but radiant or a critical hit, he makes a Con save (DC 5 + the damage) to drop to 1 HP instead. The other two are half-made: HP 11, slam +3 for 1d4+1, no Undead Fortitude. A flame from the Lantern (a wick-lamp held to them) denies Undead Fortitude: damage from a blade passed through a wick-lamp this turn (a bonus action), or from the lamp itself thrust at them (improvised, 1 fire), cannot be shrugged off. The ford-watch (Gerda Hollin) holds one of the three off at the water's edge for the whole fight. Dannic is the first to rise and the last to fall; when he does, he speaks. Built for five level-1 PCs with Gerda on their side and wick-lamps in hand: a medium fight. Without the lamps it is hard."
+    notes: "Ash-drowned (zombie, scaled for level 1): grey, bloated, coughing ash, speed 20. They walk toward the Keep and fight only what blocks them. Dannic: slam +3, 1d6+1 bludgeoning; a creature he hits makes a DC 11 Con save or is poisoned until the end of its next turn (the ash). Undead Fortitude: dropped to 0 by anything but radiant or a critical hit, he makes a Con save (+3; DC 5 + the damage) to drop to 1 HP instead. The other two are half-made: HP 11, slam +3 for 1d4+1, no Undead Fortitude. A flame from the Lantern denies Undead Fortitude: any damage dealt by a creature carrying a lit wick-lamp with its hood open (in hand or at the belt; opening the hood is free) cannot be shrugged off, whether it is a blade, a bolt or a spell. The lamp itself thrust at them is an improvised attack for 1 fire. The ford-watch (Gerda Hollin, spear +3, 1d6+1) holds one of the three off at the water's edge for the whole fight. Dannic is the first to rise and the last to fall; when he does, he speaks. Built for five level-1 PCs with Gerda on their side and wick-lamps in hand: a medium fight. Without the lamps it is hard."
     foes:
       - { name: Dannic Rook (ash-drowned), count: 1, hp: 22, ac: "8", side: foe, page: dannic-rook }
       - { name: Ash-drowned (half-made), count: 2, hp: 11, ac: "8", side: foe }
@@ -15,7 +15,7 @@ encounters:
     foes:
       - { name: Glass-spider, count: 2, hp: 13, ac: "13", side: foe }
   - name: The Cold Captain of the Seventh
-    notes: "Wight, scaled for level 1. Speed 30. One attack a turn: lantern-pole +4, 1d8+2 bludgeoning; or Life Drain +4, 1d6+2 necrotic, Con DC 11 or hit-point maximum reduced by the damage until a long rest. Resists necrotic and cold; vulnerable to fire. Non-aggressive: he sits until something is lifted from the ring round his chair, then stands and fights only to put it back; set it down and step out of the ring and he stops. Shown a lit wick-lamp or a company token, he stops for a round and asks 'Which lantern is lit?'; the answer 'the Ninth' makes him sit, and he does not rise again for this party. Lantern flame makes him recoil: disadvantage on his attacks against anyone holding a lit wick-lamp. Each spell cast in the Barrow after the first gives him +5 hp (max +10). He never leaves the Cold Room. Built for five level-1 PCs who fight him: a hard fight, and meant to be avoided. Answered rightly, it never happens."
+    notes: "Wight, scaled for level 1. Speed 30. One attack a turn: lantern-pole +4, 1d8+2 bludgeoning; or Life Drain +4, 1d6+2 necrotic, Con DC 11 or hit-point maximum reduced by the damage until a long rest. Resists necrotic and cold; vulnerable to fire. Non-aggressive: he sits until something is lifted from the ring round his chair, then stands and fights only to put it back; set it down and step out of the ring and he stops. Shown a lit wick-lamp or a company token, he stops for a round and asks 'Which lantern is lit?'; the answer 'the Ninth' makes him sit, and he does not rise again for this party. Lantern flame makes him recoil: disadvantage on his attacks against anyone holding a lit wick-lamp. Each spell cast in the Barrow after the first gives him +5 hp (max +10). He never leaves the Cold Room. Built for five level-1 PCs who fight him: an easy-to-medium fight on paper (about 200 XP), nastier than it looks because Life Drain takes hit-point maximum, and meant to be avoided. Answered rightly, it never happens."
     foes:
       - { name: The Cold Captain of the Seventh, count: 1, hp: 30, ac: "13", side: foe }
 lectern:
@@ -48,7 +48,7 @@ lectern:
 
 **Other ways in.** Pick one for the whole party, or mix them. Each one puts the PCs in the drill yard when Marrow breaks the seal, with a lit wick-lamp by the end of scene 1, which they need for the ford.
 - **Already sworn.** The PCs have been soldiers of the Ninth for a season or more, with lamps at their belts and tokens round their necks. Tallow is lighting lamps for five NPC wicks this morning, and Vosk puts them under the PCs: "They're yours now. Bring me back the same number." Skip the swearing-in beat for the PCs and give them the wicks to keep alive all day. Back Sallow and lose the yard, and two of the wicks walk out with the mutterers.
-- **Off the post-road.** The PCs came in last night on the Ash Road behind the Regency post-rider who brought the notice, slept in the Candle's loft, and walk up the hill at the bell because Fennick told them to come on quarter-day if they wanted work. They saw the rider hand over the sealed letter. They can say, truthfully, that there was no wagon anywhere behind him on the road. Marrow swears them in after the letter, with the line she used on Varra: "Can you hold a line? Good. You're hired. The pay is late."
+- **Off the post-road.** The PCs came in last night on the Fallowden road, through the West Gate, behind the Regency post-rider who brought the notice, slept in the Candle's loft, and walk up the hill at the bell because Fennick told them to come on quarter-day if they wanted work. They saw the rider hand over the sealed letter. They can say, truthfully, that there was no wagon anywhere behind him on the road. Marrow swears them in after the letter, with the line she used on Varra: "Can you hold a line? Good. You're hired. The pay is late."
 - **Townsfolk on the hill.** The PCs have business at the Keep this morning and get caught up in it: carrying Kettle's salt fish up from the Low Quay, delivering the Rook-Court's coffin measure, bringing the Reeve's note for the captain, or collecting a debt from Fennick. When the yard turns ugly Marrow needs every hand she can trust, and swears them in at the foot of the ladder before the muster breaks. Tallow lights their lamps without a word.
 - **Your players' own characters.** Have each player pick a tie from the [[Player's Guide]], and use whichever way in above fits that tie best. The ties' pay-offs are on that page, in GM-only notes.
 
@@ -68,19 +68,23 @@ Cut to morning, and the muster bell. If you played the prologue, the players hav
 >
 > A hundred and forty soldiers stand in the drill yard in four ragged files. Their boots have been mended with tent canvas. Their breath smokes. Somewhere at the back, a corporal is taking bets.
 >
-> Captain Ilse Marrow walks out of the Keep with a letter in her hand. It has a Regency seal on it. She breaks it in front of everyone, reads it once, and then, very carefully, reads it again.
->
-> "Well," she says. "Good news. We've been paid."
+> Captain Ilse Marrow walks out of the Keep with a letter in her hand. It has a Regency seal on it. She does not open it. "Cinders first," she says. "Then the post."
 
 **Before the letter: Cinders morning.** Play a minute of quiet first. It is nine years to the day. Vosk has unlocked the outside ladder, and the veterans who were at Cinders climb it one at a time, touch the bars of the cage, and climb down without a word. Nobody jokes, not even Spoons. Marrow announces the evening as it is every year: "Dusk muster at the cooks' camp in the Orchard. Nobody speaks." Then the swearing-in. Brother Tallow comes down the ladder with a taper cupped in his hands, lit at the cage, and lights the five new wick-lamps one by one while Fennick writes each name in the book. Tallow, to each: "Don't let it go out. I'm too old to climb for you." Fennick issues each wick one marigold smoke-pot "for the parade we're not having", and Skarra Burnbrow, the sapper, will sell anyone a grumbler for two silver they don't have.
 
-**Then the letter.** The notice came by post-rider yesterday; by custom the captain breaks the seal at muster. She reads the total: **0 silver.** Hand round the [[Pay Notice]]. Marrow, before the yard can find its voice: "The coin was supposed to come by wagon behind it. Where is it?" Then, quieter: "Muster at the Orchard is cancelled. Go and be angry somewhere warm."
+**Then the letter.** The notice came by post-rider yesterday; by custom the captain breaks the seal at muster.
+
+> She breaks the seal in front of everyone, reads the letter once, and then, very carefully, reads it again.
+>
+> "Well," she says. "Good news. We've been paid."
+
+She reads the total: **0 silver.** Hand round the [[Pay Notice]]. Marrow, before the yard can find its voice: "The coin was supposed to come by wagon behind it. Where is it?" Then, quieter: "Muster at the Orchard is cancelled. Go and be angry somewhere warm."
 
 **Who's here and what they want.**
 - [[Ilse Marrow|Captain Marrow]]: keep the company calm and together. "I was made captain by attrition. I was the last one who could count. So I've counted, and we are owed near three years, and I am going to find out where it went." She had been told, privately, that the Concord's Treaty share was coming on the Ashfall wagon. She doesn't say so.
 - [[Mirrel Vosk|Sergeant Vosk]]: keep the recruits alive. He sizes up the PCs openly, a little green under the tusks from last night's bottle. "Five new faces. Lovely. I'll learn your names when you've lived a month." When the zero is read: "Don't worry, lads. Nothing's what we were paid last quarter too. At least they're consistent. And nine years to the day since Cinders. Somebody in Caer Ardith has a sense of occasion." The first mutterer who says *pay* too loudly, he calls a mutineer, to his face, by name.
 
-*It is Cinders Muster. Vosk's bottle at the Gibbet and Hennet's reading of the slate were last night; the veterans touch the cage three times on the way down the hill; at dusk the company walks out to the Orchard's cooks' camp in silence and the widows set lamps on the river. The rest is on [[Feasts, Fasts and Holy Days]]. Give each PC [[An Emperor's Penny]] from a veteran, as a kindness, and say nothing about it.*
+*It is Cinders Muster. Vosk's bottle at the Gibbet and Hennet's reading of the slate were last night; the veterans climb the ladder and touch the cage. In any other year the company walks out to the Orchard's cooks' camp at dusk in silence, but this year Marrow cancels it after the letter, and only the widows set lamps on the river. The rest is on [[Feasts, Fasts and Holy Days]]. Give each PC [[An Emperor's Penny]] from a veteran, as a kindness, and say nothing about it.*
 - [[Garrick Sallow|Lieutenant Sallow]]: plant the idea, gently. "Let's hear the Captain out." Then, loud enough to carry: "Near three years. And still we stand here guarding a candle for people who won't pay for the wick."
 - [[Fennick Bottlebrook]]: worried, with his ledger clutched to his chest like a shield. Tells anyone who'll listen there's bread for nine days. (There's flour for eleven at full ration; he says nine because recruits eat.) Asked about the wagon, he blinks: "Tollamund's clerk came by last week asking, very politely, when the pay was due. I thought that was odd. I thought most things were odd."
 - [[Brother Tallow]]: old, near-blind Vesh at the foot of the ladder, antennae folded. Takes no notice of the money. Ysse's master: he asks her quietly whether the flame "looks right" to her. (It doesn't, quite. Ysse feels it thin, like a voice going hoarse.)
@@ -151,7 +155,7 @@ This is [[Dannic Rook]]: drowned under the third pier on the night of 7 Ashfall,
 
 [[Quorl Many-Words]] records the words, as he records all last words. Tick's mother, [[Marla Marlowe]], is standing in the river beside the body, up to her knees, pointing at the old stone culvert in the foot of the third pier. Only Tick sees her.
 
-**After the fight: the rite.** Dannic was never buried, and Hathe's door is shut. Quorl can lay him down properly: Religion DC 12, or anyone who kneels, says his name and the Ravelers' rhyme (*"Your name is said. Your words are kept. The door is there. Go through."*). If it's done, Dannic stays down until Hathe's door is opened for him (the Door-Key, session 5). If it's skipped or fails, the ground will not keep him, and he rises again at the full Ember in session 3, at the oil store.
+**After the fight: the rite.** Dannic was never buried, and Hathe's door is shut. Quorl can lay him down properly: Religion DC 12, or anyone who kneels, says his name and the Ravelers' rhyme (*"Your name is said. Your words are kept. The door is there. Go through."*). If it's done, Dannic stays down for good, and nothing later depends on him. If it's skipped or fails, the ground will not keep him, and he rises again at the full Ember in session 3, at the oil store (Quorl's rite still works on him then, and in session 5 Quorl can open Hathe's door for him with the Door-Key).
 
 Either way, [[Skrell Already-Gone]] arrives at a flat sprint with his handcart. He has a joke ready, sees the key-shaped scar on Dannic's hand, and for once has no joke at all. He brings word from [[Mother Corvane]], who has not come down from the Rise in a year and does not intend to start: "She says thank you ever so much for the extra work, she wants him on the Chapel slab by dusk, and to tell the Many-Words he could at least have *asked* before he did her job for her."
 
@@ -167,16 +171,16 @@ Either way, [[Skrell Already-Gone]] arrives at a flat sprint with his handcart. 
 **Following him back.**
 - Survival DC 11: the current under the ford pulls into the culvert at the foot of the third pier, an old imperial drain half-choked with glass. A body could go in. A body could come out again.
 - [[Kettle Brindlewake]], on [[The Low Quay|the Low Quay]], knows exactly where the culvert goes. "Into the Barrow. The old town under the ford, the bit the fire turned to glass. Smugglers used it till the dead started sitting up in there." She'll guide the party to the drain mouth at the third pier for nothing, and tells them the way out: the smugglers' cut, which comes up under her own quay. While she does, she offers them [[Kettle's Cargo]]: a night job, "the first night the Lieutenant's patrol is looking the other way".
-- Kettle on the poster: "The 12th? I was on the Quay all day the 12th. No Dannic. And I'd know. He owed me money." On the night of the 7th: "There was a clerk on the bridge that night. Ink on his cuffs, scarf up to his nose. Not one of ours." On the wagon, if anyone asks: "Turned off by the mill. Ask me tomorrow, I'm busy."
+- Kettle on the poster: "The 12th? I was on the Quay all day the 12th. No Dannic. And I'd know. He owed me money." On the night of the 7th: "There was a clerk on the bridge that night. Ink on his cuffs. Not one of ours. Nan Crupp at the ferry saw more than I did; ask her nicely." (Nan, asked: a scarfed man on the bridge, and a splash, and she minded her own business, which she now regrets.) On the wagon, if anyone asks: "Turned off by the mill. Ask me tomorrow, I'm busy."
 - Witnesses to Borrin's double, if the party asks about him in town: [[Nan Crupp]] at the ferry landing ("Saw you walking on the ford at midnight, a week back. Wasn't you, was it."); Jory Dunmore, who saw "Borrin" on the wall above the Smokes on a night his bunk was empty; Noume Flarewick, who saw a dwarf-shaped shadow standing by the cage at three in the morning.
 
 **Optional: the Keep.** If the party goes to the Keep first, Brother Tallow is uneasy: "Dannic took two tins of oil when he ran. Find them. Please. I'd like to know what he wanted with them." Fennick, asked about oil, gets shifty: his ledger shows twelve casks bought and twelve burned this quarter, which is about four too many (Investigation DC 13: the numbers are fiddled). He isn't the poisoner, but he looks guilty as sin. (GM: the Keep burns oil in its hall and its lamps too, not just the cage; eight casks were really burned. Fennick sold four to Kettle for bread.)
 
-**Optional: Hesk's Chandlery** (the Smokes, open dusk to midnight; best after the Barrow, if the moth seal sends them). Mirrit, the Hollowborn apprentice, has the counter; Hesk coughs in the back and comes out to argue about oil. With trust, or Persuasion DC 13, the order-book: two sealed Keel tins at full price in the last fortnight, one to Dannic Rook on credit, unpaid, and one to "the Assessor's Office, paid in advance", by a clerk with a cold.
+**Optional: Hesk's Chandlery** (the Smokes; Mirrit keeps the day trade, Hesk the counter from dusk to midnight; best after the Barrow, if the moth seal sends them). By day Mirrit, the Hollowborn apprentice, has the counter; Hesk coughs in the back and comes out to argue about oil. With trust, or Persuasion DC 13, the order-book: sealed Keel tins at full price, one to "the Assessor's Office, paid in advance", by a clerk with a cold, and eleven more since Reaping, the same way. Dannic's name isn't in it: he never bought oil, he only moved it.
 
 **Short on time?** Scene 4 is optional if the players go straight for the culvert: Kettle can shout the useful parts down to them from the Quay as they wade in.
 
-**Before the Barrow.** The culvert is only passable at low water, which comes at dusk. The party gets a short rest on the Quay stair while the water drops. Kettle's cousins sell them hot chestnuts on credit.
+**Before the Barrow.** The culvert is only passable at low water, which comes at dusk and lasts about four hours. After that the culvert floods to the roof and the Quay cut is the only way out. The cut works as a way in at any hour (the smugglers use it), but that means the flooded swim from scene 6's "Getting out" before the night has started, and Kettle advises against it. The party gets a short rest on the Quay stair while the water drops. Kettle's cousins sell them hot chestnuts on credit.
 
 **Development.** Whatever they did with the afternoon, the light starts to go and the river drops. Kettle (or Gerda, or the Pike boy on the bell-house stair) calls it: "Water's down. If you're going, go now." Go to scene 5. If the party has learned enough to want to skip the Barrow altogether (they have Hesk's order-book and want the clerk), remind them through Tallow that the oil itself is still out there: "Two tins, he took. I want to know what was in them." The Barrow is where the proof is.
 
@@ -185,11 +189,13 @@ Either way, [[Skrell Already-Gone]] arrives at a flat sprint with his handcart. 
 ---
 
 ### Scene 5: Into the Glass Barrow (dusk)
-> The culvert is waist-deep and black and colder than it should be. Twenty paces in, the brick walls turn to glass: a whole street fused by the fire of Cinders, the doorways still open, the shutters melted into curtains of grey and green. Your little lamps go into the walls and come back wrong, a hundred small copies of you moving a beat behind. Somewhere ahead, glass ticks as if something is walking on it.
+> The culvert is ankle-deep and black and colder than it should be. Twenty paces in, the brick walls turn to glass: a whole street fused by the fire of Cinders, the doorways still open, the shutters melted into curtains of grey and green. Your little lamps go into the walls and come back wrong, a hundred small copies of you moving a beat behind. Somewhere ahead, glass ticks as if something is walking on it.
+
+At the culvert's far end is an eight-foot drop onto the Flooded Street (DC 10 Athletics to climb down; 1d6 bludgeoning on a fall; climbing back up needs a rope or the same check).
 
 See [[The Glass Barrow]] for the rooms. Keep it to four tonight:
 - **The flooded street.** Knee-deep on the low side. Dannic's belt-pouch lies on the dry side, empty but for a single new Regency silver. On the right, under the water, a brick arch with a rope through it: the Quay cut, the way out.
-- **The glass chapel.** Forty villagers fused to the pews, heads bowed. Quorl can take their last words (Religion DC 12, or a short rite): they all whisper the same thing, and it is the sentence seven dying soldiers have whispered to him over nine years. Let his player hear it and not yet understand. At the chapel door, scratched in the glass: *D.R. 3 Ashfall. Back for the rest.*
+- **The glass chapel.** Forty villagers fused to the pews, heads bowed. Quorl can take their last words (Religion DC 12, or a short rite): they all whisper the same thing, and it is the sentence seven dying soldiers have whispered to him over nine years: *"The lamp is the lock."* Pass it to Quorl's player on a note, or whisper it, and let the table watch Quorl's face. He has noticed; he does not yet understand. At the chapel door, scratched in the glass: *D.R. 3 Ashfall. Back for the rest.*
 - **The collapsed bakery.** Run **Glass-spiders** (see Encounters) here and only here: two of them, nested in the ovens, webs of glass thread that ring like bells when touched. A group Stealth check (DC 12) gets the party past the door without waking them. Perception DC 13 spots the webs before someone walks into one (restrained, Strength DC 11 to break).
 - **The cold stair.** Behind the chapel altar, older than the chapel by a thousand years. Over its first arch, a Lithic lintel: *WHAT WE BURIED IS NOT AT REST* (Ysse Arcana DC 13, Borrin DC 10). Halfway down, a landing with Dannic's gear: a bedroll, an empty dark-lantern, a Glasser's pick, and seven rinsed empty Keel tins, seals broken. Whatever he was doing, he was doing it with oil, and keeping the empties.
 
@@ -199,7 +205,7 @@ See [[The Glass Barrow]] for the rooms. Keep it to four tonight:
 
 **Development.** The four areas can be met in any order; the flooded street is first because it is where the culvert comes in, and the cold stair is last because it is behind the chapel altar. If the party fights the spiders and is hurt, let them take a short rest in the chapel among the fused villagers: nothing disturbs them there, which is its own kind of unsettling. When they go down the stair, go to scene 6. If they want to leave now, the Quay cut is under the flooded street, but nobody has found the oil yet: the tins on the landing are empty, and the cold is coming from further down.
 
-**Treasure.** Dannic's belt-pouch holds one new Regency silver. The fused bakery's oven tin holds Ada Pennock's ring (see [[The Baker's Hoard]]), and a few coppers fused into the glass that can be chipped out (2d6 cp, an hour's work). Aelith Sorn will pay a silver apiece for any rubbing or shard of carved glass from the chapel.
+**Treasure.** Dannic's belt-pouch holds one new Regency silver. The middle oven in the bakery holds Tom Pennock's takings fused into one lump, 23 sp and 140 cp, worth 4 gp by weight, with his wedding ring inside (DC 14 Investigation, or a lantern held behind it, shows a band of gold in the glass; see [[The Baker's Hoard]]). [[Ninefingers Forge]] cuts the lump open for 1 sp. A warm stone loaf sits in the next oven. Aelith Sorn will pay a silver apiece for any rubbing or shard of carved glass from the chapel.
 
 ---
 
@@ -213,6 +219,7 @@ This is the Cold Captain of the Seventh, the Ruddy Hundred, whose lantern went d
 **How it plays.**
 - He does not move until something is lifted from the ring. Then he stands and says the one thing he says on rising: "Held. We held. Is it morning?" He fights only to put it back. Set it down and step out of the ring, and he stops.
 - Hold up a lit wick-lamp (or a soldier's token), and he stops for a round and looks. "Which lantern is lit?" Answer "the Ninth", truthfully, and he sits down, sets the pole across his knees, and does not rise again for this party. They can take what they like.
+- If a lamp is held up before anything is lifted, he raises his head and asks the question anyway; "the Ninth" means he never rises for this party at all. Any other answer, or none, changes nothing while he is seated: he lowers his head and waits for something to be lifted. If he is already standing, a wrong answer ends his pause and he goes on fighting to put things back. He asks again each time a lamp is shown, once a round at most.
 - Lantern flame makes him recoil: disadvantage on his attacks against anyone holding a lit wick-lamp. He is vulnerable to fire. Every spell cast down here after the first feeds him (+5 hp, max +10).
 - Destroyed, he comes apart into ash and frost. On him: the Seventh's badge (Mother Hennet will want it) and, in his coat, a note folded and refolded in a woman's hand: *come home*.
 
@@ -220,6 +227,7 @@ This is the Cold Captain of the Seventh, the Ruddy Hundred, whose lantern went d
 - **A grey company blanket bundle**, holding a purse of twelve new Caer Ardith silver (the same mint as Sallow's round and Hennet's cup); a scrap of paper in Dannic's scrawl, *"S. says one more swap and Im square. Then the clerk wants a word. Dont like the clerk."* ([[Dannic's Note]]); and a pay-chit of the Ninth Lantern for 3009, stamped PAID IN FULL under a Regency seal nobody in the company has ever seen. (Pell will know it, in session 2 or later: it is Marius Vell's private seal.)
 - **Three tins.** One is clean lantern oil. One is [[The Cut Oil Tin]]: a dented Keel tin, Keel bell on the base, grey-wax moth seal, grey slurry that smells of lake water. The third is empty and still smells of it. Dannic was taking good oil out and putting cut oil in.
 - How it got here, for the GM: he cached it on 3 Ashfall, with Skelt on the rope; the tins he carried out on the 7th came down with his body.
+- **Behind the chair**, a crack in the wall runs down and east into the Red Seam (Barrow area 7): sixty feet on, a door of grey Lithic stone with no handle, and a hairline of red light pulsing under the glass in front of it. The door does not open this session. Let them look, and let it unsettle them.
 
 When anyone lifts the cut tin, everyone's breath stops smoking for a moment, as if the room has warmed. Then it's cold again.
 
@@ -227,7 +235,7 @@ When anyone lifts the cut tin, everyone's breath stops smoking for a moment, as 
 - Investigation DC 12: the moth pressed in the grey wax is a Smokes chandler's seal. Any local will tell you whose: Hesk's.
 - Nature or Survival DC 13, in good light: the ash is fine and pale and smells of lake water. Locals know only the ash at [[Stillwater]] smells like that.
 
-**Getting out.** Back up the stair and the street; the culvert if the water is still low, the Quay cut if it isn't. The cut is fifty yards, and the last fifty feet are flooded: hoods shut, DC 10 Athletics to swim it in the dark, and a wick-lamp that goes under goes out. They surface under the Low Quay at the floating market's stair, in front of whoever is there at that hour.
+**Getting out.** Back up the stair and the street; the culvert if the water is still low (about four hours after dusk), the Quay cut if it isn't. The cut is fifty yards, and the last fifty feet are flooded: hoods shut, DC 10 Athletics to swim it in the dark with the lamp held up. On a failure the swimmer comes up coughing and their lamp went under: it is a cold tin until they climb to the cage at dawn and ask Tallow for a light, to general mockery. In scene 7 only the lamps still lit shrink. They surface under the Low Quay at the floating market's stair, in front of whoever is there at that hour.
 
 **How it goes wrong.** If the Captain is too much, the party only has to set things down and step back. He doesn't pursue past the ring. They can come back, with a lamp held high and a better answer.
 
@@ -239,7 +247,7 @@ When anyone lifts the cut tin, everyone's breath stops smoking for a moment, as 
 
 ### Scene 7: The lantern gutters (Lantern Hill, towards midnight)
 The party climbs back up through the town. It is Cinders night, and there is a lamp in every window for the dead. The Ember, nearly full, sits red and swollen over the Ashenreach. Then:
-> Halfway up Lantern Hill, the light changes. It takes you a moment to understand why. It's the lantern. Up in its iron cage, the flame that has burned without a flicker for nine years is shrinking: yellow, then white, then a bead of blue no bigger than a fingernail. At your belts, five little tin lamps shrink with it.
+> Halfway up Lantern Hill, the light changes. It takes you a moment to understand why. It's the lantern. Up in its iron cage, the flame that has burned without a flicker for nine years is shrinking: yellow, then white, then a bead of blue no bigger than a fingernail. At your belts, the little tin lamps shrink with it.
 >
 > All over the hill, doors are opening. Soldiers in their shirts, barefoot in the ash, are coming out to look. Nobody says anything. On the ladder under the niche, Brother Tallow has both hands on the bars of the cage, as if he could hold it up by himself.
 >
@@ -253,11 +261,11 @@ Give the players the moment. Then let the NPCs react:
 - Marrow finds the party: "What did you find down there?"
 - Tallow, holding the cut tin, his antennae flat: "Someone has been feeding my flame ash." Hand them [[Who Is Poisoning the Flame?]].
 
-Tick the Mutiny clock to 3. End the session on the image of a hundred and forty soldiers standing in the ash in their shirts, each with a small blue light at the belt, looking up.
+Tick the Mutiny clock (to 3, or 4 if a PC backed Sallow in the yard). End the session on the image of a hundred and forty soldiers standing in the ash in their shirts, each with a small blue light at the belt, looking up.
 
-**Development.** Marrow wants the tin, the note and the chit on her table by dawn, and asks the party to sleep in the Keep tonight "in case". Nobody else does much sleeping. Session 2 opens at dawn with hammering at the gate, so end here, on the hill. If the players want to act tonight (go after Hesk, search Sallow's quarters), give them one short scene and let it come to nothing much: Hesk has shut up shop, and Sallow is drinking in the yard with forty witnesses.
+**Development.** Marrow wants the tin, the note and the chit on her table by dawn, and asks the party to sleep in the Keep tonight "in case". Nobody else does much sleeping. Session 2 opens at dawn with hammering at the gate, so end here, on the hill. If the players want to act tonight (go after Hesk, search Sallow's quarters), give them one short scene and let it come to nothing much: Hesk is closing up, and says what his book says (he sold the tins, he did not cut them), which gets them nothing new tonight; and Sallow is drinking in the yard with forty witnesses.
 
-**End of session: level 2. Mutiny clock 3 of 6.**
+**End of session: level 2. Mutiny clock 3 of 6 (4 if a PC backed Sallow in the yard).** The guttering also ticks The Quiet Office closes in (to 2), The Saint ascends (to 4) and The Sleepless rise (to 3). Last words decoded goes to 2 when Skrell carries Dannic's words to the Chapel, and one more if Quorl took the chapel congregation's words by rite. See [[The Clocks]].
 
 ---
 
@@ -281,17 +289,15 @@ The handbell on Lantern Hill clanks for muster, dented and tinny, the way it has
 
 A hundred and forty soldiers stand in the drill yard in four ragged files. Their boots have been mended with tent canvas. Their breath smokes. Somewhere at the back, a corporal is taking bets.
 
-Captain Ilse Marrow walks out of the Keep with a letter in her hand. It has a Regency seal on it. She breaks it in front of everyone, reads it once, and then, very carefully, reads it again.
-
-"Well," she says. "Good news. We've been paid."
+Captain Ilse Marrow walks out of the Keep with a letter in her hand. It has a Regency seal on it. She does not open it. "Cinders first," she says. "Then the post."
 
 == Scenes ==
 
-- Cinders morning on Lantern Hill: the veterans touch the cage; Tallow lights the five wicks' lamps; Marrow reads the pay notice. 0 silver, and no wagon. The Orchard muster is cancelled.
+- Cinders morning on Lantern Hill: Marrow holds the letter; the veterans touch the cage; Tallow lights the five wicks' lamps; Marrow reads the pay notice. 0 silver, and no wagon. The Orchard muster is cancelled.
 - The Last Candle: Hennet's slate with Dannic crossed off; Sallow buys a round with new silver; Spoons's pool on the lantern; the wrong poster; Bray starts a brawl and Hennet ends it with a ladle.
 - Noon at the Ford: the mallet strikes three and three; Dannic Rook and two half-made dead climb out of the river. Fight: the drowned walk, with Gerda Hollin.
 - Last words ("It's cold under the glass"), Quorl's rite, Skrell and Corvane's message, and Marla pointing at the culvert.
-- The trail: Kettle on the Low Quay (the clerk in the scarf, the wagon "turned off by the mill"), the Keep's oil ledger, Hesk's order-book.
+- The trail: Kettle on the Low Quay (the clerk with inky cuffs, the wagon "turned off by the mill"), the Keep's oil ledger, Hesk's order-book.
 - Into the Glass Barrow at dusk: the flooded street, the fused chapel, the spiders in the bakery, the cold stair.
 - The Cold Room: the Cold Captain of the Seventh, "Which lantern is lit?", Dannic's stash and the Cut Oil Tin.
 - Back up Lantern Hill towards midnight: the lantern gutters for the first time in nine years, and every wick-lamp with it. Tallow: "Someone has been feeding my flame ash."
@@ -304,12 +310,12 @@ Captain Ilse Marrow walks out of the Keep with a letter in her hand. It has a Re
 - Sallow's silver is new Caer Ardith mint, this year's date. Dannic paid his Candle tab with the same coin on the 5th, and Hennet kept it.
 - Someone has a fat stack with Spoons on the lantern going out "before the red moon's gone". Spoons glances at Sallow.
 - The wanted poster claims Dannic was seen on the 12th; he drowned on the night of the 7th. Its description is wrong in three places: whoever wrote it never saw him alive. It is signed A.M.
-- Kettle saw a clerk with ink-stained cuffs and a scarf on the bridge the night Dannic ran.
+- Kettle saw a clerk with ink-stained cuffs on the bridge the night Dannic ran. Nan Crupp saw a scarfed man there and heard a splash.
 - Bruises on Dannic's shoulders: someone held him under.
 - Dannic's last words: "It's cold under the glass."
 - Dannic's note: "S. says one more swap and Im square. Then the clerk wants a word. Dont like the clerk."
 - A 3009 pay-chit stamped PAID IN FULL under a Regency seal nobody in the company knows.
-- The cut tin's grey-wax moth is Hesk's seal. Hesk's order-book: a tin to "the Assessor's Office, paid in advance", by a clerk with a cold.
+- The cut tin's grey-wax moth is Hesk's seal. Hesk's order-book: a tin to "the Assessor's Office, paid in advance", by a clerk with a cold, and eleven more since Reaping, the same way.
 - The ash in the cut oil smells of lake water: Stillwater ash.
 - Fennick's oil ledger is fiddled (four casks too many burned). He looks guilty; he isn't the poisoner.
 - Spells cast under the glass make frost bloom on the walls. Something cold breathes through the Barrow.
@@ -320,6 +326,4 @@ The handbell on Lantern Hill clanks for muster, dented and tinny, the way it has
 
 A hundred and forty soldiers stand in the drill yard in four ragged files. Their boots have been mended with tent canvas. Their breath smokes. Somewhere at the back, a corporal is taking bets.
 
-Captain Ilse Marrow walks out of the Keep with a letter in her hand. It has a Regency seal on it. She breaks it in front of everyone, reads it once, and then, very carefully, reads it again.
-
-"Well," she says. "Good news. We've been paid."
+Captain Ilse Marrow walks out of the Keep with a letter in her hand. It has a Regency seal on it. She does not open it. "Cinders first," she says. "Then the post."

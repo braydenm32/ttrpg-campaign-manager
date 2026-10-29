@@ -26,7 +26,7 @@ The house's real trade is knowing. People say things here. They are encouraged t
 - A letter delivered unopened to anyone in the March, 5 sp, by a barge-clan runner who owes the house.
 
 ### Who is here
-Madame Vey. Her second, a Raveler called [[Mourn]] who tends the door and laughs at the wrong things. The house: Perrow from Fallowden, Tesh who was a Glasser, two Iskavethi who left Halcyra, a Vesh boy who plays the lute and watches the lamps. [[Garrick Sallow]] on Coinday nights. The Assessor's clerk [[Ansel Mote]], once, who paid for tea and asked nothing, which Vey found interesting. The Captain, by the back stair, which the whole town knows and pretends not to.
+Madame Vey. Her second, a Raveler called [[Mourn]] who tends the door and laughs at the wrong things. The house: Perrow from Fallowden, Tesh who was a Glasser, two Iskavethi who left Halcyra, a Vesh boy who plays the lute and watches the lamps. [[Garrick Sallow]] on Coinday nights. The Assessor's clerk [[Ansel Mote]], once, who paid for tea and asked nothing, which Vey found interesting.
 
 ### Rumours
 - Madame Vey is three hundred years old and cannot read her own skin.

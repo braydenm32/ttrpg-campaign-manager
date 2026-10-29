@@ -2,7 +2,7 @@
 number: 5
 title: Last Words
 worldDate: 25 Ashfall 3011
-pages: [ mother-corvane, quorl, npc-halloran-pike, npc-mother-hennet, npc-brannoc-saltash, npc-skrell, brother-tallow, aelith-sorn, dreaming-widow, npc-ambry-coyle, marla-marlowe, dannic-rook, pell-quillon, spoons, last-candle, corvel-rise, weeping-orchard, doorkeepers-chapel, lantern-keep, treaty-stone, item-door-key, item-shard, item-last-words-ledger, item-glass-hand, item-treaty, h-map-scrap, q-raveler-funeral, q-weeping-sap, f-rook-court, god-hathe, ambercote, npc-jeb-marrowick, npc-cass-marrowick, q-standing-village, item-orchard-amber, item-road-marker, npc-keld-owes-nothing, sedgemere, the-thirteenth-barrel, npc-posy-reedmarsh, q-lost-pay-order, item-hennets-soup-pot, q-wager-on-never, q-price-was-an-arm, lore-songs, npc-caelo-once-mar, npc-aurelio-bask, table-last-words, npc-greta-holm ]
+pages: [ mother-corvane, quorl, ilse-marrow, npc-halloran-pike, npc-mother-hennet, npc-brannoc-saltash, npc-skrell, brother-tallow, aelith-sorn, dreaming-widow, npc-ambry-coyle, marla-marlowe, dannic-rook, pell-quillon, spoons, last-candle, corvel-rise, weeping-orchard, doorkeepers-chapel, lantern-keep, treaty-stone, item-door-key, item-shard, item-last-words-ledger, item-glass-hand, item-treaty, h-map-scrap, q-raveler-funeral, q-weeping-sap, f-rook-court, god-hathe, ambercote, npc-jeb-marrowick, npc-cass-marrowick, q-standing-village, item-orchard-amber, item-road-marker, npc-keld-owes-nothing, sedgemere, the-thirteenth-barrel, npc-posy-reedmarsh, q-lost-pay-order, item-hennets-soup-pot, q-wager-on-never, q-price-was-an-arm, lore-songs, npc-caelo-once-mar, npc-aurelio-bask, table-last-words, npc-greta-holm ]
 encounters:
   - name: Orchard pilgrims
     notes: "Cult fanatic: Multiattack two daggers +4, 1d4+2; spells command (DC 11), inflict wounds, hold person. Four commoners who scrape sap and shove. They won't let outsiders take the sap, and they back off the moment Tick or any Hollowborn asks them to. Built for five level-3 PCs: easy."
@@ -43,14 +43,14 @@ lectern:
 - *Never took the Wager?* Corvane's "That was my sister" still lands, and Spoons, hearing it, asks them that evening.
 - *Sallow was never confined?* He stays away from the funeral, and nothing he does today matters. Session 7 is where he moves.
 
-**The session at a glance.** One long day. The funeral in the morning (scene 1) and the ledger at midday (scene 2) run in order. Then the party has the afternoon and evening, and the usual way round is: out to the Orchard and its fire-pit in the afternoon (scenes 3 and 4), back to the Last Candle at dusk for the soup-pot (scene 5), and up to the Keep at night for Tallow and the shard (scene 5 again). If they go to Hennet first, they carry the pot out to the Orchard and it fits the ring in front of them, which is better still. The session ends at the Keep, with the sap in the oil-port. The Treaty Stone is optional, for a party with time in hand.
+**The session at a glance.** One long day. The funeral in the morning (scene 1) and the ledger at midday (scene 2) run in order. Then the party has the afternoon and evening, and the best way round is: the Last Candle first, since it is on the way from the Rise to the orchard lane (scene 5, the soup-pot); out to the Orchard with the pot in the afternoon (scenes 3 and 4), where it drops into the ring in front of them; and up to the Keep by evening for Tallow and the shard (scene 5 again). A party that goes to the Orchard first sees the ring, fetches the pot from the Candle at dusk, and takes Hennet's word that it fits; that works too. The session ends at the Keep, with the sap in the oil-port. The Treaty Stone is optional, for a party with time in hand.
 
 ---
 
 ### Scene 1: The funeral that would not end (Corvel Rise)
 Old [[Halloran Pike]] sits up at his own funeral on [[Corvel Rise]] (see [[The Funeral That Would Not End]]). Before the door can open, he has a confession to make, sitting up on his bier with the coin he spat out in his lap:
 - He was the deserter Pike of the company's story. He did carry the ninth lantern up to the Keep the night of Cinders. He never walked into the Rent: he went as far as its lip, lost his nerve, and came back two years later under his own name, and nobody looked twice at another Pike. ("There are a great many Pikes.")
-- On the night of Cinders, at the cooks' camp in the Orchard, [[Mother Hennet]] lit the ninth lantern from a cookfire that was burning on a lump of grey stone, with no wood under it. "It was cold. In the fire, and it was cold. It talked. I thought I was dying." He carried the lantern. Hennet carried the stone after him in a soup-pot. The boy with the burnt hand, [[Brannoc Saltash]], followed them up the hill: he says he sang; Pike says he howled.
+- On the night of Cinders, at the cooks' camp in the Orchard, [[Mother Hennet]] lit the ninth lantern from a cookfire that was burning on a lump of grey stone, with no wood under it. "It was cold. In the fire, and it was cold. It talked. I thought I was dying." He carried the lantern. Hennet carried the stone after him in a soup-pot, and at the Keep she tipped it out into Brother Tallow's hands. "He never said a word about it after, and neither did I." The boy with the burnt hand, [[Brannoc Saltash]], followed them up the hill: he says he sang; Pike says he howled.
 - Years later he drew a chart for Vexa of what he'd seen at the lip and what her crews told him, and signed it "-P".
 
 Then [[Mother Corvane]], who has come down from her roost for this, lends [[Hathe's Door-Key]] (kept in the reliquary at Corvel Rise and lent for funerals) to finish the rite. When the door opens, Pike's last words are the same as the seven in Quorl's notebook: "The lamp is the lock." He is the eighth.
@@ -61,12 +61,12 @@ If Dannic was never laid to rest, he is on the Rise too, under a fresh mound tha
 
 **Development.** Pike goes through the door, and this time he stays gone. The mourners go home talking. Corvane does not: she looks at Quorl for a long moment, and then asks the party into the bone-library "before the light goes off the shelves". Go to scene 2. If Quorl isn't in the party, she asks whoever said the rhyme, or whoever looked as if Pike's confession meant something to them.
 
-**Treasure.** [[Hathe's Door-Key]], lent for the rite. Corvane wants it back at the end of the day. If Quorl asks to keep it a while longer and gives her a reason, she lets him, which matters in session 6. Pike's spat-out coin, which nobody will touch.
+**Treasure.** [[Hathe's Door-Key]], lent for the rite. Corvane wants it back at the end of the day. If Quorl asks to keep it a while longer and gives her a reason, she lets him, which matters if the party takes the Cold Seam in session 6. Pike's spat-out coin, which nobody will touch.
 
 ---
 
 ### Scene 2: The ledger (the bone-library)
-Corvane takes the party into the bone-library at the heart of the roosts and opens the Rook-Court's Ledger of Last Words: forty narrow books, every dying sentence a Raveler has heard in the March since 3002. Read a handful aloud; let the players hear the voices:
+Corvane takes the party into the bone-library at the heart of the roosts and opens the Rook-Court's Ledger of Last Words: forty narrow books, every dying sentence a Raveler has heard in the March since 3002. Read a handful aloud; let the players hear the voices. (This year's book is kept down at the Doorkeeper's Chapel until Longnight, so Skrell has run it up the hill under his arm for the funeral; the two 3011 lines come from it, and Corvane reads them last.)
 - *"Tell my brother the dog was his."* (a sapper, the Field of Lanterns, 3003)
 - *"The lamp. Mind the lamp."* (a sentry on the east wall, 3004)
 - *"Wenna, hold his hand. Don't look up."* (Marla Marlowe, a cellar in the Smokes, the night of Cinders; told, not heard: given at dawn by her mother to the fledgling who came for the body)
@@ -95,9 +95,11 @@ If anyone asks after her family, Corvane mentions her sister Keld, who put a sil
 ---
 
 ### Scene 3: The Weeping Orchard
-For [[Sap from the Weeping Orchard]], or following the confession, the party walks two miles north-east up the orchard lane to [[The Weeping Orchard]], under a waning Ember. The trees weep only at the full; nine days on, every bough carries beads of set sap, the oldest tree is trickling, and the Sleepless are scraping them. [[The Dreaming Widow]] is here if the party hasn't dealt with her, with [[Ambry Coyle]] at her elbow.
+For [[Sap from the Weeping Orchard]], or following the confession, the party walks two miles north-east up the orchard lane to [[The Weeping Orchard]], under a waning Ember. The trees weep only at the full; nine days on, every bough carries beads of set sap, the oldest tree is trickling, and the Sleepless are scraping them. [[The Dreaming Widow]] is here if the party hasn't dealt with her, with [[Ambry Coyle]] at her elbow. She wants nothing from them today but Tick: "Come and sit with us at the next full, Tibbet. Just sit." If Tick is with the party she tells the pilgrims to let them scrape, and they do; if not, she watches the fight and does not join it.
 
-Complication: a cult fanatic and four pilgrims who won't let outsiders take the sap (**Orchard pilgrims**). If the party stays past midnight, the dead in the grave rows climb out at Ember-rise (**The stone-touched dead**). A line of sap on the ground stops them.
+Gathering a vial from the boughs takes an hour: three successes before two failures on Survival, Nature or Medicine DC 12 (see [[Sap from the Weeping Orchard]]).
+
+Complication: a cult fanatic and four pilgrims who won't let outsiders take the sap (**Orchard pilgrims**). If the party stays past midnight, the dead in the grave rows climb out at Ember-rise (**The stone-touched dead**). A line of sap on the ground stops them: crushed beads smeared across a path, or one vial poured out, make a line about ten feet long that they will not cross for an hour. A party that gathered sap for Tallow has to decide whether to spend it here.
 
 **Development.** The cooks' camp is at the orchard's heart, a few minutes' walk through the stone trees: go to scene 4. If the pilgrims have run them off without sap, the oldest tree in the cooks' camp is still trickling, and nobody is guarding it.
 
@@ -113,9 +115,9 @@ At the orchard's heart is the cooks' camp, where the company should have mustere
 ---
 
 ### Scene 5: The shard's fate
-**At the Candle.** The Last Candle is shut, for the first time since it was built. Mother Hennet lets them in by the kitchen door. The soup-pot hangs on its hook in the cold corner of the kitchen, black, dented and scrubbed dry. Pike's name is on the slate in fresh chalk, with nothing owing. She looks at them for a long time. "Took you long enough." She takes [[Mother Hennet's Soup-Pot]] off its hook and puts it in a PC's arms. Carried back to the fire-pit and set in the ring, it fits to a hair. If the party missed Vexa's chart, Hennet takes Pike's own copy out of the book under the bar and gives it to them: "He'd want it used. He never could."
+**At the Candle.** The Last Candle is shut, for the first time since it was built. Mother Hennet lets them in by the kitchen door. The soup-pot hangs on its hook in the cold corner of the kitchen, black, dented and scrubbed dry. Pike's name is on the slate in fresh chalk, with nothing owing. She looks at them for a long time. "Took you long enough." She takes [[Mother Hennet's Soup-Pot]] off its hook and puts it in a PC's arms. Carried to the fire-pit and set in the ring, it fits to a hair. Asked what was in it: "A stone. I gave it to Tallow. Ask him where he put it." And, as she lets them out: "A bargee came for my book last week with new silver, the same mint as the coin in the cup under the bar. I told him no. He said he'd be back." That is the party's warning: someone should watch the Candle tonight (see "If the party wanders"). If the party missed Vexa's chart, Hennet takes Pike's own copy out of the book under the bar and gives it to them: "He'd want it used. He never could."
 
-**At the Keep.** [[Brother Tallow]], confronted, admits it: he has kept [[The Ward Shard]] under the lantern for nine years and has always been afraid to say what it was. "It's under the cage." It is reached from the oil-room in the tower's base, by the trap-ladder, no key needed: look up through the oil-port at the foot of the cage, and there in the lamp's bowl under the flame is a finger-long splinter of grey stone, faintly warm, with a hairline crack of red down its length.
+**At the Keep.** [[Brother Tallow]], confronted, admits it: he has kept [[The Ward Shard]] under the lantern for nine years and has always been afraid to say what it was. "It's under the cage." It is reached from the oil-room in the tower's base, by the trap-ladder, no key needed: look up through the oil-port at the foot of the cage, and there in the lamp's bowl under the flame is a finger-long splinter of grey stone, cold enough that the flame above it throws no heat on that side, with a hairline crack of red down its length.
 
 [[Aelith Sorn]], who has followed the party all day, wants one more thing: the stone hand in the false floor of Kettle's barge. (If the party ran Kettle's Cargo, they know exactly what she means. If not, she tells them where it is, and that she paid for it.)
 
@@ -133,7 +135,9 @@ If there's time, or if Pell asks for an escort, ride three miles east along the 
 ---
 
 ### How it ends
-At the Keep, a drop of sap tipped into the oil-port makes the lantern burn tall and white, and every wick-lamp on the hill burns white with it, for a whole day. For a moment Ysse sees a standing figure in the flame, enormous and very tired, looking at her. Tallow: "It wants to go home." Marrow decides: someone has to go to the Ninth Stone.
+Tallow will not tip the sap in without the Captain there, and sends a wick running for her. [[Ilse Marrow]] stands in the oil-room door with her arms folded and hears all of it: Pike, the pot, the stone under the flame.
+
+At the Keep, a drop of sap tipped into the oil-port makes the lantern burn tall and white, and every wick-lamp on the hill burns white with it, for a whole day. For a moment Ysse sees a standing figure in the flame, enormous and very tired, looking at her. Tallow: "It wants to go home." Marrow watches every lamp in the yard go white, and that is what decides her: "If that's what's keeping it lit, I want to know who's holding the other end." Someone has to go to the Ninth Stone.
 
 **End of session: level 4.**
 
