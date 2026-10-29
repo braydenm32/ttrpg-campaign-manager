@@ -559,7 +559,7 @@ async function pushWorld(worldId: string): Promise<{ sent: number; forPlayers: b
   // Keep the name shown in "your cloud" lists up to date.
   const worldRow = plan.records.find((r) => r.upsert.table_name === 'worlds' && !r.upsert.deleted)
   if (worldRow) await supabase.from('cloud_worlds').update({ name: (worldRow.upsert.data as World).name }).eq('id', worldId)
-  return { sent, forPlayers: forPlayers || plan.forPlayers, failed: [...plan.failed, ...failures], missing: plan.missing }
+  return { sent, forPlayers: forPlayers || plan.forPlayers, failed: [...new Set([...plan.failed, ...failures])], missing: plan.missing }
 }
 
 // ---------- engine ----------
