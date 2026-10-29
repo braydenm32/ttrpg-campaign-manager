@@ -106,7 +106,7 @@ export const HELP = {
   playersCopy:
     'Shows the map as players get it, without the secret doors, traps, secret rooms and anything ticked GM only. Untick to go back to your own copy. Players never receive your copy, only theirs (with the fog of war on top, if it’s on).',
   exportMap:
-    'Download the map as a picture (PNG) to print, share or use anywhere. Pick a size: on battle maps that is pixels to a square, since virtual tabletops count that way (Roll20 uses 70, Foundry 100); bigger is sharper for printing but makes a bigger file. Tick Show the grid to draw the squares on. Battle maps and dungeons can also go out as a Universal VTT file (.dd2vtt): the picture with its walls, doors and lights already in it. In Foundry, open it with the Universal Battlemap Importer module; in Roll20 (Pro), use the UniversalVTTImporter script, which wants the PNG at the same size too. Fantasy Grounds and others read it as well. Room walls, Wall, Inner wall and Hedge lines become walls, doors leave a door in them, portcullises and iron gates become see-through bars, pillars and buildings block sight, and lit torches, braziers and campfires give light.',
+    'Download the map as a picture (PNG) to print, share or use anywhere. Pick a size: on battle maps that is pixels to a square, since virtual tabletops count that way (Roll20 uses 70, Foundry 100); bigger is sharper for printing but makes a bigger file. Tick Show the grid to draw the squares on. Battle maps and dungeons can also go out as a Universal VTT file (.dd2vtt): the picture with its walls, doors and lights already in it. In Foundry, open it with the Universal Battlemap Importer module; in Roll20 (Pro), use the UniversalVTTImporter script, which wants the PNG at the same size too. Fantasy Grounds and others read it as well. Room walls, Wall, Inner wall and Hedge lines become walls, doors leave a door in them, portcullises and iron gates become see-through bars, pillars and buildings block sight, and lit torches, braziers and campfires give light. If the map has fog of war, the tabletop file and the plain picture leave it out (tabletops add their own); you can also download the fogged picture exactly as players see it now.',
   curvedLabels:
     'Click to place a label, or drag a line on the map and the words will follow it, like a river name or a mountain range. Region lettering is spaced capitals, place names are italic, Title is for the map name.',
 
@@ -269,6 +269,10 @@ export const HELP = {
   fightBar: 'On a phone, this bar stays at the top while a fight is on. Tap the name to jump to them in the initiative list.',
   lecternKeys:
     'With a keyboard: N or → for the next turn, B or ← to go back, D to roll a d20, and ? for this list. They don’t work while you’re typing in a box.',
+  pinNames:
+    'Keeps the names of pins and regions showing on the map instead of only when you hover. They appear once you zoom in a little, so a zoomed-out map isn’t covered in labels. Each map remembers its own setting on this device. Players only get names for the pins they can see. On a phone, tap a pin once to see its name and again to open it.',
+  fogRoom:
+    'Click inside a room to uncover just that room, right up to its walls. It stops at walls drawn across the room and at doors, gates and bars, so click in the next room to open that one too. Secret rooms are left alone until you mark their door as found. With Cover chosen, it covers the room again. Only on maps with rooms drawn in the map builder.',
 } as const
 
 export type HelpTopic = keyof typeof HELP
