@@ -27,7 +27,7 @@ Since then the Glassers do not go below the first chamber. Vexa goes down alone,
 :::
 
 :::gm
-The seam is a Lithic road, one of the covered ways between the Ninth Stone and its outlying waystations; it runs east under the glasslands toward the Rent and is how session 6's expedition can reach the Ninth Stone's foot without crossing sixty miles of open ash, if the party is brave enough to take it. What took Brakk is a shadow of the same kind that wears Borrin's: a passenger from a breached ward, thin, hungry, patient, and very interested in the Returned dwarf above. It will answer Borrin, or Mardle, in Borrin's voice. Not a fight to force on a level 2 party; a conversation, and a reason to come back. In session 2 it appears as a shadow in a digger's shape that talks; a ghoul only for his body.
+The seam is a Lithic road, the Ninth Road itself, the covered way that runs under the Barrow's stair, the Burned Mill, Tally's Cut and Ambercote's square (the same line [[A Lithic Road-Marker]] points along); it runs east under the glasslands toward the Rent and is how session 6's expedition can reach the Ninth Stone's foot without crossing sixty miles of open ash, if the party is brave enough to take it. What took Brakk is a shadow of the same kind that wears Borrin's: a passenger from a breached ward, thin, hungry, patient, and very interested in the Returned dwarf above. It will answer Borrin, or Mardle, in Borrin's voice. Not a fight to force on a level 2 party; a conversation, and a reason to come back. In session 2 it appears as a shadow in a digger's shape that talks; a ghoul only for his body.
 
 **Why go.** Vexa pays 20 gp to bring Brakk back, or to shut his voice up.
 :::

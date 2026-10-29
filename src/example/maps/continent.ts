@@ -20,7 +20,6 @@ const PLACE_PAGES: Record<string, string> = {
   Ilmareth: 'ilmareth',
   Ardmere: 'ardmere',
   Fallowden: 'fallowden',
-  Whitepost: 'whitepost',
   Dunmeer: 'dunmeer',
   Halcyra: 'halcyra',
   Qerath: 'qerath',
@@ -109,8 +108,9 @@ function continent(): Drawing {
     L(text, [x, y], size, 'place')
   L('to Qal Merrow', [218, 904], 13, 'place')
   L('to Ostrakai', [1510, 770], 13, 'place')
-  // Whitepost and Dunmeer crowd Fallowden and Cinderford: small lettering, set to the side of the pieces
-  const TIGHT: Record<string, Point> = { Whitepost: [914, 524], Dunmeer: [909, 571] }
+  // Dunmeer crowds Fallowden and Cinderford: small lettering, set to the side of its piece. (Whitepost, halfway along the
+  // road between them, is too close to show at this scale; it's on its own page.)
+  const TIGHT: Record<string, Point> = { Dunmeer: [909, 571] }
   for (const [name, p] of Object.entries(TOWNS)) {
     const big = name === 'Caer Ardith' || name === 'Sevenhaven' || name === 'Cinderford'
     const dy = p.asset === 'temple' ? 14 : p.asset === 'tower' ? 10 : 12

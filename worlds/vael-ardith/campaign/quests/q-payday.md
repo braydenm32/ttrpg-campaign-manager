@@ -26,7 +26,7 @@ The pay notice came up the road from the Regency with its seal and its signature
 [[Ilse Marrow|Captain Marrow]] wants the wagon found, or at least wants to know who to be angry at. [[Fennick Bottlebrook]] wants it found before the bakers stop giving credit. [[Garrick Sallow]] wants everyone to keep talking about it.
 
 ### Leads
-- The [[Pay Notice]] itself: a real seal, a real signature, a very real zero.
+- The pay notice itself: a real seal, a real signature, a very real zero.
 - The wagon's escort was paid off at the waystation two days west, on the Fallowden road. After that nobody admits to seeing it. The toll-log in the gatehouse at the bridge-head, where [[Mistress Hebbe]] writes down every cart that crosses, might.
 - The barge-folk on [[The Low Quay]] hear everything that moves on the Cinder and most things that move on the road.
 

@@ -26,7 +26,8 @@ Every price here is the one on a board, a slate or a shop wall somewhere in the 
 - **[[The Baker's Wife]]:** ash-bread 1 cp the loaf. Stone-pear dumplings 2 cp. Hearthday loaf 2 cp. Pallas pie 3 cp, on the 15th only. Soup of the day 2 cp, bread free. Bread and dripping 1 cp. Hot Mercy 1 cp, in winter.
 - **Sedgemere:** thirteenth-barrel ale 1 cp a mug; eel pie 2 cp; fish stew 3 cp; Fallowden red 3 cp a cup (dearer in Cinderford for the toll). The Returned, 5 cp.
 - **[[Tolliver's Dairy]]:** goat's milk 1 cp a mug. A round of soft cheese, 2 cp.
-- **Gutter Market:** a stone pear, 1 cp. A hank of spider silk, after dark, 1 gp.
+- **[[Lennard's]], Dunmeer:** Soft No 3 cp the round; Not Today 6 cp the wedge; Hard No 8 cp the wedge; Yes, Sir 1 sp, the officers' price. Bread and cheese for a pack, 2 cp.
+- **Gutter Market:** a stone pear, 1 cp. A hank of spider silk, after dark, 1 gp. Orchard amber, 2 sp a bead (5 sp at Hesk's, for the label).
 - **Tally's Cut:** stone-pear spirit, 2 cp a thimble. Hot bone-broth, 1 cp a bowl.
 - **[[The Salt Lake]]:** salt-mint tea, 1 cp.
 - **Whitepost:** the Sunburst loaf, 1 cp. Mutton and barley pottage, 4 cp. Honey-mead, 3 cp a cup.
@@ -34,9 +35,10 @@ Every price here is the one on a board, a slate or a shop wall somewhere in the 
 ### The road and the river
 - **The toll bridge:** 1 cp a head, 2 cp a beast, 5 cp a cart. Company soldiers free.
 - **The ferry** ([[The Cinder Ferry]]): 1 cp, or something true you have not told anyone.
-- **[[The Bridle & Yoke]]:** stabling 3 cp a night, 5 with feed. A mule, 5 cp a day; a horse, 2 sp a day and a 5 gp deposit. A handcart, 1 cp a day. A cart and carter to the Treaty Stone and back, 5 sp; to Fort Mercy and back, 1 gp; to Fallowden, 4 gp. A seat on the Fallowden wagon, 1 sp, on Restdays, when it runs.
+- **[[The Bridle & Yoke]]:** stabling 3 cp a night, 5 with feed. A mule, 5 cp a day; a horse, 2 sp a day and a 5 gp deposit. A handcart, 1 cp a day. Saddle and bridle, 2 cp a day to hire. A cart and carter to the Treaty Stone and back, 5 sp; to Fort Mercy and back, 1 gp; to Fallowden, 4 gp. A seat on the Fallowden wagon, 1 sp, on Restdays, when it runs.
 - **A letter** by clan boat, 1 sp, to anywhere the Cinder runs. Delivered unopened by the Velvet Ledger's runners, 5 sp.
 - **A Writ of Safe Conduct** for the dead, at Whitepost, 1 sp. Recommended.
+- An escort across the glass with Orla Quist of [[Quist & Daughter, Surveyors]], 3 gp and a copy of the sheet.
 - **Passage by barge:** Kettle's price, which is gossip first and coin second.
 - **Stakes** on the Ash Road are free. They are not for taking.
 
@@ -49,6 +51,7 @@ Every price here is the one on a board, a slate or a shop wall somewhere in the 
 - **Charms and things:** a noose-knot charm, 1 sp; a strand of the Corporal's rope, 1 cp or a refusal; a dream-knot at [[Harrow's Simples]], 1 sp (3 after a red moon); a thunderjar, 30 sp; a grumbler, 12 sp; a Marigold, 6 sp; a Widow's Kiss, 8 sp.
 
 ### Paper and prayer
+- **[[Ottun Fray]], printer:** a handbill 2 cp; a hundred, 1 sp; a wanted bill with his brother-in-law's face, 3 sp.
 - A prayer written down by [[Brother Audit]], 1 cp, word for word, with the date, and read back on Coinday.
 - A copy of the company's Rent survey, 1 sp. The Ash Road stake-chart, 5 cp. The town plan, 2 sp. A map of the continent, 2 gp. At [[Quist & Daughter, Surveyors]].
 - A Doorkeeper's rite at the Chapel, 1 sp. A Raveler funeral, 5 sp: a last word is kept free; one sold is "on application". A loaf for Maelis, free at the hearth-house.
@@ -63,7 +66,7 @@ Every price here is the one on a board, a slate or a shop wall somewhere in the 
 ### Money and loans
 - **Tollamund & Daughters:** a loan at a tenth per quarter. A bill of exchange, 2% to draw. Coin changed, Regency to Concord, 5%. Strongbox space, 1 sp a month a box.
 - **[[The Hock]]:** a copper in ten, a week. Pledges kept thirty days. Against a company token, 3 cp; a sword, 1 gp.
-- **Coin assayed** at Sevenhaven, 2 cp the piece.
+- **Coin assayed** at Sevenhaven, 2 cp the piece. A true weight at the Assay, 1 sp the pound. A note of hand on Veramund & Heirs, 2 in the hundred.
 - **Ardmere Receipts:** forty in the hundred at Tollamund's. At the Hock, a copper for the frame.
 - **Information:** Tam Sixfingers at Gutter Market, 1 sp a sentence, edited.
 - **Tea with a Velvet Ledger priestess,** 2 sp. An evening upstairs, 1 gp and up. The Blue Room, 5 gp. A secret, by weight.

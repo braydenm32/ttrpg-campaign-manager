@@ -55,6 +55,6 @@ Ferrow first, slowly, with a pick; then whichever crew is up the rope, 2d6 Glass
 
 == GM notes ==
 
-Play the Cut as a mining camp with a sense of humour: the dead are a crop here, and everyone knows it, and the kindness is real anyway. It is the party's first look at the Glassers on their own ground before Vexa's tower (session 2), a place to sleep on the way to the Rent (session 6), and where Old Tally's Coin starts. The hum is the thing players remember; let a Hollowborn or Ysse feel it before anyone mentions it.
+Play the Cut as a mining camp with a sense of humour: the dead are a crop here, and everyone knows it, and the kindness is real anyway. It is the party's first look at the Glassers on their own ground before Vexa's tower (session 2), a place to stop on the way to the Rent (session 6: water at noon, the first camp is out on the ash), and where Old Tally's Coin starts. The hum is the thing players remember; let a Hollowborn or Ysse feel it before anyone mentions it.
 
 The 11th Foot was a Regency regiment of the Regency's own army at Cinders, not one of the eight companies of the Treaty's schedule. Its chest was Regency pay for Regency soldiers, and the Regency wants it back; see the Find's page.

@@ -2,7 +2,7 @@
 type: location
 name: The Burned Mill
 players: true
-summary: "Six miles out on the Ash Road, the only roof between the Treaty Stone and Fort Mercy: a mill's stone shell, a bell on a post, a water-butt, a bench scratched with nine years of tallies, and a pear tree that is alive and has one fruit on it."
+summary: "Six miles out on the Ash Road, the only roof between the Treaty Stone and Fort Mercy: a mill's stone shell, a bell on a post, a water-butt, a bench scratched with eight years of tallies, and a pear tree that is alive and has one fruit on it."
 parent: ash-road
 tags: [ landmark, waypoint, ruin ]
 fields:
@@ -21,7 +21,7 @@ The Oddy mill ground the pear country's barley for a hundred and forty years, on
 Nance Oddy came back in Seedwake 3003, when the company was still arguing about which way the road had gone, and has not left. She lives in the one corner of the mill that keeps a roof, a lean-to of wagon-boards and sailcloth over the old grain-store. Travellers call the place the Burned Mill because that is what it is. She calls it the mill.
 
 ### What is here
-- **The bench**, a slab of millstone under the tree, scratched edge to edge with tallies: every traveller to pass in nine years, in groups of five, in rows, with a letter for which way they were going. The company's stake-parties have their own corner, and the last four springs of it are blank.
+- **The bench**, a slab of millstone under the tree, scratched edge to edge with tallies: every traveller to pass in eight years, in groups of five, in rows, with a letter for which way they were going. The company's stake-parties have their own corner, and the last two springs of it are blank.
 - **The water-butt**, a barrel sunk to its rim by the wall, roofed with a door. The company's stake-party used to fill it on Stake Day; since 3010 Nance fills it herself from the Treaty Stone's pilgrim-cistern, three miles each way with two buckets on a yoke, and will not be thanked. The water is free. Taking more than you can drink is the one thing that makes her shout.
 - **The bell**, a cracked cow-bell on a post by the road, for travellers lost in a greywind to steer by. She rings it every quarter-hour in bad weather, all night if she has to. Soldiers call it the Widow's Bell and pretend not to be glad of it.
 - **The fork.** A hundred paces east of the mill a track leaves the road, south of east, not staked: the glassland track to [[Fort Mercy]], which the Glassers use because it keeps them off the company's road. Where it leaves, half-buried, lie the black ribs and iron tyres of a burnt wagon.
@@ -51,7 +51,7 @@ Drink, and fill your skins, and be told how many you are. Read the bench and fin
 ### The Toll
 Nance keeps a ledger she calls the Toll, in a tin box in the grain-store: one line a party, the date, the count, the beasts, the way they went. She charges nothing for passing. She wrote it, she says, "so somebody would know who went east", and it is the only written witness to what happened at the fork in Ashfall. The lines the pay-wagon mystery needs, in her square hand:
 
-*7 Ashfall. Dawn. A cart, House-sealed, two drivers in grey, no escort. Did not stop for water. Turned south at my fork. Heavy.*
+*7 Ashfall. Morning. A cart, House-sealed, two drivers in grey, no escort. Did not stop for water. Turned south at my fork. Heavy.*
 *8 Ashfall. The same cart, back, light, two drivers walking beside it. Four Glassers met it at the fork, took the mules, stripped the iron and burnt the rest where it stood. Burned till noon. The drivers walked west. Did not stop for water.*
 *9 Ashfall. One child from the Keep, the drummer, alone, no rope, no bell. Poked in the ashes. Took a buckle. Would not stay for water. Told her she'd die out here. She said everyone says that.*
 

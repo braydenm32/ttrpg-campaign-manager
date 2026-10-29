@@ -47,4 +47,4 @@ The Ninth is sealed, for now. The Eighth Ward under the Grimmark is breached, an
 
 == GM notes ==
 
-This ending should feel earned and expensive. Don't let it be the obvious right answer handed over by an NPC: let the party find the rubbing, read it, argue about it. If no PC volunteers and Uthrem goes in alone, roll a d6 at the end of the epilogue: on a 1-2, the seal holds only a year.
+This ending should feel earned and expensive. Don't let it be the obvious right answer handed over by an NPC: let the party find the rubbing, read it, argue about it. If Hold-Mother [[Greta Holm]] is present at the Stone, the seal holds and the roll is skipped. If no PC volunteers and Uthrem goes in alone without her, roll a d6 at the end of the epilogue: on a 1-2, the seal holds only a year.

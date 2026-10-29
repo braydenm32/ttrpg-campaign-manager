@@ -16,7 +16,7 @@ date: Bloomtide to Frostcall 2994 AW
 order: 40
 ---
 
-Ardmere, the river town north of [[Caer Ardith]], was held for the Regency by a garrison of levies and a commander named Helmar Quist. In Bloomtide 2994 AW it was surrounded by the Free Host of the pretender Hallam Ostrey. It held for two hundred and eleven days.
+Ardmere, the river town north of [[Caer Ardith]], was held for the Regency by a garrison of levies and a commander named Helmar Quist. In Bloomtide 2994 AW it was surrounded by the Free Host, a hired army of three claimants' contingents under a hired general, Hallam Ostrey. It held for two hundred and eleven days.
 
 **The siege.** The usual horrors: starvation, disease, the water-gate, the dead thrown from the walls and the dead thrown back. Quist wrote to the Regency every week for relief. The Regency sent forms. Eventually it sent a wagon of forms, to be completed on arrival.
 

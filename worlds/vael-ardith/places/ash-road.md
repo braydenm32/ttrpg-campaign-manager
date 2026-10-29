@@ -31,7 +31,7 @@ The Ash Road was the old road from Fallowden to the pear country and the eastern
 :::gm
 **Which are true.** 1. Mostly false: the Glassers move them, to turn pilgrims down the track to Vexa's well. Ask [[Nance Oddy]] how she knows. 2. Soldiers' nonsense. Count anyway. 3. True, and it has one fruit on it.
 
-At the Burned Mill (mile 6) a glassland track turns off for Fort Mercy; the pay wagon's strongbox took it at dawn on 7 Ashfall in a sealed House cart. The Glassers burned the empty wagon at the turn-off; its black ribs and iron tyres lie in the ash (DC 12 Survival to spot from the road). Nance Oddy's Toll at the mill records the cart going south at dawn on the 7th and coming back empty on the 8th.
+At the Burned Mill (mile 6) a glassland track turns off for Fort Mercy; the pay wagon's strongbox took it on the morning of 7 Ashfall in a sealed House cart. The Glassers burned the empty wagon at the turn-off; its black ribs and iron tyres lie in the ash (DC 12 Survival to spot from the road). Nance Oddy's Toll at the mill records the cart going south on the morning of the 7th and coming back empty on the 8th.
 
 Use the Greywind Weather table every half-day on the road. Roll once a day on Travellers on the Ash Road for a face. A party caught in a full greywind without a rope loses someone for 1d4 hours (DC 12 Survival to find them, DC 15 after dark). At the glasslands crossing, Hollowborn characters see the shapes in the glass turn their heads.
 :::

@@ -75,4 +75,4 @@ See [[Lusk Pardew]] for what he will do with this, and [[Pell Quillon]] for who 
 
 Whitepost is a pause in a bureaucracy, a place that proves the Regency is a real state and not a shape in a ledger. Keep it orderly and slightly bored. Everyone here is very good at looking. The comedy is that the Regency's last post on the road is the single most competent thing the Regency has left. The danger is that competence is also records.
 
-Use in S1 as where the PCs have come from (a bench under the post, a Writ of Safe Conduct in a backpack). In S4 to S7 it is a letter away: a post-rider will carry a request to Pardew for 5 sp. After S8 it is the first place the road leads to going home.
+Use in S1 as where the PCs have come from (a bench under the post, a Writ of Safe Conduct in a backpack). In S2 to S7 it is a letter away (Pell arrives in S2; S7 needs Pell to have written by 1 Leafrot for the cedar box to come in four days): a post-rider will carry a request to Pardew for 5 sp. After S8 it is the first place the road leads to going home.

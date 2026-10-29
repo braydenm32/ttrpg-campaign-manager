@@ -12,7 +12,7 @@ gmFields:
 relations:
   - to: npc-orla-quist
     kind: can be read by
-    known: true
+    known: false
 ---
 
 *(A rough chart on stitched hide. North is marked with a crude drawing of a stone leaning over. The Rent runs down the middle like a scar, with notes scrawled along both sides in charcoal.)*
