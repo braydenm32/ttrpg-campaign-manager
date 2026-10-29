@@ -264,6 +264,10 @@ export const HELP = {
   pageDrafts:
     'While you edit a page, what you type is also kept on this device. If you leave by mistake, the next time you edit the page it offers to bring your changes back. Saving only writes what you changed, so edits made meanwhile by a co-GM or a player are kept.',
   pagePicker: 'Start typing a name to find a page, then click it or press Enter. The ones in the current scene are listed first.',
+  secretNames:
+    'Players can read this text, and it links to a GM-only page, so they would see that page’s name. Move the link into a :::gm secret, give it a label like [[Lord Vexis|the stranger]], or reveal the page. This is only a warning; nothing is blocked.',
+  backupRecordings:
+    'Recordings can be very large. Leave this unticked for a small backup that has everything except the audio; transcripts, bookmarks and the rest of each session are kept. Tick it to keep the audio too.',
 } as const
 
 export type HelpTopic = keyof typeof HELP

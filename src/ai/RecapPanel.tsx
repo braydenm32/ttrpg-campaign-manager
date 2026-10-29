@@ -3,6 +3,7 @@ import { Help } from '../help'
 import { Link } from 'react-router-dom'
 import { db, type Entity, type Session, type World } from '../db'
 import { Markdown } from '../Markdown'
+import { SecretNamesWarning } from '../SecretNamesWarning'
 import { buildRecapPrompt, estimateTokens, parseRecap, recapCost, recapWithClaude } from './recap'
 import { useAiSettings } from './settings'
 import { Ico } from '../icons'
@@ -236,6 +237,7 @@ function RecapDraftReview({ world, session, entities, note }: { world: World; se
       ) : (
         <textarea rows={8} value={players} onChange={(e) => editPlayers(e.target.value)} />
       )}
+      <SecretNamesWarning worldId={worldId} texts={[players]} />
       <div className="row">
         <button onClick={usePlayers} disabled={!players.trim() || done.players}>
           {done.players ? '✓ Saved as the player recap' : 'Use as the player recap'}
