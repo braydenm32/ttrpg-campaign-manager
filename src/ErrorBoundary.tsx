@@ -1,4 +1,4 @@
-import { Component, type ReactNode } from 'react'
+import { Component, useState, type ReactNode } from 'react'
 import { db } from './db'
 import { exportWorld } from './backup'
 
@@ -26,6 +26,7 @@ export class ErrorBoundary extends Component<Props, { error: Error | null; key?:
 function Crashed({ error, whole }: { error: Error; whole?: boolean }) {
   const closed = /DatabaseClosed|VersionChange|blocked/i.test(`${error.name} ${error.message}`)
   const text = `${error.name}: ${error.message}`
+  const [withAudio, setWithAudio] = useState(false)
   return (
     <div className={whole ? 'loading error-screen' : 'page error-screen'}>
       <h1>Something went wrong{whole ? '' : ' with this page'}</h1>
@@ -41,7 +42,7 @@ function Crashed({ error, whole }: { error: Error; whole?: boolean }) {
         <button
           onClick={async () => {
             try {
-              for (const w of await db.worlds.toArray()) if (!w.shared) await exportWorld(w.id)
+              for (const w of await db.worlds.toArray()) if (!w.shared) await exportWorld(w.id, undefined, { recordings: withAudio })
             } catch (e) {
               alert(`Couldn’t make a backup: ${e instanceof Error ? e.message : String(e)}`)
             }
@@ -50,6 +51,10 @@ function Crashed({ error, whole }: { error: Error; whole?: boolean }) {
           Download a backup of every world
         </button>
         <button onClick={() => navigator.clipboard?.writeText(text).catch(() => {})}>Copy the message</button>
+        <label className="row small">
+          <input type="checkbox" checked={withAudio} onChange={(e) => setWithAudio(e.target.checked)} />
+          Include session recordings (much bigger)
+        </label>
       </p>
       <pre className="small muted">{text}</pre>
     </div>

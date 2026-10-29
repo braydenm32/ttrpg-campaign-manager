@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
-import { backupStore, exportWorld } from './backup'
+import { backupStore, exportWorld, recordingsSize } from './backup'
 import { db, type World } from './db'
+import { formatBytes } from './hooks'
 import { Help } from './help'
 import { Ico } from './icons'
 import { FloppyDisk } from '@phosphor-icons/react'
@@ -46,15 +47,20 @@ export function BackupReminder({ world }: { world: World }) {
   )
 }
 
-/** Downloads a backup of the world, saying how far it has got (a world with recordings can take a while) and what went wrong if it fails. */
+/**
+ * Downloads a backup of the world, saying how far it has got (a world with recordings can take a while) and what went wrong if it fails.
+ * Recording audio is left out unless ticked, since it can be many times bigger than everything else.
+ */
 export function BackupButton({ worldId, className, label = '⬇ Download backup', onDone }: { worldId: string; className?: string; label?: string; onDone?: () => void }) {
   const [progress, setProgress] = useState<string>()
   const [error, setError] = useState('')
+  const [withAudio, setWithAudio] = useState(false)
+  const audioBytes = useLiveQuery(() => recordingsSize(worldId), [worldId]) ?? 0
   const run = async () => {
     setError('')
     setProgress('Preparing…')
     try {
-      await exportWorld(worldId, (done, total) => setProgress(total > 1 ? `Preparing… ${done} of ${total} files` : 'Preparing…'))
+      await exportWorld(worldId, (done, total) => setProgress(total > 1 ? `Preparing… ${done} of ${total} files` : 'Preparing…'), { recordings: withAudio })
       onDone?.()
     } catch (e) {
       setError(`The backup couldn’t be made (${(e as Error).message || 'something went wrong'}). If this device is short of space, free some up and try again.`)
@@ -67,6 +73,12 @@ export function BackupButton({ worldId, className, label = '⬇ Download backup'
       <button className={className} disabled={!!progress} onClick={run}>
         {progress ?? label}
       </button>
+      {audioBytes > 0 && (
+        <label className="row small">
+          <input type="checkbox" checked={withAudio} disabled={!!progress} onChange={(e) => setWithAudio(e.target.checked)} />
+          Include session recordings ({formatBytes(audioBytes)}) <Help topic="backupRecordings" />
+        </label>
+      )}
       {error && <span className="error small">{error}</span>}
     </>
   )
