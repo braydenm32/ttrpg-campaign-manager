@@ -221,7 +221,7 @@ function ScreenRoute() {
 
 function SyncBadge() {
   const s = useSyncExternalStore(syncStore.subscribe, syncStore.get)
-  const label = { off: '', idle: '☁️ Synced', syncing: '☁️ Syncing…', offline: '☁️ Offline, will sync later', error: '⚠️ Sync problem' }[s.status]
+  const label = { off: '', idle: s.message ? '⚠️ Synced, with a note' : '☁️ Synced', syncing: '☁️ Syncing…', offline: '☁️ Offline, will sync later', error: '⚠️ Sync problem' }[s.status]
   if (!label) return null
   return (
     <button className="sync-badge ghost" title={s.message ?? 'Sync now'} onClick={() => syncNow()}>

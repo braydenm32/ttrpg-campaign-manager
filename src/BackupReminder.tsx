@@ -18,7 +18,6 @@ export function BackupReminder({ world }: { world: World }) {
   const pages = useLiveQuery(() => db.entities.where({ worldId: world.id }).count(), [world.id]) ?? 0
   const [now] = useState(() => Date.now())
   const [hidden, setHidden] = useState(false)
-  const [busy, setBusy] = useState(false)
   if (hidden || world.shared || pages < 5) return null
   const last = backupStore.read(world.id, 'last')
   const every = (world.cloud?.enabled ? 30 : 14) * DAY
@@ -32,21 +31,7 @@ export function BackupReminder({ world }: { world: World }) {
         <Help topic="backupReminder" />
       </span>
       <span className="row">
-        <button
-          className="small primary"
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true)
-            try {
-              await exportWorld(world.id)
-              setHidden(true)
-            } finally {
-              setBusy(false)
-            }
-          }}
-        >
-          {busy ? 'Preparing…' : 'Download backup'}
-        </button>
+        <BackupButton worldId={world.id} className="small primary" label="Download backup" onDone={() => setHidden(true)} />
         <button
           className="small ghost"
           onClick={() => {
@@ -58,5 +43,31 @@ export function BackupReminder({ world }: { world: World }) {
         </button>
       </span>
     </div>
+  )
+}
+
+/** Downloads a backup of the world, saying how far it has got (a world with recordings can take a while) and what went wrong if it fails. */
+export function BackupButton({ worldId, className, label = '⬇ Download backup', onDone }: { worldId: string; className?: string; label?: string; onDone?: () => void }) {
+  const [progress, setProgress] = useState<string>()
+  const [error, setError] = useState('')
+  const run = async () => {
+    setError('')
+    setProgress('Preparing…')
+    try {
+      await exportWorld(worldId, (done, total) => setProgress(total > 1 ? `Preparing… ${done} of ${total} files` : 'Preparing…'))
+      onDone?.()
+    } catch (e) {
+      setError(`The backup couldn’t be made (${(e as Error).message || 'something went wrong'}). If this device is short of space, free some up and try again.`)
+    } finally {
+      setProgress(undefined)
+    }
+  }
+  return (
+    <>
+      <button className={className} disabled={!!progress} onClick={run}>
+        {progress ?? label}
+      </button>
+      {error && <span className="error small">{error}</span>}
+    </>
   )
 }

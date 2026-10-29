@@ -65,8 +65,14 @@ export async function askClaude(opts: AskOptions) {
   const messages = [...opts.messages]
   const usage: ClaudeUsage = { input: 0, output: 0, cachedRead: 0, cacheWrite: 0 }
   let text = ''
+  /** Said alongside the answer when it isn't the whole of it. */
+  let warning: string | undefined
   try {
-    for (let round = 0; round < 12; round++) {
+    for (let round = 0; ; round++) {
+      if (round === MAX_ROUNDS) {
+        warning = 'Claude was still reading pages when it had to stop, so this answer may be unfinished. Try asking about something narrower.'
+        break
+      }
       const stream = client.beta.messages.stream(
         {
           model: MODEL,
@@ -93,6 +99,7 @@ export async function askClaude(opts: AskOptions) {
       usage.cachedRead += message.usage.cache_read_input_tokens ?? 0
       usage.cacheWrite += message.usage.cache_creation_input_tokens ?? 0
       if (message.stop_reason === 'refusal') throw new Error('Claude declined to answer that one.')
+      if (message.stop_reason === 'max_tokens' || message.stop_reason === 'model_context_window_exceeded') warning = CUT_OFF
       messages.push({ role: 'assistant', content: message.content })
       text = message.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('')
       const calls = message.content.filter((b) => b.type === 'tool_use')
@@ -111,17 +118,27 @@ export async function askClaude(opts: AskOptions) {
       }
       messages.push({ role: 'user', content: results })
     }
-    return { text, messages, usage }
+    return { text, messages, usage, warning }
   } catch (err) {
     throw friendly(err, Anthropic)
   }
 }
 
+/** Rounds of reading pages with tools before Claude has to answer. */
+const MAX_ROUNDS = 12
+
+/** When Claude stops because the answer hit its length limit. */
+export const CUT_OFF = 'Claude ran out of room before it finished, so the end of this answer is missing. Try a smaller job, or use “Copy for Claude” instead.'
+
 /** Turns the SDK's errors into something a GM can act on. */
-function friendly(err: unknown, Anthropic: typeof import('@anthropic-ai/sdk').default) {
+export function friendly(err: unknown, Anthropic: typeof import('@anthropic-ai/sdk').default) {
   if (err instanceof Anthropic.AuthenticationError) return new Error('Anthropic didn’t accept the API key. Check it in World settings → AI tools.')
   if (err instanceof Anthropic.RateLimitError) return new Error('Anthropic says you’re over your limit for now. Wait a minute and try again.')
   if (err instanceof Anthropic.APIError && /credit/i.test(err.message)) return new Error('Your Anthropic account is out of credit. Add some at console.anthropic.com → Billing.')
   if (err instanceof Anthropic.APIConnectionError) return new Error('Could not reach Anthropic. Check your internet connection.')
+  if (err instanceof Anthropic.APIError && (err.status === 413 || (err.status === 400 && /too long|too many tokens|context (window|length)/i.test(err.message))))
+    return new Error('That’s more than Claude can read in one go. Try a smaller job (one page, or one recording), or use “Copy for Claude” instead.')
+  if (err instanceof Anthropic.APIError && (err.status === 529 || (err.status ?? 0) >= 500))
+    return new Error('Anthropic is busy or having trouble right now. Wait a few minutes and try again.')
   return err
 }

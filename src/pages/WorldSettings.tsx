@@ -5,7 +5,7 @@ import { Help, HelpTipsToggle } from '../help'
 import { ThemePicker } from '../theme'
 import { RecentlyDeleted } from '../History'
 import { AiSettingsSection } from '../ai/AiSettingsSection'
-import { exportWorld } from '../backup'
+import { BackupButton } from '../BackupReminder'
 import { deleteCloudCopy } from '../cloud/sync'
 import { myRole } from '../cloud/players'
 import { db, deleteWorld, GAME_SYSTEMS, newId, typeLabel, WORLD_COLORS, worldColor, type Asset, type CustomType, type World } from '../db'
@@ -110,7 +110,7 @@ export default function WorldSettings() {
               A backup is a single file with the whole world in it, including uploaded files. Keep one even if sync is on; you can import it from the
               home screen on any device.
             </p>
-            <button onClick={() => exportWorld(worldId)}>⬇ Download backup</button>
+            <BackupButton worldId={worldId} />
           </section>
 
           <ImportPages worldId={worldId} />
@@ -130,8 +130,13 @@ export default function WorldSettings() {
               </p>
               <button
                 onClick={async () => {
-                  if (!confirm('Reset the example world? Everything you changed in it is lost.')) return
-                  navigate(worldPath(await resetExampleWorld(worldId)))
+                  const cloud = world.cloud?.enabled ? ' Its cloud copy is deleted too, so players who joined it lose it.' : ''
+                  if (!confirm(`Reset the example world? Everything you changed in it is lost.${cloud}`)) return
+                  try {
+                    navigate(worldPath(await resetExampleWorld(worldId)))
+                  } catch (e) {
+                    alert(`The example world couldn’t be reset (${(e as Error).message}). Your copy is unchanged.`)
+                  }
                 }}
               >
                 Reset the example world

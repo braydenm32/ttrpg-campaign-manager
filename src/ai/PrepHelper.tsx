@@ -21,25 +21,29 @@ interface Suggestion {
   scenes: string[]
   clues: string[]
   ready: string[]
+  /** Claude's answer as written, when it didn't use the headings the app reads. */
+  raw?: string
 }
 
 const HEADS = { strongStart: /^#{1,3}\s*Strong start/i, scenes: /^#{1,3}\s*Scenes/i, clues: /^#{1,3}\s*Secrets/i, ready: /^#{1,3}\s*Have ready/i }
 
 export function parsePrep(text: string): Suggestion {
   const out: Suggestion = { strongStart: '', scenes: [], clues: [], ready: [] }
-  let part: keyof Suggestion | undefined
+  let part: keyof typeof HEADS | undefined
   for (const line of text.replace(/\r\n/g, '\n').split('\n')) {
-    const head = (Object.keys(HEADS) as (keyof Suggestion)[]).find((k) => HEADS[k].test(line))
+    const head = (Object.keys(HEADS) as (keyof typeof HEADS)[]).find((k) => HEADS[k].test(line))
     if (head) {
       part = head
       continue
     }
     if (!part || /^#/.test(line)) continue
     if (part === 'strongStart') out.strongStart += (out.strongStart ? '\n' : '') + line
-    else if (/^\s*[-*]\s+/.test(line)) out[part].push(line.replace(/^\s*[-*]\s+/, '').trim())
+    else if (/^\s*([-*]|\d+[.)])\s+/.test(line)) out[part].push(line.replace(/^\s*([-*]|\d+[.)])\s+/, '').trim())
     else if (line.trim() && out[part].length) out[part][out[part].length - 1] += ` ${line.trim()}`
   }
   out.strongStart = out.strongStart.trim()
+  // Nothing in the usual headings: keep the answer as it came, so it isn't lost.
+  if (!out.strongStart && !out.scenes.length && !out.clues.length && !out.ready.length) out.raw = text.trim()
   return out
 }
 
@@ -161,7 +165,13 @@ ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${pl
         </>
       ) : (
         <div className="prep-suggestion">
-          <p className="muted small">Untick anything you don’t want, then add the rest to your prep sheet.</p>
+          {suggestion.raw !== undefined && (
+            <div className="notice small">
+              <p>Claude’s answer didn’t come in the shape the app can read, so nothing can be added from it here. This is what it wrote:</p>
+              {suggestion.raw ? <Markdown text={suggestion.raw} entities={entities} worldId={world.id} showSecrets /> : <p className="muted">(Nothing.)</p>}
+            </div>
+          )}
+          {suggestion.raw === undefined && <p className="muted small">Untick anything you don’t want, then add the rest to your prep sheet.</p>}
           {suggestion.strongStart && (
             <label className="suggest-item">
               {tick('start')}
@@ -193,9 +203,11 @@ ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${pl
               ),
           )}
           <div className="row">
-            <button className="primary" onClick={add}>
-              Add to my prep
-            </button>
+            {suggestion.raw === undefined && (
+              <button className="primary" onClick={add}>
+                Add to my prep
+              </button>
+            )}
             <button className="ghost" onClick={() => setSuggestion(undefined)}>
               Throw these away
             </button>

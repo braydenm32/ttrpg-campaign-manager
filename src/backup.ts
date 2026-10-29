@@ -1,4 +1,4 @@
-import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate'
+import { strFromU8, strToU8, unzipSync, Zip, ZipDeflate, ZipPassThrough } from 'fflate'
 import { db, newId, type Asset, type Board, type Campaign, type Entity, type Pin, type Session, type Sound, type World, type WorldMap } from './db'
 
 /**
@@ -41,7 +41,12 @@ export const backupStore = {
   },
 }
 
-export async function exportWorld(worldId: string) {
+/**
+ * Downloads a backup of a world. The zip is built a piece at a time, so a world with hours of
+ * recordings doesn't have to fit in memory two or three times over (which could crash a phone or
+ * tablet). `onProgress` hears how many files are in so far.
+ */
+export async function exportWorld(worldId: string, onProgress?: (done: number, total: number) => void) {
   const world = await db.worlds.get(worldId)
   if (!world) throw new Error('World not found')
   const campaigns = await db.campaigns.where({ worldId }).toArray()
@@ -62,15 +67,50 @@ export async function exportWorld(worldId: string) {
     sounds: await db.sounds.where({ worldId }).toArray(),
     assets: assets.map(({ blob: _blob, ...a }) => a),
   }
-  const zip: Zippable = { 'world.json': strToU8(JSON.stringify(backup)) }
-  // Pictures and audio are already compressed, so they're stored as they are.
-  for (const a of assets) zip[`files/${a.id}`] = [new Uint8Array(await a.blob.arrayBuffer()), { level: 0 }]
-  const file = new Blob([zipSync(zip) as Uint8Array<ArrayBuffer>], { type: 'application/zip' })
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(file)
-  a.download = `${world.name.replace(/[^\w-]+/g, '_')}-${backup.exportedAt.slice(0, 10)}.codex.zip`
-  a.click()
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+
+  // The zip comes out in pieces; every so often they're joined into one Blob, which the browser can
+  // keep on disk rather than in memory.
+  let parts: BlobPart[] = []
+  let held = 0
+  let fail: (err: Error) => void = () => {}
+  let finish: () => void = () => {}
+  const finished = new Promise<void>((resolve, reject) => {
+    finish = resolve
+    fail = reject
+  })
+  const zip = new Zip((err, chunk, final) => {
+    if (err) return fail(err)
+    parts.push(chunk as Uint8Array<ArrayBuffer>)
+    held += chunk.length
+    if (held > 64 * 1024 * 1024) {
+      parts = [new Blob(parts)]
+      held = 0
+    }
+    if (final) finish()
+  })
+  const json = new ZipDeflate('world.json', { level: 6 })
+  zip.add(json)
+  json.push(strToU8(JSON.stringify(backup)), true)
+  // Pictures and audio are already compressed, so they're stored as they are, read a slice at a time.
+  const SLICE = 8 * 1024 * 1024
+  for (const [i, a] of assets.entries()) {
+    onProgress?.(i, assets.length)
+    const entry = new ZipPassThrough(`files/${a.id}`)
+    zip.add(entry)
+    if (!a.blob.size) entry.push(new Uint8Array(), true)
+    for (let at = 0; at < a.blob.size; at += SLICE)
+      entry.push(new Uint8Array(await a.blob.slice(at, at + SLICE).arrayBuffer()), at + SLICE >= a.blob.size)
+  }
+  zip.end()
+  await finished
+  onProgress?.(assets.length, assets.length)
+  const file = new Blob(parts, { type: 'application/zip' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(file)
+  // Any letters (Zoë, Ægir, 龍) stay in the name; only characters file systems refuse are swapped.
+  link.download = `${world.name.replace(/[\\/:*?"<>|\s]+/g, '_').replace(/^[._]+|_+$/g, '') || 'world'}-${backup.exportedAt.slice(0, 10)}.codex.zip`
+  link.click()
+  setTimeout(() => URL.revokeObjectURL(link.href), 60_000)
   backupStore.write(worldId, 'last', Date.now())
 }
 
@@ -78,16 +118,34 @@ export async function exportWorld(worldId: string) {
 export async function importWorld(file: File): Promise<string> {
   const bytes = new Uint8Array(await file.arrayBuffer())
   // A zip starts with "PK".
-  const files = bytes[0] === 0x50 && bytes[1] === 0x4b ? unzipSync(bytes) : undefined
+  const isZip = bytes[0] === 0x50 && bytes[1] === 0x4b
+  // One file at a time out of the zip, so a big backup isn't unpacked into memory all at once.
+  const entry = (name: string) => unzipSync(bytes, { filter: (f) => f.name === name })[name] as Uint8Array<ArrayBuffer> | undefined
   let b: WorldBackup
   try {
-    b = JSON.parse(files ? strFromU8(files['world.json'] ?? new Uint8Array()) : strFromU8(bytes)) as WorldBackup
+    b = JSON.parse(isZip ? strFromU8(entry('world.json') ?? new Uint8Array()) : strFromU8(bytes)) as WorldBackup
   } catch {
-    throw new Error('This file is not a Warded Atlas world backup.')
+    throw new Error(
+      isZip ? 'This backup file is damaged or incomplete (it may not have finished downloading). Try another copy.' : 'This file is not a Warded Atlas world backup.',
+    )
   }
   if (b.format !== 'campaign-codex-world') throw new Error('This file is not a Warded Atlas world backup.')
-  const fileOf = (a: WorldBackup['assets'][number]) =>
-    a.data !== undefined ? base64ToBlob(a.data, a.mime) : new Blob([(files?.[`files/${a.id}`] ?? new Uint8Array()) as Uint8Array<ArrayBuffer>], { type: a.mime })
+  const missing: string[] = []
+  const blobs = new Map<string, Blob>()
+  for (const a of b.assets) {
+    if (a.data !== undefined) {
+      blobs.set(a.id, base64ToBlob(a.data, a.mime))
+      continue
+    }
+    let data: Uint8Array<ArrayBuffer> | undefined
+    try {
+      data = isZip ? entry(`files/${a.id}`) : undefined
+    } catch {
+      data = undefined
+    }
+    if (!data && a.size) missing.push(a.name)
+    blobs.set(a.id, new Blob([data ?? new Uint8Array()], { type: a.mime }))
+  }
   const ids = new Map<string, string>()
   const id = (old: string) => {
     if (!ids.has(old)) ids.set(old, newId())
@@ -113,11 +171,13 @@ export async function importWorld(file: File): Promise<string> {
       handouts: b.world.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId) })),
     })
     await db.assets.bulkAdd(
-      b.assets.map(({ data: _data, ...a }) => ({ ...a, id: id(a.id), worldId, blob: fileOf({ ...a, data: _data }) })),
+      b.assets.map(({ data: _data, ...a }) => ({ ...a, id: id(a.id), worldId, blob: blobs.get(a.id)! })),
     )
     await db.campaigns.bulkAdd(b.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))
     await db.entities.bulkAdd(
-      b.entities.map((e) => ({
+      // Who each page was shown to belongs to the old world's players: a copy starts with nobody,
+      // so someone who plays in both doesn't see pages the GM never chose to show them here.
+      b.entities.map(({ revealedTo: _r, secretForYou: _s, ...e }) => ({
         ...e,
         id: id(e.id),
         worldId,
@@ -179,6 +239,10 @@ export async function importWorld(file: File): Promise<string> {
     )
     await db.sounds.bulkAdd((b.sounds ?? []).map((x) => ({ ...x, id: id(x.id), worldId, assetId: opt(x.assetId) })))
   })
+  if (missing.length)
+    alert(
+      `The world was imported, but ${missing.length === 1 ? 'one file was' : `${missing.length} files were`} missing from the backup and came in empty: ${missing.slice(0, 5).join(', ')}${missing.length > 5 ? '…' : ''}. The backup may be damaged; if you have another copy, try that one too.`,
+    )
   return worldId
 }
 

@@ -21,11 +21,17 @@ async function call<T>(url: string, key: string, init: RequestInit = {}, signal?
 
 const wait = (ms: number, signal: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
-    const t = setTimeout(resolve, ms)
-    signal.addEventListener('abort', () => {
+    const stop = () => {
       clearTimeout(t)
       reject(new DOMException('Cancelled', 'AbortError'))
-    })
+    }
+    if (signal.aborted) return stop()
+    // Each wait takes its listener off again, so a long job doesn't pile them up.
+    const t = setTimeout(() => {
+      signal.removeEventListener('abort', stop)
+      resolve()
+    }, ms)
+    signal.addEventListener('abort', stop, { once: true })
   })
 
 /** Uploads the recording and starts a transcription job with speaker labels. Returns the job id. */

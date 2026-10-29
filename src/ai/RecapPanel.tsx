@@ -54,7 +54,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
     try {
       const res = await recapWithClaude(prompt(), settings.anthropicKey.trim(), (text) => setWriting({ text, abort }), abort.signal)
       await saveDraft(res.text, 'claude-api')
-      setCost(`That recap cost about US$${recapCost(res.inputTokens, res.outputTokens).toFixed(2)}.`)
+      setCost(`${res.warning ? `${res.warning} ` : ''}That recap cost about US$${recapCost(res.inputTokens, res.outputTokens).toFixed(2)}.`)
     } catch (err) {
       if ((err as Error).name !== 'AbortError' && !abort.signal.aborted) setError((err as Error).message || 'Something went wrong.')
     } finally {

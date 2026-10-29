@@ -32,16 +32,52 @@ Names can be known pages or pages you list as new. Leave out the player characte
 
 const str = (x: unknown) => (typeof x === 'string' ? x.trim() : '')
 
-/** Reads the JSON list from Claude's reply, keeping only well-formed suggestions. */
-export function parseUpdates(text: string): WorldUpdate[] {
-  const block = text.match(/```(?:json)?\s*([\s\S]*?)```/)?.[1] ?? text.slice(text.indexOf('['), text.lastIndexOf(']') + 1)
+/**
+ * The suggestions in a JSON list that doesn't quite parse (a stray comma, or a reply cut off part
+ * way): each {…} is read on its own, so one bad one doesn't lose the rest.
+ */
+function salvage(text: string): unknown[] {
+  const out: unknown[] = []
+  let depth = 0
+  let start = -1
+  let inString = false
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    if (inString) {
+      if (c === '\\') i++
+      else if (c === '"') inString = false
+    } else if (c === '"') inString = true
+    else if (c === '{' && depth++ === 0) start = i
+    else if (c === '}' && depth > 0 && --depth === 0) {
+      try {
+        out.push(JSON.parse(text.slice(start, i + 1)))
+      } catch {
+        // Not readable on its own either: skip just this one.
+      }
+    }
+  }
+  return out
+}
+
+/**
+ * Reads the JSON list from Claude's reply, keeping only well-formed suggestions. `readable` is false
+ * when nothing in it could be read, which is not the same as Claude finding nothing to change.
+ */
+export function readUpdates(text: string): { updates: WorldUpdate[]; readable: boolean } {
+  // A reply cut off before its closing ``` still has its opening one.
+  const block = text.match(/```(?:json)?\s*([\s\S]*?)(?:```|$)/)?.[1] ?? text.slice(text.indexOf('['), text.lastIndexOf(']') + 1)
   let raw: unknown
   try {
     raw = JSON.parse(block)
   } catch {
-    return []
+    raw = salvage(block)
+    if (!(raw as unknown[]).length) return { updates: [], readable: false }
   }
-  if (!Array.isArray(raw)) return []
+  if (!Array.isArray(raw)) return { updates: [], readable: false }
+  return { updates: toUpdates(raw), readable: true }
+}
+
+function toUpdates(raw: unknown[]): WorldUpdate[] {
   const out: WorldUpdate[] = []
   for (const r of raw as Record<string, unknown>[]) {
     if (!r || typeof r !== 'object') continue
