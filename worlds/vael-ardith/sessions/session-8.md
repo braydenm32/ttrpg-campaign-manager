@@ -65,12 +65,12 @@ At the northern lip, above the Stone, the pantheon's priests are waiting, every 
 - **Seraphine Ashe**, for the Saint, her eyes ember-red. If she is still the Saint's, she becomes **The Saint's champion** when the party tries to go down.
 - **So is a friend: Mother Corvane.** She believes putting the lamp out lets the dead rest. She has come with six Raveler undertakers and Hathe's Door-Key, and she will try to snuff it "to let them go home". Quorl has the words to answer her, the seventh in his notebook: *"Don't let them put it out."* If Quorl reads all eight aloud, she listens. If the party fetched [[Keld Owes-Nothing]] from Sedgemere, she stands beside her sister and says one sentence to her that neither of them ever repeats.
 
-**Pennies.** Waiting on the lip, every soldier rubs his [[An Emperor's Penny|penny]], the way soldiers do, and frost blooms on the glass under their boots. A hundred at once spend the ward like a spell: roll a d6 for the Sleeper's clock and tick it on a 1. A Vesh PC sees why.
+**Pennies.** Waiting on the lip, every soldier rubs his [[An Emperor's Penny|penny]], the way soldiers do, and frost blooms on the glass under their boots. A hundred at once spend the ward like a spell. If you are speeding up the Sleeper's clock, roll a d6 and tick it on a 1. A Vesh PC sees why.
 
 ---
 
 ### Scene 4: The voice in the flame
-As the Ember tops the sky, the flame speaks aloud for the first time, in the Ninth's warm voice, to whoever holds it: "Keep me." Everyone hears it. (It isn't the Ninth. The Ninth asks you to stand.) Tick the Sleeper's clock for the full Ember if you haven't. If it reaches 6, the dead of Cinders stand up all along the lip, turn, and start to walk toward the Stone (**The dead of Cinders**).
+As the Ember tops the sky, the flame speaks aloud for the first time, in the Ninth's warm voice, to whoever holds it: "Keep me." Everyone hears it. (It isn't the Ninth. The Ninth asks you to stand.) Tick the Sleeper's clock for the full Ember if you haven't. Left alone, the clock stands at 5 now and the dead stay in the ash: the finale is the march, the Stone and the choice. If it reaches 6 (because you sped it up), the dead of Cinders stand up all along the lip, turn, and start to walk toward the Stone (**The dead of Cinders**).
 
 ---
 

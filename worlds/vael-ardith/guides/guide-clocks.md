@@ -17,7 +17,7 @@ Seven clocks run under this campaign. Each lives on its own page (the faction's,
 | The Saint ascends | [[The Church of the Unburnt Saint]] | 8 | 3 | 5 to 7 |
 | Last words decoded | [[The Rook-Court]] | 4 | 1 | full in S5 |
 | The Sleepless rise | [[The Sleepless]] | 6 | 2 | 4 to 6 |
-| The Sleeper stirs | [[The Sleeper Below]] | 12 | 3 | 5 or 6 |
+| The Sleeper stirs | [[The Sleeper Below]] | 12 | 3 | 5 (6 to 8 if you speed it up) |
 
 ### Mutiny (6, starts at 2)
 The company's patience. The players can see this one.
@@ -57,9 +57,10 @@ The Widow's congregation.
 
 ### The Sleeper stirs (12, starts at 3)
 The world clock. One segment for each failing ward: the Fourth weak, the Eighth breached, the Ninth cracked.
-- **Ticks:** +1 at each full Ember (16 Ashfall, S3; 9 Leafrot, S8); +1 if the lantern goes fully out for more than a breath (for instance Ysse fails the S3 tending); spells cast in the Rent or within a mile of the Ninth Stone: frost on the nearest wall, roll a d6, tick on a 1. The Barrow and the Cold Seam frost and feed the Cold Captain but do not tick this clock.
+- **Ticks:** +1 at each full Ember (16 Ashfall, S3; 9 Leafrot, S8), and nothing else unless you speed it up. Spells in the Rent or within a mile of the Ninth Stone always frost the nearest wall. The Barrow and the Cold Seam frost and feed the Cold Captain but never tick this clock.
+- **Speeding it up (your choice, one at a time):** +1 if the lantern goes fully out for more than a breath; a d6 for each spell near the Stone or in the Rent, ticking on a 1 (or 1 to 2 for a fast clock); +1 for battle sorcery near the Stone; +1 when a PC answers the Choir or drinks the Orchard's sap at full Ember; +1 for a finished Sleepless rite; +1 each time the flame speaks through its holder. Full list on [[The Sleeper Below]].
 - **Rolls back:** Reseal the Ward −3. Nothing else.
-- **Thresholds:** **6**, the dream reaches the whole March of Cinders and the Cinders dead stand on the lip (S8 as written); **9**, the Ashenreach dead rise at a red moon unaided; **12**, it speaks through whoever holds the flame. 9 and 12 belong to the Let It Crack and Use It aftermaths. As written the clock reaches 5 or 6 by S8.
+- **Thresholds:** **6**, the dream reaches the whole March of Cinders and the Cinders dead stand on the lip (S8 as written); **9**, the Ashenreach dead rise at a red moon unaided; **12**, it speaks through whoever holds the flame. 9 and 12 belong to the Let It Crack and Use It aftermaths. Left alone the clock reaches 5 by S8, so the dead of Cinders stay down; with one or two accelerators it reaches 6 and they stand for the finale.
 
 ### Moving them between sessions
 Before each session, read the previous session's "How it ends" and tick what the players caused in the open. Then move one clock in the dark, the faction that lost most by the players' choices, and let its consequence arrive at the Keep gate as the strong start. Keep the Sleeper for red moons and the Stone; it is the only clock the players should never see ticked.

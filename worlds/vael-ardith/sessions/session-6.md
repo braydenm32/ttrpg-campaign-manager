@@ -46,7 +46,7 @@ From the lip: **300 feet of old company rope steps** down the north wall to the 
 
 With [[A Glasser's Chart]] (Vexa's, or Pike's own from Hennet), the party has advantage on the descent checks and can skip one hazard. Skelt's Gutter Market copies are false: they leave out the Choir and the Halfway Ledge.
 
-**Spells down here.** Spells work, at a cost: each one frosts the walls; roll a d6, and on a 1 the Sleeper's clock ticks. (The same holds anywhere in the Rent or within a mile of the Ninth Stone. Ysse's player should be keeping her tally.)
+**Spells down here.** Spells work, at a cost: each one frosts the walls, and the players should see it. If you are speeding up the Sleeper's clock, roll a d6 per spell and tick it on a 1 (1 or 2 for a fast clock). The same holds anywhere in the Rent or within a mile of the Ninth Stone. Ysse's player should be keeping her tally either way.
 
 **The other road: the Cold Seam.** If the party went down the Cold Seam under Fort Mercy in session 2, they can come this way instead: a Lithic covered road running east under the glasslands, forty miles in the dark instead of the open ash, through a Lithic door on the landing that Hathe's Door-Key turns (if Corvane let Quorl keep it after the funeral; otherwise it takes an hour and Athletics DC 18 to force, while something watches them try). The thing that took Brakk walks with them in the dark, a little behind Borrin, asking questions in his voice. The road comes up the chasm floor and climbs to the Warden's Shelf from below.
 
