@@ -282,6 +282,7 @@ function picturesForPlayers(rows: Row[]) {
       inText(d.playerBody)
     }
     if (table === 'sessions' && d.visibility === 'players') inText(d.recap)
+    if (table === 'pins' && d.visibility === 'players') inText(d.note)
   }
   return ids
 }

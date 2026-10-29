@@ -18,6 +18,8 @@ export default function Handouts() {
   const { worldId, world } = useWorld()
   const { isGM } = useViewMode()
   const [open, setOpen] = useState<string>()
+  // A page handout being removed: the page itself can stay revealed or be hidden again.
+  const [removing, setRemoving] = useState<string>()
   const entities = useVisibleEntities(worldId)
   if (!world) return null
   const list = world.handouts ?? []
@@ -57,37 +59,64 @@ export default function Handouts() {
       )}
       <p className="muted">
         {isGM
-          ? 'Everything you’ve shown players, newest first. Players can open these any time. Remove one to take it back.'
+          ? 'Everything you’ve shown players, newest first. Players can open these any time. Remove a picture or text to take it back; a page stays revealed unless you hide it too.'
           : 'Everything your GM has shown the table, newest first.'}
       </p>
       {list.length === 0 ? (
         <Empty>{isGM ? 'Nothing yet. Use “Show players” at the Lectern or on a page, and it lands here.' : 'Nothing yet.'}</Empty>
       ) : (
         <ul className="handout-list">
-          {list.map((h: Showing) => (
-            <li key={h.id} className="card">
-              <div className="row wrap">
-                <button className="link" onClick={() => setOpen(open === h.id ? undefined : h.id)}>
-                  <strong>
-                    {{ image: '🖼️', page: '📄', text: '📝' }[h.kind]} {h.title}
-                  </strong>
-                </button>
-                <span className="muted small">{new Date(h.at).toLocaleDateString()}</span>
-                {h.kind === 'page' && h.entityId && <Link to={`${pagePath(worldId, h.entityId)}`} className="small">Open page</Link>}
-                {isGM && (
-                  <span className="row">
-                    <button className="small" onClick={() => showToPlayers(worldId, h)}>
-                      <Ico as={Television} /> Show again
-                    </button>
-                    <button className="small ghost" onClick={() => confirm(`Take “${h.title}” back from the players?`) && removeHandout(worldId, h.id)}>
-                      Remove
-                    </button>
-                  </span>
+          {list.map((h: Showing) => {
+            const page = h.kind === 'page' ? entities.find((e) => e.id === h.entityId) : undefined
+            const revealed = page?.visibility === 'players'
+            return (
+              <li key={h.id} className="card">
+                <div className="row wrap">
+                  <button className="link" onClick={() => setOpen(open === h.id ? undefined : h.id)}>
+                    <strong>
+                      {{ image: '🖼️', page: '📄', text: '📝' }[h.kind]} {h.title}
+                    </strong>
+                  </button>
+                  <span className="muted small">{new Date(h.at).toLocaleDateString()}</span>
+                  {h.kind === 'page' && h.entityId && <Link to={`${pagePath(worldId, h.entityId)}`} className="small">Open page</Link>}
+                  {isGM && (
+                    <span className="row">
+                      <button className="small" onClick={() => showToPlayers(worldId, h)}>
+                        <Ico as={Television} /> Show again
+                      </button>
+                      <button
+                        className="small ghost"
+                        onClick={() =>
+                          revealed
+                            ? setRemoving(h.id)
+                            : confirm(h.kind === 'page' ? `Take “${h.title}” off the handouts?` : `Take “${h.title}” back from the players?`) && removeHandout(worldId, h.id)
+                        }
+                      >
+                        Remove
+                      </button>
+                    </span>
+                  )}
+                </div>
+                {isGM && removing === h.id && page && (
+                  <div className="notice small" role="alert">
+                    <p>Taking “{h.title}” off the handouts doesn’t hide the page: players can still read it in the world unless you hide it again.</p>
+                    <div className="row wrap">
+                      <button className="small" onClick={() => removeHandout(worldId, h.id)}>
+                        Remove, keep the page revealed
+                      </button>
+                      <button className="small primary" onClick={() => removeHandout(worldId, h.id, page.id)}>
+                        Remove and hide the page
+                      </button>
+                      <button className="small ghost" onClick={() => setRemoving(undefined)}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </div>
-              {open === h.id && <ShowingView showing={h} worldId={worldId} />}
-            </li>
-          ))}
+                {open === h.id && <ShowingView showing={h} worldId={worldId} />}
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>
