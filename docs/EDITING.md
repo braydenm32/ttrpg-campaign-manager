@@ -567,10 +567,10 @@ People who open Vael Ardith for the first time always get the latest version.
 | `src/example/` | The code that reads Vael Ardith's files, its pictures (`art/`) and its maps (`maps/`, see [Maps](#6i-maps)) |
 | `src/db.ts` | How everything is stored on the device. **Leave to Claude** |
 | `src/cloud/`, `supabase/` | Sync, sharing and what players are allowed to see. **Leave to Claude**: mistakes here can show GM secrets to players |
-| `src/ai/` | Transcription and recaps |
+| `src/ai/` | Transcription, recaps and the Claude tools (setup guide: [AI_SETUP.md](AI_SETUP.md)) |
 | `src/mapArt/`, `src/mapDrawing.ts` | The map builder's drawing |
 | `public/` | Files served as they are: the icon, privacy policy, terms (`privacy.html`, `terms.html`) |
-| `docs/` | This guide, the roadmap (`ROADMAP.md`), account setup notes |
+| `docs/` | This guide, the AI setup guide (`AI_SETUP.md`), the roadmap (`ROADMAP.md`), account setup notes |
 | `README.md` | The project's front page on GitHub |
 | `CLAUDE.md` | Standing instructions for Claude |
 
