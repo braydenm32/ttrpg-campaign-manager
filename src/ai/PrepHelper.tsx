@@ -7,7 +7,9 @@ import { Ico } from '../icons'
 import { Markdown } from '../Markdown'
 import { editPrep } from '../prep'
 import { partyOf } from '../sessions'
+import { MODEL } from './claude'
 import { ClaudeJob } from './ClaudeJob'
+import { useKept } from './kept'
 import { describeStep, MARKUP_NOTE, pageByName, pageText, sessionIndex, sessionText, worldHeader, worldIndex, worldTools } from './worldText'
 
 /**
@@ -49,8 +51,11 @@ export function parsePrep(text: string): Suggestion {
 
 export function PrepHelper({ world, session, entities }: { world: World; session: Session; entities: Entity[] }) {
   const sessions = useLiveQuery(() => db.sessions.where({ worldId: world.id }).toArray(), [world.id]) ?? []
-  const [suggestion, setSuggestion] = useState<Suggestion>()
-  const [skip, setSkip] = useState<Set<string>>(new Set())
+  // Kept outside the panel, so the suggestion is still here after a look at another page (see kept.ts).
+  const kept = `prep:${session.id}`
+  const [suggestion, setSuggestion] = useKept<Suggestion | undefined>(kept, undefined)
+  const [skipped, setSkipped] = useKept<string[]>(`${kept}:skip`, [])
+  const skip = new Set(skipped)
   const [added, setAdded] = useState(false)
 
   const build = () => {
@@ -103,7 +108,8 @@ ${open.length ? `Open quests and loose threads:\n${open.map((e) => `- [[${e.name
 ${clocks.length ? `Clocks still running:\n${clocks.join('\n')}` : ''}
 
 ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${planned.join('\n')}` : ''}`.replace(/\n{3,}/g, '\n\n')
-    return { system, prompt, tools: worldTools(world, entities, sessions), describe: describeStep, expectOut: 2500 }
+    // Planning a session from what's happened is a bigger job, so it gets the most capable model.
+    return { system, prompt, tools: worldTools(world, entities, sessions), describe: describeStep, model: MODEL, expectOut: 2500 }
   }
 
   const add = async () => {
@@ -122,20 +128,14 @@ ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${pl
       .filter((id): id is string => !!id && !session.entityIds.includes(id))
     if (ready.length) await db.sessions.update(session.id, { entityIds: [...session.entityIds, ...new Set(ready)] })
     setAdded(true)
+    setSuggestion(undefined)
   }
 
   const tick = (k: string) => (
     <input
       type="checkbox"
       checked={!skip.has(k)}
-      onChange={() =>
-        setSkip((s) => {
-          const n = new Set(s)
-          if (n.has(k)) n.delete(k)
-          else n.add(k)
-          return n
-        })
-      }
+      onChange={() => setSkipped((s) => (s.includes(k) ? s.filter((x) => x !== k) : [...s, k]))}
     />
   )
 
@@ -153,12 +153,14 @@ ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${pl
           </p>
           <ClaudeJob
             worldId={world.id}
+            jobId={kept}
+            jobTitle={`Prep ideas for session ${session.number}`}
             label="Suggest prep"
             build={build}
             priceKey={`${session.id}:${sessions.length}:${entities.length}`}
             onResult={(text) => {
               setSuggestion(parsePrep(text))
-              setSkip(new Set())
+              setSkipped([])
               setAdded(false)
             }}
           />

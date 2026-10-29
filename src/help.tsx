@@ -137,7 +137,7 @@ export const HELP = {
   recording:
     'Record from one microphone for games at the table, or the microphone plus your Discord or Zoom audio for online games. Add bookmarks while you play to jump back to big moments. Recording carries on while you use the rest of the app (the Lectern, maps, pages), and is saved every few seconds, so if the app closes by accident you can recover it here. Always get everyone’s OK before recording. Recordings are big, so they stay on the device that made them; their transcripts sync to your other devices.',
   transcript:
-    'Turns a recording into text. "On this device" is free and private but slower, with no speaker names. "Cloud" uses AssemblyAI with your own key, is faster and tells speakers apart. Name the speakers once and “Same as last time” fills the names in for the next session.',
+    'Turns a recording into text. "On this device" is free and private but slower, with no speaker names. "Cloud" uses AssemblyAI with your own key, is faster and tells speakers apart; once the transcript is saved here it’s deleted from AssemblyAI. Name the speakers once and “Same as last time” fills the names in for the next session.',
   recap:
     'Claude drafts a GM summary, a player recap and updates for your pages from the transcript. "Copy for Claude" works with a Claude subscription for free; "Write it now" uses your own API key. You review both before saving.',
   worldUpdates:
@@ -273,6 +273,10 @@ export const HELP = {
     'Keeps the names of pins and regions showing on the map instead of only when you hover. They appear once you zoom in a little, so a zoomed-out map isn’t covered in labels. Each map remembers its own setting on this device. Players only get names for the pins they can see. On a phone, tap a pin once to see its name and again to open it.',
   fogRoom:
     'Click inside a room to uncover just that room, right up to its walls. It stops at walls drawn across the room and at doors, gates and bars, so click in the next room to open that one too. Secret rooms are left alone until you mark their door as found. With Cover chosen, it covers the room again. Only on maps with rooms drawn in the map builder.',
+  keepAtAssembly:
+    'Once a cloud transcript is saved in your world, the app deletes it from AssemblyAI, so your table’s talk isn’t kept by another company. Tick this to leave a copy in your AssemblyAI account instead (for example, to look at it on their website). Applies on this device only.',
+  claudeJobs:
+    'Claude keeps writing when you go to another page: a note at the top says “Claude is writing…”, then “Claude finished”, and takes you back to it. If you leave the page while it writes, you choose to keep it writing or stop it. Closing the tab or the app stops it. Small jobs (flavour, NPC lines, Archivist questions) use Claude Sonnet 5.5, quicker and half the price; recaps, contradiction checks and prep use Claude Opus 5.5.',
 } as const
 
 export type HelpTopic = keyof typeof HELP

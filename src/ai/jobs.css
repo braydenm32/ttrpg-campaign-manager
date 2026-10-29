@@ -1,0 +1,19 @@
+/* The top bar's note about Claude jobs on other pages (LeaveGuard.tsx), and the model a job uses. */
+.claude-chips { display: flex; gap: .4em; flex: none; min-width: 0; }
+.claude-chip { display: inline-flex; align-items: center; gap: .1em; border: 1px solid var(--border); border-radius: 999px; background: var(--panel-2); font-size: .82rem; white-space: nowrap; }
+.claude-chip a { display: inline-flex; align-items: center; gap: .35em; padding: .3em .7em; color: var(--text); }
+.claude-chip.writing { border-color: var(--accent); }
+.claude-chip.writing svg { color: var(--accent); animation: claude-chip-pulse 1.6s ease-in-out infinite; }
+.claude-chip.done svg { color: var(--good); }
+.claude-chip.failed svg { color: var(--danger); }
+.claude-chip button { padding: .2em .45em .2em 0; min-height: 0; color: var(--muted); }
+.claude-chip .short { display: none; }
+@keyframes claude-chip-pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .claude-chip.writing svg { animation: none; } }
+@media (max-width: 900px) {
+  .claude-chip .long { display: none; }
+  .claude-chip .short { display: inline; }
+}
+.model-tag { white-space: nowrap; }
+.leave-ask p { margin: .6em 0; }
+.leave-ask .row { margin-top: 1em; }

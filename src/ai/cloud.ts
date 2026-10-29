@@ -84,3 +84,16 @@ export async function waitForCloudJob(id: string, key: string, signal: AbortSign
     await wait(5000, signal)
   }
 }
+
+/**
+ * Deletes a finished transcript from AssemblyAI once it's saved here, so the table's talk doesn't sit
+ * in another company's storage. True when it worked; a failure never undoes the saved transcript.
+ */
+export async function deleteCloudJob(id: string, key: string) {
+  try {
+    const res = await fetch(`${API}/transcript/${id}`, { method: 'DELETE', headers: { authorization: key } })
+    return res.ok
+  } catch {
+    return false
+  }
+}

@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useGuardedNavigate } from './ai/leave'
 import { db, ENTITY_LABELS, PICKER_TYPES, typeLabel, type Entity, type Session, type World, type WorldMap } from './db'
 import { Help, HELP } from './help'
 import { Ico, TypeIcon } from './icons'
@@ -149,7 +149,7 @@ export function useSearchable(worldId: string) {
 export function QuickSearch({ worldId, world, onClose }: { worldId: string; world?: World | null; onClose: () => void }) {
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const navigate = useNavigate()
+  const navigate = useGuardedNavigate()
   const data = useSearchable(worldId)
   const create = useCreatePage(world)
   const found = useMemo(() => searchWorld(query, { worldId, world, ...data }), [query, worldId, world, data])
