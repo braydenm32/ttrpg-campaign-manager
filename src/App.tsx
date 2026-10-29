@@ -11,6 +11,7 @@ import { db } from './db'
 import { nextSessions, useCampaigns, useWorldSessions } from './threads'
 import { ForcePlayerView, useViewMode, ViewModeProvider, WorldViewMode } from './viewMode'
 import { finishSignInRedirect, useAuthSession, verifyEmailLink } from './cloud/auth'
+import { startAccountKeys, stopAccountKeys } from './ai/accountKeys'
 import { cloudErrorMessage, supabase } from './cloud/client'
 import { leaveWorld } from './cloud/players'
 import { watchPlayerCopy } from './cloud/share'
@@ -141,10 +142,15 @@ function CloudBoot() {
     if (user) startSync()
     else stopSync()
   }, [user])
+  const userId = user?.id
+  useEffect(() => {
+    if (userId) startAccountKeys(userId)
+  }, [userId])
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setRecovering(true)
       if (event === 'SIGNED_IN') finishSignInRedirect()
+      if (event === 'SIGNED_OUT') stopAccountKeys()
     })
     verifyEmailLink().then((r) => {
       if (!r) return

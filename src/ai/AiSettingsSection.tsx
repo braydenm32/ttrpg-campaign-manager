@@ -4,10 +4,14 @@ import { Help } from '../help'
 import { DEVICE_MODELS, setAiSettings, useAiSettings } from './settings'
 import { Ico } from '../icons'
 import { Sparkle } from '@phosphor-icons/react'
+import { useAuthSession } from '../cloud/auth'
+import { saveKeysToAccount, useAccountKeys } from './accountKeys'
 
-/** Keys and choices for transcription and recaps. Stored on this device only. */
+/** Keys and choices for transcription and recaps. Stored on this device, and the keys in the account if the GM ticks it. */
 export function AiSettingsSection() {
   const s = useAiSettings()
+  const { user } = useAuthSession()
+  const account = useAccountKeys()
   return (
     <section>
       <h2>
@@ -15,7 +19,8 @@ export function AiSettingsSection() {
       </h2>
       <p className="muted">
         Used to turn session recordings into transcripts and recaps. These settings stay on this device and apply to all your
-        worlds. Keys are never put in backups or synced to the cloud, so add them again on each device you use.
+        worlds. Keys are never put in worlds or backups. Tick “Save my keys to my account” to have them on every device you
+        sign in on; otherwise add them again on each device you use.
       </p>
       <div className="form">
         <KeyField
@@ -29,7 +34,7 @@ export function AiSettingsSection() {
               <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">
                 console.anthropic.com
               </a>{' '}
-              and add a little prepaid credit. A three-hour session’s recap costs roughly 10 to 30 US cents. Without a key you can still use “Copy for Claude”.
+              and add a little prepaid credit. A three-hour session’s recap costs roughly 20 to 50 US cents. Without a key you can still use “Copy for Claude”.
             </>
           }
         />
@@ -48,6 +53,32 @@ export function AiSettingsSection() {
             </>
           }
         />
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={s.keysInAccount}
+            disabled={!user || account.status === 'loading' || account.status === 'saving'}
+            onChange={(e) => {
+              if (e.target.checked || confirm('Take your keys out of your account? This device keeps its copy; other devices keep theirs too until you remove them there.'))
+                saveKeysToAccount(e.target.checked)
+            }}
+          />
+          <span>
+            Save my keys to my account <Help topic="keysInAccount" />
+            <br />
+            <span className="muted small">
+              {!user
+                ? 'Sign in (your account, on the front page) to use this.'
+                : account.status === 'error'
+                  ? account.error
+                  : account.status === 'saving'
+                    ? 'Saving…'
+                    : account.status === 'saved' && s.keysInAccount
+                      ? 'Saved. Any device you sign in on gets them, and signing out takes them off that device.'
+                      : 'Only you can read them. They never go into worlds, backups or anything players see.'}
+            </span>
+          </span>
+        </label>
         <label className="check">
           <input type="checkbox" checked={s.keepAtAssembly} onChange={(e) => setAiSettings({ keepAtAssembly: e.target.checked })} />
           <span>

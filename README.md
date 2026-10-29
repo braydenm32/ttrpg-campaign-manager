@@ -54,6 +54,8 @@ Everything is stored on your device first, so it works with no internet. Sync ca
 
 To edit the Vael Ardith example world (or make small changes) by hand, offline included, see **[docs/EDITING.md](docs/EDITING.md)**.
 
+To switch on the AI features (transcripts, recaps and the Claude tools), see **[docs/AI_SETUP.md](docs/AI_SETUP.md)**.
+
 You'll need Node 22.18 or newer (the current LTS is best). The desktop app also needs Rust and the [Tauri prerequisites](https://tauri.app/start/prerequisites/).
 
 ```bash
