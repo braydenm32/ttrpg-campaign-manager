@@ -27,7 +27,7 @@ export default function BoardView() {
   const { worldId } = useWorld()
   const { boardId = '' } = useParams()
   const { isGM } = useViewMode()
-  const board = useLiveQuery(() => db.boards.get(boardId), [boardId])
+  const board = useLiveQuery(async () => (await db.boards.get(boardId)) ?? null, [boardId])
   if (board === undefined) return null
   if (!isGM) return <Empty>Corkboards are a GM tool. Switch back to the GM view to use them.</Empty>
   if (board === null || board.worldId !== worldId) return <Empty>Board not found.</Empty>

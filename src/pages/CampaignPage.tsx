@@ -17,7 +17,7 @@ export default function CampaignPage() {
   const { campaignId = '' } = useParams()
   const { isGM, canSee } = useViewMode()
   const navigate = useNavigate()
-  const campaign = useLiveQuery(() => db.campaigns.get(campaignId), [campaignId])
+  const campaign = useLiveQuery(async () => (await db.campaigns.get(campaignId)) ?? null, [campaignId])
   const sessions =
     useLiveQuery(
       () => db.sessions.where({ campaignId }).filter((s) => canSee(s.visibility)).sortBy('number'),

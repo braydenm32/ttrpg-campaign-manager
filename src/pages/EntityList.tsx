@@ -4,7 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Empty, VisibilityBadge } from '../components'
 import { StatusBadge } from '../status'
 import { ENTITY_TYPES, typeLabel, type Entity, type EntityType } from '../db'
-import { useVisibleEntities, useWorld } from '../hooks'
+import { treeRoots, useVisibleEntities, useWorld } from '../hooks'
 import { NewPageButton } from '../NewPage'
 import { TableRoller } from '../tables'
 import { useViewMode } from '../viewMode'
@@ -98,9 +98,9 @@ function EntityCard({ worldId, entity: e }: { worldId: string; entity: Entity })
 }
 
 function LocationTree({ worldId, entities }: { worldId: string; entities: Entity[] }) {
-  const ids = new Set(entities.map((e) => e.id))
+  const roots = treeRoots(entities)
   const children = (parentId?: string) =>
-    entities.filter((e) => (parentId ? e.parentId === parentId : !e.parentId || !ids.has(e.parentId)))
+    entities.filter((e) => (parentId ? e.parentId === parentId && !roots.has(e.id) : roots.has(e.id)))
   const render = (parentId?: string, depth = 0): ReactNode => {
     const kids = children(parentId)
     if (!kids.length || depth > 12) return null

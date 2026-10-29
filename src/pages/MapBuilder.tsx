@@ -224,7 +224,7 @@ export default function MapBuilder() {
   const { worldId } = useWorld()
   const { mapId = '' } = useParams()
   const { isGM } = useViewMode()
-  const map = useLiveQuery(() => db.maps.get(mapId), [mapId])
+  const map = useLiveQuery(async () => (await db.maps.get(mapId)) ?? null, [mapId])
   if (map === undefined) return null
   if (!isGM || map === null || map.worldId !== worldId || !map.drawing) return <Empty>This map can't be drawn on.</Empty>
   return <Builder key={map.id} map={map as WorldMap & { drawing: Drawing }} />

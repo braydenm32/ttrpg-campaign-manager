@@ -73,7 +73,7 @@ export default function Timeline() {
     e.eventOrder = Date.now()
     if (place) e.parentId = place
     await db.entities.add(e)
-    navigate(`${pagePath(worldId, e.id)}?edit=1`)
+    navigate(`${pagePath(worldId, e.id)}?edit=1&new=1`)
   }
 
   return (

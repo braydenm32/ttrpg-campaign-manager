@@ -32,7 +32,7 @@ export default function SessionPage() {
   const { sessionId = '' } = useParams()
   const { isGM, canSee } = useViewMode()
   const navigate = useNavigate()
-  const session = useLiveQuery(() => db.sessions.get(sessionId), [sessionId])
+  const session = useLiveQuery(async () => (await db.sessions.get(sessionId)) ?? null, [sessionId])
   const campaign = useLiveQuery(() => (session ? db.campaigns.get(session.campaignId) : undefined), [session?.campaignId])
   const entities = useVisibleEntities(worldId)
   const [params, setParams] = useSearchParams()

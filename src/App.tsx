@@ -15,9 +15,10 @@ import { cloudErrorMessage, supabase } from './cloud/client'
 import { leaveWorld } from './cloud/players'
 import { watchPlayerCopy } from './cloud/share'
 import { startSync, stopSync, syncNow, syncStore } from './cloud/sync'
-import { Modal } from './components'
+import { Empty, Modal } from './components'
 import { UpdateBanner } from './appUpdate'
 import { MoveBanner } from './move'
+import { ErrorBoundary } from './ErrorBoundary'
 import { RecordingBar } from './RecordingBar'
 import { SearchButton } from './search'
 import SharedWorld from './pages/SharedWorld'
@@ -64,6 +65,7 @@ const Router = hashRouting ? HashRouter : BrowserRouter
 
 export default function App() {
   return (
+    <ErrorBoundary whole>
     <ViewModeProvider>
       <CloudBoot />
       <UpdateBanner />
@@ -113,11 +115,13 @@ export default function App() {
             <Route path="clocks" element={<ClocksPage />} />
             <Route path="safety" element={<SafetyPage />} />
             <Route path="handouts" element={<Handouts />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
           <Route path="*" element={<Home />} />
         </Routes>
       </Router>
     </ViewModeProvider>
+    </ErrorBoundary>
   )
 }
 
@@ -206,6 +210,18 @@ function WorldLayout() {
     </ForcePlayerView>
   )
   return <WorldShell />
+}
+
+/** An address inside a world that goes nowhere. */
+function NotFound() {
+  const { worldId } = useWorld()
+  return (
+    <div className="page">
+      <Empty>
+        There’s nothing at this address. <Link to={worldPath(worldId)}>Back to the world’s home</Link>
+      </Empty>
+    </div>
+  )
 }
 
 /** The players' screen for a TV: always the player view, whoever opens it. */
@@ -430,9 +446,11 @@ function WorldShell() {
           </div>
         )}
         {/* Bigger screens (maps, the Lectern, settings…) load the first time they're opened. */}
-        <Suspense fallback={<div className="loading">Loading…</div>}>
-          <Outlet />
-        </Suspense>
+        <ErrorBoundary resetKey={pathname}>
+          <Suspense fallback={<div className="loading">Loading…</div>}>
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
       </main>
       </div>
     </div>

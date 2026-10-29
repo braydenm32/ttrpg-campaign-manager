@@ -47,7 +47,7 @@ export default function Lectern() {
   const { worldId, world } = useWorld()
   const { sessionId = '' } = useParams()
   const { isGM } = useViewMode()
-  const session = useLiveQuery(() => db.sessions.get(sessionId), [sessionId])
+  const session = useLiveQuery(async () => (await db.sessions.get(sessionId)) ?? null, [sessionId])
   const entities = useVisibleEntities(worldId)
   // Opening the Lectern starts the live link to players' Common Room for this session.
   useEffect(() => {
