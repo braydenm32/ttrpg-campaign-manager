@@ -164,7 +164,7 @@ export const HELP = {
   handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove one to take it back.',
   handoutsReady: 'Handouts you’ve prepared but not shown yet: any GM-only page tagged “handout”. Players can’t see them. “Reveal and show” reveals the page to everyone and puts it on their screens, and it moves to Shown so far.',
   playersScreen: 'A clean screen for a TV or second monitor at the table. It shows whatever you’re showing players, and nothing else.',
-  initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go.',
+  initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go. In the ± box, type +5 to heal or -5 to damage; a plain number follows the button you press, and Undo puts HP back. “Something else…” in the condition list lets you type your own.',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',
   quickNote: 'Jot something down mid-session. It is added to this session’s GM notes with the time.',
   randomTables:
@@ -256,6 +256,11 @@ export const HELP = {
   spotlight:
     'Who got time at the table. With a transcript that tells speakers apart, it shows how long each person talked; it also counts how often each character came up (in the transcript, or in your notes and recap without one). Worked out on this device; nothing is sent anywhere.',
   readAloud: 'Reads recaps aloud with your device’s own voices: free, private, and secret passages are never read. Pick a voice and speed here.',
+  revealQuietly:
+    'Reveal quietly lets players read the page the next time they look, without putting it on their screens. Reveal and show does both. Hide from players makes it GM only again (and takes it off their screens if it is showing). GM notes and secret passages stay hidden either way.',
+  pageDrafts:
+    'While you edit a page, what you type is also kept on this device. If you leave by mistake, the next time you edit the page it offers to bring your changes back. Saving only writes what you changed, so edits made meanwhile by a co-GM or a player are kept.',
+  pagePicker: 'Start typing a name to find a page, then click it or press Enter. The ones in the current scene are listed first.',
 } as const
 
 export type HelpTopic = keyof typeof HELP

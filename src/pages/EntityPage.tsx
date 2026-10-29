@@ -147,6 +147,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
                 Hide from players
               </button>
             )}
+            {!e.template && <Help topic="revealQuietly" />}
             <HistoryButton entity={e} />
             <button className="primary" onClick={onEdit}>
               <Ico as={PencilSimple} /> Edit
@@ -469,6 +470,7 @@ function EntityEditor({ entity, fresh, onDone }: { entity: Entity; fresh: boolea
                 <Help topic="visibility" />
               </>
             )}
+            <Help topic="pageDrafts" />
             <button type="button" onClick={cancel}>
               Cancel
             </button>

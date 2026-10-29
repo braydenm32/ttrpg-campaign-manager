@@ -476,7 +476,9 @@ function NoCharacter({ ctx }: { ctx: RoomContext }) {
     <p className="muted small">
       {ctx.memberOf
         ? 'Once your GM approves the character you play, it shows here. Pick yours from the banner at the top.'
-        : 'Previewing as a player? Choose one at the top of the page to see their character here.'}
+        : ctx.world.cloud?.enabled
+          ? 'Previewing as a player? Choose one in the yellow banner at the top of the page to see their character here.'
+          : 'Invite players in World settings to preview the world as one of them.'}
     </p>
   )
 }

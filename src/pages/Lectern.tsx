@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { partyOf } from '../sessions'
 import { DraftText, Empty } from '../components'
+import { PagePicker } from '../PagePicker'
 import { ENTITY_LABELS, blankLectern, db, newId, type Combatant, type Entity, type LecternState } from '../db'
 import { modifierFrom, roll, rollDie } from '../dice'
 import { addCombatants, fieldOf, fromEntity, initiativeOrder, numberFrom } from '../encounters'
@@ -21,7 +22,6 @@ import {
 } from '../generators'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
-import { plainLinks } from '../text'
 import { TablesPanel } from '../tables'
 import { ThreadCard } from '../ThreadCard'
 import { newThread, threadLinks, useWorldSessions } from '../threads'
@@ -199,7 +199,7 @@ function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: 
   const present = lectern.presentIds.map((id) => entities.find((e) => e.id === id)).filter((e): e is Entity => !!e)
   return (
     <section className="card lectern-panel">
-      <h2><Ico as={User} /> Who's here</h2>
+      <h2><Ico as={User} /> Who's here <Help topic="pagePicker" /></h2>
       {present.length === 0 && <p className="muted small">Add the NPCs and others in this scene to keep their notes in reach.</p>}
       {present.map((e) => (
         <div key={e.id} className="present">
@@ -229,25 +229,22 @@ function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: 
               ))}
             </div>
           )}
-          {e.gmNotes && <div className="secret small">{plainLinks(e.gmNotes)}</div>}
+          {e.gmNotes && (
+            <details className="present-notes small">
+              <summary>GM notes</summary>
+              <div className="secret small">
+                <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
+              </div>
+            </details>
+          )}
         </div>
       ))}
-      <select
-        value=""
-        onChange={(e) => {
-          const v = e.target.value
-          if (v) edit((l) => void l.presentIds.push(v))
-        }}
-      >
-        <option value="">+ Add someone…</option>
-        {entities
-          .filter((e) => ['npc', 'pc', 'faction', 'deity'].includes(e.type) && !lectern.presentIds.includes(e.id))
-          .map((e) => (
-            <option key={e.id} value={e.id}>
-              {ENTITY_LABELS[e.type].icon} {e.name}
-            </option>
-          ))}
-      </select>
+      <PagePicker
+        entities={entities.filter((e) => ['npc', 'pc', 'faction', 'deity'].includes(e.type) && !lectern.presentIds.includes(e.id))}
+        placeholder="+ Add someone… (type a name)"
+        suggested={entities.filter((e) => lectern.sceneId && e.parentId === lectern.sceneId).map((e) => e.id)}
+        onPick={(id) => id && edit((l) => void l.presentIds.push(id))}
+      />
     </section>
   )
 }
@@ -298,7 +295,7 @@ function LecternThreads({ lectern, entities, worldId, sessionId }: { lectern: Le
   )
 }
 
-const CONDITIONS = ['Blinded', 'Charmed', 'Concentrating', 'Deafened', 'Frightened', 'Grappled', 'Hidden', 'Invisible', 'Paralysed', 'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious']
+const CONDITIONS = ['Blinded', 'Charmed', 'Concentrating', 'Deafened', 'Exhausted', 'Frightened', 'Grappled', 'Hidden', 'Incapacitated', 'Invisible', 'Paralysed', 'Petrified', 'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious']
 
 const field = fieldOf
 
@@ -307,6 +304,8 @@ const ordered = initiativeOrder
 function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { entities: Entity[]; campaignId: string }) {
   const { round, activeId } = lectern.combat
   const list = ordered(lectern.combat.combatants)
+  // Conditions typed in for this fight (any game's: “Burning 2”, “Marked”, “ends round 5”) are offered again for the others.
+  const customConditions = [...new Set(list.flatMap((c) => c.conditions))].filter((k) => !CONDITIONS.includes(k))
   const [name, setName] = useState('')
   const [count, setCount] = useState(1)
   const [hp, setHp] = useState('')
@@ -387,6 +386,7 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
                 value={c.init?.toString() ?? ''}
                 placeholder="–"
                 title="Initiative"
+                saveOn="leave"
                 onCommit={(v) => change(c.id, (x) => void (x.init = toNumber(v)))}
               />
               <button className="ghost" title={`Roll d20${initMod(c) ? ` ${initMod(c) > 0 ? '+' : ''}${initMod(c)}` : ''}`} onClick={() => change(c.id, (x) => void (x.init = rollDie(20) + initMod(c)))}>
@@ -439,14 +439,16 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
                 className="condition-select"
                 value=""
                 onChange={(e) => {
-                  const v = e.target.value
+                  const picked = e.target.value
+                  const v = picked === '__custom' ? prompt('Name the condition. You can add a note, like “Burning 2” or “Marked, ends round 5”.')?.trim() : picked
                   if (v) change(c.id, (x) => void (x.conditions = [...new Set([...x.conditions, v])]))
                 }}
               >
                 <option value="">+ condition</option>
-                {CONDITIONS.filter((k) => !c.conditions.includes(k)).map((k) => (
+                {[...CONDITIONS, ...customConditions].filter((k) => !c.conditions.includes(k)).map((k) => (
                   <option key={k}>{k}</option>
                 ))}
+                <option value={'__custom'}>Something else…</option>
               </select>
             </div>
           </li>
@@ -494,9 +496,15 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
 
 function HpControl({ c, onChange }: { c: Combatant; onChange: (fn: (c: Combatant) => void) => void }) {
   const [amount, setAmount] = useState('')
-  const apply = (sign: 1 | -1) => {
-    const n = numberFrom(amount)
-    if (n === null) return
+  // What HP was before the last change, so a slip can be taken back.
+  const [was, setWas] = useState<number | null>(null)
+  // "+8" heals and "-8" damages whatever button or key is used; a bare number follows the button (Enter damages).
+  const apply = (button: 1 | -1) => {
+    const m = amount.trim().match(/^([+\-−–])?\s*(\d+)/)
+    if (!m) return
+    const sign = m[1] ? (m[1] === '+' ? 1 : -1) : button
+    const n = Number(m[2])
+    setWas(c.hp ?? c.maxHp ?? 0)
     onChange((x) => {
       const now = (x.hp ?? x.maxHp ?? 0) + sign * n
       x.hp = Math.max(0, x.maxHp ? Math.min(now, x.maxHp) : now)
@@ -534,7 +542,7 @@ function HpControl({ c, onChange }: { c: Combatant; onChange: (fn: (c: Combatant
         className="hp-input"
         value={amount}
         placeholder="±"
-        title="Amount of damage or healing"
+        title="Amount of damage or healing. Type +5 to heal or -5 to damage; a plain number follows the button you press (Enter damages)."
         onChange={(e) => setAmount(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && apply(-1)}
       />
@@ -544,6 +552,18 @@ function HpControl({ c, onChange }: { c: Combatant; onChange: (fn: (c: Combatant
       <button className="ghost" title="Heal" onClick={() => apply(1)}>
         +
       </button>
+      {was !== null && (
+        <button
+          className="ghost small"
+          title="Put HP back to what it was before the last change"
+          onClick={() => {
+            onChange((x) => void (x.hp = was))
+            setWas(null)
+          }}
+        >
+          Undo (was {was})
+        </button>
+      )}
     </span>
   )
 }

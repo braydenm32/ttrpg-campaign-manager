@@ -62,7 +62,7 @@ export default function EntityList() {
         )}
       </div>
       {filtered.length === 0 ? (
-        <Empty>{ofType.length === 0 ? `No ${label.many.toLowerCase()} yet.` : 'Nothing matches.'}</Empty>
+        <Empty>{ofType.length === 0 ? `No ${/^[A-Z]{2}/.test(label.many) ? label.many : label.many.toLowerCase()} yet.` : 'Nothing matches.'}</Empty>
       ) : showTree ? (
         <LocationTree worldId={worldId} entities={filtered} />
       ) : (

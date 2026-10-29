@@ -418,7 +418,6 @@ function WorldShell() {
             <button className={isGM ? 'on' : ''} onClick={() => setMode('gm')}>GM</button>
             <button className={!isGM ? 'on' : ''} onClick={() => setMode('player')}>Player</button>
           </div>
-          {!isGM && <PreviewAsPicker world={world} />}
         </div>
         )}
         </div>
@@ -442,6 +441,7 @@ function WorldShell() {
             {previewAs
               ? `Player view as ${previewAs.name}: what's revealed to everyone, plus what's just for ${previewAs.characterNames.join(' and ') || previewAs.name}.`
               : "Player view: you're seeing only what's been revealed to players."}
+            <PreviewAsPicker world={world} />
             <button onClick={() => setMode('gm')}>Back to GM view</button>
           </div>
         )}
