@@ -101,7 +101,7 @@ export const HELP = {
   gmOnly:
     'Tick this and the piece, line or label is only on your copy of the map: players get a picture without it. On your copy it has a red dashed line round it so you know. Handy for a cult’s hidden lair on a world map, a secret tunnel, or a label with a note to yourself. A piece linked to a page stays GM only too.',
   secretRooms:
-    'Rooms and passages dug with this ticked are only on your copy, washed in red; players see solid rock (or plain ground) there. Put a secret door from the "GM only" pieces where a secret passage meets a room. When the players find the door, select it and press "Players found it": the door and the secret rooms behind it show up on their copy.',
+    'Rooms and passages dug with this ticked are only on your copy, washed in red; players see solid rock (or plain ground) there, and the pieces, labels and lines inside them are left off their copy too (a piece there that’s linked to a page becomes GM only). Put a secret door from the "GM only" pieces where a secret passage meets a room. When the players find the door, select it and press "Players found it": the door and the secret rooms behind it show up on their copy.',
   playersCopy:
     'Shows the map as players get it, without the secret doors, traps, secret rooms and anything ticked GM only. Untick to go back to your own copy. Players never receive your copy, only theirs (with the fog of war on top, if it’s on).',
   exportMap:

@@ -28,7 +28,11 @@ function sizesFor(d: Drawing, W: number, H: number) {
   })
 }
 
-const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
+/** The players' copy also leaves out what stands in secret rooms (worked out by the map drawer, loaded only when needed). */
+const finish = async (chosen: Drawing, drawing: Drawing, W: number, H: number) =>
+  chosen === drawing ? drawing : (await import('./mapArt/classic')).playersCopy(drawing, W, H)
+
+const plural =(n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
 /** Download a drawn map as a PNG, or (battle maps and dungeons) as a Universal VTT file with its walls, doors and lights. */
 export function ExportMap({ name, drawing, width, height, onClose }: { name: string; drawing: Drawing; width: number; height: number; onClose: () => void }) {
@@ -50,15 +54,15 @@ export function ExportMap({ name, drawing, width, height, onClose }: { name: str
   useEffect(() => {
     if (format !== 'vtt') return
     let live = true
-    import('./mapArt/vtt').then((m) => {
+    Promise.all([import('./mapArt/vtt'), finish(chosen, drawing, width, height)]).then(([m, d]) => {
       if (!live) return
-      const p = m.vttParts(chosen, width, height)
-      setParts({ ...p, from: chosen, feet: Math.round((p.walls.reduce((n, w) => n + m.length(w), 0) / (chosen.gridSize || 70)) * 5) })
+      const p = m.vttParts(d, width, height)
+      setParts({ ...p, from: chosen, feet: Math.round((p.walls.reduce((n, w) => n + m.length(w), 0) / (d.gridSize || 70)) * 5) })
     })
     return () => {
       live = false
     }
-  }, [format, chosen, width, height])
+  }, [format, chosen, drawing, width, height])
 
   const download = async () => {
     setBusy(true)
@@ -67,7 +71,7 @@ export function ExportMap({ name, drawing, width, height, onClose }: { name: str
     await new Promise((r) => setTimeout(r, 30))
     try {
       const { exportMap } = await import('./mapArt/export')
-      await exportMap(copy === 'gm' ? `${name} (GM)` : name, chosen, width, height, { format, scale: size.scale, grid })
+      await exportMap(copy === 'gm' ? `${name} (GM)` : name, await finish(chosen, drawing, width, height), width, height, { format, scale: size.scale, grid })
       onClose()
     } catch (e) {
       console.warn('Map export failed', e)

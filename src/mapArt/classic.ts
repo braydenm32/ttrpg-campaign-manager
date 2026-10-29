@@ -7,7 +7,7 @@ import { Atlas, type InkStyle, type Point, type Rng, type Tint } from './atlas'
 import { hashId, loopArea, makeNoise, roughen, scaleOf, smoothLine, traceLoops } from './geometry'
 import { buildGround, drawGround, freeGroundSheet, groundColour, type GroundMap } from './ground'
 import { buildRooms, doorGaps, drawRock, type RoomMap } from './rooms'
-import { drawUnit, fromAbove, gmOnly, LAYERS, layerOf, type Drawing, type GroundId, type LayerId, type LabelFont, type Look, type Shape, type StampKind, type Terrain } from '../mapDrawing'
+import { drawUnit, forPlayers, fromAbove, gmOnly, LAYERS, layerOf, type Drawing, type GroundId, type LayerId, type LabelFont, type Look, type Shape, type StampKind, type Terrain } from '../mapDrawing'
 
 export const LOOKS: Record<Look, { label: string; mode: 'ink' | 'colour'; paper?: string; ink?: string }> = {
   parchment: { label: 'Ink on parchment', mode: 'ink', paper: '#ead9b0', ink: '#3a2814' },
@@ -1235,8 +1235,33 @@ export const roomTest = (d: Drawing, W: number, H: number): ((x: number, y: numb
   if (!rm) return undefined
   return (x, y) => rm.floor[Math.min(rm.mh - 1, Math.max(0, Math.floor(y * rm.ms))) * rm.mw + Math.min(rm.mw - 1, Math.max(0, Math.floor(x * rm.ms)))] >= 0.5
 }
+/** Whether a map point is on floor only the secret rooms make (rock or plain ground on the players' copy), or undefined when there are none. */
+export const secretFloorTest = (d: Drawing, W: number, H: number): ((x: number, y: number) => boolean) | undefined => {
+  const all = d.rooms?.some(gmOnly) ? roomTest(d, W, H) : undefined
+  if (!all) return undefined
+  const open = roomTest({ ...d, rooms: d.rooms!.filter((r) => !gmOnly(r)) }, W, H)
+  return (x, y) => all(x, y) && !open?.(x, y)
+}
+/**
+ * The drawing as players get it (forPlayers), also without the pieces, labels and lines standing in
+ * secret rooms, which would float on the rock players see there. Once the players find a room
+ * ("Players found it"), what's in it shows again.
+ */
+export function playersCopy(d: Drawing, W: number, H: number): Drawing {
+  const base = forPlayers(d)
+  const hidden = secretFloorTest(d, W, H)
+  if (!hidden) return base
+  const inside = (s: Shape) => {
+    if ('at' in s) return hidden(s.at[0], s.at[1])
+    if (s.kind !== 'line' || !s.points.length) return false
+    const xs = s.points.map((p) => p[0])
+    const ys = s.points.map((p) => p[1])
+    return hidden((Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2)
+  }
+  return { ...base, shapes: base.shapes.filter((s) => !inside(s)) }
+}
 /** Where pieces can stand: underground, only inside the rooms; above ground, anywhere. */
-export const floorTest = (d: Drawing, W: number, H: number): ((x: number, y: number) => boolean) => {
+export const floorTest =(d: Drawing, W: number, H: number): ((x: number, y: number) => boolean) => {
   if (d.outside !== 'rock') return () => true
   return roomTest(d, W, H) ?? (() => false)
 }

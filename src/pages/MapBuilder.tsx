@@ -36,7 +36,7 @@ import {
   type Terrain,
 } from '../mapDrawing'
 import { ASSET_GROUPS, Atlas, assetNamesIn, BATTLE_GROUPS, CITY_GROUPS } from '../mapArt/atlas'
-import { canTurn, classicBlob, classicHitSvg, drawPiece, floorTest, FONTS, landTest, loadMapFonts, LOOKS, pieceOutline, renderClassic, riverWidth, roomTest, streetWidth, styleFor, townWallHalf } from '../mapArt/classic'
+import { canTurn, classicBlob, classicHitSvg, drawPiece, floorTest, FONTS, landTest, loadMapFonts, LOOKS, pieceOutline, playersCopy, renderClassic, riverWidth, roomTest, secretFloorTest, streetWidth, styleFor, townWallHalf } from '../mapArt/classic'
 import { groundColour } from '../mapArt/ground'
 import { useViewMode } from '../viewMode'
 import { worldPath } from '../paths'
@@ -366,7 +366,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       if (!d || !el) return
       const t0 = performance.now()
       const players = playersView.current
-      const art = renderClassic(players ? forPlayers(d) : d, W, H)
+      const art = renderClassic(players ? playersCopy(d, W, H) : d, W, H)
       if (import.meta.env.DEV) console.debug(`map drawn in ${Math.round(performance.now() - t0)} ms`)
       lastArt.current = { drawing: d, canvas: art, players }
       el.width = art.width
@@ -399,6 +399,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       const pieces = new Map(d.shapes.filter((s): s is Extract<Shape, { kind: 'asset' }> => s.kind === 'asset').map((s) => [s.id, s]))
       const pins = await db.pins.where({ mapId: map.id }).filter((p) => !!p.pieceId).toArray()
       const live = new Set<string>()
+      const secret = secretFloorTest(d, W, H)
       for (const pin of pins) {
         const s = pieces.get(pin.pieceId!)
         if (!s) {
@@ -409,8 +410,8 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
         live.add(pin.pieceId!)
         const points = outlineOf(s)
         if (JSON.stringify(points) !== JSON.stringify(pin.points)) await db.pins.update(pin.id, { points })
-        // a piece only the GM sees can't be clicked by players either
-        if (gmOnly(s) && pin.visibility !== 'gm') await db.pins.update(pin.id, { visibility: 'gm' })
+        // a piece only the GM sees (or one standing in a secret room) can't be clicked by players either
+        if ((gmOnly(s) || secret?.(s.at[0], s.at[1])) && pin.visibility !== 'gm') await db.pins.update(pin.id, { visibility: 'gm' })
       }
       for (const [id, pin] of removedPins.current) {
         const s = pieces.get(id)
@@ -419,7 +420,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
         removedPins.current.delete(id)
       }
     },
-    [map.id, outlineOf],
+    [map.id, outlineOf, W, H],
   )
 
   // Autosave: the drawing is kept on the map, and the rendered picture replaces the map image.
@@ -432,7 +433,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       const art = lastArt.current?.drawing === d && !lastArt.current.players ? lastArt.current.canvas : renderClassic(d, W, H)
       const blob = await classicBlob(art)
       // with secrets on it, the players get a picture of their own without them
-      const forThem = hasSecrets(d) ? await classicBlob(renderClassic(forPlayers(d), W, H)) : undefined
+      const forThem = hasSecrets(d) ? await classicBlob(renderClassic(playersCopy(d, W, H), W, H)) : undefined
       const now = Date.now()
       await db.transaction('rw', [db.maps, db.assets], async () => {
         let playerImageId = (await db.maps.get(map.id))?.playerImageId
