@@ -5,10 +5,30 @@ import type { BetaContentBlock, BetaMessageParam, BetaTextBlockParam, BetaTool, 
  * the app goes through here, so they all handle errors, refusals and costs the same way.
  */
 
-export const MODEL = 'claude-opus-5-5'
+/**
+ * The two Claude models the app uses, with their prices in US dollars per million tokens. Big jobs
+ * (recaps with world updates, continuity checks, prep) get the most capable one; small ones (flavour,
+ * NPC lines, Archivist questions) a quicker one at half the price.
+ */
+export const MODELS = {
+  'claude-opus-5-5': { name: 'Claude Opus 5.5', input: 4, output: 20, cachedRead: 0.2, cacheWrite: 5 },
+  'claude-sonnet-5-5': { name: 'Claude Sonnet 5.5', input: 2, output: 10, cachedRead: 0.2, cacheWrite: 2.5 },
+} as const
+export type ClaudeModel = keyof typeof MODELS
 
-/** Rough cost in US dollars at Claude Opus 5.5 prices ($4 in / $20 out per million tokens, cached reads $0.20). */
-export const claudeCost = (input: number, output: number, cachedRead = 0, cacheWrite = 0) => (input * 4 + output * 20 + cachedRead * 0.2 + cacheWrite * 5) / 1e6
+/** For big jobs, and anything that doesn't say. */
+export const MODEL: ClaudeModel = 'claude-opus-5-5'
+/** For small, quick jobs. */
+export const QUICK_MODEL: ClaudeModel = 'claude-sonnet-5-5'
+
+/** "Claude Sonnet 5.5". */
+export const modelName = (model: ClaudeModel) => MODELS[model].name
+
+/** Rough cost in US dollars of a job on that model. */
+export const claudeCost = (model: ClaudeModel, input: number, output: number, cachedRead = 0, cacheWrite = 0) => {
+  const p = MODELS[model]
+  return (input * p.input + output * p.output + cachedRead * p.cachedRead + cacheWrite * p.cacheWrite) / 1e6
+}
 
 /** About four characters per token for English text. */
 export const estimateTokens = (text: string) => Math.ceil(text.length / 4)
@@ -22,7 +42,7 @@ export interface ClaudeUsage {
   cachedRead: number
   cacheWrite: number
 }
-export const usageCost = (u: ClaudeUsage) => claudeCost(u.input, u.output, u.cachedRead, u.cacheWrite)
+export const usageCost = (model: ClaudeModel, u: ClaudeUsage) => claudeCost(model, u.input, u.output, u.cachedRead, u.cacheWrite)
 
 export type { BetaMessageParam as ClaudeMessage, BetaContentBlock as ClaudeBlock }
 
@@ -36,6 +56,8 @@ export interface LocalTool {
 
 export interface AskOptions {
   apiKey: string
+  /** Which Claude; the big one unless the job is small. */
+  model?: ClaudeModel
   /** Instructions and material that stay the same between questions; cached so follow-ups are cheap. */
   system: string
   messages: BetaMessageParam[]
@@ -75,7 +97,7 @@ export async function askClaude(opts: AskOptions) {
       }
       const stream = client.beta.messages.stream(
         {
-          model: MODEL,
+          model: opts.model ?? MODEL,
           max_tokens: opts.maxTokens ?? 16000,
           betas: ['server-side-fallback-2026-07-01'],
           fallbacks: 'default',

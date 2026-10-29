@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Books, ChatCircleText, Check, ClipboardText, PaperPlaneRight, PenNib, Scales, Sparkle, X } from '@phosphor-icons/react'
 import { db, type Entity, type Session, type World } from '../db'
@@ -9,8 +9,10 @@ import { Ico } from '../icons'
 import { Markdown, findBacklinks } from '../Markdown'
 import { useViewMode } from '../viewMode'
 import { Empty } from '../components'
-import { askClaude, dollars, estimateTokens, claudeCost, usageCost, type ClaudeMessage } from './claude'
-import { ClaudeJob } from './ClaudeJob'
+import { askClaude, dollars, estimateTokens, claudeCost, MODEL, modelName, QUICK_MODEL, usageCost, type ClaudeMessage } from './claude'
+import { ClaudeJob, ModelTag } from './ClaudeJob'
+import { moveJob, startJob, stopJob, takeFinished, useJob } from './jobs'
+import { getKept, setKept, useKept } from './kept'
 import { useAiSettings } from './settings'
 import { describeStep, findPages, MARKUP_NOTE, pageByName, pageText, sessionIndex, sessionText, worldHeader, worldIndex, worldTools } from './worldText'
 
@@ -77,49 +79,66 @@ interface Turn {
 
 const STARTERS = ['Who in the world would want the party dead, and why?', 'What do the players know about the main villain so far?', 'Which clues haven’t the players found yet?', 'What’s happening in the place the party is heading to?']
 
+/** One conversation with the Archivist: what's shown, and the exchange as Claude saw it (with the pages it read), so follow-ups know what came before. */
+interface Conversation {
+  turns: Turn[]
+  history: ClaudeMessage[]
+  spent: number
+}
+const NEW_CONVERSATION: Conversation = { turns: [], history: [], spent: 0 }
+
+/** Questions are short jobs, so they use the quicker model. */
+const ASK_MODEL = QUICK_MODEL
+
 function Ask({ world, entities, sessions }: { world: World; entities: Entity[]; sessions: Session[] }) {
   const settings = useAiSettings()
   const key = settings.anthropicKey.trim()
-  const [turns, setTurns] = useState<Turn[]>([])
-  const [question, setQuestion] = useState('')
-  const [writing, setWriting] = useState<{ q: string; text: string; step: string; abort: AbortController }>()
+  // The conversation and the question being typed outlive this panel, and so does a question
+  // Claude is still answering (see jobs.ts), so going to read a page and coming back loses nothing.
+  const talkKey = `ask:${world.id}`
+  const [{ turns }, setTalk] = useKept<Conversation>(talkKey, NEW_CONVERSATION)
+  const [question, setQuestion] = useKept(`${talkKey}:draft`, '')
+  const job = useJob(talkKey)
+  const writing = job?.status === 'writing' ? job : undefined
   const [error, setError] = useState('')
   const [copied, setCopied] = useState<string>()
   const [pasted, setPasted] = useState('')
-  // The conversation as Claude saw it, including the pages it read, so follow-ups know what came before.
-  const history = useRef<ClaudeMessage[]>([])
-  const spent = useRef(0)
-  const running = useRef<AbortController>(undefined)
-  useEffect(() => () => running.current?.abort(), [])
+  const { pathname, search } = useLocation()
+  useEffect(() => {
+    if (!job) return
+    if (job.status === 'writing') return moveJob(job.id, pathname, pathname + search)
+    takeFinished(job, undefined, setError)
+  }, [job, pathname, search])
 
-  const ask = async (q: string) => {
+  const ask = (q: string) => {
     if (!q.trim() || writing) return
     setError('')
-    const abort = new AbortController()
-    running.current = abort
-    setWriting({ q, text: '', step: '', abort })
-    try {
-      const res = await askClaude({
-        apiKey: key,
-        system: askSystem(world, entities, sessions),
-        messages: [...history.current, { role: 'user', content: q }],
-        tools: worldTools(world, entities, sessions),
-        describe: describeStep,
-        signal: abort.signal,
-        onText: (text) => setWriting((w) => w && { ...w, text }),
-        onStep: (step) => setWriting((w) => w && { ...w, step, text: '' }),
-      })
-      history.current = res.messages
-      const cost = usageCost(res.usage)
-      spent.current += cost
-      setTurns((t) => [...t, { q, a: res.text, note: `${res.warning ? `${res.warning} ` : ''}About ${dollars(cost)}${t.length ? `, ${dollars(spent.current)} so far` : ''}.` }])
-      setQuestion('')
-    } catch (err) {
-      if ((err as Error).name !== 'AbortError' && !abort.signal.aborted) setError((err as Error).message || 'Something went wrong.')
-    } finally {
-      running.current = undefined
-      setWriting(undefined)
-    }
+    const talk = getKept<Conversation>(talkKey) ?? NEW_CONVERSATION
+    const short = q.length > 40 ? `${q.slice(0, 40).trimEnd()}…` : q
+    startJob(
+      { id: talkKey, worldId: world.id, title: `An answer to “${short}”`, path: pathname, href: pathname + search, model: ASK_MODEL, asked: q },
+      async ({ signal, onText, onStep }) => {
+        const res = await askClaude({
+          apiKey: key,
+          model: ASK_MODEL,
+          system: askSystem(world, entities, sessions),
+          messages: [...talk.history, { role: 'user', content: q }],
+          tools: worldTools(world, entities, sessions),
+          describe: describeStep,
+          signal,
+          onText,
+          onStep,
+        })
+        // Added to the conversation as soon as it's done, wherever the GM is by then.
+        const cost = usageCost(ASK_MODEL, res.usage)
+        const now = getKept<Conversation>(talkKey) ?? NEW_CONVERSATION
+        const spent = now.spent + cost
+        const note = `${res.warning ? `${res.warning} ` : ''}About ${dollars(cost)}${now.turns.length ? `, ${dollars(spent)} so far` : ''}, with ${modelName(ASK_MODEL)}.`
+        setKept<Conversation>(talkKey, { turns: [...now.turns, { q, a: res.text, note }], history: res.messages, spent })
+        if (getKept(`${talkKey}:draft`) === q) setKept(`${talkKey}:draft`, '')
+        return {}
+      },
+    )
   }
 
   const copy = async () => {
@@ -134,7 +153,7 @@ function Ask({ world, entities, sessions }: { world: World; entities: Entity[]; 
     }
   }
 
-  const firstCost = claudeCost(estimateTokens(askSystem(world, entities, sessions)) * 1.4, 800)
+  const firstCost = claudeCost(ASK_MODEL, estimateTokens(askSystem(world, entities, sessions)) * 1.4, 800)
 
   return (
     <section className="ask-world">
@@ -164,13 +183,13 @@ function Ask({ world, entities, sessions }: { world: World; entities: Entity[]; 
       ))}
       {writing && (
         <div className="ask-turn">
-          <p className="ask-q">{writing.q}</p>
+          <p className="ask-q">{writing.asked}</p>
           <div className="card ask-a">
             <div className="row spread small">
               <span>
                 <Ico as={PenNib} /> {writing.step && !writing.text ? `${writing.step}…` : writing.text ? 'Writing…' : 'Looking through your world…'}
               </span>
-              <button className="ghost small" onClick={() => writing.abort.abort()}>
+              <button className="ghost small" onClick={() => stopJob(talkKey)}>
                 Stop
               </button>
             </div>
@@ -204,6 +223,7 @@ function Ask({ world, entities, sessions }: { world: World; entities: Entity[]; 
           <button className="primary" disabled={!question.trim() || !!writing || !key} title={key ? 'Uses your Anthropic API key' : 'Add an Anthropic API key in World settings first'}>
             <Ico as={PaperPlaneRight} /> Ask{!turns.length && question.trim() ? ` (about ${dollars(firstCost)})` : ''}
           </button>
+          {key && !turns.length && question.trim() && <ModelTag model={ASK_MODEL} />}
           <button type="button" onClick={copy} disabled={!question.trim() || !!writing} title="Copies your question with the pages that matter. Paste it into claude.ai.">
             <Ico as={ClipboardText} /> Copy for Claude
           </button>
@@ -211,11 +231,7 @@ function Ask({ world, entities, sessions }: { world: World; entities: Entity[]; 
             <button
               type="button"
               className="ghost"
-              onClick={() => {
-                history.current = []
-                spent.current = 0
-                setTurns([])
-              }}
+              onClick={() => setTalk(NEW_CONVERSATION)}
             >
               New conversation
             </button>
@@ -238,7 +254,7 @@ function Ask({ world, entities, sessions }: { world: World; entities: Entity[]; 
               className="primary"
               disabled={!pasted.trim()}
               onClick={() => {
-                setTurns((t) => [...t, { q: copied, a: pasted, note: 'From claude.ai.' }])
+                setTalk((t) => ({ ...t, turns: [...t.turns, { q: copied, a: pasted, note: 'From claude.ai.' }] }))
                 setPasted('')
                 setCopied(undefined)
                 setQuestion('')
@@ -360,6 +376,8 @@ ${MARKUP_NOTE}`
       prompt,
       tools: page ? worldTools(world, entities, sessions) : undefined,
       describe: describeStep,
+      // Reading the whole world for contradictions is a big job: the most capable model.
+      model: MODEL,
       maxTokens: 32000,
       expectOut: 4000,
     }
@@ -373,6 +391,8 @@ ${MARKUP_NOTE}`
       </p>
       <ClaudeJob
         worldId={world.id}
+        jobId={`continuity:${world.id}`}
+        jobTitle="A check for contradictions"
         label="Check now"
         build={build}
         disabled={scope === 'page' && !page}

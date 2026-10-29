@@ -1,10 +1,11 @@
-import { useState } from 'react'
 import { ChatTeardropText, Sparkle } from '@phosphor-icons/react'
 import { db, type Entity, type World } from '../db'
 import { Help } from '../help'
 import { Ico } from '../icons'
 import { Markdown } from '../Markdown'
+import { QUICK_MODEL } from './claude'
 import { ClaudeJob } from './ClaudeJob'
+import { useKept } from './kept'
 import { MARKUP_NOTE, indexLine, pageText, worldHeader } from './worldText'
 
 /**
@@ -22,7 +23,8 @@ function nearby(world: World, entities: Entity[], parentId?: string) {
 }
 
 export function GeneratorFlavour({ world, entities, preview, parentId, onUse }: { world: World; entities: Entity[]; preview: string; parentId?: string; onUse: (text: string) => void }) {
-  const [flavour, setFlavour] = useState('')
+  // Kept outside the panel, so it's still here after a look at another page (see kept.ts).
+  const [flavour, setFlavour] = useKept(`flavour:${world.id}`, '')
   const parent = entities.find((e) => e.id === parentId)
   const build = () => ({
     system: `You add colour to things a tabletop roleplaying game master rolled up on random tables, so they feel like they belong in the GM's world. Keep the names and facts you're given. Match the world's tone.
@@ -40,6 +42,7 @@ ${MARKUP_NOTE}${parent ? `\n\nIt will go in:\n${pageText(parent, world, entities
 Some of the world around it:
 ${nearby(world, entities, parentId)}`,
     prompt: `What I rolled:\n\n${preview}`,
+    model: QUICK_MODEL,
     effort: 'low' as const,
     expectOut: 500,
   })
@@ -67,7 +70,7 @@ ${nearby(world, entities, parentId)}`,
           </div>
         </div>
       ) : (
-        <ClaudeJob worldId={world.id} label="Add flavour" build={build} priceKey={preview + parentId} onResult={setFlavour} />
+        <ClaudeJob worldId={world.id} jobId={`flavour:${world.id}`} jobTitle="Flavour for what you rolled" label="Add flavour" build={build} priceKey={preview + parentId} onResult={setFlavour} />
       )}
     </div>
   )
@@ -85,9 +88,10 @@ export const keepSecretsSecret = (text: string) => {
 
 /** On an NPC's page: a few lines they might say, for the GM to read out in character. */
 export function NpcLines({ world, entity, entities }: { world: World; entity: Entity; entities: Entity[] }) {
-  const [situation, setSituation] = useState('')
-  const [lines, setLines] = useState<string[]>([])
-  const [open, setOpen] = useState(false)
+  const kept = `npcLines:${entity.id}`
+  const [situation, setSituation] = useKept(`${kept}:situation`, '')
+  const [lines, setLines] = useKept<string[]>(kept, [])
+  const [open, setOpen] = useKept(`${kept}:open`, false)
   const build = () => ({
     system: `You help a tabletop roleplaying game master improvise. Write lines one of their characters might say out loud at the table, in that character's own voice: their manner of speech, what they want and what they know. Never have them give away a secret they would keep, unless the situation forces it.
 
@@ -99,6 +103,7 @@ ${MARKUP_NOTE}
 The character:
 ${pageText(entity, world, entities)}`,
     prompt: situation.trim() ? `The situation: ${situation.trim()}` : 'The party has just walked up to them.',
+    model: QUICK_MODEL,
     effort: 'low' as const,
     expectOut: 300,
   })
@@ -120,6 +125,8 @@ ${pageText(entity, world, entities)}`,
       <input value={situation} onChange={(e) => setSituation(e.target.value)} placeholder="What’s happening? e.g. The party asks about the missing oil" aria-label="What’s happening" />
       <ClaudeJob
         worldId={world.id}
+        jobId={kept}
+        jobTitle={`Lines for ${entity.name}`}
         label="Give me lines"
         build={build}
         priceKey={situation + entity.updatedAt}

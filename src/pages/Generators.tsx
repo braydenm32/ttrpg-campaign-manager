@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Help } from '../help'
 import { Link, useNavigate } from 'react-router-dom'
 import { db } from '../db'
@@ -17,6 +16,7 @@ import {
 } from '../generators'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { GeneratorFlavour, keepSecretsSecret } from '../ai/Flavour'
+import { useKept } from '../ai/kept'
 import { Markdown } from '../Markdown'
 import { TablesPanel } from '../tables'
 import { Ico } from '../icons'
@@ -29,12 +29,14 @@ export default function Generators() {
   const { worldId, world } = useWorld()
   const navigate = useNavigate()
   const entities = useVisibleEntities(worldId)
-  const [kind, setKind] = useState<Kind>('tavern')
-  const [shopKind, setShopKind] = useState<ShopKind>('blacksmith')
-  const [place, setPlace] = useState<GeneratedPlace>(() => generateTavern())
-  const [npc, setNpc] = useState<GeneratedNpc>(() => generateNpc())
-  const [parentId, setParentId] = useState('')
-  const [flavour, setFlavour] = useState('')
+  // What's rolled stays while you look at other pages, so Claude's flavour still has its tavern when you come back.
+  const kept = `generators:${worldId}`
+  const [kind, setKind] = useKept<Kind>(`${kept}:kind`, 'tavern')
+  const [shopKind, setShopKind] = useKept<ShopKind>(`${kept}:shopKind`, 'blacksmith')
+  const [place, setPlace] = useKept<GeneratedPlace>(`${kept}:place`, () => generateTavern())
+  const [npc, setNpc] = useKept<GeneratedNpc>(`${kept}:npc`, () => generateNpc())
+  const [parentId, setParentId] = useKept(`${kept}:parent`, '')
+  const [flavour, setFlavour] = useKept(`${kept}:flavour`, '')
 
   const reroll = (k = kind, sk = shopKind) => {
     setFlavour('')
@@ -47,6 +49,7 @@ export default function Generators() {
     const created = kind === 'npc' ? [npcToEntity(worldId, npc, parentId || undefined)] : placeToEntities(worldId, place, parentId || undefined)
     if (flavour) created[0].body = `${created[0].body.trim()}\n\n${keepSecretsSecret(flavour)}`
     await db.entities.bulkAdd(created)
+    reroll()
     navigate(`${pagePath(worldId, created[0].id)}`)
   }
 

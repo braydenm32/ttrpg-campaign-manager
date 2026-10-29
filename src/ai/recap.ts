@@ -2,7 +2,7 @@ import { ENTITY_LABELS, type Entity, type Session, type World } from '../db'
 import { formatDate } from '../calendar'
 import { transcriptText } from './transcript'
 import { readUpdates, UPDATES_HEADING, updatesInstructions } from './worldUpdates'
-import { CUT_OFF, friendly, MODEL } from './claude'
+import { claudeCost, CUT_OFF, friendly, MODEL } from './claude'
 
 export const GM_HEADING = '## GM summary'
 export const PLAYER_HEADING = '## Player recap'
@@ -105,7 +105,7 @@ export async function recapWithClaude(prompt: string, apiKey: string, onText: (s
   try {
     const stream = client.beta.messages.stream(
       {
-        model: MODEL,
+        model: RECAP_MODEL,
         max_tokens: 32000,
         betas: ['server-side-fallback-2026-07-01'],
         fallbacks: 'default',
@@ -127,8 +127,11 @@ export async function recapWithClaude(prompt: string, apiKey: string, onText: (s
   }
 }
 
-/** Rough cost in US dollars at Claude Opus 5.5 prices ($4 in / $20 out per million tokens). */
-export const recapCost = (input: number, output: number) => (input * 4 + output * 20) / 1e6
+/** Recaps (with their world updates) are a big job, so they use the most capable model. */
+export const RECAP_MODEL = MODEL
+
+/** Rough cost in US dollars of a recap. */
+export const recapCost = (input: number, output: number) => claudeCost(RECAP_MODEL, input, output)
 
 /** About four characters per token for English text. */
 export const estimateTokens = (text: string) => Math.ceil(text.length / 4)

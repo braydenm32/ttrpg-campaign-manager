@@ -61,6 +61,8 @@ import { NewCharacterRequestsBanner } from './players/NewCharacters'
 import Handouts from './pages/Handouts'
 import { ExampleDrawingNote } from './example/DrawingNote'
 import { hashRouting, pagePath, setPages, tidyPath, usePathsVersion, worldPath } from './paths'
+import { ClaudeJobChips, LeaveGuard } from './ai/LeaveGuard'
+import { useGuardedNavigate } from './ai/leave'
 
 const Router = hashRouting ? HashRouter : BrowserRouter
 
@@ -263,7 +265,8 @@ function WorldShell() {
   )
   const { owners } = useCharacterOwners(world)
   const myCharacters = [...owners.entries()].filter(([, o]) => o.mine).map(([id]) => id)
-  const navigate = useNavigate()
+  // Asks first when Claude is writing on this page (see LeaveGuard).
+  const navigate = useGuardedNavigate()
   // On a phone the menu is open only on the page it was opened on, so following a link folds it away.
   const { pathname } = useLocation()
   const [menuOpenAt, setMenuOpenAt] = useState<string>()
@@ -324,6 +327,7 @@ function WorldShell() {
 
   return (
     <div className={`layout ${isGM ? '' : 'player-mode'}`}>
+      <LeaveGuard />
       <header className="topbar">
         <button
           className="icon-button menu-toggle"
@@ -349,6 +353,7 @@ function WorldShell() {
           ))}
         </nav>
         <SearchButton worldId={worldId} world={world} />
+        {isGM && ownWorld && <ClaudeJobChips worldId={worldId} />}
         {ownWorld && (
           <div className="segmented gm-switch" title={HELP.viewingAs}>
             <button className={isGM ? 'on' : ''} onClick={() => setMode('gm')}>GM</button>
