@@ -175,8 +175,22 @@ export async function storePlayerCopy(
       news = undefined
   }
 
+  // Files are the big part: only ones that are new, changed or gone are written, so a small edit
+  // by the GM doesn't rewrite every picture on a phone (and pictures on screen don't reload).
+  const keepIds = new Set(assets.map((a) => a.id))
+  const sameFile = (a: Asset) => {
+    const have = existing.get(a.id)
+    if (!have || have.blob !== a.blob) return false
+    const { blob: _h, ...was } = have
+    const { blob: _a, ...now } = a
+    return stableStringify(was) === stableStringify(now)
+  }
+  const changedAssets = assets.filter((a) => !sameFile(a))
+  const goneAssets = [...existing.keys()].filter((x) => !keepIds.has(x))
+
   await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
-    for (const t of [db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets] as const) await t.where({ worldId }).delete()
+    for (const t of [db.campaigns, db.entities, db.maps, db.pins, db.sessions] as const) await t.where({ worldId }).delete()
+    await db.assets.bulkDelete(goneAssets)
     const showing = p.world?.showing
     await db.worlds.put({
       ...(p.world ?? { name: 'Shared world', description: '', system: '', createdAt: now }),
@@ -187,7 +201,7 @@ export async function storePlayerCopy(
       cloud: undefined,
       shared: { ...info, claims, notes, questions, news, fetchedAt: now, hash: assets.length === p.assets.length ? hash : undefined },
     } as World)
-    await db.assets.bulkPut(assets)
+    await db.assets.bulkPut(changedAssets)
     await db.campaigns.bulkPut(p.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))
     await db.entities.bulkPut(
       p.entities.map((e) => ({ ...e, id: id(e.id), worldId, parentId: opt(e.parentId), imageId: opt(e.imageId), raisedIn: opt(e.raisedIn), campaignId: opt(e.campaignId), tiedOffIn: opt(e.tiedOffIn), heldBy: e.heldBy === 'party' ? 'party' : opt(e.heldBy), relations: e.relations?.map((r) => ({ ...r, to: id(r.to) })), gmNotes: '' })),

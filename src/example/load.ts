@@ -16,11 +16,25 @@ export async function loadExampleWorld(): Promise<string> {
   return addExample(EXAMPLE, drawArt)
 }
 
-/** Deletes this copy of the example world and loads it fresh. */
+/**
+ * Loads the example world fresh and deletes this copy. The new copy is made first, so if anything
+ * goes wrong (offline, say) the old one is still there. A synced copy's cloud copy goes too (when
+ * this is its owner), or it would keep coming back under "In your cloud".
+ */
 export async function resetExampleWorld(worldId: string): Promise<string> {
   const { deleteWorld } = await import('../db')
+  const old = await db.worlds.get(worldId)
+  const fresh = await loadExampleWorld()
+  if (old?.cloud?.enabled) {
+    const [{ myRole }, { deleteCloudCopy }] = await Promise.all([import('../cloud/players'), import('../cloud/sync')])
+    try {
+      if ((await myRole(worldId)) === 'owner') await deleteCloudCopy(worldId)
+    } catch {
+      // Offline or signed out: the cloud copy stays, and can be deleted from Home later.
+    }
+  }
   await deleteWorld(worldId)
-  return loadExampleWorld()
+  return fresh
 }
 
 async function addExample(content: ExampleContent, drawArt: (key: string, page?: ExPage) => Promise<Blob | undefined>): Promise<string> {
@@ -40,6 +54,8 @@ async function addExample(content: ExampleContent, drawArt: (key: string, page?:
 
   // The maps take longest, so they start drawing first; the pictures are saved while the rest is built.
   const mapsDrawn = drawMaps(content.maps ?? [], worldId, now, ref, (key) => content.pages.find((p) => p.key === key)!)
+  // If building the pages below fails, that error is the one reported; this one isn't left unhandled.
+  mapsDrawn.catch(() => {})
 
   // Pictures: each drawing becomes one file, shared by every page that uses it.
   const assets: Asset[] = []
