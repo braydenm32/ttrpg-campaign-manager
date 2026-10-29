@@ -506,6 +506,11 @@ export interface RecapDraft {
   updates?: WorldUpdate[]
   /** Set once the GM has applied (or skipped) the suggested changes. */
   updatesDone?: boolean
+  /**
+   * When the suggested changes couldn't be read: Claude's text for that part as it came, or '' when
+   * the reply had no world updates at all (cut off before them, say).
+   */
+  updatesProblem?: string
   createdAt: number
 }
 

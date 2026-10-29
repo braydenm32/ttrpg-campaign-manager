@@ -74,7 +74,9 @@ export function WorldUpdatesReview({ world, session, entities }: { world: World;
       <h3>
         <Ico as={BookBookmark} /> Keep the world up to date <Help topic="worldUpdates" />
       </h3>
-      {items.length === 0 ? (
+      {items.length === 0 && draft.updatesProblem !== undefined ? (
+        <UnreadableUpdates text={draft.updatesProblem} />
+      ) : items.length === 0 ? (
         <p className="muted small">Claude didn’t find anything in this session that your pages are missing.</p>
       ) : (
         <>
@@ -225,6 +227,35 @@ function UpdateEditor({ update: u, onChange }: { update: WorldUpdate; onChange: 
           {field('note', 'Note', u.note, 2)}
         </>
       )}
+    </div>
+  )
+}
+
+/** Claude's suggested changes came back in a shape the app can't read: show them as they are rather than saying there were none. */
+function UnreadableUpdates({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  if (!text.trim())
+    return (
+      <p className="notice small">
+        Claude’s reply stopped before its list of changes to your pages (it may have run out of room), so there’s nothing to add here. Write the recap again to get
+        them.
+      </p>
+    )
+  return (
+    <div className="notice small">
+      <p>Claude’s list of changes to your pages didn’t come in the shape the app can read, so here it is as written. You can make the changes by hand.</p>
+      <pre className="recap-stream">{text}</pre>
+      <button
+        className="small"
+        onClick={() =>
+          navigator.clipboard.writeText(text).then(
+            () => setCopied(true),
+            () => setCopied(false),
+          )
+        }
+      >
+        {copied ? 'Copied' : 'Copy'}
+      </button>
     </div>
   )
 }

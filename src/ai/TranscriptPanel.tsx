@@ -242,7 +242,7 @@ function TranscriptView({
         </button>
       </div>
       {naming && (
-        <div className="speaker-names" key={JSON.stringify(t.speakers ?? {})}>
+        <div className="speaker-names">
           {known.last && (
             <p className="small">
               <button className="small" onClick={() => setSpeakers(sessionId, recording.assetId, labels, known.last!)}>
@@ -261,7 +261,9 @@ function TranscriptView({
             ))}
           </datalist>
           {labels.map((l) => (
-            <label key={l} className="row small">
+            // Keyed by the saved name too, so "Same as last time" refills the boxes, but naming one
+            // speaker doesn't rebuild the others (Tab moves on to the next box as it should).
+            <label key={`${l}:${t.speakers?.[l] ?? ''}`} className="row small">
               <span className="speaker-chip">{l}</span>
               <input
                 defaultValue={t.speakers?.[l] ?? ''}

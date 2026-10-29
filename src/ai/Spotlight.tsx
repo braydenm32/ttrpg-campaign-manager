@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Flashlight } from '@phosphor-icons/react'
 import { db, type Entity, type Session } from '../db'
@@ -46,7 +46,8 @@ export function spotlight(sessions: Session[], party: Entity[]) {
   // Without a transcript, what the GM wrote about the session is the next best thing.
   const text = transcribed ? said.join('\n') : sessions.map((s) => `${stripSecrets(s.recap)}\n${s.notes}`).join('\n')
   const mentions: Bar[] = party.map((e) => {
-    const re = new RegExp(`\\b(?:${callNames(e).map(escape).join('|')})\\b`, 'gi')
+    // Not \b: it only knows plain English letters, so "Zoë" or "Élodie" would never count.
+    const re = new RegExp(`(?<![\\p{L}\\p{N}])(?:${callNames(e).map(escape).join('|')})(?![\\p{L}\\p{N}])`, 'giu')
     return { name: e.name, value: text.match(re)?.length ?? 0 }
   })
   return {
@@ -79,10 +80,11 @@ function Bars({ bars, format }: { bars: Bar[]; format: (v: number) => string }) 
 
 export function SpotlightPanel({ session, entities }: { session: Session; entities: Entity[] }) {
   const [scope, setScope] = useState<'session' | 'campaign'>('session')
-  const campaign = useLiveQuery(() => db.sessions.where({ worldId: session.worldId }).filter((s) => s.campaignId === session.campaignId).toArray(), [session.worldId, session.campaignId]) ?? []
-  const sessions = scope === 'session' ? [session] : campaign
-  const party = partyOf(entities, session.campaignId)
-  const stats = spotlight(sessions, party)
+  const campaign = useLiveQuery(() => db.sessions.where({ worldId: session.worldId }).filter((s) => s.campaignId === session.campaignId).toArray(), [session.worldId, session.campaignId])
+  const sessions = useMemo(() => (scope === 'session' ? [session] : (campaign ?? [])), [scope, session, campaign])
+  const party = useMemo(() => partyOf(entities, session.campaignId), [entities, session.campaignId])
+  // Reading every transcript of a campaign is slow, so only when something it uses changes.
+  const stats = useMemo(() => spotlight(sessions, party), [sessions, party])
   const hasAnything = stats.transcribed > 0 || sessions.some((s) => s.recap.trim() || s.notes.trim())
   if (!party.length || !hasAnything) return null
   const counted = stats.mentions.filter((m) => m.value > 0)

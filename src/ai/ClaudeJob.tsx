@@ -87,6 +87,7 @@ export function ClaudeJob({
       })
       onResult(res.text)
       setCost(`That cost about ${dollars(usageCost(res.usage))}.`)
+      if (res.warning) setError(res.warning)
     } catch (err) {
       if ((err as Error).name !== 'AbortError' && !abort.signal.aborted) setError((err as Error).message || 'Something went wrong.')
     } finally {

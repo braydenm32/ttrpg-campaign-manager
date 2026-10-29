@@ -112,7 +112,7 @@ function Ask({ world, entities, sessions }: { world: World; entities: Entity[]; 
       history.current = res.messages
       const cost = usageCost(res.usage)
       spent.current += cost
-      setTurns((t) => [...t, { q, a: res.text, note: `About ${dollars(cost)}${t.length ? `, ${dollars(spent.current)} so far` : ''}.` }])
+      setTurns((t) => [...t, { q, a: res.text, note: `${res.warning ? `${res.warning} ` : ''}About ${dollars(cost)}${t.length ? `, ${dollars(spent.current)} so far` : ''}.` }])
       setQuestion('')
     } catch (err) {
       if ((err as Error).name !== 'AbortError' && !abort.signal.aborted) setError((err as Error).message || 'Something went wrong.')
@@ -277,7 +277,7 @@ const NONE = 'No contradictions found.'
 export function parseIssues(text: string): Issue[] {
   const items: string[] = []
   for (const line of text.replace(/\r\n/g, '\n').split('\n')) {
-    if (/^[-*]\s+/.test(line)) items.push(line.replace(/^[-*]\s+/, ''))
+    if (/^([-*]|\d+[.)])\s+/.test(line)) items.push(line.replace(/^([-*]|\d+[.)])\s+/, ''))
     else if (items.length && line.trim() && !/^#/.test(line)) items[items.length - 1] += `\n${line.trim()}`
   }
   return items.map((raw) => {
@@ -289,6 +289,13 @@ export function parseIssues(text: string): Issue[] {
     for (const c of title.toLowerCase()) h = (h * 31 + c.charCodeAt(0)) | 0
     return { id: `i${(h >>> 0).toString(36)}`, title, text: body }
   })
+}
+
+/** Only Claude's exact "none found" counts as an all-clear: an answer in another shape (an apology, say) is shown as it came. */
+function readIssues(text: string): Issue[] {
+  const issues = parseIssues(text)
+  if (issues.length || !text.trim()) return issues
+  return [{ id: 'unlisted', title: 'Claude’s answer (not in the usual list)', text: text.trim() }]
 }
 
 const storeKey = (worldId: string) => `codex.continuity.${worldId}`
@@ -392,7 +399,7 @@ ${MARKUP_NOTE}`
           update({
             at: Date.now(),
             scope: page ? page.name : 'The whole world',
-            issues: text.includes(NONE) ? [] : parseIssues(text),
+            issues: text.includes(NONE) ? [] : readIssues(text),
             dismissed: result?.dismissed ?? [],
           })
         }
