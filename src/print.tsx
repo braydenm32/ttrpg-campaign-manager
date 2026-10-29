@@ -12,10 +12,11 @@ import { ForcePlayerView, useViewMode } from './viewMode'
 import { Ico, PageIcon } from './icons'
 import { Eye, Lock, Printer } from '@phosphor-icons/react'
 
-/** Opens the print page for a page or a session. */
+/** Opens the print page for a page or a session. In the player view it opens the player copy, so a GM previewing as a player never prints secrets by surprise. */
 export function PrintButton({ to }: { to: string }) {
+  const { isGM } = useViewMode()
   return (
-    <Link className="button" to={to} title="Print this, or save it as a PDF">
+    <Link className="button" to={isGM ? to : `${to}?copy=players`} title="Print this, or save it as a PDF">
       <Ico as={Printer} /> Print
     </Link>
   )
