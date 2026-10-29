@@ -464,6 +464,36 @@ button.social.facebook .social-icon { background: #1877f2; }
   .lectern, .lectern-col:last-child { grid-template-columns: minmax(0, 1fr); }
   .lectern-col:last-child { grid-column: auto; }
 }
+/* Going live, and the "Live" badge in the top bar while players follow a session. */
+.lectern-actions { justify-content: flex-end; }
+.go-live { border-color: color-mix(in srgb, var(--good) 55%, var(--border)); }
+.live-badge { display: inline-flex; align-items: center; gap: .35em; flex: none; padding: .1em .15em .1em .6em; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--good) 55%, var(--border)); background: color-mix(in srgb, var(--good) 12%, var(--panel)); color: var(--text); font-size: .85rem; font-weight: 600; white-space: nowrap; }
+.live-badge a { display: inline-flex; align-items: center; gap: .4em; color: inherit; }
+.live-badge button.ghost { font-weight: normal; border-radius: 999px; }
+.live-dot { width: .55em; height: .55em; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent); animation: live-pulse 2s ease-in-out infinite; }
+@keyframes live-pulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--good) 10%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+/* The fight bar: only on phones, stuck under the top bar while a fight is on. */
+.fight-bar { display: none; }
+#lectern-initiative { scroll-margin-top: calc(var(--topbar-h) + 4em); }
+@media (max-width: 800px) {
+  .topbar .live-badge-session { display: none; }
+  .fight-bar { display: flex; align-items: center; gap: .4em; position: sticky; top: calc(var(--topbar-h) + env(safe-area-inset-top)); z-index: 800; margin: -1.25em -1em 1em; padding: .45em max(1em, env(safe-area-inset-right)) .45em max(1em, env(safe-area-inset-left)); background: var(--panel); border-bottom: 1px solid var(--border); box-shadow: 0 4px 10px rgb(0 0 0 / .2); }
+  .fight-bar-turn { flex: 1; min-width: 0; text-align: left; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fight-bar .primary { flex: none; }
+}
+/* Keyboard shortcuts, and what a key did. */
+.lectern-keys { position: fixed; z-index: 2350; right: 1em; top: calc(var(--topbar-h) + 1em); width: min(320px, calc(100vw - 2em)); box-shadow: var(--shadow); }
+.lectern-keys h3 { margin: 0; font-size: 1rem; }
+.lectern-keys dl { margin: .5em 0; display: grid; gap: .3em; }
+.lectern-keys dl > div { display: flex; gap: .8em; align-items: baseline; }
+.lectern-keys dt { width: 5.5em; flex: none; }
+.lectern-keys dd { margin: 0; }
+.lectern-keys kbd { font: inherit; font-size: .85em; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 5px; padding: 0 .4em; background: var(--panel-2); }
+.lectern-toast { position: fixed; z-index: 2350; left: 50%; bottom: 1.5em; transform: translateX(-50%); padding: .5em 1.1em; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--accent); box-shadow: var(--shadow); font: 700 1.3rem var(--font-display); }
+.lectern-toast.high { border-color: var(--good); color: var(--good); }
+.lectern-toast.low { border-color: var(--danger); color: var(--danger); }
+@media (hover: none) { .lectern-keys-button { display: none; } }
 
 /* Loose threads */
 .thread-add { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1.4fr) minmax(0, 1fr) auto; gap: .5em; align-items: center; margin-bottom: 1em; }

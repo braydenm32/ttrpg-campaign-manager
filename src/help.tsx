@@ -165,7 +165,7 @@ export const HELP = {
   handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove a picture or text to take it back. A page you remove stays revealed unless you choose to hide it again.',
   handoutsReady: 'Handouts you’ve prepared but not shown yet: any GM-only page tagged “handout”. Players can’t see them. “Reveal and show” reveals the page to everyone and puts it on their screens, and it moves to Shown so far.',
   playersScreen: 'A clean screen for a TV or second monitor at the table. It shows whatever you’re showing players, and nothing else.',
-  initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go. In the ± box, type +5 to heal or -5 to damage; a plain number follows the button you press, and Undo puts HP back. “Something else…” in the condition list lets you type your own.',
+  initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go. In the ± box, type +5 to heal or -5 to damage; a plain number follows the button you press, and Undo puts HP back. “Something else…” in the condition list lets you type your own. With a keyboard, N moves to the next turn (press ? for all the shortcuts).',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',
   quickNote: 'Jot something down mid-session. It is added to this session’s GM notes with the time.',
   randomTables:
@@ -228,7 +228,7 @@ export const HELP = {
   commonRoom:
     'Your seat at the table: what the GM is showing, your character, the party, leads, notes and last time’s recap. While your GM runs the session you also see the scene, whose turn it is and the music, roll dice everyone sees, and can quietly ask for a turn or a break.',
   tableLink:
-    'While this Lectern is open, players’ Common Room shows which session is on, the scene (only if its page is revealed), the music and the turn order once combat starts. HP, conditions and your notes never go. Their rolls and signals (“I’d like to do something”, “I need a break”) come to you here and pop up wherever you are in the app.',
+    'Once you go live with this session, players’ Common Room shows which session is on, the scene (only if its page is revealed), the music, your timers and the turn order once combat starts. HP, conditions and your notes never go, and anyone from a page players haven’t seen shows as “Enemy 1” or “Ally 2”. Their rolls and signals (“I’d like to do something”, “I need a break”) come to you here and pop up wherever you are in the app.',
   inspiration:
     'Inspiration or hero points: tap + to hand one out. Players see how many they have in their Common Room and on their character page, and can ask to use one; you’ll get a pop-up with “Use it”.',
   newCharacter:
@@ -264,6 +264,11 @@ export const HELP = {
   pageDrafts:
     'While you edit a page, what you type is also kept on this device. If you leave by mistake, the next time you edit the page it offers to bring your changes back. Saving only writes what you changed, so edits made meanwhile by a co-GM or a player are kept.',
   pagePicker: 'Start typing a name to find a page, then click it or press Enter. The ones in the current scene are listed first.',
+  goLive:
+    'Opening the Lectern doesn’t show players anything. Press “Go live to players” when you start playing: their Common Room then shows this session as being played, with the scene, music, timers and turn order. A “Live” badge stays at the top of every screen until you press Stop or end the session.',
+  fightBar: 'On a phone, this bar stays at the top while a fight is on. Tap the name to jump to them in the initiative list.',
+  lecternKeys:
+    'With a keyboard: N or → for the next turn, B or ← to go back, D to roll a d20, and ? for this list. They don’t work while you’re typing in a box.',
 } as const
 
 export type HelpTopic = keyof typeof HELP
