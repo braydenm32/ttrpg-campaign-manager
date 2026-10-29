@@ -15,13 +15,37 @@ import { SecretTextarea } from '../SecretTextarea'
 import { useViewMode } from '../viewMode'
 import { circleShape, fogOverlay, pinRevealed, playersImageId, rectShape, removeFog, renderPlayerFog } from '../fog'
 import { Ico, TypeIcon } from '../icons'
-import { CloudFog, DownloadSimple, Eye, HandPalm, MapPin, PencilSimple, SlidersHorizontal } from '@phosphor-icons/react'
+import { CloudFog, DoorOpen, DownloadSimple, Eye, HandPalm, MapPin, PencilSimple, SlidersHorizontal } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
 import { ExportMap } from '../ExportMap'
 import { toClassic } from '../mapDrawing'
 
-type Tool = 'select' | 'pin' | 'region' | 'fog-rect' | 'fog-shape' | 'fog-circle'
+type Tool = 'select' | 'pin' | 'region' | 'fog-rect' | 'fog-shape' | 'fog-circle' | 'fog-room'
 const COLORS = ['#e0b354', '#d9534f', '#5bc0de', '#5cb85c', '#a678de', '#f0f0f0']
+/** Names show on the map from this far in past "whole map in view" (zoom steps), so a zoomed-out map isn't covered in labels. */
+const NAMES_FROM = 0.5
+
+/** Whether pin names are kept showing on a map, remembered per map on this device. */
+function useShowNames(mapId: string) {
+  const key = `atlas.mapNames.${mapId}`
+  const [on, set] = useState(() => {
+    try {
+      return localStorage.getItem(key) === '1'
+    } catch {
+      return false
+    }
+  })
+  const setOn = (v: boolean) => {
+    set(v)
+    try {
+      if (v) localStorage.setItem(key, '1')
+      else localStorage.removeItem(key)
+    } catch {
+      // private window or blocked storage: it just isn't remembered
+    }
+  }
+  return [on, setOn] as const
+}
 
 export default function MapView() {
   const { worldId } = useWorld()
@@ -60,6 +84,14 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const [fogMode, setFogMode] = useState<'reveal' | 'hide'>('reveal')
   const [fogCorner, setFogCorner] = useState<[number, number]>()
   const [fogSize, setFogSize] = useState(0.06)
+  const [roomNote, setRoomNote] = useState('')
+  const [showNames, setShowNames] = useShowNames(map.id)
+  const [zoomedIn, setZoomedIn] = useState(false)
+  // on a touch screen the first tap on a pin shows its name and the second opens it
+  const touch = useMemo(() => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches, [])
+  const [tapped, setTapped] = useState<string>()
+  const namesOn = showNames && zoomedIn
+  const hasRooms = !!exportDrawing?.rooms?.length && exportDrawing.scene === 'battle'
   const selectedId = params.get('pin')
   const selected = pins.find((p) => p.id === selectedId)
   const select = (id?: string) => setParams(id ? { pin: id } : {}, { replace: true })
@@ -87,15 +119,27 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   }, [isGM, fog, fogShapes, map.id, map.imageId, map.playerImageId])
   useEffect(() => () => flushFog(), [])
 
-  const addFog = (shape: ReturnType<typeof rectShape>) =>
+  const addFogShapes = (shapes: ReturnType<typeof rectShape>[]) =>
     db.maps
       .where('id')
       .equals(map.id)
       .modify((m) => {
-        m.fog = { on: true, ...m.fog, shapes: [...(m.fog?.shapes ?? []), shape] }
+        m.fog = { on: true, ...m.fog, shapes: [...(m.fog?.shapes ?? []), ...shapes] }
       })
+  const addFog = (shape: ReturnType<typeof rectShape>) => addFogShapes([shape])
+  // Room tool: the room's floor (stopping at walls and doors) becomes fog shapes like any other
+  const fogRoom = async (pos: [number, number]) => {
+    if (!exportDrawing) return
+    setRoomNote('')
+    const { roomFogShapes } = await import('../mapArt/roomFog')
+    const found = roomFogShapes(exportDrawing, map.width, map.height, pos, fogMode)
+    if (found === 'none') setRoomNote('That isn’t inside a room. Click on a room’s floor.')
+    else if (found === 'secret') setRoomNote('That’s a secret room the players haven’t found yet. Mark its door as found first.')
+    else await addFogShapes(found)
+  }
   const fogClick = (pos: [number, number]) => {
-    if (tool === 'fog-circle') addFog(circleShape(pos, Math.max(map.width, map.height) * fogSize, fogMode))
+    if (tool === 'fog-room') fogRoom(pos)
+    else if (tool === 'fog-circle') addFog(circleShape(pos, Math.max(map.width, map.height) * fogSize, fogMode))
     else if (tool === 'fog-rect') {
       if (!fogCorner) return setFogCorner(pos)
       addFog(rectShape(fogCorner, pos, fogMode))
@@ -140,8 +184,14 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
       <div className="map-toolbar">
         <Link to={`${worldPath(worldId)}/maps`}>← Maps</Link>
         <strong>{map.name}</strong> <VisibilityBadge value={map.visibility} /> <Help topic="mapView" />
-        {isGM && (
-          <div className="row">
+        <div className="row">
+          <label className="inline-check small" title="Keep the pins’ names showing on the map (zoom in to see them)">
+            <input type="checkbox" checked={showNames} onChange={(e) => setShowNames(e.target.checked)} />
+            Show names <Help topic="pinNames" />
+          </label>
+          {showNames && !zoomedIn && <span className="muted small">Zoom in to see them</span>}
+          {isGM && (
+            <>
             <div className="segmented">
               <button className={tool === 'select' ? 'on' : ''} onClick={() => setTool('select')} title="Select and move">
                 <Ico as={HandPalm} /> Select
@@ -192,11 +242,12 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
               <Ico as={CloudFog} /> Fog{fog ? ' (on)' : ''}
             </button>
             <button onClick={() => setShowSettings((s) => !s)}><Ico as={SlidersHorizontal} /> Map settings</button>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
       {isGM && exporting && exportDrawing && (
-        <ExportMap name={map.name} drawing={exportDrawing} width={map.width} height={map.height} onClose={() => setExporting(false)} />
+        <ExportMap mapId={map.id} name={map.name} drawing={exportDrawing} fog={fog} width={map.width} height={map.height} onClose={() => setExporting(false)} />
       )}
       {isGM && fogBar && (
         <FogBar
@@ -206,12 +257,15 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
             setTool(t)
             setDraft([])
             setFogCorner(undefined)
+            setRoomNote('')
           }}
           mode={fogMode}
           setMode={setFogMode}
           size={fogSize}
           setSize={setFogSize}
           corner={!!fogCorner}
+          rooms={hasRooms}
+          note={roomNote}
           draft={draft.length}
           onFinish={finishFogShape}
           onUndoPoint={() => setDraft((d) => d.slice(0, -1))}
@@ -235,9 +289,13 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
               if (tool.startsWith('fog')) fogClick(pos)
               else if (tool === 'pin') addPin(pos)
               else if (tool === 'region') setDraft((d) => [...d, pos])
-              else select()
+              else {
+                setTapped(undefined)
+                select()
+              }
             }}
           />
+          <ZoomWatcher bounds={bounds} onChange={setZoomedIn} />
           <FocusPin pin={selected} />
           <ResizeWatcher panelOpen={!!selected || showSettings} />
           {pins.map((p) => {
@@ -247,6 +305,13 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
               click: (ev: L.LeafletMouseEvent) => {
                 if (tool !== 'select') return
                 L.DomEvent.stopPropagation(ev)
+                // first tap on a touch screen: just show the name (unless it's already showing)
+                if (touch && !namesOn && tapped !== p.id && selectedId !== p.id) {
+                  setTapped(p.id)
+                  ;(ev.target as L.Layer).openTooltip?.(ev.latlng)
+                  return
+                }
+                setTapped(undefined)
                 select(p.id)
               },
             }
@@ -266,7 +331,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                   }}
                   eventHandlers={handlers}
                 >
-                  <Tooltip sticky>{label}</Tooltip>
+                  <PinName key={namesOn ? 'name' : 'hover'} label={label} on={namesOn} center />
                 </Polygon>
               )
             if (p.kind === 'region' && p.points)
@@ -282,7 +347,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                   }}
                   eventHandlers={handlers}
                 >
-                  <Tooltip sticky>{label}</Tooltip>
+                  <PinName key={namesOn ? 'name' : 'hover'} label={label} on={namesOn} center />
                 </Polygon>
               )
             if (!p.position) return null
@@ -300,9 +365,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                   },
                 }}
               >
-                <Tooltip direction="top" offset={[0, -14]}>
-                  {label}
-                </Tooltip>
+                <PinName key={namesOn ? 'name' : 'hover'} label={label} on={namesOn} />
               </Marker>
             )
           })}
@@ -325,6 +388,26 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
       </div>
     </div>
   )
+}
+
+/** A pin's name: on hover, or kept showing (when names are on and the map is zoomed in far enough). */
+function PinName({ label, on, center }: { label: string; on: boolean; center?: boolean }) {
+  if (center) return on ? <Tooltip permanent direction="center" className="pin-name">{label}</Tooltip> : <Tooltip sticky>{label}</Tooltip>
+  return (
+    <Tooltip direction="top" offset={[0, -14]} permanent={on} className={on ? 'pin-name' : undefined}>
+      {label}
+    </Tooltip>
+  )
+}
+
+/** Tells the page whether the map is zoomed in far enough to show pin names. */
+function ZoomWatcher({ bounds, onChange }: { bounds: L.LatLngBounds; onChange: (zoomedIn: boolean) => void }) {
+  const map = useMap()
+  const check = () => onChange(map.getZoom() >= map.getBoundsZoom(bounds) + NAMES_FROM)
+  useMapEvents({ zoomend: check, resize: check })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(check, [])
+  return null
 }
 
 const cornerIcon = L.divIcon({ className: '', html: '<div class="fog-corner"></div>', iconSize: [14, 14], iconAnchor: [7, 7] })
@@ -362,6 +445,8 @@ function FogBar({
   size,
   setSize,
   corner,
+  rooms,
+  note,
   draft,
   onFinish,
   onUndoPoint,
@@ -374,6 +459,8 @@ function FogBar({
   size: number
   setSize: (n: number) => void
   corner: boolean
+  rooms: boolean
+  note: string
   draft: number
   onFinish: () => void
   onUndoPoint: () => void
@@ -416,13 +503,20 @@ function FogBar({
             <button className={tool === 'fog-shape' ? 'on' : ''} onClick={() => setTool(tool === 'fog-shape' ? 'select' : 'fog-shape')} title="Click points round the area">
               ⬠ Shape
             </button>
+            {rooms && (
+              <button className={tool === 'fog-room' ? 'on' : ''} onClick={() => setTool(tool === 'fog-room' ? 'select' : 'fog-room')} title="Click inside a room to uncover just that room (walls and closed doors stop it)">
+                <Ico as={DoorOpen} /> Room
+              </button>
+            )}
           </div>
+          {rooms && <Help topic="fogRoom" />}
           {tool === 'fog-circle' && (
             <label className="row small">
               Size
               <input type="range" min={0.01} max={0.25} step={0.01} value={size} onChange={(e) => setSize(Number(e.target.value))} />
             </label>
           )}
+          {tool === 'fog-room' && <span className="muted small">{note || 'Click inside a room'}</span>}
           {tool === 'fog-rect' && <span className="muted small">{corner ? 'Now click the opposite corner' : 'Click one corner'}</span>}
           {tool === 'fog-shape' && (
             <>
