@@ -66,8 +66,10 @@ export default function CommonRoom({ world }: { world: World }) {
   const mineIds = new Set(mine.map((c) => gmIdOf(c.id)))
   const who = memberOf ? me.who : 'GM'
   // A world with several groups: another campaign's session isn't yours to see as "playing now".
-  const table =
-    anyTable && (!mine.length || mine.some((c) => !c.campaignId || gmIdOf(c.campaignId) === anyTable.session.campaignId)) ? anyTable : null
+  // (One in a campaign the GM keeps hidden comes with no campaign: it's for players whose campaign they can't see.)
+  const ours = (campaignId?: string) =>
+    !campaignId || (anyTable!.session.campaignId ? gmIdOf(campaignId) === anyTable!.session.campaignId : !campaigns.some((k) => k.id === campaignId))
+  const table = anyTable && (!mine.length || mine.some((c) => ours(c.campaignId))) ? anyTable : null
 
   const liveCampaign = table && campaigns.find((c) => gmIdOf(c.id) === table.session.campaignId)
   const campaign = liveCampaign ?? campaigns.find((c) => upcoming(c)) ?? (campaigns.length === 1 ? campaigns[0] : undefined)
@@ -607,7 +609,7 @@ function SceneTab({ ctx }: { ctx: RoomContext }) {
                 <Ico as={CastleTurret} /> The scene
               </h2>
               <p className="muted">
-                Your GM isn’t running a session right now. When they open the Lectern, where you are, the music and whose turn it is show up here.
+                Your GM isn’t running a session right now. When they go live, where you are, the music and whose turn it is show up here.
               </p>
             </>
           )}

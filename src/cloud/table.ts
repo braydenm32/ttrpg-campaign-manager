@@ -1,5 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import { blankLectern, newId, type Entity, type Session, type Sound } from '../db'
+import { blankLectern, newId, type Campaign, type Entity, type Session, type Sound } from '../db'
 import { initiativeOrder } from '../encounters'
 import { joinRoom, JOINED, sendOnce, type LiveRoom } from './live'
 
@@ -283,7 +283,7 @@ export function linkAsHost(cloudId: string, current: () => TableState | null) {
     const sig: TableSignal = { id: text(p.id), kind, who: text(p.who) || 'A player', entityId: text(p.entityId) || undefined, at: Date.now() }
     update(cloudId, (s) => (s.signals.some((x) => x.id === sig.id) ? s : { ...s, signals: [...s.signals, sig].slice(-20) }))
   })
-  // Players stop showing "playing now" if they hear nothing for a few minutes, so say it again now and then.
+  // Players stop showing "playing now" if they hear nothing for a few minutes, so say it again now and then (only while live).
   const beat = setInterval(remind, HEARTBEAT)
   return () => {
     clearInterval(beat)
@@ -313,9 +313,12 @@ export function answerSignal(cloudId: string, id: string) {
 
 /**
  * What players see of a session being run, filtered by the GM's choices on the Lectern. Only
- * pages players can see are named or linked; foes appear only once combat has started.
+ * pages revealed to everyone are linked, and a fighter made from a page players can't see goes
+ * out as "Enemy 2" or "Ally 1" even when names are shown (only names typed in by hand go as they
+ * are). Foes appear only once combat has started. A GM-only session, or one in a GM-only
+ * campaign, goes out as just "Session 12".
  */
-export function tableStateFor(session: Session, pages: Map<string, Entity>, sounds: Sound[], playing: string[]): TableState | null {
+export function tableStateFor(session: Session, pages: Map<string, Entity>, sounds: Sound[], playing: string[], campaign?: Campaign): TableState | null {
   const l = { ...blankLectern(), ...session.lectern }
   const share = l.share ?? {}
   if (share.off) return null
@@ -323,6 +326,7 @@ export function tableStateFor(session: Session, pages: Map<string, Entity>, soun
     const e = id ? pages.get(id) : undefined
     return e && e.visibility === 'players' && !e.template ? e : undefined
   }
+  const hiddenCampaign = campaign?.visibility === 'gm'
   const place = visible(l.sceneId)
   const order = initiativeOrder(l.combat.combatants)
   const counts = { pc: 0, ally: 0, foe: 0 }
@@ -333,8 +337,8 @@ export function tableStateFor(session: Session, pages: Map<string, Entity>, soun
     session: {
       id: session.id,
       number: session.number,
-      title: session.visibility === 'players' ? session.title : `Session ${session.number}`,
-      campaignId: session.campaignId,
+      title: session.visibility === 'players' && !hiddenCampaign ? session.title : `Session ${session.number}`,
+      campaignId: hiddenCampaign ? '' : session.campaignId,
     },
     scene: place ? { name: place.name, entityId: place.id } : undefined,
     timers: l.timers?.some((t) => !t.hidden) ? l.timers.filter((t) => !t.hidden).map(({ id, label, endsAt, left }) => ({ id, label, endsAt, left })) : undefined,
@@ -348,7 +352,9 @@ export function tableStateFor(session: Session, pages: Map<string, Entity>, soun
             order: order.map((c) => {
               const pc = c.side === 'pc' ? visible(c.entityId) : undefined
               counts[c.side]++
-              const name = pc?.name ?? (share.hideNames && c.side !== 'pc' ? `${c.side === 'foe' ? 'Enemy' : 'Ally'} ${counts[c.side]}` : c.name)
+              // Its name came from a page players haven't been shown ("The Masked Duke"): that stays secret.
+              const secret = c.side !== 'pc' && !!c.entityId && !visible(c.entityId)
+              const name = pc?.name ?? ((share.hideNames || secret) && c.side !== 'pc' ? `${c.side === 'foe' ? 'Enemy' : 'Ally'} ${counts[c.side]}` : c.name)
               return { id: c.id, name, side: c.side, entityId: pc?.id }
             }),
           }
@@ -362,7 +368,7 @@ const liveKey = (worldId: string) => `codex.liveSession.${worldId}`
 const liveListeners = new Set<() => void>()
 const memory = new Map<string, string | undefined>()
 
-/** The session the GM is running in this world (the last Lectern opened), kept until it ends. */
+/** The session the GM has gone live with in this world (from its Lectern), kept until they stop or end it. */
 export function setLiveSession(worldId: string, sessionId: string | undefined) {
   if (memory.get(worldId) === sessionId && memory.has(worldId)) return
   memory.set(worldId, sessionId)
