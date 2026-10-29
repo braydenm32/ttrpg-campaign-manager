@@ -2,64 +2,109 @@
 number: 7
 title: Three Knives
 worldDate: 5 Leafrot 3011
-pages: [ tollamund, odile-fairweather, ansel-mote, pell-quillon, seraphine-ashe, garrick-sallow, mirrel-vosk, ilse-marrow, grashka, marius-vell, tollamund-house, item-treaty, f-quiet-office, f-concord-houses, f-church-saint, f-mothers, f-ninth-lantern ]
+pages: [ tollamund, npc-pennamund, odile-fairweather, ansel-mote, pell-quillon, npc-widow-pruitt, npc-dunstan-bray, seraphine-ashe, garrick-sallow, mirrel-vosk, ilse-marrow, fennick, sorrel-vey, aelith-sorn, mother-corvane, npc-tesh, varra, grashka, npc-skarra, npc-mother-hesha, marius-vell, tollamund-house, assessors-office, lantern-keep, item-treaty, item-promissory-note, item-cage-keys, item-thunderjars, item-widows-kisses, q-assessors-form, f-quiet-office, f-concord-houses, f-church-saint, f-mothers, f-ninth-lantern ]
 encounters:
   - name: Mote's night
-    notes: "Ansel Mote as a scaled-down assassin: Multiattack two shortswords +6, 1d6+4 piercing plus 3d6 poison (Con DC 13 half). Assassinate: advantage and auto-crit on surprised targets in round one. Two thugs with him. He flees at half HP and is not above using Pell as a shield."
+    notes: "Ansel Mote (page stats: spy, upgraded): two shortsword attacks; Sneak Attack 3d6; Assassinate (advantage against anyone who hasn't acted, crits on the surprised); poison needle (DC 13 Con, 3d6 poison and poisoned for an hour). Two hired knives (thugs, mace +4, 1d6+2, Pack Tactics). They scatter Widow's Kisses on the oil-room stair behind them. Mote wants Ysse's key and the lantern, flees at half HP, and is not above using Pell as a shield."
     foes:
-      - { name: Ansel Mote, count: 1, hp: 45, ac: "15", side: foe, page: ansel-mote }
+      - { name: Ansel Mote, count: 1, hp: 45, ac: "14", side: foe, page: ansel-mote }
       - { name: Hired knife (thug), count: 2, hp: 32, ac: "11", side: foe }
-  - name: The mutiny in the yard
-    notes: "Sallow as a veteran: two longsword attacks +5, 1d8+3. Mutineers as bandits. Each mutineer reduced to 0 can be knocked out instead of killed; each one spared is one the company gets back. If Vosk or Marrow speaks first, two mutineers switch sides."
+  - name: The Lamp-Wardens on the Halcyra road
+    notes: "Veterans in red surcoats: two longsword attacks +5, 1d8+3. They try to carry Ysse off, not to kill anyone; they stop if Seraphine is shamed into calling them back, or if Ysse herself refuses them three times in front of the crowd."
     foes:
-      - { name: Garrick Sallow, count: 1, hp: 58, ac: "15", side: foe, page: garrick-sallow }
+      - { name: Lamp-Warden, count: 2, hp: 58, ac: "17", side: foe }
+  - name: The mutiny in the yard
+    notes: "Sallow (page stats: veteran, half plate, rapier): two rapier attacks +5, 1d8+3; Reasonable Man (advantage on Persuasion with soldiers once a scene). Mutineers as bandits. Each mutineer reduced to 0 can be knocked out instead of killed; each one spared is one the company gets back. If Vosk or Marrow speaks first, two mutineers switch sides."
+    foes:
+      - { name: Garrick Sallow, count: 1, hp: 58, ac: "17", side: foe, page: garrick-sallow }
       - { name: Mutineer, count: 4, hp: 11, ac: "12", side: foe }
 ---
 
 ## Session 7: Three Knives
-*Level 4. 5 Leafrot 3011 AW. Four nights before the red moon is full again.*
+*Level 4. 5 to 6 Leafrot 3011 AW (Wardday, the Reeve's court day, and Restday). Four nights before the red moon is full again.*
 
-**Goal.** Survive the week every faction moves on the lantern, and break (or win) the mutiny.
+- *Sky*: the Ember four nights from full and already the colour of a fresh wound; Pallas a waxing crescent.
+- *Weather*: first frost. The ash crunches underfoot and the Keep's well has a skin of ice at dawn.
+- *Touch these*: the Concord's move goes through Fennick's debts: he can be made to sign the stores over, or to hand Tollamund's people the Keep's keys, and what he does depends on whether the party stood by him. Sallow tries to have Vosk killed before he calls the yard. Sorrel risks the Ledger for Marrow. In the chaos Aelith makes her move on Sorrel: a sleeping draught, a hired barge, a cutting-table. On the 6th, while every eye is on the yard, the Sleepless slip up the hill to snuff the lantern; Ambry Coyle is the one who hesitates with his hand on the ladder. Mirrit, at Hesk's counter, sees the shadow behind Borrin take a step the wrong way. Ysse, the night of the 5th: "Not yet," in the warm voice, and "Keep me," closer than it has ever been.
+- *In between* (2 to 4 Leafrot): the ride home. The party finds the company half-turned: Sallow worked on it while they were gone. Grace on the Tollamund note ends at sunset on the 4th.
+- *Level-up*: End of session: level 5.
+- *If the party…* sides with Sallow: he wins the yard, Marrow is locked in the oil-room, and at dawn on the 7th Sallow pours the last cut tin into the oil-port himself (it needs no key). The lantern gutters to a bead and stays there. The company that marches is about sixty, and Mote means to kill Sallow on the road once the lantern is out of the Keep.
 
-### Key scenes
-1. **The Concord's knife.** [[Grandmother Tollamund]] calls in the debt, very slowly, in person, at the Keep gate, with lawyers. The collateral named on the chit is "the property of the company, including the lamp". [[Odile Fairweather]] stands beside her: the Reeve has signed the charter over. Talk, stall, or find a hole in the contract (History or Investigation DC 15; [[The Original Treaty]] has one, if the party has it). Tick the Concord's clock.
-2. **The Quiet Office's knife.** [[Ansel Mote]] stops pretending. The cipher on [[The Assessor's Lost Form]], if read, says it all: the lantern is to be seized for the Regency under the unpaid tax. At night Mote comes for the lantern himself, with two hired knives, while Pell sleeps. [[Pell Quillon]], if the party returned his form, wakes, sees, and is braver than anyone expects.
-3. **The Saint's knife.** [[Seraphine Ashe]] comes for Ysse, not the lantern. Gently. With an offer. If refused, the House's wardens try to take her to the Halcyra road.
-4. **Sallow's mutiny.** With the company split by the debt, [[Garrick Sallow]] breaks out of confinement and calls the files to the drill yard: "They've sold us. Let's sell them first." Half the company is listening. Turning it: expose the Quiet Office coin, tell the company Marrow fed them from her own purse, or let [[Mirrel Vosk]] speak (he served under Grashka; he tells them what the Iron Guard did to the last emperor who dug at a ward, and why).
-5. **Grashka's answer.** If Varra wrote to the Mothers, a reply arrives in the middle of everything: [[Grashka]]'s seal. "Hold the lamp. I am sending what I can." And, in a different ink: "I did it. Not for the throne. For this. Ask Vosk."
+**Goal.** Survive the two days every faction moves on the lantern, and break (or win) the mutiny.
 
-### NPCs
-[[Grandmother Tollamund]], [[Odile Fairweather]], [[Ansel Mote]], [[Pell Quillon]], [[Seraphine Ashe]], [[Garrick Sallow]], [[Mirrel Vosk]], [[Ilse Marrow]], [[Grashka]] (by letter).
+---
 
-### Encounters
-- **Mote's night** (Ansel Mote as an assassin scaled down: AC 15, HP 45, two shortsword attacks +6 1d6+4, poison 3d6 on a hit, Con DC 13 half; plus two thugs AC 11, HP 32).
-- **The mutiny in the yard** (veteran Sallow AC 15, HP 58 and four bandit mutineers AC 12, HP 11), if it comes to blades. Every mutineer knocked out rather than killed is one the company gets back.
+### The 5th (Wardday)
 
-### Clues revealed
-The Quiet Office answers to [[Marius Vell]], who wants the flame for a puppet emperor. The Concord wants the lantern as collateral (Tollamund, if asked straight: "It is a key. To a door my people closed."). Grashka's confession.
+**1. The Concord's knife (the Keep gate, morning).** [[Grandmother Tollamund]] sits in her chair in the ash at the gate; she has left the house for the second time in four years, carried. Eight porters set the chair down. Sal and two lawyers walk behind it, with four Concord veterans in livery. She calls in the debt very slowly, pausing for sips of water from a cup Sal holds: the note stands at 4,800 gold; the quarter's interest, 480, is unpaid past grace (sunset yesterday); and the collateral is "the property of the company, including the lamp". It is court day, so [[Odile Fairweather]] the Reeve stands beside her, with the town's charter, signed but not sealed, and a pen. Whether Odile seals it or tears it up is the scene's outcome.
 
-### Threads
-Ties: who is cutting the lantern oil (Mote, through Sallow); what is the Assessor's clerk really writing; where is Lieutenant Sallow getting his money; what has the Reeve signed. Moves: the Saint's envoy.
+Talk, stall, or find the hole in the contract: History or Investigation DC 15, with [[The Original Treaty]] or what was scratched in the Treaty Stone's glass. The pay clause, "by the signatories, or by whosoever shall hold their debt", makes the Concord the company's paymaster and creditor, so the company itself can be pledged. But page seven, the keeping of the Ninth Ward, signed by the Mothers and the Last Wardens alone, makes the lamp a fixture of the Treaty, "kept lit by those who do not know why". It was never the company's to pledge. "Including the lantern" is void; the company is collateral, the lamp is not. Tollamund, if asked straight what she wants it for: "It is a key. To a door my people closed." Tick the Concord's clock.
+
+**2. The Quiet Office's knife (the night of the 5th).** [[Ansel Mote]] stops pretending. At the Assessor's Office he burns the files while [[Pell Quillon]] sleeps at his desk, then comes up to the Keep with two hired knives for the lantern and for Ysse's key. He has a copy of the third key, Sallow a copy of the second; neither fits the first lock, which is why he needs Ysse. Turning any key makes the cage chime through the whole Keep. If [[Dunstan Bray]] talked, Mote finds him first, in the Candle's back lane, and Bray never talks again. Run **Mote's night**.
+
+If the party returned Pell's form, Pell wakes in the smoke, sees, and is braver than anyone expects: he runs to the Keep in his nightshirt with the Claim of Arrears under one arm, shouting for the watch. If he didn't wake, Widow Pruitt pulls him out by the collar. Nib, the errand boy, sleeps under the office stairs; somebody has to remember him.
+
+**The cipher.** On the back of [[The Assessor's Lost Form]] (Form 9-K), if anyone has it, is Mote's cipher: column widths that are letters. Pell, or Investigation DC 15 and an hour, reads it:
+- *S. paid.*
+- *Oil done by the red moon.*
+- *Lamp to be taken under Levy default; escort at Ardmere.*
+- *Assessor knows nothing.*
+
+**Tesh.** A fifth line, squeezed in under the others: *The girl at the Ledger is the line. Bring her with the lamp.* [[Tesh]], the courtesan at the Velvet Ledger who does not sleep, has imperial blood through a by-blow of Aurel IX's uncle. [[Marius Vell]]'s claimant cousin in the capital has stopped speaking and is failing; Tesh is the line Vell needs, and a puppet who already hears the voice under the Stone is exactly what the Regent-Chancellor wants on his throne. If the party searches Mote's lodging over Gannet's on Temple Row, they find his black second ledger, and Vell's name in it.
+
+---
+
+### The 6th (Restday)
+
+**3. The Saint's knife (first light).** [[Seraphine Ashe]] comes for Ysse, not the lantern, with a crowd of the faithful singing behind her up the hill road. Gently. With an offer: Halcyra, a keeper's chair beside the Saint, the flame safe forever. If Ysse refuses, the Lamp-Wardens, in red surcoats for the road, try to take her to the Halcyra road (**The Lamp-Wardens on the Halcyra road**).
+
+**4. Corvane comes down.** For the first time in a year [[Mother Corvane]] comes down from Corvel Rise, on Skrell's arm, and stands at the foot of Lantern Hill. She says it to Ysse, kindly: "The lamp is the lock, child. Put it out. Open the doors. Let them all go home." She believes it. She is wrong. Whether the party can talk her round decides who she is at the lip in session 8.
+
+**5. Sallow's mutiny (the drill yard).** With the company split by the debt, [[Garrick Sallow]] breaks out of confinement and calls the files to the yard: "They've sold us. Let's sell them first." Half the company is listening. Turning it:
+- **Expose the coin.** Dannic's purse, Hennet's cup, the pay-chit, the letter in the small neat hand, Mote's cipher: Persuasion DC 13 with proof in hand, DC 18 without. Sallow exposed with proof: Mutiny clock −1.
+- **Tell them about Marrow's purse.** She fed them out of her own savings for a year until it ran out. Marrow would rather die than have it said; said anyway, it turns the yard (Mutiny clock −2).
+- **Let Vosk speak.** [[Mirrel Vosk]] tells them what the Iron Guard did to the last emperor who dug at a ward, and why: "The Guard did it. I held the door." He does not name who struck. If Vosk speaks first, two mutineers switch sides before swords come out.
+- **Blades.** Run **The mutiny in the yard**. Every mutineer knocked out instead of killed is one the company gets back.
+
+**The mutiny clock and the march.** Whatever the clock stands at when the dust settles decides how many soldiers walk east with the lantern in session 8:
+
+| Mutiny clock | Who marches |
+|---|---|
+| 0 to 2 | about 120 |
+| 3 to 4 | about 100 |
+| 5 to 6 | about 60, and Sallow's diehards are on the road behind them |
+
+Skarra Burnbrow has two thunderjars left and offers them for the road.
+
+**6. Grashka's answer.** A reply from the Mothers arrives in the middle of everything, regardless of whether Varra wrote: [[Skarra]] has written home to her mother, [[Mother Hesha]] of the council, every month since Varra came, and this is the answer, under Hesha's seal and [[Grashka]]'s. If Varra wrote to the Mothers, it reads: "Hold the lamp. I am sending what I can." If she didn't: "Hold the lamp. I am coming to see what you have kept." Under it, in a second ink, in knot-script only Varra was taught to read, is a line for Varra's eyes only: "I did it. Not for the throne. For this. Ask Vosk." Vosk, if Varra asks him privately: "The Guard did it. I held the door." He does not name Grashka, then or ever. Whether the company learns whose granddaughter Varra is belongs to Varra's player. The Quiet Office would very much like to know.
+
+---
 
 ### How it ends
-The Mutiny clock is broken or full. Either way, the company, what's left of it, stands round the lantern. The Ember is four nights from full and already the colour of a fresh wound. Marrow: "Whatever we're doing with that thing, we're doing it at the Rent. Under the moon. Together, or not at all."
+The mutiny is broken or it isn't. Either way the company, what's left of it, stands round the lantern in the frost. The Ember is three nights from full and the colour of a fresh wound. Marrow: "Whatever we're doing with that thing, we're doing it at the Rent. Under the moon. Together, or not at all." Before dawn, the cage is unbolted from its niche.
+
+**End of session: level 5.**
 
 == Strong start ==
 
-The Keep gate. A Shellback banker three hundred and forty years old is standing in the ash with two lawyers and the Reeve of Cinderford, and she has been saying the same sentence for nearly a minute. She is not finished. The sentence is "We are here to collect."
+The Keep gate. A Shellback banker three hundred and forty years old sits in a carried chair in the ash, with eight porters, two lawyers and the Reeve of Cinderford beside her, and she has been saying the same sentence for nearly a minute, stopping only for sips of water. She is not finished. The sentence is "We are here to collect."
 
 == Scenes ==
 
-- Tollamund calls in the debt; the Reeve has signed the charter.
-- Ansel Mote comes for the lantern by night.
-- Seraphine comes for Ysse.
+- The 5th: Tollamund calls in the debt at the gate; Odile holds the charter, signed but not sealed; the hole in the Treaty.
+- The night of the 5th: Mote burns the Assessor's files and comes for the lantern and Ysse's key with two hired knives.
+- The cipher on the back of Form 9-K, and its fifth line: the girl at the Ledger.
+- The 6th: Seraphine comes for Ysse with the faithful; the Lamp-Wardens try for the Halcyra road.
+- Mother Corvane comes down from the Rise to ask Ysse to put the lamp out.
 - Sallow's mutiny in the drill yard.
-- Grashka's letter arrives.
+- Grashka's letter arrives, with a second ink for Varra alone.
 
 == Clues ==
 
-- Mote's cipher: the lantern is to be seized for the Regency under the unpaid tax.
+- Mote's cipher: S. paid; oil done by the red moon; the lamp to be taken under Levy default, escort at Ardmere; the Assessor knows nothing.
+- Its fifth line: Tesh at the Velvet Ledger is the imperial line Vell needs.
 - Marius Vell commissioned the Quiet Office's work in Cinderford.
 - Tollamund wants the lantern as a key "to a door my people closed".
-- The Reeve signed Cinderford's charter to the Concord.
-- Grashka struck the blow that killed the Emperor, to stop him opening a ward.
+- The pay clause makes the company pledgeable; page seven makes the lamp a Treaty fixture, so "including the lantern" is void.
+- The Reeve signed Cinderford's charter to the Concord, and has not yet sealed it.
+- Grashka struck the blow that killed the Emperor, to stop him opening a ward (for Varra's eyes only).
