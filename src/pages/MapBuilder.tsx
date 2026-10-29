@@ -286,28 +286,43 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const ringRef = useRef<SVGCircleElement>(null)
   const spaceDown = useRef(false)
 
+  // The last slider or typing change, so a run of them (dragging Size, typing a label) is one Undo step.
+  const lastTweak = useRef<{ key: string; t: number }>(undefined)
   const commit = useCallback(
     (next: Drawing, before: Drawing = drawing) => {
+      lastTweak.current = undefined
       setPast((p) => [...p.slice(-80), before])
       setFuture([])
       setDrawing(next)
     },
     [drawing],
   )
+  /** A change made by a slider or typing: changes to the same thing in quick succession merge into one step. */
+  const tweak = (key: string, next: Drawing) => {
+    const now = performance.now()
+    const last = lastTweak.current
+    if (last?.key === key && now - last.t < 600) {
+      setFuture([])
+      setDrawing(next)
+    } else commit(next)
+    lastTweak.current = { key, t: now }
+  }
   const undo = useCallback(() => {
     if (!past.length) return
+    lastTweak.current = undefined
     setFuture((f) => [drawing, ...f])
     setDrawing(past[past.length - 1])
     setPast((p) => p.slice(0, -1))
   }, [past, drawing])
   const redo = useCallback(() => {
     if (!future.length) return
+    lastTweak.current = undefined
     setPast((p) => [...p, drawing])
     setDrawing(future[0])
     setFuture((f) => f.slice(1))
   }, [future, drawing])
   const updateShape = (id: string, patch: Partial<Shape>) =>
-    commit({ ...drawing, shapes: drawing.shapes.map((s) => (s.id === id ? ({ ...s, ...patch } as Shape) : s)) })
+    tweak(`${id}:${Object.keys(patch).sort().join()}`, { ...drawing, shapes: drawing.shapes.map((s) => (s.id === id ? ({ ...s, ...patch } as Shape) : s)) })
   /**
    * The players found a secret door: it becomes a plain door, and the secret rooms and passages it
    * leads into (those touching it, and the secret ones touching those) are shown to them too.
@@ -466,24 +481,59 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     },
     [map.id, map.imageId, map.name, worldId, W, H, syncPiecePins],
   )
+  // Saves run one after another, so an older one finishing late can't say "Saved" over newer strokes.
+  const latest = useRef(drawing)
+  const saving = useRef<Promise<void>>(Promise.resolve())
+  const inFlight = useRef(0)
+  const [saveError, setSaveError] = useState('')
+  const queueSave = useCallback(
+    (d: Drawing) => {
+      inFlight.current++
+      const run = saving.current.then(async () => {
+        try {
+          if (d !== lastSaved.current) await save(d)
+          setSaveError('')
+        } catch (e) {
+          console.warn('Map save failed', e)
+          // still waiting to be saved: leaving the page, the next stroke or Try again saves it
+          unsaved.current ??= latest.current
+          setSaveError(e instanceof Error && /quota/i.test(e.name + e.message) ? 'this device has run out of room.' : 'something went wrong.')
+        }
+        inFlight.current--
+        if (latest.current === lastSaved.current) setSaved(true)
+      })
+      saving.current = run
+      return run
+    },
+    [save],
+  )
   useEffect(() => {
-    if (drawing === lastSaved.current) return
+    latest.current = drawing
+    if (drawing === lastSaved.current && !inFlight.current) {
+      // back to what's saved (an Undo straight away, say)
+      unsaved.current = undefined
+      setSaved(true)
+      return
+    }
     setSaved(false)
     unsaved.current = drawing
-    const t = setTimeout(async () => {
+    const t = setTimeout(() => {
       unsaved.current = undefined
-      await save(drawing)
-      setSaved(true)
+      void queueSave(drawing)
     }, 800)
     return () => clearTimeout(t)
-  }, [drawing, save])
+  }, [drawing, queueSave])
+  const retrySave = () => {
+    unsaved.current = undefined
+    void queueSave(latest.current)
+  }
   useEffect(
     () => () => {
       const d = unsaved.current
       unsaved.current = undefined
-      if (d) void save(d).then(() => renderPlayerFog(map.id).catch(() => {}))
+      if (d) void queueSave(d).then(() => renderPlayerFog(map.id).catch(() => {}))
     },
-    [save, map.id],
+    [queueSave, map.id],
   )
 
   useEffect(() => {
@@ -982,7 +1032,16 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       <div className="map-toolbar">
         <Link to={`${worldPath(worldId)}/maps/${map.id}`}>← Done</Link>
         <strong>{map.name}</strong>
-        <span className="muted small">{saved ? 'Saved' : 'Saving…'}</span>
+        {saveError && !saved ? (
+          <span className="error small">
+            Couldn’t save: {saveError} Your drawing is still here.{' '}
+            <button className="small" onClick={retrySave}>
+              Try again
+            </button>
+          </span>
+        ) : (
+          <span className="muted small">{saved ? 'Saved' : 'Saving…'}</span>
+        )}
         <div className="row">
           <button onClick={undo} disabled={!past.length} title="Undo (Ctrl+Z)">
             ↶ Undo
@@ -1255,7 +1314,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                     max={200}
                     step={5}
                     value={drawing.gridSize}
-                    onChange={(e) => commit({ ...drawing, gridSize: Number(e.target.value) })}
+                    onChange={(e) => tweak('gridSize', { ...drawing, gridSize: Number(e.target.value) })}
                   />
                 </label>
               )}
