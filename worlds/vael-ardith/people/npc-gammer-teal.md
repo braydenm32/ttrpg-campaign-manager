@@ -26,6 +26,9 @@ relations:
   - to: f-sleepless
     kind: counterweight to
     note: The one voice the Hollowborn trust who says do not wake it.
+  - to: ambercote
+    kind: has kin standing in
+    note: Aud Marrowick, her grand-niece, by the kiln.
 ---
 
 ### Look and voice
@@ -52,7 +55,7 @@ As fools until proved otherwise, and then as fools she likes. She tells them the
 :::gm
 **Secret.** Once, the winter after the drowning, the voice in the dream spoke to her alone and said "not yet", warmly, and she has not slept properly since. She knows the difference between that voice and the Hollowborn dream the way the lamp-keeper knows the difference between the two voices in the flame: it was too kind. She has told nobody, because the Widow would make a sermon of it.
 
-**The standing village.** From the jetty at low water, when the Ember is up, the Hollowborn see a village standing whole on the lake bed under the dead: a pear-country hamlet the glass took in the war. Gammer Teal knows the way to its door by heart from dreaming it, and can guide a party to it across the shallows at the full Ember: a scene for session 3 or 5, not a dungeon. The door is shut. There is a lamp in the window.
+**The standing village.** The village the Cinderford rumour means is [[Ambercote]], twenty miles south in the glass, where two hundred and twelve stand fused in the square. One of them is Aud Marrowick, the glass-cutter's wife, standing by the kiln with the child she was carrying: Gammer Teal's grand-niece, a pear-country Teal from before the family ever saw the lake. Gammer Teal has not been and will not go ("I've one eye for the dead already; I don't need the other"), but she knows the goat-track from the lake across the stubble to the glass, and she knows from Kettle's cousins that the child there, [[Cass Marrowick]], dreams a different dream from the lake children, and she has told nobody, least of all the Widow. Ask her about Aud and she goes quiet for the first time in the conversation.
 
 Her dreams match the Widow's sermons line for line because they are the same dream; she is the proof, if the party wants it, that the Widow is not lying, only wrong.
 :::
