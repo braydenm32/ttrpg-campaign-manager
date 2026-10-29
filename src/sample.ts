@@ -13,14 +13,14 @@ export async function loadSampleWorld(): Promise<string> {
 
   const coast = E('location', 'The Shattered Coast', {
     visibility: 'players',
-    summary: 'A storm-wracked coastline of fishing towns, sea caves and old ruins.',
-    body: 'Three centuries after [[The Sundering]], the coast is still littered with ruins of the old empire. [[Saltmere]] is the largest town; the road north leads to [[Greywatch Keep]].',
+    summary: 'A storm-wracked coastline of fishing towns, sea caves and old ruins',
+    body: 'Three centuries after [[The Sundering]], the waves of the Grey Sea still break against the ruins of the old empire. [[Saltmere]] is the largest town, and the road north-east climbs to [[Greywatch Keep]]. Fishing folk keep to the shore, and most of them will tell you the deep forest inland is best left alone.',
   })
   const saltmere = E('location', 'Saltmere', {
     visibility: 'players',
     parentId: coast.id,
-    summary: 'Busy fishing town built on stilts over the tidal flats.',
-    body: 'Smells of tar and fish. Ruled by the [[Tidewardens]].\n\n:::gm\nThe town sits on top of a sealed vault from the old empire. The tremors are getting worse.\n:::',
+    summary: 'Busy fishing town built on stilts over the tidal flats',
+    body: 'Smells of tar and fish, and the boards creak underfoot at every tide. Ruled by the Harbourmaster, with the [[Tidewardens]] as his guard. Good places to start are the tavern, [[The Salty Anchor]], and the fishing fleet’s berths at [[The Stilt Docks]].\n\n:::gm\nThe town sits on top of a sealed vault from the old empire. The tremors are getting worse.\n:::',
     fields: [
       { key: 'Population', value: '~2,400' },
       { key: 'Ruler', value: 'Harbourmaster Corvin Vane' },
@@ -30,65 +30,92 @@ export async function loadSampleWorld(): Promise<string> {
   const keep = E('location', 'Greywatch Keep', {
     visibility: 'players',
     parentId: coast.id,
-    summary: 'A crumbling fortress guarding the northern pass.',
+    summary: 'A crumbling fortress guarding the pass through the Ashspine Mountains',
+    body: 'A square grey keep with half its roof fallen in, standing where the road squeezes between two cliffs. A dozen [[Tidewardens]] hold it through the summer, and in winter the snow closes the pass and the keep stands empty. Travellers shelter in the dry corner of the courtyard and swear the walls hum when the wind is right.',
     tags: ['fortress'],
   })
   const wood = E('location', 'Whisperwood', {
     visibility: 'players',
     parentId: coast.id,
-    summary: 'Ancient forest where voices are heard between the trees.',
+    summary: 'Ancient forest where voices are heard between the trees',
+    body: 'Birch and old oak grow thick enough to keep the sea wind out, and the quiet under them feels heavy. Hunters say the voices sound like someone you know, calling you by a name you do not use. Most of them turn back at the second stream.\n\n:::gm\nThe voices are a lure laid by the [[Choir of the Deep]]. Wren’s brother Tobin followed them and now lives in a Choir camp in a clearing a day in, half-convinced he belongs there. He can be talked out of it, but not while his new friends are watching.\n:::',
     tags: ['wilderness'],
   })
   const lighthouse = E('location', 'The Drowned Lighthouse', {
     parentId: coast.id,
     summary: 'A ruined lighthouse, lit again by someone. Players have not found it yet.',
-    body: 'Lair of the [[Choir of the Deep]].',
+    body: 'Lair of the [[Choir of the Deep]]. A strange pale light burns in the lamp room each night, and the cellars flood and drain with the tide. The missing boats from [[The Missing Fishermen]] are moored in the cellar.',
     tags: ['dungeon'],
   })
-  const docks = E('location', 'The Stilt Docks', { visibility: 'players', parentId: saltmere.id, summary: 'Where the fishing fleet ties up.' })
-  const temple = E('location', 'Temple of the Tides', { visibility: 'players', parentId: saltmere.id, summary: 'Shrine to the sea goddess Thalassa.', body: 'Dedicated to [[Thalassa]].' })
+  const docks = E('location', 'The Stilt Docks', {
+    visibility: 'players',
+    parentId: saltmere.id,
+    summary: 'Where the fishing fleet ties up',
+    body: 'Forty berths on tarred stilts, where the fleet comes in at dusk and the catch is gutted on the planks while gulls scream overhead. One empty berth belongs to the Hale family’s boat, the *Gull’s Promise*; her mooring rope has been cut clean through, and the anchor has been cut loose too.',
+  })
+  const temple = E('location', 'Temple of the Tides', {
+    visibility: 'players',
+    parentId: saltmere.id,
+    summary: 'Shrine to the sea goddess Thalassa',
+    body: 'A low white shrine with a bell that rings at every high tide. Sister Maren tends it, and fishermen leave a coin or a silver fish in the offering bowl before they sail. Lately the bowl has been found empty every morning, and the sister is not sure who is taking it. Dedicated to [[Thalassa]].',
+  })
   const tavern = E('shop', 'The Salty Anchor', {
     visibility: 'players',
     parentId: saltmere.id,
     summary: 'Tavern, smoky, loud and full of dockhands',
-    body: 'Run by [[Marta Copperkettle]].\n\n### Menu\n- House ale: 4 cp\n- Fish pie: 4 sp\n- Room: 5 sp a night\n\n### Rumours\n:::gm\n- Lights have been seen at the old lighthouse.\n- The harbourmaster is buying up all the silver.\n:::',
+    body: 'Run by [[Marta Copperkettle]]. A low room of black beams, with a fire that never goes out and a fisherman in the corner with a pale coral-coloured scar across his forearm, who does not like being asked about it.\n\n### Menu\n- House ale: 4 cp\n- Fish pie: 4 cp\n- Room: 5 sp a night\n\n### Rumours\n- The fleet has been coming home early.\n- Lights have been seen out on the water after dark.\n- The harbourmaster is buying up all the silver.\n\n:::gm\nThe fleet is coming home early because the crews are afraid. The lights are real: they are the relit [[The Drowned Lighthouse]]. The silver is also true: Corvin needs it for the vault door.\n:::',
     tags: ['tavern'],
   })
   const smith = E('shop', 'Anvil & Ember', {
     visibility: 'players',
     parentId: docks.id,
-    summary: 'Blacksmith',
-    body: 'Run by [[Dorn Ironfoot]].\n\n### Stock\n- Longsword: 15 gp\n- Shield: 10 gp\n- Harpoon: 5 gp',
+    summary: 'Smithy on the docks, hot, loud and fair',
+    body: 'Run by [[Dorn Ironfoot]]. The forge roars from dawn, and hooks, harpoons and boat nails hang on the wall in neat rows. Dorn mends tools for the fleet first and sells blades to anyone who has the coin.\n\n### Stock\n- Longsword: 15 gp\n- Shield: 10 gp\n- Harpoon: 5 gp',
   })
   const marta = E('npc', 'Marta Copperkettle', {
     visibility: 'players',
     parentId: tavern.id,
     summary: 'Warm and gossipy halfling innkeeper',
-    body: 'Knows everyone’s business.\n\n:::gm\n**Secret:** informant for the [[Tidewardens]].\n:::',
+    body: 'Knows everyone’s business, and will happily trade it for a drink or a good story. She has lost three regulars to the sea this month and wants to know why.\n\n:::gm\n**Secret:** she passes gossip to Captain Marsh of the [[Tidewardens]], who suspects the harbourmaster.\n:::',
   })
-  const dorn = E('npc', 'Dorn Ironfoot', { visibility: 'players', parentId: smith.id, summary: 'Gruff but fair dwarven smith' })
+  const dorn = E('npc', 'Dorn Ironfoot', {
+    visibility: 'players',
+    parentId: smith.id,
+    summary: 'Gruff but fair dwarven smith',
+    body: 'Dorn mends hooks and harpoons for the fleet and sells swords to anyone who does not ask what for. He lost two cousins to the sea and will not take work from anyone who sings the Choir’s hymns.',
+  })
   const corvin = E('npc', 'Corvin Vane', {
     visibility: 'players',
     parentId: saltmere.id,
+    aliases: ['the Harbourmaster'],
     summary: 'Harbourmaster of Saltmere, smooth and ambitious',
     gmNotes: 'Secretly a member of the [[Choir of the Deep]]. Wants the vault opened.',
   })
   // A few relationships and a clock, to show off the relationship web and progress clocks.
   marta.relations = [{ id: newId(), to: corvin.id, kind: 'rival of', known: true, note: 'Old business quarrel' }]
-  const wardens = E('faction', 'Tidewardens', { visibility: 'players', summary: 'The town guard and harbour militia of Saltmere.' })
+  const wardens = E('faction', 'Tidewardens', {
+    visibility: 'players',
+    summary: 'The town guard and harbour militia of Saltmere',
+    body: 'Led by Captain Idris Marsh, a tired, careful woman who walks the docks every evening. They answer to the harbourmaster on paper.',
+  })
   const choir = E('faction', 'Choir of the Deep', {
-    summary: 'A cult that worships something beneath the waves.',
+    summary: 'A cult that worships something beneath the waves',
+    body: 'They believe the old empire’s vault holds the thing they worship. Their token is a ring of living coral, and the harbourmaster is buying silver for them because the vault’s door is said to open only to that metal.',
     clocks: [{ id: newId(), name: 'The vault beneath Saltmere is opened', segments: 6, filled: 2 }],
   })
   corvin.relations = [{ id: newId(), to: choir.id, kind: 'member of' }]
-  const thalassa = E('deity', 'Thalassa', { visibility: 'players', summary: 'Goddess of the sea, storms and safe harbour.' })
+  const thalassa = E('deity', 'Thalassa', {
+    visibility: 'players',
+    summary: 'Goddess of the sea, storms and safe harbour',
+    body: 'Sailors pray to her before they cast off and leave her a coin when they return. She is shown as a tall woman with seaweed hair and a lantern in her hand.',
+  })
   const sundering = E('event', 'The Sundering', {
     visibility: 'players',
     eventEra: 'pre',
     eventDate: '312 years ago',
     eventOrder: 1,
     parentId: coast.id,
-    summary: 'The cataclysm that broke the old empire and drowned half the coast.',
+    summary: 'The cataclysm that broke the old empire and drowned half the coast',
   })
   const founding = E('event', 'Founding of Saltmere', {
     visibility: 'players',
@@ -96,14 +123,14 @@ export async function loadSampleWorld(): Promise<string> {
     eventDate: '280 years ago',
     eventOrder: 2,
     parentId: saltmere.id,
-    summary: 'Refugees build a town on stilts over the flats.',
+    summary: 'Refugees build a town on stilts over the flats',
   })
   const relit = E('event', 'The lighthouse is relit', {
     eventEra: 'pre',
     eventDate: '1 month ago',
     eventOrder: 3,
     parentId: lighthouse.id,
-    summary: 'The Choir begins its ritual.',
+    summary: 'The Choir begins its ritual',
   })
   const arrival = E('event', 'The party arrives in Saltmere', {
     visibility: 'players',
@@ -111,16 +138,23 @@ export async function loadSampleWorld(): Promise<string> {
     eventDate: 'Day 1',
     eventOrder: 4,
     parentId: saltmere.id,
+    summary: 'The heroes come in out of a storm and find shelter at the Salty Anchor',
   })
   const quest = E('quest', 'The Missing Fishermen', {
     visibility: 'players',
     questStatus: 'active',
     parentId: saltmere.id,
     summary: 'Three boats went out and never came back. Marta asked the party to look into it.',
+    body: 'Marta’s regulars are gone and the fleet is frightened. Start by asking around the docks, where one boat’s anchor was cut, and watch the water at night.\n\n:::gm\nThe three boats were lured by the new light at [[The Drowned Lighthouse]] and are moored in its cellar. The crews are alive but charmed by the [[Choir of the Deep]], and will fight to stay until the lamp is put out.\n:::',
+    fields: [
+      { key: 'Given by', value: 'Marta Copperkettle' },
+      { key: 'Reward', value: '30 sp and the best room at the Salty Anchor for free' },
+    ],
   })
   const pc = E('pc', 'Wren Thistle', {
     visibility: 'players',
     summary: 'Half-elf ranger, looking for her lost brother',
+    body: 'Lean and weather-browned, with a green cloak and an easy way of watching a room. She wants to find her brother Tobin, who went into the woods and did not come out. She carries a short bow and a carved wooden bird he made her.',
     fields: [
       { key: 'Player', value: '(player name)' },
       { key: 'Class', value: 'Ranger 3' },
@@ -174,7 +208,7 @@ export async function loadSampleWorld(): Promise<string> {
     await db.worlds.add({
       id: worldId,
       name: 'The Shattered Coast',
-      description: 'A small sample world to explore. Try the map, switch to Player view, and open Saltmere.',
+      description: 'A small sample world to explore. Try the map, switch to Player view, and open Saltmere and its tavern, the Salty Anchor.',
       sample: true,
       system: 'System agnostic',
       createdAt: now,
@@ -231,6 +265,7 @@ export async function loadSampleWorld(): Promise<string> {
       number: 1,
       title: 'Arrival in Saltmere',
       date: localDate(),
+      worldDate: { year: 312, month: 3, day: 14 },
       notes: 'Party met [[Marta Copperkettle]] at [[The Salty Anchor]]. Took the [[The Missing Fishermen]] quest.\n\nLoose thread: Wren noticed [[Corvin Vane]] wearing a strange coral ring.',
       recap: 'The party arrived in [[Saltmere]] in a storm and found shelter at [[The Salty Anchor]]. Marta told them about the missing fishing boats.',
       visibility: 'players',
