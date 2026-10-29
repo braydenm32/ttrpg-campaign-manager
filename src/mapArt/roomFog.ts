@@ -129,14 +129,15 @@ export function roomFogShapes(drawing: Drawing, W: number, H: number, [lat, lng]
     .map((l) => simplify(l, 0.04 * g))
     .filter((l) => l.length > 2 && loopArea(l) > (0.25 * g) ** 2)
   if (!loops.length) return 'none'
-  // Loops inside another loop are rock left standing in the room. They are put back as they were, so
-  // a ring-shaped room can't uncover what is in its middle. (The tracer doesn't say which way a loop
-  // runs, so nesting is counted instead: inside an odd number of loops means a hole.)
+  // Loops inside another loop are rock (or a walled-off chamber) left standing in the room. When
+  // uncovering, they are covered again so a ring-shaped room can't show what is in its middle; when
+  // covering, they are simply covered along with the room (never uncovered). (The tracer doesn't say
+  // which way a loop runs, so nesting is counted instead: inside an odd number of loops means a hole.)
   const depth = (l: Point[]) => loops.filter((o) => o !== l && inside(o, l[0])).length
-  const other = mode === 'reveal' ? 'hide' : 'reveal'
   const toFog = (l: Point[]) => l.map(([lx, ly]) => [H - ly, lx] as [number, number])
   return loops
     .map((l) => ({ l, n: depth(l) }))
+    .filter(({ n }) => mode === 'reveal' || n % 2 === 0)
     .sort((a, b) => a.n - b.n)
-    .map(({ l, n }) => ({ id: newId(), mode: n % 2 ? other : mode, points: toFog(l) }))
+    .map(({ l, n }) => ({ id: newId(), mode: n % 2 ? ('hide' as const) : mode, points: toFog(l) }))
 }
