@@ -53,6 +53,12 @@ export default function Timeline() {
         { key: 'campaign', era: 'campaign', title: 'During the campaign', items: events.filter((e) => e.eventEra === 'campaign') },
       ]
 
+  // Two events on different calendar days keep their date order, so the arrows can't swap them.
+  const byDate = (a: Entity, b?: Entity) => {
+    const wa = when(a)
+    const wb = b && when(b)
+    return wa !== undefined && wb !== undefined && wa !== wb
+  }
   const move = async (list: Entity[], i: number, dir: -1 | 1) => {
     const j = i + dir
     if (j < 0 || j >= list.length) return
@@ -73,7 +79,7 @@ export default function Timeline() {
     e.eventOrder = Date.now()
     if (place) e.parentId = place
     await db.entities.add(e)
-    navigate(`${pagePath(worldId, e.id)}?edit=1`)
+    navigate(`${pagePath(worldId, e.id)}?edit=1&new=1`)
   }
 
   return (
@@ -139,10 +145,10 @@ export default function Timeline() {
                   </div>
                   {isGM && (
                     <div className="reorder">
-                      <button className="ghost" onClick={() => move(era.items, i, -1)} disabled={i === 0} aria-label="Earlier">
+                      <button className="ghost" onClick={() => move(era.items, i, -1)} disabled={i === 0 || byDate(e, era.items[i - 1])} title={i > 0 && byDate(e, era.items[i - 1]) ? 'Ordered by date. Change the date to move it.' : undefined} aria-label="Earlier">
                         ↑
                       </button>
-                      <button className="ghost" onClick={() => move(era.items, i, 1)} disabled={i === era.items.length - 1} aria-label="Later">
+                      <button className="ghost" onClick={() => move(era.items, i, 1)} disabled={i === era.items.length - 1 || byDate(e, era.items[i + 1])} title={i < era.items.length - 1 && byDate(e, era.items[i + 1]) ? 'Ordered by date. Change the date to move it.' : undefined} aria-label="Later">
                         ↓
                       </button>
                     </div>

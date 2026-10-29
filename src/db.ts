@@ -882,11 +882,24 @@ export function blankEntity(worldId: string, type: EntityType, name = ''): Entit
   }
 }
 
+/**
+ * A fresh page that keeps only what a template should hand on: the wording and the shape. Anything
+ * tied to one particular page or to play (links to other pages, how full a clock is, who carries it,
+ * dates, a player's own text) is left out, and clocks start empty with ids of their own.
+ */
+export function templateOf(t: Entity): Entity {
+  const c = structuredClone(t)
+  const keep = <K extends keyof Entity>(...keys: K[]) => Object.fromEntries(keys.filter((k) => c[k] !== undefined).map((k) => [k, c[k]])) as Partial<Entity>
+  return {
+    ...blankEntity(c.worldId, c.type, c.name),
+    ...keep('customType', 'summary', 'body', 'gmNotes', 'tags', 'gmTags', 'fields', 'entries', 'imageId', 'quantity', 'eventEra', 'eventAge', 'threadUrgency'),
+    ...(c.clocks?.length ? { clocks: c.clocks.map((k) => ({ ...k, id: newId(), filled: 0 })) } : {}),
+  }
+}
+
 /** A new page that starts as a copy of a template. */
 export function fromTemplate(t: Entity, name = `New ${t.name}`): Entity {
-  const now = Date.now()
-  const { template: _t, revealedTo: _r, ...rest } = structuredClone(t)
-  return { ...rest, id: newId(), name, visibility: 'gm', createdAt: now, updatedAt: now }
+  return { ...templateOf(t), name }
 }
 
 export async function deleteWorld(worldId: string) {

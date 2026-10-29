@@ -27,9 +27,9 @@ export default function MapView() {
   const { worldId } = useWorld()
   const { mapId = '' } = useParams()
   const { canSee, isGM } = useViewMode()
-  const map = useLiveQuery(() => db.maps.get(mapId), [mapId])
+  const map = useLiveQuery(async () => (await db.maps.get(mapId)) ?? null, [mapId])
   // previewing as a player shows their copy of a map with secrets on it
-  const url = useAssetUrl(map && (isGM ? map.imageId : playersImageId(map)))
+  const url = useAssetUrl(map ? (isGM ? map.imageId : playersImageId(map)) : undefined)
 
   if (map === undefined) return null
   if (map === null || map.worldId !== worldId || !canSee(map.visibility)) return <Empty>Map not found.</Empty>

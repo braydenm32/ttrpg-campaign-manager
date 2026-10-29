@@ -257,6 +257,40 @@ export function CalDateInput({ calendar, value, onChange }: { calendar: WorldCal
   )
 }
 
+/**
+ * Takes a month out of the calendar. Dates store the month's place in the list, so everything dated
+ * after it is moved up to keep reading the same month; anything dated inside it loses its calendar date
+ * (a date written by hand stays), and holidays in it go.
+ */
+async function removeMonth(world: World, c: WorldCalendar, i: number) {
+  const events = await db.entities.where({ worldId: world.id }).filter((e) => !!e.eventWhen && e.eventWhen.month >= i).toArray()
+  const sessions = await db.sessions.where({ worldId: world.id }).filter((x) => !!x.worldDate && x.worldDate.month >= i).toArray()
+  const inside = events.filter((e) => e.eventWhen!.month === i).length + sessions.filter((x) => x.worldDate!.month === i).length
+  const later = events.length + sessions.length - inside
+  const holidays = (c.holidays ?? []).filter((h) => h.month === i).length
+  const note = [
+    inside && `${inside} dated event${inside === 1 ? '' : 's'} or session${inside === 1 ? '' : 's'} in it will lose their calendar date`,
+    holidays && `${holidays} holiday${holidays === 1 ? '' : 's'} in it will be removed`,
+    later && `${later} later date${later === 1 ? '' : 's'} will be moved up so they keep their month`,
+  ].filter(Boolean)
+  if (!confirm(`Remove the month “${c.months[i].name}”?${note.length ? ` ${note.join('; ')}.` : ''}`)) return
+  const up = (d: CalDate): CalDate => (d.month > i ? { ...d, month: d.month - 1 } : d)
+  const last = c.months.length - 2
+  await db.transaction('rw', [db.worlds, db.entities, db.sessions], async () => {
+    for (const e of events) await db.entities.update(e.id, { eventWhen: e.eventWhen!.month === i ? undefined : up(e.eventWhen!) })
+    for (const x of sessions) await db.sessions.update(x.id, { worldDate: x.worldDate!.month === i ? undefined : up(x.worldDate!) })
+    await db.worlds.update(world.id, {
+      calendar: {
+        ...c,
+        months: c.months.filter((_, j) => j !== i),
+        holidays: c.holidays?.filter((h) => h.month !== i).map((h) => ({ ...h, month: h.month > i ? h.month - 1 : h.month })),
+        today: c.today && (c.today.month === i ? { ...c.today, month: Math.min(i, last), day: 1 } : up(c.today)),
+      },
+      updatedAt: Date.now(),
+    })
+  })
+}
+
 /** World settings: choose or build the calendar. */
 export function CalendarEditor({ world }: { world: World }) {
   const c = world.calendar
@@ -371,7 +405,7 @@ export function CalendarEditor({ world }: { world: World }) {
                   <input type="checkbox" checked={!!m.festival} onChange={(e) => change({ months: c.months.map((x, j) => (j === i ? { ...x, festival: e.target.checked || undefined } : x)) })} />
                   festival
                 </label>
-                <button type="button" className="ghost" disabled={c.months.length < 2} onClick={() => change({ months: c.months.filter((_, j) => j !== i) })}>
+                <button type="button" className="ghost" disabled={c.months.length < 2} onClick={() => removeMonth(world, c, i)}>
                   ×
                 </button>
               </div>
@@ -470,6 +504,22 @@ export function CalendarEditor({ world }: { world: World }) {
   )
 }
 
+/** Days from a date to the same day number in the next ordinary month (festivals and leap-only months are skipped, short months clamp). */
+function daysToNextMonth(c: WorldCalendar, d: CalDate) {
+  let m = d.month
+  let y = d.year
+  for (let tries = 0; tries <= c.months.length; tries++) {
+    m++
+    if (m >= c.months.length) {
+      m = 0
+      y++
+    }
+    if (!c.months[m].festival && monthDays(c, m, y) > 0) break
+  }
+  const len = monthDays(c, m, y)
+  return len ? Math.max(1, toDays(c, { year: y, month: m, day: Math.min(d.day, len) }) - toDays(c, d)) : 30
+}
+
 /** Today's date in the world, its moons, and (for the GM) buttons to move time on. */
 export function WorldToday({ world, isGM }: { world: World; isGM: boolean }) {
   const c = world.calendar
@@ -503,7 +553,7 @@ export function WorldToday({ world, isGM }: { world: World; isGM: boolean }) {
           <button className="small" onClick={() => move(week)}>
             +1 {c.weekdays.length ? 'week' : 'tenday'}
           </button>
-          <button className="small" onClick={() => move(Math.max(1, monthDays(c, c.today!.month, c.today!.year) || 30))}>
+          <button className="small" onClick={() => move(daysToNextMonth(c, c.today!))} title="The same day of the next month">
             +1 month
           </button>
         </span>

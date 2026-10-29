@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { db, ENTITY_LABELS, PICKER_TYPES, typeLabel, type Entity, type Session, type World, type WorldMap } from './db'
 import { Help, HELP } from './help'
 import { Ico, TypeIcon } from './icons'
-import { BookOpen, MagnifyingGlass, MapTrifold, Plus, ArrowRight } from '@phosphor-icons/react'
+import { BookOpen, Lock, MagnifyingGlass, MapTrifold, Plus, ArrowRight } from '@phosphor-icons/react'
 import { useCreatePage } from './NewPage'
 import { useVisibleEntities } from './hooks'
 import { stripSecrets } from './Markdown'
@@ -30,6 +30,8 @@ export interface Hit {
   score: number
   /** Drawn instead of the emoji icon where there's room for a line icon. */
   node?: ReactNode
+  /** A page only the GM can see. */
+  gmOnly?: boolean
   /** An action (like making a new page) instead of a page to open. */
   run?: () => void
 }
@@ -72,7 +74,7 @@ export function searchWorld(
       snippet = around(body, q) || around(extra, q)
     }
     if (score)
-      hits.push({ key: e.id, to: `${pagePath(worldId, e.id)}`, icon: typeLabel(e, world).icon, node: <TypeIcon type={e.type} custom={world?.customTypes?.find((c) => c.id === e.customType)} />, title: e.name, snippet: snippet || e.summary, score })
+      hits.push({ key: e.id, to: `${pagePath(worldId, e.id)}`, icon: typeLabel(e, world).icon, node: <TypeIcon type={e.type} custom={world?.customTypes?.find((c) => c.id === e.customType)} />, title: e.name, snippet: snippet || e.summary, score, gmOnly: isGM && e.visibility === 'gm' })
   }
   for (const s of sessions) {
     const title = `#${s.number} ${s.title}`
@@ -189,6 +191,7 @@ export function QuickSearch({ worldId, world, onClose }: { worldId: string; worl
                 <button className="link" onMouseEnter={() => setActive(i)} onClick={() => open(h)}>
                   <strong className="row">
                     {h.node ?? h.icon} {h.title}
+                    {h.gmOnly && <span title="GM only" aria-label="GM only"><Ico as={Lock} /></span>}
                   </strong>
                   {h.snippet && <span className="muted small">{h.snippet}</span>}
                 </button>

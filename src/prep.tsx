@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { DraftText } from './components'
-import { ENTITY_LABELS, blankLectern, blankPrep, db, newId, type CheckItem, type Encounter, type Entity, type Session, type SessionPrep } from './db'
+import { PagePicker } from './PagePicker'
+import { blankLectern, blankPrep, db, newId, type CheckItem, type Encounter, type Entity, type Session, type SessionPrep } from './db'
 import { addCombatants, encounterCombatants, foeCount, foeFromEntity, numberFrom } from './encounters'
 import { Help } from './help'
 import { StatusBadge } from './status'
@@ -284,22 +285,14 @@ function FoeTable({ enc, entities, worldId, onChange }: { enc: Encounter; entiti
         <input value={ac} onChange={(e) => setAc(e.target.value)} placeholder="AC" />
         <button disabled={!name.trim()}>Add</button>
       </form>
-      <select
-        value=""
-        onChange={(e) => {
-          const page = byId.get(e.target.value)
+      <PagePicker
+        entities={entities.filter((e) => ['npc', 'pc', 'faction', 'deity', 'custom'].includes(e.type))}
+        placeholder="+ Add from a page (reads HP and AC from its details)…"
+        onPick={(id) => {
+          const page = byId.get(id)
           if (page) onChange((x) => void x.foes.push(foeFromEntity(page)))
         }}
-      >
-        <option value="">+ Add from a page (reads HP and AC from its details)…</option>
-        {entities
-          .filter((e) => ['npc', 'pc', 'faction', 'deity', 'custom'].includes(e.type))
-          .map((e) => (
-            <option key={e.id} value={e.id}>
-              {ENTITY_LABELS[e.type].icon} {e.name}
-            </option>
-          ))}
-      </select>
+      />
     </div>
   )
 }
@@ -307,6 +300,8 @@ function FoeTable({ enc, entities, worldId, onChange }: { enc: Encounter; entiti
 /** The prep sheet at the Lectern: the opening, scenes and clues to tick off, and fights to start. */
 export function LecternPrep({ session, worldId }: { session: Session; worldId: string }) {
   const prep = { ...blankPrep(), ...session.prep }
+  // Fights already added to the initiative list from here, so a second tap asks first instead of doubling them.
+  const [loaded, setLoaded] = useState<string[]>([])
   const edit = (fn: (p: SessionPrep) => void) => editPrep(session.id, fn)
   const empty = !prep.strongStart && !prep.scenes.length && !prep.clues.length && !prep.encounters.length
   const tick = (list: 'scenes' | 'clues', x: CheckItem) => (
@@ -361,11 +356,21 @@ export function LecternPrep({ session, worldId }: { session: Session; worldId: s
           <div className="muted"><Ico as={Sword} /> Encounters</div>
           <div className="row wrap">
             {prep.encounters.map((enc) => (
-              <button key={enc.id} disabled={!enc.foes.length} title={enc.notes || 'Add to initiative'} onClick={() => runEncounter(session.id, enc)}>
-                <Ico as={Sword} /> {enc.name} ({foeCount(enc)})
+              <button
+                key={enc.id}
+                disabled={!enc.foes.length}
+                title={enc.notes || 'Add to initiative'}
+                onClick={() => {
+                  if (loaded.includes(enc.id) && !confirm(`“${enc.name}” is already in the initiative list. Add it again?`)) return
+                  runEncounter(session.id, enc)
+                  setLoaded([...loaded, enc.id])
+                }}
+              >
+                <Ico as={Sword} /> {enc.name} ({foeCount(enc)}){loaded.includes(enc.id) && ' ✓ added'}
               </button>
             ))}
           </div>
+          {loaded.length > 0 && <div className="muted">Added to the Initiative list. Tap again to add another set.</div>}
         </div>
       )}
     </section>

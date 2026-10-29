@@ -3,7 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { DraftText, Empty } from '../components'
-import { db, ENTITY_LABELS, newId, type Board, type BoardCard } from '../db'
+import { PagePicker } from '../PagePicker'
+import { db, newId, type Board, type BoardCard } from '../db'
 import { Help } from '../help'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { StatusBadge } from '../status'
@@ -27,7 +28,7 @@ export default function BoardView() {
   const { worldId } = useWorld()
   const { boardId = '' } = useParams()
   const { isGM } = useViewMode()
-  const board = useLiveQuery(() => db.boards.get(boardId), [boardId])
+  const board = useLiveQuery(async () => (await db.boards.get(boardId)) ?? null, [boardId])
   if (board === undefined) return null
   if (!isGM) return <Empty>Corkboards are a GM tool. Switch back to the GM view to use them.</Empty>
   if (board === null || board.worldId !== worldId) return <Empty>Board not found.</Empty>
@@ -131,22 +132,11 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
         </button>
       </header>
       <div className="row wrap board-toolbar">
-        <select
-          value=""
-          onChange={(e) => {
-            const id = e.target.value
-            if (id) addCard({ entityId: id })
-          }}
-        >
-          <option value="">+ Pin a page…</option>
-          {entities
-            .filter((e) => !onBoard.has(e.id))
-            .map((e) => (
-              <option key={e.id} value={e.id}>
-                {ENTITY_LABELS[e.type].icon} {e.name}
-              </option>
-            ))}
-        </select>
+        <PagePicker
+          entities={entities.filter((e) => !onBoard.has(e.id))}
+          placeholder="+ Pin a page…"
+          onPick={(id) => id && addCard({ entityId: id })}
+        />
         <form
           className="row"
           onSubmit={(e) => {

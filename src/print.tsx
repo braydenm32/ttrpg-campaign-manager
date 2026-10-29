@@ -79,7 +79,7 @@ function PrintBody({ world }: { world: World }) {
 
 function PrintEntity({ world, id }: { world: World; id: string }) {
   const { isGM, canSeeEntity } = useViewMode()
-  const stored = useLiveQuery(() => db.entities.get(id), [id])
+  const stored = useLiveQuery(async () => (await db.entities.get(id)) ?? null, [id])
   const entities = useVisibleEntities(world.id)
   const image = useAssetUrl(stored && (isGM || canSeeEntity(stored)) ? stored.imageId : undefined)
   if (stored === undefined) return null
@@ -124,7 +124,7 @@ function PrintEntity({ world, id }: { world: World; id: string }) {
 
 function PrintSession({ world, id }: { world: World; id: string }) {
   const { isGM, canSee } = useViewMode()
-  const s = useLiveQuery(() => db.sessions.get(id), [id])
+  const s = useLiveQuery(async () => (await db.sessions.get(id)) ?? null, [id])
   const entities = useVisibleEntities(world.id)
   if (s === undefined) return null
   if (!s || s.worldId !== world.id) return <p>Session not found.</p>
