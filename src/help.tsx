@@ -48,8 +48,9 @@ export const HELP = {
     'Other names this page goes by, like “the Harbourmaster” for Corvin Vane. A [[link]] to any of them finds this page. Nicknames are for you: players don’t see them. Renaming a page updates every link to it.',
   gmTags: 'Tags only you see, like “traitor” or “recurring”. Players get the ordinary tags of a revealed page, never these.',
   history:
-    'Every time you save a page, the version before is kept on this device (the last 40). Look at an old version or restore it; restoring keeps today’s version too.',
-  recentlyDeleted: 'Pages, sessions, campaigns, maps, files, corkboards and sounds deleted on this device (pages deleted on another device too). Restore brings them back as they were. Things other than pages are kept for a month.',
+    'Every time you save a page, the version before is kept on this device (the last 40). Look at an old version or restore it; restoring keeps today’s version too, and who can see the page stays as it is now.',
+  recentlyDeleted:
+    'Pages, sessions, campaigns, maps, files, corkboards and sounds deleted on this device, or on another device that syncs this world. Restore brings them back as they were. Things other than pages are kept for a month; “Delete forever” or “Empty the bin” frees the space straight away.',
   templates:
     'A template is a starting point for new pages, like a "Dungeon room" with the headings and details you always fill in. Templates are always GM only and never appear in lists. Make one with "Save as template" on any page.',
   lifeStatus:

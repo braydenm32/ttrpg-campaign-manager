@@ -198,7 +198,13 @@ export interface World {
   /** The table's safety tools: lines (never in the game) and veils (happens off screen). Everyone sees these. */
   safety?: Safety
   /** Device-only: cloud sync settings for this world. Never uploaded. */
-  cloud?: { enabled: boolean; lastPulledAt?: string; pullVersion?: number }
+  cloud?: {
+    enabled: boolean
+    lastPulledAt?: string
+    pullVersion?: number
+    /** Set when the cloud copy turned out to be gone (deleted on another device, or this GM was removed): sync stops until the GM decides. */
+    gone?: boolean
+  }
   /**
    * Device-only: set when this world is a read-only player copy, either opened from a share link
    * (token) or joined with an invite (memberOf, the GM's cloud world id).
@@ -728,12 +734,21 @@ export interface BinItem {
   id: string
   worldId: string
   at: number
-  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map'
+  /** "elsewhere": removed because it was deleted on another device (several things at once, maybe). */
+  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map' | 'elsewhere'
   /** What to call it in the list, e.g. the session's title. */
   label: string
   /** The rows that were removed, by table, so restoring puts every one back. */
   rows: { table: 'campaigns' | 'sessions' | 'assets' | 'boards' | 'sounds' | 'maps' | 'pins'; rows: unknown[] }[]
+  /**
+   * Links that pointed at what was deleted and were cleared (pins on other maps that led into a map,
+   * characters who played in a campaign), so restoring puts them back.
+   */
+  relinks?: { table: 'pins' | 'entities'; field: 'childMapId' | 'campaignId'; value: string; ids: string[] }[]
 }
+
+/** How long the recently deleted bin keeps things. */
+export const BIN_KEEP_FOR = 30 * 24 * 60 * 60_000
 
 /** What was last synced for each row, so only real changes are uploaded. */
 export interface SyncMeta {
@@ -741,7 +756,10 @@ export interface SyncMeta {
   worldId: string
   hash: string
   deleted?: boolean
-  /** Upload failed (e.g. file too large); not retried until the row changes. */
+  /**
+   * Upload failed (e.g. file too large); not retried until the row changes. DOWNLOAD_FAILED (with
+   * deleted, as there's no copy here) for a file that couldn't be downloaded: tried again each time the app opens.
+   */
   failed?: string
   /** The row as last synced (without files), so edits made here and elsewhere can be merged. */
   base?: Record<string, unknown>
@@ -810,6 +828,17 @@ db.version(5).stores({
 // v6: recordings are saved a few seconds at a time while they run, so a crash loses almost nothing.
 db.version(6).stores({
   recordingChunks: '++id, recordingId, sessionId',
+})
+
+// v7: deleted pages are found without reading every saved version of every page.
+db.version(7).stores({
+  history: 'id, entityId, worldId, at, [worldId+reason]',
+})
+
+// The bin is cleared of anything over a month old soon after the app opens, not only when it's
+// looked at, so deleting a big recording to make room does give the space back in time.
+db.on('ready', () => {
+  setTimeout(() => db.bin.where('at').below(Date.now() - BIN_KEEP_FOR).delete().catch(() => {}), 5000)
 })
 
 export const newId = () => crypto.randomUUID()
