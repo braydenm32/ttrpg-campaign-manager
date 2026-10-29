@@ -18,7 +18,7 @@ The full step-by-step guide is [docs/EDITING.md](../../docs/EDITING.md).
 | Quests, loose threads, handouts, endings, campaign events | `campaign/` |
 | The eight sessions (notes, prep, encounters, Lectern) | `sessions/` |
 | The corkboard | `boards/` |
-| The GM's "Start here" page | `guides/` |
+| The GM's guides (Start Here, Running The Lantern Gutters, The Clocks) and the Player's Guide | `guides/` |
 | Page templates | `templates/` |
 | Maps (drawn by code; pins point at pages by key) | `src/example/maps/` |
 

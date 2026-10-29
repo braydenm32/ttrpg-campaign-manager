@@ -5,14 +5,17 @@ worldDate: 9 Leafrot 3011
 pages: [ warden-uthrem, ysse, borrin, quorl, tick, varra, seraphine-ashe, ilse-marrow, mirrel-vosk, brother-tallow, fennick, spoons, garrick-sallow, ansel-mote, pell-quillon, tollamund, odile-fairweather, kettle, vexa-glassjaw, dreaming-widow, mother-corvane, npc-mother-brisk, npc-mourn, npc-mother-hennet, npc-dunny-pike, npc-noume-flarewick, treaty-bell, corvel-rise, last-candle, the-rent, ninth-stone, item-lantern, item-shard, item-cage-keys, end-reseal, end-crack, end-use, god-sleeper, god-saint, burned-mill, npc-nance-oddy, ambercote, npc-keld-owes-nothing, item-hennets-soup-pot, lore-signals, npc-brother-audit, lore-songs, item-aurels-penny, bridle-and-yoke, q-wager-on-never, npc-greta-holm, t-pardon-list, t-key-that-melts, t-frostcall-cargo ]
 encounters:
   - name: The dead of Cinders
-    notes: "Only if the Sleeper's clock has reached 6, or the crack widens at the Stone. Zombies (slam +3, 1d6+1, Undead Fortitude) and one wight (two longswords +4, 1d8+2, or one longsword and Life Drain +4, 1d6+2 necrotic, Con DC 13 or hit-point maximum reduced). They walk to the Stone, not at the party, unless the party stands in the way. A wick-lamp's flame denies Undead Fortitude, and lantern-lit weapons ignore their resistances."
+    notes: "Only if the Sleeper's clock has reached 6, or the crack widens at the Stone. Zombies (slam +3, 1d6+1, Undead Fortitude) and one wight (two longswords +4, 1d8+2, or one longsword and Life Drain +4, 1d6+2 necrotic, Con DC 13 or hit-point maximum reduced). They walk to the Stone, not at the party, unless the party stands in the way. A wick-lamp's flame denies Undead Fortitude, and lantern-lit weapons ignore their resistances. Built for five level-5 PCs: medium if they stand in the way, and the company on the lip takes the rest."
     foes:
       - { name: Dead of Cinders, count: 6, hp: 22, ac: "8", side: foe }
       - { name: Lost lantern-captain (wight), count: 1, hp: 45, ac: "14", side: foe }
   - name: The Saint's champion
-    notes: "Seraphine with the Saint in her (page stats: priest, immune to fire; sacred flame, command, charm person, burning hands, flame strike once). Ilyra's gift for this night: spirit guardians, fire-gold. Ilyra's Kindness (recharge 5-6): one creature within 30 ft, Wisdom DC 14 or charmed, and it walks to her. Her eyes are ember-red. She fights to win Ysse, not to kill; talked back to herself (Persuasion DC 18, or Ysse refusing her by name), she stops."
+    notes: "Seraphine with the Saint in her (page stats: priest, immune to fire; sacred flame, command, charm person, burning hands, flame strike once). Ilyra's gift for this night: spirit guardians, fire-gold. Ilyra's Kindness (recharge 5-6): one creature within 30 ft, Wisdom DC 14 or charmed, and it walks to her. Her eyes are ember-red. She fights to win Ysse, not to kill; talked back to herself (Persuasion DC 18, or Ysse refusing her by name), she stops. Built for five level-5 PCs: hard, because of flame strike. Talking her down is the better answer."
     foes:
       - { name: Seraphine Ashe, count: 1, hp: 45, ac: "13", side: foe, page: seraphine-ashe }
+lectern:
+  scene: ash-road
+  present: [ ilse-marrow, mirrel-vosk, pell-quillon ]
 ---
 
 ## Session 8: The Lantern Gutters
@@ -27,6 +30,21 @@ encounters:
 
 **Goal.** Decide the flame's fate. See [[Ending: Reseal the Ward]], [[Ending: Let It Crack]] and [[Ending: Use It]].
 
+### Running this session
+**Last time** (read aloud). *"For two days every knife in the March came out for the lantern: the Concord at the gate with its lawyers, the clerk in the night with his, the Saint's wardens on the hill road, Mother Corvane at the foot of the hill, and Sallow's mutiny in the yard. What's left of the company stood round the cage in the frost, and Marrow said it plainly: whatever we're doing with that thing, we're doing it at the Rent, under the moon, together. Before dawn, they unbolted the cage."*
+
+**Where the PCs are.** At the Keep on the morning of 7 Leafrot, before dawn, with the cage lashed to a handcart and the company forming up in the yard.
+
+**The party should have.** The lantern (Ysse with the first key; Marrow and Vosk with theirs), [[A Rubbing from the Ninth Stone]], and whatever allies they earned: [[Hold-Mother Greta Holm]] if they sent for her in time, [[Keld Owes-Nothing]] if they found her, the Rust Choir or Grashka herself if the Mothers' letter said so, Orla Quist with her chain. Count the marchers on the Mutiny table in session 7. Check the Sleeper's clock.
+
+**If they missed something.**
+- *No rubbing?* Uthrem tells them what it says at the Stone, in fewer words and with more grinding.
+- *Never sent for Greta Holm?* Nobody says the Standing rite; keep the epilogue's d6 in [[Ending: Reseal the Ward]].
+- *Never found Keld?* Corvane at the lip is harder to talk round: Quorl's eight sentences still work, but nothing else does.
+- *Ysse went with Seraphine?* The company carries the lantern without its keeper, and the flame fails faster (pay one extra gauntlet cost on the road). Ysse is waiting at the lip in white, at Seraphine's side, and the fight with the Saint's champion is for her.
+
+**The session at a glance.** The last session runs long; plan on five hours, or two evenings. Scene 1 is the dawn the column leaves. Scene 2 is three days on the road: run one or two gauntlet fights, never more than one a day, and let the camps at night be quiet scenes for the PCs to talk. Scene 3 is dusk on the 9th at the lip. Scene 4 comes as the Ember climbs. Scene 5 is the descent and the choice, by night. Scene 6 is dawn on the 10th. If time runs short, cut the gauntlet to one fight and the priests to Corvane and Seraphine.
+
 **Who's still standing?** Before you start, check what session 7 left alive and free, and strike out the rest below: Mote (fled, dead or in irons), Sallow (in irons, on the road with his diehards, dead, or redeemed), Seraphine (here as the Saint's champion unless she was talked back to herself), Pell (with the column, or dead in the fire), Corvane (an ally, or the friend at the lip), Bray (dead if he talked).
 
 ---
@@ -37,6 +55,10 @@ The cage is unbolted from its niche on the Keep's east wall and lifted down: lan
 As the cart rolls down the hill road, [[Dunny Pike]] climbs the bell-house stair past the knot, hauls the Treaty Bell's rope down, and pulls it: the tenth ring in nine years. He makes it four. Four is the end of the world. He has never done four; he has practised it in his head. The whole town comes out in the dark with lamps to watch the company go. Thistle beats the Muster all the way down to the bridge, because nobody told her not to ([[Signals of Cinderford]]).
 
 **The soup.** Before the column moves, Mother Hennet takes [[Mother Hennet's Soup-Pot]] back and cooks in it for the first time in nine years: the night-of-Cinders soup, barley, salt mutton, onions and the last dried pears. Every soldier who marches gets a bowl: 1d4 temporary hit points, and advantage on the first save against being frightened or charmed before the next dawn. She does not march.
+
+**Development.** The column crosses the bridge as the sun comes up behind the Rent, and the town watches it go. Go to scene 2.
+
+**Treasure.** Hennet's soup, as above. Hob's handcart, which will never be paid for.
 
 ---
 
@@ -53,6 +75,8 @@ The company, or what's left of it (see the Mutiny table in session 7), carries t
 
 Each one costs something, whatever the dice say. Choose one: a wick-lamp gutters out for good (someone's flame is gone; the lantern is a little weaker); a named NPC is wounded and has to be left with the carts (a Dunmore twin, Noume, Gerda); or a clock ticks (Sleeper, Saint, or Concord).
 
+**Development.** Two nights' camp out on the ash, under a red moon that gets bigger every night. Give each camp one quiet scene: a PC and an NPC by the fire (Vosk and Varra, Marrow and whoever she trusts, Tallow and Ysse if Tallow came). The column reaches the lip at dusk on the 9th: go to scene 3.
+
 ---
 
 ### Scene 3: The priests at the lip (the 9th, dusk)
@@ -67,10 +91,14 @@ At the northern lip, above the Stone, the pantheon's priests are waiting, every 
 
 **Pennies.** Waiting on the lip, every soldier rubs his [[An Emperor's Penny|penny]], the way soldiers do, and frost blooms on the glass under their boots. A hundred at once spend the ward like a spell. If you are speeding up the Sleeper's clock, roll a d6 and tick it on a 1. A Vesh PC sees why.
 
+**Development.** The priests talk until the Ember is well up, and nobody can be argued with for ever. Those the party has talked down step back from the edge; the rest follow the party to the top of the rope steps. When the moon reaches the top of the sky, the flame speaks: go to scene 4.
+
 ---
 
 ### Scene 4: The voice in the flame
 As the Ember tops the sky, the flame speaks aloud for the first time, in the Ninth's warm voice, to whoever holds it: "Keep me." Everyone hears it. (It isn't the Ninth. The Ninth asks you to stand.) Tick the Sleeper's clock for the full Ember if you haven't. Left alone, the clock stands at 5 now and the dead stay in the ash: the finale is the march, the Stone and the choice. If it reaches 6 (because you sped it up), the dead of Cinders stand up all along the lip, turn, and start to walk toward the Stone (**The dead of Cinders**).
+
+**Development.** Now someone has to go down. The party goes, with the lantern; the company holds the lip behind them against whatever is left (the Sleepless, the priests, the dead). Getting the lantern down: Vosk's rope team lowers the cage on a line beside the rope steps, or Ysse, Marrow and Vosk turn all three keys and Ysse carries the lamp itself, small enough for two hands, with the shard in its bowl. The ropes the party fixed in session 6 are still there (advantage on the rope steps), but the Glass Stair is worse by Ember-light, when the red and the clear look the same (disadvantage, unless someone lights the way with a wick-lamp held low). If Seraphine is still the Saint's, she tries to stop them at the top of the steps: **The Saint's champion**. Go to scene 5.
 
 ---
 
@@ -91,6 +119,8 @@ The party goes down to the Warden's Shelf, as in session 6, with the lantern. At
 
 Whatever they choose, give each PC one last moment: Tick and Marla; Borrin and the shadow that wants his place; Quorl's last words, his own or someone's; Varra and her grandmother's letter; Ysse's answer.
 
+**Development.** The climb out is slow and nobody hurries it. If they resealed the ward, the crack closes over the night behind them, and they reach the lip as the sky goes grey. If they let it crack, they climb with the Stone groaning below and the dead on the lip turned round to watch them. If they kept it, the flame comes up with them, burning. Go to scene 6, at dawn.
+
 ---
 
 ### Scene 6: Dawn
@@ -107,7 +137,7 @@ An epilogue in the ash. Who's left, what Cinderford becomes, and what happens to
 - On the morning of the 10th, Nance Oddy picks up what fell from the pear tree at the Burned Mill. (Reseal) A pear, sweet, with one hard black seed, which she plants in the wheel-pit. (Let it crack) A stone, and the mill's dead have climbed out of the pit and gone east. (Use it) Nothing fell; the pear hangs red, and never ripens, and never rots.
 - Ambercote's square: (Reseal) every figure sags an inch, and the woman at the well has set her bucket down. (Let it crack) all two hundred and twelve walk east, and the living walk after them. (Use it) they stand, and turn a little further each red moon toward whoever holds the flame.
 
-Leave two threads open on purpose for a second arc: Borrin's shadow, and whoever the Sleeper whispers to next. For more, see [[Who is on the Crownfast pardon list?]], [[Why does the Returned smith forge the same key?]] and, on 10 Leafrot, [[What is the sealed cargo for Frostcall?]].
+**Development.** The campaign ends here, at level 5. A second arc starts at level 6 with whichever threads the table cares about. Leave two threads open on purpose for a second arc: Borrin's shadow, and whoever the Sleeper whispers to next. For more, see [[Who is on the Crownfast pardon list?]], [[Why does the Returned smith forge the same key?]] and, on 10 Leafrot, [[What is the sealed cargo for Frostcall?]].
 
 == Strong start ==
 
@@ -130,3 +160,7 @@ The lantern is lashed to a handcart, and the flame inside the cage is the size o
 - If the lantern goes out, by contract the company stands down.
 - The gods' priests each want the crack open for their own reason, and they want it before dawn.
 - Quorl's seventh whisperer said: "Don't let them put it out."
+
+== Lectern ==
+
+The lantern is lashed to a handcart, and the flame inside the cage is the size of a fingernail and blue at the root. Ysse walks beside it with one hand on the bars. Behind you, a hundred soldiers. Ahead, three days of ash and then the Rent. Down in the west the Ember is setting, nearly full, low and red, so close it seems you could hear it breathing. Back on the hill, the Treaty Bell is still ringing: four, the end of the world. Everyone who has ever wanted this flame is on the road behind you.

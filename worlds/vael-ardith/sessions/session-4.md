@@ -5,14 +5,17 @@ worldDate: 20 Ashfall 3011
 pages: [ seraphine-ashe, ilyra, npc-iosune, sorrel-vey, npc-mourn, npc-tesh, aelith-sorn, ilse-marrow, garrick-sallow, npc-dunstan-bray, spoons, brother-tallow, fennick, mother-corvane, kettle, ansel-mote, pell-quillon, house-unburnt-light, velvet-ledger, h-letter, item-velvet-token, item-saint-candle, q-kettles-cargo, f-church-saint, god-saint, god-isaurana, bellwether, npc-marn-tolliver, q-thirteenth-barrel, the-thirteenth-barrel, sedgemere, q-price-was-an-arm, npc-mother-hennet, npc-pennamund, npc-brother-audit, npc-fallon-wrass, the-salt-lake, the-turncoat, npc-orla-quist, dunmeer, ambercote, npc-gammer-teal ]
 encounters:
   - name: The Lamp-Wardens
-    notes: "Veteran (the House's Lamp-Wardens): two longsword attacks +5, 1d8+3. White-and-gold tabards in the House, red surcoats on the road. They fight with real regret. One by default; a second joins only if the party draws steel first. Seraphine calls them off at first blood, theirs or yours."
+    notes: "Veteran (the House's Lamp-Wardens): two longsword attacks +5, 1d8+3. White-and-gold tabards in the House, red surcoats on the road. They fight with real regret. One by default; a second joins only if the party draws steel first. Seraphine calls them off at first blood, theirs or yours. Built for five level-3 PCs: one warden is a medium fight, two is hard."
     foes:
       - { name: Lamp-Warden, count: 1, hp: 58, ac: "17", side: foe }
   - name: Sallow's loyalists
-    notes: "Dunstan Bray as a bandit captain (scaled up for level 3): scimitar +5 twice, 1d6+3, and a dagger +5, 1d4+3. Two of Sallow's loyalists as bandits (scimitar +3, 1d6+1). Only if the party tries to arrest Sallow without Marrow; Sallow stays behind his door, confined to quarters, and lets Bray take the blame. Bray yields at half HP and weeps."
+    notes: "Dunstan Bray as a bandit captain (scaled up for level 3): scimitar +5 twice, 1d6+3, and a dagger +5, 1d4+3. Two of Sallow's loyalists as bandits (scimitar +3, 1d6+1). Only if the party tries to arrest Sallow without Marrow; Sallow stays behind his door, confined to quarters, and lets Bray take the blame. Bray yields at half HP and weeps. Built for five level-3 PCs: medium."
     foes:
       - { name: Dunstan Bray, count: 1, hp: 65, ac: "15", side: foe, page: npc-dunstan-bray }
       - { name: Sallow's loyalist, count: 2, hp: 11, ac: "12", side: foe }
+lectern:
+  scene: lantern-keep
+  present: [ brother-tallow, mirrel-vosk, ilse-marrow, garrick-sallow ]
 ---
 
 ## Session 4: The House of Unburnt Light
@@ -27,10 +30,27 @@ encounters:
 
 **Goal.** Learn what the Saint's church wants with the flame, and survive its kindness.
 
+### Running this session
+**Last time** (read aloud). *"The red moon came up full and the whole town dreamed one dream. The Sleepless sat round Lantern Hill all night, singing under their breath. At midnight the lantern guttered again, Brother Tallow fell on the ladder, and Ysse held the flame with the first key in her hand. By dawn somebody had talked about who was at the oil store. That was three days ago. Tallow woke, nearly blind. The company is quiet, and careful, and watching Lieutenant Sallow."*
+
+**Where the PCs are.** At the Keep on the morning of 20 Ashfall, a Coinday, after three quieter days (see "In between"). Ysse has been keeper for three nights and has hardly slept. The letter arrives at the gate mid-morning.
+
+**The party should have.** The first cage key (Ysse), proof or a witness against Sallow (Spoons's word, Bray's confession, or the letter in the small neat hand), whatever they decided about the 600 gold, and Cass's slate ([[The Standing Village]]) for Tick. Maybe the jar of Stillwater ash from the oil store.
+
+**If they missed something.**
+- *Nothing against Sallow yet?* Scene 5 waits. Bray is still the weak link, and he has booked two horses at the Bridle & Yoke in his own name (session 7, "Two horses"), which a party asking at the stables can find now. If the party still has nothing by session 7, [[Brother Audit]] can read Sallow's prayers aloud in the yard.
+- *The flame went fully out in session 3?* Nothing here changes. Tallow simply says less, and Seraphine says more.
+- *The strongbox argument never happened?* Fennick brings it up at breakfast with the ledger open: the House wants its 480 gold, and someone has to decide.
+- *Vosk fetched the box instead of the party?* Open with Fennick's sums and the argument from session 3, scene 2, then the letter.
+
+**The session at a glance.** Six scenes over one day and night, and the middle of it is the party's to arrange. The usual order: the letter in the morning (scene 1); the House in the afternoon and over supper (scene 2); the Velvet Ledger late that night, where Tesh starts calling after midnight (scenes 3 and 4); the garden door on the walk home, if they go back (scene 6). If the party goes to the Ledger first, at noon when it is quiet, Sorrel comes to the House supper as their guest and Tesh's calling happens as they walk back past the Ledger that night. Scene 5, Sallow, happens whenever they bring their proof to Marrow: at the Keep before they leave, or the next morning. Nothing here needs a fight unless the party picks one.
+
 ---
 
 ### Scene 1: The letter
 A child in a clean white smock brings [[A Perfumed Letter]] to the Keep gate and waits for an answer. Everyone at the Keep has an opinion. Vosk: "Go. Eat everything. Sign nothing." Tallow, from his bed, blind: "Don't let her hold the lamp. Don't let her hold *you*." He will not say why.
+
+**Development.** The girl waits for an answer and will walk the party back to the House herself, chattering about the pears. If they accept, go to scene 2 in the early afternoon. If they want Sorrel's view first ("Sorrel knows Seraphine" is the kind of thing Marrow lets slip, or Hennet), go to scene 3 at noon and come back to scene 2. If they refuse, see "If the party…" above: Seraphine comes to them at noon. Ysse can't leave the lantern for long; someone else holds the first key while she's gone (Marrow takes it, unhappily), or Ysse stays and the House comes to her later in the week.
 
 ---
 
@@ -50,6 +70,10 @@ Every hour in the House, each PC makes a Wisdom save (DC 13) or finds themselves
 
 **Sorrel at supper.** If the party has asked [[Sorrel Vey]] for help (scene 3), she comes to the House supper as their guest, uninvited by anyone else, in black. At some point she says it to Seraphine's face, once, on purpose, across the table: that she is Ilse Marrow's lover. Seraphine smiles and says she's glad the captain has someone. Nobody else at the table will ever forget it.
 
+**Development.** Supper runs late, and the House offers beds. A party that stays the night wakes rested and a little too happy (each PC who stays makes the Wisdom save once more at breakfast). A party that leaves after supper walks a mile back along the Ash Road in the dark, and on Temple Row the Velvet Ledger's lamps are still lit: go to scene 3. A party that has already been to the Ledger goes home, and may want to come back to the House uninvited: scene 6. If anyone was healed at the House, or accepted the Saint's coin for the arrears, tick the Saint's clock.
+
+**Treasure.** The House gives freely: a loaf, a bottle of Halcyran wine, a clean shirt for anyone who needs one. Seraphine leaves [[The Saint's Candle-Stub]] with whoever seemed most in pain, "for the bad nights". Her offer of the Saint's coin for the company's arrears stands until session 7.
+
 ---
 
 ### Scene 3: The Velvet Ledger
@@ -59,10 +83,16 @@ Every hour in the House, each PC makes a Wisdom save (DC 13) or finds themselves
 
 **Tesh.** Late in the evening the house goes quiet, and then someone upstairs starts calling a name, over and over, in a voice that isn't hers: slow, warm, patient, in the cadence of the Sleeper's voice from the dream. It is [[Tesh]], the courtesan who does not sleep. Sorrel goes up to her and comes down pale. "She does that. Lately she does it every night." Insight DC 15 on Sorrel: she knows something about Tesh she is not saying. (She is the Regency's lost line: imperial blood through a by-blow of Aurel IX's uncle, and the Regent's own claimant in the capital has stopped speaking. Mote knows. See session 7.)
 
+**Development.** Sorrel's help depends on the trade. A secret the party gives her that she can use (Sallow's arrangement, the loan-chit's clause, what the Barrow said) buys her answer about the church and her company at supper. A secret that costs the party something (a PC's own) buys her trust, and with it scene 4. If the party leaves with nothing to trade, Sorrel gives them one thing free, because she wants Seraphine to lose: "Ask her what she does with the ones she saves."
+
+**Treasure.** A [[Velvet Ledger Token]], from Sorrel, for whoever she liked best.
+
 ---
 
 ### Scene 4: The ink
 If the party wins her trust, Sorrel shows them the oldest of her tattoos, under the gown, down her spine. Saelish script, faded and re-inked by later hands; a list of names; a ward-sign. Nobody in the March can read it. (It's the record of the Saelish Trespass that Sael chose to forget; [[Aelith Sorn]] can read one line in five, and would do almost anything to read the rest.)
+
+**Development.** The ink is a seed for session 7, when Aelith makes her move on Sorrel. The party doesn't need to understand it yet; it is enough that they know Aelith wants it badly. From here, they go back out to the House uninvited (scene 6), or straight up the hill to Marrow (scene 5).
 
 ---
 
@@ -71,12 +101,18 @@ With Spoons's word (or Bray's, or the letter in the small neat hand) and the coi
 
 If the party tries to take him without Marrow, Sallow stays behind his door and Bray comes out of the barracks with two friends: **Sallow's loyalists** (see Encounters).
 
+**Development.** Confined, Sallow is quiet and patient, and his people go underground: the Mutiny clock doesn't move, but it doesn't fall either. Not confined (no proof, or Marrow won't act), he buys a round at the Candle and Old Pike says his line about the Seventh's lieutenant. Either way, Bray is frightened now, and a frightened man is the party's best witness in session 7.
+
 ---
 
 ### Scene 6: The garden door (night)
 > The garden wall is lower at the bottom, where the pears are, and the door in it is open, as it always is. No lock; there has never been a lock. Inside, the pear trees stand very still, and between them, just at the edge of the lamplight, there are more people than there should be: standing, facing the house, not talking. In the Lamp Hall a single voice is praying, and then, under it, answering it, a second.
 
 If the party comes back to the House at night, uninvited: Seraphine at prayer in the Lamp Hall, speaking in two voices, her own and something warmer. On her desk in the next room, a letter to Halcyra, the ink still wet: "The flame's new keeper is a Vesh girl. Bring her to me." If they're caught and refuse to leave politely, run **The Lamp-Wardens** (one, called off at first blood).
+
+**Development.** Seraphine never mentions the night visit. She knows. From now on her letters to the Keep are warmer, and addressed to Ysse. Go to "How it ends".
+
+**Treasure.** The letter to Halcyra, if they take it, with the ink still wet.
 
 ---
 
@@ -117,3 +153,7 @@ A small girl in a clean white smock stands at the Keep gate with a letter held i
 - Tesh, at the Ledger, calls out at night in the Sleeper's cadence.
 - Mote's Coinday report to Caer Ardith: "Report on the lamp. Progress satisfactory."
 - The flame leans east, toward Halcyra, after the party visits the House.
+
+== Lectern ==
+
+A small girl in a clean white smock stands at the Keep gate with a letter held in both hands. She has been told to wait for an answer. She has a smudge of honey on her chin and a very serious face, and she is not going anywhere. The letter smells of warm resin and rain.

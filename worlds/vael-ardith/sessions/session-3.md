@@ -5,18 +5,21 @@ worldDate: 16 Ashfall 3011
 pages: [ dreaming-widow, npc-ambry-coyle, npc-sabe-hollins, marla-marlowe, tick, quorl, ysse, brother-tallow, ilse-marrow, mirrel-vosk, fennick, spoons, garrick-sallow, npc-dunstan-bray, dannic-rook, odile-fairweather, seraphine-ashe, mother-corvane, npc-mother-hennet, npc-dunny-pike, npc-noume-flarewick, pell-quillon, ansel-mote, the-smokes, lantern-hill, lantern-keep, house-unburnt-light, tollamund-house, fort-mercy, item-cage-keys, item-promissory-note, q-payday, table-dreams, f-sleepless, god-sleeper, lore-ember, npc-cass-marrowick, q-standing-village, ambercote, bellwether, npc-marn-tolliver, tollivers-dairy, sedgemere, npc-keld-owes-nothing, lore-signals, npc-mirrit, item-dreamless-charm, item-stone-pears, harrows-simples, npc-nell-harrow, npc-auntie-brace, npc-gammer-teal, the-salt-lake ]
 encounters:
   - name: Breaking the vigil
-    notes: "Cult fanatic: Multiattack two daggers +4, 1d4+2; spells command (DC 11), inflict wounds, hold person. The pilgrims are commoners who only shove and sing. The Sleepless don't fight back unless attacked first. Only if the party tries to break up the vigil by force."
+    notes: "Cult fanatic: Multiattack two daggers +4, 1d4+2; spells command (DC 11), inflict wounds, hold person. The pilgrims are commoners who only shove and sing. The Sleepless don't fight back unless attacked first. Only if the party tries to break up the vigil by force. Built for five level-2 PCs: easy. The real cost is the town (see \"If the party…\" above)."
     foes:
       - { name: Sleepless zealot, count: 1, hp: 33, ac: "13", side: foe }
       - { name: Sleepless pilgrim, count: 4, hp: 4, ac: "10", side: foe }
   - name: The dream given shape
-    notes: "Shadow reskinned: a figure stepping out of the crowd's song. Strength Drain +4, 2d6+2 necrotic, Strength reduced 1d4 until a short rest (a creature reduced to 0 Strength dies). Resists nonmagical weapons; vulnerable to radiant. Weak in the Lantern's light: disadvantage on attacks within 10 ft of the cage or of a lit wick-lamp. Only if Ysse fails the flame twice."
+    notes: "Shadow reskinned: a figure stepping out of the crowd's song. Strength Drain +4, 2d6+2 necrotic, Strength reduced 1d4 until a short rest (a creature reduced to 0 Strength dies). Resists nonmagical weapons; vulnerable to radiant. Weak in the Lantern's light: disadvantage on attacks within 10 ft of the cage or of a lit wick-lamp. Only if Ysse fails the flame twice. Built for five level-2 PCs fighting by lamplight: medium. Strength Drain can kill a weak character outright, so keep the frail ones near the cage."
     foes:
       - { name: Dream-shape (shadow), count: 2, hp: 16, ac: "12", side: foe }
   - name: Dannic at the oil store
-    notes: "Only if Dannic was not laid to rest in session 1. Ash-drowned as in session 1 (slam +3, 1d6+1, the ash rider DC 11 Con, Undead Fortitude; a wick-lamp's flame denies it). He doesn't attack unless touched: he stands at the oil-store door holding an empty tin, trying to put it back. Quorl's rite still works on him afterwards."
+    notes: "Only if Dannic was not laid to rest in session 1. Ash-drowned as in session 1 (slam +3, 1d6+1, the ash rider DC 11 Con, Undead Fortitude; a wick-lamp's flame denies it). He doesn't attack unless touched: he stands at the oil-store door holding an empty tin, trying to put it back. Quorl's rite still works on him afterwards. Built for five level-2 PCs: easy, and better talked down than fought."
     foes:
       - { name: Dannic Rook (ash-drowned), count: 1, hp: 22, ac: "8", side: foe, page: dannic-rook }
+lectern:
+  scene: fort-mercy
+  present: [ vexa-glassjaw, npc-mardle-ock, npc-ottoline-crane, npc-skelt ]
 ---
 
 ## Session 3: Red Moon Rising
@@ -33,12 +36,30 @@ encounters:
 
 **Goal.** Keep the lantern lit through the worst night of the year, and meet the Sleepless face to face.
 
+### Running this session
+**Last time** (read aloud). *"You found the pay: six hundred gold in an iron box in a Glassers' cellar, in coin that isn't the Regency's, with a paper saying the company owes it back with interest. You bedded down in Fort Mercy's yard under two moons, one white and one red. And in the small hours, everyone in the fort woke at once."*
+
+**Where the PCs are.** In the Glassers' yard at Fort Mercy, in their blankets by the windmill, with the strongbox at their feet. The strong start wakes them.
+
+**The party should have.** The strongbox and [[The Concord Loan-Chit]], [[The Cut Oil Tin]], [[Dannic's Note]], and [[A Glasser's Chart]] if they traded for it. Perhaps [[Old Tally's Coin]] from Ferrow Gant, and Skelt's confession.
+
+**If they missed something.**
+- *Never went east, or came home without the box?* Vosk has gone for it instead. The party wakes in the Keep: play scene 1 there (the dream reached Cinderford too), and when Vosk rides in with the box on the morning of the 17th, play Fennick's sums and the argument over the money as the opening of session 4.
+- *No chart?* Hennet hands over Pike's own copy in session 5, and Vexa will still trade if they go back.
+- *Never matched Mote's hand to the poster?* It doesn't matter yet. The unsigned letter in Sallow's room (scene 7) is in the same small neat hand, for whoever compares them.
+
+**The session at a glance.** Scene 1 is the small hours at Fort Mercy and scene 2 the ride home and the day at the Keep. Scenes 3 to 7 are one long night on Lantern Hill, and they are not a strict sequence. Scene 3 at dusk sets the stage. Scene 4 comes when the Widow sends for Tick, any time before midnight. Scene 5 is midnight. Scene 6 happens during scene 5, while every eye is on the cage, and scene 7 is whenever the party corners Spoons, usually towards dawn. **This is the session to split the party**: one or two on the ladder with Ysse, one at the oil store, one in the crowd with Tick. Cut between them every few minutes, and leave the cage for last.
+
 ---
 
 ### Scene 1: The dream (the small hours, Fort Mercy)
 Everyone in the fort wakes at the same moment from the same dream: a vast warm dark, a voice saying "nearly", a door with no handle (roll on [[Sleeper Dreams]] for each PC's version). Tick, being Hollowborn, wakes weeping and can't say why. Glassers are standing in their tent-mouths in their shirts looking at each other. Mardle Ock is humming. On the tower, Vexa says to nobody, "Well, that's new." A PC wearing [[A Dreamless Charm]] sleeps through it and has nothing to compare in the morning; a stone pear in anyone's pocket is warm ([[Stone Pears]]).
 
 It reached twenty-two miles. When the party rides home they will find it reached all of Cinderford too.
+
+**Development.** Nobody goes back to sleep. At first light Vexa sees them off from the tower ("Tell the factor I was robbed, and tell him nicely"), and the ride home is twenty-two miles in the clear, still morning after the greywind. If the party has unfinished business at the fort (the Cold Seam, Skelt, the crown), it can wait or they can stay a few hours, but Tallow's warning in scene 2 needs them home before dusk. Go to scene 2.
+
+**Treasure.** A stone pear warm in someone's pocket, if anyone bought one ([[Stone Pears]]).
 
 ---
 
@@ -54,6 +75,10 @@ At the Keep, [[Fennick Bottlebrook]] counts the strongbox twice and goes white. 
 
 [[Brother Tallow]], at the foot of the ladder, his antennae turned east: "Tonight. Stay close to the lantern tonight."
 
+**Development.** The afternoon is the party's to prepare in, and a party that prepares should be rewarded. Good uses of it: [[A Dreamless Charm]] from Harrow's Simples (a silver each, and Nell is nearly sold out); a guard posted on the oil store; a word with Spoons about the pool; a nap, for whoever will be on the ladder at midnight. Marrow puts the party on the hill for the night, whatever else they do. At dusk the Ember rises huge and red over the Ashenreach, and the Smokes start to walk. Go to scene 3.
+
+**Treasure.** The 600 gold, for as long as they hold it. Whatever they decide about it, Fennick writes it down.
+
 ---
 
 ### Scene 3: The Smokes march (dusk)
@@ -67,12 +92,16 @@ At dusk [[The Dreaming Widow]] leads the Sleepless out of [[The Smokes]] in a lo
 - Tick feels the Rent pulling. Sometime before midnight he starts walking east and doesn't notice he is doing it (Wisdom save DC 12, or a friend's hand on his shoulder, to stop).
 - Odile is seen slipping into Tollamund & Daughters during the march.
 
+**Development.** The Sleepless sit, and wait, and sing very softly. Nothing happens for hours, which is the worst of it. Use the time for the bullets above, one at a time. Some time before midnight a Sleepless child comes up to the gate and asks for "Tibbet": go to scene 4. If Tick isn't in the party, the Widow asks for the soldiers instead and makes the same plea to all of them. Close to midnight, Tallow climbs the ladder to the cage and doesn't come down: go to scene 5.
+
 ---
 
 ### Scene 4: Tick's aunt
 The Widow asks for Tick by name. [[Marla Marlowe]] stands between them, furious, invisible to everyone but Tick. The Widow is Marla's sister and says so: "Your mother dreamed this too, Tibbet. She'd want you with us." Marla scratches in the ash: NO.
 
 If Quorl is there, he knows Marla's last words: he wrote them down himself at Marlowe's cellar door at dawn the morning after Cinders, a fledgling come for the body, from her mother's mouth. *"Wenna, hold his hand. Don't look up."* If he says them aloud, the Widow looks up, and for a moment she is eight years old and very frightened. Then the veil comes down again.
+
+**Development.** The Widow goes back to her people's circle, and does not ask again tonight. If Tick goes with her, he is sitting among the Sleepless, singing, when midnight comes: Marla pulls at his sleeve, and he can come back to the hill (Wisdom save DC 12, or a friend who comes for him) in time to help on the ladder. Either way, the hill goes quiet as midnight comes on. Go to scene 5.
 
 ---
 
@@ -83,6 +112,8 @@ At midnight, under the full Ember, the lantern gutters again, worse than before.
 
 Up on the signal tower, Noume Flarewick flashes the far patrols and gets an answer from nobody: three flashes, from inside the Rent. (They are the Last Wardens' lamp-code. Uthrem explains in session 6.)
 
+**Development.** While every eye on the hill is on the cage, glass breaks at the foot of the tower. Whoever is not on the ladder hears it: go to scene 6. If the whole party is on the ladder, the tanner gets in and out unseen, the next dawn measure is cut again, and the flame gutters a little at dawn as well (no clock tick, but the oil store needs a guard from now on, and the tanner is gone).
+
 ---
 
 ### Scene 6: The cut oil in the store
@@ -90,12 +121,20 @@ While the hill is busy, someone breaks into the oil store at the tower's foot. I
 
 **If Dannic was not laid to rest in session 1,** he rises tonight with the full Ember, walks up from the Chapel slab to the oil store where he did the swaps, and stands at its door holding an empty tin, trying to put it back. The tanner runs screaming straight into the party's arms. See **Dannic at the oil store**.
 
+**Development.** The tanner talks, if anyone asks him kindly: Bray let him in, and he doesn't know why. Bray, collared, blusters and then looks for Sallow, who is very visibly on the wall with Marrow. This is the moment the players can see who is lying. If they go after Sallow now, he laughs at them, and Marrow tells them to bring proof, not a tanner. That proof is Spoons: go to scene 7.
+
+**Treasure.** The tanner's jar of Stillwater ash, which smells of lake water, like the cut tin.
+
 ---
 
 ### Scene 7: Spoons cracks
 If confronted with the poster, the coin and the timing, [[Spoons Aldane]] gives up Sallow: "I saw him and Dannic at the oil store. Twice. After midnight. I didn't say. I moved my copper to the red moon instead. It was the biggest book I ever ran." He looks sick.
 
 If they never corner Spoons, session 4 still needs evidence. Two other ways in: Bray, pressed after the oil-store business, folds and weeps and tells everything he knows (enough to hang Sallow, nothing about Mote); or a search of Sallow's room turns up a letter, unsigned, in a small neat hand, about "the arrangement" and the red moon.
+
+**Development.** Whoever confesses, the night is nearly over. Hold any confession until Marrow can hear it at dawn: she will want it said again, in front of witnesses, and she will want it in session 4 when the party brings Sallow to her (scene 5 there). Go to "How it ends". Spoons, sick with himself, asks the party a favour before they go: [[The Wager on Never]].
+
+**Treasure.** Spoons's marker, if they take his job and finish it.
 
 ---
 
@@ -140,3 +179,7 @@ Every PC wakes at the same moment, gasping, from the same dream: a warm dark, a 
 - Tallow: "It isn't oil it wants. It never was."
 - The flame responds to Ysse's touch better than to Tallow's.
 - The Widow is Marla Marlowe's sister, Tick's aunt.
+
+== Lectern ==
+
+Every PC wakes at the same moment, gasping, from the same dream: a warm dark, a door with no handle, a voice saying "nearly". It is the middle of the night in the Glassers' yard at Fort Mercy. All around you, in the light of two moons, diggers are standing in their tent-mouths in their shirts, looking at each other. Nobody needs to ask.

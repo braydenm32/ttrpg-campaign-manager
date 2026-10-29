@@ -5,13 +5,16 @@ worldDate: 1 Leafrot 3011
 pages: [ warden-uthrem, ysse, borrin, quorl, tick, vexa-glassjaw, aelith-sorn, npc-jory-dunmore, npc-jessom-dunmore, npc-noume-flarewick, ilse-marrow, mirrel-vosk, the-rent, ninth-stone, cold-seam, ash-road, treaty-stone, h-map-scrap, h-rubbing, table-encounters, table-weather, f-last-wardens, lore-nine, lore-wards, god-sleeper, god-hathe, ev-godslaying, ev-digs, ev-cinders, t-cinders-born, burned-mill, tallys-cut, item-road-marker, table-ash-road-travellers, lore-festivals, npc-orla-quist, npc-greta-holm, ambercote ]
 encounters:
   - name: The glass-stalker
-    notes: "Giant scorpion reskinned as a thing of fused glass. Multiattack: two claws +4, 1d8+2 bludgeoning, grappled (escape DC 12); sting +4, 1d10+2 piercing plus 4d10 poison (Con DC 12 half). Blindsight 60 ft. Lives on the Glass Stair and hunts whoever steps on the clear glass."
+    notes: "Giant scorpion reskinned as a thing of fused glass. Multiattack: two claws +4, 1d8+2 bludgeoning, grappled (escape DC 12); sting +4, 1d10+2 piercing plus 4d10 poison (Con DC 12 half). Blindsight 60 ft. Lives on the Glass Stair and hunts whoever steps on the clear glass. Built for five level-4 PCs: medium. With a good chart they can avoid it entirely."
     foes:
       - { name: Glass-stalker, count: 1, hp: 52, ac: "15", side: foe }
   - name: The Choir
-    notes: "Specters reskinned as the voices of the party's dead. Life Drain +4, 3d6 necrotic, Con DC 10 or max HP reduced by the damage. Incorporeal; sunlight sensitivity becomes lantern sensitivity (disadvantage within 10 ft of a lit wick-lamp). Only if a PC answers them."
+    notes: "Specters reskinned as the voices of the party's dead. Life Drain +4, 3d6 necrotic, Con DC 10 or max HP reduced by the damage. Incorporeal; sunlight sensitivity becomes lantern sensitivity (disadvantage within 10 ft of a lit wick-lamp). Only if a PC answers them. Built for five level-4 PCs: three voices is hard. Use two if only one PC answered."
     foes:
       - { name: Voice of the Choir, count: 3, hp: 22, ac: "12", side: foe }
+lectern:
+  scene: the-rent
+  present: [ npc-jory-dunmore, npc-jessom-dunmore ]
 ---
 
 ## Session 6: Into the Rent
@@ -28,6 +31,20 @@ encounters:
 
 **Goal.** Reach the Ninth Stone, hear the truth from the one who keeps it, and come back.
 
+### Running this session
+**Last time** (read aloud). *"Old Pike sat up at his own funeral and told you the truth: the lantern was lit from a cook-fire burning on a lump of grey stone. The Rook-Court's ledger finished the sentence the dead have been whispering for nine years: the lamp is the lock. Under the cage, in the lamp's own bowl, you found a splinter of grey stone with a red crack down it. A drop of sap made the flame burn white, and for a moment Ysse saw someone in it, very large and very tired, looking at her. Marrow has decided. Someone has to go to the Ninth Stone."*
+
+**Where the PCs are.** At the Keep gate at dawn on 29 Ashfall, with horses from the company's string and the Dunmore twins if Vosk lends them again. A party taking the Cold Seam starts the same way, but turns off at the Burned Mill for Fort Mercy.
+
+**The party should have.** [[A Glasser's Chart]] (Vexa's or Pike's copy), their wick-lamps, two days' food and water, rope, and [[Hathe's Door-Key]] if Corvane let Quorl keep it. Perhaps Pell's copy of the Claim of Arrears, [[A Lithic Road-Marker]] from Ambercote, and Orla Quist (see "If the party wanders").
+
+**If they missed something.**
+- *No chart?* They can still go down: no advantage on the descent, and no hazard skipped. Vexa's people at the lip will sell them the way down if the party dealt fairly with Vexa in session 2.
+- *Never found the shard?* Uthrem tells them: "There is a piece of me in your lamp. Under the flame. Look when you go home." Tallow, confronted on their return, admits it as in session 5.
+- *Skipped the Treaty Stone?* It is on the road out, three miles east of town.
+
+**The session at a glance.** The strong start is a cold open: it drops the party on the rope three hundred feet down, on the morning of 1 Leafrot. Read it, then go back two days and play the ride and the lip (scene 1) briskly, one encounter roll a day, until they are back on that rope. Short on time? Skip the ride, say what it cost them, and start at the lip. Scenes 2 to 6 are one day: the descent in the morning, Uthrem at midday, the climb out at dusk. Scenes 3 to 6 all happen at the foot of the Stone and can run in any order; keep Borrin's shadow (scene 6) for last, as they turn to go.
+
 ---
 
 ### Scene 1: The ride and the lip
@@ -39,6 +56,10 @@ Two hard days east along the Ash Road and then across open ash, with the Dunmore
 
 And there is [[The Ninth Stone]], leaning out over the chasm like a drunk over a well, its crack glowing faintly from crown to root.
 
+**Development.** The party reaches the lip at dusk on the 30th, the night of the Unveiling, and camps there: nobody climbs down a chasm in the dark. If Vexa's people are at the lip, they share a fire, or they don't. Nobody sleeps well with the standing dead behind them. At first light on Doorsnight they go over the edge: go to scene 2, and the strong start, on the rope.
+
+**Treasure.** Vexa's people sell good rope (a silver for fifty feet) to anyone they don't hate.
+
 ---
 
 ### Scene 2: The descent
@@ -49,6 +70,8 @@ With [[A Glasser's Chart]] (Vexa's, or Pike's own from Hennet), the party has ad
 **Spells down here.** Spells work, at a cost: each one frosts the walls, and the players should see it. If you are speeding up the Sleeper's clock, roll a d6 per spell and tick it on a 1 (1 or 2 for a fast clock). The same holds anywhere in the Rent or within a mile of the Ninth Stone. Ysse's player should be keeping her tally either way.
 
 **The other road: the Cold Seam.** If the party went down the Cold Seam under Fort Mercy in session 2, they can come this way instead: a Lithic covered road running east under the glasslands, forty miles in the dark instead of the open ash, through a Lithic door on the landing that Hathe's Door-Key turns (if Corvane let Quorl keep it after the funeral; otherwise it takes an hour and Athletics DC 18 to force, while something watches them try). The thing that took Brakk walks with them in the dark, a little behind Borrin, asking questions in his voice. The road comes up the chasm floor and climbs to the Warden's Shelf from below.
+
+**Development.** Whichever way they came, they reach the Warden's Shelf about midday, with the crack's light on their faces. If they are badly hurt, they can take a short rest on the Halfway Ledge first, with the Choir murmuring in the cleft above them, and every PC makes the Wisdom save once more before they go on. Go to scene 3.
 
 ---
 
@@ -63,6 +86,8 @@ At the foot of the Stone, half-turned to stone himself, sits [[Warden Uthrem]]. 
 - **The Cinders-born.** "A ward is a lid on a sleeper's dreams. Where it cracks, the dreams come out, and the first thing a dream touches is what has no walls yet. The newborn. Born on the night it cracked, they grow toward the crack. Fast." He looks at Tick for a long time.
 - **The three flashes.** "I signalled. Three. *Come.* It is the Wardens' lamp-code. Someone on your hill answered, though they did not know what they said."
 
+**Development.** Uthrem tires as the afternoon goes on; each answer costs him a breath he may not have. Let the players ask what they want, and when they run out of questions, he turns to Ysse: go to scene 4. If Ysse isn't with them, he asks after "the one who keeps the flame", and the scene is a message for her.
+
 ---
 
 ### Scene 4: He waited for Ysse
@@ -70,20 +95,30 @@ Uthrem says Ysse's name before she gives it. He has heard her in the flame. He a
 
 If she asks about the voices: Uthrem confirms that the first voice is the Ninth's, the one that says *stand*. "A second borrows it. It wears her voice like a coat. It will not ask you to stand. It will ask you to keep."
 
+**Development.** Ysse doesn't have to answer him today, and Uthrem says so. He asks only that they take the Stone's words home with them: go to scene 5.
+
 ---
 
 ### Scene 5: The rubbing
 Ysse (or anyone) takes [[A Rubbing from the Ninth Stone]]. With Uthrem's help, they read it: carry the flame to the stone; give it a heart that chooses; "do not listen when it asks to be kept".
+
+**Development.** The light in the crack dims as the sun leaves the chasm's top. It is time to climb. As the party turns to go, go to scene 6.
+
+**Treasure.** [[A Rubbing from the Ninth Stone]]. If Aelith came with them, she wants a copy, and will pay for one or take one.
 
 ---
 
 ### Scene 6: Borrin's shadow
 At the foot of the Stone, Borrin's shadow stands up from the ground on its own, looks at the Stone, and bows to it. Then it looks at Borrin and says, in his voice: "Not yet." Uthrem names it, and is afraid of it: something from the Eighth Ward, a door-warden that came up with him. It wants to see what the Ninth does.
 
+**Development.** The climb out is the descent in reverse, and easier: the ropes are fixed and the party knows where the clear glass is (advantage on the checks, and the glass-stalker stays below if it is still alive). They reach the lip at dusk. Go to "How it ends".
+
 ---
 
 ### How it ends
 The climb out at dusk. At the top, a rider from Cinderford is waiting, exhausted, his horse blown: "Captain says come home now. They're all moving at once."
+
+**Development.** Two days' hard ride home, the 2nd and the 3rd, and nothing on the road but ash and the Sleepless walking east to meet them. The party rides into Cinderford on the evening of the 3rd and finds the company half-turned (session 7, "In between"). Session 7 opens on the morning of the 5th, so the party has the 4th: a day to rest, talk to Marrow and get ready.
 
 ### If the party wanders
 - **Orla's cairn.** If [[Orla Quist]] came along (3 gp and a copy of the sheet), she paces the near cairn at the Rent's western end, thirty-eight miles out by the Ash Road, and gets thirty-three. She says nothing for a mile, then: "I owe a Glasser an apology." The 3011 line on her slate is no longer blank.
@@ -115,3 +150,7 @@ The rope is old company rope, tarred and knotted, and three hundred feet down it
 - The first spell at Cinders was a frightened Regency watcher's.
 - Noume's three flashes were the Last Wardens' lamp-code: "Come."
 - Borrin's shadow is a door-warden from the Eighth Ward.
+
+== Lectern ==
+
+The rope is old company rope, tarred and knotted, and three hundred feet down it runs out. Ysse's hand is on the knot when the voice comes up out of the dark, warm and slow and patient: "There you are. I have waited such a long time." Everyone heard it; it was meant for one.

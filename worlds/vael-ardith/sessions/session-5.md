@@ -5,14 +5,17 @@ worldDate: 25 Ashfall 3011
 pages: [ mother-corvane, quorl, npc-halloran-pike, npc-mother-hennet, npc-brannoc-saltash, npc-skrell, brother-tallow, aelith-sorn, dreaming-widow, npc-ambry-coyle, marla-marlowe, dannic-rook, pell-quillon, spoons, last-candle, corvel-rise, weeping-orchard, doorkeepers-chapel, lantern-keep, treaty-stone, item-door-key, item-shard, item-last-words-ledger, item-glass-hand, item-treaty, h-map-scrap, q-raveler-funeral, q-weeping-sap, f-rook-court, god-hathe, ambercote, npc-jeb-marrowick, npc-cass-marrowick, q-standing-village, item-orchard-amber, item-road-marker, npc-keld-owes-nothing, sedgemere, the-thirteenth-barrel, npc-posy-reedmarsh, q-lost-pay-order, item-hennets-soup-pot, q-wager-on-never, q-price-was-an-arm, lore-songs, npc-caelo-once-mar, npc-aurelio-bask, table-last-words, npc-greta-holm ]
 encounters:
   - name: Orchard pilgrims
-    notes: "Cult fanatic: Multiattack two daggers +4, 1d4+2; spells command (DC 11), inflict wounds, hold person. Four commoners who scrape sap and shove. They won't let outsiders take the sap, and they back off the moment Tick or any Hollowborn asks them to."
+    notes: "Cult fanatic: Multiattack two daggers +4, 1d4+2; spells command (DC 11), inflict wounds, hold person. Four commoners who scrape sap and shove. They won't let outsiders take the sap, and they back off the moment Tick or any Hollowborn asks them to. Built for five level-3 PCs: easy."
     foes:
       - { name: Sleepless scraper (cult fanatic), count: 1, hp: 33, ac: "13", side: foe }
       - { name: Sleepless pilgrim, count: 4, hp: 4, ac: "10", side: foe }
   - name: The stone-touched dead
-    notes: "Ghouls reskinned: soldiers half-turned to stone, climbing out of the Orchard's grave rows. Claws +4, 2d4+2 slashing, Con DC 10 or paralysed for 1 minute (elves and Returned immune). Bite +2, 2d6+2. AC 14 for the stone skin. They rise at Ember-rise, a little after midnight, and will not cross a line of sap. Use two if the party has already fought the pilgrims."
+    notes: "Ghouls reskinned: soldiers half-turned to stone, climbing out of the Orchard's grave rows. Claws +4, 2d4+2 slashing, Con DC 10 or paralysed for 1 minute (elves and Returned immune). Bite +2, 2d6+2. AC 14 for the stone skin. They rise at Ember-rise, a little after midnight, and will not cross a line of sap. Use two if the party has already fought the pilgrims. Built for five level-3 PCs: three is hard (the paralysis), two is medium."
     foes:
       - { name: Stone-touched dead, count: 3, hp: 22, ac: "14", side: foe }
+lectern:
+  scene: corvel-rise
+  present: [ npc-halloran-pike, mother-corvane, npc-skrell ]
 ---
 
 ## Session 5: Last Words
@@ -27,6 +30,21 @@ encounters:
 
 **Goal.** Find out what the ninth lantern was lit from, and what "the lamp is the lock" means.
 
+### Running this session
+**Last time** (read aloud). *"You walked out to the House of Unburnt Light and ate the Saint's bread, and for an afternoon you wanted to stay. Sorrel Vey told you what the church really wants with the flame. Lieutenant Sallow is in his quarters, or he isn't, and either way the company is watching him. That was five days ago. Last night, old Halloran Pike died in his cot in the followers' lines, and this morning the Ravelers are burying him."*
+
+**Where the PCs are.** At the Keep, on the morning of 25 Ashfall, an Ironday. [[Skrell Already-Gone]] comes for Quorl at first light: Pike's funeral is this morning on [[Corvel Rise]], and Pike asked, before he died, for "the new ones" to be there. The company still wears its black armbands from Cinders. Everyone who knew Pike walks up.
+
+**The party should have.** The first key (Ysse), whatever Sorrel gave them, Seraphine's letter if they took it, and [[A Glasser's Chart]] if they traded for it. Perhaps Tallow's request for [[Sap from the Weeping Orchard]] and Spoons's for [[The Wager on Never]].
+
+**If they missed something.**
+- *Tallow never asked for the sap?* He asks this morning as they leave for the Rise: "If you go anywhere near the Orchard, bring me sap. The red, not the clear."
+- *No chart?* Hennet hands over Pike's own copy in scene 5.
+- *Never took the Wager?* Corvane's "That was my sister" still lands, and Spoons, hearing it, asks them that evening.
+- *Sallow was never confined?* He stays away from the funeral, and nothing he does today matters. Session 7 is where he moves.
+
+**The session at a glance.** One long day. The funeral in the morning (scene 1) and the ledger at midday (scene 2) run in order. Then the party has the afternoon and evening, and the usual way round is: out to the Orchard and its fire-pit in the afternoon (scenes 3 and 4), back to the Last Candle at dusk for the soup-pot (scene 5), and up to the Keep at night for Tallow and the shard (scene 5 again). If they go to Hennet first, they carry the pot out to the Orchard and it fits the ring in front of them, which is better still. The session ends at the Keep, with the sap in the oil-port. The Treaty Stone is optional, for a party with time in hand.
+
 ---
 
 ### Scene 1: The funeral that would not end (Corvel Rise)
@@ -40,6 +58,10 @@ Then [[Mother Corvane]], who has come down from her roost for this, lends [[Hath
 While the door stands open the room sings the long verse, *and neither was he* ([[Songs of the March]]). If anyone mentions Spoons's pool, Corvane, rattling her shawls as if it were a joke: "That was my sister." It is not a joke ([[The Wager on Never]]).
 
 If Dannic was never laid to rest, he is on the Rise too, under a fresh mound that won't stay flat. Quorl can open the door for him while the key is in his hand.
+
+**Development.** Pike goes through the door, and this time he stays gone. The mourners go home talking. Corvane does not: she looks at Quorl for a long moment, and then asks the party into the bone-library "before the light goes off the shelves". Go to scene 2. If Quorl isn't in the party, she asks whoever said the rhyme, or whoever looked as if Pike's confession meant something to them.
+
+**Treasure.** [[Hathe's Door-Key]], lent for the rite. Corvane wants it back at the end of the day. If Quorl asks to keep it a while longer and gives her a reason, she lets him, which matters in session 6. Pike's spat-out coin, which nobody will touch.
 
 ---
 
@@ -66,6 +88,10 @@ What a full clock means: Corvane is certain now, and wrong. "The lamp is the loc
 
 If anyone asks after her family, Corvane mentions her sister Keld, who put a silver on "never" in Spoons's pool the year it opened and then simply went away. "She always did like long odds."
 
+**Development.** Pike's confession and the ledger point two ways at once: out to the cooks' camp in the Orchard, where the lantern was lit, and down to the Last Candle, where Hennet has kept the secret for nine years. It is early afternoon. A party that goes to the Orchard first (scene 3) is back by dusk; a party that goes to the Candle first finds it shut, and Hennet lets them in by the kitchen door (scene 5). Either way, Corvane's wrong conclusion goes with them: from today, she wants the lamp put out.
+
+**Treasure.** A page of the Rook-Court's ledger, copied out in Corvane's hand, if the party helped the funeral end ([[The Funeral That Would Not End]]).
+
 ---
 
 ### Scene 3: The Weeping Orchard
@@ -73,10 +99,16 @@ For [[Sap from the Weeping Orchard]], or following the confession, the party wal
 
 Complication: a cult fanatic and four pilgrims who won't let outsiders take the sap (**Orchard pilgrims**). If the party stays past midnight, the dead in the grave rows climb out at Ember-rise (**The stone-touched dead**). A line of sap on the ground stops them.
 
+**Development.** The cooks' camp is at the orchard's heart, a few minutes' walk through the stone trees: go to scene 4. If the pilgrims have run them off without sap, the oldest tree in the cooks' camp is still trickling, and nobody is guarding it.
+
+**Treasure.** A vial or two of set sap scraped from the boughs, which is what Tallow asked for. A handful of [[Stone Pears]] from the ground. Beads of [[Orchard Amber]] that the pilgrims dropped (two silver each at Gutter Market).
+
 ---
 
 ### Scene 4: The fire-pit
 At the orchard's heart is the cooks' camp, where the company should have mustered in silence on the 14th: a ring of stone-fused cookpots, and the fire-pit, just as Pike said. Glass in the ashes. Burnt into the stone beside it, a ring the exact size of a soup-pot's foot. In the grave rows along the north wall, one grave holds a lantern-pole and no body: somebody meant to bury a lantern here, and the lantern went up the hill instead.
+
+**Development.** The ring in the stone wants a pot, and Pike said whose pot: go to scene 5, at the Last Candle. If the party already has the pot, setting it in the ring is the proof, and they can take it straight up to the Keep. Warn them, if the light is going, that the Ember rises a little after midnight tonight and the grave rows are not quiet then.
 
 ---
 
@@ -87,10 +119,16 @@ At the orchard's heart is the cooks' camp, where the company should have mustere
 
 [[Aelith Sorn]], who has followed the party all day, wants one more thing: the stone hand in the false floor of Kettle's barge. (If the party ran Kettle's Cargo, they know exactly what she means. If not, she tells them where it is, and that she paid for it.)
 
+**Development.** With the shard found, the party has the whole of it: the lantern burns on a piece of the Ninth Stone. Tallow will tell them what he fears if they bring him the sap: go to "How it ends", at the oil-port. If they have no sap, the flame stays thin, and Marrow's decision is the same, only grimmer. Aelith's stone hand can wait for another day; it will still be pointing east.
+
+**Treasure.** [[Mother Hennet's Soup-Pot]]. Pike's own copy of the Rent chart, if they lacked one. [[The Ward Shard]] stays where it is, under the flame. Tallow will not let anyone lift it out of the bowl, and he is right.
+
 ---
 
 ### Optional: the Treaty Stone
 If there's time, or if Pell asks for an escort, ride three miles east along the staked road to [[The Treaty Stone]]: pilgrims, widows leaving pebbles, the grille over the Original Treaty, and, scratched into the glass at the Stone's foot by a Raveler witness in 3002, the pay clause as it was really signed: *"by the signatories, or by whosoever shall hold their debt."* Pell reads it twice and says, "Oh dear." It is half of the argument the party needs in session 7. (This can also go on session 6's road east.)
+
+**Development.** A three-mile ride each way: an afternoon, back by dusk. Fit it in after the ledger, instead of the Orchard, only if the party can come back for the Orchard another day before the 29th.
 
 ---
 
@@ -133,3 +171,7 @@ The funeral is going beautifully. The Ravelers are singing, the salt is on the s
 - Orchard sap makes the flame and every wick-lamp burn white; Ysse sees a standing figure in it.
 - The Regency's pay for the Ninth was signed out every quarter "to Account Deferred, by order of the Regent-Chancellor".
 - The dead lie cold because they lie near the leak (Corvane).
+
+== Lectern ==
+
+The funeral is going beautifully. The Ravelers are singing, the salt is on the step, the coin is on old Pike's tongue. Then Pike spits out the coin, sits up on the bier, and says, with great dignity, "I'm terribly sorry. The door's locked." Two mourners faint. Mother Corvane closes her eyes and says, "Not again."

@@ -5,17 +5,17 @@ worldDate: 14 Ashfall 3011
 pages: [ q-lantern-gutters, q-payday, q-drowned-man, q-poisoned-flame, q-kettles-cargo, h-pay-notice, h-wanted, ilse-marrow, mirrel-vosk, brother-tallow, fennick, garrick-sallow, spoons, kettle, dannic-rook, marla-marlowe, varra, ysse, borrin, tick, quorl, npc-mother-hennet, npc-halloran-pike, npc-dunstan-bray, npc-dunny-pike, npc-gerda-hollin, npc-skrell, npc-nan-crupp, mother-corvane, aelith-sorn, lantern-hill, lantern-keep, last-candle, the-ford, treaty-bell, low-quay, hesks-chandlery, glass-barrow, item-lantern, item-oil-tin, item-lantern-token, item-grumblers, item-marigolds, f-ninth-lantern, h-noticeboard, lore-festivals, item-aurels-penny, lore-songs, bellwether, npc-keld-owes-nothing, sedgemere, ford-street, the-bakers-wife, npc-ada-pennock, q-bakers-hoard, the-hock, table-street-events, h-dannic-note ]
 encounters:
   - name: The drowned walk
-    notes: "Ash-drowned (zombie, scaled for level 1): grey, bloated, coughing ash, speed 20. They walk toward the Keep and fight only what blocks them. Dannic: slam +3, 1d6+1 bludgeoning; a creature he hits makes a DC 11 Con save or is poisoned until the end of its next turn (the ash). Undead Fortitude: dropped to 0 by anything but radiant or a critical hit, he makes a Con save (DC 5 + the damage) to drop to 1 HP instead. The other two are half-made: HP 11, slam +3 for 1d4+1, no Undead Fortitude. A flame from the Lantern (a wick-lamp held to them) denies Undead Fortitude: damage from a blade passed through a wick-lamp this turn (a bonus action), or from the lamp itself thrust at them (improvised, 1 fire), cannot be shrugged off. The ford-watch (Gerda Hollin) holds one of the three off at the water's edge for the whole fight. Dannic is the first to rise and the last to fall; when he does, he speaks."
+    notes: "Ash-drowned (zombie, scaled for level 1): grey, bloated, coughing ash, speed 20. They walk toward the Keep and fight only what blocks them. Dannic: slam +3, 1d6+1 bludgeoning; a creature he hits makes a DC 11 Con save or is poisoned until the end of its next turn (the ash). Undead Fortitude: dropped to 0 by anything but radiant or a critical hit, he makes a Con save (DC 5 + the damage) to drop to 1 HP instead. The other two are half-made: HP 11, slam +3 for 1d4+1, no Undead Fortitude. A flame from the Lantern (a wick-lamp held to them) denies Undead Fortitude: damage from a blade passed through a wick-lamp this turn (a bonus action), or from the lamp itself thrust at them (improvised, 1 fire), cannot be shrugged off. The ford-watch (Gerda Hollin) holds one of the three off at the water's edge for the whole fight. Dannic is the first to rise and the last to fall; when he does, he speaks. Built for five level-1 PCs with Gerda on their side and wick-lamps in hand: a medium fight. Without the lamps it is hard."
     foes:
       - { name: Dannic Rook (ash-drowned), count: 1, hp: 22, ac: "8", side: foe, page: dannic-rook }
       - { name: Ash-drowned (half-made), count: 2, hp: 11, ac: "8", side: foe }
       - { name: Gerda Hollin, count: 1, hp: 30, ac: "18", side: ally, page: npc-gerda-hollin }
   - name: Glass-spiders
-    notes: "Giant spider, scaled for level 1: glassy, fist-sized eyes, legs that chime. Bite +4, 1d6+2 piercing plus 1d6 poison (Con DC 11 for half). Web (recharge 5-6): +4 ranged, target restrained by ringing glass thread (Strength DC 11, or 10 damage to the web, to break free). Spider Climb; Web Sense. They nest in the bakery ovens only. Two by default; add a third only for a rested party that wants the fight. A group Stealth check (DC 12) gets the party past the bakery door without waking them."
+    notes: "Giant spider, scaled for level 1: glassy, fist-sized eyes, legs that chime. Bite +4, 1d6+2 piercing plus 1d6 poison (Con DC 11 for half). Web (recharge 5-6): +4 ranged, target restrained by ringing glass thread (Strength DC 11, or 10 damage to the web, to break free). Spider Climb; Web Sense. They nest in the bakery ovens only. Two by default; add a third only for a rested party that wants the fight. A group Stealth check (DC 12) gets the party past the bakery door without waking them. Built for five level-1 PCs: two spiders is an easy-to-medium fight, three is hard."
     foes:
       - { name: Glass-spider, count: 2, hp: 13, ac: "13", side: foe }
   - name: The Cold Captain of the Seventh
-    notes: "Wight, scaled for level 1. Speed 30. One attack a turn: lantern-pole +4, 1d8+2 bludgeoning; or Life Drain +4, 1d6+2 necrotic, Con DC 11 or hit-point maximum reduced by the damage until a long rest. Resists necrotic and cold; vulnerable to fire. Non-aggressive: he sits until something is lifted from the ring round his chair, then stands and fights only to put it back; set it down and step out of the ring and he stops. Shown a lit wick-lamp or a company token, he stops for a round and asks 'Which lantern is lit?'; the answer 'the Ninth' makes him sit, and he does not rise again for this party. Lantern flame makes him recoil: disadvantage on his attacks against anyone holding a lit wick-lamp. Each spell cast in the Barrow after the first gives him +5 hp (max +10). He never leaves the Cold Room."
+    notes: "Wight, scaled for level 1. Speed 30. One attack a turn: lantern-pole +4, 1d8+2 bludgeoning; or Life Drain +4, 1d6+2 necrotic, Con DC 11 or hit-point maximum reduced by the damage until a long rest. Resists necrotic and cold; vulnerable to fire. Non-aggressive: he sits until something is lifted from the ring round his chair, then stands and fights only to put it back; set it down and step out of the ring and he stops. Shown a lit wick-lamp or a company token, he stops for a round and asks 'Which lantern is lit?'; the answer 'the Ninth' makes him sit, and he does not rise again for this party. Lantern flame makes him recoil: disadvantage on his attacks against anyone holding a lit wick-lamp. Each spell cast in the Barrow after the first gives him +5 hp (max +10). He never leaves the Cold Room. Built for five level-1 PCs who fight him: a hard fight, and meant to be avoided. Answered rightly, it never happens."
     foes:
       - { name: The Cold Captain of the Seventh, count: 1, hp: 30, ac: "13", side: foe }
 lectern:
@@ -31,11 +31,35 @@ lectern:
 - *Touch these*: Gerda Hollin sees Borrin's late shadow by the cage and says so out loud. Vosk, hungover from his yearly bottle at the Corporal's Gibbet, calls the mutterers mutineers to their faces. Old Halloran Pike tells the lantern story wrong by the Candle fire, on purpose. Spoons opens a book on the drowned man ("five to two he walks again"). After the guttering, Ysse dreams one word in the warm voice: *Hold.*
 - *Level-up*: End of session: level 2.
 
+### Running this session
 **The shape of the night.** The pay doesn't come on the one day of the year the company can least stand it. The company mutters; a drowned deserter climbs out of the river at noon; the party follows his trail under the ford into [[The Glass Barrow]] and finds [[The Cut Oil Tin]]; they come back up in time to watch the lantern gutter for the first time in nine years.
 
-**Before you start.** Agree the safety tools with the table. Give each player their character page and let them read their own secret. The five PCs are wicks: hangers-on who have been eating the company's bread on promise, to be sworn in at this quarter-day muster. Ask each player one question: *What did you spend your last silver on, and do you regret it?*
+**The session at a glance.** Seven scenes, about four hours. Scenes 1 to 3 run in order and take the morning and noon. Scene 4 is the afternoon and bends to whatever the players chase. Scenes 5 and 6 are the Glass Barrow at dusk, and scene 7 is the walk home. If time is short, scene 4 can shrink to a single conversation with Kettle (see its "Short on time?" note).
+
+**Before you start.** Agree the safety tools with the table. Give each player their character page and let them read their own secret. Point everyone at the [[Player's Guide]]. Ask each player one question: *What did you spend your last silver on, and do you regret it?*
 
 **Wick-lamps.** Every soldier of the Ninth carries a hooded tin lamp the size of a fist, lit from the Lantern by the lamp-keeper the morning they sign on; that is why recruits are called wicks. Its flame is the Lantern's flame. It never needs trimming, it shrinks when the Lantern gutters, and a soldier who lets it go out climbs to the cage at dawn and asks for a light, to general mockery. Tonight it is the party's best weapon: it denies the drowned their Undead Fortitude and makes the Cold Captain recoil. If nobody thinks of it, Gerda shouts it at the ford.
+
+**Where the PCs are.** The default opening: the five PCs are wicks, hangers-on who have been eating the company's bread on promise for a few weeks, and are to be sworn in at this quarter-day muster. When the bell goes, they are standing together at the end of the fourth file, where the wicks stand:
+- [[Varra Nine-Knuckles]] and [[Borrin Halt]] turned up at the Keep on the same morning a month ago (she off Kettle's barge, he off the Ash Road) and have shared a bench ever since. Vosk put them at the front of the wicks, because they're the two who look as if they've done this before.
+- [[Ysse Lampwright]] is at the foot of the ladder with Brother Tallow, holding the box of tapers. She will be sworn last, by her master's own hand.
+- [[Quorl Many-Words]] has buried the company's dead for years at three coppers a grave. Marrow is swearing him in today so the company can owe him wages instead of fees. He has the death-roll under his wing, in case.
+- [[Tibbet Marlowe|Tick]] arrives at a run as the bell stops, with powder on his hands and a fuse behind his ear, and slides into the file next to Varra. Skarra glares.
+
+**Other ways in.** Pick one for the whole party, or mix them. Each one puts the PCs in the drill yard when Marrow breaks the seal, with a lit wick-lamp by the end of scene 1, which they need for the ford.
+- **Already sworn.** The PCs have been soldiers of the Ninth for a season or more, with lamps at their belts and tokens round their necks. Tallow is lighting lamps for five NPC wicks this morning, and Vosk puts them under the PCs: "They're yours now. Bring me back the same number." Skip the swearing-in beat for the PCs and give them the wicks to keep alive all day. Back Sallow and lose the yard, and two of the wicks walk out with the mutterers.
+- **Off the post-road.** The PCs came in last night on the Ash Road behind the Regency post-rider who brought the notice, slept in the Candle's loft, and walk up the hill at the bell because Fennick told them to come on quarter-day if they wanted work. They saw the rider hand over the sealed letter. They can say, truthfully, that there was no wagon anywhere behind him on the road. Marrow swears them in after the letter, with the line she used on Varra: "Can you hold a line? Good. You're hired. The pay is late."
+- **Townsfolk on the hill.** The PCs have business at the Keep this morning and get caught up in it: carrying Kettle's salt fish up from the Low Quay, delivering the Rook-Court's coffin measure, bringing the Reeve's note for the captain, or collecting a debt from Fennick. When the yard turns ugly Marrow needs every hand she can trust, and swears them in at the foot of the ladder before the muster breaks. Tallow lights their lamps without a word.
+- **Your players' own characters.** Have each player pick a tie from the [[Player's Guide]], and use whichever way in above fits that tie best. The ties' pay-offs are on that page, in GM-only notes.
+
+**Prologue: the eve of Cinders** (optional, 20 minutes). Play this first if your table likes to meet the town before the trouble starts. It is the night of 13 Ashfall, dusk, at [[The Last Candle]].
+> Nobody drinks. The room is full and nobody drinks. Mother Hennet stands at the slate with a stub of chalk in her one hand and reads the oldest column aloud, from the top, every name with no tab under it, and she does not hurry. Somewhere near the fire an old man mouths the names along with her. The Seventh's are read last.
+
+When she finishes, the room breathes out and the noise comes back. Give the players a few minutes in the Candle: [[Spoons Aldane|Spoons]] is opening his book on tomorrow ("five to one the pay comes on time, and I'm being generous"), old [[Halloran Pike]] is drinking free by the fire, and Hennet sizes up the new faces. While she reads, [[Hester Pruitt|Widow Pruitt]] from the Assessor's Office waits in the doorway with a rolled poster, and when the reading is over she nails it up beside the crow: *Wanted: Dannic Rook*. Nobody has seen Dannic in a week. Spoons says he owes him eleven silver.
+
+Then Hennet sends the wicks down to the Ford with a jug for the ford-watch, as she does every Cinders eve. On the way they pass the end of Temple Row, where [[Mirrel Vosk|Sergeant Vosk]] sits alone under [[The Corporal's Gibbet]] with a bottle; anyone who knows the company knows not to speak to him tonight. At the bridge [[Gerda Hollin]] takes the jug and says, "Don't look at the water tonight, wicks." They look. The red moon is rising, and under the third pier a man is standing waist-deep in the river, quite still, facing the Keep. When they look again he is gone. Gerda didn't see it, and doesn't want to hear about it.
+
+Cut to morning, and the muster bell. If you played the prologue, the players have already seen the poster: drop the last sentence of scene 2's read-aloud.
 
 ---
 
@@ -70,7 +94,9 @@ lectern:
 
 **How it goes wrong.** If a PC backs Sallow publicly, the yard shouts and two files walk out. Tick the Mutiny clock (it starts at 2 of 6). If a PC backs Marrow well (Persuasion DC 13 or a good speech), the yard settles and Vosk gives that PC a nod they'll remember.
 
-**Ending the scene.** Marrow dismisses the muster and asks the five new hands to "make themselves useful in town and keep their ears open". Vosk adds: "And keep out of the Last Candle." Everyone goes to the Last Candle.
+**Development.** Marrow dismisses the muster and asks the five new hands to "make themselves useful in town and keep their ears open". Vosk adds: "And keep out of the Last Candle." Everyone goes to the Last Candle. If the players would rather follow someone instead, let them, and keep an eye on the clock: whoever they shadow (Sallow, Marrow, Fennick) ends up at the Candle by late morning anyway, because that is where the company goes to be angry. If they go straight into town, run "If the party wanders" (Ford Street) on the way, then the Candle. Either way the bell at the Ford strikes at noon (scene 3).
+
+**Treasure.** Each PC has a lit wick-lamp (the brass [[Ninth Lantern Brass Token|company token]] comes later, after a night's watch by the cage), one marigold smoke-pot, and the [[An Emperor's Penny|penny]] a veteran pressed on them. A grumbler costs two silver from Skarra, on credit if they're charming.
 
 ---
 
@@ -98,7 +124,9 @@ On the way down the hill the party passes [[The Gatehouse Board]]. The poster in
 
 **Short on time?** This scene can run in fifteen minutes: the round, the poster, Bray's shove, the bell.
 
-**Ending the scene.** It's coming up on noon. Go straight into scene 3: it opens with the bell.
+**Development.** It's coming up on noon. Go straight into scene 3: it opens with the bell, and every soldier in the Candle knows the stroke. If there was a brawl, the PCs arrive at the Ford with Bray's friends behind them; if Hennet liked them, she shouts after them to bring her the drowned man's coin if he has one.
+
+**Treasure.** None, unless a PC wins a bet with Spoons. Hennet's cup of new silver stays under the bar.
 
 ---
 
@@ -129,6 +157,10 @@ Either way, [[Skrell Already-Gone]] arrives at a flat sprint with his handcart. 
 
 **How it goes wrong.** If the party flees or is beaten, the drowned walk up the hill and the company cuts them down in the drill yard. Dannic's last words are lost: let Quorl hear them in a dream that night instead. The trail is not: the ford-watch saw which pier he came from.
 
+**Development.** It is early afternoon. The players have three threads in their hands: the pier Dannic came out of, the grit in his coat, and Marla pointing at the culvert (if Tick is there). Most parties go straight for the culvert and find it running too high to enter. That is the way into scene 4: the water won't drop until dusk, and the afternoon is theirs. Gerda tells them so if nobody checks. If they'd rather report to the Keep first, Marrow listens, sends them back down with her blessing, and Tallow catches them at the gate with his request about the oil (scene 4, "Optional: the Keep").
+
+**Treasure.** Dannic carries nothing. His wick-lamp is gone, and so is his company token: [[The Hock]] knows where (see "If the party wanders").
+
 ---
 
 ### Scene 4: The trail (the Ford and the Low Quay, afternoon)
@@ -146,6 +178,10 @@ Either way, [[Skrell Already-Gone]] arrives at a flat sprint with his handcart. 
 
 **Before the Barrow.** The culvert is only passable at low water, which comes at dusk. The party gets a short rest on the Quay stair while the water drops. Kettle's cousins sell them hot chestnuts on credit.
 
+**Development.** Whatever they did with the afternoon, the light starts to go and the river drops. Kettle (or Gerda, or the Pike boy on the bell-house stair) calls it: "Water's down. If you're going, go now." Go to scene 5. If the party has learned enough to want to skip the Barrow altogether (they have Hesk's order-book and want the clerk), remind them through Tallow that the oil itself is still out there: "Two tins, he took. I want to know what was in them." The Barrow is where the proof is.
+
+**Treasure.** Whatever the party buys or begs on the way: rope from the Quay, a lantern-hood, hot chestnuts. Prices are on [[What Things Cost in the Ashenreach]].
+
 ---
 
 ### Scene 5: Into the Glass Barrow (dusk)
@@ -160,6 +196,10 @@ See [[The Glass Barrow]] for the rooms. Keep it to four tonight:
 **Checks.**
 - Arcana DC 14 (Ysse has advantage): the glass is thin here, and something cold is breathing through it. Every spell cast in the Barrow makes frost bloom on the walls. Tell the players that, and let them worry. (Don't tell them the Cold Captain drinks it.)
 - Borrin, in the glass reflections, sees a shadow behind him that he does not cast. It is looking at the stair.
+
+**Development.** The four areas can be met in any order; the flooded street is first because it is where the culvert comes in, and the cold stair is last because it is behind the chapel altar. If the party fights the spiders and is hurt, let them take a short rest in the chapel among the fused villagers: nothing disturbs them there, which is its own kind of unsettling. When they go down the stair, go to scene 6. If they want to leave now, the Quay cut is under the flooded street, but nobody has found the oil yet: the tins on the landing are empty, and the cold is coming from further down.
+
+**Treasure.** Dannic's belt-pouch holds one new Regency silver. The fused bakery's oven tin holds Ada Pennock's ring (see [[The Baker's Hoard]]), and a few coppers fused into the glass that can be chipped out (2d6 cp, an hour's work). Aelith Sorn will pay a silver apiece for any rubbing or shard of carved glass from the chapel.
 
 ---
 
@@ -191,6 +231,10 @@ When anyone lifts the cut tin, everyone's breath stops smoking for a moment, as 
 
 **How it goes wrong.** If the Captain is too much, the party only has to set things down and step back. He doesn't pursue past the ring. They can come back, with a lamp held high and a better answer.
 
+**Development.** It is full dark when they surface. Whoever is on the Low Quay at that hour sees them come up the floating market's stair, soaked and carrying tins: Kettle, if she guided them, with a blanket and something hot in a tin mug. The way home is up through the town and the hill, and it is Cinders night: there is a lamp in every window. Go to scene 7. If the party wants to take the tin straight to Hesk's Chandlery, it is open till midnight and only a short detour into the Smokes (scene 4); let them, and start scene 7 on the walk back up from the Smokes.
+
+**Treasure.** Dannic's bundle (twelve new Caer Ardith silver, [[Dannic's Note]], the PAID IN FULL pay-chit), the clean tin and [[The Cut Oil Tin]]. If the Captain was destroyed: the Seventh's badge (Mother Hennet pays for it in drink, a season's worth) and the note in a woman's hand.
+
 ---
 
 ### Scene 7: The lantern gutters (Lantern Hill, towards midnight)
@@ -210,6 +254,8 @@ Give the players the moment. Then let the NPCs react:
 - Tallow, holding the cut tin, his antennae flat: "Someone has been feeding my flame ash." Hand them [[Who Is Poisoning the Flame?]].
 
 Tick the Mutiny clock to 3. End the session on the image of a hundred and forty soldiers standing in the ash in their shirts, each with a small blue light at the belt, looking up.
+
+**Development.** Marrow wants the tin, the note and the chit on her table by dawn, and asks the party to sleep in the Keep tonight "in case". Nobody else does much sleeping. Session 2 opens at dawn with hammering at the gate, so end here, on the hill. If the players want to act tonight (go after Hesk, search Sallow's quarters), give them one short scene and let it come to nothing much: Hesk has shut up shop, and Sallow is drinking in the yard with forty witnesses.
 
 **End of session: level 2. Mutiny clock 3 of 6.**
 

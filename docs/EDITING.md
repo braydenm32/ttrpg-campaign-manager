@@ -150,7 +150,7 @@ Everything is in the folder **`worlds/vael-ardith/`**. Each page in the app is o
 | Events that happen during play | `campaign/events/` |
 | Sessions 1 to 8: GM notes, recap, prep, encounters, the Lectern | `sessions/session-1.md` … `session-8.md` |
 | The corkboard ("Who's poisoning the flame?") | `boards/` |
-| The GM's "Start here" tour | `guides/guide-start.md` |
+| The GM's "Start here" tour, the GM's chapter and the Player's Guide | `guides/guide-start.md`, `guide-running.md`, `guide-players.md` |
 | Page templates | `templates/` |
 
 **Finding a page:** in VS Code press **Cmd+Shift+F** (Windows Ctrl+Shift+F) and type the page's name. Or **Cmd+P** and type part of the file name.
@@ -424,6 +424,12 @@ What the Lectern shows as the current scene.
 - `pages` are the pages involved, by key.
 - Each foe needs a `name`, a `count` and a `side` (`foe`, `ally` or `pc`). `hp`, `ac` and `page` (the foe's page, by key) are optional. `ac` can be a number or text like `"15 (chain)"`.
 - Leave out any part you don't use.
+
+The session notes follow one pattern, so a GM always knows where to look. Keep it when you edit or add a session:
+- A short header (level, date, sky, weather, *Touch these*, *In between*, *Level-up*, *If the party…*), then **Goal**.
+- `### Running this session`: **Last time** (a recap to read aloud), **Where the PCs are**, **The party should have**, **If they missed something** (a way back in for each clue they could miss) and **The session at a glance** (the order of scenes and when they happen).
+- One `### Scene` heading per scene. Each scene ends with **Development** (what happens next, with "if they do this, then that", and which scene comes next) and, when there's something to find, **Treasure**.
+- Each fight's `notes` end with the party it was built for, like "Built for five level-2 PCs: medium".
 
 **Quests** (`campaign/quests/`) are pages with `type: quest` and a `questStatus`. **Loose threads** (`campaign/threads/`) are pages with `type: thread`, a `threadStatus`, a `threadUrgency`, and `raisedIn` (the session number). Link them to the NPCs and places involved with `relations`.
 
