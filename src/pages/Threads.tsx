@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Help } from '../help'
 import { useNavigate } from 'react-router-dom'
 import { Empty } from '../components'
-import { db, ENTITY_LABELS, THREAD_STATUS, type Entity, type ThreadStatus } from '../db'
+import { PagePicker } from '../PagePicker'
+import { db, THREAD_STATUS, type Entity, type ThreadStatus } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { ThreadCard } from '../ThreadCard'
 import { COLD_AFTER, latestSession, newThread, sessionsSinceTouched, threadLinks, URGENCY, useWorldSessions } from '../threads'
@@ -52,7 +53,9 @@ export default function Threads() {
     t.threadUrgency = urgency
     const target = others.find((e) => e.id === involves)
     if (target?.type === 'location') t.parentId = target.id
-    else if (target) t.summary = `Involves [[${target.name}]].`
+    // A page the players can't see is named only in a secret passage, so revealing the thread doesn't give it away.
+    else if (target?.visibility === 'players') t.summary = `Involves [[${target.name}]].`
+    else if (target) t.body = `:::gm\nInvolves [[${target.name}]].\n:::`
     await db.entities.add(t)
     setName('')
   }
@@ -81,14 +84,7 @@ export default function Threads() {
           }}
         >
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="What’s left hanging? e.g. Who sent the assassin?" />
-          <select value={involves} onChange={(e) => setInvolves(e.target.value)} title="Who or where it involves">
-            <option value="">Involves… (optional)</option>
-            {others.map((e) => (
-              <option key={e.id} value={e.id}>
-                {ENTITY_LABELS[e.type].icon} {e.name}
-              </option>
-            ))}
-          </select>
+          <PagePicker entities={others} value={involves} onPick={setInvolves} placeholder="Involves… (optional)" />
           <select value={urgency} onChange={(e) => setUrgency(e.target.value as typeof urgency)} title="How pressing it is">
             {(['high', 'normal', 'low'] as const).map((u) => (
               <option key={u} value={u}>
@@ -105,14 +101,7 @@ export default function Threads() {
 
       <div className="row wrap thread-filters">
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search threads" />
-        <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-          <option value="">Involving anyone or anywhere</option>
-          {others.map((e) => (
-            <option key={e.id} value={e.id}>
-              {ENTITY_LABELS[e.type].icon} {e.name}
-            </option>
-          ))}
-        </select>
+        <PagePicker entities={others} value={filter} onPick={setFilter} placeholder="Involving anyone or anywhere" />
         {isGM && (
           <label className="row small">
             <input type="checkbox" checked={showClosed} onChange={(e) => setShowClosed(e.target.checked)} /> Show tied off and dropped

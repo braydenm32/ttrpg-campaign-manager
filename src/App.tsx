@@ -9,15 +9,16 @@ import { Armchair, GlobeHemisphereWest, House, List, Play, Shield, SlidersHorizo
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db'
 import { nextSessions, useCampaigns, useWorldSessions } from './threads'
-import { ForcePlayerView, useViewMode, ViewModeProvider } from './viewMode'
+import { ForcePlayerView, useViewMode, ViewModeProvider, WorldViewMode } from './viewMode'
 import { finishSignInRedirect, useAuthSession, verifyEmailLink } from './cloud/auth'
 import { cloudErrorMessage, supabase } from './cloud/client'
 import { leaveWorld } from './cloud/players'
 import { watchPlayerCopy } from './cloud/share'
 import { startSync, stopSync, syncNow, syncStore } from './cloud/sync'
-import { Modal } from './components'
+import { Empty, Modal } from './components'
 import { UpdateBanner } from './appUpdate'
 import { MoveBanner } from './move'
+import { ErrorBoundary } from './ErrorBoundary'
 import { RecordingBar } from './RecordingBar'
 import { SearchButton } from './search'
 import SharedWorld from './pages/SharedWorld'
@@ -55,15 +56,21 @@ const RelationWeb = lazy(() => import('./pages/RelationWeb'))
 import ClocksPage from './clocks'
 import SafetyPage, { XCardAlert, XCardButton } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
-import { PlayerTableLink, TableHost, TableSignals } from './atTheTable'
+import { LiveBadge, PlayerTableLink, TableHost, TableSignals } from './atTheTable'
 import { NewCharacterRequestsBanner } from './players/NewCharacters'
 import Handouts from './pages/Handouts'
+import { finishExampleWorld } from './example/load'
+import { finishSampleWorld } from './sample'
+import { WorldLoadingNote } from './WorldLoadingNote'
 import { hashRouting, pagePath, setPages, tidyPath, usePathsVersion, worldPath } from './paths'
+import { ClaudeJobChips, LeaveGuard } from './ai/LeaveGuard'
+import { useGuardedNavigate } from './ai/leave'
 
 const Router = hashRouting ? HashRouter : BrowserRouter
 
 export default function App() {
   return (
+    <ErrorBoundary whole>
     <ViewModeProvider>
       <CloudBoot />
       <UpdateBanner />
@@ -113,11 +120,13 @@ export default function App() {
             <Route path="clocks" element={<ClocksPage />} />
             <Route path="safety" element={<SafetyPage />} />
             <Route path="handouts" element={<Handouts />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
           <Route path="*" element={<Home />} />
         </Routes>
       </Router>
     </ViewModeProvider>
+    </ErrorBoundary>
   )
 }
 
@@ -205,7 +214,24 @@ function WorldLayout() {
       <WorldShell />
     </ForcePlayerView>
   )
-  return <WorldShell />
+  // Keyed, so each world starts from its own remembered view and no previewed player.
+  return (
+    <WorldViewMode key={worldId} worldId={worldId}>
+      <WorldShell />
+    </WorldViewMode>
+  )
+}
+
+/** An address inside a world that goes nowhere. */
+function NotFound() {
+  const { worldId } = useWorld()
+  return (
+    <div className="page">
+      <Empty>
+        There’s nothing at this address. <Link to={worldPath(worldId)}>Back to the world’s home</Link>
+      </Empty>
+    </div>
+  )
 }
 
 /** The players' screen for a TV: always the player view, whoever opens it. */
@@ -221,7 +247,7 @@ function ScreenRoute() {
 
 function SyncBadge() {
   const s = useSyncExternalStore(syncStore.subscribe, syncStore.get)
-  const label = { off: '', idle: '☁️ Synced', syncing: '☁️ Syncing…', offline: '☁️ Offline, will sync later', error: '⚠️ Sync problem' }[s.status]
+  const label = { off: '', idle: s.message ? '⚠️ Synced, with a note' : '☁️ Synced', syncing: '☁️ Syncing…', offline: '☁️ Offline, will sync later', error: '⚠️ Sync problem' }[s.status]
   if (!label) return null
   return (
     <button className="sync-badge ghost" title={s.message ?? 'Sync now'} onClick={() => syncNow()}>
@@ -246,7 +272,8 @@ function WorldShell() {
   )
   const { owners } = useCharacterOwners(world)
   const myCharacters = [...owners.entries()].filter(([, o]) => o.mine).map(([id]) => id)
-  const navigate = useNavigate()
+  // Asks first when Claude is writing on this page (see LeaveGuard).
+  const navigate = useGuardedNavigate()
   // On a phone the menu is open only on the page it was opened on, so following a link folds it away.
   const { pathname } = useLocation()
   const [menuOpenAt, setMenuOpenAt] = useState<string>()
@@ -264,6 +291,13 @@ function WorldShell() {
   const campaigns = useCampaigns(worldId)
   const sessions = useWorldSessions(worldId)
   const maps = useLiveQuery(() => db.maps.where({ worldId }).count(), [worldId]) ?? 0
+  // An example or sample world closed before its pictures and maps were all drawn carries on drawing them.
+  const example = !!world?.example
+  const sample = !!world?.sample
+  useEffect(() => {
+    if (example) void finishExampleWorld(worldId)
+    if (sample) void finishSampleWorld(worldId)
+  }, [example, sample, worldId])
   useEffect(() => {
     if (!menuOpen) return
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpenAt(undefined)
@@ -307,6 +341,7 @@ function WorldShell() {
 
   return (
     <div className={`layout ${isGM ? '' : 'player-mode'}`}>
+      <LeaveGuard />
       <header className="topbar">
         <button
           className="icon-button menu-toggle"
@@ -332,6 +367,8 @@ function WorldShell() {
           ))}
         </nav>
         <SearchButton worldId={worldId} world={world} />
+        {ownWorld && world.cloud?.enabled && <LiveBadge world={world} />}
+        {isGM && ownWorld && <ClaudeJobChips worldId={worldId} />}
         {ownWorld && (
           <div className="segmented gm-switch" title={HELP.viewingAs}>
             <button className={isGM ? 'on' : ''} onClick={() => setMode('gm')}>GM</button>
@@ -402,7 +439,6 @@ function WorldShell() {
             <button className={isGM ? 'on' : ''} onClick={() => setMode('gm')}>GM</button>
             <button className={!isGM ? 'on' : ''} onClick={() => setMode('player')}>Player</button>
           </div>
-          {!isGM && <PreviewAsPicker world={world} />}
         </div>
         )}
         </div>
@@ -410,6 +446,7 @@ function WorldShell() {
       <main className="content">
         {shareError && <div className="player-banner">Couldn’t refresh: {shareError}</div>}
         {isGM && !shared && <RecordingBar />}
+        <WorldLoadingNote worldId={worldId} />
         {memberOf && <ChooseCharacterBanner world={world} />}
         {shared && <NewsBanner world={world} />}
         {/* What the GM shows is for the table; a public wiki link never pops it up. */}
@@ -426,13 +463,16 @@ function WorldShell() {
             {previewAs
               ? `Player view as ${previewAs.name}: what's revealed to everyone, plus what's just for ${previewAs.characterNames.join(' and ') || previewAs.name}.`
               : "Player view: you're seeing only what's been revealed to players."}
+            <PreviewAsPicker world={world} />
             <button onClick={() => setMode('gm')}>Back to GM view</button>
           </div>
         )}
         {/* Bigger screens (maps, the Lectern, settings…) load the first time they're opened. */}
-        <Suspense fallback={<div className="loading">Loading…</div>}>
-          <Outlet />
-        </Suspense>
+        <ErrorBoundary resetKey={pathname}>
+          <Suspense fallback={<div className="loading">Loading…</div>}>
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
       </main>
       </div>
     </div>

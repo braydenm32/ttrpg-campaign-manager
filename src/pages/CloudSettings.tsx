@@ -61,6 +61,21 @@ export default function CloudSettings({ world }: { world: World }) {
             {busy ? 'Uploading…' : 'Turn on sync for this world'}
           </button>
         </>
+      ) : world.cloud?.gone ? (
+        <>
+          <p className="notice small">
+            This world’s cloud copy is gone: it was deleted on another device, or you’re no longer one of its GMs. Your copy on this device is safe, but it
+            isn’t syncing.
+          </p>
+          <div className="row wrap">
+            <button disabled={busy} onClick={() => run(() => disableCloud(world.id, true))}>
+              Keep it on this device only
+            </button>
+            <button className="primary" disabled={busy} onClick={() => run(() => enableCloud(world.id))}>
+              {busy ? 'Uploading…' : 'Upload it to the cloud again'}
+            </button>
+          </div>
+        </>
       ) : (
         <>
           <p>

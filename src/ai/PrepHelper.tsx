@@ -7,7 +7,9 @@ import { Ico } from '../icons'
 import { Markdown } from '../Markdown'
 import { editPrep } from '../prep'
 import { partyOf } from '../sessions'
+import { MODEL } from './claude'
 import { ClaudeJob } from './ClaudeJob'
+import { useKept } from './kept'
 import { describeStep, MARKUP_NOTE, pageByName, pageText, sessionIndex, sessionText, worldHeader, worldIndex, worldTools } from './worldText'
 
 /**
@@ -21,32 +23,39 @@ interface Suggestion {
   scenes: string[]
   clues: string[]
   ready: string[]
+  /** Claude's answer as written, when it didn't use the headings the app reads. */
+  raw?: string
 }
 
 const HEADS = { strongStart: /^#{1,3}\s*Strong start/i, scenes: /^#{1,3}\s*Scenes/i, clues: /^#{1,3}\s*Secrets/i, ready: /^#{1,3}\s*Have ready/i }
 
 export function parsePrep(text: string): Suggestion {
   const out: Suggestion = { strongStart: '', scenes: [], clues: [], ready: [] }
-  let part: keyof Suggestion | undefined
+  let part: keyof typeof HEADS | undefined
   for (const line of text.replace(/\r\n/g, '\n').split('\n')) {
-    const head = (Object.keys(HEADS) as (keyof Suggestion)[]).find((k) => HEADS[k].test(line))
+    const head = (Object.keys(HEADS) as (keyof typeof HEADS)[]).find((k) => HEADS[k].test(line))
     if (head) {
       part = head
       continue
     }
     if (!part || /^#/.test(line)) continue
     if (part === 'strongStart') out.strongStart += (out.strongStart ? '\n' : '') + line
-    else if (/^\s*[-*]\s+/.test(line)) out[part].push(line.replace(/^\s*[-*]\s+/, '').trim())
+    else if (/^\s*([-*]|\d+[.)])\s+/.test(line)) out[part].push(line.replace(/^\s*([-*]|\d+[.)])\s+/, '').trim())
     else if (line.trim() && out[part].length) out[part][out[part].length - 1] += ` ${line.trim()}`
   }
   out.strongStart = out.strongStart.trim()
+  // Nothing in the usual headings: keep the answer as it came, so it isn't lost.
+  if (!out.strongStart && !out.scenes.length && !out.clues.length && !out.ready.length) out.raw = text.trim()
   return out
 }
 
 export function PrepHelper({ world, session, entities }: { world: World; session: Session; entities: Entity[] }) {
   const sessions = useLiveQuery(() => db.sessions.where({ worldId: world.id }).toArray(), [world.id]) ?? []
-  const [suggestion, setSuggestion] = useState<Suggestion>()
-  const [skip, setSkip] = useState<Set<string>>(new Set())
+  // Kept outside the panel, so the suggestion is still here after a look at another page (see kept.ts).
+  const kept = `prep:${session.id}`
+  const [suggestion, setSuggestion] = useKept<Suggestion | undefined>(kept, undefined)
+  const [skipped, setSkipped] = useKept<string[]>(`${kept}:skip`, [])
+  const skip = new Set(skipped)
   const [added, setAdded] = useState(false)
 
   const build = () => {
@@ -99,7 +108,8 @@ ${open.length ? `Open quests and loose threads:\n${open.map((e) => `- [[${e.name
 ${clocks.length ? `Clocks still running:\n${clocks.join('\n')}` : ''}
 
 ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${planned.join('\n')}` : ''}`.replace(/\n{3,}/g, '\n\n')
-    return { system, prompt, tools: worldTools(world, entities, sessions), describe: describeStep, expectOut: 2500 }
+    // Planning a session from what's happened is a bigger job, so it gets the most capable model.
+    return { system, prompt, tools: worldTools(world, entities, sessions), describe: describeStep, model: MODEL, expectOut: 2500 }
   }
 
   const add = async () => {
@@ -118,20 +128,14 @@ ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${pl
       .filter((id): id is string => !!id && !session.entityIds.includes(id))
     if (ready.length) await db.sessions.update(session.id, { entityIds: [...session.entityIds, ...new Set(ready)] })
     setAdded(true)
+    setSuggestion(undefined)
   }
 
   const tick = (k: string) => (
     <input
       type="checkbox"
       checked={!skip.has(k)}
-      onChange={() =>
-        setSkip((s) => {
-          const n = new Set(s)
-          if (n.has(k)) n.delete(k)
-          else n.add(k)
-          return n
-        })
-      }
+      onChange={() => setSkipped((s) => (s.includes(k) ? s.filter((x) => x !== k) : [...s, k]))}
     />
   )
 
@@ -149,19 +153,27 @@ ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${pl
           </p>
           <ClaudeJob
             worldId={world.id}
+            jobId={kept}
+            jobTitle={`Prep ideas for session ${session.number}`}
             label="Suggest prep"
             build={build}
             priceKey={`${session.id}:${sessions.length}:${entities.length}`}
             onResult={(text) => {
               setSuggestion(parsePrep(text))
-              setSkip(new Set())
+              setSkipped([])
               setAdded(false)
             }}
           />
         </>
       ) : (
         <div className="prep-suggestion">
-          <p className="muted small">Untick anything you don’t want, then add the rest to your prep sheet.</p>
+          {suggestion.raw !== undefined && (
+            <div className="notice small">
+              <p>Claude’s answer didn’t come in the shape the app can read, so nothing can be added from it here. This is what it wrote:</p>
+              {suggestion.raw ? <Markdown text={suggestion.raw} entities={entities} worldId={world.id} showSecrets /> : <p className="muted">(Nothing.)</p>}
+            </div>
+          )}
+          {suggestion.raw === undefined && <p className="muted small">Untick anything you don’t want, then add the rest to your prep sheet.</p>}
           {suggestion.strongStart && (
             <label className="suggest-item">
               {tick('start')}
@@ -193,9 +205,11 @@ ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${pl
               ),
           )}
           <div className="row">
-            <button className="primary" onClick={add}>
-              Add to my prep
-            </button>
+            {suggestion.raw === undefined && (
+              <button className="primary" onClick={add}>
+                Add to my prep
+              </button>
+            )}
             <button className="ghost" onClick={() => setSuggestion(undefined)}>
               Throw these away
             </button>

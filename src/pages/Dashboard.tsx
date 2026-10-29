@@ -20,6 +20,7 @@ import { useCharacterOwners } from '../players/owners'
 import { Ico, TypeIcon } from '../icons'
 import { ChatCircleDots, ListChecks, Play, Plus, Spiral, UserCirclePlus } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
+import { createNextSession, localDate } from '../sessions'
 
 export default function Dashboard() {
   const { worldId, world } = useWorld()
@@ -308,6 +309,7 @@ function NewCampaign({
 
 /** The GM's "what's next" card: each campaign's coming session, with its prep and the Lectern a click away. */
 function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampaign: () => void }) {
+  const navigate = useNavigate()
   const campaigns = useCampaigns(worldId)
   const sessions = useLiveQuery(() => db.sessions.where({ worldId }).toArray(), [worldId]) ?? []
   const cards = nextSessions(campaigns, sessions)
@@ -326,24 +328,42 @@ function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampai
         const clues = next.prep?.clues.filter((x) => !x.done && x.text.trim()).length ?? 0
         const scenes = next.prep?.scenes.filter((x) => !x.done && x.text.trim()).length ?? 0
         const when = upcoming(c)
+        // The newest session is shown even once it's been played; then the useful next step is planning the one after.
+        const played = !!next.recap.trim() || (!!next.date && next.date < localDate())
+        const details = [when ? showDate(when) : next.date, clues || scenes ? `${scenes} scene${scenes === 1 ? '' : 's'}, ${clues} clue${clues === 1 ? '' : 's'} ready` : ''].filter(Boolean).join(' · ')
         return (
           <div key={c.id} className="next-session">
-            <div className="kicker">{c.name}</div>
+            <div className="kicker">{c.name}{played && ' · last played'}</div>
             <Link className="next-title" to={`${worldPath(worldId)}/s/${next.id}`}>
               #{next.number} {next.title}
             </Link>
-            <div className="muted small">
-              {when ? showDate(when) : next.date}
-              {clues || scenes ? ` · ${scenes} scene${scenes === 1 ? '' : 's'}, ${clues} clue${clues === 1 ? '' : 's'} ready` : ''}
-            </div>
-            <div className="row wrap">
-              <Link className="button primary" to={`${worldPath(worldId)}/s/${next.id}/lectern`} title={HELP.lectern}>
-                <Ico as={Play} weight="fill" /> Run session
-              </Link>
-              <Link className="button" to={`${worldPath(worldId)}/s/${next.id}?tab=prep`}>
-                <Ico as={ListChecks} /> Prep
-              </Link>
-            </div>
+            {details && <div className="muted small">{details}</div>}
+            {played ? (
+              <div className="row wrap">
+                <button
+                  className="primary"
+                  title="Start the next session, carrying over the clues and scenes you didn’t reach"
+                  onClick={async () => {
+                    const n = await createNextSession(worldId, c.id, '')
+                    navigate(`${worldPath(worldId)}/s/${n.id}?tab=prep`)
+                  }}
+                >
+                  <Ico as={ListChecks} /> Plan session #{next.number + 1}
+                </button>
+                <Link className="button" to={`${worldPath(worldId)}/s/${next.id}/lectern`} title={HELP.lectern}>
+                  Re-open #{next.number}
+                </Link>
+              </div>
+            ) : (
+              <div className="row wrap">
+                <Link className="button primary" to={`${worldPath(worldId)}/s/${next.id}/lectern`} title={HELP.lectern}>
+                  <Ico as={Play} weight="fill" /> Run session
+                </Link>
+                <Link className="button" to={`${worldPath(worldId)}/s/${next.id}?tab=prep`}>
+                  <Ico as={ListChecks} /> Prep
+                </Link>
+              </div>
+            )}
           </div>
         )
       })}
@@ -362,7 +382,7 @@ function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampai
 function GettingStarted({ worldId }: { worldId: string }) {
   const steps: [string, string, string][] = [
     ['🎲', 'Make a campaign', 'One group’s story in this world. Use “+ Campaign” below.'],
-    ['🧑', 'Add a few people and places', 'Use Quick add. Link pages to each other by writing [[Name]].'],
+    ['🧑', 'Add a few people and places', 'Use New page (top right), or press Ctrl/Cmd K and type “new npc”. Link pages to each other by writing [[Name]].'],
     ['🗺️', 'Add a map', 'Upload one or draw it, then pin your places on it.'],
     ['🔒', 'Keep secrets', 'Pages start GM only. Reveal them when the players find out, and hide passages with the 🔒 buttons.'],
     ['☁️', 'Invite your players (optional)', 'Turn on cloud sync in World settings, then send invite links.'],

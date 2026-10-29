@@ -1,4 +1,5 @@
 import { db, type Asset, type Campaign, type Entity, type Pin, type Session, type SharedInfo, type World, type WorldMap } from '../db'
+import { worldLoading } from '../worldLoading'
 import { appLink, supabase, SUPABASE_URL } from './client'
 import { joinRoom, sendOnce } from './live'
 import { stableStringify } from './sync'
@@ -122,11 +123,15 @@ export async function storePlayerCopy(
     const have = existing.get(id(a.id))
     return have && have.size === a.size && have.updatedAt === a.updatedAt ? have : undefined
   }
-  const fresh = await download(p.assets.filter((a) => !unchanged(a)).map((a) => a.id))
+  // Those are fetched after the pages are saved, so the world opens straight away (see fetchFiles).
+  // A newer refresh takes over from one still fetching.
+  const gen = (generation.get(worldId) ?? 0) + 1
+  generation.set(worldId, gen)
+  worldLoading.clear(worldId)
+  const toFetch = p.assets.filter((a) => !unchanged(a))
   const assets: Asset[] = p.assets.flatMap((a) => {
     const have = unchanged(a)
-    const blob = have?.blob ?? fresh.get(a.id)
-    return blob ? [{ ...a, id: id(a.id), worldId, blob } as Asset] : []
+    return have ? [{ ...a, id: id(a.id), worldId, blob: have.blob } as Asset] : []
   })
   const now = Date.now()
   const claims = info.claims?.map((c) => ({ ...c, entityId: id(c.entityId) }))
@@ -175,8 +180,23 @@ export async function storePlayerCopy(
       news = undefined
   }
 
+  // Files are the big part: only ones that are new, changed or gone are written, so a small edit
+  // by the GM doesn't rewrite every picture on a phone (and pictures on screen don't reload).
+  // A file that changed keeps its old copy until the new one arrives.
+  const keepIds = new Set(p.assets.map((a) => id(a.id)))
+  const sameFile = (a: Asset) => {
+    const have = existing.get(a.id)
+    if (!have || have.blob !== a.blob) return false
+    const { blob: _h, ...was } = have
+    const { blob: _a, ...now } = a
+    return stableStringify(was) === stableStringify(now)
+  }
+  const changedAssets = assets.filter((a) => !sameFile(a))
+  const goneAssets = [...existing.keys()].filter((x) => !keepIds.has(x))
+
   await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
-    for (const t of [db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets] as const) await t.where({ worldId }).delete()
+    for (const t of [db.campaigns, db.entities, db.maps, db.pins, db.sessions] as const) await t.where({ worldId }).delete()
+    await db.assets.bulkDelete(goneAssets)
     const showing = p.world?.showing
     await db.worlds.put({
       ...(p.world ?? { name: 'Shared world', description: '', system: '', createdAt: now }),
@@ -187,7 +207,7 @@ export async function storePlayerCopy(
       cloud: undefined,
       shared: { ...info, claims, notes, questions, news, fetchedAt: now, hash: assets.length === p.assets.length ? hash : undefined },
     } as World)
-    await db.assets.bulkPut(assets)
+    await db.assets.bulkPut(changedAssets)
     await db.campaigns.bulkPut(p.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))
     await db.entities.bulkPut(
       p.entities.map((e) => ({ ...e, id: id(e.id), worldId, parentId: opt(e.parentId), imageId: opt(e.imageId), raisedIn: opt(e.raisedIn), campaignId: opt(e.campaignId), tiedOffIn: opt(e.tiedOffIn), heldBy: e.heldBy === 'party' ? 'party' : opt(e.heldBy), relations: e.relations?.map((r) => ({ ...r, to: id(r.to) })), gmNotes: '' })),
@@ -200,7 +220,50 @@ export async function storePlayerCopy(
       p.sessions.map((s) => ({ ...s, id: id(s.id), worldId, campaignId: id(s.campaignId), entityIds: s.entityIds.map(id), notes: '', recordings: [], lectern: undefined })),
     )
   })
+  if (toFetch.length) void fetchFiles(worldId, gen, toFetch, id, download, hash)
   return worldId
+}
+
+/** How many times each player's copy has been stored, so only the newest one goes on fetching its files. */
+const generation = new Map<string, number>()
+
+/**
+ * Downloads a player's copy's new or changed files a few at a time, saving each batch as it comes,
+ * while the world is already open. Files that don't arrive are fetched again on the next refresh.
+ */
+async function fetchFiles(
+  worldId: string,
+  gen: number,
+  files: Omit<Asset, 'blob'>[],
+  id: (x: string) => string,
+  download: (ids: string[]) => Promise<Map<string, Blob>>,
+  hash: string,
+) {
+  const current = () => generation.get(worldId) === gen
+  // A refresh or two of one or two files isn't worth a note on screen.
+  const say = files.length > 2
+  let done = 0
+  let all = true
+  try {
+    for (let i = 0; i < files.length; i += 6) {
+      if (!current()) return
+      if (say) worldLoading.set({ worldId, what: 'downloading', done, total: files.length })
+      const batch = files.slice(i, i + 6)
+      const blobs = await download(batch.map((a) => a.id))
+      // A newer refresh works out for itself what's still missing; a deleted world needs nothing.
+      if (!current() || !(await db.worlds.get(worldId))) return
+      const got = batch.flatMap((a) => (blobs.has(a.id) ? [{ ...a, id: id(a.id), worldId, blob: blobs.get(a.id)! } as Asset] : []))
+      if (got.length < batch.length) all = false
+      await db.assets.bulkPut(got)
+      done += batch.length
+    }
+    // Everything arrived: the next refresh with nothing new can skip straight past.
+    if (all && current() && (await db.worlds.get(worldId))?.shared) await db.worlds.update(worldId, { 'shared.hash': hash })
+  } catch {
+    // Offline or a blip: the next refresh fetches what's missing.
+  } finally {
+    if (say && current()) worldLoading.clear(worldId)
+  }
 }
 
 /** What a player would notice changed on a page since their last copy, in a few words each. */

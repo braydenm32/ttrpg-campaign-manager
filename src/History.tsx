@@ -3,8 +3,8 @@ import { useState } from 'react'
 import { Empty, Modal } from './components'
 import { db, saveEntity, type Entity, type PageVersion } from './db'
 import { Help } from './help'
-import { useWorld } from './hooks'
-import { restoreFromBin, useBin } from './bin'
+import { binSize, deleteFromBin, emptyBin, restoreFromBin, useBin } from './bin'
+import { formatBytes, useWorld } from './hooks'
 import { PageIcon } from './icons'
 
 /**
@@ -30,6 +30,8 @@ function changes(old: Entity, now: Entity | undefined) {
   if (old.body !== now.body) out.push(`description (${old.body.length} → ${now.body.length} letters)`)
   if (old.gmNotes !== now.gmNotes) out.push('GM notes')
   if (old.visibility !== now.visibility) out.push(old.visibility === 'gm' ? 'was GM only' : 'was revealed')
+  const shownTo = (e: Entity) => [...(e.revealedTo ?? [])].sort().join()
+  if (shownTo(old) !== shownTo(now)) out.push(old.revealedTo?.length ? `was shown to ${old.revealedTo.length} player${old.revealedTo.length === 1 ? '' : 's'}` : 'was shown to no one in particular')
   if (JSON.stringify(old.fields) !== JSON.stringify(now.fields)) out.push('details')
   if (JSON.stringify(old.entries) !== JSON.stringify(now.entries)) out.push('table entries')
   if (JSON.stringify(old.tags) !== JSON.stringify(now.tags)) out.push('tags')
@@ -74,8 +76,9 @@ function HistoryModal({ entity, onClose }: { entity: Entity; onClose: () => void
                 <button
                   className="small"
                   onClick={async () => {
-                    if (!confirm(`Put ${entity.name} back the way it was on ${when(v.at)}?`)) return
-                    await saveEntity({ ...v.entity, updatedAt: Date.now() })
+                    if (!confirm(`Put ${entity.name} back the way it was on ${when(v.at)}? Who can see it stays as it is now.`)) return
+                    // Only the writing comes back: an old version must never quietly reveal the page again.
+                    await saveEntity({ ...v.entity, visibility: entity.visibility, revealedTo: entity.revealedTo, updatedAt: Date.now() })
                     onClose()
                   }}
                 >
@@ -100,60 +103,103 @@ function HistoryModal({ entity, onClose }: { entity: Entity; onClose: () => void
   )
 }
 
-const BIN_ICON: Record<string, string> = { session: '📖', campaign: '🎲', file: '📁', board: '📌', sound: '🎵', map: '🗺️' }
+const BIN_ICON: Record<string, string> = { session: '📖', campaign: '🎲', file: '📁', board: '📌', sound: '🎵', map: '🗺️', elsewhere: '☁️' }
 
-/** World settings: pages deleted on this device, with a way to bring them back. */
+/** How many of each list show before "Show all". */
+const SHORT_LIST = 30
+
+/** World settings: things deleted on this device (or on another one), with a way to bring them back. */
 export function RecentlyDeleted() {
   const { worldId, world } = useWorld()
+  const [all, setAll] = useState(false)
   const deleted =
     useLiveQuery(async () => {
-      const vs = await db.history.where({ worldId }).filter((v) => v.reason === 'deleted').reverse().sortBy('at')
+      const vs = await db.history.where('[worldId+reason]').equals([worldId, 'deleted']).reverse().sortBy('at')
       const still = new Set((await db.entities.bulkGet(vs.map((v) => v.entityId))).flatMap((e) => (e ? [e.id] : [])))
       const seen = new Set<string>()
       // Newest deletion of each page that hasn't come back since.
       return vs.filter((v) => !still.has(v.entityId) && !seen.has(v.entityId) && seen.add(v.entityId))
     }, [worldId]) ?? []
   const bin = useBin(worldId)
+  const size = bin.reduce((n, b) => n + binSize(b), 0)
+  const more = bin.length > SHORT_LIST || deleted.length > SHORT_LIST
   return (
     <section>
       <h2>
         🗑️ Recently deleted <Help topic="recentlyDeleted" />
       </h2>
       {bin.length > 0 && (
-        <ul className="entity-list">
-          {bin.slice(0, 30).map((b) => (
-            <li key={b.id} className="row spread">
-              <span>
-                {BIN_ICON[b.kind]} {b.label || 'Untitled'} <span className="muted small">· deleted {when(b.at)}</span>
-              </span>
-              <button className="small" onClick={() => restoreFromBin(b.id)}>
-                Restore
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="entity-list">
+            {(all ? bin : bin.slice(0, SHORT_LIST)).map((b) => (
+              <li key={b.id} className="row spread">
+                <span>
+                  {BIN_ICON[b.kind]} {b.label || 'Untitled'}{' '}
+                  <span className="muted small">
+                    · {b.kind === 'elsewhere' ? 'deleted on another device' : 'deleted'} {when(b.at)}
+                    {binSize(b) ? ` · ${formatBytes(binSize(b))}` : ''}
+                  </span>
+                </span>
+                <span className="row">
+                  <button className="small" onClick={() => restoreFromBin(b.id)}>
+                    Restore
+                  </button>
+                  <button className="small ghost" onClick={() => confirm(`Delete “${b.label || 'Untitled'}” for good? It can’t be brought back.`) && deleteFromBin(b.id)}>
+                    Delete forever
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="row small">
+            <span className="muted">
+              Kept for a month{size ? `, taking ${formatBytes(size)} on this device` : ''}.
+            </span>
+            <button
+              className="small ghost"
+              onClick={() => confirm('Empty the bin? Nothing in it can be brought back afterwards. (Deleted pages below are kept.)') && emptyBin(worldId)}
+            >
+              Empty the bin
+            </button>
+          </p>
+        </>
       )}
       {deleted.length === 0 ? (
-        bin.length === 0 && 
-<Empty>Nothing deleted on this device.</Empty>
+        bin.length === 0 && <Empty>Nothing deleted on this device.</Empty>
       ) : (
         <ul className="entity-list">
-          {deleted.slice(0, 30).map((v) => (
+          {(all ? deleted : deleted.slice(0, SHORT_LIST)).map((v) => (
             <li key={v.id} className="row spread">
               <span>
                 <PageIcon page={v.entity} world={world} /> {v.entity.name} <span className="muted small">· deleted {when(v.at)}</span>
               </span>
-              <button
-                className="small"
-                onClick={async () => {
-                  await db.entities.put({ ...v.entity, updatedAt: Date.now() })
-                }}
-              >
-                Restore
-              </button>
+              <span className="row">
+                <button
+                  className="small"
+                  onClick={async () => {
+                    await db.entities.put({ ...v.entity, updatedAt: Date.now() })
+                  }}
+                >
+                  Restore
+                </button>
+                <button
+                  className="small ghost"
+                  onClick={() =>
+                    confirm(`Delete “${v.entity.name}” for good, with all its earlier versions? It can’t be brought back.`) &&
+                    db.history.where({ entityId: v.entityId }).delete()
+                  }
+                >
+                  Delete forever
+                </button>
+              </span>
             </li>
           ))}
         </ul>
+      )}
+      {more && (
+        <button className="small ghost" onClick={() => setAll(!all)}>
+          {all ? 'Show fewer' : `Show all (${bin.length + deleted.length})`}
+        </button>
       )}
       {deleted.length > 0 && (
         <p className="muted small">

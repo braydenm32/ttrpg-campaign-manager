@@ -11,7 +11,8 @@ import { Ico } from './icons'
  *  - The old address shows a banner. Its button opens the new address, which asks for the data; the
  *    old one sends every table and the device settings (one browser, one device, so device-only
  *    things like API keys stay on this device), and the new one adds what it doesn't already have.
- *  - Once moved, or if the old address never had anything saved, it just forwards to the new
+ *  - Once moved, or if the old address never had anything saved (no worlds, and no keys or other
+ *    device settings), it just forwards to the new
  *    address, keeping the rest of the link (invites and share links keep working).
  * Nothing on the old address is deleted, so a failed move can be tried again.
  */
@@ -52,6 +53,19 @@ function newHomeIsUp() {
   })
 }
 
+/**
+ * Device settings worth carrying over even with no worlds: the AI keys, the Discord link and the
+ * Syrinscape token (kept on this device only, so nothing else has a copy).
+ */
+function hasDeviceSettings() {
+  try {
+    for (let i = 0; i < localStorage.length; i++) if (/^codex\.(ai|syrinscapeToken|discord\.)/.test(localStorage.key(i) ?? '')) return true
+  } catch {
+    // Storage blocked: there's nothing to move.
+  }
+  return false
+}
+
 function readLocal() {
   try {
     return localStorage.getItem(MOVED_KEY)
@@ -70,7 +84,7 @@ export async function startMove(): Promise<boolean> {
       window.location.replace(newHome())
       return false
     }
-    const empty = (await db.worlds.count()) === 0 && (await db.recordingChunks.count()) === 0
+    const empty = (await db.worlds.count()) === 0 && (await db.recordingChunks.count()) === 0 && !hasDeviceSettings()
     if (empty && (await newHomeIsUp())) {
       window.location.replace(newHome())
       return false
@@ -216,7 +230,8 @@ export function MoveBanner() {
   return (
     <div className="move-banner" role="status">
       <span>
-        The Warded Atlas has a new home at <strong>{new URL(PUBLIC_APP_URL).host}</strong>. Move this device’s worlds there in one click. <Help topic="moving" />
+        The Warded Atlas has a new home at <strong>{new URL(PUBLIC_APP_URL).host}</strong>. Move this device’s worlds and settings (like your AI keys) there in one
+        click. <Help topic="moving" />
       </span>
       <button className="small primary" onClick={move} disabled={busy}>
         {busy ? 'Moving…' : 'Move my worlds'} <Ico as={ArrowRight} />

@@ -198,7 +198,13 @@ export interface World {
   /** The table's safety tools: lines (never in the game) and veils (happens off screen). Everyone sees these. */
   safety?: Safety
   /** Device-only: cloud sync settings for this world. Never uploaded. */
-  cloud?: { enabled: boolean; lastPulledAt?: string; pullVersion?: number }
+  cloud?: {
+    enabled: boolean
+    lastPulledAt?: string
+    pullVersion?: number
+    /** Set when the cloud copy turned out to be gone (deleted on another device, or this GM was removed): sync stops until the GM decides. */
+    gone?: boolean
+  }
   /**
    * Device-only: set when this world is a read-only player copy, either opened from a share link
    * (token) or joined with an invite (memberOf, the GM's cloud world id).
@@ -506,6 +512,11 @@ export interface RecapDraft {
   updates?: WorldUpdate[]
   /** Set once the GM has applied (or skipped) the suggested changes. */
   updatesDone?: boolean
+  /**
+   * When the suggested changes couldn't be read: Claude's text for that part as it came, or '' when
+   * the reply had no world updates at all (cut off before them, say).
+   */
+  updatesProblem?: string
   createdAt: number
 }
 
@@ -723,12 +734,21 @@ export interface BinItem {
   id: string
   worldId: string
   at: number
-  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map'
+  /** "elsewhere": removed because it was deleted on another device (several things at once, maybe). */
+  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map' | 'elsewhere'
   /** What to call it in the list, e.g. the session's title. */
   label: string
   /** The rows that were removed, by table, so restoring puts every one back. */
   rows: { table: 'campaigns' | 'sessions' | 'assets' | 'boards' | 'sounds' | 'maps' | 'pins'; rows: unknown[] }[]
+  /**
+   * Links that pointed at what was deleted and were cleared (pins on other maps that led into a map,
+   * characters who played in a campaign), so restoring puts them back.
+   */
+  relinks?: { table: 'pins' | 'entities'; field: 'childMapId' | 'campaignId'; value: string; ids: string[] }[]
 }
+
+/** How long the recently deleted bin keeps things. */
+export const BIN_KEEP_FOR = 30 * 24 * 60 * 60_000
 
 /** What was last synced for each row, so only real changes are uploaded. */
 export interface SyncMeta {
@@ -736,7 +756,10 @@ export interface SyncMeta {
   worldId: string
   hash: string
   deleted?: boolean
-  /** Upload failed (e.g. file too large); not retried until the row changes. */
+  /**
+   * Upload failed (e.g. file too large); not retried until the row changes. DOWNLOAD_FAILED (with
+   * deleted, as there's no copy here) for a file that couldn't be downloaded: tried again each time the app opens.
+   */
   failed?: string
   /** The row as last synced (without files), so edits made here and elsewhere can be merged. */
   base?: Record<string, unknown>
@@ -807,6 +830,17 @@ db.version(6).stores({
   recordingChunks: '++id, recordingId, sessionId',
 })
 
+// v7: deleted pages are found without reading every saved version of every page.
+db.version(7).stores({
+  history: 'id, entityId, worldId, at, [worldId+reason]',
+})
+
+// The bin is cleared of anything over a month old soon after the app opens, not only when it's
+// looked at, so deleting a big recording to make room does give the space back in time.
+db.on('ready', () => {
+  setTimeout(() => db.bin.where('at').below(Date.now() - BIN_KEEP_FOR).delete().catch(() => {}), 5000)
+})
+
 export const newId = () => crypto.randomUUID()
 
 /** Versions kept per page; older ones are dropped. */
@@ -848,11 +882,24 @@ export function blankEntity(worldId: string, type: EntityType, name = ''): Entit
   }
 }
 
+/**
+ * A fresh page that keeps only what a template should hand on: the wording and the shape. Anything
+ * tied to one particular page or to play (links to other pages, how full a clock is, who carries it,
+ * dates, a player's own text) is left out, and clocks start empty with ids of their own.
+ */
+export function templateOf(t: Entity): Entity {
+  const c = structuredClone(t)
+  const keep = <K extends keyof Entity>(...keys: K[]) => Object.fromEntries(keys.filter((k) => c[k] !== undefined).map((k) => [k, c[k]])) as Partial<Entity>
+  return {
+    ...blankEntity(c.worldId, c.type, c.name),
+    ...keep('customType', 'summary', 'body', 'gmNotes', 'tags', 'gmTags', 'fields', 'entries', 'imageId', 'quantity', 'eventEra', 'eventAge', 'threadUrgency'),
+    ...(c.clocks?.length ? { clocks: c.clocks.map((k) => ({ ...k, id: newId(), filled: 0 })) } : {}),
+  }
+}
+
 /** A new page that starts as a copy of a template. */
 export function fromTemplate(t: Entity, name = `New ${t.name}`): Entity {
-  const now = Date.now()
-  const { template: _t, revealedTo: _r, ...rest } = structuredClone(t)
-  return { ...rest, id: newId(), name, visibility: 'gm', createdAt: now, updatedAt: now }
+  return { ...templateOf(t), name }
 }
 
 export async function deleteWorld(worldId: string) {

@@ -42,7 +42,14 @@ export function useVisibleEntities(worldId: string) {
           .where({ worldId })
           .filter((e) => !e.template && (isGM || e.visibility === 'players' || (!!as && !!e.revealedTo?.includes(as))))
           .sortBy('name')
-        return isGM ? list : list.map(asPlayerSees)
+        if (isGM) return list
+        // Like the server's copy: a place or carrier the player can't see isn't named.
+        const seen = new Set(list.map((e) => e.id))
+        return list.map(asPlayerSees).map((e) => ({
+          ...e,
+          parentId: e.parentId && seen.has(e.parentId) ? e.parentId : undefined,
+          heldBy: e.heldBy && (e.heldBy === 'party' || seen.has(e.heldBy)) ? e.heldBy : undefined,
+        }))
       },
       [worldId, isGM, as],
     ) ?? []
@@ -68,6 +75,30 @@ export function asPlayerSees(e: Entity): Entity {
     aliases: undefined,
     gmTags: undefined,
   }
+}
+
+/**
+ * Pages that start a tree of places: no parent, a parent that isn't there, or (for old bad data where
+ * places sit inside each other in a loop) the first of the loop, so nothing drops out of the lists.
+ */
+export function treeRoots(entities: Entity[]): Set<string> {
+  const byId = new Map(entities.map((e) => [e.id, e]))
+  const roots = new Set<string>()
+  for (const e of entities) {
+    if (!e.parentId || !byId.has(e.parentId)) {
+      roots.add(e.id)
+      continue
+    }
+    // Walk up: if we come back round to this page it's in a loop, and the lowest id of the loop is its root.
+    let low = e.id
+    let p: Entity | undefined = byId.get(e.parentId)
+    for (let n = 0; p && p.id !== e.id && n < entities.length; n++) {
+      if (p.id < low) low = p.id
+      p = p.parentId ? byId.get(p.parentId) : undefined
+    }
+    if (p && p.id === e.id && low === e.id) roots.add(e.id)
+  }
+  return roots
 }
 
 /** The world's page templates (GM only). */

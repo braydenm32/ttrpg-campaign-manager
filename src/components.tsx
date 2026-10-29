@@ -105,15 +105,17 @@ export function Empty({ children }: { children: ReactNode }) {
 
 /**
  * A text box that keeps what you type locally and saves every change. Saved values come back a moment later,
- * so reading them straight back while typing would drop keystrokes.
+ * so reading them straight back while typing would drop keystrokes. With `saveOn="leave"` it saves once,
+ * when you press Enter or move on, for boxes whose value reorders a list (so rows don't jump while you type).
  */
 export function DraftText({
   value,
   onCommit,
   multiline,
   rows,
+  saveOn,
   ...rest
-}: { value: string; onCommit: (v: string) => void; multiline?: boolean; rows?: number } & Omit<
+}: { value: string; onCommit: (v: string) => void; multiline?: boolean; rows?: number; saveOn?: 'leave' } & Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'value' | 'onChange'
 >) {
@@ -121,11 +123,15 @@ export function DraftText({
   const props = {
     value: draft ?? value,
     onFocus: () => setDraft(value),
-    onBlur: () => setDraft(null),
+    onBlur: () => {
+      if (saveOn === 'leave' && draft !== null && draft !== value) onCommit(draft)
+      setDraft(null)
+    },
     onChange: (e: { target: { value: string } }) => {
       setDraft(e.target.value)
-      onCommit(e.target.value)
+      if (saveOn !== 'leave') onCommit(e.target.value)
     },
+    ...(saveOn === 'leave' ? { onKeyDown: (e: { key: string; currentTarget: { blur: () => void } }) => e.key === 'Enter' && e.currentTarget.blur() } : {}),
   }
   return multiline ? <textarea rows={rows} placeholder={rest.placeholder} {...props} /> : <input {...rest} {...props} />
 }

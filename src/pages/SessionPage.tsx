@@ -9,11 +9,14 @@ import { RecapPanel } from '../ai/RecapPanel'
 import { SpotlightPanel } from '../ai/Spotlight'
 import { TranscriptPanel } from '../ai/TranscriptPanel'
 import { DraftText, Empty, VisibilityToggle } from '../components'
+import { PagePicker } from '../PagePicker'
 import { db, ENTITY_LABELS, type Entity, type Recording, type Session } from '../db'
 import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
+import { SecretNamesWarning } from '../SecretNamesWarning'
 import { formatTime, recordingSupported, systemAudioSupported, type RecordSource } from '../recorder'
+import { RecordingSaveWarning } from '../RecordingBar'
 import { addBookmark, beginRecording, discardRecording, endRecording, recoverRecording, unsavedRecordings, useLiveRecording } from '../recordingStore'
 import { ThreadCard } from '../ThreadCard'
 import { newThread, useWorldSessions } from '../threads'
@@ -32,12 +35,15 @@ export default function SessionPage() {
   const { sessionId = '' } = useParams()
   const { isGM, canSee } = useViewMode()
   const navigate = useNavigate()
-  const session = useLiveQuery(() => db.sessions.get(sessionId), [sessionId])
+  const session = useLiveQuery(async () => (await db.sessions.get(sessionId)) ?? null, [sessionId])
   const campaign = useLiveQuery(() => (session ? db.campaigns.get(session.campaignId) : undefined), [session?.campaignId])
   const entities = useVisibleEntities(worldId)
   const [params, setParams] = useSearchParams()
-  const tab = (['notes', 'recap', 'prep'] as const).find((t) => t === params.get('tab')) ?? 'notes'
-  const setTab = (t: 'notes' | 'recap' | 'prep') => setParams(t === 'notes' ? {} : { tab: t }, { replace: true })
+  const live = useLiveRecording()
+  // A session with nothing written or recorded yet opens on its prep; one that has been played opens on the notes.
+  const firstTab = session && !session.notes.trim() && !session.recordings.length ? 'prep' : 'notes'
+  const tab = (['notes', 'recap', 'prep'] as const).find((t) => t === params.get('tab')) ?? firstTab
+  const setTab = (t: 'notes' | 'recap' | 'prep') => setParams(t === firstTab ? {} : { tab: t }, { replace: true })
 
   if (session === undefined) return null
   if (session === null || !canSee(session.visibility) || (campaign && campaign.worldId !== worldId))
@@ -151,6 +157,7 @@ export default function SessionPage() {
           onChange={(v) => update({ recap: v })}
         />
       )}
+      {tab === 'recap' && <SecretNamesWarning worldId={worldId} texts={[session.recap]} />}
       {tab === 'recap' && session.recap.trim() && <ReadAloud text={session.recap} id={`recap-${session.id}`} className="small" />}
       {tab === 'recap' && session.recap.trim() && (
         <DiscordButton
@@ -179,19 +186,11 @@ export default function SessionPage() {
           entities={featured}
           onRemove={(id) => update({ entityIds: session.entityIds.filter((x) => x !== id) })}
         />
-        <select
-          value=""
-          onChange={(e) => e.target.value && update({ entityIds: [...session.entityIds, e.target.value] })}
-        >
-          <option value="">+ Add an NPC, place, item…</option>
-          {entities
-            .filter((e) => !session.entityIds.includes(e.id))
-            .map((e) => (
-              <option key={e.id} value={e.id}>
-                {ENTITY_LABELS[e.type].icon} {e.name}
-              </option>
-            ))}
-        </select>
+        <PagePicker
+          entities={entities.filter((e) => !session.entityIds.includes(e.id))}
+          placeholder="+ Add an NPC, place, item…"
+          onPick={(id) => id && update({ entityIds: [...session.entityIds, id] })}
+        />
       </section>
 
       <SessionThreads sessionId={session.id} entities={entities} worldId={worldId} />
@@ -199,6 +198,8 @@ export default function SessionPage() {
       <div className="row end">
         <button
           className="danger"
+          disabled={live?.sessionId === session.id}
+          title={live?.sessionId === session.id ? 'Stop the recording first' : undefined}
           onClick={async () => {
             if (!confirm('Delete this session and its recordings? You can restore it from World settings for a month.')) return
             await binSession(session.id)
@@ -301,6 +302,7 @@ function Recorder({ session }: { session: Session }) {
               ■ Stop & save
             </button>
           </div>
+          <RecordingSaveWarning live={active} />
           <form
             className="row"
             onSubmit={(e) => {
@@ -370,7 +372,7 @@ function Playback({ sessionId, recording }: { sessionId: string; recording: Reco
     return (
       <div className="playback" ref={box}>
         <div className="muted small">
-          Recorded {new Date(startedAt).toLocaleString()} on another device. The audio stays there; its transcript is here.
+          Recorded {new Date(startedAt).toLocaleString()} on another device, or left out of a backup. The audio isn’t on this device; its transcript is here.
         </div>
         <TranscriptPanel sessionId={sessionId} recording={recording} worldId={worldId} seek={() => {}} focus={focus} />
       </div>

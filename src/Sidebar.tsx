@@ -25,7 +25,7 @@ import {
   Books,
 } from '@phosphor-icons/react'
 import { db, ENTITY_LABELS, ENTITY_TYPES, type CustomType, type Entity, type EntityType } from './db'
-import { useVisibleEntities, useWorld } from './hooks'
+import { treeRoots, useVisibleEntities, useWorld } from './hooks'
 import { Ico, TypeIcon } from './icons'
 import { nextSessions, useCampaigns, useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
@@ -130,17 +130,17 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
   const openThreads = entities.filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active')).length
   const next = nextSessions(campaigns, sessions)[0]?.session
 
+  const roots = treeRoots(entities)
   /** Locations as a tree: everything at the top, and the children of each place on the way to the current page. */
   const locationTree = (parentId: string | undefined, depth: number): ReactNode => {
-    const ids = new Set(entities.map((e) => e.id))
     const kids = entities.filter(
-      (e) => e.type === 'location' && (parentId ? e.parentId === parentId : !e.parentId || !ids.has(e.parentId)),
+      (e) => e.type === 'location' && (parentId ? e.parentId === parentId && !roots.has(e.id) : roots.has(e.id)),
     )
     if (!kids.length) return null
     return (
       <div className="nav-children">
         {kids.map((e) => {
-          const hasKids = entities.some((x) => x.type === 'location' && x.parentId === e.id)
+          const hasKids = entities.some((x) => x.type === 'location' && x.parentId === e.id && !roots.has(x.id))
           const key = `loc:${e.id}`
           // Open on the way to the current page, and open a lone top-level place (usually the whole region).
           const auto = path.has(e.id) || (depth === 0 && kids.length === 1)

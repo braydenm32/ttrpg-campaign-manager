@@ -17,7 +17,7 @@ type Asset = Extract<Shape, { kind: 'asset' }>
 
 /** What a door piece leaves in the wall: a door, bars you can see through, or just a gap. */
 type Opening = 'door' | 'window' | 'gap'
-const OPENINGS: Record<string, (variant: number) => Opening> = {
+export const OPENINGS: Record<string, (variant: number) => Opening> = {
   // 5 is broken, hanging off one hinge
   'dg-door': (v) => (v === 5 ? 'gap' : 'door'),
   'dg-double-door': () => 'door',

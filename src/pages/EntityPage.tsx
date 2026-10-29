@@ -5,13 +5,14 @@ import { Help } from '../help'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, TagInput, VisibilityBadge, VisibilityToggle } from '../components'
-import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, newId, PICKER_TYPES, saveEntity, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus } from '../db'
+import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, PICKER_TYPES, saveEntity, templateOf, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus } from '../db'
 import { HistoryButton } from '../History'
-import { TableRoller } from '../tables'
+import { listedEntries, TableRoller } from '../tables'
 import { newThread, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
 import { asPlayerSees, saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
+import { SecretNamesWarning } from '../SecretNamesWarning'
 import { CharacterOwnerBox } from '../players/Characters'
 import { PlayerNotesBox } from '../players/Notes'
 import { RevealedToBadge, RevealToPicker } from '../players/Secrets'
@@ -19,7 +20,7 @@ import { useViewMode } from '../viewMode'
 import { LastSeen, StatusBadge } from '../status'
 import { PrintButton } from '../print'
 import { AskGmBox } from '../players/Questions'
-import { revealAndShow, ShowButton } from '../showing'
+import { revealAndShow, ShowButton, stopShowing } from '../showing'
 import { CalDateInput, formatDate, toDays } from '../calendar'
 import { RelationsBox } from '../relations'
 import { SessionMentions } from '../sessionMentions'
@@ -36,7 +37,8 @@ export default function EntityPage() {
   const entityId = resolvePage(worldId, param)
   const [params, setParams] = useSearchParams()
   const { isGM, canSeeEntity } = useViewMode()
-  const stored = useLiveQuery(() => db.entities.get(entityId), [entityId])
+  // null once we know the page isn't there (undefined means still loading).
+  const stored = useLiveQuery(async () => (await db.entities.get(entityId)) ?? null, [entityId])
   const editing = isGM && params.get('edit') === '1'
 
   if (stored === undefined) return null
@@ -45,7 +47,7 @@ export default function EntityPage() {
   const entity = isGM ? stored : asPlayerSees(stored)
 
   return editing ? (
-    <EntityEditor key={entity.id} entity={entity} onDone={() => setParams({})} />
+    <EntityEditor key={entity.id} entity={entity} fresh={params.get('new') === '1' && entity.createdAt === entity.updatedAt} onDone={() => setParams({})} />
   ) : (
     <EntityView entity={entity} onEdit={() => setParams({ edit: '1' })} />
   )
@@ -118,13 +120,35 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               (e.visibility === 'players' ? (
                 <ShowButton worldId={worldId} what={{ kind: 'page', title: e.name, entityId: e.id }} />
               ) : (
-                <button
-                  title="Reveal this page to every player and put it on their screens"
-                  onClick={() => confirm(`Reveal “${e.name}” to every player and show it? GM notes and secret passages stay hidden.`) && revealAndShow(worldId, e)}
-                >
-                  <Ico as={Television} /> Reveal and show
-                </button>
+                <>
+                  <button
+                    title="Let every player read this page, without putting it on their screens"
+                    onClick={() => confirm(`Reveal “${e.name}” to every player? GM notes and secret passages stay hidden.`) && saveEntity({ ...e, visibility: 'players', updatedAt: Date.now() })}
+                  >
+                    Reveal quietly
+                  </button>
+                  <button
+                    title="Reveal this page to every player and put it on their screens"
+                    onClick={() => confirm(`Reveal “${e.name}” to every player and show it? GM notes and secret passages stay hidden.`) && revealAndShow(worldId, e)}
+                  >
+                    <Ico as={Television} /> Reveal and show
+                  </button>
+                </>
               ))}
+            {!e.template && e.visibility === 'players' && (
+              <button
+                title="Make this page GM only again. Players stop seeing it."
+                onClick={async () => {
+                  const onScreen = world?.showing?.kind === 'page' && world.showing.entityId === e.id
+                  if (!confirm(`Hide “${e.name}” from players again?${onScreen ? ' It is on their screens right now, and will come off.' : ''}`)) return
+                  if (onScreen) await stopShowing(worldId)
+                  await saveEntity({ ...e, visibility: 'gm', updatedAt: Date.now() })
+                }}
+              >
+                Hide from players
+              </button>
+            )}
+            {!e.template && <Help topic="revealQuietly" />}
             <HistoryButton entity={e} />
             <button className="primary" onClick={onEdit}>
               <Ico as={PencilSimple} /> Edit
@@ -149,7 +173,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             <div className="card">
               <TableRoller tables={[e, ...entities.filter((x) => x.type === 'table' && x.id !== e.id)]} fixed={e} worldId={worldId} entities={entities} showSecrets={isGM} />
               <ol className="table-entries">
-                {(e.entries ?? []).filter((x) => x.trim() && !x.trim().startsWith('#')).map((x, i) => (
+                {listedEntries(e, isGM).map((x, i) => (
                   <li key={i}>{x}</li>
                 ))}
               </ol>
@@ -304,15 +328,54 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   )
 }
 
-function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }) {
+/** Enter in a single-line box shouldn't save the whole page and close the editor. */
+const noEnter = (ev: { key: string; preventDefault: () => void }) => ev.key === 'Enter' && ev.preventDefault()
+
+/** What differs between two copies of a page: only these fields are written when the editor saves. */
+function changes(from: Entity, to: Entity): Partial<Entity> {
+  const a = from as unknown as Record<string, unknown>
+  const b = to as unknown as Record<string, unknown>
+  const out: Record<string, unknown> = {}
+  for (const k of new Set([...Object.keys(a), ...Object.keys(b)]))
+    if (k !== 'updatedAt' && JSON.stringify(a[k]) !== JSON.stringify(b[k])) out[k] = b[k]
+  return out as Partial<Entity>
+}
+
+/** An unsaved edit is kept on this device while you type, so leaving the page by mistake doesn't lose it. */
+const draftKey = (id: string) => `codex.draft.${id}`
+function readDraft(id: string): { base: Entity; d: Entity; at: number } | null {
+  try {
+    const raw = localStorage.getItem(draftKey(id))
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+function clearDraft(id: string) {
+  try {
+    localStorage.removeItem(draftKey(id))
+  } catch {
+    // Storage blocked: nothing was kept anyway.
+  }
+}
+
+function EntityEditor({ entity, fresh, onDone }: { entity: Entity; fresh: boolean; onDone: () => void }) {
   const { worldId, world } = useWorld()
   const navigate = useNavigate()
+  // The page as it was when the editor opened. Saving writes only what you changed from this, on top of
+  // the page as it is now, so edits that arrived meanwhile (a player, a co-GM, another device) survive.
+  const [opened] = useState(entity)
   const [d, setD] = useState<Entity>(entity)
   const entities = useVisibleEntities(worldId)
   const image = useAssetUrl(d.imageId)
   const set = <K extends keyof Entity>(k: K, v: Entity[K]) => setD((x) => ({ ...x, [k]: v }))
   const campaigns = useCampaigns(worldId)
-  const dirty = JSON.stringify(d) !== JSON.stringify(entity)
+  const dirty = JSON.stringify(d) !== JSON.stringify(opened)
+  const changedElsewhere = entity.updatedAt !== opened.updatedAt
+  const [kept, setKept] = useState(() => {
+    const k = readDraft(entity.id)
+    return k && Object.keys(changes(k.base, k.d)).length ? k : null
+  })
 
   useEffect(() => {
     if (!dirty) return
@@ -320,26 +383,59 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
   }, [dirty])
+  useEffect(() => {
+    if (!dirty) return
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey(entity.id), JSON.stringify({ base: opened, d, at: Date.now() }))
+      } catch {
+        // Storage full or blocked: the edit just isn't kept.
+      }
+    }, 600)
+    return () => clearTimeout(t)
+  }, [dirty, d, entity.id, opened])
 
   const save = async () => {
+    const current = (await db.entities.get(entity.id)) ?? opened
+    const mine = changes(opened, d)
+    const merged = { ...current, ...mine, updatedAt: Date.now() }
+    if ('name' in mine) merged.name = d.name.trim() || 'Untitled'
     // A new calendar date puts the event in its place on the timeline; an unchanged one keeps its order among same-day events.
-    const redated = JSON.stringify(d.eventWhen) !== JSON.stringify(entity.eventWhen)
-    const order = d.type === 'event' && d.eventWhen && world?.calendar && redated ? { eventOrder: toDays(world.calendar, d.eventWhen) } : {}
-    const next = { ...d, ...order, name: d.name.trim() || 'Untitled', updatedAt: Date.now() }
-    await saveEntity(next)
+    if ('eventWhen' in mine && merged.type === 'event' && merged.eventWhen && world?.calendar) merged.eventOrder = toDays(world.calendar, merged.eventWhen)
+    await saveEntity(merged)
+    clearDraft(entity.id)
     // Renamed: links to the old name (and :::for passages, for a player character) follow it.
-    if (!next.template) await renameLinks(worldId, entity, next)
+    const renamed = merged.template ? '' : await renameLinks(worldId, current, merged)
+    if (renamed) alert(renamed)
+    onDone()
+  }
+  const cancel = async () => {
+    if (dirty && !confirm('Throw away what you changed on this page?')) return
+    clearDraft(entity.id)
+    // A brand-new page nobody wrote on goes away again, so Cancel doesn't leave clutter behind.
+    if (fresh) {
+      await db.entities.delete(entity.id)
+      navigate(typePath(worldId, entity.type, entity.customType), { replace: true })
+      return
+    }
     onDone()
   }
   const saveAsTemplate = async () => {
-    const now = Date.now()
-    const { revealedTo: _r, ...rest } = d
-    const t: Entity = { ...rest, id: newId(), name: d.name.trim() || 'Untitled', template: true, visibility: 'gm', createdAt: now, updatedAt: now }
+    const t: Entity = { ...templateOf(d), name: d.name.trim() || 'Untitled', template: true }
     await db.entities.add(t)
     alert(`Saved “${t.name}” as a template. Choose it next time you make a new ${typeLabel(d, world).one.toLowerCase()}. Templates are listed in World settings.`)
   }
-  // Anything can sit "inside" a location, and locations can nest.
-  const parents = entities.filter((x) => x.type === 'location' && x.id !== d.id)
+  // Anything can sit "inside" a location, and locations can nest, but a place can't go inside itself or anything inside it.
+  const within = new Set([d.id])
+  for (let grew = true; grew; ) {
+    grew = false
+    for (const x of entities) {
+      if (!x.parentId || !within.has(x.parentId) || within.has(x.id)) continue
+      within.add(x.id)
+      grew = true
+    }
+  }
+  const parents = entities.filter((x) => x.type === 'location' && !within.has(x.id))
 
   return (
     <div className="page">
@@ -352,7 +448,14 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
       >
         <header className="page-header">
           <div className="title-block">
-            <input className="title-input" value={d.name} onChange={(ev) => set('name', ev.target.value)} placeholder="Name" />
+            <input
+              className="title-input"
+              value={d.name}
+              onChange={(ev) => set('name', ev.target.value)}
+              placeholder={`Name this ${typeLabel(d, world).one.toLowerCase()}`}
+              autoFocus={fresh}
+              onFocus={fresh ? (ev) => ev.target.select() : undefined}
+            />
             <div className="row small aliases">
               <span className="muted">
                 Also called <Help topic="aliases" />
@@ -369,12 +472,42 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
                 <Help topic="visibility" />
               </>
             )}
-            <button type="button" onClick={onDone}>
+            <Help topic="pageDrafts" />
+            <button type="button" onClick={cancel}>
               Cancel
             </button>
             <button className="primary">Save</button>
           </div>
         </header>
+        {kept && !dirty && (
+          <p className="notice">
+            You have unsaved changes to this page from {new Date(kept.at).toLocaleString()}.{' '}
+            <button
+              type="button"
+              onClick={() => {
+                setD({ ...entity, ...changes(kept.base, kept.d) })
+                setKept(null)
+              }}
+            >
+              Restore them
+            </button>{' '}
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                clearDraft(entity.id)
+                setKept(null)
+              }}
+            >
+              Throw them away
+            </button>
+          </p>
+        )}
+        {changedElsewhere && (
+          <p className="notice">
+            This page was changed somewhere else while you were editing (another device, a co-GM or a player). When you save, only what you changed here is written, on top of their changes.
+          </p>
+        )}
         {d.visibility === 'gm' && !d.template && world && (
           <RevealToPicker world={world} entities={entities} value={d.revealedTo ?? []} onChange={(ids) => set('revealedTo', ids.length ? ids : undefined)} />
         )}
@@ -564,6 +697,7 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
             some characters only (:::for Wren and Silas). Names are suggested as you type.
           </small>
         </label>
+        <SecretNamesWarning worldId={worldId} texts={[d.summary, d.body, d.playerBody]} show={d.visibility === 'players' && !d.template} />
         {d.type === 'pc' && (
           <label>
             <span>
@@ -589,11 +723,13 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
                 <input
                   value={f.key}
                   placeholder="Field"
+                  onKeyDown={noEnter}
                   onChange={(ev) => set('fields', d.fields.map((x, j) => (j === i ? { ...x, key: ev.target.value } : x)))}
                 />
                 <input
                   value={f.value}
                   placeholder="Value"
+                  onKeyDown={noEnter}
                   onChange={(ev) => set('fields', d.fields.map((x, j) => (j === i ? { ...x, value: ev.target.value } : x)))}
                 />
                 <button
@@ -655,6 +791,7 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
               className="danger"
               onClick={async () => {
                 if (!confirm(`Delete "${entity.name}"? You can bring it back from World settings → Recently deleted, on this device.`)) return
+                clearDraft(entity.id)
                 await deleteEntity(entity.id)
                 navigate(entity.template ? `${worldPath(worldId)}/settings` : typePath(worldId, entity.type, entity.customType))
               }}

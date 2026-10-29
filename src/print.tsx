@@ -6,15 +6,17 @@ import { foeCount } from './encounters'
 import { Help } from './help'
 import { asPlayerSees, useAssetUrl, useVisibleEntities, useWorld } from './hooks'
 import { Markdown } from './Markdown'
+import { listedEntries } from './tables'
 import { StatusBadge } from './status'
 import { ForcePlayerView, useViewMode } from './viewMode'
 import { Ico, PageIcon } from './icons'
 import { Eye, Lock, Printer } from '@phosphor-icons/react'
 
-/** Opens the print page for a page or a session. */
+/** Opens the print page for a page or a session. In the player view it opens the player copy, so a GM previewing as a player never prints secrets by surprise. */
 export function PrintButton({ to }: { to: string }) {
+  const { isGM } = useViewMode()
   return (
-    <Link className="button" to={to} title="Print this, or save it as a PDF">
+    <Link className="button" to={isGM ? to : `${to}?copy=players`} title="Print this, or save it as a PDF">
       <Ico as={Printer} /> Print
     </Link>
   )
@@ -78,7 +80,7 @@ function PrintBody({ world }: { world: World }) {
 
 function PrintEntity({ world, id }: { world: World; id: string }) {
   const { isGM, canSeeEntity } = useViewMode()
-  const stored = useLiveQuery(() => db.entities.get(id), [id])
+  const stored = useLiveQuery(async () => (await db.entities.get(id)) ?? null, [id])
   const entities = useVisibleEntities(world.id)
   const image = useAssetUrl(stored && (isGM || canSeeEntity(stored)) ? stored.imageId : undefined)
   if (stored === undefined) return null
@@ -97,7 +99,7 @@ function PrintEntity({ world, id }: { world: World; id: string }) {
       <Markdown text={e.body} entities={entities} worldId={world.id} showSecrets={isGM} />
       {e.type === 'table' && (
         <ol className="table-entries">
-          {(e.entries ?? []).filter((x) => x.trim() && !x.trim().startsWith('#')).map((x, i) => (
+          {listedEntries(e, isGM).map((x, i) => (
             <li key={i}>{x}</li>
           ))}
         </ol>
@@ -123,7 +125,7 @@ function PrintEntity({ world, id }: { world: World; id: string }) {
 
 function PrintSession({ world, id }: { world: World; id: string }) {
   const { isGM, canSee } = useViewMode()
-  const s = useLiveQuery(() => db.sessions.get(id), [id])
+  const s = useLiveQuery(async () => (await db.sessions.get(id)) ?? null, [id])
   const entities = useVisibleEntities(world.id)
   if (s === undefined) return null
   if (!s || s.worldId !== world.id) return <p>Session not found.</p>

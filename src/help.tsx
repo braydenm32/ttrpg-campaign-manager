@@ -45,11 +45,12 @@ export const HELP = {
   news: 'What’s happened since you last looked: new pages, handouts and session recaps, answers to your questions, and what changed on pages you already had (new writing, someone’s fate, a clock that moved). Tap one to read it, and “Got it” when you’re done.',
   backupReminder: 'A reminder to download a backup of this world every two weeks (monthly with cloud sync on). Save the file somewhere safe, like Google Drive or a USB stick. “Later” asks again in a week.',
   aliases:
-    'Other names this page goes by, like “the Harbourmaster” for Corvin Vane. A [[link]] to any of them finds this page. Nicknames are for you: players don’t see them. Renaming a page updates every link to it.',
+    'Other names this page goes by, like “the Harbourmaster” for Corvin Vane. A [[link]] to any of them finds this page. Nicknames are for you: players don’t see them. Renaming a page updates every link to it. For a GM-only page, text your players can read keeps the old name (so the new one stays secret), and the old name is added here.',
   gmTags: 'Tags only you see, like “traitor” or “recurring”. Players get the ordinary tags of a revealed page, never these.',
   history:
-    'Every time you save a page, the version before is kept on this device (the last 40). Look at an old version or restore it; restoring keeps today’s version too.',
-  recentlyDeleted: 'Pages, sessions, campaigns, maps, files, corkboards and sounds deleted on this device (pages deleted on another device too). Restore brings them back as they were. Things other than pages are kept for a month.',
+    'Every time you save a page, the version before is kept on this device (the last 40). Look at an old version or restore it; restoring keeps today’s version too, and who can see the page stays as it is now.',
+  recentlyDeleted:
+    'Pages, sessions, campaigns, maps, files, corkboards and sounds deleted on this device, or on another device that syncs this world. Restore brings them back as they were. Things other than pages are kept for a month; “Delete forever” or “Empty the bin” frees the space straight away.',
   templates:
     'A template is a starting point for new pages, like a "Dungeon room" with the headings and details you always fill in. Templates are always GM only and never appear in lists. Make one with "Save as template" on any page.',
   lifeStatus:
@@ -101,11 +102,11 @@ export const HELP = {
   gmOnly:
     'Tick this and the piece, line or label is only on your copy of the map: players get a picture without it. On your copy it has a red dashed line round it so you know. Handy for a cult’s hidden lair on a world map, a secret tunnel, or a label with a note to yourself. A piece linked to a page stays GM only too.',
   secretRooms:
-    'Rooms and passages dug with this ticked are only on your copy, washed in red; players see solid rock (or plain ground) there. Put a secret door from the "GM only" pieces where a secret passage meets a room. When the players find the door, select it and press "Players found it": the door and the secret rooms behind it show up on their copy.',
+    'Rooms and passages dug with this ticked are only on your copy, washed in red; players see solid rock (or plain ground) there, and the pieces, labels and lines inside them are left off their copy too (a piece there that’s linked to a page becomes GM only). Put a secret door from the "GM only" pieces where a secret passage meets a room. When the players find the door, select it and press "Players found it": the door and the secret rooms behind it show up on their copy.',
   playersCopy:
     'Shows the map as players get it, without the secret doors, traps, secret rooms and anything ticked GM only. Untick to go back to your own copy. Players never receive your copy, only theirs (with the fog of war on top, if it’s on).',
   exportMap:
-    'Download the map as a picture (PNG) to print, share or use anywhere. Pick a size: on battle maps that is pixels to a square, since virtual tabletops count that way (Roll20 uses 70, Foundry 100); bigger is sharper for printing but makes a bigger file. Tick Show the grid to draw the squares on. Battle maps and dungeons can also go out as a Universal VTT file (.dd2vtt): the picture with its walls, doors and lights already in it. In Foundry, open it with the Universal Battlemap Importer module; in Roll20 (Pro), use the UniversalVTTImporter script, which wants the PNG at the same size too. Fantasy Grounds and others read it as well. Room walls, Wall, Inner wall and Hedge lines become walls, doors leave a door in them, portcullises and iron gates become see-through bars, pillars and buildings block sight, and lit torches, braziers and campfires give light.',
+    'Download the map as a picture (PNG) to print, share or use anywhere. Pick a size: on battle maps that is pixels to a square, since virtual tabletops count that way (Roll20 uses 70, Foundry 100); bigger is sharper for printing but makes a bigger file. Tick Show the grid to draw the squares on. Battle maps and dungeons can also go out as a Universal VTT file (.dd2vtt): the picture with its walls, doors and lights already in it. In Foundry, open it with the Universal Battlemap Importer module; in Roll20 (Pro), use the UniversalVTTImporter script, which wants the PNG at the same size too. Fantasy Grounds and others read it as well. Room walls, Wall, Inner wall and Hedge lines become walls, doors leave a door in them, portcullises and iron gates become see-through bars, pillars and buildings block sight, and lit torches, braziers and campfires give light. If the map has fog of war, the tabletop file and the plain picture leave it out (tabletops add their own); you can also download the fogged picture exactly as players see it now.',
   curvedLabels:
     'Click to place a label, or drag a line on the map and the words will follow it, like a river name or a mountain range. Region lettering is spaced capitals, place names are italic, Title is for the map name.',
 
@@ -136,7 +137,7 @@ export const HELP = {
   recording:
     'Record from one microphone for games at the table, or the microphone plus your Discord or Zoom audio for online games. Add bookmarks while you play to jump back to big moments. Recording carries on while you use the rest of the app (the Lectern, maps, pages), and is saved every few seconds, so if the app closes by accident you can recover it here. Always get everyone’s OK before recording. Recordings are big, so they stay on the device that made them; their transcripts sync to your other devices.',
   transcript:
-    'Turns a recording into text. "On this device" is free and private but slower, with no speaker names. "Cloud" uses AssemblyAI with your own key, is faster and tells speakers apart. Name the speakers once and “Same as last time” fills the names in for the next session.',
+    'Turns a recording into text. "On this device" is free and private but slower, with no speaker names. "Cloud" uses AssemblyAI with your own key, is faster and tells speakers apart; once the transcript is saved here it’s deleted from AssemblyAI. Name the speakers once and “Same as last time” fills the names in for the next session.',
   recap:
     'Claude drafts a GM summary, a player recap and updates for your pages from the transcript. "Copy for Claude" works with a Claude subscription for free; "Write it now" uses your own API key. You review both before saving.',
   worldUpdates:
@@ -160,11 +161,11 @@ export const HELP = {
   syrinscape:
     'Control Syrinscape from here: keep its online player open, add your auth token once on this device, then paste the remote control link of any mood or element.',
   showPlayers:
-    'Put a picture, a page or some text on every player’s screen right now, like handing round a letter or showing a monster. It pops up for players who joined; open the Players’ screen on a TV or second monitor for the table. Pick a page that isn’t revealed yet and it’s revealed as you show it. Everything you show is kept in Handouts.',
-  handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove one to take it back.',
+    'Put a picture, a page or some text on every player’s screen right now, like handing round a letter or showing a monster. It pops up for players who joined; open the Players’ screen on a TV or second monitor for the table. Pick a page that isn’t revealed yet and it’s revealed as you show it. A map’s picture always goes out as the players’ copy, never yours with the secrets or the fog lifted. Everything you show is kept in Handouts.',
+  handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove a picture or text to take it back. A page you remove stays revealed unless you choose to hide it again.',
   handoutsReady: 'Handouts you’ve prepared but not shown yet: any GM-only page tagged “handout”. Players can’t see them. “Reveal and show” reveals the page to everyone and puts it on their screens, and it moves to Shown so far.',
   playersScreen: 'A clean screen for a TV or second monitor at the table. It shows whatever you’re showing players, and nothing else.',
-  initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go.',
+  initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go. In the ± box, type +5 to heal or -5 to damage; a plain number follows the button you press, and Undo puts HP back. “Something else…” in the condition list lets you type your own. With a keyboard, N moves to the next turn (press ? for all the shortcuts).',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',
   quickNote: 'Jot something down mid-session. It is added to this session’s GM notes with the time.',
   randomTables:
@@ -227,7 +228,7 @@ export const HELP = {
   commonRoom:
     'Your seat at the table: what the GM is showing, your character, the party, leads, notes and last time’s recap. While your GM runs the session you also see the scene, whose turn it is and the music, roll dice everyone sees, and can quietly ask for a turn or a break.',
   tableLink:
-    'While this Lectern is open, players’ Common Room shows which session is on, the scene (only if its page is revealed), the music and the turn order once combat starts. HP, conditions and your notes never go. Their rolls and signals (“I’d like to do something”, “I need a break”) come to you here and pop up wherever you are in the app.',
+    'Once you go live with this session, players’ Common Room shows which session is on, the scene (only if its page is revealed), the music, your timers and the turn order once combat starts. HP, conditions and your notes never go, and anyone from a page players haven’t seen shows as “Enemy 1” or “Ally 2”. Their rolls and signals (“I’d like to do something”, “I need a break”) come to you here and pop up wherever you are in the app.',
   inspiration:
     'Inspiration or hero points: tap + to hand one out. Players see how many they have in their Common Room and on their character page, and can ask to use one; you’ll get a pop-up with “Use it”.',
   newCharacter:
@@ -255,7 +256,31 @@ export const HELP = {
     'Say what’s happening and Claude writes four lines this character might say, in their voice, using what their page says about them. Keep the ones you like in your GM notes.',
   spotlight:
     'Who got time at the table. With a transcript that tells speakers apart, it shows how long each person talked; it also counts how often each character came up (in the transcript, or in your notes and recap without one). Worked out on this device; nothing is sent anywhere.',
-  readAloud: 'Reads recaps aloud with your device’s own voices: free, private, and secret passages are never read. Pick a voice and speed here.',
+  readAloud: 'Reads recaps aloud with your device’s own voices: free, private, and secret passages are never read, not even ones meant only for you (the whole table would hear them). Pick a voice and speed here.',
+  newCharacterName:
+    'Secret passages written “for” a character reach whoever plays a character with that full name or first name. If the new character shares a name with another, those secrets would reach both players, so give one of them a different name.',
+  revealQuietly:
+    'Reveal quietly lets players read the page the next time they look, without putting it on their screens. Reveal and show does both. Hide from players makes it GM only again (and takes it off their screens if it is showing). GM notes and secret passages stay hidden either way.',
+  pageDrafts:
+    'While you edit a page, what you type is also kept on this device. If you leave by mistake, the next time you edit the page it offers to bring your changes back. Saving only writes what you changed, so edits made meanwhile by a co-GM or a player are kept.',
+  pagePicker: 'Start typing a name to find a page, then click it or press Enter. The ones in the current scene are listed first.',
+  goLive:
+    'Opening the Lectern doesn’t show players anything. Press “Go live to players” when you start playing: their Common Room then shows this session as being played, with the scene, music, timers and turn order. A “Live” badge stays at the top of every screen until you press Stop or end the session.',
+  fightBar: 'On a phone, this bar stays at the top while a fight is on. Tap the name to jump to them in the initiative list.',
+  lecternKeys:
+    'With a keyboard: N or → for the next turn, B or ← to go back, D to roll a d20, and ? for this list. They don’t work while you’re typing in a box.',
+  pinNames:
+    'Keeps the names of pins and regions showing on the map instead of only when you hover. They appear once you zoom in a little, so a zoomed-out map isn’t covered in labels. Each map remembers its own setting on this device. Players only get names for the pins they can see. On a phone, tap a pin once to see its name and again to open it.',
+  fogRoom:
+    'Click inside a room to uncover just that room, right up to its walls. It stops at walls drawn across the room and at doors, gates and bars, so click in the next room to open that one too. Secret rooms are left alone until you mark their door as found. With Cover chosen, it covers the room again. Only on maps with rooms drawn in the map builder.',
+  keepAtAssembly:
+    'Once a cloud transcript is saved in your world, the app deletes it from AssemblyAI, so your table’s talk isn’t kept by another company. Tick this to leave a copy in your AssemblyAI account instead (for example, to look at it on their website). Applies on this device only.',
+  claudeJobs:
+    'Claude keeps writing when you go to another page: a note at the top says “Claude is writing…”, then “Claude finished”, and takes you back to it. If you leave the page while it writes, you choose to keep it writing or stop it. Closing the tab or the app stops it. Small jobs (flavour, NPC lines, Archivist questions) use Claude Sonnet 5.5, quicker and half the price; recaps, contradiction checks and prep use Claude Opus 5.5.',
+  secretNames:
+    'Players can read this text, and it links to a GM-only page, so they would see that page’s name. Move the link into a :::gm secret, give it a label like [[Lord Vexis|the stranger]], or reveal the page. This is only a warning; nothing is blocked.',
+  backupRecordings:
+    'Recordings can be very large. Leave this unticked for a small backup that has everything except the audio; transcripts, bookmarks and the rest of each session are kept. Tick it to keep the audio too.',
 } as const
 
 export type HelpTopic = keyof typeof HELP

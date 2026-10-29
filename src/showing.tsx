@@ -23,8 +23,38 @@ import { worldPath } from './paths'
 const sameHandout = (a: Omit<Showing, 'id' | 'at'>, b: Omit<Showing, 'id' | 'at'>) =>
   a.kind === b.kind && (a.kind === 'image' ? a.assetId === b.assetId : a.kind === 'page' ? a.entityId === b.entityId : a.text === b.text)
 
-/** Shows something to every player, and keeps it in the world's handouts so they can read it again later. */
-export async function showToPlayers(worldId: string, s: Omit<Showing, 'id' | 'at'>) {
+/**
+ * Map pictures players must never be shown, each with the picture to show instead (once there is
+ * one): the clean picture of a fogged map would show everything under the fog, and so would its
+ * players' copy; the GM's copy of a map with secrets on it shows the secrets. Keep in step with
+ * "fogged" in public.player_view, which never sends these.
+ */
+export async function unshowableImages(worldId: string) {
+  const instead = new Map<string, string | undefined>()
+  for (const m of await db.maps.where({ worldId }).toArray()) {
+    if (m.fog?.on) {
+      instead.set(m.imageId, m.fog.imageId)
+      if (m.playerImageId) instead.set(m.playerImageId, m.fog.imageId)
+    } else if (m.playerImageId) instead.set(m.imageId, m.playerImageId)
+  }
+  return instead
+}
+
+/**
+ * Shows something to every player, and keeps it in the world's handouts so they can read it again
+ * later. A map picture players mustn't see is swapped for their copy, or not shown at all (false).
+ */
+export async function showToPlayers(worldId: string, what: Omit<Showing, 'id' | 'at'>) {
+  let s = what
+  const instead = s.kind === 'image' && s.assetId ? await unshowableImages(worldId) : undefined
+  if (instead?.has(s.assetId!)) {
+    const safe = instead.get(s.assetId!)
+    if (!safe) {
+      alert('This is the full picture of a fogged map, so players can’t be shown it. Open the map once so the app can make the fogged copy, then show that.')
+      return false
+    }
+    s = { ...s, assetId: safe }
+  }
   const shown = { ...s, id: newId(), at: Date.now() }
   await db.worlds
     .where('id')
@@ -35,6 +65,7 @@ export async function showToPlayers(worldId: string, s: Omit<Showing, 'id' | 'at
     })
   // Don't wait for the usual pause after an edit: the table is waiting.
   schedule(200)
+  return true
 }
 
 /** Reveals a page to everyone and puts it on their screens, for an NPC who just walked in. */
@@ -43,13 +74,17 @@ export async function revealAndShow(worldId: string, page: Entity) {
   await showToPlayers(worldId, { kind: 'page', title: page.name, entityId: page.id })
 }
 
-export async function removeHandout(worldId: string, id: string) {
+/** Takes a handout off the list (and off players' screens, if it's up now). With hidePage, its page is made GM only again. */
+export async function removeHandout(worldId: string, id: string, hidePage?: string) {
   await db.worlds
     .where('id')
     .equals(worldId)
     .modify((w) => {
       w.handouts = (w.handouts ?? []).filter((h) => h.id !== id)
+      if (w.showing?.id === id) w.showing = null
     })
+  if (hidePage) await db.entities.update(hidePage, { visibility: 'gm', updatedAt: Date.now() })
+  schedule(200)
 }
 
 export async function stopShowing(worldId: string) {
@@ -180,9 +215,8 @@ export function ShowButton({ worldId, what, disabled }: { worldId: string; what:
 export function ShowPanel({ world, sceneText }: { world: World; sceneText?: string }) {
   const entities = useVisibleEntities(world.id)
   const images = useLiveQuery(async () => {
-    // The clean picture of a fogged map would show players everything under the fog.
-    // So would the GM's copy of a map with secrets on it.
-    const fogged = new Set((await db.maps.where({ worldId: world.id }).toArray()).filter((m) => m.fog?.on || m.playerImageId).map((m) => m.imageId))
+    // Not a map picture players mustn't see: their own copy is in the list anyway.
+    const fogged = await unshowableImages(world.id)
     return db.assets
       .where({ worldId: world.id })
       .filter((a) => a.mime.startsWith('image/') && !a.tags.includes('fog') && !fogged.has(a.id))

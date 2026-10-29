@@ -36,7 +36,7 @@ import {
   type Terrain,
 } from '../mapDrawing'
 import { ASSET_GROUPS, Atlas, assetNamesIn, BATTLE_GROUPS, CITY_GROUPS } from '../mapArt/atlas'
-import { canTurn, classicBlob, classicHitSvg, drawPiece, floorTest, FONTS, landTest, loadMapFonts, LOOKS, pieceOutline, renderClassic, riverWidth, roomTest, streetWidth, styleFor, townWallHalf } from '../mapArt/classic'
+import { canTurn, classicBlob, classicHitSvg, drawPiece, floorTest, FONTS, landTest, loadMapFonts, LOOKS, pieceOutline, playersCopy, renderClassic, riverWidth, roomTest, secretFloorTest, streetWidth, styleFor, townWallHalf } from '../mapArt/classic'
 import { groundColour } from '../mapArt/ground'
 import { useViewMode } from '../viewMode'
 import { worldPath } from '../paths'
@@ -52,7 +52,7 @@ interface ToolDef {
 
 const WORLD_TOOLS: ToolDef[] = [
   { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a piece, line or label to edit it, drag to move it' },
-  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll to zoom' },
+  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll, pinch or use + and − to zoom' },
   { id: 'land', icon: '🖌', label: 'Land', hint: 'Drag to paint land; switch to Water to carve out seas, bays and lakes. The coast draws itself' },
   { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw rivers, roads, trails and borders' },
   { id: 'stamp', icon: '⛰', label: 'Place', hint: 'Click to place a piece. Click and hold, then drag, to scatter lots of them' },
@@ -62,7 +62,7 @@ const WORLD_TOOLS: ToolDef[] = [
 
 const BATTLE_TOOLS: ToolDef[] = [
   { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a piece, line or label to edit it, drag to move it' },
-  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll to zoom' },
+  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll, pinch or use + and − to zoom' },
   { id: 'land', icon: '🖌', label: 'Ground', hint: 'Drag to paint grass, dirt, sand, stone, mud, snow, floors or water. Where two kinds meet they blend softly' },
   { id: 'room', icon: '🧱', label: 'Rooms', hint: 'Drag to dig out a room, passage or cave. Rooms that touch join up, and the walls draw themselves' },
   { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw fences, hedges, stone walls and cliff edges' },
@@ -73,7 +73,7 @@ const BATTLE_TOOLS: ToolDef[] = [
 
 const CITY_TOOLS: ToolDef[] = [
   { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a piece, line or label to edit it, drag to move it' },
-  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll to zoom' },
+  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll, pinch or use + and − to zoom' },
   { id: 'land', icon: '🖌', label: 'Ground', hint: 'Drag to paint grass, dirt, sand, paving stones, mud, snow or water: squares, gardens, ponds and canals' },
   { id: 'coast', icon: '🌊', label: 'Coast', hint: 'Drag to paint land; switch to Sea to carve out the sea, a harbour or a lake. The coast draws itself' },
   { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw streets, town walls, stone walls, fences, hedges and rivers' },
@@ -224,7 +224,7 @@ export default function MapBuilder() {
   const { worldId } = useWorld()
   const { mapId = '' } = useParams()
   const { isGM } = useViewMode()
-  const map = useLiveQuery(() => db.maps.get(mapId), [mapId])
+  const map = useLiveQuery(async () => (await db.maps.get(mapId)) ?? null, [mapId])
   if (map === undefined) return null
   if (!isGM || map === null || map.worldId !== worldId || !map.drawing) return <Empty>This map can't be drawn on.</Empty>
   return <Builder key={map.id} map={map as WorldMap & { drawing: Drawing }} />
@@ -281,33 +281,52 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     | { kind: 'move'; id: string; start: Point; before: Drawing }
     | { kind: 'scatter'; before: Drawing; placed: Shape[]; start: Point; at: Point; t0: number; moved: boolean; fits: (asset: string, p: Point) => boolean }
     | { kind: 'erase'; before: Drawing; ids: Set<string> }
+    | { kind: 'pinch'; view: typeof view; mid: Point; dist: number }
   >(undefined)
+  // Fingers (and pens and mice) on the map, so a second finger zooms instead of breaking the stroke.
+  const pointers = useRef(new Map<number, { at: Point; touch: boolean }>())
+  const owner = useRef<number>(undefined)
   const scatterTimer = useRef<number>(undefined)
   const ringRef = useRef<SVGCircleElement>(null)
   const spaceDown = useRef(false)
 
+  // The last slider or typing change, so a run of them (dragging Size, typing a label) is one Undo step.
+  const lastTweak = useRef<{ key: string; t: number }>(undefined)
   const commit = useCallback(
     (next: Drawing, before: Drawing = drawing) => {
+      lastTweak.current = undefined
       setPast((p) => [...p.slice(-80), before])
       setFuture([])
       setDrawing(next)
     },
     [drawing],
   )
+  /** A change made by a slider or typing: changes to the same thing in quick succession merge into one step. */
+  const tweak = (key: string, next: Drawing) => {
+    const now = performance.now()
+    const last = lastTweak.current
+    if (last?.key === key && now - last.t < 600) {
+      setFuture([])
+      setDrawing(next)
+    } else commit(next)
+    lastTweak.current = { key, t: now }
+  }
   const undo = useCallback(() => {
     if (!past.length) return
+    lastTweak.current = undefined
     setFuture((f) => [drawing, ...f])
     setDrawing(past[past.length - 1])
     setPast((p) => p.slice(0, -1))
   }, [past, drawing])
   const redo = useCallback(() => {
     if (!future.length) return
+    lastTweak.current = undefined
     setPast((p) => [...p, drawing])
     setDrawing(future[0])
     setFuture((f) => f.slice(1))
   }, [future, drawing])
   const updateShape = (id: string, patch: Partial<Shape>) =>
-    commit({ ...drawing, shapes: drawing.shapes.map((s) => (s.id === id ? ({ ...s, ...patch } as Shape) : s)) })
+    tweak(`${id}:${Object.keys(patch).sort().join()}`, { ...drawing, shapes: drawing.shapes.map((s) => (s.id === id ? ({ ...s, ...patch } as Shape) : s)) })
   /**
    * The players found a secret door: it becomes a plain door, and the secret rooms and passages it
    * leads into (those touching it, and the secret ones touching those) are shown to them too.
@@ -366,7 +385,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       if (!d || !el) return
       const t0 = performance.now()
       const players = playersView.current
-      const art = renderClassic(players ? forPlayers(d) : d, W, H)
+      const art = renderClassic(players ? playersCopy(d, W, H) : d, W, H)
       if (import.meta.env.DEV) console.debug(`map drawn in ${Math.round(performance.now() - t0)} ms`)
       lastArt.current = { drawing: d, canvas: art, players }
       el.width = art.width
@@ -399,6 +418,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       const pieces = new Map(d.shapes.filter((s): s is Extract<Shape, { kind: 'asset' }> => s.kind === 'asset').map((s) => [s.id, s]))
       const pins = await db.pins.where({ mapId: map.id }).filter((p) => !!p.pieceId).toArray()
       const live = new Set<string>()
+      const secret = secretFloorTest(d, W, H)
       for (const pin of pins) {
         const s = pieces.get(pin.pieceId!)
         if (!s) {
@@ -409,8 +429,8 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
         live.add(pin.pieceId!)
         const points = outlineOf(s)
         if (JSON.stringify(points) !== JSON.stringify(pin.points)) await db.pins.update(pin.id, { points })
-        // a piece only the GM sees can't be clicked by players either
-        if (gmOnly(s) && pin.visibility !== 'gm') await db.pins.update(pin.id, { visibility: 'gm' })
+        // a piece only the GM sees (or one standing in a secret room) can't be clicked by players either
+        if ((gmOnly(s) || secret?.(s.at[0], s.at[1])) && pin.visibility !== 'gm') await db.pins.update(pin.id, { visibility: 'gm' })
       }
       for (const [id, pin] of removedPins.current) {
         const s = pieces.get(id)
@@ -419,7 +439,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
         removedPins.current.delete(id)
       }
     },
-    [map.id, outlineOf],
+    [map.id, outlineOf, W, H],
   )
 
   // Autosave: the drawing is kept on the map, and the rendered picture replaces the map image.
@@ -432,7 +452,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       const art = lastArt.current?.drawing === d && !lastArt.current.players ? lastArt.current.canvas : renderClassic(d, W, H)
       const blob = await classicBlob(art)
       // with secrets on it, the players get a picture of their own without them
-      const forThem = hasSecrets(d) ? await classicBlob(renderClassic(forPlayers(d), W, H)) : undefined
+      const forThem = hasSecrets(d) ? await classicBlob(renderClassic(playersCopy(d, W, H), W, H)) : undefined
       const now = Date.now()
       await db.transaction('rw', [db.maps, db.assets], async () => {
         let playerImageId = (await db.maps.get(map.id))?.playerImageId
@@ -465,24 +485,59 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     },
     [map.id, map.imageId, map.name, worldId, W, H, syncPiecePins],
   )
+  // Saves run one after another, so an older one finishing late can't say "Saved" over newer strokes.
+  const latest = useRef(drawing)
+  const saving = useRef<Promise<void>>(Promise.resolve())
+  const inFlight = useRef(0)
+  const [saveError, setSaveError] = useState('')
+  const queueSave = useCallback(
+    (d: Drawing) => {
+      inFlight.current++
+      const run = saving.current.then(async () => {
+        try {
+          if (d !== lastSaved.current) await save(d)
+          setSaveError('')
+        } catch (e) {
+          console.warn('Map save failed', e)
+          // still waiting to be saved: leaving the page, the next stroke or Try again saves it
+          unsaved.current ??= latest.current
+          setSaveError(e instanceof Error && /quota/i.test(e.name + e.message) ? 'this device has run out of room.' : 'something went wrong.')
+        }
+        inFlight.current--
+        if (latest.current === lastSaved.current) setSaved(true)
+      })
+      saving.current = run
+      return run
+    },
+    [save],
+  )
   useEffect(() => {
-    if (drawing === lastSaved.current) return
+    latest.current = drawing
+    if (drawing === lastSaved.current && !inFlight.current) {
+      // back to what's saved (an Undo straight away, say)
+      unsaved.current = undefined
+      setSaved(true)
+      return
+    }
     setSaved(false)
     unsaved.current = drawing
-    const t = setTimeout(async () => {
+    const t = setTimeout(() => {
       unsaved.current = undefined
-      await save(drawing)
-      setSaved(true)
+      void queueSave(drawing)
     }, 800)
     return () => clearTimeout(t)
-  }, [drawing, save])
+  }, [drawing, queueSave])
+  const retrySave = () => {
+    unsaved.current = undefined
+    void queueSave(latest.current)
+  }
   useEffect(
     () => () => {
       const d = unsaved.current
       unsaved.current = undefined
-      if (d) void save(d).then(() => renderPlayerFog(map.id).catch(() => {}))
+      if (d) void queueSave(d).then(() => renderPlayerFog(map.id).catch(() => {}))
     },
-    [save, map.id],
+    [queueSave, map.id],
   )
 
   useEffect(() => {
@@ -799,7 +854,36 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     return { at: best.at, turn: Math.round(((turn % 360) + 360) % 360) }
   }
 
+  /** Two fingers between them: the point halfway, and how far apart they are. */
+  const twoFingers = (): { mid: Point; dist: number } => {
+    const [a, b] = [...pointers.current.values()].map((x) => x.at)
+    return { mid: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], dist: Math.max(1, Math.hypot(a[0] - b[0], a[1] - b[1])) }
+  }
+  /** Drops the stroke under way without keeping any of it (a second finger came down to zoom). */
+  const abandonGesture = () => {
+    const g = gesture.current
+    gesture.current = undefined
+    window.clearInterval(scatterTimer.current)
+    setDraft([])
+    setRoomDraft(undefined)
+    if (g && (g.kind === 'scatter' || g.kind === 'erase' || g.kind === 'move')) setDrawing(g.before)
+  }
+
   const onPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
+    // the first finger (or any mouse press) starts afresh, so a lost "finger up" can't get stuck
+    if (e.isPrimary) pointers.current.clear()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    pointers.current.set(e.pointerId, { at: [e.clientX, e.clientY], touch: e.pointerType === 'touch' })
+    if (pointers.current.size > 1) {
+      // two fingers: pinch to zoom and drag to move about; any other extra touch (a palm, say) is ignored
+      const all = [...pointers.current.values()]
+      if (pointers.current.size === 2 && all.every((x) => x.touch) && gesture.current?.kind !== 'pinch') {
+        abandonGesture()
+        gesture.current = { kind: 'pinch', view, ...twoFingers() }
+      }
+      return
+    }
+    owner.current = e.pointerId
     const p = toMap(e)
     const hit = shapeAt(e.target)
     if (tool === 'hand' || e.button === 1 || spaceDown.current) {
@@ -853,11 +937,25 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       if (hit) gesture.current = { kind: 'move', id: hit, start: p, before: drawing }
       if (!hit) gesture.current = { kind: 'pan', client: [e.clientX, e.clientY], view }
     }
-    e.currentTarget.setPointerCapture(e.pointerId)
   }
 
   const onPointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
     const g = gesture.current
+    const finger = pointers.current.get(e.pointerId)
+    if (finger) finger.at = [e.clientX, e.clientY]
+    if (g?.kind === 'pinch') {
+      if (pointers.current.size < 2) return
+      const { mid, dist } = twoFingers()
+      const box = svgRef.current!.getBoundingClientRect()
+      const k0 = g.view.w / canvas.w
+      // the map point that was between the fingers stays between them
+      const at: Point = [g.view.x + (g.mid[0] - box.left) * k0, g.view.y + (g.mid[1] - box.top) * k0]
+      const w = Math.min(W * 3, Math.max(W / 20, (g.view.w * g.dist) / dist))
+      const k = w / canvas.w
+      setView({ x: at[0] - (mid[0] - box.left) * k, y: at[1] - (mid[1] - box.top) * k, w, h: g.view.h * (w / g.view.w) })
+      return
+    }
+    if (g && e.pointerId !== owner.current) return
     if (tool === 'stamp' && (!g || g.kind === 'scatter')) showRing(toMap(e))
     if (!g) return
     if (g.kind === 'erase') {
@@ -901,8 +999,16 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     }
   }
 
-  const onPointerUp = () => {
+  const onPointerUp = (e: ReactPointerEvent<SVGSVGElement>) => {
+    pointers.current.delete(e.pointerId)
     const g = gesture.current
+    // a lifted finger ends a pinch; the other one does nothing until it's lifted too
+    if (g?.kind === 'pinch') {
+      gesture.current = undefined
+      return
+    }
+    if (e.pointerId !== owner.current) return
+    owner.current = undefined
     gesture.current = undefined
     window.clearInterval(scatterTimer.current)
     if (!g) return
@@ -955,13 +1061,17 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     }
   }
 
-  const onWheel = (e: React.WheelEvent<SVGSVGElement>) => {
-    const [mx, my] = toMap(e)
-    const k = Math.exp(e.deltaY * 0.0015)
+  /** Zooms by k (under 1 is closer), keeping the map point (mx, my) where it is on screen. */
+  const zoomAt = (mx: number, my: number, k: number) => {
     const w = Math.min(W * 3, Math.max(W / 20, view.w * k))
     const ratio = w / view.w
     setView({ x: mx - (mx - view.x) * ratio, y: my - (my - view.y) * ratio, w, h: view.h * ratio })
   }
+  const onWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+    const [mx, my] = toMap(e)
+    zoomAt(mx, my, Math.exp(e.deltaY * 0.0015))
+  }
+  const zoomBy = (k: number) => zoomAt(view.x + view.w / 2, view.y + view.h / 2, k)
 
   const fit = () => fitView(canvas.w, canvas.h)
   const html = useMemo(() => classicHitSvg(drawing), [drawing])
@@ -981,7 +1091,16 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       <div className="map-toolbar">
         <Link to={`${worldPath(worldId)}/maps/${map.id}`}>← Done</Link>
         <strong>{map.name}</strong>
-        <span className="muted small">{saved ? 'Saved' : 'Saving…'}</span>
+        {saveError && !saved ? (
+          <span className="error small">
+            Couldn’t save: {saveError} Your drawing is still here.{' '}
+            <button className="small" onClick={retrySave}>
+              Try again
+            </button>
+          </span>
+        ) : (
+          <span className="muted small">{saved ? 'Saved' : 'Saving…'}</span>
+        )}
         <div className="row">
           <button onClick={undo} disabled={!past.length} title="Undo (Ctrl+Z)">
             ↶ Undo
@@ -989,13 +1108,19 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
           <button onClick={redo} disabled={!future.length} title="Redo (Ctrl+Shift+Z)">
             ↷ Redo
           </button>
+          <button onClick={() => zoomBy(0.8)} title="Zoom in (you can also scroll, or pinch with two fingers)" aria-label="Zoom in">
+            +
+          </button>
+          <button onClick={() => zoomBy(1.25)} title="Zoom out" aria-label="Zoom out">
+            −
+          </button>
           <button onClick={fit}>⤢ Fit</button>
           <button onClick={() => setExporting(true)} title="Download as a picture or a virtual tabletop file">
             ⤓ Export
           </button>
         </div>
       </div>
-      {exporting && <ExportMap name={map.name} drawing={drawing} width={W} height={H} onClose={() => setExporting(false)} />}
+      {exporting && <ExportMap mapId={map.id} fog={map.fog?.on ? map.fog : undefined} name={map.name} drawing={drawing} width={W} height={H} onClose={() => setExporting(false)} />}
       <div className="map-body">
         <div className="builder-tools">
           {TOOLS.map((t) => (
@@ -1254,7 +1379,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                     max={200}
                     step={5}
                     value={drawing.gridSize}
-                    onChange={(e) => commit({ ...drawing, gridSize: Number(e.target.value) })}
+                    onChange={(e) => tweak('gridSize', { ...drawing, gridSize: Number(e.target.value) })}
                   />
                 </label>
               )}

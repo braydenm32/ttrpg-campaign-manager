@@ -9,6 +9,8 @@ export interface AiSettings {
   anthropicKey: string
   /** AssemblyAI API key, for cloud transcription with speaker labels. */
   assemblyKey: string
+  /** Leave the transcript in the GM's AssemblyAI account after saving it here (normally it's deleted there). */
+  keepAtAssembly: boolean
   /** Whisper model used for on-device transcription. */
   deviceModel: 'base' | 'small'
   /** Language spoken at the table; "auto" lets the transcriber guess. */
@@ -20,7 +22,7 @@ export interface AiSettings {
 }
 
 const KEY = 'codex.ai'
-const DEFAULTS: AiSettings = { anthropicKey: '', assemblyKey: '', deviceModel: 'base', language: 'en', voice: '', voiceRate: 1 }
+const DEFAULTS: AiSettings = { anthropicKey: '', assemblyKey: '', keepAtAssembly: false, deviceModel: 'base', language: 'en', voice: '', voiceRate: 1 }
 const listeners = new Set<() => void>()
 let cached: AiSettings | undefined
 

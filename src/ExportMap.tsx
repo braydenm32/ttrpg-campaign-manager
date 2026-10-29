@@ -1,5 +1,8 @@
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo, useState } from 'react'
 import { Modal } from './components'
+import { db, type MapFog } from './db'
+import { renderPlayerFog } from './fog'
 import { Help } from './help'
 import { forPlayers, hasSecrets, type Drawing } from './mapDrawing'
 import type { VttParts } from './mapArt/vtt'
@@ -28,10 +31,32 @@ function sizesFor(d: Drawing, W: number, H: number) {
   })
 }
 
+/** The players' copy also leaves out what stands in secret rooms (worked out by the map drawer, loaded only when needed). */
+const finish = async (chosen: Drawing, drawing: Drawing, W: number, H: number) =>
+  chosen === drawing ? drawing : (await import('./mapArt/classic')).playersCopy(drawing, W, H)
+
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
 /** Download a drawn map as a PNG, or (battle maps and dungeons) as a Universal VTT file with its walls, doors and lights. */
-export function ExportMap({ name, drawing, width, height, onClose }: { name: string; drawing: Drawing; width: number; height: number; onClose: () => void }) {
+export function ExportMap({
+  mapId,
+  name,
+  drawing,
+  fog,
+  width,
+  height,
+  onClose,
+}: {
+  /** The saved map this is from, for its fogged picture. */
+  mapId?: string
+  name: string
+  drawing: Drawing
+  /** The map's fog of war, when it is on. */
+  fog?: MapFog
+  width: number
+  height: number
+  onClose: () => void
+}) {
   const battle = drawing.scene === 'battle'
   const sizes = sizesFor(drawing, width, height)
   const [format, setFormat] = useState<'png' | 'vtt'>('png')
@@ -41,8 +66,11 @@ export function ExportMap({ name, drawing, width, height, onClose }: { name: str
   const [error, setError] = useState('')
   const secrets = hasSecrets(drawing)
   // a map with secrets on it goes out as the players' copy unless you ask for your own
-  const [copy, setCopy] = useState<'players' | 'gm'>('players')
-  const chosen = useMemo(() => (copy === 'players' ? forPlayers(drawing) : drawing), [copy, drawing])
+  // 'fogged' is the picture players are sent now, fog and all (PNG only: it is made already)
+  const [copy, setCopy] = useState<'players' | 'gm' | 'fogged'>('players')
+  const foggedPicture = useLiveQuery(async () => (fog?.imageId ? ((await db.assets.get(fog.imageId)) ?? null) : null), [fog?.imageId])
+  const fogged = copy === 'fogged'
+  const chosen = useMemo(() => (copy === 'gm' ? drawing : forPlayers(drawing)), [copy, drawing])
   const [found, setParts] = useState<Parts>()
   const parts = found?.from === chosen ? found : undefined
   const size = sizes.find((s) => s.scale === scale) ?? sizes[0]
@@ -50,15 +78,15 @@ export function ExportMap({ name, drawing, width, height, onClose }: { name: str
   useEffect(() => {
     if (format !== 'vtt') return
     let live = true
-    import('./mapArt/vtt').then((m) => {
+    Promise.all([import('./mapArt/vtt'), finish(chosen, drawing, width, height)]).then(([m, d]) => {
       if (!live) return
-      const p = m.vttParts(chosen, width, height)
-      setParts({ ...p, from: chosen, feet: Math.round((p.walls.reduce((n, w) => n + m.length(w), 0) / (chosen.gridSize || 70)) * 5) })
+      const p = m.vttParts(d, width, height)
+      setParts({ ...p, from: chosen, feet: Math.round((p.walls.reduce((n, w) => n + m.length(w), 0) / (d.gridSize || 70)) * 5) })
     })
     return () => {
       live = false
     }
-  }, [format, chosen, width, height])
+  }, [format, chosen, drawing, width, height])
 
   const download = async () => {
     setBusy(true)
@@ -66,12 +94,26 @@ export function ExportMap({ name, drawing, width, height, onClose }: { name: str
     // let the button show it's working before the drawing ties the page up
     await new Promise((r) => setTimeout(r, 30))
     try {
+      if (fogged) {
+        // make sure the picture is up to date with the fog as it is right now
+        if (!mapId) throw new Error('The players’ picture isn’t ready yet.')
+        await renderPlayerFog(mapId)
+        const latest = await db.maps.get(mapId)
+        const asset = latest?.fog?.imageId ? await db.assets.get(latest.fog.imageId) : undefined
+        if (!asset) throw new Error('The players’ picture isn’t ready yet. Try again in a moment.')
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(asset.blob)
+        a.download = `${name.trim().replace(/[^\w-]+/g, '_') || 'map'}_players_with_fog.jpg`
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+        return onClose()
+      }
       const { exportMap } = await import('./mapArt/export')
-      await exportMap(copy === 'gm' ? `${name} (GM)` : name, chosen, width, height, { format, scale: size.scale, grid })
+      await exportMap(copy === 'gm' ? `${name} (GM)` : name, await finish(chosen, drawing, width, height), width, height, { format, scale: size.scale, grid })
       onClose()
     } catch (e) {
       console.warn('Map export failed', e)
-      setError(e instanceof Error && e.message.startsWith('This device') ? e.message : 'Could not make the file at that size. Try a smaller one.')
+      setError(e instanceof Error && (e.message.startsWith('This device') || e.message.startsWith('The players')) ? e.message : 'Could not make the file at that size. Try a smaller one.')
       setBusy(false)
     }
   }
@@ -96,6 +138,7 @@ export function ExportMap({ name, drawing, width, height, onClose }: { name: str
               ).map(([k, title, note]) => (
                 <button key={k} type="button" role="radio" aria-checked={format === k} className={format === k ? 'on' : ''} onClick={() => {
                     setFormat(k)
+                    if (k === 'vtt' && copy === 'fogged') setCopy('players')
                     // tabletops draw their own grid
                     setGrid(k === 'png' && drawing.grid !== 'none')
                   }}
@@ -107,23 +150,45 @@ export function ExportMap({ name, drawing, width, height, onClose }: { name: str
             </div>
           </div>
         )}
-        {secrets && (
+        {(secrets || fog) && (
           <div className="label">
             <span>Which copy</span>
             <div className="segmented">
               <button type="button" className={copy === 'players' ? 'on' : ''} onClick={() => setCopy('players')}>
-                Players’ copy
+                {secrets ? 'Players’ copy' : 'The map'}
               </button>
-              <button type="button" className={copy === 'gm' ? 'on' : ''} onClick={() => setCopy('gm')}>
-                Yours, with the secrets
-              </button>
+              {secrets && (
+                <button type="button" className={copy === 'gm' ? 'on' : ''} onClick={() => setCopy('gm')}>
+                  Yours, with the secrets
+                </button>
+              )}
+              {fog && (
+                <button
+                  type="button"
+                  className={fogged ? 'on' : ''}
+                  disabled={format === 'vtt' || !foggedPicture}
+                  title={format === 'vtt' ? 'Only for a picture, not a tabletop file' : !foggedPicture ? 'The players’ picture is still being made' : undefined}
+                  onClick={() => setCopy('fogged')}
+                >
+                  As players see it now (with fog)
+                </button>
+              )}
             </div>
             <span className="muted small">
-              {copy === 'players' ? 'Without the secret doors, traps and anything else only you see.' : 'Keep this one to yourself: secret doors go in a tabletop file as doors players can see.'}
+              {fogged
+                ? 'Exactly the picture players are sent, with the parts you haven’t uncovered still hidden (a JPEG).'
+                : copy === 'gm'
+                  ? 'Keep this one to yourself: secret doors go in a tabletop file as doors players can see.'
+                  : secrets
+                    ? 'Without the secret doors, traps and anything else only you see.'
+                    : 'The whole map, as drawn.'}
             </span>
+            {fog && !fogged && <span className="muted small">Fog of war isn’t included (virtual tabletops add their own).</span>}
+            {fog && format === 'vtt' && <span className="muted small">The fogged picture is only there for a picture download, not a tabletop file.</span>}
+            {fog && format !== 'vtt' && !foggedPicture && <span className="muted small">The fogged picture isn’t ready yet. It appears a moment after you change the fog.</span>}
           </div>
         )}
-        <label>
+        {!fogged && <label>
           <span>
             Size {!battle && <Help topic="exportMap" />}
           </span>
@@ -139,8 +204,8 @@ export function ExportMap({ name, drawing, width, height, onClose }: { name: str
           <span className="muted small">
             {size.w} × {size.h} px
           </span>
-        </label>
-        {(battle || drawing.grid !== 'none') && (
+        </label>}
+        {!fogged && (battle || drawing.grid !== 'none') && (
           <label className="check">
             <input type="checkbox" checked={grid} onChange={(e) => setGrid(e.target.checked)} /> Show the grid{format === 'vtt' && <span className="muted small">(tabletops draw their own)</span>}
           </label>

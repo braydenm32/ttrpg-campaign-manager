@@ -40,5 +40,10 @@ export function cloudErrorMessage(e: unknown) {
   if (typeof navigator !== 'undefined' && !navigator.onLine) return 'You’re offline. Your copy on this device still works, and it will catch up when you’re back online.'
   if (/failed to fetch|networkerror|load failed|network request failed|paused|status of 54\d|fetch/i.test(msg))
     return 'Can’t reach the Warded Atlas server right now. If nobody has used it for about a week it may be asleep: the GM can wake it by opening their Supabase dashboard (it takes a minute). Your copy on this device still works.'
+  if (/row-level security|permission denied|violates.*policy/i.test(msg))
+    return 'The cloud didn’t allow that: this world’s cloud copy may have been deleted on another device, or you may no longer be one of its GMs.'
+  if (/jwt expired|invalid jwt|refresh token|not authenticated/i.test(msg)) return 'Your sign-in has run out. Sign in again (Cloud settings) and it will carry on.'
+  if (/payload too large|request entity too large|maximum allowed size|413/i.test(msg)) return 'That’s too big to upload: the free plan allows 50 MB per file.'
+  if (/unsupported unicode escape|\\u0000/i.test(msg)) return 'Some text has a hidden character the cloud can’t store (it often comes from copying out of a PDF).'
   return msg
 }

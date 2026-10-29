@@ -4,6 +4,7 @@ import { Help } from '../help'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { DraftText, Empty, VisibilityBadge, VisibilityToggle } from '../components'
 import { db, GAME_SYSTEMS, type Campaign } from '../db'
+import { useLiveRecording } from '../recordingStore'
 import { bookNextSession, createNextSession, partyOf } from '../sessions'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
@@ -17,12 +18,14 @@ export default function CampaignPage() {
   const { campaignId = '' } = useParams()
   const { isGM, canSee } = useViewMode()
   const navigate = useNavigate()
-  const campaign = useLiveQuery(() => db.campaigns.get(campaignId), [campaignId])
+  const campaign = useLiveQuery(async () => (await db.campaigns.get(campaignId)) ?? null, [campaignId])
   const sessions =
     useLiveQuery(
       () => db.sessions.where({ campaignId }).filter((s) => canSee(s.visibility)).sortBy('number'),
       [campaignId, isGM],
     ) ?? []
+  const live = useLiveRecording()
+  const recording = !!live && sessions.some((s) => s.id === live.sessionId)
   const entities = useVisibleEntities(worldId)
   const pcs = partyOf(entities, campaignId)
   const quests = entities.filter((e) => e.type === 'quest' && e.questStatus === 'active')
@@ -117,7 +120,7 @@ export default function CampaignPage() {
                     #{s.number} {s.title}
                   </Link>{' '}
                   <VisibilityBadge value={s.visibility} />
-                  <span className="muted"> · {s.date}</span>
+                  {s.date && <span className="muted"> · {s.date}</span>}
                   {s.recordings.length > 0 && <span title="Has recordings"> <Ico as={Microphone} /></span>}
                 </li>
               ))}
@@ -156,8 +159,12 @@ export default function CampaignPage() {
         <div className="row end">
           <button
             className="danger"
+            disabled={recording}
+            title={recording ? 'Stop the recording first' : undefined}
             onClick={async () => {
               if (!confirm(`Delete campaign "${campaign.name}" and its sessions? World content is kept.`)) return
+              // Characters who played only in this campaign go back to "any campaign", so they don't vanish from every party.
+              await db.entities.where({ worldId }).filter((e) => e.campaignId === campaignId).modify({ campaignId: undefined })
               await binCampaign(campaignId)
               navigate(`${worldPath(worldId)}`)
             }}

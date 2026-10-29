@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { Help } from '../help'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { db, type Entity, type Session, type World } from '../db'
 import { Markdown } from '../Markdown'
-import { buildRecapPrompt, estimateTokens, parseRecap, recapCost, recapWithClaude } from './recap'
+import { SecretNamesWarning } from '../SecretNamesWarning'
+import { buildRecapPrompt, estimateTokens, parseRecap, RECAP_MODEL, recapCost, recapWithClaude } from './recap'
 import { useAiSettings } from './settings'
 import { Ico } from '../icons'
 import { ClipboardText, Eye, Lock, PenNib, Sparkle } from '@phosphor-icons/react'
 import { worldPath } from '../paths'
 import { WorldUpdatesReview } from './WorldUpdatesReview'
+import { dollars, modelName } from './claude'
+import { ModelTag } from './ClaudeJob'
+import { moveJob, startJob, stopJob, takeFinished, useJob } from './jobs'
 
 /**
  * Turns a session's transcript (and GM notes) into a GM summary and a player recap.
@@ -20,11 +24,18 @@ export function RecapPanel({ world, session, entities }: { world: World; session
   const [mode, setMode] = useState<'idle' | 'paste'>('idle')
   const [pasted, setPasted] = useState('')
   const [copied, setCopied] = useState(false)
-  const [writing, setWriting] = useState<{ text: string; abort: AbortController }>()
   const [error, setError] = useState('')
   const [cost, setCost] = useState('')
-  const running = useRef<AbortController>(undefined)
-  useEffect(() => () => running.current?.abort(), [])
+  // The recap keeps writing if the GM leaves the page, and saves its draft when it's done (see jobs.ts).
+  const jobId = `recap:${session.id}`
+  const job = useJob(jobId)
+  const writing = job?.status === 'writing' ? job : undefined
+  const { pathname, search } = useLocation()
+  useEffect(() => {
+    if (!job) return
+    if (job.status === 'writing') return moveJob(job.id, pathname, pathname + search)
+    takeFinished(job, undefined, setError, setCost)
+  }, [job, pathname, search])
 
   const transcribed = session.recordings.filter((r) => r.transcript && !r.transcript.pending).length
   const hasMaterial = transcribed > 0 || session.notes.trim().length > 0
@@ -45,25 +56,24 @@ export function RecapPanel({ world, session, entities }: { world: World; session
     }
   }
 
-  const write = async () => {
+  const write = () => {
     setError('')
     setCost('')
-    const abort = new AbortController()
-    running.current = abort
-    setWriting({ text: '', abort })
-    try {
-      const res = await recapWithClaude(prompt(), settings.anthropicKey.trim(), (text) => setWriting({ text, abort }), abort.signal)
-      await saveDraft(res.text, 'claude-api')
-      setCost(`That recap cost about US$${recapCost(res.inputTokens, res.outputTokens).toFixed(2)}.`)
-    } catch (err) {
-      if ((err as Error).name !== 'AbortError' && !abort.signal.aborted) setError((err as Error).message || 'Something went wrong.')
-    } finally {
-      running.current = undefined
-      setWriting(undefined)
-    }
+    const key = settings.anthropicKey.trim()
+    const text = prompt()
+    const title = `The write-up of session ${session.number}`
+    startJob(
+      { id: jobId, worldId: world.id, title, path: pathname, href: `${pathname}${search}`, model: RECAP_MODEL },
+      async ({ signal, onText }) => {
+        const res = await recapWithClaude(text, key, onText, signal)
+        // Saved as soon as it's done, wherever the GM is by then.
+        await saveDraft(res.text, 'claude-api')
+        return { note: `That recap cost about ${dollars(recapCost(res.inputTokens, res.outputTokens))} with ${modelName(RECAP_MODEL)}.`, warning: res.warning }
+      },
+    )
   }
 
-  if (session.recapDraft) return <RecapDraftReview world={world} session={session} entities={entities} note={cost} />
+  if (session.recapDraft) return <RecapDraftReview world={world} session={session} entities={entities} note={[error, cost].filter(Boolean).join(' ')} />
 
   return (
     <section className="recap-panel">
@@ -82,7 +92,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
         <div className="recap-writing">
           <div className="row spread">
             <span className="small"><Ico as={PenNib} /> Claude is writing…</span>
-            <button className="ghost small" onClick={() => writing.abort.abort()}>
+            <button className="ghost small" onClick={() => stopJob(jobId)}>
               Stop
             </button>
           </div>
@@ -99,8 +109,9 @@ export function RecapPanel({ world, session, entities }: { world: World; session
             disabled={!hasMaterial || !settings.anthropicKey.trim()}
             title={settings.anthropicKey.trim() ? 'Uses your Anthropic API key' : 'Add an Anthropic API key in World settings first'}
           >
-            <Ico as={Sparkle} /> Write it now{estimate ? ` (about US$${Math.max(0.01, estimate).toFixed(2)})` : ''}
+            <Ico as={Sparkle} /> Write it now{estimate ? ` (about ${dollars(estimate)})` : ''}
           </button>
+          {hasMaterial && settings.anthropicKey.trim() && <ModelTag model={RECAP_MODEL} />}
           {mode === 'idle' && (
             <button className="ghost small" onClick={() => setMode('paste')}>
               Paste a reply
@@ -111,7 +122,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
       {!settings.anthropicKey.trim() && !writing && (
         <p className="muted small">
           “Copy for Claude” is free with your Claude subscription. For one click, add an Anthropic API key in{' '}
-          <Link to={`${worldPath(world.id)}/settings`}>World settings → AI tools</Link>.
+          <Link to={`${worldPath(world.id)}/settings?tab=device`}>World settings → AI tools</Link>.
         </p>
       )}
 
@@ -236,6 +247,7 @@ function RecapDraftReview({ world, session, entities, note }: { world: World; se
       ) : (
         <textarea rows={8} value={players} onChange={(e) => editPlayers(e.target.value)} />
       )}
+      <SecretNamesWarning worldId={worldId} texts={[players]} />
       <div className="row">
         <button onClick={usePlayers} disabled={!players.trim() || done.players}>
           {done.players ? '✓ Saved as the player recap' : 'Use as the player recap'}

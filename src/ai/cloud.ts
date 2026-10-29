@@ -21,11 +21,17 @@ async function call<T>(url: string, key: string, init: RequestInit = {}, signal?
 
 const wait = (ms: number, signal: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
-    const t = setTimeout(resolve, ms)
-    signal.addEventListener('abort', () => {
+    const stop = () => {
       clearTimeout(t)
       reject(new DOMException('Cancelled', 'AbortError'))
-    })
+    }
+    if (signal.aborted) return stop()
+    // Each wait takes its listener off again, so a long job doesn't pile them up.
+    const t = setTimeout(() => {
+      signal.removeEventListener('abort', stop)
+      resolve()
+    }, ms)
+    signal.addEventListener('abort', stop, { once: true })
   })
 
 /** Uploads the recording and starts a transcription job with speaker labels. Returns the job id. */
@@ -76,5 +82,18 @@ export async function waitForCloudJob(id: string, key: string, signal: AbortSign
     }
     if (job.status === 'error') throw new Error(`AssemblyAI couldn’t transcribe this recording: ${job.error ?? 'unknown error'}`)
     await wait(5000, signal)
+  }
+}
+
+/**
+ * Deletes a finished transcript from AssemblyAI once it's saved here, so the table's talk doesn't sit
+ * in another company's storage. True when it worked; a failure never undoes the saved transcript.
+ */
+export async function deleteCloudJob(id: string, key: string) {
+  try {
+    const res = await fetch(`${API}/transcript/${id}`, { method: 'DELETE', headers: { authorization: key } })
+    return res.ok
+  } catch {
+    return false
   }
 }

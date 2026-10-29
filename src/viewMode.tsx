@@ -28,26 +28,53 @@ const ViewModeContext = createContext<ViewModeValue>({
   setPreviewAs: () => {},
 })
 
+/**
+ * Outside any world (the shelf of worlds, sign-in pages) there is nothing to preview, so it is the
+ * GM view. This also tidies away the old setting that was shared by every world.
+ */
 export function ViewModeProvider({ children }: { children: ReactNode }) {
-  const [mode, setModeState] = useState<Mode>(() => {
+  useEffect(() => {
     try {
-      return localStorage.getItem('viewMode') === 'player' ? 'player' : 'gm'
+      localStorage.removeItem('viewMode')
     } catch {
-      return 'gm'
+      /* storage unavailable */
     }
-  })
+    document.documentElement.dataset.viewMode = 'gm'
+  }, [])
+  return <>{children}</>
+}
+
+const storedMode = (worldId: string): Mode => {
+  try {
+    return localStorage.getItem(`viewMode.${worldId}`) === 'player' ? 'player' : 'gm'
+  } catch {
+    return 'gm'
+  }
+}
+
+/**
+ * The view mode for one world, remembered on this device for that world alone, so previewing one
+ * world as a player doesn't leave the next one stuck in the player view. Mount it with
+ * key={worldId}: changing world then starts again from that world's own setting, with no player
+ * previewed.
+ */
+export function WorldViewMode({ worldId, children }: { worldId: string; children: ReactNode }) {
+  const [mode, setModeState] = useState<Mode>(() => storedMode(worldId))
   const [previewAs, setPreviewAs] = useState<PreviewAs>()
   const setMode = (m: Mode) => {
     setModeState(m)
     if (m === 'gm') setPreviewAs(undefined)
+    try {
+      localStorage.setItem(`viewMode.${worldId}`, m)
+    } catch {
+      /* storage unavailable: the choice lasts until the page is closed */
+    }
   }
   useEffect(() => {
-    try {
-      localStorage.setItem('viewMode', mode)
-    } catch {
-      /* storage unavailable */
-    }
     document.documentElement.dataset.viewMode = mode
+    return () => {
+      document.documentElement.dataset.viewMode = 'gm'
+    }
   }, [mode])
   return (
     <ViewModeContext.Provider value={{ mode, setMode, previewAs: mode === 'player' ? previewAs : undefined, setPreviewAs }}>

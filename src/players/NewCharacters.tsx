@@ -15,6 +15,7 @@ import { schedule } from '../cloud/sync'
 import { Modal } from '../components'
 import { blankEntity, db, type World } from '../db'
 import { Help } from '../help'
+import { useVisibleEntities } from '../hooks'
 import { useCampaigns } from '../threads'
 import { Ico } from '../icons'
 import { MaskHappy, Plus, UserCirclePlus } from '@phosphor-icons/react'
@@ -196,12 +197,16 @@ function ReviewCharacter({ world, request, player, onClose, onDone }: { world: W
   const [error, setError] = useState('')
   const [made, setMade] = useState<string>()
   const s = request.sheet
+  const [name, setName] = useState(s.name.trim())
+  // ":::for" secrets match a character's full name or first name, so a new character sharing either with another would get theirs.
+  const keys = (n: string) => [n.trim().toLowerCase(), n.trim().split(/\s+/)[0].toLowerCase()].filter(Boolean)
+  const clashes = useVisibleEntities(world.id).filter((e) => e.type === 'pc' && !e.template && keys(e.name).some((k) => keys(name).includes(k)))
   const run = async (approve: boolean) => {
     setBusy(true)
     setError('')
     try {
       if (approve) {
-        const page = { ...blankEntity(world.id, 'pc', s.name.trim()), summary: s.summary, fields: s.fields, playerBody: s.playerBody, visibility: 'players' as const, campaignId: campaignId || undefined }
+        const page = { ...blankEntity(world.id, 'pc', name.trim() || s.name.trim()), summary: s.summary, fields: s.fields, playerBody: s.playerBody, visibility: 'players' as const, campaignId: campaignId || undefined }
         // The player gets the page first (an approved claim), then the page itself syncs to them.
         await answerCharacterRequest(world.id, request.id, true, note, page.id)
         await db.entities.add(page)
@@ -220,9 +225,9 @@ function ReviewCharacter({ world, request, player, onClose, onDone }: { world: W
   }
   if (made)
     return (
-      <Modal title={`${s.name} is in`} onClose={onClose}>
+      <Modal title={`${name.trim() || s.name} is in`} onClose={onClose}>
         <p>
-          {s.name} now has a page, revealed to players, and it’s {player}’s character. Add a picture, secrets or anything else on <Link to={pagePath(world.id, made)} onClick={onClose}>their page</Link>.
+          {name.trim() || s.name} now has a page, revealed to players, and it’s {player}’s character. Add a picture, secrets or anything else on <Link to={pagePath(world.id, made)} onClick={onClose}>their page</Link>.
         </p>
         <button className="primary" onClick={onClose}>
           Done
@@ -245,6 +250,16 @@ function ReviewCharacter({ world, request, player, onClose, onDone }: { world: W
           </dl>
         )}
         {s.playerBody && <p className="pre-wrap">{s.playerBody}</p>}
+        <label className="form">
+          Name on their page
+          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
+        </label>
+        {clashes.length > 0 && (
+          <p className="notice small">
+            Shares a name with {clashes.map((e) => e.name).join(', ')}. Secret passages written for {clashes.length > 1 ? 'those characters' : 'that character'} would reach{' '}
+            {player} too, so you may want to give one of them a different name. <Help topic="newCharacterName" />
+          </p>
+        )}
         {campaigns.length > 1 && (
           <label className="form">
             Plays in

@@ -1,6 +1,7 @@
 import { localDate } from './sessions'
 import { CALENDAR_PRESETS } from './calendar'
 import { blankEntity, db, newId, type Entity, type Pin } from './db'
+import { loadInBackground } from './worldLoading'
 
 /** A small ready-made world so new users can click around before building their own. */
 export async function loadSampleWorld(): Promise<string> {
@@ -180,17 +181,8 @@ export async function loadSampleWorld(): Promise<string> {
   })
   const entities = [ring, brother, tremors, coast, saltmere, keep, wood, lighthouse, docks, temple, tavern, smith, marta, dorn, corvin, wardens, choir, thalassa, sundering, founding, relit, arrival, quest, pc]
 
-  // The region map is drawn in the classic style, from a drawing that stays editable in the map builder.
-  const [{ shatteredCoast, saltmere: saltmereTown, COAST_W, COAST_H, SALTMERE_W, SALTMERE_H }, { renderClassic, classicBlob, loadMapFonts }] = await Promise.all([
-    import('./sampleMap'),
-    import('./mapArt/classic'),
-  ])
-  await loadMapFonts()
-  const regionDrawing = shatteredCoast()
-  const townDrawing = saltmereTown()
-  const [regionBlob, townBlob] = await Promise.all([classicBlob(renderClassic(regionDrawing, COAST_W, COAST_H)), classicBlob(renderClassic(townDrawing, SALTMERE_W, SALTMERE_H))])
-  const ext = (b: Blob) => (b.type === 'image/webp' ? 'webp' : 'jpg')
-
+  // The maps are drawn in the classic style, from drawings that stay editable in the map builder.
+  // That's the slow part, so the world opens first and they're drawn just after (see drawSampleMaps).
   const regionImg = newId()
   const townImg = newId()
   const regionMap = newId()
@@ -204,7 +196,8 @@ export async function loadSampleWorld(): Promise<string> {
     ...p,
   })
 
-  await db.transaction('rw', [db.worlds, db.entities, db.assets, db.maps, db.pins, db.campaigns, db.sessions], async () => {
+  const pins: Pin[] = []
+  await db.transaction('rw', [db.worlds, db.entities, db.campaigns, db.sessions], async () => {
     await db.worlds.add({
       id: worldId,
       name: 'The Shattered Coast',
@@ -222,16 +215,8 @@ export async function loadSampleWorld(): Promise<string> {
       safety: { lines: ['Harm to children'], veils: ['Torture'], notes: 'Anyone can call a break at any time.', xcard: true },
     })
     await db.entities.bulkAdd(entities)
-    await db.assets.bulkAdd([
-      { id: regionImg, worldId, name: `Shattered Coast map.${ext(regionBlob)}`, mime: regionBlob.type, size: regionBlob.size, blob: regionBlob, tags: ['map', 'drawn'], visibility: 'players', createdAt: now },
-      { id: townImg, worldId, name: `Saltmere map.${ext(townBlob)}`, mime: townBlob.type, size: townBlob.size, blob: townBlob, tags: ['map', 'drawn'], visibility: 'players', createdAt: now },
-    ])
-    await db.maps.bulkAdd([
-      { id: regionMap, worldId, name: 'The Shattered Coast', imageId: regionImg, width: COAST_W, height: COAST_H, visibility: 'players', locationId: coast.id, drawing: regionDrawing, createdAt: now },
-      { id: townMap, worldId, name: 'Saltmere', imageId: townImg, width: SALTMERE_W, height: SALTMERE_H, visibility: 'players', locationId: saltmere.id, drawing: townDrawing, createdAt: now },
-    ])
     // Map coordinates are [y, x] with y measured from the bottom of the image.
-    await db.pins.bulkAdd([
+    pins.push(
       pin({ mapId: regionMap, label: 'Saltmere', kind: 'point', position: [1000 - 640, 560], entityId: saltmere.id, childMapId: townMap }),
       pin({ mapId: regionMap, label: 'Greywatch Keep', kind: 'point', position: [1000 - 200, 820], entityId: keep.id }),
       pin({ mapId: regionMap, label: 'The Drowned Lighthouse', kind: 'point', position: [1000 - 730, 285], entityId: lighthouse.id, visibility: 'gm', color: '#d9534f' }),
@@ -255,7 +240,7 @@ export async function loadSampleWorld(): Promise<string> {
       pin({ mapId: townMap, label: 'The Stilt Docks', kind: 'point', position: [800 - 600, 380], entityId: docks.id }),
       pin({ mapId: townMap, label: 'Anvil & Ember', kind: 'point', position: [800 - 560, 560], entityId: smith.id }),
       pin({ mapId: townMap, label: 'Harbourmaster’s office', kind: 'point', position: [800 - 470, 260], entityId: corvin.id, note: 'Corvin Vane works here most days.' }),
-    ])
+    )
     const campaignId = newId()
     await db.campaigns.add({ id: campaignId, worldId, name: 'Tides of the Choir', description: 'Something stirs beneath Saltmere.', system: 'System agnostic', status: 'active', createdAt: now })
     await db.sessions.add({
@@ -274,5 +259,75 @@ export async function loadSampleWorld(): Promise<string> {
       createdAt: now,
     })
   })
+  const plan: SamplePlan = { now, pins, maps: [
+    { id: regionMap, imageId: regionImg, name: 'The Shattered Coast', file: 'Shattered Coast map', locationId: coast.id, which: 'coast' },
+    { id: townMap, imageId: townImg, name: 'Saltmere', file: 'Saltmere map', locationId: saltmere.id, which: 'saltmere' },
+  ] }
+  try {
+    localStorage.setItem(planKey(worldId), JSON.stringify(plan))
+  } catch {
+    // Storage blocked: the maps are still drawn while the tab stays open.
+  }
+  void drawSampleMaps(worldId, plan)
   return worldId
+}
+
+/** The sample world's two maps, still to draw: kept on this device so a closed tab carries on next time. */
+interface SamplePlan {
+  now: number
+  pins: Pin[]
+  maps: { id: string; imageId: string; name: string; file: string; locationId: string; which: 'coast' | 'saltmere' }[]
+}
+const planKey = (worldId: string) => `sample.toDraw.${worldId}`
+
+/** Picks up the sample world's map drawing if the tab closed before it finished. */
+export async function finishSampleWorld(worldId: string) {
+  if (drawing.has(worldId)) return
+  let plan: SamplePlan | undefined
+  try {
+    plan = JSON.parse(localStorage.getItem(planKey(worldId)) ?? 'null') ?? undefined
+  } catch {
+    plan = undefined
+  }
+  if (plan) await drawSampleMaps(worldId, plan)
+}
+
+/** Worlds whose maps this tab is drawing now. */
+const drawing = new Set<string>()
+
+async function drawSampleMaps(worldId: string, plan: SamplePlan) {
+  // Claimed before anything is awaited, so opening the world meanwhile doesn't start a second drawing.
+  if (drawing.has(worldId)) return
+  drawing.add(worldId)
+  try {
+    await drawPlan(worldId, plan)
+  } catch (e) {
+    // The plan stays, so the next visit tries again.
+    console.error('Drawing the sample world’s maps failed', e)
+  } finally {
+    drawing.delete(worldId)
+  }
+}
+
+async function drawPlan(worldId: string, plan: SamplePlan) {
+  const [art, { renderClassic, classicBlob, loadMapFonts }] = await Promise.all([import('./sampleMap'), import('./mapArt/classic')])
+  await loadMapFonts()
+  await loadInBackground(worldId, 'drawing', plan.maps, async (m) => {
+    if (await db.maps.get(m.id)) return
+    const [drawing, width, height] = m.which === 'coast' ? [art.shatteredCoast(), art.COAST_W, art.COAST_H] : [art.saltmere(), art.SALTMERE_W, art.SALTMERE_H]
+    const blob = await classicBlob(renderClassic(drawing, width, height))
+    if (!(await db.worlds.get(worldId))) return false
+    const { now } = plan
+    await db.transaction('rw', [db.assets, db.maps, db.pins], async () => {
+      await db.assets.put({ id: m.imageId, worldId, name: `${m.file}.${blob.type === 'image/webp' ? 'webp' : 'jpg'}`, mime: blob.type, size: blob.size, blob, tags: ['map', 'drawn'], visibility: 'players', createdAt: now })
+      await db.maps.add({ id: m.id, worldId, name: m.name, imageId: m.imageId, width, height, visibility: 'players', locationId: m.locationId, drawing, createdAt: now })
+      await db.pins.bulkPut(plan.pins.filter((p) => p.mapId === m.id))
+    })
+  })
+  // Done (or the world was deleted): nothing left to pick up. If drawing failed, it's tried again next time.
+  try {
+    localStorage.removeItem(planKey(worldId))
+  } catch {
+    // Nothing to tidy.
+  }
 }

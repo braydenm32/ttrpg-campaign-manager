@@ -1,8 +1,8 @@
 import { ENTITY_LABELS, type Entity, type Session, type World } from '../db'
 import { formatDate } from '../calendar'
 import { transcriptText } from './transcript'
-import { parseUpdates, UPDATES_HEADING, updatesInstructions } from './worldUpdates'
-import { MODEL } from './claude'
+import { readUpdates, UPDATES_HEADING, updatesInstructions } from './worldUpdates'
+import { claudeCost, CUT_OFF, friendly, MODEL } from './claude'
 
 export const GM_HEADING = '## GM summary'
 export const PLAYER_HEADING = '## Player recap'
@@ -90,7 +90,10 @@ export function parseRecap(text: string) {
   // Without headings, the whole reply is the GM's: nothing reaches players by accident.
   if (!heads.length) part.gm = t
   else if (heads[0].at > 0 && !part.gm) part.gm = t.slice(0, heads[0].at).trim()
-  return { gm: part.gm ?? '', players: part.players ?? '', updates: parseUpdates(part.updates ?? '') }
+  const read = part.updates !== undefined ? readUpdates(part.updates) : undefined
+  // "Nothing to change" only when Claude said so: a missing or garbled list is shown to the GM as it is.
+  const updatesProblem = !read ? '' : read.readable ? undefined : part.updates
+  return { gm: part.gm ?? '', players: part.players ?? '', updates: read?.updates ?? [], updatesProblem }
 }
 
 /** Writes the recap with the GM's own Anthropic API key, streaming text as it arrives. */
@@ -102,7 +105,7 @@ export async function recapWithClaude(prompt: string, apiKey: string, onText: (s
   try {
     const stream = client.beta.messages.stream(
       {
-        model: MODEL,
+        model: RECAP_MODEL,
         max_tokens: 32000,
         betas: ['server-side-fallback-2026-07-01'],
         fallbacks: 'default',
@@ -117,19 +120,18 @@ export async function recapWithClaude(prompt: string, apiKey: string, onText: (s
     const message = await stream.finalMessage()
     if (message.stop_reason === 'refusal') throw new Error('Claude declined to write this recap. You can still use "Copy for Claude" instead.')
     const text = message.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('')
-    return { text, inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens }
+    const cutOff = message.stop_reason === 'max_tokens' || message.stop_reason === 'model_context_window_exceeded'
+    return { text, inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens, warning: cutOff ? CUT_OFF : undefined }
   } catch (err) {
-    if (err instanceof Anthropic.AuthenticationError) throw new Error('Anthropic didn’t accept the API key. Check it in World settings → AI tools.')
-    if (err instanceof Anthropic.RateLimitError) throw new Error('Anthropic says you’re over your limit for now. Wait a minute and try again.')
-    if (err instanceof Anthropic.APIError && /credit/i.test(err.message))
-      throw new Error('Your Anthropic account is out of credit. Add some at console.anthropic.com → Billing.')
-    if (err instanceof Anthropic.APIConnectionError) throw new Error('Could not reach Anthropic. Check your internet connection.')
-    throw err
+    throw friendly(err, Anthropic)
   }
 }
 
-/** Rough cost in US dollars at Claude Opus 5.5 prices ($4 in / $20 out per million tokens). */
-export const recapCost = (input: number, output: number) => (input * 4 + output * 20) / 1e6
+/** Recaps (with their world updates) are a big job, so they use the most capable model. */
+export const RECAP_MODEL = MODEL
+
+/** Rough cost in US dollars of a recap. */
+export const recapCost = (input: number, output: number) => claudeCost(RECAP_MODEL, input, output)
 
 /** About four characters per token for English text. */
 export const estimateTokens = (text: string) => Math.ceil(text.length / 4)

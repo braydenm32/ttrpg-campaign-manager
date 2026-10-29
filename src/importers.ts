@@ -19,7 +19,10 @@ export interface ImportedPage {
   summary: string
   body: string
   tags: string[]
-  fields: { key: string; value: string }[]
+  fields: { key: string; value: string; gm?: boolean }[]
+  /** Other names (GM only), and tags only the GM sees, from our own Markdown export. */
+  aliases?: string[]
+  gmTags?: string[]
   /** The key or name of the page this one sits inside. */
   parent?: string
   status?: Entity['status']
@@ -120,6 +123,13 @@ const linkName = (v: string | string[] | undefined) => {
   return s?.replace(/^\[\[|\]\]$/g, '').split('|')[0].split('#')[0].split('/').pop()?.trim()
 }
 
+/**
+ * Our Markdown export marks GM-only details with this in front of the name ("gm-True identity"), so
+ * importing it back keeps them GM only instead of making them details players can see.
+ */
+const GM_PREFIX = 'gm-'
+const GM_TAGS_KEY = 'gm-tags'
+
 /** Obsidian's extras turned into ours: tidy [[links]], %%comments%% as GM-only, embedded pictures pulled out. */
 function convertObsidian(body: string, images: string[]) {
   return body
@@ -131,7 +141,7 @@ function convertObsidian(body: string, images: string[]) {
     .trim()
 }
 
-const SKIP_KEYS = new Set(['title', 'name', 'tags', 'tag', 'type', 'aliases', 'alias', 'summary', 'description', 'cssclass', 'cssclasses', 'publish', 'location', 'parent', 'located in', 'image', 'status'])
+const SKIP_KEYS = new Set(['title', 'name', 'tags', 'tag', 'type', 'aliases', 'alias', 'summary', 'description', 'cssclass', 'cssclasses', 'publish', 'location', 'parent', 'located in', 'image', 'status', 'visibility', GM_TAGS_KEY])
 
 export async function planMarkdown(files: Map<string, Blob>): Promise<ImportPlan> {
   const pages: ImportedPage[] = []
@@ -153,7 +163,15 @@ export async function planMarkdown(files: Map<string, Blob>): Promise<ImportPlan
     const imageBlob = imageName ? byName.get(baseName(imageName).toLowerCase()) : undefined
     const fields = Object.entries(data)
       .filter(([k, v]) => !SKIP_KEYS.has(k) && (typeof v === 'string' ? v.trim() : v.length))
-      .map(([k, v]) => ({ key: k[0].toUpperCase() + k.slice(1), value: Array.isArray(v) ? v.join(', ') : v }))
+      .map(([k, v]) => {
+        const gm = k.startsWith(GM_PREFIX) && k.length > GM_PREFIX.length
+        const key = gm ? k.slice(GM_PREFIX.length).trim() : k
+        return { key: key[0].toUpperCase() + key.slice(1), value: Array.isArray(v) ? v.join(', ') : v, ...(gm ? { gm: true } : {}) }
+      })
+    // Other names can have spaces in them, so a plain line is split at commas only.
+    const names = (v: string | string[] | undefined) => (Array.isArray(v) ? v : v ? v.split(',') : []).map((a) => a.trim()).filter(Boolean)
+    const aliases = [...names(data.aliases), ...names(data.alias)]
+    const gmTags = asList(data[GM_TAGS_KEY])
     const tags = [...asList(data.tags), ...asList(data.tag)].map((t) => t.replace(/^#/, ''))
     pages.push({
       key: path,
@@ -163,6 +181,8 @@ export async function planMarkdown(files: Map<string, Blob>): Promise<ImportPlan
       body: text,
       tags,
       fields,
+      aliases: aliases.length ? aliases : undefined,
+      gmTags: gmTags.length ? gmTags : undefined,
       parent: linkName(data.location) ?? linkName(data.parent) ?? linkName(data['located in']),
       status: typeof data.status === 'string' && ['alive', 'dead', 'missing', 'captured'].includes(data.status.toLowerCase()) ? (data.status.toLowerCase() as Entity['status']) : undefined,
       image: imageBlob && imageName ? { name: baseName(imageName), blob: imageBlob } : undefined,
@@ -452,6 +472,8 @@ export async function applyImport(worldId: string, plan: ImportPlan, skipExistin
     e.body = p.body
     e.tags = [...new Set(p.tags)]
     e.fields = p.fields
+    if (p.aliases) e.aliases = [...new Set(p.aliases)]
+    if (p.gmTags) e.gmTags = [...new Set(p.gmTags)]
     if (p.status) e.status = p.status
     if (p.type === 'event') e.eventOrder = now + i
     const parent = p.parent && (idByKey.get(p.parent) ?? idByName.get(p.parent.toLowerCase()))
@@ -483,10 +505,15 @@ export async function exportMarkdown(worldId: string) {
     const fm: string[] = [`type: ${JSON.stringify(typeLabel(e, world).one)}`, `visibility: ${e.visibility === 'players' ? 'revealed' : 'gm only'}`]
     if (e.summary) fm.push(`summary: ${JSON.stringify(e.summary)}`)
     if (e.tags.length) fm.push(`tags: [${e.tags.map((t) => JSON.stringify(t)).join(', ')}]`)
+    if (e.aliases?.length) fm.push(`aliases: [${e.aliases.map((t) => JSON.stringify(t)).join(', ')}]`)
+    if (e.gmTags?.length) fm.push(`${GM_TAGS_KEY}: [${e.gmTags.map((t) => JSON.stringify(t)).join(', ')}]`)
     if (e.status) fm.push(`status: ${e.status}`)
     const parent = e.parentId && byId.get(e.parentId)
     if (parent) fm.push(`location: ${JSON.stringify(`[[${parent.name}]]`)}`)
-    for (const f of e.fields) if (f.key.trim() && !/^(type|tags|summary|status|location|visibility)$/i.test(f.key.trim())) fm.push(`${f.key.trim().replace(/[:\n]/g, ' ')}: ${JSON.stringify(f.value)}`)
+    // GM-only details keep their mark, so importing this back in never shows them to players.
+    for (const f of e.fields)
+      if (f.key.trim() && !/^(type|tags|summary|status|location|visibility)$/i.test(f.key.trim()))
+        fm.push(`${f.gm ? GM_PREFIX : ''}${f.key.trim().replace(/[:\n]/g, ' ')}: ${JSON.stringify(f.value)}`)
     let image = ''
     const asset = e.imageId ? await db.assets.get(e.imageId) : undefined
     if (asset) {
