@@ -2,13 +2,13 @@
 type: quest
 name: Old Tally's Coin
 players: true
-summary: "Ferrow Gant wants one of a dead regiment's seals carried to a widow at Whitepost. The seal is in Vexa's vault, and it is worth more than he knows: by the Concord's own law it is a claim on Tollamund & Daughters."
+summary: "Ferrow Gant wants one of a dead regiment's seals carried to a widow at Whitepost. The seal is in Vexa's vault, and it is worth more than anyone at the Cut knows."
 parent: tallys-cut
 tags: [ side quest, glassers, concord ]
 questStatus: open
 fields:
   Given by: Ferrow Gant, at the Ripe One, after the second thimble
-  Reward: 20 silver from Ferrow, a bottle of Mercy, and a lead seal on a ribbon that makes a Shellback go very still
+  Reward: 20 silver from Ferrow, a bottle of Mercy, and a lead seal on a ribbon
 gmFields:
   Sessions: 2 (given on the road to Fort Mercy); the seal pays off in 7
 relations:
@@ -46,16 +46,16 @@ Twenty silver, which in the Ashenreach this month is real money, and a bottle of
 4. **Carry it**, to Whitepost, or send it west by a hand you trust, or keep it a while, because of what it turns out to be.
 
 ### Complications
-- The Concord factor, [[Cousin Pennamund]], has asked Vexa for the roll twice and been told the price twice. He knows what it is for.
+- The Concord factor, [[Cousin Pennamund]], has asked Vexa for the roll twice and been told the price twice.
 - [[Jaspin Sweet]] at Gutter Market offers fifty silver a seal, no questions, and will go to a hundred.
 - The roll has forty-one seals on it, and the party will be asked by Ferrow for one, and will have to decide what to do with forty.
 - Vexa does not part with anything she has not been paid for, and does not know what the seals are worth, and will know the moment the party asks for them by name.
 
 :::gm
 ### What the seal is
-Under [[The First Concord]]'s ninth article, read by nobody, "the debts of the dead pass to the land they died on": the clause [[Tollamund & Daughters]] has used for nine years to buy up the Ashenreach's dead at forty in the hundred. It cuts both ways. A regiment's seal is its signature; the holder of the 11th Foot's pensions seal, standing on the land the 11th died on, is the 11th for the purposes of the article, and the 11th is owed nine years of dead-pay for six hundred men by whoever holds the Regency's paper on the March. That is Tollamund, layer on layer, from the 2650 lien on the marches along the Cinder to the garrison wages she bought in 3009 "at four in ten, the same afternoon". She has never once had Article Nine cited back at her, and she has never had to explain to the Principals at Sevenhaven that the paper she bought carries a dead regiment's credit as well as a living company's debt.
+Cousin Pennamund knows what the roll is for, which is why he asked. Under [[The First Concord]]'s ninth article, read by nobody, "the debts of the dead pass to the land they died on": the clause [[Tollamund & Daughters]] has used for nine years to buy up the Ashenreach's dead at forty in the hundred. It cuts both ways. A regiment's seal is its signature; the holder of the 11th Foot's pensions seal, standing on the land the 11th died on, is the 11th for the purposes of the article, and the 11th is owed nine years of dead-pay for six hundred men by whoever holds the Regency's paper on the March. That is Tollamund, layer on layer, from the 2650 lien on the marches along the Cinder to the garrison wages she bought in 3009 "at four in ten, the same afternoon". She has never once had Article Nine cited back at her, and she has never had to explain to the Principals at Sevenhaven that the paper she bought carries a dead regiment's credit as well as a living company's debt.
 
-It is not a winning argument. The Treaty's page seven is the winning argument (CANON §5: the lamp is not collateral; the company is). It is a lever. A PC who lays the seal on the table in session 7, when the Grandmother is at the Keep gate with her lawyers and the Reeve, gets this: she goes still, for longer than usual, and then she says, very slowly, "Where ... did you get ... that," and one of the two lawyers leaves to send a letter, and the party has bought the company a day. Offer it in exchange for something concrete: the loan-chit's third line read aloud in front of the Reeve, a day's grace, Fennick's personal paper torn up, or Odile's unsealed charter put back in her hands. Tollamund will pay to make Article Nine go away quietly; she will not pay to be shown it in a court.
+It is not a winning argument. The Treaty's page seven is the winning argument: the lamp is not collateral; the company is. It is a lever. A PC who lays the seal on the table in session 7, when the Grandmother is at the Keep gate with her lawyers and the Reeve, gets this: she goes still, for longer than usual, and then she says, very slowly, "Where ... did you get ... that," and one of the two lawyers leaves to send a letter, and the party has bought the company a day. Offer it in exchange for something concrete: the loan-chit's third line read aloud in front of the Reeve, a day's grace, Fennick's personal paper torn up, or Odile's unsealed charter put back in her hands. Tollamund will pay to make Article Nine go away quietly; she will not pay to be shown it in a court.
 
 A Corvex auditor (Brother Audit on Temple Row, or a priest of Corvex in session 8's crowd at the lip) can confirm the reading in a day; it will make him very busy and very frightened. Ferrow does not know any of this; he wants a widow paid.
 

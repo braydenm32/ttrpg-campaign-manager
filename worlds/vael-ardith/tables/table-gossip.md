@@ -33,3 +33,7 @@ Use gossip to move clocks: Mutiny ticks up when the grumbling is loud; Debt tick
 - "Mother Hennet at the Candle lit the ninth lantern, and she'll tell you it was the soup that did it. She isn't joking."
 - "My bunkmate heard the Hanged Corporal say 'enough' in his sleep. In a very patient voice."
 - "Someone's been putting salt on the lantern cage. In a ring. I don't think it's a joke."
+- 2x "Quist's girl says the Rent was thirty in the survey, thirty-one on the day. Somebody measured wrong. Wasn't her."
+- 2x "Hurkul doesn't shoe for the Wheel Smiths' lot. Won't say why. One eye and a long memory."
+- "The Hock's halfling knows the whole street's debts by heart and writes them down on Coinday for somebody."
+- 2x "Ada Pennock's feeding the Ravelers free. Don't ask her why. She'll hit you with a ladle."

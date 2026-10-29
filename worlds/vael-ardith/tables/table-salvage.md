@@ -11,7 +11,7 @@ Roll when a PC browses the stalls, or when a Glasser tries to sell them somethin
 
 Most items are mundane or junk; a few are leads. The Lithic fragment ties to Vexa's writing; the shimmer-coin is a hook to the Weeping Orchard. Prices in silver unless stated.
 
-Keys. The shimmer-coins are Orchard sap, set in a coin-mould by Glassers. The rusted lantern is an iron copy from Corvel Rise, one of the poles in the Field of Lanterns; somebody has been stealing them. The crate of Concord coin stamped with a Regency die is a Quiet Office decoy: the die is too clean, and the coin is not from the Ninth's strongbox, which sits unopened in Fort Mercy.
+Keys. The shimmer-coins are Orchard sap, set in a coin-mould by Glassers. The rusted lantern is an iron copy from Corvel Rise, one of the poles in the Field of Lanterns; somebody has been stealing them. The crate of Concord coin stamped with a Regency die is a Quiet Office decoy: the die is too clean, and the coin is not from the Ninth's strongbox, which sits unopened in Fort Mercy. For what the town's own shops have on the shelf, [[What the Shop Has Today]].
 
 == Entries ==
 

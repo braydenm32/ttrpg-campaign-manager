@@ -31,7 +31,7 @@ On its back, in a tiny, neat hand: columns of numbers that look like tax tables.
 *Lamp to be taken under Levy default; escort at Ardmere.*
 *Assessor knows nothing.*
 
-A fifth line, found only by a second hour or a DC 18 check, mentions "the girl at the Ledger": Tesh, whom Mote went to look at on his first evening in town. Handout: h-mote-cipher.
+A fifth line, found only by a second hour or a DC 18 check, reads *The girl at the Ledger is the line. Bring her with the lamp.* It means Tesh, whom Mote went to look at on his first evening in town. Handout: [[The Clerk's Cipher]] (one row per attempt; Pell, shown the form, gets a row a day).
 
 Returning the form makes Pell an ally for life. He will stamp anything for them, once, in triplicate.
 :::

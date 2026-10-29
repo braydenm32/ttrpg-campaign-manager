@@ -32,6 +32,15 @@ relations:
   - to: pell-quillon
     kind: hides behind
     known: false
+  - to: npc-mirrit
+    kind: bought oil from
+    note: Twelve sealed Keel tins, as the clerk with a cold. She watched him take an impression of the moth stamp.
+  - to: npc-ottun-fray
+    kind: had printed by
+    note: The wanted bill, 13 Ashfall. Fray kept the copy-text in Mote's hand.
+  - to: npc-wendel-hoop
+    kind: bought a cask from
+    note: The tenth crate went up the stair inside it.
 ---
 
 ### Look and voice
@@ -61,10 +70,11 @@ Mildly, helpfully, invisibly. He is the clerk who finds the form they need. He r
 - He pays [[Garrick Sallow]] in new Regency silver, struck at the Caer Ardith mint, to brew the mutiny.
 - He buys sealed Keel oil tins at [[Hesk's Chandlery]] through "a clerk with a cold", cuts them with lake-ash from [[Stillwater]], given gladly by [[The Dreaming Widow]], and reseals them with Hesk's own grey wax. The ash chokes the flame without killing it. Sallow paid [[Dannic Rook]] to swap the tins in the lantern store.
 - On the night of 7 Ashfall, when Rook tried to back out and ran with a clean tin and a cut one, Mote caught him at [[The Ford]] and held him under the third pier. The body wouldn't stay down. Nan Crupp saw a scarfed man and a splash from her hut door.
-- He wrote the wanted poster himself ([[Wanted: Dannic Rook]], dated the 13th, signed "A.M."), with an invented sighting on the 12th, so the company would hunt a living deserter and nobody would look for a body. He had it set at Ottun Fray's on Temple Row; Pruitt paid the printer. He never saw Rook alive, which is why the description is guesswork: wrong age, wrong ear, wrong accent.
+- He wrote the wanted poster himself ([[Wanted: Dannic Rook]], dated the 13th, signed "A.M."), with an invented sighting on the 12th, so the company would hunt a living deserter and nobody would look for a body. He had it set at [[Ottun Fray]]'s on Temple Row; Pruitt paid the printer. He never saw Rook alive, which is why the description is guesswork: wrong age, wrong ear, wrong accent.
 - He keeps a black second ledger, which [[Nib]] has seen, with the payments to Sallow and the key to his cipher. His cipher is on the back of Form 9-K; a fifth line mentions "the girl at the Ledger" ([[Tesh]]).
 - Sallow holds a Quiet Office copy of the second cage key; Mote holds a copy of the third. Neither fits the first lock, so even together they cannot open the cage without the lamp-keeper's key. Sallow does not know Mote drowned Rook.
 - He keeps a Quiet Office file on the orc Mothers' lineages. If he learns who [[Varra Nine-Knuckles]]'s grandmother is, he will move on her.
+- The Sunburst's register at [[Whitepost]] records him on 14 Reaping: nine crates and a tenth he would not let the porters touch, carried up three flights and down again before dawn. He asked Kettle whether anything "from the Paymaster in Fallowden" ever came through the post-stair; she said no. His jars of blotting-sand are collected on Coinday dusks by Nib at [[Bellwether]] (see [[Goodwife Marn Tolliver]]).
 
 He is patient, methodical and completely without malice. He likes Pell, genuinely, and will kill him if ordered.
 :::

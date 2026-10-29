@@ -9,7 +9,7 @@ Roll or choose when the Ember is full and a PC, a Hollowborn or a soldier sleeps
 
 == GM notes ==
 
-Ordered from mild (top) to severe (bottom). Choose from the top on the first red moon, the middle by session 4, the bottom by session 7. If the Sleeper's clock is high, add one line per dreamer: "And someone was speaking to me, and I answered." Repeated dreams are the point; let the PCs compare.
+Ordered from mild (top) to severe (bottom). Choose from the top on the first red moon, the middle by session 4, the bottom by session 7. If the Sleeper's clock is high, add one line per dreamer: "And someone was speaking to me, and I answered." Repeated dreams are the point; let the PCs compare. A sleeper wearing [[A Dreamless Charm]] does not roll.
 
 == Entries ==
 

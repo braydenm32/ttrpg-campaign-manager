@@ -24,7 +24,7 @@ One year to the day after the battle, the signatories met to renew the garrison 
 **How it is told now.** In the company, as a point of pride: *they bet against us and we're still here*. In the Regency's files, as an administrative oversight.
 
 :::gm
-Spoons's first pool recorded one oddity: a bettor who put a large wager on "never". She was a Raveler woman called Keld, Mother Corvane's sister and the Court's first watcher of the lantern, and she vanished the next day. The wager has never been collected, and sits in Spoons's strongbox, growing.
+Spoons's first pool recorded one oddity: a bettor who put a large wager on "never". She was a Raveler woman called [[Keld Owes-Nothing|Keld]], Mother Corvane's sister and the Court's first watcher of the lantern, and she vanished the next day. The wager has never been collected, and sits in Spoons's strongbox, growing. The quest is [[The Wager on Never]].
 :::
 
 == GM notes ==

@@ -67,6 +67,8 @@ As patients. She takes one look at them and prescribes. A Hollowborn PC gets the
 The knots work by dulling the true dream, which is why the Widow calls them blinding, and why Nell's son, who never had the true dream, now has nothing else. She knows this and sells them anyway, because the soldiers who buy them sleep for the first time in nine years.
 
 If Tick comes to her, she will offer him a knot. If he takes one, he sleeps, and the shared dream of session 3 misses him.
+
+The ribbons are cut from the dead tree on Temple Row, a cutting of the Orchard's, which is why the knots hold at all.
 :::
 
 == GM notes ==

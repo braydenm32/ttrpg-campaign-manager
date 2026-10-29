@@ -27,7 +27,6 @@ relations:
   - to: dreaming-widow
     kind: lends the dream-book to
     note: Does not approve. Lends it anyway.
-    known: true
 ---
 
 ### Look and voice

@@ -6,7 +6,7 @@ tags: [ handout ]
 fields:
   Format: "A single sheet of grey hide-paper, folded in three and sealed with a clenched fist in iron-red wax; the hand is not Grashka's. A second line, at the foot, is."
 gmFields:
-  Show in: Session 7, scene 5, in the middle of everything
+  Show in: Session 7, scene 6, in the middle of everything
 ---
 
 *(Grey hide-paper, the Mothers' iron-red seal: a clenched fist holding a broken chain. The hand is a sapper's, square and careful. It is addressed to the Captain of the Ninth Lantern, at the Lantern Keep, and under that, smaller: "and to the exile with nine knuckles, if she is standing".)*
@@ -38,7 +38,7 @@ Nobody but you will know that line is there unless you show them. The hand is yo
 :::
 
 :::gm
-**When to show it.** Session 7, scene 5, while Tollamund is at the gate or Mote's knives are in the yard. A Fist of the Iron brings it: an orc officer with a short message and no expression, who stays.
+**When to show it.** Session 7, scene 6, on the 6th, while the Saint's wardens are at the gate or Sallow's people are breaking out in the yard. A Fist of the Iron brings it: an orc officer with a short message and no expression, who stays.
 
 **What it reveals.** The Mothers have known where Varra is since spring, through [[Skarra]]'s letters to [[Mother Hesha]]. The first line depends on whether Varra wrote home: "sending what I can" means the Rust Choir, Varra's mother's company, can be hired for the Rent (forty orc pikes in session 8, if Varra pays the price, which is her oath to the Iron again or something harder); "coming to see" means Grashka herself may arrive at the Rent with a company at her back, which is the big finale if the GM wants it. The paragraph about the writ is a weapon against Tollamund: the Mothers' licence makes the company's word a Treaty matter, not the Concord's property.
 

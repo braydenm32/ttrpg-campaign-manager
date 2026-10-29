@@ -30,6 +30,11 @@ relations:
   - to: tick
     kind: grew up with
     known: true
+  - to: npc-ada-pennock
+    kind: is fed free by
+    known: true
+  - to: q-bakers-hoard
+    kind: is needed by
 ---
 
 ### Who he is
@@ -78,6 +83,7 @@ You have written all seven in your own notebook. You have not written them in th
 - The Rook-Court's ledger, read together, spells out the same words. [[Mother Corvane]] has already guessed, and hasn't told Quorl, just as he hasn't told her. When old [[Halloran Pike]] sits up at his own funeral ([[The Funeral That Would Not End]], session 5), his last words make it eight, said aloud in front of Corvane. In **Last Words** (session 5), putting Quorl's notebook beside the ledger confirms the message.
 - "Don't let them put it out" is the dead warning him, among others, about Mother Corvane: she believes that putting the lamp out would open Hathe's doors and let the dead rest. She is wrong, and sincere.
 - Quorl's prayers are answered, and Hathe is dead. The truth, if you want it: Hathe's dying power went into Ilyra, so prayers to Hathe now reach her, and she has been answering them. She knows Quorl's name. In session 4 [[Sister Seraphine]] can greet him by it, and know what he last prayed for.
+- [[Ambercote]]'s roll of two hundred and twelve, dictated by [[Cass Marrowick]], is a day's work and the largest single entry the Court's ledger has taken since the battle ([[The Standing Village]]).
 :::
 
 == GM notes ==

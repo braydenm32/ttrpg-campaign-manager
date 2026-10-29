@@ -28,6 +28,14 @@ relations:
     kind: relies on
     note: She does the sums.
     known: true
+  - to: npc-lusk-pardew
+    kind: trained under
+    note: "His first posting, 2997: the second desk at Whitepost. Pardew wrote the reference."
+    known: true
+  - to: npc-wendel-hoop
+    kind: tenant of
+    note: Paid a month of the Regency's rent out of his own purse.
+    known: true
 ---
 
 ### Look and voice
@@ -48,7 +56,7 @@ The notice itself is the Tax Notice, in Triplicate. The company can dispute it o
 To complete his forms. All of them. Correctly. He is the only honest Regency man in the [[The Ashenreach|Ashenreach]], and he does not know it, because it hasn't occurred to him that the others aren't.
 
 ### What he knows
-The Regency's tax law, in detail. The Regency's own absurd ledger of "wages intended", on which the Hearth Levy is assessed, and which he cannot explain either. That his clerk, [[Ansel Mote]], is a treasure, and that [[Hester Pruitt|Widow Pruitt]], who does the sums, is a terror.
+The Regency's tax law, in detail. The Regency's own absurd ledger of "wages intended", on which the Hearth Levy is assessed, and which he cannot explain either. That his clerk, [[Ansel Mote]], is a treasure, and that [[Hester Pruitt|Widow Pruitt]], who does the sums, is a terror. That [[Lusk Pardew|Examiner Pardew]], who trained him at Whitepost, has never once been wrong about a cart.
 
 ### How he treats the PCs
 With nervous courtesy, then growing horror as he realises the Regency owes the company far more than the company owes the Regency. He is easily bullied and impossible to bribe (he would have to log it). Treat him kindly and he will fight for them in the only way he knows: on paper.
@@ -69,5 +77,5 @@ With nervous courtesy, then growing horror as he realises the Regency owes the c
 2. Arrives; assesses everything, including the lantern (one lamp, nine years, continuously, at a silver a night). Delivers the notice; total 3,882 silver, due in thirty days.
 3. Terrified of the dreamers; hides under his desk with a candle and fills in an Incident Report.
 4–5. Finds the "Account Deferred" entry. Files his Claim of Arrears. Asks the PCs to carry a copy to safety, "should anything happen to the office". Something will.
-7. Mote tries to burn the office and Pell with it. If the PCs save him, his forms are the proof that sinks [[Marius Vell]]'s plan in the March.
-8. Whatever happens, he records it. "Someone has to."
+7. Mote tries to burn the office and Pell with it. If the PCs save him, his forms are the proof that sinks [[Marius Vell]]'s plan in the March. Pardew's cedar box of sealed orders (141, including the Office of Charters' standing instruction to pass Tollamund's crates unexamined) would reach him if he asked in his own hand: see [[Examiner Lusk Pardew]].
+8. Whatever happens, he records it. "Someone has to." Post-campaign, he is the one man in Cinderford who can tell a pardon form from a Form of the Records ([[Who is on the Crownfast pardon list?]]).

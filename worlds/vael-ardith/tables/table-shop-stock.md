@@ -5,7 +5,7 @@ summary: "Twenty oddities any Cinderford shop might have on the shelf today, wit
 tags: [ random, shopping ]
 ---
 
-Roll when a PC asks "what else have you got?" in any shop on Ford Street, Temple Row or the Smokes, or when a keeper needs a thing on the counter to talk about. These are not the Glassers' salvage ([[Gutter Market Salvage]] has that); they are what nine years of a town on the edge of the ash has left on its own shelves. Prices are the asking price; a story knocks a quarter off.
+Roll when a PC asks "what else have you got?" in any shop on Ford Street, Temple Row or the Smokes, or when a keeper needs a thing on the counter to talk about. These are not the Glassers' salvage ([[Gutter Market Salvage]] has that); they are what nine years of a town on the edge of the ash has left on its own shelves. Prices are the asking price; a story knocks a quarter off. For the real prices on Ford Street, see [[What Things Cost in the Ashenreach]].
 
 == GM notes ==
 
@@ -16,7 +16,7 @@ Half of these are texture and half are leads. The badge, the Keel tin, the dream
 - An unredeemed badge of the Seventh, the Ruddy Hundred, brass, the hundred-mark worn smooth. 5 silver, "and Mother Hennet will want to know who sold it".
 - A blank Form 44-A, Declaration of Non-Receipt of Imperial Funds, slightly foxed. 3 copper. Nobody has filled one in and the shopkeeper does not know what it is for.
 - A jar of Stillwater blind-fish, dried, heads off. 2 copper. The keeper will not say who took the heads off, or where they went.
-- A stone pear with a bite out of it. Not for sale. The keeper does not know whose teeth.
+- A stone pear with a bite out of it. Not for sale. Everybody says nobody has ever bitten one, and the keeper does not know whose teeth.
 - A dark-lantern rusted open, the shutter seized. 4 silver. It was found with the shutter open and has stayed that way.
 - A coat re-dyed from Greywake's Spears' colours, badly: the grey shows through at the seams. 2 silver. From the Turncoat, three doors down, originally.
 - A framed Ardmere Receipt, No. 0088, thirty-one crowns. 1 copper, frame included. "Face value's on the paper."

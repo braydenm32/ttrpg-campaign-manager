@@ -2,7 +2,7 @@
 type: event
 name: The Drowning of Stillwater
 players: true
-summary: A farming village on a grey lake went under in a night. Its Hollowborn survivors built a new one on the shore.
+summary: A farming village on a grey lake went under in a night. Its survivors, most of them Hollowborn children, joined the shore settlement that Smokes families had begun.
 parent: stillwater
 tags: [ hollowborn, stillwater ]
 age: ashen

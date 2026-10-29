@@ -21,6 +21,9 @@ Orcs were made. In 2104 AW the imperial magi bred a soldier caste from hill-clan
 
 What the humans did not breed, and did not notice, was the Mothers. Orc women bear few children and bear them late, and the oldest women became the keepers of lineage, contract and law while the men were away dying; by the time the empire noticed, the Mothers decided everything. They still do. [[The Mothers of the Iron]] license every orc mercenary company, set its terms, and exile any orc who breaks a contract, and an exiled orc has no company, no kin and no god that will admit to her. Orcs do not have a nation. They have contracts, and the contracts are holy.
 
+### Customs and superstitions
+A contract is holy and a Mother's seal is a prayer. "Mother hear it" is the oath that cannot be taken back; "knuckle it" means give up, from the rings of knuckle-bones the Mothers wear, which are made of what their soldiers lost. The Ember is the Sergeant: it watches, and if you shirk it writes your name down, and an orc on night watch under a full Ember stands straighter than under an officer. Every orc sergeant dreams of a bakery and will tell you so, and it is not a joke, and you should not laugh. Scars are kept; a healed wound is a line on the ledger. An exiled orc is not named at a Mother's table, and the empty place is not filled.
+
 ### Names
 Given names hard in the mouth, with an epithet earned or a Mother's line-name. Dreska Ironmouth, Oruk Thane, Hesha Three-Scars, Kazrim Vosk, Tarnak Shieldbreak, Ghorra Half-Tooth, Ushka Mell, Morrak Lame-Hand, Zhurra Saltwell, Brakka Coldhand. A Mother is called Mother and her line: Mother Vosk. [[Varra Nine-Knuckles]] earned hers at twelve.
 

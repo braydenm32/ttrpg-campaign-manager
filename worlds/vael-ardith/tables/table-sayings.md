@@ -21,7 +21,7 @@ Give each NPC one and let them wear it out. Vosk gets the soldiers' ones, Hennet
 - "It's not a bridge, it's a barge." Cinderford, of the toll bridge and anything else that looks fixed and charges you every time you use it. The Reeve's son has heard it.
 - "Ketterin's luck." Soldiers: a small kindness that costs the giver everything. From the first Lithic who walked to the Ninth Stone and stood. The gatehouse dwarves say it reverently; everyone else says it to someone who has just bought a round they cannot afford.
 - "I'll take it in Ardmere Receipts." Any camp on the continent: I do not believe a word of it. Fennick says it to the Regency's pay notices, every quarter, aloud.
-- "Dask's rule." The Ninth, of a refusal: I am not doing that, and we both know why. Dask is the company's name for the Hanged Corporal. Said with a grin, to see if the sergeant objects. He has not, yet.
+- "Dask's rule." The Ninth, of a refusal: I am not doing that, and we both know why. Dask is the name the company gave the Hanged Corporal when the clerks blotted his own. Said with a grin, to see if the sergeant objects. He has not, yet.
 - "At least they stand up for their taxes." Cinderford, since the drowned started walking: said of anyone who finally gets to their feet, and of the Assessor, and of the dead, who have been seen in the ford on the days the Regency's post-rider comes.
 - "Corporal, I'm not doing it." Soldiers, everywhere. The prayer. Also the chorus of the song. Also, lately, an answer.
 - "I heard you the first time." The Corporal's second line, from the story. Means: ask again and see what happens.
@@ -36,7 +36,7 @@ Give each NPC one and let them wear it out. Vosk gets the soldiers' ones, Hennet
 - "Count the stakes." Anyone who has walked the Ash Road: make sure of your way home before you go further. Also: check your change. Also, of a liar: his stakes don't count the same twice.
 - "Evening, four-and-six." Mother Hennet's greeting, by tab total, now a general greeting in Cinderford meaning: I know exactly what you owe and I am being civil about it.
 - "What hums, don't." Gutter Market's rule, and everyone's: leave the dangerous thing alone. Tam Sixfingers says it to children, soldiers and Shellbacks in the same voice.
-- "The soup did it." The Candle: an unlikely cause offered with a straight face. From Hennet's account of how the ninth lantern was lit, which nobody believes and which is true.
+- "The soup did it." The Candle: an unlikely cause offered with a straight face. From Hennet's account of how the ninth lantern was lit, which nobody believes and Hennet has never taken back.
 - "Nine of something." Cinderford: a thing has gone uncanny. Ninth company, ninth ward, ninth stone, ninth year. If somebody counts nine of anything in the Smokes, the room goes quiet.
 - "Red-moon reasons." Excuses. "Why were you late?" "Red-moon reasons." Accepted three nights either side of a full Ember and not otherwise.
 - "A never." Spoons's book: a bet that cannot be paid out whatever happens. From a wager placed in 3003 that is still in his strongbox. Said of any promise with no date on it: the Regency's arrears are "a never".

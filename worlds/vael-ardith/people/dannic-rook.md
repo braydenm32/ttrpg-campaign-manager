@@ -35,6 +35,12 @@ relations:
     known: true
   - to: glass-barrow
     kind: hid the oil in
+  - to: npc-mother-hennet
+    kind: paid his tab to
+    note: In full, on 5 Ashfall, two days before he ran.
+    known: true
+  - to: npc-skelt
+    kind: was guided by
 ---
 
 ### Who he was

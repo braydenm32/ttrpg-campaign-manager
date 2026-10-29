@@ -28,6 +28,9 @@ relations:
   - to: god-saint
     kind: is becoming
     known: true
+  - to: npc-dovan-ilm
+    kind: the brother of her lover is
+    note: "Dovan Ilm. The one letter that has come out of the lattice went to him."
 ---
 
 ### Look and voice
@@ -58,6 +61,8 @@ What the faithful tell her, which is everything they think she wants to hear. Th
 Her church wants the Ninth Ward's crack to open fully, so that she can drink the leak and become a full god. She would call it mercy. She may even be right that she'd be a kinder god than most. She would also be a god who ate two others to get there.
 
 She wants the PCs: they are close to the flame, and the flame trusts them.
+
+Her mother, her sister and her lover Tamas Ilm have lived behind the Lamp Court's lattice since 1 Highsun 3007. One letter has come out, in 3009, to Tamas's brother [[Dovan Ilm]]: "She is not hungry yet."
 :::
 
 == GM notes ==

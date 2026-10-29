@@ -23,7 +23,7 @@ The chorus:
 > *Corporal, I'm not doing it,*
 > *and the rope's no worse than the war.*
 
-The verses change by the night. Ten of them, in the order the Candle has been singing them this autumn:
+The verses change by the night, and new ones turn up. Five of them, as the Candle has been singing them this autumn:
 
 > *They gave him a torch and a village to light,*
 > *eleven old women and forty small fry;*
@@ -40,16 +40,6 @@ The verses change by the night. Ten of them, in the order the Candle has been si
 > *so here's to the wages that never were lent,*
 > *and here's what the Corporal said:*
 
-> *A man came up out of the ford on his own,*
-> *a week in the water and cold to the bone;*
-> *he'd not pay his tab and he'd not lie alone,*
-> *so the Candle sang over him:*
-
-> *The Assessor came riding, he came on a mule,*
-> *with a form for the living, a form for the fool,*
-> *a form for the dead and a form for the rule,*
-> *and we signed the whole lot of them:*
-
 > *The Sergeant's up red and he's writing you down,*
 > *the dogs are all howling from here to the town,*
 > *the dreamers are out and the lamp's burning brown,*
@@ -59,21 +49,6 @@ The verses change by the night. Ten of them, in the order the Candle has been si
 > *she'll heal up your fever and dry out your camp,*
 > *she'll ask for your light and she'll ask for your stamp,*
 > *and the kindest of answers is:*
-
-> *Old men die in cots and they sit up to say*
-> *the thing they'd have said if they'd said it that day;*
-> *so take back the coin and we'll let the man stay,*
-> *and we'll sing the long verse for him:*
-
-> *The road to the Stone is a rope and a stair,*
-> *the dead sing you down and the dead meet you there,*
-> *the Warden's a statue, the statue's in prayer,*
-> *and the prayer that he's saying is:*
-
-> *The Grandmother's come in her chair to the gate*
-> *with lawyers and ledgers and nine years of weight;*
-> *she's bought all the debt and she's bought all the plate,*
-> *but there's one thing she'll not buy, and that's:*
 
 The **long verse** is the chorus with a line on the end, sung only at funerals, and the whole room comes in on it: *and neither was he.* The Ravelers consider it a hymn and have asked for it twice.
 
@@ -163,6 +138,41 @@ A Hollowborn children's rhyme from the Smokes, for counting out at games and for
 Not a song. One note, low, hummed, held as long as the breath lasts: the sound of the bell under the lake at [[Stillwater]], which the drowned village's children brought back to the shore with them. Stillwater folk hum it when they want a conversation to stop, and it does. Mardle Ock at Fort Mercy hums three notes, not one, and his are not these.
 
 :::gm
+**New verses, as the campaign goes.** Hennet's rule is that the Candle sings what happened. Add one after each beat; it is canon in the Candle by the next session. After session 1 (the drowned man):
+
+> *A man came up out of the ford on his own,*
+> *a week in the water and cold to the bone;*
+> *he'd not pay his tab and he'd not lie alone,*
+> *so the Candle sang over him:*
+
+After session 2 (Pell Quillon and the tax notice):
+
+> *The Assessor came riding, he came on a mule,*
+> *with a form for the living, a form for the fool,*
+> *a form for the dead and a form for the rule,*
+> *and we signed the whole lot of them:*
+
+After session 5 (Pike's funeral; the long verse is sung that day):
+
+> *Old men die in cots and they sit up to say*
+> *the thing they'd have said if they'd said it that day;*
+> *so take back the coin and we'll let the man stay,*
+> *and we'll sing the long verse for him:*
+
+After session 6 (the Ninth Stone):
+
+> *The road to the Stone is a rope and a stair,*
+> *the dead sing you down and the dead meet you there,*
+> *the Warden's a statue, the statue's in prayer,*
+> *and the prayer that he's saying is:*
+
+After session 7 (Tollamund at the gate):
+
+> *The Grandmother's come in her chair to the gate*
+> *with lawyers and ledgers and nine years of weight;*
+> *she's bought all the debt and she's bought all the plate,*
+> *but there's one thing she'll not buy, and that's:*
+
 **The tenth verse.** The Lithic have a tomb-song for the Nine that counts ten and calls the last *the one who stayed soft* ([[The Stone Marriage]]). It is sung at a Standing, once, by whoever is left, and [[Warden Uthrem]] knows it and has nobody left to sing it for him. If a PC sings it at the Stone, slowly, he answers the tenth line, and what he says is the GM's to decide: that the tenth child is under the stair, or is the Sleeper's keeper, or is the reason he will not name the cold voice. Do not resolve it in this campaign.
 
 **The fortieth verse** of the Corporal's Song exists and nobody sings it, because the words are "when the lantern goes out". Vosk knows it. At the Reseal ending, on the road home, he sings it once, flat, and the company comes in on the chorus, and that is the company standing down:

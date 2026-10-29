@@ -26,6 +26,11 @@ relations:
     kind: works for
     note: The Reeve's family owns two of the vats.
     known: true
+  - to: npc-marn-tolliver
+    kind: pays a copper a jar to
+    note: "For holding the Stillwater jars in her goat-shed."
+  - to: npc-nell-harrow
+    kind: holds her secret over
 ---
 
 Huge, soft-spoken and kind, with tannery-brown arms, a shaved head and red-rimmed eyes ringed in shadow. Ambry Coyle runs the biggest tannery in [[The Smokes]], and the men and women under him say he's the fairest foreman in town. He has the lapels of his coat stuck full of pins, which he presses into his palm, gently, when his eyes start to close.

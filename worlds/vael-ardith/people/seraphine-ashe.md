@@ -45,7 +45,7 @@ She touches people when she speaks to them, a hand on the arm, a palm on the che
 ### Who she is
 Sister Seraphine Ashe is the envoy of [[The Church of the Unburnt Saint]] to the March of Cinders, and mistress of [[The House of Unburnt Light]], the mission outside town where the hungry are fed, the sick are tended, the lonely are comforted, and everyone is warm. It is a little too comfortable. People go for a bowl of soup and stay for a week.
 
-She was born in [[Qerath]] by the Glass Sea, walked the coals at [[Halcyra]] at sixteen, and was chosen to come west by [[Ilyra of Halcyra]] herself, who touched her face and said, "You'll do." She left Halcyra on foot, under a vow; the mission's goods came after her by cart, and its cut stone by mule.
+She was born in [[Qerath]] by the Glass Sea, walked the coals at [[Halcyra]] at sixteen, and was chosen to come west by [[Ilyra of Halcyra]] herself, who touched her face and said, "You'll do." She left Halcyra on foot, under a vow; the mission's goods came after her by cart, and its cut stone by mule. She bought her white clay lamp for the road at [[The Lamp at the Foot]], heard the lamp-seller's story through to the end, and said "I know".
 
 ### What she wants
 The town, for the Saint. The flame, for the Saint, "to keep it safe". And the people around the flame, especially the ones it seems to trust.

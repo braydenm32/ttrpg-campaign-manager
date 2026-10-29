@@ -29,6 +29,22 @@ relations:
   - to: f-barge-clans
     kind: born into
     known: true
+  - to: npc-aurelio-bask
+    kind: buys boots from
+    known: true
+  - to: npc-ada-pennock
+    kind: owes nine days of bread to
+    known: true
+  - to: q-bakers-hoard
+    kind: has an interest in
+  - to: npc-marn-tolliver
+    kind: buys goats from
+    note: Forty goats a quarter, on account.
+    known: true
+  - to: npc-mother-hennet
+    kind: quarrels with
+    note: About rations, every time he comes in.
+    known: true
 ---
 
 ### Look and voice
@@ -58,6 +74,10 @@ Fussy, friendly and transactional. He will find them gear if they find him somet
 He noticed the captain's savings going into the wages by arithmetic, and hid it in the books. He has also noticed that every Coinday a small anonymous credit from "a friend of the company" turns up in the accounts, and has decided not to ask.
 
 **The red herring.** Last month Fennick sold four casks of the company's good lantern oil to Kettle to buy bread, and wrote them up as burned: twelve casks bought, twelve burned, says the ledger, when eight were really burned. When the lantern gutters he will be certain it's his fault, and he will act exactly like a guilty man. It isn't his fault. The oil he sold was good; the poisoned oil came from [[Garrick Sallow]] and [[Dannic Rook]]. He is the obvious suspect, and the wrong one.
+
+**The other book.** Hennet's slate-book and Fennick's ledger disagree for four quarters, Ashfall 3010 to Highsun 3011: he wrote the Captain's own coin in as "advance on the line" so nobody would feel like charity. Read side by side, the two books give away Marrow's savings, which is why Fennick begs the party not to show Hennet's book to the company ([[The Price Was an Arm]]). [[Wendel Hoop]]'s boy pushed the four "empties" to the Low Quay for him one night in Reaping, and said they were the heaviest empties he ever pushed.
+
+**The pay order.** The pay order of 3009 was addressed to him: a private warning from Paymaster Corin Blythe of Fallowden, lost in the post-stair in Thawmere 3009. He never received it. He has gone through the post-books four times, and he is not pleased to learn it went missing at his cousin Kettle's quay ([[The Lost Pay Order]]). Cobb Latchwater's cord at [[The Thirteenth Barrel]] has a red knot for his four casks.
 :::
 
 == GM notes ==

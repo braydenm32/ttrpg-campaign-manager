@@ -22,9 +22,12 @@ relations:
   - to: ilyra
     kind: fears
     note: Since he saw her look out of Seraphine's eyes.
+  - to: npc-mother-casimira
+    kind: trained under
+    known: true
 ---
 
-Nineteen, slight, olive-skinned, with soft dark eyes and both hands wrapped in linen to the wrist. Iosune walked the coals at [[Halcyra]] like every acolyte, and unlike the chosen, he burned. The scars shame him. He serves soup at the [[The House of Unburnt Light|House]], washes the feet of pilgrims and is gentle with everyone, and he looks at [[Sister Seraphine]] the way a dog looks at a butcher's door.
+Nineteen, slight, olive-skinned, with soft dark eyes and both hands wrapped in linen to the wrist. Iosune walked the coals at [[Halcyra]] like every acolyte, having served his first year in the Lower Mercy House under [[Mother Casimira]], who wrote *worthy* on his roll; and unlike the chosen, he burned. The scars shame him. He serves soup at the [[The House of Unburnt Light|House]], washes the feet of pilgrims and is gentle with everyone, and he looks at [[Sister Seraphine]] the way a dog looks at a butcher's door.
 
 > "She says the burning was a gift. That I'll understand it later. I'm sure she's right. She's always right."
 

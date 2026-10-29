@@ -20,7 +20,7 @@ gmFields:
 relations:
   - to: npc-mother-hennet
     kind: drinks free at the bar of
-    note: Nine years. Neither of them has said why.
+    note: Seven years. Neither of them has said why.
     known: true
   - to: npc-dunny-pike
     kind: taught the bell codes to
@@ -35,6 +35,9 @@ relations:
   - to: mother-corvane
     kind: buried by
     note: 25 Ashfall, at Corvel Rise. He sits up.
+  - to: npc-aurelio-bask
+    kind: was recognised by
+    note: Bask hid in the Weeping Orchard on the night of Cinders and knew the man behind the glowing pot when he signed on in 3004. He has never said.
 ---
 
 ### Look and voice
@@ -53,7 +56,7 @@ He touches the lantern cage three times when he passes under it, and the soldier
 To die in his cot with nobody owing him anything, and to tell the real story once, to the right person, and only once.
 
 ### What he knows
-What the ash plains were like the first winter, before the Ash Road was staked. Every verse of the Corporal's song, including the three that were cut. Which of the Candle's stories about the night of Cinders are wrong and exactly how. Something about the Rent that makes him stop talking when the Glassers come in.
+What the ash plains were like the first winter, before the Ash Road was staked. Every verse of the Corporal's song, including the three that were cut ([[Songs of the March]]). Which of the Candle's stories about the night of Cinders are wrong and exactly how. Something about the Rent that makes him stop talking when the Glassers come in.
 
 ### How he treats the PCs
 As an audience. He tells them the lantern legend their first night, wrong in one place, and watches to see who corrects him; whoever does gets the corner of the hearth next to him and a different wrong version every night after. He is kind to Ysse and will not look at the lantern when she is near it. He calls Borrin "the other one who came back".

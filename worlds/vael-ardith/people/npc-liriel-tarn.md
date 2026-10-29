@@ -2,7 +2,7 @@
 type: npc
 name: Liriel Tarn
 players: true
-summary: "Keeper of the Unlettered at Ilmareth, warden of the Wild with the antler on her sole and almost no other ink at four hundred; Merane Tarn's mother, who wants her daughter home before Aelith Sorn uses her."
+summary: "Keeper of the Unlettered at Ilmareth, warden of the Wild with the antler on her sole and almost no other ink at four hundred; Merane Tarn's mother, who wants her daughter home from the east."
 parent: the-unlettered
 aliases: [ Warden Tarn ]
 tags: [ npc, elf, sael, orvanne, far-away ]
@@ -35,6 +35,10 @@ relations:
   - to: the-unlettered
     kind: keeps
     known: true
+  - to: npc-caelo-once-mar
+    kind: refused the needle of
+    note: Told him on 9 Greenreach 3005 she would not sit for ink again while the gates were closed.
+    known: true
 ---
 
 ### Look and voice
@@ -46,15 +50,15 @@ She says little, and when she speaks it is low and plain and has the forest's gr
 
 > "The wood's been thirsty since before I was born. You don't need ink to feel that. You need feet."
 
-> "She went east with that woman and a box lined with lead. I've hunted. I know what you line a box with lead for."
+> "She went east with that woman, and her letters got smaller. I have hunted. I know what a quiet animal is afraid of."
 
 ### Who she is
 Liriel Tarn is a warden of the Wild, one of [[Orvanne]]'s barefoot priests who go under the trees alone and tattoo his antler on the sole so that every step is a prayer, and she has kept [[The Unlettered]], the hollow-beech hall below the Archive of Skins at [[Ilmareth]], for a hundred and twenty years, because somebody who did not want to be read had to pour for the ones who did. She is the oldest elf in Sael with a bare arm. She had ink once, a sleeve of eighty years, and it faded with the century it recorded and she did not have it read or renewed; and on 9 Greenreach 3005, the day the Circle shut the Saelwood and gave no reason, she went to the Inkwright's, had her daughter's name re-cut, and told Caelo once-Mar she would not sit for a needle again as long as the gates were closed. They are still closed. She has kept her word with a thorn.
 
-Her daughter is [[Merane Tarn]], seventy, freckled, anxious, with three exam tattoos on one wrist, who went east to the ash country as apprentice to the Remembrancer [[Aelith Sorn]] in the spring and writes home every month in a hand that gets smaller.
+Her daughter is [[Merane Tarn]], seventy, freckled, anxious, with three exam tattoos on one wrist, who was apprenticed to the Remembrancer [[Aelith Sorn]] and went east with her to the ash country last spring, and writes home every month in a hand that gets smaller.
 
 ### What she wants
-Merane home. Not later: now, before the thing Aelith Sorn went east to do is done, with Merane carrying the satchels. Liriel does not know what the thing is. She knows what a lead-lined case is for, and she knows Aelith's face, which she has watched across the hall for three hundred years and has never once seen want anything, and she knows that is not what faces do.
+Merane home. Not later: now, before whatever Aelith Sorn went east to do is done, with Merane carrying the satchels. Liriel does not know what that is. She knows Aelith's face, which she has watched across the hall for three hundred years and has never once seen want anything, and she knows that is not what faces do.
 
 Under that: for the forest to stop being thirsty, which she has felt through her feet all her life and has never had a name for, and for the Circle to say why it shut the gates, which it never will.
 
@@ -65,6 +69,8 @@ The Saelwood, every ford and path, and that since 3005 the paths end and the for
 As outsiders in a closed wood, which means with a bow in reach until she has decided; then, if they are from the March and know her daughter's name, as the first people in half a year who can tell her whether Merane is eating. She will trade green wine, a ledge and a route out through the wardens' paths (which the Circle does not know about and the Concord would pay a fortune for) for news of Merane, and more for Merane herself. She does not lie, and she does not forgive the way elves forgive, kindly, at a century's distance. She forgives the way the Wild does, which is not at all.
 
 :::gm
+**The case.** The Unlettered pour for the clerks who copy the Archive's stores lists, and Liriel has read the Circle's requisition for a cutting table, salt and a lead-lined case with Aelith's name on the chit. She knows what such a case is for: skins are carried in them. She does not know whose skin, and has not let herself guess.
+
 **Secret.** Liriel knows where the Fourth Ward is. Not as a scholar: as a warden, who has walked the Saelwood barefoot for four centuries and felt, through the antler on her sole, the one place in the forest where the ground is *drinking*. The Rooted Stone, grown through by the Old Tree the elves have no record of planting, stands at the heart of the wood, and the wardens forbid fire within a mile of it, and Liriel is the one who enforces that, and has killed to. She has never been told why. She has worked it out: the tree is a dressing on a wound, the wound is the thing the Circle burned the memory of, and the forest is dying from the roots because the wound was never closed ([[The Nine Great Wards]], the Fourth). She would give a great deal to know how a ward is resealed. If the party has done it, or seen it done (session 8), she will ask, in her hall, with the Readers sent upstairs, and that is the beginning of the Fourth Ward's campaign.
 
 **Merane.** If Merane warns the party before Aelith moves on Sorrel in session 7, as her page allows, and then has to decide whether to go home to Sael at all, this is who she would be going home to, and the party can carry a letter either way. If Merane comes home, Liriel has the Unlettered sing the song for her, and Caelo re-inks the three exam lines for nothing, and the Circle takes no notice, because nobody writes anything down in the beech.

@@ -2,7 +2,7 @@
 number: 8
 title: The Lantern Gutters
 worldDate: 9 Leafrot 3011
-pages: [ warden-uthrem, ysse, borrin, quorl, tick, varra, seraphine-ashe, ilse-marrow, mirrel-vosk, brother-tallow, fennick, spoons, garrick-sallow, ansel-mote, pell-quillon, tollamund, odile-fairweather, kettle, vexa-glassjaw, dreaming-widow, mother-corvane, npc-mother-brisk, npc-mourn, npc-mother-hennet, npc-dunny-pike, npc-noume-flarewick, treaty-bell, corvel-rise, last-candle, the-rent, ninth-stone, item-lantern, item-shard, item-cage-keys, end-reseal, end-crack, end-use, god-sleeper, god-saint ]
+pages: [ warden-uthrem, ysse, borrin, quorl, tick, varra, seraphine-ashe, ilse-marrow, mirrel-vosk, brother-tallow, fennick, spoons, garrick-sallow, ansel-mote, pell-quillon, tollamund, odile-fairweather, kettle, vexa-glassjaw, dreaming-widow, mother-corvane, npc-mother-brisk, npc-mourn, npc-mother-hennet, npc-dunny-pike, npc-noume-flarewick, treaty-bell, corvel-rise, last-candle, the-rent, ninth-stone, item-lantern, item-shard, item-cage-keys, end-reseal, end-crack, end-use, god-sleeper, god-saint, burned-mill, npc-nance-oddy, ambercote, npc-keld-owes-nothing, item-hennets-soup-pot, lore-signals, npc-brother-audit, lore-songs, item-aurels-penny, bridle-and-yoke, q-wager-on-never, npc-greta-holm, t-pardon-list, t-key-that-melts, t-frostcall-cargo ]
 encounters:
   - name: The dead of Cinders
     notes: "Only if the Sleeper's clock has reached 6, or the crack widens at the Stone. Zombies (slam +3, 1d6+1, Undead Fortitude) and one wight (two longswords +4, 1d8+2, or one longsword and Life Drain +4, 1d6+2 necrotic, Con DC 13 or hit-point maximum reduced). They walk to the Stone, not at the party, unless the party stands in the way. A wick-lamp's flame denies Undead Fortitude, and lantern-lit weapons ignore their resistances."
@@ -32,14 +32,18 @@ encounters:
 ---
 
 ### Scene 1: The tenth bell (the 7th, before dawn)
-The cage is unbolted from its niche on the Keep's east wall and lifted down: lantern and cage together weigh about thirty pounds, and it takes Ysse and Vosk to steady it onto the handcart. The flame inside is the size of a fingernail and blue at the root. The niche is empty for the first time in nine years; there's a ring of ash where the cage stood.
+The cage is unbolted from its niche on the Keep's east wall and lifted down: lantern and cage together weigh about thirty pounds, and it takes Ysse and Vosk to steady it onto the handcart, the one hired from [[The Bridle & Yoke]] at 1 cp a day; Hob Garrity has chalked it on the company's slate, and will not be paid. The flame inside is the size of a fingernail and blue at the root. The niche is empty for the first time in nine years; there's a ring of ash where the cage stood.
 
-As the cart rolls down the hill road, [[Dunny Pike]] climbs the bell-house stair past the knot, hauls the Treaty Bell's rope down, and pulls it: the tenth ring in nine years. He makes it four. Four is the end of the world. He has never done four; he has practised it in his head. The whole town comes out in the dark with lamps to watch the company go.
+As the cart rolls down the hill road, [[Dunny Pike]] climbs the bell-house stair past the knot, hauls the Treaty Bell's rope down, and pulls it: the tenth ring in nine years. He makes it four. Four is the end of the world. He has never done four; he has practised it in his head. The whole town comes out in the dark with lamps to watch the company go. Thistle beats the Muster all the way down to the bridge, because nobody told her not to ([[Signals of Cinderford]]).
+
+**The soup.** Before the column moves, Mother Hennet takes [[Mother Hennet's Soup-Pot]] back and cooks in it for the first time in nine years: the night-of-Cinders soup, barley, salt mutton, onions and the last dried pears. Every soldier who marches gets a bowl: 1d4 temporary hit points, and advantage on the first save against being frightened or charmed before the next dawn. She does not march.
 
 ---
 
 ### Scene 2: The road (the 7th to the 9th)
 The company, or what's left of it (see the Mutiny table in session 7), carries the lantern east across the ash under a swelling red moon. The flame is failing fast now; Ysse can barely keep it. Everyone who wants it follows.
+
+**On the road.** The column passes [[The Burned Mill]] on the morning of the 7th and the pear on the tree is red; [[Nance Oddy]] counts every soldier and the handcart, and cuts the company's corner of the bench for the first time in four years. The veterans sing The Eight Lanterns, which is sung on this road and no other ([[Songs of the March]]). If the route bends south, [[Ambercote]]'s standing turn as one to watch the flame go by.
 
 **The gauntlet** (optional: run one or two, not all). Whoever the party hasn't dealt with comes for the lantern on the road. Pick from:
 - **The Lamp-Wardens** (session 4's stats; two of them), if Seraphine was refused and not shamed.
@@ -54,12 +58,14 @@ Each one costs something, whatever the dice say. Choose one: a wick-lamp gutters
 ### Scene 3: The priests at the lip (the 9th, dusk)
 At the northern lip, above the Stone, the pantheon's priests are waiting, every one with a different reason to let it crack, all talking at once. (Optional: if the night is running long, keep only Corvane and Seraphine.)
 - **Sister Brine**, for Grum: "A crack is a road. The gods walked roads before your Nine ever cut one."
-- **Brother Audit**, Corvex's lay brother from Temple Row: "Every ledger closes. Let this one."
+- **[[Brother Audit]]**, Corvex's lay brother from Temple Row: "Every ledger closes. Let this one." He can be argued down with a contract: show him the company keeping its oath (the lantern carried, not abandoned) and he puts the stylus behind his ear and steps back.
 - **Odile Fairweather**, the Reeve, with the key to the locked Aurelan shrine on a cord round her neck: Aurelan's people want the old order back, and the old order never had a lamp in it. She is here for her town, and not sure she should be.
 - **[[Mourn]]**, the Velvet Ledger's doorkeeper, for Isaurana: "Some things want to be uncovered. You know that, soldier. Everyone knows that."
 - **[[Mother Brisk]]**, for Maelis, with a basket of Hearthday bread: "Whatever comes up that stair will be hungry. Somebody should be ready to feed it."
 - **Seraphine Ashe**, for the Saint, her eyes ember-red. If she is still the Saint's, she becomes **The Saint's champion** when the party tries to go down.
-- **So is a friend: Mother Corvane.** She believes putting the lamp out lets the dead rest. She has come with six Raveler undertakers and Hathe's Door-Key, and she will try to snuff it "to let them go home". Quorl has the words to answer her, the seventh in his notebook: *"Don't let them put it out."* If Quorl reads all eight aloud, she listens.
+- **So is a friend: Mother Corvane.** She believes putting the lamp out lets the dead rest. She has come with six Raveler undertakers and Hathe's Door-Key, and she will try to snuff it "to let them go home". Quorl has the words to answer her, the seventh in his notebook: *"Don't let them put it out."* If Quorl reads all eight aloud, she listens. If the party fetched [[Keld Owes-Nothing]] from Sedgemere, she stands beside her sister and says one sentence to her that neither of them ever repeats.
+
+**Pennies.** Waiting on the lip, every soldier rubs his [[An Emperor's Penny|penny]], the way soldiers do, and frost blooms on the glass under their boots. A hundred at once spend the ward like a spell: roll a d6 for the Sleeper's clock and tick it on a 1. A Vesh PC sees why.
 
 ---
 
@@ -76,6 +82,7 @@ The party goes down to the Warden's Shelf, as in session 6, with the lantern. At
 - **A willing PC** can go. That PC is gone. Give them their last moment, and let the player narrate it.
 - **The flame chooses Ysse** if no one else is willing. It wants her. That is not the same as her having to say yes.
 - **Ysse's tally bites here.** Every spell she has cast near the Rent drained the ward. If her tally is long (more than ten, say), the shard will not seat for anyone else's hand: whoever gives the heart, Ysse has to climb in and hold the shard in the socket until it takes, and she comes out at dawn grey to the wrists, with stone in her fingers that never quite warms.
+- **The Standing rite.** If the party fetched [[Hold-Mother Greta Holm]] from Hollowhall, she says the rite over whoever goes into the heart-socket and sits with them until they stop. The seal holds: skip the end-of-epilogue d6 in [[Ending: Reseal the Ward]].
 - The crack closes over a night. The flame in your hands goes out. Marrow reads the contract aloud at the Stone, and the company stands down. The Ember dims to copper over a season. Sleeper's clock −3.
 
 **Let it crack.** The shard is kept from the Stone, destroyed, or the Saint's people pour the leak into their lamp. The flame in the cart goes out. The dead on the lip turn round. The Stone falls into the Rent, and the youngest of the Nine with it. Ilyra ascends within the year. The Sleeper's clock fills.
@@ -88,7 +95,7 @@ Whatever they choose, give each PC one last moment: Tick and Marla; Borrin and t
 
 ### Scene 6: Dawn
 An epilogue in the ash. Who's left, what Cinderford becomes, and what happens to the company now the contract has or hasn't ended. Pick the lines that fit:
-- Spoons pays out at the Last Candle, publicly, to the copper. If the flame still burns (Use It), "never" has won: Keld's stake, nine years in his strongbox, takes the whole pot, and Spoons pays it to Mother Corvane as next of kin with a face like a funeral.
+- Spoons pays out at the Last Candle, publicly, to the copper, because he said he would and Hennet makes him ([[The Wager on Never]]). (Reseal) Whoever had 9 Leafrot collects; Keld's stake stays in the strongbox, because "never" neither won nor lost: the lamp was given back, not put out, and Spoons writes a new rule for it. (Use it) "Never" wins, and if the party found Keld she refuses the money in front of the room ("I bet to be right, not to be paid"), and Spoons stands there with the whole pot and nobody to give it to. (Let it crack) The pool pays on the night it went out, nobody is in a state to collect, and Keld's stake is the only thing in the strongbox still worth anything.
 - Mother Hennet chalks a new line on the slate and rubs nothing out.
 - Vosk says that if the company is finished, he will finally open that bakery.
 - Tallow sits with the empty lantern until morning, and then says he would like some tea.
@@ -97,8 +104,10 @@ An epilogue in the ash. Who's left, what Cinderford becomes, and what happens to
 - Kettle is on the quay selling hot chestnuts and the story.
 - Pell finishes his report and signs it.
 - (Reseal) The cage on Lantern Hill is dark when they get home, and the ninth pole on Corvel Rise gets its lantern.
+- On the morning of the 10th, Nance Oddy picks up what fell from the pear tree at the Burned Mill. (Reseal) A pear, sweet, with one hard black seed, which she plants in the wheel-pit. (Let it crack) A stone, and the mill's dead have climbed out of the pit and gone east. (Use it) Nothing fell; the pear hangs red, and never ripens, and never rots.
+- Ambercote's square: (Reseal) every figure sags an inch, and the woman at the well has set her bucket down. (Let it crack) all two hundred and twelve walk east, and the living walk after them. (Use it) they stand, and turn a little further each red moon toward whoever holds the flame.
 
-Leave two threads open on purpose for a second arc: Borrin's shadow, and whoever the Sleeper whispers to next.
+Leave two threads open on purpose for a second arc: Borrin's shadow, and whoever the Sleeper whispers to next. For more, see [[Who is on the Crownfast pardon list?]], [[Why does the Returned smith forge the same key?]] and, on 10 Leafrot, [[What is the sealed cargo for Frostcall?]].
 
 == Strong start ==
 

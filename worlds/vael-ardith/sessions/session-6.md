@@ -2,7 +2,7 @@
 number: 6
 title: Into the Rent
 worldDate: 1 Leafrot 3011
-pages: [ warden-uthrem, ysse, borrin, quorl, tick, vexa-glassjaw, aelith-sorn, npc-jory-dunmore, npc-jessom-dunmore, npc-noume-flarewick, ilse-marrow, mirrel-vosk, the-rent, ninth-stone, cold-seam, ash-road, treaty-stone, h-map-scrap, h-rubbing, table-encounters, table-weather, f-last-wardens, lore-nine, lore-wards, god-sleeper, god-hathe, ev-godslaying, ev-digs, ev-cinders, t-cinders-born ]
+pages: [ warden-uthrem, ysse, borrin, quorl, tick, vexa-glassjaw, aelith-sorn, npc-jory-dunmore, npc-jessom-dunmore, npc-noume-flarewick, ilse-marrow, mirrel-vosk, the-rent, ninth-stone, cold-seam, ash-road, treaty-stone, h-map-scrap, h-rubbing, table-encounters, table-weather, f-last-wardens, lore-nine, lore-wards, god-sleeper, god-hathe, ev-godslaying, ev-digs, ev-cinders, t-cinders-born, burned-mill, tallys-cut, item-road-marker, table-ash-road-travellers, lore-festivals, npc-orla-quist, npc-greta-holm, ambercote ]
 encounters:
   - name: The glass-stalker
     notes: "Giant scorpion reskinned as a thing of fused glass. Multiattack: two claws +4, 1d8+2 bludgeoning, grappled (escape DC 12); sting +4, 1d10+2 piercing plus 4d10 poison (Con DC 12 half). Blindsight 60 ft. Lives on the Glass Stair and hunts whoever steps on the clear glass."
@@ -15,12 +15,12 @@ encounters:
 ---
 
 ## Session 6: Into the Rent
-*Level 4. 29 Ashfall to 1 Leafrot 3011 AW: two hard days' ride east; 30 Ashfall the Unveiling on the road; 1 Leafrot (Ironday) is Doorsnight, doors propped open in Cinderford till dawn.*
+*Level 4. 29 Ashfall to 1 Leafrot 3011 AW: two hard days' ride east; 30 Ashfall the Unveiling on the road; 1 Leafrot (Ironday) is [[Feasts, Fasts and Holy Days|Doorsnight]], doors propped open in Cinderford till dawn.*
 
 - *Sky*: Pallas dark the night before (the Unveiling); the Ember a waxing half, eight nights from full, red over the Rent.
 - *Weather*: roll twice on [[Greywind Weather]], once for each day's ride.
 - *Touch these*: Marrow stays behind to hold the town; Vosk wanted to come and she would not let both of them leave. Vexa's people are at the lip, with rope if the party dealt fairly and with knives if not. Aelith wants to come, and if she does she will try to copy the Stone and reach Uthrem first. Back home, Sallow works on the company and Mote sends a report to Caer Ardith that Kettle can copy. At the Stone, the shadow behind Borrin stands up on its own. Ysse hears both voices here, close as breath: "You came," in the warm one, and in the other, "There you are."
-- *In between* (26 to 28 Ashfall): Marrow argues the expedition with Vosk and loses nothing but sleep. Pell files his Claim of Arrears and asks the party to carry a copy "should anything happen to the office". The Sleepless start walking east a day behind the party. If the Treaty Stone wasn't visited in session 5, it is on the road out.
+- *In between* (26 to 28 Ashfall): Marrow argues the expedition with Vosk and loses nothing but sleep. Pell files his Claim of Arrears and asks the party to carry a copy "should anything happen to the office". The Sleepless start walking east a day behind the party. If the Treaty Stone wasn't visited in session 5, it is on the road out. Cass's square at [[Ambercote]] is a long day's ride if her slate is still unanswered; this is the last free window before the red moon.
 - *Level-up*: none. The party stays level 4 through session 7.
 - *If the party…* won't go down: Uthrem comes as far as he can, which is his voice coming up the wall at dusk. Give them the truth in pieces, shouted up three hundred feet between grinding breaths; they get no rubbing, and Ysse dreams the Stone every night until she goes down alone.
 
@@ -31,7 +31,7 @@ encounters:
 ---
 
 ### Scene 1: The ride and the lip
-Two hard days east along the Ash Road and then across open ash, with the Dunmore twins if Vosk lends them again. Roll on [[Ashenreach Encounters]] once each day. On the second night Pallas is dark, the Unveiling: no white moon at all, only the Ember. Quorl knows that tomorrow is Doorsnight, when the doors of Cinderford stand open till dawn so the lingering dead can leave.
+Two hard days east along the Ash Road and then across open ash, with the Dunmore twins if Vosk lends them again. Roll on [[Ashenreach Encounters]] once each day, and on [[Travellers on the Ash Road]] once while still on the road. Water at [[The Burned Mill]] at six miles, where Nance counts them out, and at [[Tally's Cut]] at fifteen, by noon; the first night's camp is out on the open ash, thirty miles from the bridge. A party going under the glass instead (see the Cold Seam, below) sleeps the first night at Fort Mercy, and [[A Lithic Road-Marker]], laid on the floor of the black-glass chamber, points down the Seam; Ottoline Crane will show them where to lay it. On the second night Pallas is dark, the Unveiling: no white moon at all, only the Ember. Quorl knows that tomorrow is Doorsnight, when the doors of Cinderford stand open till dawn so the lingering dead can leave.
 
 > You smell it before you see it: cold stone and pears and something under both like a struck match. Then the plain simply stops. A lip of fused glass, and beyond it air, and the far side a quarter-mile off, and between, going down past where the light goes, a wall of layered rock and glass and darkness that breathes. Slowly. Out, warm, red-tinged, for the length of a long breath. Then in, cold. Along the lip in both directions, as far as you can see, figures standing, facing the gap. They do not turn round. They were not there a moment ago.
 
@@ -84,6 +84,11 @@ At the foot of the Stone, Borrin's shadow stands up from the ground on its own, 
 
 ### How it ends
 The climb out at dusk. At the top, a rider from Cinderford is waiting, exhausted, his horse blown: "Captain says come home now. They're all moving at once."
+
+### If the party wanders
+- **Orla's cairn.** If [[Orla Quist]] came along (3 gp and a copy of the sheet), she paces the near cairn at the Rent's western end, thirty-eight miles out by the Ash Road, and gets thirty-three. She says nothing for a mile, then: "I owe a Glasser an apology." The 3011 line on her slate is no longer blank.
+- **Doorsnight at home.** Tonight every door in the Smokes and the Keep's hall door stand propped till dawn, and the Ravelers sit in the Doorkeeper's Chapel's black doorway in a row. When the party gets home on the 3rd, the doors are shut again and the town is quieter than it was.
+- **Hollowhall, by letter.** If a dwarf PC or Gerda asks what the Standing costs, a letter to [[Hold-Mother Greta Holm]] brings an answer. Sent now it is too late to bring her to the Stone for the 9th: she needs a fortnight's warning.
 
 == Strong start ==
 

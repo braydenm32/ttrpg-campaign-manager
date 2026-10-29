@@ -36,12 +36,13 @@ Six days: Ironday, Coinday, Hearthday, Tideday, Wardday, Restday. Five weeks to 
 - **1 Highsun**: Firstfire ([[The Unburnt Saint]]). **15 Highsun**: Crownfast ([[Aurelan]]).
 - **30 Emberwane**: Anvil Night ([[Grum]]).
 - **30 Reaping**: Last Sheaf (Maelis).
-- **14 Ashfall**: the night of [[The Battle of Cinders]], kept by every company in the Ashenreach with a lantern.
+- **14 Ashfall**: Cinders Muster, the night of [[The Battle of Cinders]], kept by every company in the Ashenreach with a lantern, and by Cinderford with a dip in every window.
 - **1 Leafrot**: Doorsnight ([[Hathe]]); doors propped open till dawn.
 - **1 Frostcall**: Stonefast (Tharos). **6 Frostcall**: Rope Day ([[The Hanged Corporal]]). **23 Frostcall**: Lastwater (Sefra).
 - **1 Longnight**: the Reckoning ([[Corvex]]); every counting-house closes at noon. **30 Longnight**: Hearthnight (Maelis) until the doors shut, then the Long Veil (Isaurana).
 - **Every week**: Ironday to Grum, Coinday to Corvex, Hearthday to Maelis, Tideday to Sefra, Wardday to Tharos and the Lithic, Restday to the Corporal, who says he is owed it.
 - **Every full Ember**: the Saint's Lamp in Iskaveth, and something else in the ash.
+- **The March's own days**, kept by nobody's priest: Stake Day (7 Seedwake), the Quay-Moot (7 Bloomtide), Shadow-Count (2 Emberwane), Eye-Night (17 Reaping), Tally's Day (3 Ashfall) and Widows' Walk (20 Frostcall). Every one of them, and what it looks like in Cinderford, is on [[Feasts, Fasts and Holy Days]].
 
 ### The campaign's dates
 The campaign opens on **14 Ashfall 3011 AW**, a Coinday, early autumn, nine years to the night after Cinders, with the Ember two nights from full. Winter in the Ashenreach comes early and grey.

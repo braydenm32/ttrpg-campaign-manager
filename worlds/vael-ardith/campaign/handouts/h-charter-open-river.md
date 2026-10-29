@@ -33,7 +33,7 @@ gmFields:
 *Writ number one of four. The first is held by the Reedmarsh Water, and shall not be lent.*
 
 :::gm
-**How to use it.** Wave it at a checkpoint and the checkpoint becomes a negotiation. It is the legal basis for "It's not a bridge, it's a barge", and the reason [[The Low Quay]] takes no toll and asks no questions. [[Kettle Brindlewake]] has a (good) copy in the Grey Dumpling's parlour; [[Barge-Mother Posy Reedmarsh]] carries the first of the four on her person.
+**How to use it.** Wave it at a checkpoint and the checkpoint becomes a negotiation. It is the legal basis for "It's not a bridge, it's a barge", and the reason [[The Low Quay]] takes no toll and asks no questions. [[Kettle Brindlewake]] has a (good) copy in the Grey Dumpling's parlour; [[Barge-Mother Posy Reedmarsh]] carries the first of the four on her person (the name passes to the eldest daughter; the Charter's first Posy was the captain of 1255).
 
 **Who honours it.** The Concord, always, because its own ships rely on the same principle. The Regency, grudgingly. The Treaty garrison: [[Mirrel Vosk]] laughs and waves them through. The Reeve's toll-keeper, [[Mistress Hebbe]], reads the words "a long rope's length" and puts a precise number to them.
 

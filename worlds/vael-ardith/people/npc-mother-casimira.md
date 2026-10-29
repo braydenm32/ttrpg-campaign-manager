@@ -2,7 +2,7 @@
 type: npc
 name: Mother Casimira
 players: true
-summary: "Lamp-Mother of the Lower Mercy House at Halcyra, who signs the takings-rolls: who was taken in, who was 'seen again'. Kind, exact, and a believer. She sent the forty-first missionary to Qerath, and last month she painted the girl's name off the wall herself."
+summary: "Lamp-Mother of the Lower Mercy House at Halcyra, who signs the takings-rolls: who was taken in, who was 'seen again'. Kind, exact, and a believer."
 parent: halcyra
 aliases: [ Lamp-Mother Casimira, Casimira ]
 tags: [ npc, church-saint, iskaveth, far-away ]
@@ -22,7 +22,7 @@ relations:
     known: true
   - to: ilyra
     kind: believes in
-    note: Sincerely, exactly, and with a letter in her desk that says the Saint will die.
+    note: Sincerely and exactly, for nine years.
     known: true
   - to: qerath
     kind: sends missionaries through
@@ -56,21 +56,22 @@ Casimira walked the coals at fifteen, in 2976, under the old gods, and did not b
 
 She signs the takings-rolls. Every soul who enters a Mercy House in Halcyra is written in at the door by the House's takings-girls, and every page of the roll is signed by its Lamp-Mother, and the Lower House's rolls are in Casimira's hand: *taken in*, with the day, the name, the ailment, and the eye if there is one; and, for those who go on up the hill to the Upper House or the Lamp Court, *seen again*, with the day and where. Not everyone taken in is seen again. Nobody who asks about it is answered unkindly. Casimira answers, kindly and exactly: the rolls are the Church's and the Synod's, and the Synod does not show them, and she does not lie.
 
-She also chooses, from the Hollowborn on her rolls, the ones who go to [[Qerath]] every Seedwake to sail for [[Ostrakai]]. She has chosen nine. None has written. She paints none of the names on the harbourmaster's wall; she goes down to Qerath each Seedwake to watch the ship out, and comes back up the Spine, and signs the next page.
+She also chooses, from the Hollowborn on her rolls, the ones who go to [[Qerath]] every Seedwake to sail for [[Ostrakai]]. She has chosen nine. None has written. The harbourmaster's wall at Qerath keeps a name for every one that has sailed; she goes down each Seedwake to watch the ship out, and comes back up the Spine, and signs the next page.
 
 ### What she wants
-For the Saint to be what she believes the Saint is: mercy, with a face, made large enough to stop the world hurting. She has believed it for nine years with her whole exact heart and she has a letter in her desk that says it is not true, and she wants, more than she has wanted anything since the coals, for the letter to be wrong.
+For the Saint to be what she believes the Saint is: mercy, with a face, made large enough to stop the world hurting. She has believed it for nine years with her whole exact heart, and she wants, more than she has wanted anything since the coals, never to be given a reason to stop.
 
-Under that, and not said: for the forty-first name to stay off the wall.
 
 ### What she knows
-The rolls, every page: who was taken in, who was seen again, who was not. Which of the Hollowborn on her rolls went up the hill first, and in what order, which she has never been told the reason for and has worked out. That [[Brother Iosune]] burned on the coals and went west anyway and she wrote *worthy* on his page. That [[Seraphine Ashe]] was chosen by the Saint's own hand and that nobody chosen that way has come back to Halcyra the same, or at all. That a lamp-maker called Tavan Soran, brother to two sisters who kept a bathhouse on the lower terrace and now keep one in the ash country, came into the Lower House in 3007 "to rest" and is on her rolls as *seen again*, and that his sisters' letters are answered by the Synod's clerk and not by her, because she is not allowed.
+The rolls, every page: who was taken in, who was seen again, who was not. Which of the Hollowborn on her rolls went up the hill first, and in what order. That [[Brother Iosune]] burned on the coals and went west anyway and she wrote *worthy* on his page. That [[Seraphine Ashe]] was chosen by the Saint's own hand and that nobody chosen that way has come back to Halcyra the same, or at all. That a lamp-maker called Tavan Soran, brother to two sisters who kept a bathhouse on the lower terrace and now keep one in the ash country, came into the Lower House in 3007 "to rest" and is on her rolls as *seen again*, and that his sisters' letters are answered by the Synod's clerk and not by her, because she is not allowed.
 
 ### How she treats the PCs
 With the Mercy House's whole kindness, which is real: a meal, a bed, a lamp lit for whoever they have lost, a hand on the wrist that takes the pain out of a wound, and their names used warmly from the first minute. She asks what they dream. If one of them is Hollowborn she looks at the grey eye and then, deliberately, at the other one, and writes nothing down in front of them, which is a courtesy she extends to no one else. If they are from the March she asks after the Soran sisters by name, and the House, and the lamp, in that order, and the order is the tell.
 
 :::gm
-**The hill.** The Hollowborn whose dreams are clearest at the full Ember go up to the Upper House first, where the Mothers listen to them sleep with wax tablets, and from there to the Lamp Court; the rolls write *seen again* and mean it kindly. Casimira has worked this out and signs the pages anyway.
+**What she wants, in full.** She has a letter in her desk that says the Saint will die, and she wants, more than she has wanted anything since the coals, for the letter to be wrong. Under that, and not said: for the forty-first name to stay off the wall. Her public line, "she paints none of the names", is a priest's truth: she painted one, once.
+
+**The hill.** The Hollowborn whose dreams are clearest at the full Ember go up to the Upper House first, where the Mothers listen to them sleep with wax tablets, and from there to the Lamp Court; the rolls write *seen again* and mean it kindly. Casimira has never been told the reason, has worked it out, and signs the pages anyway.
 
 **Secret.** The forty-first name on the Qerath harbourmaster's wall was Ilka Dunne, called Moth: a Hollowborn girl born in the Ardmere siege, raised on Tanners' Lane in the Smokes of Cinderford, brought to Halcyra by preachers in Reaping 3006 at twelve, taken in by Casimira, kept four years, and sent down to Qerath in Frostcall 3010 to sail on the Seedwake 3011 ship because her dreams at the full Ember were the clearest on the rolls and the Upper House wanted her and Casimira, who had come to love her, thought the sea was the kinder of the two. Casimira has a key to the harbourmaster's office because the Mercy Houses provision the missionaries; in Reaping this year she went down the Spine, let herself in at night, and painted the name over, carefully, with the harbourmaster's own white, because the girl is alive. A letter had come. An Ostrakai trader off a mirror-ship put it into the Lower House's alms-box in Emberwane, addressed in Ilka's round Smokes hand to "Mother Casimira, who was kind", and it is the only letter from Ostrakai that exists.
 

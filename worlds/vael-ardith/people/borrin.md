@@ -29,6 +29,11 @@ relations:
     kind: asks questions of
     note: "Mostly: am I alive?"
     known: true
+  - to: npc-tam-hollowell
+    kind: was in the same party as
+    note: Tam came up six months before him, and cannot be in a room with him.
+  - to: npc-durn-mallow
+    kind: shares a shadow-thief with
 ---
 
 ### Who he is
@@ -59,6 +64,7 @@ The Ninth Lantern needed scouts who could read the ash and see in the dark. He n
 - **[[Quorl Many-Words]]** wants Borrin's last words recorded now, "while you've still got all of them". Borrin keeps asking him, half joking, whether a Raveler can tell if a man is alive.
 - **[[Ysse Lampwright]]** looks at the ground near him too long when she thinks he isn't watching.
 - **[[Kettle Brindlewake]]** buys his trail maps of the glasslands and pays fair.
+- At [[The Shadowless Cup]] in Hollowhall a place is set every night for the Skarn party he went down with. Two bowls have come off it. One was his.
 
 ### Playing him
 A man who lost three years and part of himself and is trying to live in the time he has left. Quiet competence, gallows humour, and the growing suspicion that something remembers those three years for him.
@@ -72,7 +78,7 @@ You think it is your shadow. You think it is wearing your shadow, the way you'd 
 :::gm
 **How his secret pays off.**
 - Under the Grimmark the deep-road party reached the breached Eighth Ward. Something there took their shadows as the price of passage. Borrin's was taken by a thing that wanted to come up, and it did, inside the shadow: a door-warden of the Eighth Ward. It is not evil exactly; it is curious, hungry, and very old, and it wants to reach the Ninth Ward's crack to see what's on the other side.
-- Plant sightings: [[Gerda Hollin]] at the ford (she says it aloud in session 1); [[Jory Dunmore]] on the east wall; [[Noume Flarewick]] from the signal tower; old [[Nan Crupp]] at the ferry saw "Borrin" standing on the ford at midnight a week before session 1, while he was in his bunk; [[Mardle Ock]], the Returned dwarf at Fort Mercy, swears he met Borrin in the deep "two winters back" (session 2).
+- Plant sightings: [[Gerda Hollin]] at the ford (she says it aloud in session 1); [[Jory Dunmore]] on the east wall; [[Noume Flarewick]] from the signal tower; old [[Nan Crupp]] at the ferry saw "Borrin" standing on the ford at midnight a week before session 1, while he was in his bunk; [[Mardle Ock]], the Returned dwarf at Fort Mercy, swears he met Borrin in the deep "two winters back" (session 2); and [[Tam Hollowell]], a Returned mason of the Smokes who went down in the same party, is the second witness and the better one: he knows it was not Borrin, and he cannot be in a room with him.
 - At **Into the Rent** (session 6), the shadow acts on its own: it walks ahead of the party into the Rent, toward the Ninth Stone, and [[Warden Uthrem]] stops dead at the sight of it. Uthrem knows what it is: a thing of the Eighth Ward's dark, one of the forgotten.
 - In the finale, the shadow can be bargained with, fought, or sent back through the crack, and if Borrin wants it back he may get it, changed.
 :::

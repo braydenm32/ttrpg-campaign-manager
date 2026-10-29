@@ -2,7 +2,7 @@
 number: 7
 title: Three Knives
 worldDate: 5 Leafrot 3011
-pages: [ tollamund, npc-pennamund, odile-fairweather, ansel-mote, pell-quillon, npc-widow-pruitt, npc-dunstan-bray, seraphine-ashe, garrick-sallow, mirrel-vosk, ilse-marrow, fennick, sorrel-vey, aelith-sorn, mother-corvane, npc-tesh, varra, grashka, npc-skarra, npc-mother-hesha, marius-vell, tollamund-house, assessors-office, lantern-keep, item-treaty, item-promissory-note, item-cage-keys, item-thunderjars, item-widows-kisses, q-assessors-form, f-quiet-office, f-concord-houses, f-church-saint, f-mothers, f-ninth-lantern ]
+pages: [ tollamund, npc-pennamund, odile-fairweather, ansel-mote, pell-quillon, npc-widow-pruitt, npc-dunstan-bray, seraphine-ashe, garrick-sallow, mirrel-vosk, ilse-marrow, fennick, sorrel-vey, aelith-sorn, mother-corvane, npc-tesh, varra, grashka, npc-skarra, npc-mother-hesha, marius-vell, tollamund-house, assessors-office, lantern-keep, item-treaty, item-promissory-note, item-cage-keys, item-thunderjars, item-widows-kisses, q-assessors-form, f-quiet-office, f-concord-houses, f-church-saint, f-mothers, f-ninth-lantern, npc-posy-reedmarsh, h-charter-open-river, q-lost-pay-order, npc-lusk-pardew, whitepost, q-thirteenth-barrel, q-price-was-an-arm, npc-mother-hennet, npc-brother-audit, npc-wendel-hoop, npc-thimble-fairlock, the-hock, bridle-and-yoke, ford-street, the-reeves-house, the-turncoat, h-grashka-letter, npc-tollamund-daughters, q-old-tallys-coin, h-mote-cipher ]
 encounters:
   - name: Mote's night
     notes: "Ansel Mote (page stats: spy, upgraded): two shortsword attacks; Sneak Attack 3d6; Assassinate (advantage against anyone who hasn't acted, crits on the surprised); poison needle (DC 13 Con, 3d6 poison and poisoned for an hour). Two hired knives (thugs, mace +4, 1d6+2, Pack Tactics). They scatter Widow's Kisses on the oil-room stair behind them. Mote wants Ysse's key and the lantern, flees at half HP, and is not above using Pell as a shield."
@@ -40,11 +40,13 @@ encounters:
 
 Talk, stall, or find the hole in the contract: History or Investigation DC 15, with [[The Original Treaty]] or what was scratched in the Treaty Stone's glass. The pay clause, "by the signatories, or by whosoever shall hold their debt", makes the Concord the company's paymaster and creditor, so the company itself can be pledged. But page seven, the keeping of the Ninth Ward, signed by the Mothers and the Last Wardens alone, makes the lamp a fixture of the Treaty, "kept lit by those who do not know why". It was never the company's to pledge. "Including the lantern" is void; the company is collateral, the lamp is not. Tollamund, if asked straight what she wants it for: "It is a key. To a door my people closed." Tick the Concord's clock.
 
-**2. The Quiet Office's knife (the night of the 5th).** [[Ansel Mote]] stops pretending. At the Assessor's Office he burns the files while [[Pell Quillon]] sleeps at his desk, then comes up to the Keep with two hired knives for the lantern and for Ysse's key. He has a copy of the third key, Sallow a copy of the second; neither fits the first lock, which is why he needs Ysse. Turning any key makes the cage chime through the whole Keep. If [[Dunstan Bray]] talked, Mote finds him first, in the Candle's back lane, and Bray never talks again. Run **Mote's night**.
+**A second hole**, if the party kept Mother Hennet's slate-book and had it certified: it proves the House has been the garrison's paymaster since it bought the wages in 3009, and puts the account in dispute before Corvex. Tollamund accepts a stay ([[The Price Was an Arm]]; Concord clock −1).
+
+**2. The Quiet Office's knife (the night of the 5th).** [[Ansel Mote]] stops pretending. At the Assessor's Office he burns the files while [[Pell Quillon]] sleeps at his desk, then comes up to the Keep with two hired knives for the lantern and for Ysse's key. He has a copy of the third key, Sallow a copy of the second; neither fits the first lock, which is why he needs Ysse. Turning any key makes the cage chime through the whole Keep. If [[Dunstan Bray]] talked, Mote finds him first, in the Candle's back lane, and Bray never talks again. Run **Mote's night**. If the party befriended [[Wendel Hoop]], the cooper under the Assessor's Office, he comes up the hill on the night of the 4th to say his stair smells of lamp-oil, and Mote's night starts with the party already in the street.
 
 If the party returned Pell's form, Pell wakes in the smoke, sees, and is braver than anyone expects: he runs to the Keep in his nightshirt with the Claim of Arrears under one arm, shouting for the watch. If he didn't wake, Widow Pruitt pulls him out by the collar. Nib, the errand boy, sleeps under the office stairs; somebody has to remember him.
 
-**The cipher.** On the back of [[The Assessor's Lost Form]] (Form 9-K), if anyone has it, is Mote's cipher: column widths that are letters. Pell, or Investigation DC 15 and an hour, reads it:
+**The cipher.** On the back of [[The Assessor's Lost Form]] (Form 9-K), if anyone has it, is Mote's cipher ([[The Clerk's Cipher]]): column widths that are letters. Pell, or Investigation DC 15 and an hour, reads it:
 - *S. paid.*
 - *Oil done by the red moon.*
 - *Lamp to be taken under Levy default; escort at Ardmere.*
@@ -62,6 +64,7 @@ If the party returned Pell's form, Pell wakes in the smoke, sees, and is braver 
 
 **5. Sallow's mutiny (the drill yard).** With the company split by the debt, [[Garrick Sallow]] breaks out of confinement and calls the files to the yard: "They've sold us. Let's sell them first." Half the company is listening. Turning it:
 - **Expose the coin.** Dannic's purse, Hennet's cup, the pay-chit, the letter in the small neat hand, Mote's cipher: Persuasion DC 13 with proof in hand, DC 18 without. Sallow exposed with proof: Mutiny clock −1.
+- **Read the prayers.** Bring [[Brother Audit]] up from Temple Row and show him the mutiny: he opens his ledger and reads Sallow's two dated prayers aloud in the yard, in his Coinday voice. That is Sallow exposed with proof (Mutiny clock −1; it does not stack with exposing the coin).
 - **Tell them about Marrow's purse.** She fed them out of her own savings for a year until it ran out. Marrow would rather die than have it said; said anyway, it turns the yard (Mutiny clock −2).
 - **Let Vosk speak.** [[Mirrel Vosk]] tells them what the Iron Guard did to the last emperor who dug at a ward, and why: "The Guard did it. I held the door." He does not name who struck. If Vosk speaks first, two mutineers switch sides before swords come out.
 - **Blades.** Run **The mutiny in the yard**. Every mutineer knocked out instead of killed is one the company gets back.
@@ -76,7 +79,7 @@ If the party returned Pell's form, Pell wakes in the smoke, sees, and is braver 
 
 Skarra Burnbrow has two thunderjars left and offers them for the road.
 
-**6. Grashka's answer.** A reply from the Mothers arrives in the middle of everything, regardless of whether Varra wrote: [[Skarra]] has written home to her mother, [[Mother Hesha]] of the council, every month since Varra came, and this is the answer, under Hesha's seal and [[Grashka]]'s. If Varra wrote to the Mothers, it reads: "Hold the lamp. I am sending what I can." If she didn't: "Hold the lamp. I am coming to see what you have kept." Under it, in a second ink, in knot-script only Varra was taught to read, is a line for Varra's eyes only: "I did it. Not for the throne. For this. Ask Vosk." Vosk, if Varra asks him privately: "The Guard did it. I held the door." He does not name Grashka, then or ever. Whether the company learns whose granddaughter Varra is belongs to Varra's player. The Quiet Office would very much like to know.
+**6. Grashka's answer.** A reply from the Mothers arrives in the middle of everything, regardless of whether Varra wrote: [[Skarra]] has written home to her mother, [[Mother Hesha]] of the council, every month since Varra came, and this is the answer ([[Grashka's Letter]]), under Hesha's seal and [[Grashka]]'s. If Varra wrote to the Mothers, it reads: "Hold the lamp. I am sending what I can." If she didn't: "Hold the lamp. I am coming to see what you have kept." Under it, in a second ink, in knot-script only Varra was taught to read, is a line for Varra's eyes only: "I did it. Not for the throne. For this. Ask Vosk." Vosk, if Varra asks him privately: "The Guard did it. I held the door." He does not name Grashka, then or ever. Whether the company learns whose granddaughter Varra is belongs to Varra's player. The Quiet Office would very much like to know.
 
 ---
 
@@ -84,6 +87,14 @@ Skarra Burnbrow has two thunderjars left and offers them for the road.
 The mutiny is broken or it isn't. Either way the company, what's left of it, stands round the lantern in the frost. The Ember is three nights from full and the colour of a fresh wound. Marrow: "Whatever we're doing with that thing, we're doing it at the Rent. Under the moon. Together, or not at all." Before dawn, the cage is unbolted from its niche.
 
 **End of session: level 5.**
+
+### If the party wanders
+- **Ford Street on court day.** The street is empty and every window open. Odile leaves [[The Reeve's House]] at first light in a magistrate's hat, the locked case under her arm, for the Keep gate. The six white-and-gold lengths at [[The Turncoat]] are cut and collected, for the six Lamp-Wardens who come on the 6th. [[The Hock]]'s back room is the one door open: Bray (if he is still Sallow's) and three others wait there for the word.
+- **Two horses.** Booked at [[The Bridle & Yoke]] and waiting in the West Gate yard: two horses, saddled and rested, booked on 11 Ashfall by Bray in his own name, half paid in new Caer Ardith silver, "for a night in Leafrot, the fifth or the sixth". It is Sallow's bolt-hole, and proof of intent for the yard. Hob will not let them go without the rest of the money, in silver.
+- **The Charter at the Reeve's court.** [[The Charter of the Open River]], waved at a Concord lawyer: "It's not a bridge, it's a barge." [[Barge-Mother Posy Reedmarsh]] brings the 3009 pay order up the hill on her own legs if the party earned it ([[The Lost Pay Order]]).
+- **Pardew's cedar box.** If Pell wrote to [[Examiner Lusk Pardew]] at [[Whitepost]] in his own hand by the 1st, a letter and a box of 141 sealed orders arrive today. The newest is the Office of Charters' standing instruction to pass Tollamund's crates unexamined and unrecorded.
+- **The water plan.** Tollamund has written to [[Barge-Mother Thimble Fairlock]] asking her to carry "a lamp, in Leafrot, to Gilt" once she owns it. Thimble has not answered. A party that asked the Mother the right question has known for a fortnight.
+- **Old Tally's seal.** Laid on the table in front of the Grandmother ([[Old Tally's Coin]]), the 11th Foot's pensions seal buys a long stillness, "Where ... did you get ... that," a lawyer sent off with a letter, and a day. Trade it for something concrete: Fennick's paper torn up, or Odile's charter back in her hands unsealed.
 
 == Strong start ==
 

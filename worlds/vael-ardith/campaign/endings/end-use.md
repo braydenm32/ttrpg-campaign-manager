@@ -39,7 +39,7 @@ Whoever holds it (a PC, the company, a faction leader) can do terrible, useful t
 - **Kettle.** She sells the holder's whereabouts to three parties the same week, and keeps one of them honest.
 - **Hennet's Candle.** She does not shut her doors; she leaves the lantern over the bar lit and serves everyone.
 - **Corvane.** She has the holder's name written in the ledger already, in advance.
-- **Spoons's pool and Keld's stake.** "Never" wins. The pool pays out on Keld's stake, and Spoons does not know who to give it to.
+- **Spoons's pool and Keld's stake.** "Never" wins. The pool pays out on Keld's stake, and Spoons does not know who to give it to. ([[The Wager on Never]])
 
 ### Hooks for a second arc
 Being the most powerful people in the world, and the most hunted. Watching a friend become the Sleeper's voice, and deciding when to stop them. Discovering that the Shellbacks left the Ness of Thurm because of something just like this.

@@ -25,6 +25,12 @@ relations:
   - to: f-sleepless
     kind: watches
     note: Stands at the back of meetings to look at her daughter.
+  - to: npc-nell-harrow
+    kind: was the master of
+    known: true
+  - to: npc-mother-brisk
+    kind: keeps the Maelis birth-rolls with
+    note: "The rolls agree: the Cinders-born grew in steps."
 ---
 
 Small, stooped, sixty-two and looking older, with a voice like a rusty gate, forearms like a blacksmith's and a bag that clanks. Mam Ottilie has delivered nearly every child born in [[The Smokes]] since the war, including thirty-one of the first [[The Hollowborn|Hollowborn]], and the birth-rolls in her hand note each one ("one eye wrong, otherwise fine", underlined twice). She lives in Marlowe's, the narrow house where her grandson [[Tick]] was born, and she raised him there.

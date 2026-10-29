@@ -18,7 +18,7 @@ gmFields:
 relations:
   - to: borrin
     kind: went under with
-    note: The same deep-road party out of Skarn. Came up a year before him. Cannot say where the others are.
+    note: The same deep-road party out of Skarn. Came up six months before him. Cannot say where the others are.
   - to: last-candle
     kind: sits by the fire of
     known: true
@@ -47,7 +47,7 @@ The deep roads under the Grimmark as far as the place where he stops remembering
 With a mild, absent courtesy, until [[Borrin Halt]] walks in. Then he stands up, and the bowl drops, and he says Borrin's name, and after that he will not be in the same room as him, and will not say why.
 
 :::gm
-**Secret.** Tam was in Borrin's deep-road party. He came up a full year before Borrin did, by the same gate, and he remembers the thing Borrin does not: at the breached Eighth Ward, in the dark, the party was asked for a price, and paid it, and something walked on ahead of them wearing a borrowed shape. The shape was Borrin's. Tam followed it for a long time because he thought it was Borrin. When it turned round he stopped following, and he remembers nothing after that until Hollowhall's gate. The second bowl is for whatever walked beside him up the Stair; he does not know that, and sets it anyway.
+**Secret.** Tam was in Borrin's deep-road party. He came up six months before Borrin did, by the same gate, and he remembers the thing Borrin does not: at the breached Eighth Ward, in the dark, the party was asked for a price, and paid it, and something walked on ahead of them wearing a borrowed shape. The shape was Borrin's. Tam followed it for a long time because he thought it was Borrin. When it turned round he stopped following, and he remembers nothing after that until Hollowhall's gate. The second bowl is for whatever walked beside him up the Stair; he does not know that, and sets it anyway.
 
 **The key.** Like the Returned smith at Hollowhall, Tam has started carving the same object over and over: a hand-long key, in a pattern he does not know, out of ash-slag and scrap wood. He burns each one when it is done. The pattern matches the keyhole in the Lithic door at the end of the Red Seam under [[The Glass Barrow]], and [[Hathe's Door-Key]]. A party that shows him the Door-Key watches him go grey and say, "That's the one. Don't take it down there."
 

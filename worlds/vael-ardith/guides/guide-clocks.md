@@ -33,7 +33,7 @@ Vell's hand, ticking when nobody looks.
 
 ### Debt called in (8, starts at 2)
 Tollamund's ledger. The players can see this one too.
-- **Ticks:** the quarter's interest unpaid on 14 Ashfall (already counted); the loan-chit is read and the party learns the debt is 4,800; grace ends at sunset on 4 Leafrot; the Reeve signs the charter; a soldier's pay-chit is pledged at the mill; the strongbox coin is spent on anything but the debt.
+- **Ticks:** the quarter's interest unpaid on 14 Ashfall (already counted); the loan-chit is read and the party learns the debt is 4,800; grace ends at sunset on 4 Leafrot; the Reeve signs the charter; a soldier's pay-chit is pledged at the mill; the strongbox coin is spent on anything but the debt; the silver in the thirteenth barrel is traced to the House with proof ([[The Unmarked Barrel]]), and the House notices it has been seen and moves its calendar up.
 - **Rolls back:** 480 gold paid on the interest −2; the Treaty's page seven found and read aloud −1; Pennamund turns against the Grandmother −1; the Reeve tears up the charter −1.
 - **At 8:** Tollamund collects on 5 Leafrot (S7) with lawyers, the Reeve and the clause; at full before S7, she comes early and brings Concord lances to the gate.
 

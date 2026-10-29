@@ -24,7 +24,7 @@ Forge-Warden Harrek Underlook keeps the hall. He is big, red-plaited, loud and s
 - A deep-oil lamp, 1 gp: a miner's lamp of black iron with a wick-guard and a reservoir that burns a day on a gill. Takes any oil. The Returned side's lamps have no shutter, because they do not want the dark.
 - Rope, mountain-hemp, 1 sp the ten fathoms; the company rope on the Rent's steps came from here in 3004 and is due renewing.
 - Nails, rivets, hinges, hoops, by the hundredweight, at the slate's price, which changes with the Harl iron.
-- Drills, borers, wedges, feathers and a mason's full set in a leather roll, 12 gp, which the Regency's Master of Works bought by the dozen in 2979 and never paid for; the Warden has the paper, and shows it.
+- Drills, borers, wedges, feathers and a mason's full set in a leather roll, 12 gp, the price of the one the Regency's Master of Works ordered in 2979 and never paid for; the Warden has the paper, and shows it.
 - **Not for sale, on the dark side:** a key, hand-long, black iron, bow shaped like a shut door, lying on Durn Mallow's anvil until he finishes it, and then not lying anywhere.
 
 ### Who is here
@@ -38,7 +38,7 @@ The Warden, at his slate, shouting. Surface smiths and their prentices on the li
 - The Warden knows which door the key fits and has told the Hall-Mother and nobody else.
 
 :::gm
-**Which are true.** 1. A joke, and the surface smiths tell it, and the Returned let them. 2. True; see [[Durn Mallow]]. 3. The surface dwarves say so. The Returned do not tune to it; they tune to something under it. 4. False. Crane bought drills and a mason's set and left the hold owing twelve crowns; the paper is real and the Warden shows it to anyone from the ash to make the point. 5. False: nobody at the Underlook knows which door. The one who does is Hall-Mother Brenna Underlook's gate-priestess, Greta Holm, who has guessed, and has not said.
+**Which are true.** 1. A joke, and the surface smiths tell it, and the Returned let them. 2. True; see [[Durn Mallow]]. 3. The surface dwarves say so. The Returned do not tune to it; they tune to something under it. 4. False. Crane bought drills and a mason's set and left the hold owing twelve crowns; the paper is real and the Warden shows it to anyone from the ash to make the point. 5. False: nobody at the Underlook knows which door. The one who comes nearest is [[Hold-Mother Greta Holm]] at the gate-shrine, who has guessed, and has not said.
 :::
 
 ### Things to do

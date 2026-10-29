@@ -28,6 +28,9 @@ relations:
   - to: npc-tesh
     kind: is searching for
     note: An imperial by-blow. She doesn't know. Neither, yet, does he.
+  - to: npc-orrin-mallory
+    kind: has questioned
+    note: Had the throne-room floor lifted twice and asked what he heard. Orrin said "the river".
 ---
 
 ### Look and voice

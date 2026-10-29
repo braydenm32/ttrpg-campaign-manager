@@ -24,7 +24,7 @@ It opens anything a dead person closed: a locked tomb, a grave sealed by a curse
 :::gm
 Hathe did not die by accident. Ilyra took what was left of him, though she did not choose to. The key still carries a thread of that power, and anyone holding it feels a cold pull from Halcyra. [[Mother Corvane]] will lend it to a PC she trusts for a good reason, such as opening a sealed grave, but not for long. The Saint's envoy would pay anything for it.
 
-It opens Lithic doors on one road: the Barrow's Red Seam, the Cold Seam landing, the Stone's root. The doors there were shut by the standing dead, so the key of the dead turns them.
+It opens Lithic doors on one road: the Barrow's Red Seam, the Cold Seam landing, the Stone's root. The doors there were shut by the standing dead, so the key of the dead turns them. A Returned smith at Hollowhall, [[Durn Mallow]], forges its twin tooth for tooth every week and melts it; his was cut from the other side of the same doors.
 :::
 
 == GM notes ==

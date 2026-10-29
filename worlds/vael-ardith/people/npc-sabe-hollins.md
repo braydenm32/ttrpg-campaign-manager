@@ -24,6 +24,9 @@ relations:
     kind: adores
     note: He made her a firework once.
     known: true
+  - to: npc-mirrit
+    kind: draws with the candle-ends of
+    known: true
 ---
 
 Small, silent and solemn, with one brown eye and one milky Hollowborn grey, a chalk-dusted pinafore and bare grey feet. The other children of [[The Smokes]] named her **Still**, because she can sit without moving for an hour, watching nothing in a corner. She hardly speaks. She draws instead: on walls, doorsteps, cellar floors. Always the same picture, a little more each red moon.
@@ -33,5 +36,5 @@ A vast shape under water. An eye the size of a lake, opening. Lately, a light ab
 > (She hands a PC a scrap of slate with the picture on it, then points at the lantern on the hill, then at the picture. That's all.)
 
 :::gm
-Sabe is a walking [[Sleeper Dreams]] table: each full Ember, her drawing gains a detail. After session 3: the crack. After session 5: a person with moth's wings standing in the light. After session 7: the cage, open, and nobody inside it. Her parents are Sleepless; the Widow is fond of her. If the Sleepless march, Sabe walks at the front, asleep.
+Sabe is a walking [[Sleeper Dreams]] table: each full Ember, her drawing gains a detail. After session 3: the crack. After session 5: a person with moth's wings standing in the light. After session 7: the cage, open, and nobody inside it. Her parents are Sleepless; the Widow is fond of her. The door-and-lamp she draws is not hers alone: Ilka Dunne, called Moth, drew the same picture on the Smokes' walls in 3006, when Sabe was about two, and it has run through the children there ever since ([[The Unlit Room]]). If the Sleepless march, Sabe walks at the front, asleep.
 :::

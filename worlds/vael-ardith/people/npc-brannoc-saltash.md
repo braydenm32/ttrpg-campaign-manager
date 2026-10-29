@@ -24,9 +24,13 @@ relations:
   - to: god-maelis
     kind: swears by
     known: true
+  - to: npc-mother-hennet
+    kind: was pot-boy to
+    note: In the Seventh's kitchen the night of Cinders. He still brings his stew down on Restday.
+    known: true
 ---
 
-Big, bald, red-armed and sweating, with a leather apron and a voice like a kettle coming to the boil. Brannoc was pot-boy to [[Mother Hennet]] in the Ruddy Hundred's kitchen the night of [[The Battle of Cinders]]: he is the boy with the burnt hand who followed the lantern up the hill in the company's story of the ninth lantern, and he will show you the scar if you ask, and not if you don't. He says he sang on the way up; [[Halloran Pike]] says he howled. Hennet gave him the Ninth's kitchen after she lost the arm, and every Restday he carries a bowl of his stew down to [[The Last Candle]] so that she can tell him it wants salt.
+Big, bald, red-armed and sweating, with a leather apron and a voice like a kettle coming to the boil. Brannoc was pot-boy to [[Mother Hennet]] in the Ruddy Hundred's kitchen the night of [[The Battle of Cinders]]: he is the boy with the burnt hand who followed the lantern up the hill in the company's story of the ninth lantern, and he will show you the scar if you ask, and not if you don't. He says he sang on the way up; [[Halloran Pike]] says he howled. Hennet gave him the Ninth's kitchen after she lost the arm, and every Restday he carries a bowl of his stew down to [[The Last Candle]] so that she can tell him it wants salt. On 14 Ashfall, Cinders night, the company eats his burnt-hand stew standing at the cooks' camp in [[The Weeping Orchard]] after the silent muster ([[Food and Drink of the March]]).
 
 He swears entirely in prayer, which the company finds more frightening than ordinary swearing:
 
@@ -36,4 +40,4 @@ He feeds the company on eleven days of rations stretched to three weeks, and he 
 
 == GM notes ==
 
-Use him as the mutiny's barometer: the thinner his stew, the closer the company is to breaking. If the PCs bring him food, the Mutiny clock rolls back one segment.
+Use him as the mutiny's barometer: the thinner his stew, the closer the company is to breaking. If the PCs bring him food, the Mutiny clock rolls back one segment. In 3011 Marrow cancels the silent muster after the pay notice, and he sends the pot round the barracks instead.

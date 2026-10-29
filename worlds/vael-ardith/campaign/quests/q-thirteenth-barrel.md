@@ -2,15 +2,15 @@
 type: quest
 name: The Unmarked Barrel
 players: true
-summary: "Concord silver is coming up the Cinder in salt-barrels, twelve marked and a thirteenth that is not counted. Somebody is paying for the town with it."
+summary: "New Concord silver is turning up in Hebbe's toll-box, and it is not the Treaty's. She thinks somebody should go and count at Sedgemere."
 parent: sedgemere
 tags: [ side quest, concord, river ]
 questStatus: open
 fields:
   Given by: Mistress Hebbe, the toll clerk (or Kettle Brindlewake, for a favour)
-  Reward: "Hebbe makes the party toll-free for life (worth more than it sounds), and a sight of what the Reeve signed"
+  Reward: Hebbe makes the party toll-free for life (worth more than it sounds)
 gmFields:
-  Sessions: "2 to 4 (windows: Tideday 22 Ashfall, Tideday 28 Ashfall); payoff in session 7"
+  Sessions: "2 to 5 (salt-tows come up on Tidedays: 16 Ashfall at dusk, 22 and 28 are the clean windows); payoff in session 7"
 relations:
   - to: npc-mistress-hebbe
     kind: given by
@@ -34,6 +34,11 @@ relations:
 Kettle says the same thing differently ("It's a barge, love, it's all a barge") and charges for it.
 
 ### Steps
+1. Look at the silver Hebbe has caught in the toll-box.
+2. Go and count at Sedgemere, nine miles downriver.
+
+:::gm
+### Steps in full
 1. **The ring.** Hebbe shows the party the toll-box's silver (eleven pieces in three weeks, all Tollamund-marked, from the Quay trade). Investigation DC 12, or Hebbe's ear: it is the House's *working* coin, not the Treaty's.
 2. **Sedgemere.** Nine miles downriver: half a day by barge (Kettle will carry them, with questions), a day on foot. The Weir, the Barrel, and the slate. See [[Sedgemere]].
 3. **Count the barrels.** A tow of three Concord barges comes up on Tideday evenings (22 and 28 Ashfall are the clean windows). Salt-barrels, twelve to a tow, burnt with the Concord's salt-mark, and a thirteenth, plain, which the barrel-count sweepstake at [[The Thirteenth Barrel]] never includes. Counting from the Weir-walk is a DC 10 Perception check; noticing that the house always guesses twelve is a DC 12 Insight.
@@ -50,7 +55,6 @@ Kettle says the same thing differently ("It's a barge, love, it's all a barge") 
 ### Reward
 Hebbe makes the party toll-free for life: their names go into the toll-log under "exempt" in her own hand, and she waves the soldiers' toll for every cart they bring. In a town where a penny is a head, it is worth more than it sounds, and it is a quiet credential: Hebbe's word is the one at the bridge that cannot be bought. And a sight of what the Reeve signed (see [[What has the Reeve signed?]]): Hebbe has been filing the Reeve's son's copy of the draft charter since Longnight, because it mentions the toll, and she will show it the day the Concord's porters cross the bridge in session 7.
 
-:::gm
 **The truth.** The silver in the thirteenth barrel is [[Tollamund & Daughters]]' working coin for buying the town: the Reeve's charter, [[Fennick Bottlebrook]]'s credit and signatures, [[Jaspin Sweet]]'s Glasser purchases, the Bridle and Yoke's debts. It does not travel through the Regency's customs because it does not travel *at all*, in the House's own reckoning: it is "salt". The Concord's tow-masters do not know what the thirteenth is. The tithe is **one coin in thirteen**, the Barge-Mother's own invention, called "the barrel's share" and put in the ballast.
 
 Hebbe suspects, not knows. She can ring a coin, not a motive.

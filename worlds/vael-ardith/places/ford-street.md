@@ -25,7 +25,7 @@ It is the town's high street and the only street in the March a stranger would c
 - **[[Quist & Daughter, Surveyors]]**, north side: maps, measuring and a chain hung over the door like a snake.
 - **[[The Baker's Wife]]**, south side, the first lit window of the morning.
 - **[[The Salt Lake]]**, north side, with a plume of steam over its roof that can be seen from the hill.
-- **The cooper's yard**, south side, opposite the bathhouse: Wendel Hoop makes casks and hears everything through his ceiling. The single room above it is [[The Assessor's Office]], where [[Pell Quillon]] sleeps among the paper and [[Hester Pruitt]] fights the stove.
+- **The cooper's yard**, south side, opposite the bathhouse: [[Wendel Hoop]] makes casks and hears everything through his ceiling. The single room above it is [[The Assessor's Office]], where [[Pell Quillon]] sleeps among the paper and [[Hester Pruitt]] fights the stove.
 - **[[The Hock]]**, north side, near the square: three brass balls on a bracket, a Concord licence in the window, and a halfling in a high chair.
 - **[[Harrow's Simples]]**, south side at the corner where South Street turns off to the Smokes: front door on Ford Street, back door in another town.
 - **[[The Reeve's House]]**, north side on the square: the only house with glass in the windows.

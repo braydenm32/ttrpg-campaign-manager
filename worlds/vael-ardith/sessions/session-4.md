@@ -2,7 +2,7 @@
 number: 4
 title: The House of Unburnt Light
 worldDate: 20 Ashfall 3011
-pages: [ seraphine-ashe, ilyra, npc-iosune, sorrel-vey, npc-mourn, npc-tesh, aelith-sorn, ilse-marrow, garrick-sallow, npc-dunstan-bray, spoons, brother-tallow, fennick, mother-corvane, kettle, ansel-mote, pell-quillon, house-unburnt-light, velvet-ledger, h-letter, item-velvet-token, item-saint-candle, q-kettles-cargo, f-church-saint, god-saint, god-isaurana ]
+pages: [ seraphine-ashe, ilyra, npc-iosune, sorrel-vey, npc-mourn, npc-tesh, aelith-sorn, ilse-marrow, garrick-sallow, npc-dunstan-bray, spoons, brother-tallow, fennick, mother-corvane, kettle, ansel-mote, pell-quillon, house-unburnt-light, velvet-ledger, h-letter, item-velvet-token, item-saint-candle, q-kettles-cargo, f-church-saint, god-saint, god-isaurana, bellwether, npc-marn-tolliver, q-thirteenth-barrel, the-thirteenth-barrel, sedgemere, q-price-was-an-arm, npc-mother-hennet, npc-pennamund, npc-brother-audit, npc-fallon-wrass, the-salt-lake, the-turncoat, npc-orla-quist, dunmeer, ambercote, npc-gammer-teal ]
 encounters:
   - name: The Lamp-Wardens
     notes: "Veteran (the House's Lamp-Wardens): two longsword attacks +5, 1d8+3. White-and-gold tabards in the House, red surcoats on the road. They fight with real regret. One by default; a second joins only if the party draws steel first. Seraphine calls them off at first blood, theirs or yours."
@@ -21,7 +21,7 @@ encounters:
 - *Sky*: Pallas past full and waning; the Ember waning too, rising later each night, its glow gone to copper.
 - *Weather*: clear and cold, the first clean sky in a month. You can see the House's white wall from the Keep.
 - *Touch these*: Tallow wakes nearly blind, names Ysse keeper in front of witnesses, and warns her off Seraphine without saying why. Fennick comes back grey-faced from a visit by Tollamund's clerk. Old Pike watches Sallow buy a round and says, to nobody: "Seventh had a lieutenant like that. Generous man. We buried him first." Corvane sends to ask Quorl, casually, whether anyone has said anything "odd" lately. At the House gate a dog barks at the empty air behind Borrin until a Lamp-Warden carries it off. After the House, Ysse dreams in the other voice, the sweeter one: *Somewhere warm. Keep me somewhere warm.*
-- *In between* (17 to 19 Ashfall): Tallow sleeps a day and wakes nearly blind. Sallow's people go quiet and careful. If anyone pries into the mutiny, Bray is told to "have a word" with them, and brings friends. Kettle's Cargo can run any of these nights. Nib, the Assessor's errand boy, paid in biscuits, knows Mote keeps a second ledger bound in black and locks it in the desk; for a bag of biscuits he'll leave the window unlatched, any time between now and session 5. Today is Coinday, when the post-bag leaves for Caer Ardith: Kettle can copy a page of Mote's for the party, for silver or for friendship ("Report on the lamp. Progress satisfactory.").
+- *In between* (17 to 19 Ashfall): Tallow sleeps a day and wakes nearly blind. Sallow's people go quiet and careful. If anyone pries into the mutiny, Bray is told to "have a word" with them, and brings friends. Kettle's Cargo can run any of these nights. Nib, the Assessor's errand boy, paid in biscuits, knows Mote keeps a second ledger bound in black and locks it in the desk; for a bag of biscuits he'll leave the window unlatched, any time between now and session 5. Today is Coinday, when the post-bag leaves for Caer Ardith: Kettle can copy a page of Mote's for the party, for silver or for friendship ("Report on the lamp. Progress satisfactory."). Stillwater (Gammer Teal) and Ambercote (Cass's slate) are each a long day's ride; see session 3's detours.
 - *Level-up*: none. The party stays level 3 through session 5.
 - *If the party…* ignores the letter, Seraphine comes to them: to the Keep gate at noon with the little girl, a cart of hot bread for the whole company, and an invitation to Marrow that she makes in front of a hundred hungry soldiers. Sallow loses his audience for a day. The garden door scene can still happen; somebody in the party will want to see the House after that.
 
@@ -82,6 +82,15 @@ If the party comes back to the House at night, uninvited: Seraphine at prayer in
 
 ### How it ends
 The party walks home before dawn, warm and rested and certain they shouldn't feel this good. On the hill, Ysse tends the lantern, and the flame leans toward the east, toward Halcyra, like a plant toward a window. Tick the Saint's clock.
+
+### If the party wanders
+- **Market day at the Candle.** Pennamund's clerks come for Mother Hennet's slate-book, with an offer to clear every tab on the slate. They are polite and will wait a day. Hennet asks the party what it is worth: [[The Price Was an Arm]]. [[Brother Audit]] can certify it.
+- **Bellwether.** Marn gives up the jar, its dates and Ambry Coyle's name for a forgiven season of goats (forty beasts, about forty silver in toll). The next salt-tow window is Tideday 22 Ashfall, two days off: [[The Unmarked Barrel]].
+- **Bray.** He was a boy of eleven in the line of children past the Tree at [[Dunmeer]] in 2996. The story told the Dunmeer way, or a strand of the Tree's rope put in his hand, turns him before it comes to scimitars.
+- **The Salt Lake.** The Soran sisters ban priests and forget nothing; on Hearthdays the Reeve and three Tollamund clerks talk charter through the steam in the alcoves. Ysolde's brother went into a Mercy House at Halcyra in 3007 and has not come out, which is worth knowing before the party walks into the House. See [[The Salt Lake]].
+- **The Turncoat.** Bask's order book: six lengths of white-and-gold, ordered by Brother Iosune on 12 Ashfall, "by Leafrot, for six". That is two days before the lantern first guttered. See [[The Turncoat]].
+- **Orla Quist.** [[Orla Quist]] has her father's Ardmere ledger, and Marrow is in its margin: she told him the truth about the stores, early. A quiet scene for whoever is Marrow's friend, before session 7.
+- **A note** by Kettle's cousins, in a Counting-House hand: "The lamp is on a list. I thought you should know. F.W." It is from [[Fallon Wrass]], the Sevenhaven clerk who told Kettle the Table had bought the ash.
 
 == Strong start ==
 

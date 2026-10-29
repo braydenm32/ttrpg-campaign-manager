@@ -34,7 +34,7 @@ relations:
 ---
 
 ### What is known
-Nobody agrees on his name. The Regency's record of the hanging survives, dated 12 Frostcall 2996, a Restday, at Dunmeer, a village in the Fallowden marches; the corporal's name is blotted with what the clerks swear was spilled ink. The Ninth Lantern calls him Dask. The orc companies call him Hob. In [[Ardmere]] he is Little Fenn. He was a corporal of a Regency line company, ordered to fire a village that had fed the other side, and he said no. Not a speech. He said "No, sir," and stood there, and the lieutenant said it again, and the corporal said "I heard you the first time," and they hanged him from the village's one tree at noon so the company could watch.
+Nobody agrees on his name. The Regency's record of the hanging survives, dated 12 Frostcall 2996, a Restday, at [[Dunmeer]], a village in the Fallowden marches; the corporal's name is blotted with what the clerks swear was spilled ink. The Ninth Lantern calls him Dask. The orc companies call him Hob. In [[Ardmere]] he is Little Fenn. He was a corporal of a Regency line company, ordered to fire a village that had fed the other side, and he said no. Not a speech. He said "No, sir," and stood there, and the lieutenant said it again, and the corporal said "I heard you the first time," and they hanged him from the village's one tree at noon so the company could watch.
 
 The village burned anyway. That is the part the soldiers like least and tell every time.
 
@@ -55,8 +55,12 @@ He drinks with [[Grum]], who has not decided whether to mind. [[Aurelan]] does n
 ### Holy days
 Every Restday, because he was hanged on one and the faithful say he is owed the day. Rope Day, 6 Frostcall, the first Restday of the month he died, when a company's ropes are checked, nobody is hanged, and the man who knows the words says them over a cup, and it is passed, and nobody drinks until it reaches the newest recruit.
 
+His sister keeps a cheese-shop in the village and a shrine at the Tree, and sells a strand of rope to every pilgrim for a copper: [[Mab Lennard]] (see [[A Strand of the Corporal's Rope]]).
+
 :::gm
 The Corporal is real and his ascent is real, and he is the only god on the board with no stake in the crack. He was not at Cinders; he was dead six years before it. He has no domain to gain, no debt to collect, nothing under the stone he wants. He is the god of saying no, and the pantheon has not yet asked him anything, and when they do he will probably say it.
+
+The Dunmeer story is not "and the village burned anyway". It burned *empty*: the four hours it took to hang him (the line broke twice) were the four hours the village used to walk its children out. The refusal bought time. See [[Dunmeer]] and [[Mab Lennard]].
 
 That makes him the one god who might help the party reseal the ward, and the one who might refuse them too, if what they are doing looks like an order. He answers spite better than prayer and refusal better than request. Mechanically: once per arc, when a PC who wears the rope refuses an order or a bargain at real cost, something small goes their way (a rope breaks, a guard forgets, a form is lost). Never more than that. He is a corporal.
 :::

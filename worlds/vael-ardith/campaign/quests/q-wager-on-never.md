@@ -8,7 +8,7 @@ tags: [ side quest, last-candle ]
 questStatus: open
 fields:
   Given by: Spoons Aldane, at the corner table, quietly
-  Reward: Spoons's marker (a favour from the man who knows everyone's odds), and a word Mother Corvane does not have
+  Reward: Spoons's marker (a favour from the man who knows everyone's odds)
 gmFields:
   Sessions: "3 to 5; paid out in the epilogue, publicly, at the Candle"
 relations:
@@ -38,6 +38,12 @@ He will not say what he saw at the oil store. He will say, if pressed, that a bo
 - Hennet remembers the woman: "Tall for a bird. Laughed at the clause when the clerk read it. Didn't stay for a drink." Her slate has no column for her.
 
 ### Steps
+1. Find out who she was. The Court does not discuss it.
+2. Find out where she went.
+3. Ask her why she bet it.
+
+:::gm
+### Steps in full
 1. **Who was she.** The Court will not say; Quorl can ask the right question of the wrong Raveler and be sent up the Rise. Corvane, if asked straight, and only if asked straight: "That was my sister. Keld. The Court's first watcher of your lamp. She watched it one night, and in the morning she bet against ever, and she left, and she did not say goodbye to me." She says it rattling her shawls, as if it were a joke. It is not.
 2. **Where she went.** Downriver. [[Kettle Brindlewake]] knows where every Raveler on the Cinder sleeps; so does Nan Crupp, and the price is something true. Keld keeps a slate at [[Sedgemere]], half a day by barge, and is called [[Keld Owes-Nothing]] there, which is a deed-name and a boast.
 3. **Why "never".** Keld will not be hired, bought or argued with. She will answer a question asked directly and respectfully, from her doorway, standing, and she will say the fifth word in its place if the party gives her something she can believe: a true account of the lamp, from someone who has stood near it. Then she says it: in the winter after Cinders a Salt Guard man died in her arms in the Smokes and gave her the whole sentence, a word at a time, with long gaps, and she understood it, and has never doubted it since. The lamp cannot be put out. It can only be given back. Her sister did not want to hear that, because her sister wanted it out.
@@ -51,7 +57,6 @@ He will not say what he saw at the oil store. He will say, if pressed, that a bo
 ### Reward
 Spoons's marker: once, before the end, he gives the party a thing he knows and would otherwise sell, which may be what he saw at the oil store. And the fifth word: Keld has had all five since 3002, and if the party brings her, or brings her words, to Corvane before session 5, the Rook-Court's clock fills early and Corvane's funeral for old Pike is not the first time she hears it.
 
-:::gm
 **The truth.** Keld is Corvane's younger sister, set by Corvane to be the Rook-Court's first watcher of the lantern for the year after Cinders, and in that first winter a Salt Guard man dying in her arms in the Smokes gave her "the lamp is the lock" whole, before anyone else had heard more than a word of it; the sentence the dying have been saying in pieces for nine years ([[What are the dying whispering to Quorl?]]), she got in one. She put it beside what Corvane had been saying all winter and understood that the lamp could not be put out, only given back. She told Corvane the conclusion and kept the words. Corvane, who loves the dead more than the living, said: then put it out and let them rest. Keld said: then I will bet it never goes out. She bet five crowns on "never" the morning of the renewal, walked nine miles down the towpath at dawn on the 15th, and has kept the weir at Sedgemere since. Her own page has her voice and her slate; this page only needs her reason, and her answer to the strongbox, which is "Don't pay it."
 
 **Payout, by ending, at the Candle, in the epilogue.** Spoons does it publicly because he said he would, and because Hennet makes him. **Reseal:** the lantern "goes out" on 9 Leafrot (the flame in Ysse's hands dies at the Stone), the pool pays whoever had that date, Spoons pays and is sad, and Keld's stake stays in the strongbox, grown for nine years, because *never* did not win and did not lose: the lamp was not put out, it was given back, and Spoons does not have a rule for that, and writes one. **Use it:** the flame burns on; "never" wins; Keld, if the party found her, refuses the money in front of the room ("I bet to be right, not to be paid"), and Spoons does not know who to give it to. **Let it crack:** the pool pays out on the night it went out and nobody is in a state to collect, and Keld's stake is the only thing in the strongbox still worth anything.

@@ -21,6 +21,9 @@ The Vesh keep the light. In every nation they are the lamp-wardens, the lighthou
 
 They are quiet, dry, exact and nocturnal. A Vesh household wakes at dusk. They mark the passing of the year not by the sun but by the lamps lit; a Vesh's age is counted in winters, because winter has the longest nights. They have no god of their own and keep everyone else's lamps impartially. See [[Brother Tallow]].
 
+### Customs and superstitions
+Age is counted in winters, because winter has the longest nights, and a Vesh who gives you their age in years is being polite to a human. "Lean back" is the whole of their moral teaching: step away from the thing that burns. A lamp is lit at dusk for a dead Vesh and left to burn out untrimmed; the lamp-wardens' guild says the dead keep their own light for one night. Arguing about wicks is how two old Vesh say they are fond of each other, and Tallow and Hesk have been fond for eight years. A Vesh does not look up at the red moon, on principle; the ones who did went to Cinders and did not come home.
+
 ### Names
 Soft given names, occupational surnames from the trades of light. Oume Wickmoor, Ilet Candleby, Tessel Lampwright, Auvi Sconce, Mirre Taperling, Peth Ashwick, Soli Mothwaite, Ennu Lanternby, Faelle Oilgrove, Dusk Ember. [[Ysse Lampwright]] is a cousin, distantly, of half the lamp-wardens in the Regency.
 

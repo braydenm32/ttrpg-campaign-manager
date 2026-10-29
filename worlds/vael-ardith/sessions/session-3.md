@@ -2,7 +2,7 @@
 number: 3
 title: Red Moon Rising
 worldDate: 16 Ashfall 3011
-pages: [ dreaming-widow, npc-ambry-coyle, npc-sabe-hollins, marla-marlowe, tick, quorl, ysse, brother-tallow, ilse-marrow, mirrel-vosk, fennick, spoons, garrick-sallow, npc-dunstan-bray, dannic-rook, odile-fairweather, seraphine-ashe, mother-corvane, npc-mother-hennet, npc-dunny-pike, npc-noume-flarewick, pell-quillon, ansel-mote, the-smokes, lantern-hill, lantern-keep, house-unburnt-light, tollamund-house, fort-mercy, item-cage-keys, item-promissory-note, q-payday, table-dreams, f-sleepless, god-sleeper, lore-ember ]
+pages: [ dreaming-widow, npc-ambry-coyle, npc-sabe-hollins, marla-marlowe, tick, quorl, ysse, brother-tallow, ilse-marrow, mirrel-vosk, fennick, spoons, garrick-sallow, npc-dunstan-bray, dannic-rook, odile-fairweather, seraphine-ashe, mother-corvane, npc-mother-hennet, npc-dunny-pike, npc-noume-flarewick, pell-quillon, ansel-mote, the-smokes, lantern-hill, lantern-keep, house-unburnt-light, tollamund-house, fort-mercy, item-cage-keys, item-promissory-note, q-payday, table-dreams, f-sleepless, god-sleeper, lore-ember, npc-cass-marrowick, q-standing-village, ambercote, bellwether, npc-marn-tolliver, tollivers-dairy, sedgemere, npc-keld-owes-nothing, lore-signals, npc-mirrit, item-dreamless-charm, item-stone-pears, harrows-simples, npc-nell-harrow, npc-auntie-brace, npc-gammer-teal, the-salt-lake ]
 encounters:
   - name: Breaking the vigil
     notes: "Cult fanatic: Multiattack two daggers +4, 1d4+2; spells command (DC 11), inflict wounds, hold person. The pilgrims are commoners who only shove and sing. The Sleepless don't fight back unless attacked first. Only if the party tries to break up the vigil by force."
@@ -36,7 +36,7 @@ encounters:
 ---
 
 ### Scene 1: The dream (the small hours, Fort Mercy)
-Everyone in the fort wakes at the same moment from the same dream: a vast warm dark, a voice saying "nearly", a door with no handle (roll on [[Sleeper Dreams]] for each PC's version). Tick, being Hollowborn, wakes weeping and can't say why. Glassers are standing in their tent-mouths in their shirts looking at each other. Mardle Ock is humming. On the tower, Vexa says to nobody, "Well, that's new."
+Everyone in the fort wakes at the same moment from the same dream: a vast warm dark, a voice saying "nearly", a door with no handle (roll on [[Sleeper Dreams]] for each PC's version). Tick, being Hollowborn, wakes weeping and can't say why. Glassers are standing in their tent-mouths in their shirts looking at each other. Mardle Ock is humming. On the tower, Vexa says to nobody, "Well, that's new." A PC wearing [[A Dreamless Charm]] sleeps through it and has nothing to compare in the morning; a stone pear in anyone's pocket is warm ([[Stone Pears]]).
 
 It reached twenty-two miles. When the party rides home they will find it reached all of Cinderford too.
 
@@ -100,9 +100,19 @@ If they never corner Spoons, session 4 still needs evidence. Two other ways in: 
 ---
 
 ### How it ends
-Dawn comes. The Sleepless rise and walk home, smiling as if they'd won something. If the flame held, it is thin and steady; Tallow lives but doesn't wake for a day. Ysse holds the first key and is, whether anyone has said it yet, the keeper of the lantern. Tallow, half-conscious, as they carry him in: "It isn't oil it wants. It never was." Tick the Sleepless clock.
+Dawn comes. The Sleepless rise and walk home, smiling as if they'd won something. If the flame held, it is thin and steady; Tallow lives but doesn't wake for a day. Ysse holds the first key and is, whether anyone has said it yet, the keeper of the lantern. Tallow, half-conscious, as they carry him in: "It isn't oil it wants. It never was." Tick the Sleepless clock. As the Sleepless go, Kettle's cousins come up from the Low Quay to the Keep gate with a slate wrapped in goat-hair and sealed with cheese-wax, for "the Hollowborn soldier": [[The Standing Village]]. Give it to Tick's player.
 
 **End of session: level 3.**
+
+### If the party wanders
+- **Midnight in town.** Bell, drum and tower disagree when the lantern gutters: Dunny strikes two, a death; Thistle beats Stand to; Noume gets three flashes from inside the Rent. See [[Signals of Cinderford]].
+- **Hesk's Chandlery.** If the march passes it, [[Mirrit]] is inside with her ankle corded to the counter, and asks them to check the knot.
+- **South Street.** [[Harrow's Simples]] has had its window smashed, as it is every red moon. [[Nell Harrow]] is sweeping glass in the dark with a bandaged hand and says it was the wind. She gives the party a free dream-knot and a look.
+- **The Ninepenny.** [[Auntie Brace]] sits by the stove counting her sleepers in and out (name, pennies and dream) and takes it personally when one walks out onto the plain. Her book is the plainest record in town of what the Hollowborn dream tonight.
+- **Under the Widow's yard.** [[The Salt Lake]]'s warm culvert runs from the kilns under the Smokes and passes beneath the Widow's yard: a way in, tonight, while her people sit round the hill.
+- **Bellwether's goat-shed** (a mile above the ford). The goats will not cross the pale ash line, which moves twenty yards a fortnight, and the jars in the shed came from Stillwater. See [[Goodwife Marn Tolliver]] and [[Tolliver's Dairy]].
+- **A third cold at the weir.** At the full Ember the Cinder runs cold at [[Sedgemere]] again, and Keld sends a crow up to Corvel Rise.
+- **After the night (17th to 19th).** [[Gammer Teal]] at Stillwater, fifteen miles out, is a long ride and worth it: ninety, late-eyed, and the only person on the lake the Widow did not convert. "You want it pretty, go to the Widow. You want it true, sit down and shut up."
 
 == Strong start ==
 

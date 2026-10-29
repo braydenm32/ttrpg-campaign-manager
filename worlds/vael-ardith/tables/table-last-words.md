@@ -1,15 +1,15 @@
 ---
 type: table
 name: Last Words
-summary: "Twenty lines from the Rook-Court's ledger of last words, for session 5's reading and any funeral: most ordinary, a few that carry pieces of a sentence."
+summary: "Twenty-one lines from the Rook-Court's ledger of last words, for session 5's reading and any funeral: most ordinary, a few that carry pieces of a sentence."
 tags: [ random, ravelers ]
 ---
 
-Roll or choose when the party reads the Rook-Court's ledger with Mother Corvane (session 5), when Quorl takes a dying soldier's words, or when any funeral needs a line. Read each aloud in a different voice, with the name and the year, and let the players compare. Eight of the twenty carry a piece of a five-word sentence. Twelve are only what people say.
+Roll or choose when the party reads the Rook-Court's ledger with Mother Corvane (session 5), when Quorl takes a dying soldier's words, or when any funeral needs a line. Read each aloud in a different voice, with the name and the year, and let the players compare. Eight of the twenty-one carry a piece of a five-word sentence. Thirteen are only what people say.
 
 == GM notes ==
 
-Read one at a time, slowly, and do not point. The pattern should arrive at the table a few lines before anyone says it. The eight pieces between them give four of the five words: *the lamp is the*. Nobody in the Court's ledger says the fifth; Mother Corvane supplies "lock" herself, from Halloran Pike's bier that morning, and the Rook-Court clock fills. Two lines are fixed and should always come up: Marla Marlowe's (marked *told*, not *heard*: Quorl wrote it down from Ottilie's mouth at dawn), and Dannic Rook's. Quorl's own seven whisperers are in his notebook, not this ledger; if he reads them beside these, he hears the whole sentence for the first time in other voices.
+Read one at a time, slowly, and do not point. The pattern should arrive at the table a few lines before anyone says it. The eight pieces between them give four of the five words: *the lamp is the*. Nobody in the Court's ledger says the fifth; Mother Corvane supplies "lock" herself, from Halloran Pike's bier that morning, and the Rook-Court clock fills. Two lines are fixed and should always come up: Marla Marlowe's (marked *told*, not *heard*: Quorl wrote it down from Ottilie's mouth at dawn), and Dannic Rook's. The Sedgemere line points at [[The Unmarked Barrel]]; Keld has had it for a year and thought it was about eels. Quorl's own seven whisperers are in his notebook, not this ledger; if he reads them beside these, he hears the whole sentence for the first time in other voices.
 
 == Entries ==
 

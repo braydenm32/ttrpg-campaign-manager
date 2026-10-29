@@ -44,10 +44,10 @@ Mother Brisk has kept the hearth-house of [[Maelis]] on [[Temple Row]] since the
 She is also, by town custom, the keeper of the birth-rolls: every child born in Cinderford since the rebuilding is written in a book she keeps in a chest under the kettle-shelf, and anyone who stirs the soup may read it.
 
 ### What she wants
-Everyone fed. Everyone home. The crack left alone, which she says plainly to any priest on the Row who starts talking about mercy, and does.
+Everyone fed. Everyone home. The Rent left alone, which she says plainly to any priest on the Row who starts talking about mercy, and does.
 
 ### What she knows
-Who is hungry, which is to say who is in trouble, before anyone else in town. The names and dates of every child born here in eight years, and which six were born the night of Cinders. That [[Ottilie Marlowe]] has been writing heights in the margin beside those six every red moon, and that the heights have stopped. That every other priest on the Row has started saying the same thing about the Rent in different words, and she does not like it.
+Who is hungry, which is to say who is in trouble, before anyone else in town. The names and dates of every child born here in eight years, and which six were born the night of Cinders. That [[Ottilie Marlowe]] measured those six against her cellar door until they stopped growing. That every other priest on the Row has started saying the same thing about the Rent in different words, and she does not like it.
 
 ### How she treats the PCs
 As mouths first and soldiers second. She feeds them, tells them to come back when they are hungry rather than when they have questions, and answers the questions anyway while they eat. [[Tibbet Marlowe]] she has fed since he could hold a bowl; she calls him "the fourth" when she forgets and "Tibbet" when she remembers.

@@ -19,7 +19,7 @@ The riot in the Smokes began, as these things do, with a kindness.
 
 **The toll.** Eleven dead, forty hurt, nine households burned out. The company arrested thirty and hanged none, an act of mercy the Regency noted in a file marked *irregular*.
 
-**What it left.** A wary peace. A tradition of the Smokes' door-bells, rung twice for safety. An understanding between the Hollowborn and the company that neither will say aloud: *if it happens again, we come.* And a girl, now grown, who is Mirrit, Hesk the chandler's apprentice, and no longer tells anyone what she sees.
+**What it left.** A wary peace. A tradition of the Smokes' door-bells, rung twice for safety. An understanding between the Hollowborn and the company that neither will say aloud: *if it happens again, we come.* And a girl, now grown, who is [[Mirrit]], Hesk the chandler's apprentice, and no longer tells anyone what she sees.
 
 **How it is told now.** The Smokes remember it as the night the soldiers stood in the street. The Quarter above it remembers it as the night the Smokes burned.
 

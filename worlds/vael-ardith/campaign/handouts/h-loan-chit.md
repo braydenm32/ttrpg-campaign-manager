@@ -36,7 +36,9 @@ The sum to travel from the House's table at Fallowden under the Regency's pay se
 
 **What it reveals.** The whole shape of the debt in one half-sheet. The pay wagon was never Regency pay: it was Tollamund's own silver, lent to the company in the company's name under a clause Marrow signed when the company was starving, and booked at interest before a coin of it was spent. The note stands at 4,800 gold (see [[The Concord Promissory Note]]), and the quarter's interest of 480 fell due on the 14th. "Including the lantern" is the clause [[Grandmother Tollamund]] reads aloud at the Keep gate in session 7. The Regency seal on the box was cover, and the chit says so in the politest possible way.
 
-Fennick, shown it, goes white: "They've lent us our own wages and charged us for the loan." He is right. If the party spends the 600 on wages anyway, the Mutiny clock rolls back one and the Debt clock does not move, because the debt was already booked.
+Fennick, shown it, goes white: "They've lent us our own wages and charged us for the loan." He is right. If the party spends the 600 on wages anyway, the Mutiny clock rolls back one and the Debt clock ticks one: it is House money, and the House will say so.
 
 Pennamund's scored-through initial is a clue to his own doubts: he audited the advance and did not like it. Perrin, who wrote the chit, is his source inside the house (see [[The Tollamund Daughters]]).
+
+Hebbe's toll-log is the only independent record of the silver that paid it (see [[Mistress Hebbe]]); the thirteenth barrels at [[Sedgemere]] are where the House's working coin travels (see [[The Unmarked Barrel]]).
 :::

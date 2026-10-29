@@ -20,6 +20,8 @@ const PLACE_PAGES: Record<string, string> = {
   Ilmareth: 'ilmareth',
   Ardmere: 'ardmere',
   Fallowden: 'fallowden',
+  Whitepost: 'whitepost',
+  Dunmeer: 'dunmeer',
   Halcyra: 'halcyra',
   Qerath: 'qerath',
   Cinderford: 'cinderford',
@@ -107,10 +109,12 @@ function continent(): Drawing {
     L(text, [x, y], size, 'place')
   L('to Qal Merrow', [218, 904], 13, 'place')
   L('to Ostrakai', [1510, 770], 13, 'place')
+  // Whitepost and Dunmeer crowd Fallowden and Cinderford: small lettering, set to the side of the pieces
+  const TIGHT: Record<string, Point> = { Whitepost: [914, 524], Dunmeer: [909, 571] }
   for (const [name, p] of Object.entries(TOWNS)) {
     const big = name === 'Caer Ardith' || name === 'Sevenhaven' || name === 'Cinderford'
     const dy = p.asset === 'temple' ? 14 : p.asset === 'tower' ? 10 : 12
-    L(name, [p.at[0], p.at[1] + dy], big ? 16 : 13, 'place', undefined, true)
+    L(name, TIGHT[name] ?? [p.at[0], p.at[1] + dy], big ? 16 : TIGHT[name] ? 11 : 13, 'place', undefined, true)
   }
   L('one of the Nine Great Wards', [1381, 1073], 12, 'place')
   L('play begins here', [1354, 1100], 12, 'place')

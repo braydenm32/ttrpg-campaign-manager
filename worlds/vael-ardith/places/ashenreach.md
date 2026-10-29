@@ -19,7 +19,7 @@ Nine years ago this was farmland: the Cinder valley, the pear country, forty vil
 
 ### The lie of the land
 - **The March of Cinders**, the western strip along the river Cinder, where [[Cinderford]] stands and the ash is only ankle deep. See [[The March of Cinders]].
-- **The glasslands**, east and south, where war sorcery fused whole villages into sheets and knots of dark glass. The Glassers dig them for anything that will sell. [[Fort Mercy]] is their den.
+- **The glasslands**, east and south, where war sorcery fused whole villages into sheets and knots of dark glass. The Glassers dig them for anything that will sell. [[Fort Mercy]] is their den and [[Tally's Cut]] their second camp. Twenty miles out in the southern glass is [[Ambercote]], the village where the dead are still standing.
 - **The grey lakes**, north-east, standing water that does not ripple. [[Stillwater]] is the only hamlet on them.
 - **The Rent**, in the heart of the plain: a chasm thirty miles long that was not there before the battle. The dead are said to walk its edge. See [[The Rent]].
 
@@ -36,7 +36,7 @@ Dry, cold at night, and the **greywinds**: ash-storms that rise without warning,
 - The Rent is getting longer.
 
 :::gm
-**Which are true.** 1. Partly. Mostly it is the pear trees. 2. True of one village. The Glassers do not dig it. 3. True, for the Hollowborn. Everyone else just sees mud. 4. True.
+**Which are true.** 1. Partly. Mostly it is the pear trees. 2. True of one village: [[Ambercote]]. The Glassers do not dig it. 3. True, for the Hollowborn. Everyone else just sees mud. 4. True.
 :::
 
 :::gm

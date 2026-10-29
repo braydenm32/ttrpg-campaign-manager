@@ -21,6 +21,9 @@ Two peoples now, who were one in 2981. The **surface dwarves** are clan-folk of 
 
 The **Returned** went under the Grimmark in the war, when the passes were burning, and came back years later, the first of them in 3004 and more every year since, without their shadows and without the deep. They do not say what they met. They do not say it with a discipline that frightens the clans more than any story could. They stand at Tharos's shrines and do not pray. They take a second name: Shadowless, Hollow, Came-Back, or Six-Years, which is one band's tally and not the rule. They are welcome in the holds and they are watched, and some of them have started leaving, for the lowlands, for the companies, for [[The Ashenreach]]. See [[The Return from the Deep]].
 
+### Customs and superstitions
+A pebble cairn at every crossroads, a hand high, that travellers add to; Gerda Hollin's at the Treaty Stone is knee-high now. Shadow-Count, 2 Emberwane, when every dwarf stands in the noon sun and is counted by shadow, and the Returned stand with them and are counted as present. The Returned set a place at their own table for themselves and nobody asks where the other one went. Bread at a standing Lithic's feet on Ketterin's name-day. An oath is sworn on bare rock or not at all; a dwarf who swears on a floor is making a joke, and it is the only kind they make. They will not sing the quick version of Ketterin's Luck ([[Songs of the March]]).
+
 ### Names
 Hard and short, with a hold-name after. Dagna Stillwell, Harrek Coombe, Morwen Pike, Ulfric Dunn, Brenna Gault, Torvald Hesk, Ingrid Mallow, Eskil Dorn, Greta Holm, Skarri Ulvane. A Returned dwarf adds the second name: Eskil Dorn Six-Years, Brenna Gault Shadowless.
 

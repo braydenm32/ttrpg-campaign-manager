@@ -23,7 +23,7 @@ He means to assess the company at once. The company is trying to work out whethe
 - **The window**, which looks straight down on the bridge and the gatehouse, and from which a patient man could count every coin that crosses.
 
 ### Who is here
-Pell, who means every word. Widow Pruitt, who does the sums. Nib, who runs errands and is paid in biscuits. And [[Ansel Mote]], a thin clerk with a cold, who copies, files and fetches, lodges above Gannet's Tallow & Wicks on Temple Row, and is somehow never in the room when anyone looks for him.
+Pell, who means every word. Widow Pruitt, who does the sums. Nib, who runs errands and is paid in biscuits. And [[Ansel Mote]], a thin clerk with a cold, who copies, files and fetches, lodges above Gannet's Tallow & Wicks on Temple Row, and is somehow never in the room when anyone looks for him. Below, in the yard under the floor, [[Wendel Hoop]] the cooper, the landlord, who has not been paid the Regency's rent since 3009 and hears every word through his ceiling.
 
 ### Rumours
 - The Assessor is here to seize the lantern for the Regency.

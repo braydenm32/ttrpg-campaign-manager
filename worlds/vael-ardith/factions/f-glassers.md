@@ -7,7 +7,7 @@ tags: [ salvage, gangs ]
 image: crest:f-glassers
 fields:
   Crest: A cracked green glass shard with a pick laid across it, on rust
-  Seat: Fort Mercy
+  Seat: Fort Mercy; a second camp at Tally's Cut
   Boss: Vexa Glassjaw
   Market: Gutter Market, Cinderford
 relations:
@@ -46,6 +46,7 @@ Cheerful, filthy scavengers who will sell you a boot, a bell or a king's ring, a
 
 ### Others you will meet
 - [[Skelt]]: a digger who drinks, and sells dig-charts at Gutter Market for two silver. Usually false.
+- [[Ferrow Gant]]: crew-boss of [[Tally's Cut]], one lung, keeps the grave and the Ripe One.
 - [[Ottoline Crane]]: Vexa's second, a dowser who finds metal under glass by walking barefoot and bleeding.
 - [[Tam Sixfingers]]: the Market Reeve at Gutter Market, with a cudgel and a memory for faces.
 - [[Mardle Ock]]: the Returned dwarf digger, who hums in the dark and says he will not go below the cellar.
@@ -66,7 +67,7 @@ A crowd of strong backs, a fort, a market stall or four, and an unusual collecti
 - **A buyer:** an agent from Ilmareth or Halcyra asks a very specific question.
 
 :::gm
-Secret aim: sell anything to anyone, including relics that should stay buried. Vexa has found Lithic writing in the glass she cannot read, and it runs beneath Fort Mercy in a direction she does not like. She wants to dig deeper. The crews have started to talk about what they hear at night. Some of them are Sleepless. The Church of the Unburnt Saint quietly pays for the oldest finds.
+Secret aim: sell anything to anyone, including relics that should stay buried. Vexa has found Lithic writing in the glass she cannot read, and it runs beneath Fort Mercy in a direction she does not like. She wants to dig deeper. The crews have started to talk about what they hear at night. Some of them are Sleepless. The Church of the Unburnt Saint quietly pays for the oldest finds. Two of the Cut's crews are the Widow's; Ferrow Gant does not know what they are. Ambercote is forbidden on pain of the glass, and the forbidding is Vexa's one superstition.
 :::
 
 == GM notes ==

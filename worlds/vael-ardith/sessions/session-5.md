@@ -2,7 +2,7 @@
 number: 5
 title: Last Words
 worldDate: 25 Ashfall 3011
-pages: [ mother-corvane, quorl, npc-halloran-pike, npc-mother-hennet, npc-brannoc-saltash, npc-skrell, brother-tallow, aelith-sorn, dreaming-widow, npc-ambry-coyle, marla-marlowe, dannic-rook, pell-quillon, spoons, last-candle, corvel-rise, weeping-orchard, doorkeepers-chapel, lantern-keep, treaty-stone, item-door-key, item-shard, item-last-words-ledger, item-glass-hand, item-treaty, h-map-scrap, q-raveler-funeral, q-weeping-sap, f-rook-court, god-hathe ]
+pages: [ mother-corvane, quorl, npc-halloran-pike, npc-mother-hennet, npc-brannoc-saltash, npc-skrell, brother-tallow, aelith-sorn, dreaming-widow, npc-ambry-coyle, marla-marlowe, dannic-rook, pell-quillon, spoons, last-candle, corvel-rise, weeping-orchard, doorkeepers-chapel, lantern-keep, treaty-stone, item-door-key, item-shard, item-last-words-ledger, item-glass-hand, item-treaty, h-map-scrap, q-raveler-funeral, q-weeping-sap, f-rook-court, god-hathe, ambercote, npc-jeb-marrowick, npc-cass-marrowick, q-standing-village, item-orchard-amber, item-road-marker, npc-keld-owes-nothing, sedgemere, the-thirteenth-barrel, npc-posy-reedmarsh, q-lost-pay-order, item-hennets-soup-pot, q-wager-on-never, q-price-was-an-arm, lore-songs, npc-caelo-once-mar, npc-aurelio-bask, table-last-words, npc-greta-holm ]
 encounters:
   - name: Orchard pilgrims
     notes: "Cult fanatic: Multiattack two daggers +4, 1d4+2; spells command (DC 11), inflict wounds, hold person. Four commoners who scrape sap and shove. They won't let outsiders take the sap, and they back off the moment Tick or any Hollowborn asks them to."
@@ -37,6 +37,8 @@ Old [[Halloran Pike]] sits up at his own funeral on [[Corvel Rise]] (see [[The F
 
 Then [[Mother Corvane]], who has come down from her roost for this, lends [[Hathe's Door-Key]] (kept in the reliquary at Corvel Rise and lent for funerals) to finish the rite. When the door opens, Pike's last words are the same as the seven in Quorl's notebook: "The lamp is the lock." He is the eighth.
 
+While the door stands open the room sings the long verse, *and neither was he* ([[Songs of the March]]). If anyone mentions Spoons's pool, Corvane, rattling her shawls as if it were a joke: "That was my sister." It is not a joke ([[The Wager on Never]]).
+
 If Dannic was never laid to rest, he is on the Rise too, under a fresh mound that won't stay flat. Quorl can open the door for him while the key is in his hand.
 
 ---
@@ -55,6 +57,8 @@ Corvane takes the party into the bone-library at the heart of the roosts and ope
 - *"…lock…"* (a widow, the Smokes, 3010)
 - *"Is the bread come?"* (a follower's child, the Keep's lines, 3011)
 - *"It's cold. It's cold under the glass."* (Dannic Rook, the Ford, 14 Ashfall 3011)
+
+For more voices, roll on [[Last Words]].
 
 Quorl reading with her: Religion or Investigation DC 14 to see the pattern before Corvane says it. Corvane has had four of the words for years and guessed the fifth. Now Pike has said it, and she says it aloud: "Lock." Tick the Rook-Court's clock to full. Asked why the drowned man said it was cold under the glass: "The dead are cold because they lie near the leak."
 
@@ -77,7 +81,7 @@ At the orchard's heart is the cooks' camp, where the company should have mustere
 ---
 
 ### Scene 5: The shard's fate
-**At the Candle.** The Last Candle is shut, for the first time since it was built. Mother Hennet lets them in by the kitchen door. The soup-pot hangs over the kitchen fire, black and dented. Pike's name is on the slate in fresh chalk, with nothing owing. She looks at them for a long time. "Took you long enough." If the party missed Vexa's chart, Hennet takes Pike's own copy out of the book under the bar and gives it to them: "He'd want it used. He never could."
+**At the Candle.** The Last Candle is shut, for the first time since it was built. Mother Hennet lets them in by the kitchen door. The soup-pot hangs on its hook in the cold corner of the kitchen, black, dented and scrubbed dry. Pike's name is on the slate in fresh chalk, with nothing owing. She looks at them for a long time. "Took you long enough." She takes [[Mother Hennet's Soup-Pot]] off its hook and puts it in a PC's arms. Carried back to the fire-pit and set in the ring, it fits to a hair. If the party missed Vexa's chart, Hennet takes Pike's own copy out of the book under the bar and gives it to them: "He'd want it used. He never could."
 
 **At the Keep.** [[Brother Tallow]], confronted, admits it: he has kept [[The Ward Shard]] under the lantern for nine years and has always been afraid to say what it was. "It's under the cage." It is reached from the oil-room in the tower's base, by the trap-ladder, no key needed: look up through the oil-port at the foot of the cage, and there in the lamp's bowl under the flame is a finger-long splinter of grey stone, faintly warm, with a hairline crack of red down its length.
 
@@ -94,6 +98,15 @@ If there's time, or if Pell asks for an escort, ride three miles east along the 
 At the Keep, a drop of sap tipped into the oil-port makes the lantern burn tall and white, and every wick-lamp on the hill burns white with it, for a whole day. For a moment Ysse sees a standing figure in the flame, enormous and very tired, looking at her. Tallow: "It wants to go home." Marrow decides: someone has to go to the Ninth Stone.
 
 **End of session: level 4.**
+
+### If the party wanders
+- **The night the Candle is shut.** Mote's hired knife, a stranger off the Low Quay, comes with lamp-oil for the loft and the slate-book under the bar. A party watching the Candle catches him; he knows only that "a clerk" paid him. Nobody watching: the loft burns, the slate is scorched black and the book is gone ([[The Price Was an Arm]]).
+- **The second witness.** [[Aurelio Bask]], the tailor at the Turncoat, ran from the wall at Cinders and spent the night in the cooks' camp, where he saw Hennet tip something glowing into the soup-pot. He has kept it seven years. He tells it if asked in front of a priest, or by Hennet, or by Marrow; a PC who has been kind to him hears it first.
+- **Sedgemere and Keld.** "That was my sister" sends the party nine miles down the towpath (a day) or half a day by barge. [[Keld Owes-Nothing]] answers a question asked directly and respectfully, from her doorway, and gives the fifth word to anyone who tells her the truth about the lamp. She comes to the Stone only for someone who says, in person, that the lamp is to be given back.
+- **Posy's pay order.** If the party has earned it, [[Barge-Mother Posy Reedmarsh]] hands over the 3009 order on the quay: [[The Lost Pay Order]].
+- **Ambercote** (a long day, 26 to 28 Ashfall). The standing are plain by daylight, and the Sleepless crews come at the next red moon, 9 Leafrot: a fortnight. See [[Ambercote]] and [[The Standing Village]]. [[Orchard Amber]], cut at dawn on the 17th, is at Gutter Market for two silver.
+- **Hollowhall, by letter.** To have [[Hold-Mother Greta Holm]] at the Stone on 9 Leafrot, someone must send for her now: she needs a fortnight's warning and a barge or a horse.
+- **If Sorrel is threatened**, a note reaches the Velvet Ledger by barge in an old square hand: "I could read it. I am sorry. Come home, or do not; but do not let her cut it. C." Sorrel does not understand it for a day. See [[Caelo once-Mar]].
 
 == Strong start ==
 

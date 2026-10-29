@@ -34,10 +34,10 @@ They found what a bathhouse needs: heat. The Smokes' three kilns run day and nig
 - Everything said in the Salt Lake is heard, and the sisters sell it.
 - The warmth comes up from the Glass Barrow, and one night you will hear singing in the pipes.
 - No priest has ever got past the counter. One tried once, in a bath towel, and was removed with the towel.
-- Ysolde has a brother in the Saint's Mercy House who she says is dead.
+- Ysolde has a brother in a Saint's Mercy House, and her sister says he is dead.
 
 :::gm
-**Which are true.** 1. True, every Hearthday: the Reeve and the three clerks of Tollamund's house sit in adjacent alcoves with the curtains open and talk through the steam about the charter, and it is true that nothing is written. 2. False. They sell nothing. They remember everything, which is worse and cheaper. 3. False, but near: the culvert runs from the kilns, under the Smokes, and passes under the Widow's yard on the way. 4. True of the first half: the priest was Brother Audit, auditing the water, and the towel was returned. 5. Her brother **Tavan**, a lamp-maker, went into the Lower Mercy House on Halcyra's lake in 3007 "to rest". The roll says *seen again*. Nobody has seen him.
+**Which are true.** 1. True, every Hearthday: the Reeve and the three clerks of Tollamund's house sit in adjacent alcoves with the curtains open and talk through the steam about the charter, and it is true that nothing is written. 2. False. They sell nothing. They remember everything, which is worse and cheaper. 3. False, but near: the culvert runs from the kilns, under the Smokes, and passes under the Widow's yard on the way. 4. True of the first half: the priest was Brother Audit, auditing the water, and the towel was returned. 5. Half: Dalia says it, and Ysolde will not. Her brother **Tavan**, a lamp-maker, went into the Lower Mercy House on Halcyra's lake in 3007 "to rest". The roll says *seen again*. Nobody has seen him.
 :::
 
 ### Things to do
@@ -50,7 +50,7 @@ They have also heard, in the steam, the Reeve say to Perrin: *"Under seal, not u
 
 **Why they stay.** The Church of the Unburnt Saint has Mercy Houses in three cities. Ysolde believes her brother is alive in one, and Dalia believes he is not, and they have argued about it every day for four years while pouring each other's tea. If [[Seraphine Ashe]] or Brother Caddis tries the door, Dalia says "No priests," and Seraphine goes. If the party asks where Tavan is and means it, the Mercy House's takings-roll in Halcyra holds the answer; see [[Mother Casimira]].
 
-**The Lamp** burns forty flames, and each was lit from the lamp in the Saint's niche on Temple Row on a different night, by Ysolde, who goes at dusk and takes nothing from the kiln-girl who tends it but a taper. It is her private rebuke, and the Saint's niche has never once gone dark in three years.
+**The Lamp** burns forty flames, and each was lit from the lamp in the Saint's niche on Temple Row on a different night, by Ysolde, who goes at dusk, takes nothing from the niche but a taper's worth of flame, and has never once met whoever keeps it lit. It is her private rebuke, and the Saint's niche has never once gone dark in three years.
 :::
 
 == GM notes ==

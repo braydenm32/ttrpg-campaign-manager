@@ -30,6 +30,16 @@ relations:
     kind: respects
     note: And doesn't trust her company to last.
     known: true
+  - to: the-reeves-house
+    kind: lives and holds court in
+    known: true
+  - to: npc-mistress-hebbe
+    kind: holds the toll through
+    note: Her son holds it by charter; Hebbe does the work.
+    known: true
+  - to: npc-orla-quist
+    kind: has lines drawn by
+    known: true
 ---
 
 ### Look and voice
@@ -42,7 +52,7 @@ She finishes other people's sentences, usually more bluntly than they would have
 > "I don't care who's right. I care who's paying for the roof."
 
 ### Who she is
-Odile Fairweather came to [[Cinderford]] in 3003, a widow of forty-seven, the year after [[The Battle of Cinders]], with a wagon, two sons and a charter from the Treaty commissioners to rebuild a town that everyone else had given up for ash. She rebuilt it. Grey stone, slate roofs, wells sunk below the ash line, a toll bridge at [[The Ford]] and the bell-ward's stroke to shut it. One of her sons died of the glass-lung in 3006; the other holds the toll, with [[Mistress Hebbe]] as his clerk at the company gatehouse. She has been Reeve for eight years, elected three times, never opposed, and has outlasted three captains. She keeps the only key to the locked shrine of Aurelan on Temple Row, and will not say why.
+Odile Fairweather came to [[Cinderford]] in 3003, a widow of forty-seven, the year after [[The Battle of Cinders]], with a wagon, two sons and a charter from the Treaty commissioners to rebuild a town that everyone else had given up for ash. She rebuilt it. Grey stone, slate roofs, wells sunk below the ash line, a toll bridge at [[The Ford]] and the bell-ward's stroke to shut it. One of her sons died of the glass-lung in 3006; the other holds the toll, with [[Mistress Hebbe]] as his clerk at the company gatehouse. She has been Reeve for eight years, elected three times, never opposed, and has outlasted three captains. She keeps the only key to the locked shrine of Aurelan on Temple Row, and will not say why. She holds court at [[The Reeve's House]], on the north side of the square.
 
 ### What she wants
 A town that outlives [[The Ninth Lantern]]. A charter nobody can tear up. Grain stores for two winters. Roads. She thinks of the company the way a farmer thinks of weather: necessary, unreliable, and not to be relied upon for the harvest.
@@ -53,7 +63,7 @@ Every family in town and what they owe. That the company can't pay the town for 
 ### How she treats the PCs
 Courteous, brisk and practical: they are the company's, so they are useful to her but not hers. She will pay them for jobs the company won't do, and she pays on time, which makes her the only employer in the March who does.
 
-**The Reeve's board** (four jobs, at the Reeve's rates):
+**The Reeve's board** (four jobs, at the Reeve's rates; pinned on the gatehouse board):
 1. A child who has walked toward the Rent in the night, and keeps doing it. Her mother says she was sleep-walking; the Reeve thinks she is Hollowborn.
 2. A cellar on Tanners' Lane flooded with water so cold it has a skin of ice in Ashfall.
 3. A quarrel on the Low Quay between Kettle's cousins and a Glasser, over a crate nobody will name.

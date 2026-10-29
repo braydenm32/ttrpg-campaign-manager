@@ -23,6 +23,10 @@ const RISE: Point = [132, 752]
 const MILL: Point = [420, 630]
 const FORT: Point = [614, 632]
 const STILLWATER: Point = [398, 470]
+const SEDGEMERE: Point = [66, 828] // west bank, where the river bends south-west, nine miles below the ford
+const BELLWETHER: Point = [272, 616] // east bank, at the mouth of the orchard lane
+const TALLYS_CUT: Point = [524, 686] // south of the road where the glass crossing begins
+const AMBERCOTE: Point = [560, 800] // in the southern glass, south-east of the Cut
 const RENT_W: Point = [905, 662]
 const RENT_E: Point = [1288, 266]
 const NINTH: Point = [1300, 262]
@@ -50,6 +54,11 @@ export const ASHENREACH: ExMap = {
     { page: 'weeping-orchard', at: [ORCHARD[0], ORCHARD[1] - 8] },
     { page: 'corvel-rise', at: RISE, piece: 'corvel-rise' },
     { page: 'stillwater', at: STILLWATER, piece: 'stillwater' },
+    { page: 'sedgemere', at: SEDGEMERE, piece: 'sedgemere' },
+    { page: 'bellwether', at: BELLWETHER, piece: 'bellwether' },
+    { page: 'burned-mill', at: MILL, piece: 'burned-mill' },
+    { page: 'tallys-cut', at: TALLYS_CUT, piece: 'tallys-cut' },
+    { page: 'ambercote', at: AMBERCOTE, piece: 'ambercote' },
     { page: 'fort-mercy', at: FORT, piece: 'fort-mercy' },
     { page: 'cold-seam', at: [FORT[0] + 34, FORT[1] + 6], note: 'Behind the Lithic panel in the fort’s cellar; it runs down and east toward the Rent.' },
     { page: 'ash-road', at: [700, 660] },
@@ -190,6 +199,16 @@ function ashenreach(): Drawing {
   many('village', [FORT[0] + 30, FORT[1] + 18], 14, 5)
   P('stillwater', 'village', STILLWATER, 18, 3, 16)
   P('ninth-stone', 'standing-stones', NINTH, 46, 7, 30)
+  // the small places: set with fixed seeds so the scatter below comes out as it always has
+  const small = (name: string, asset: string, at: Point, size: number, seed: number, variant: number) => {
+    add(piece(name, asset, at, size, seed, variant))
+    room.take(at[0], at[1] - size * 0.3, size * 0.6)
+  }
+  small('sedgemere', 'village', SEDGEMERE, 12, 880211, 1)
+  small('bellwether', 'village', BELLWETHER, 10, 880212, 3)
+  small('tallys-cut', 'village', TALLYS_CUT, 12, 880213, 5)
+  small('ambercote', 'ruins', AMBERCOTE, 16, 880214, 2)
+  small('ambercote-village', 'village', [AMBERCOTE[0] + 17, AMBERCOTE[1] + 5], 11, 880215, 4)
 
   // ---- lettering (placed before the scatter, so the scatter leaves it room) ----
   L('The Ashenreach', [220, 1006], 30, 'title')
@@ -203,6 +222,10 @@ function ashenreach(): Drawing {
   L('the Weeping Orchard', [ORCHARD[0] + 2, ORCHARD[1] - 26], 12, 'place')
   L('Corvel Rise', [RISE[0] + 8, RISE[1] + 16], 13, 'place')
   L('the Burned Mill', [MILL[0], MILL[1] - 26], 11, 'place')
+  L('Sedgemere', [SEDGEMERE[0] + 4, SEDGEMERE[1] - 18], 11, 'place')
+  L('Bellwether', [BELLWETHER[0] + 4, BELLWETHER[1] + 20], 11, 'place')
+  L("Tally's Cut", [TALLYS_CUT[0], TALLYS_CUT[1] + 18], 11, 'place')
+  L('Ambercote', [AMBERCOTE[0] + 6, AMBERCOTE[1] + 22], 11, 'place')
   L('the Ninth Stone', [NINTH[0] + 76, NINTH[1] - 4], 14, 'place')
   L('THE MARCH OF CINDERS', [215, 372], 16, 'region', arc(45, 372, 385, 380, -6))
   L('THE ASHENREACH', [680, 540], 26, 'region', arc(470, 548, 880, 548, -8))

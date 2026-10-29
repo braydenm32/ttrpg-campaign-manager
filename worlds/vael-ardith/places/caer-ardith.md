@@ -11,11 +11,14 @@ fields:
   Notable for: the Empty Throne, the Hall of Records, assassins with excellent manners
 ---
 
-Caer Ardith is the biggest city on the continent and the most carefully swept. Seven bridges cross the Ardis under the walls; the Sun Palace stands on the island between them, and in its heart the Empty Throne sits under a dust sheet that is changed every morning by a man whose family has kept the throne room's keys for nine generations.
+Caer Ardith is the biggest city on the continent and the most carefully swept. Seven bridges cross the Ardis under the walls; the Sun Palace stands on the island between them, and in its heart the Empty Throne sits under a dust sheet that is changed every morning by a man whose family has kept the throne room's keys for nine generations: [[Orrin Mallory]], the ninth of them.
 
 The city runs on paper. The Hall of Records fills three streets and every transaction in the Regency ends up in it, in triplicate, sooner or later. Vesh archivists keep the stacks; halfling couriers run the corridors; the Quiet Office has a door on every floor and no sign on any of them.
 
 The old nobility live on the terraces above the river in houses they cannot afford to heat, and throw parties. The orc garrison lives in the Iron Barracks across the water, where it has lived since 2104, under a watch that has not been relaxed since the Kingslaying. The Iron Barracks' gate still bears the marks of the night the Guard came out of it.
 
 ### Hook
-A claimant to the throne was "examined" at the Sun Palace last month. He was a vintner's son from Fallowden with the right chin and the wrong temperament, and after three nights in the palace he began screaming about a voice under the floor. He has been sent home to recover. [[Marius Vell]] attended the examination personally and took notes.
+A claimant to the throne was "examined" at the Sun Palace last month. He was a vintner's son from Fallowden with the right chin and the wrong temperament, and after three nights in the palace he began screaming about a voice under the floor. He has been sent home to recover. The night before his examination he drank at [[The Nine Generations]], the clerks' cellar under the Hall of Records, and told the room the floor was humming. [[Marius Vell]] attended the examination personally and took notes.
+
+### Where to drink and buy
+[[The Nine Generations]], the clerks' cellar under the Hall of Records, where paper is forbidden after the sixth bell and the Dust-Sheet Man drinks under yesterday's sheet. [[Ostrey's Ink & Forms]] on Records Street, which sells the Regency its own forms and has been out of Form 9-K since Reaping. The quarterly zero the garrison receives is signed there, in the Hall, by [[Edda Haverleigh]].

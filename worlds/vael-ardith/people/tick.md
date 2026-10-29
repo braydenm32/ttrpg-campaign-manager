@@ -33,6 +33,16 @@ relations:
     kind: rival of
     note: Professional jealousy, mostly about fuses.
     known: true
+  - to: npc-cass-marrowick
+    kind: dreamed of by
+    note: She has seen him standing in a closing door. Her letter is addressed to him.
+  - to: npc-hurkul-ninefingers
+    kind: has cages made by
+    known: true
+  - to: npc-mirrit
+    kind: knows
+    note: Another of the six. She calls him Fourth and has never once laughed at his jokes.
+    known: true
 ---
 
 ### Who he is
@@ -80,6 +90,7 @@ One more thing, small. Every full red moon for as long as you can remember, Mam 
 - Her younger sister, Tick's aunt Wenna, is [[The Dreaming Widow]], leader of [[The Sleepless]]. The Widow knows she is Tick's aunt; Tick does not know who the Widow is. "Her" is the Widow. The Widow believes Tick is the Sleeper's firstborn, the child of the night it dreamed hardest, and she wants him at the Rent's lip under a full red moon. Marla knows. Marla is terrified.
 - Tick grew fast, like the five others born in Cinderford that night, because the Sleeper's dream was strongest the night they were born; they grew in steps, one at each full Ember (see [[Why did the Cinders-born grow up so fast?]]). At each full Ember, the dream pulls at him. In **Red Moon Rising** (session 3), he sleepwalks toward the Smokes with the rest of the dreamers unless someone stops him.
 - If the ward is resealed, Hathe's old doors steady and Marla can finally pass. Give Tick a goodbye. If it cracks, she stays, and so do thousands more.
+- [[Cass Marrowick]] at [[Ambercote]] dreams the one Hollowborn dream in the March in which the door closes, and Tick is standing in it ([[The Standing Village]]). It is the Reseal ending's omen and the only hint that the Ninth is awake enough to want it.
 :::
 
 == GM notes ==

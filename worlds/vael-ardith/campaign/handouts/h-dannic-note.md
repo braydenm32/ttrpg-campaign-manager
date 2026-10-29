@@ -23,4 +23,6 @@ Dont like the clerk.
 **What it reveals.** Three clues, one a line. "S." is [[Garrick Sallow]], who was paying Dannic to swap the oil tins; "square" is the eleven silver he owed Spoons and the rest he owed Kettle. "The clerk" is [[Ansel Mote]], whom Dannic had met once on the bridge and did not like: the party has already seen the clerk's initials on the wanted bill and will meet him at the Keep gate in session 2. "Dont like the clerk" is the last judgement Dannic made, and it was right; Mote drowned him four nights later.
 
 The hand is Dannic's: Spoons, Fennick or Quorl recognise it. Compare it with the chalk on the Cold Room wall, *D.R. 3 Ashfall. Back for the rest.*
+
+The "clerk" Dannic did not like is also the clerk with a cold whom [[Mirrit]] served at the chandlery, who buys the Keel tins; the pale ash that comes back the other way is collected at Bellwether by Nib: see [[Goodwife Marn Tolliver]].
 :::

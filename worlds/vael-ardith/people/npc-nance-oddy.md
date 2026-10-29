@@ -30,7 +30,7 @@ relations:
     known: true
   - to: kettle
     kind: sends letters by
-    note: Through Kettle's cousins, who pass the mill with salt for the south.
+    note: Through Kettle's people, who pass the mill with salt for the south.
     known: true
   - to: f-ninth-lantern
     kind: counts for
@@ -39,7 +39,7 @@ relations:
 ---
 
 ### Look and voice
-A square, weathered woman in her sixties in a dead man's coat and a miller's leather apron gone the colour of the plain, grey hair cropped with a knife, forearms like a rower's from carrying water three miles. Ash in every line of her face. She carries a nail on a cord round her neck, for the bench, and a boar-spear she uses as a walking-staff and has used for other things. She does not sit still: when she is not cutting the tally she is sweeping ash off the bench, off the butt-lid, off the pear tree's roots, with a broom worn to the binding.
+A square, weathered woman nearing sixty in a dead man's coat and a miller's leather apron gone the colour of the plain, grey hair cropped with a knife, forearms like a rower's from carrying water three miles. Ash in every line of her face. She carries a nail on a cord round her neck, for the bench, and a boar-spear she uses as a walking-staff and has used for other things. She does not sit still: when she is not cutting the tally she is sweeping ash off the bench, off the butt-lid, off the pear tree's roots, with a broom worn to the binding.
 
 She talks with the pear-country burr that nobody else alive still has, slow and flat and short, and she counts before she says anything else.
 
@@ -52,15 +52,15 @@ She talks with the pear-country burr that nobody else alive still has, slow and 
 ### Who she is
 Nance Oddy married into the mill at nineteen and ground barley for the pear country for thirty years. The night of Cinders she was in Cinderford selling flour; the mill was six miles east of her with her husband and two children in it, and by morning there was no road to get back on. She went west with everyone else to Fallowden, lived a winter in a wool-shed, and in Seedwake 3003 walked back east alone with a yoke and two buckets, found the mill's walls standing and the tree in leaf, and stayed. The company's first stake-party found her there in Bloomtide, sweeping. She has been counting them ever since.
 
-The count is her work. She keeps the stakes between the Treaty Stone and the mill herself now, since the company stopped coming past the Stone in 3010: fifty paces and a rag, cut from whatever she can get, some of them the company's own old stakes carried back from where the Glassers left them. She keeps the Toll, a tin-box ledger of every party that has passed in nine years. She keeps the bench. She is, without anyone having decided it, the Ash Road's only clerk, and the company's stake-sergeant has twice tried to put her on the roll as a follower so she can draw rations, and she has twice refused, "because then you'd think you could tell me things".
+The count is her work. She keeps the stakes between the Treaty Stone and the mill herself now, since the company stopped coming past the Stone in 3010: fifty paces and a rag, cut from whatever she can get, some of them the company's own old stakes carried back from where the Glassers left them. She keeps the Toll, a tin-box ledger of every party that has passed in eight years. She keeps the bench. She is, without anyone having decided it, the Ash Road's only clerk, and the company's stake-sergeant has twice tried to put her on the roll as a follower so she can draw rations, and she has twice refused, "because then you'd think you could tell me things".
 
 ### What she wants
-The company back. Not the Keep, not the town: the stake-party, in Seedwake, with a cart and a tun of water and twenty soldiers who swear at the stakes and fill her butt and scratch their corner of the bench, the way it was for seven springs. Four blank springs in the company's corner of the bench are, to Nance, the whole of the Ninth Lantern's decline, and she will say so to any soldier who stops. "You used to come as far as me. Then you stopped. That's the whole story of you, lad, in a bench."
+The company back. Not the Keep, not the town: the stake-party, in Seedwake, with a cart and a tun of water and twenty soldiers who swear at the stakes and fill her butt and scratch their corner of the bench, the way it was for seven springs. Two blank springs in the company's corner of the bench are, to Nance, the whole of the Ninth Lantern's decline, and she will say so to any soldier who stops. "You used to come as far as me. Then you stopped. That's the whole story of you, lad, in a bench."
 
 She also wants the pear to fall, and is afraid of it, and does not say either.
 
 ### What she knows
-How many stakes stand this morning and stood last night, which Glasser crews use the track and how often they come back one short, and who moves the stakes (the Glassers, to turn pilgrims toward Fort Mercy's water, which Vexa sells; she has seen it done). The count of every party east and west for nine years, which is to say she knows exactly how many soldiers the Ninth sent out in each spring and that it was fewer every year. What came past her fork on 7 and 8 Ashfall, and the drummer-girl on the 9th. That Kettle's cousins take salt and iron south twice a month to somewhere they do not name. That the dwarf Gerda leaves a pebble at the Stone and a loaf at the mill and talks to the tree before she talks to Nance. That the pear has started to go red.
+How many stakes stand this morning and stood last night, which Glasser crews use the track and how often they come back one short, and who moves the stakes, and she will answer a plain question about it plainly. The count of every party east and west for eight years, which is to say she knows exactly how many soldiers the Ninth sent out in each spring and that it was fewer every year. What came past her fork on 7 and 8 Ashfall, and the drummer-girl on the 9th. That Kettle's people take salt and iron south twice a month to somewhere they do not name. That the dwarf Gerda leaves a pebble at the Stone and a loaf at the mill and talks to the tree before she talks to Nance. That the pear has started to go red.
 
 ### How she treats the PCs
 As a count first and people second, which she thinks is good manners. Soldiers of the Ninth get the blank springs, once, in full. Anyone who fills their skins and goes is counted and forgotten. Anyone who sits on the bench, lets her finish a sentence, and does not touch the tree is fed: ash-bread, cheese that has come a long way, and water that tastes of the Stone's cistern, which is to say of pilgrims' tears. A Hollowborn who looks at the wheel-pit and then at her gets a long look back and the question she has never asked anyone: "How many?"
@@ -80,7 +80,7 @@ Fill her butt (a tun of water from the Stone's cistern is a day's work for a par
 **Voice:** short, flat, pear-country; counts first; "it's a field". Her joke is that she will not do the count in verse, and that she treats the whole Ninth Lantern as a line on a bench. Her grief is under the tree and she keeps it there.
 
 **Across the arc:**
-2. The Toll: the House cart at dawn on the 7th, the burnt wagon on the 8th, the drummer on the 9th. Sends the party down the track to Fort Mercy with a full skin each and the stake count ("eleven standing between here and the Stone this morning, and there were fourteen last night").
+2. The Toll: the House cart on the morning of the 7th, the burnt wagon on the 8th, the drummer on the 9th. Sends the party down the track to Fort Mercy with a full skin each and the stake count ("eleven standing between here and the Stone this morning, and there were fourteen last night").
 5. If the party passes on the way to the Orchard or beyond: the pear is redder. She has started to leave the bell unrung at dusk, "so as not to wake it".
 6. The last conversation before the Rent. She counts them out and says she will count them back. Gives Ysse, if Ysse is kind to the tree, a cup of the Stone's water "for the lamp, if it drinks".
-8. The column passes on 7 Leafrot; she counts a hundred soldiers and a handcart, and cuts the company's corner of the bench for the first time in four years, a long line, with the nail. In the epilogue, tell the players what she found under the tree on the morning of the 10th: see the mill's page.
+8. The column passes on 7 Leafrot; she counts a hundred soldiers and a handcart, and cuts the company's corner of the bench for the first time in two years, a long line, with the nail. In the epilogue, tell the players what she found under the tree on the morning of the 10th: see the mill's page.

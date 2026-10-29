@@ -19,7 +19,7 @@ gmFields:
 relations:
   - to: fennick
     kind: sells goats to
-    note: "Forty a quarter, at 2 cp a beast at the bridge, on account."
+    note: "Forty goats a quarter, on account. She pays the bridge's 2 cp a beast herself."
     known: true
   - to: npc-ambry-coyle
     kind: was paid by
@@ -41,7 +41,7 @@ Her counting is a sort of prayer. "Thirty-eight. Thirty-nine. Forty. No, that is
 > "Two pennies a beast to cross a bridge with a goat. I have asked Mistress Hebbe which end of the goat the beast is."
 
 ### Who she is
-Marn Tolliver took the north holding at Bellwether the spring after the battle with a husband, two sons and a daughter. The husband died of the cough in 3005. One son went east with a Glasser crew and did not come back, and the other drowned at the weir at Sedgemere, and the daughter, Linnet, died of a fever in 3009 and left her a granddaughter of seven, **Ember**, born in Marn's own kitchen with one eye grey as the lake. Ember is a Hollowborn child, small for her age and with a grave stare, who will not come indoors when the bells ring and plays in the byre until they stop.
+Marn Tolliver took the north holding at Bellwether the spring after the battle with a husband, two sons and a daughter. The husband died of the cough in 3005. One son went east with a Glasser crew and did not come back, and the other drowned at the weir at Sedgemere, and the daughter, Linnet, died of a fever in 3009 and left her a granddaughter of five, **Ember**, now seven, born in Marn's own kitchen with one eye grey as the lake. Ember is a Hollowborn child, small for her age and with a grave stare, who will not come indoors when the bells ring and plays in the byre until they stop.
 
 Marn keeps the dairy, the forty goats, and the tally on the window-frame. The tally is knots, one a red moon, with the number of lanterns that went up the lane. She is proud of it, and a little afraid of it, and has never thrown a knot away.
 
@@ -70,5 +70,5 @@ Voice: practical, counting under her breath, interrupting herself to look at the
 1. The Tolliver tally is her best card; she will show it for salt. S1 is a good night to hear about lanterns.
 3. After the guttering she is frightened. She asks the PCs, without quite asking, whether the ash is the cause.
 4. Gives up the jar for the forgiven season of goats. If the PCs speak to the Reeve about the toll, she throws in the dates.
-7. When Mote's hired knives come into the March, the first place they pass is Bellwether, and Marn counts them: nine, with the knives, on the lane at night. She tells the company. It is a very good tip.
+7. When Mote's hired knives come into the March, the first place they pass is Bellwether, and Marn counts them: three, a clerk and two knives, on the lane at night. She tells the company. It is a very good tip.
 8. The goat-count after the column passes.

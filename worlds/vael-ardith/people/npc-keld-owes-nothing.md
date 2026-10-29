@@ -53,7 +53,7 @@ She is also the keeper of **the slate**: a black board the length of a door, on 
 Quiet. To go on doing the work. For the river to keep bringing her people and for nobody to ask why she has not gone back to town.
 
 ### What she knows
-The river. The slate is the best record in the March of what has come down the Cinder since the flood, and she knows which of its entries are lies by what the water did. She knows the cold water of the 8th and the 13th was not weather. She knows who she is, and who her sister is, and what a dying Salt Guard man whispered to her eight years ago in the first spring, which is why she bet.
+The river. The slate is the best record in the March of what has come down the Cinder since the flood, and she knows which of its entries are lies by what the water did. She knows the cold water of the 8th and the 13th was not weather. She knows who she is, and who her sister is, and what a dying Salt Guard man whispered to her in the winter after Cinders, which is why she bet.
 
 ### How she treats the PCs
 Courteously, from the doorway, standing. She will answer a question that is asked directly and respectfully. She will not volunteer. A PC who helps lift a body off the stakes without being asked, and does not flinch, is a person she will talk to for the length of a cup of tea. [[Quorl Many-Words]] gets a long look, and then nothing, and then, at dusk, one sentence she did not have to say.

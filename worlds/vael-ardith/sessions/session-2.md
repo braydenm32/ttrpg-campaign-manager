@@ -2,7 +2,7 @@
 number: 2
 title: The Assessor
 worldDate: 15 Ashfall 3011
-pages: [ pell-quillon, ansel-mote, npc-widow-pruitt, odile-fairweather, vexa-glassjaw, npc-skelt, npc-ottoline-crane, npc-mardle-ock, npc-jory-dunmore, npc-jessom-dunmore, kettle, npc-mistress-hebbe, tollamund, npc-pennamund, fennick, fort-mercy, cold-seam, ash-road, assessors-office, the-ford, h-tax-notice, h-map-scrap, item-melted-crown, item-promissory-note, table-salvage, table-weather, q-payday, q-assessors-form, q-kettles-cargo, f-glassers, f-concord-houses ]
+pages: [ pell-quillon, ansel-mote, npc-widow-pruitt, odile-fairweather, vexa-glassjaw, npc-skelt, npc-ottoline-crane, npc-mardle-ock, npc-jory-dunmore, npc-jessom-dunmore, kettle, npc-mistress-hebbe, tollamund, npc-pennamund, fennick, fort-mercy, cold-seam, ash-road, assessors-office, the-ford, h-tax-notice, h-map-scrap, item-melted-crown, item-promissory-note, table-salvage, table-weather, q-payday, q-assessors-form, q-kettles-cargo, f-glassers, f-concord-houses, burned-mill, npc-nance-oddy, tallys-cut, npc-ferrow-gant, q-old-tallys-coin, sedgemere, the-thirteenth-barrel, npc-posy-reedmarsh, npc-keld-owes-nothing, q-thirteenth-barrel, q-lost-pay-order, whitepost, npc-lusk-pardew, item-dreamless-charm, lore-coin, lore-festivals, ford-street, bridle-and-yoke, the-bakers-wife, npc-ada-pennock, q-bakers-hoard, quist-and-daughter, h-loan-chit, h-mote-cipher ]
 encounters:
   - name: Glassers at Fort Mercy
     notes: "Glasser toughs (bandits, reskinned: glass-shard cudgels, ash-masks): scimitar +3, 1d6+1. They break and run at half strength. Vexa (page stats: berserker, black-glass greataxe +5, 1d12+3, Reckless) joins after round three if the toughs haven't broken. At level 2 she can kill someone, so she fights to make a point: she calls it off at half HP, or the moment anyone offers to read her wall, and she never finishes a fallen soldier ('I'm a digger, not a butcher'). The Dunmore twins shoot from the gate."
@@ -57,6 +57,8 @@ Marrow, very calmly, asks the party to get the Assessor out of her sight before 
 
 The cart turned off the Ash Road at the Burned Mill, six miles east, onto the glassland track toward [[Fort Mercy]]. Tracking runs from the mill: Survival DC 12, three successes before the greywind buries the ruts. Success puts them at Fort Mercy at dusk; failure means they get there after dark, tired, with a level of exhaustion. Vosk lends them Jory and Jessom Dunmore, crossbows, who argue the whole way about which of them is the better shot.
 
+**On the way.** At the mill, [[Nance Oddy]] keeps a Toll of everything that passes ([[The Burned Mill]]): the sealed cart went south at her fork on the morning of the 7th, heavy, and came back on the 8th light, where four Glassers stripped it and burned it. Seven miles short of the fort, the smoke of [[Tally's Cut]] is a short ride off the track (an hour; they reach the fort after dark): [[Ferrow Gant]] saw the cart cross the glass at dusk on the 7th, and will tell a soldier who buys him a drink that Skelt missed Tally's dawn on the 3rd and came in on the 5th with rope-burns. [[Old Tally's Coin]] starts there.
+
 ---
 
 ### Scene 3: Fort Mercy (dusk)
@@ -78,7 +80,7 @@ An abandoned Regency fort that burned in 3005, now a Glassers' den. [[Vexa Glass
 ---
 
 ### Scene 4: The cellar and the strongbox (night)
-**The strongbox.** Iron-bound, under an old Regency pay seal. Inside: 600 gold in new Sevenhaven coin, every piece stamped with the house-mark of [[Tollamund & Daughters]], and a loan-chit: the Concord's copy of an advance under the third line of Marrow's note, naming the Ninth Lantern debtor "for the full sum, at interest", collateral as in the note. The company owes money it never received.
+**The strongbox.** Iron-bound, under an old Regency pay seal. Inside: 600 gold in new Sevenhaven coin, every piece stamped with the house-mark of [[Tollamund & Daughters]], and a loan-chit ([[The Concord Loan-Chit]]): the Concord's copy of an advance under the third line of Marrow's note, naming the Ninth Lantern debtor "for the full sum, at interest", collateral as in the note. The company owes money it never received.
 
 **Vexa's writing.** On the cellar's far wall is a panel of grey Lithic stone, glyphs on every inch. Behind it the Glassers broke into a black-glass chamber thirty feet down, every wall carved; the Cold Seam drops from the chamber, ninety feet of rope and then ladders. Reading it: Ysse (Arcana DC 13), Borrin (DC 10 as a dwarf), or anyone with the Lithic tongue. It repeats the Barrow's lintel, *WHAT WE BURIED IS NOT AT REST*, and the longer passage below ends: *The lamp holds the lock; the heart holds the lamp.*
 
@@ -92,6 +94,13 @@ An abandoned Regency fort that burned in 3005, now a Glassers' den. [[Vexa Glass
 
 ### How it ends
 The party beds down in Fort Mercy's yard under two moons, the box at their feet and the chit in someone's coat, while the greywind hisses over the glass. In the small hours, everyone in the fort wakes at once. That is where session 3 begins: the dream, the ride home, and Fennick counting the coin. (If you want session 2 to end at home, play session 3's first two scenes now and open session 3 at dusk.)
+
+### If the party wanders
+- **Ford Street before they ride.** Hearthday and rent day: Ada's Hearthday loaf and the Pallas pies are on the board at [[The Baker's Wife]], everyone is short, and Spoons has the rent odds chalked in the street ([[Feasts, Fasts and Holy Days]]). [[The Baker's Hoard]] pays off today if the ring came back. Mules at [[The Bridle & Yoke]] are 5 cp a day; the Assessor's mule is boarded there from today and refuses the hill. [[Quist & Daughter, Surveyors]] sells the Ash Road stake-chart for 5 cp. Harrow's Simples sells [[A Dreamless Charm]] for a silver, and tomorrow night is the full Ember.
+- **Sedgemere, by barge.** If the party goes downriver instead of east, it is half a day to [[Sedgemere]]. Keld's slate has the cold dates. The salt-tow count for [[The Unmarked Barrel]] is a Tideday-evening job, and the clean windows are 22 and 28 Ashfall, not this week. [[Mistress Hebbe]] can send them with the first coin that rang wrong.
+- **The lost letter.** Over the strongbox, Fennick wonders aloud why nobody warned the company in 3009: [[The Lost Pay Order]].
+- **Whitepost, by letter.** A post-rider to [[Examiner Lusk Pardew]] at [[Whitepost]] costs 5 sp and is back in four days with the yard-book entry for 4 Ashfall, if Pell asks in his own hand.
+- **Small change.** The day's loot is three kinds of coin at once (Concord silver, Regency silver, old crowns); [[Coins and Money Slang]] has what the Glassers call each, and what they will and will not take.
 
 == Strong start ==
 

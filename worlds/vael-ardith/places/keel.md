@@ -15,7 +15,7 @@ The Bay of Bells is a fjord, deep and dark and barely a mile wide, and Keel clin
 [[Sefra]]'s face here is the Bell-Ringer, oldest and least friendly of her seven, which has no face, only the sound; her priests go down on ropes once a year to touch the bells and come up changed. Whale-oil is the trade: Keel's boats go out past the Southern Deep's edge and bring back lamp-oil the whole continent burns, including, until this year, the Lantern Keep.
 
 ### Hook
-The drowned bells rang on their own on the night of 2 Ashfall, all together, for the length of a breath. The last time they did that was the night of the Battle of Cinders. The priests have written to Sevenhaven and had no reply.
+The drowned bells rang on their own on the night of 2 Ashfall, all together, for the length of a breath. The last time they did that was the night of the Battle of Cinders. The priests have written to Sevenhaven and had no reply. A bell-pilot's widow on the third tier, Hanne Wrass, wrote the same night to her son [[Fallon Wrass]], a clerk in the Long Counting-House; his reply came, and the priests' did not.
 
 :::gm
 The bells rang the night the Treaty Bell at the Ford sounded once with no hand on it, and for the same reason: the Ninth Ward flinched. Keel's pilots have started to dread what the next ringing will carry, and the Concord Table has begun to ask why Keel's oil stopped being bought.

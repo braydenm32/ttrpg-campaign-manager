@@ -29,6 +29,12 @@ relations:
   - to: varra
     kind: watches over
     note: He knows whose granddaughter she is.
+  - to: npc-hurkul-ninefingers
+    kind: handed his sword to
+    note: On the evening of the Kingslaying. Hurkul knows; Vosk does not know he knows.
+  - to: npc-ada-pennock
+    kind: took a cup of starter from
+    known: true
 ---
 
 ### Look and voice
@@ -58,6 +64,8 @@ Hard, then fair, then fond, in that order, and he never admits to the third. He 
 He has never told anyone. He thinks the Mothers had a reason. He has never known what it was, and once a year, on the eve of Cinders (13 Ashfall), he takes a bottle to the [[The Corporal's Gibbet|Corporal's Gibbet]] and doesn't talk about it.
 
 He recognised Grashka's face in Varra's the moment she walked in.
+
+On the evening of the Kingslaying he handed his sword to a young barracks smith in the Palace forge with the words "No notches. Never used." The smith is [[Hurkul Ninefingers]], who now keeps [[Ninefingers Forge]] on Ford Street and has known ever since what the Second Blade did not do at the Gilded Gallery door. They have never spoken of it. Vosk comes every Ironday to have a dagger edged that does not need it, and does not know Hurkul knows.
 :::
 
 == GM notes ==

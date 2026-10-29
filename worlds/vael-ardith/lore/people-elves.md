@@ -21,6 +21,9 @@ Every elf forgets. Not slowly: in a season, around each century mark, a hundred 
 
 Sael has forgotten most of its history, and knows it has, and is quietly desperate. See [[The Remembrancers]].
 
+### Customs and superstitions
+"Once-" before the old house-name after a century mark, and it is rude to say it to a Remembrancer's face. The Unlettered of Ilmareth cut a notch in a doorpost for each thing they will not write down, and the notches heal over, which is the point. No fire within a mile of the Rooted Stone in the Saelwood, and no elf will tell you why, because none of them remembers. Sleeves in company: an elf's skin is a book and it is rude to read over a shoulder. An elf's last words are usually a question, and the Ravelers keep a page for them.
+
 ### Names
 Soft, long, two or three syllables, with a house-name that changes when the house forgets itself. Caelis Tarn, Ismere Vaun, Oriath Senn, Thessaly Morn, Ilvane Sorrow, Nereth Quill, Sabeth Lorne, Eluin Marr, Teiran Voss, Ysolde Fenn. An elf who has crossed a century mark adds "once" before the old house-name: Sabeth once-Lorne.
 

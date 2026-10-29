@@ -22,7 +22,7 @@ Names, mostly. Some words are mundane ("Tell my brother the dog was his"). Some 
 Quorl copies every entry up to [[Mother Corvane]] once a month. The Court has done this for every battlefield since the war. They are the only archive of the dead the world has.
 
 :::gm
-Quorl copies every entry except seven. Seven dying soldiers, spread across nine years, whispered the same sentence to him in different voices, and he wrote those in his own notebook, not the Court's. Read together with the other Court ledgers, the record spells "the lamp is the lock". Quorl has noticed. He has not understood. Corvane has four words of five. Halloran Pike's last words, at his funeral in S5, make eight. If the ledger is stolen, burned, or read aloud at the wrong place, the dead listen.
+Quorl copies every entry except seven. Seven dying soldiers, spread across nine years, whispered the same sentence to him in different voices, and he wrote those in his own notebook, not the Court's. Read together with the other Court ledgers, the record spells "the lamp is the lock". Quorl has noticed. He has not understood. Corvane has four words of five. Halloran Pike's last words, at his funeral in S5, make eight. For lines to read aloud from the Court's own books, roll on [[Last Words]]. If the ledger is stolen, burned, or read aloud at the wrong place, the dead listen.
 :::
 
 == GM notes ==

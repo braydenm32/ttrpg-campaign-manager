@@ -32,12 +32,12 @@ Kettle, when she is in. Her cousins. Old Nan Crupp at the ferry. The Market Reev
 - The post-stair box has never lost a letter.
 
 :::gm
-**Which are true.** 1. True. 2. True; Kettle's people know it. 3. True, though she edits. 4. False. It lost one, in 3009. It was the pay order.
+**Which are true.** 1. True. 2. True; Kettle's people know it. 3. True, though she edits. 4. False. It lost one, in 3009. It was the pay order: see [[The Lost Pay Order]].
 :::
 
 ### Things to do
-Buy supper. Send a letter home. Hire a barge. Ask Kettle a question and pay for the answer in gossip. Watch a Concord factor count out silver to a Glasser for a crate that hums. Find out what the price of the ferry is, and why it is in last words.
+Buy supper. Send a letter home. Hire a barge. Ask Kettle a question and pay for the answer in gossip. Watch a Concord factor count out silver to a Glasser for a crate that hums. Find out what the price of the ferry is, and why it is in last words. Ask who took the one letter the post-stair lost, and see Kettle look at her hat.
 
 :::gm
-Kettle likes the PCs best of all her customers and will say so, which is worth more than it sounds. The smugglers' passage from the Quay's culvert into the Barrow (area 2, the Flooded Street) is a way out for the PCs, and Skelt and the smugglers use it in the other direction. She has the vial of water from the Kneeling Stone at Coldwater and no idea what to do with it.
+Kettle likes the PCs best of all her customers and will say so, which is worth more than it sounds. The smugglers' passage from the Quay's culvert into the Barrow (area 2, the Flooded Street) is a way out for the PCs, and Skelt and the smugglers use it in the other direction. She has the vial of water from the Kneeling Stone at Coldwater and no idea what to do with it. The Clans' Mother of the Water on this river is [[Barge-Mother Posy Reedmarsh]], at Sedgemere, who is Kettle's superior and does not come to the Quay. The weekly salt-tows pass the Low Quay's dark side in the night: see [[The Unmarked Barrel]].
 :::

@@ -200,6 +200,8 @@ export const TOWNS: Record<string, BakedPiece> = {
   "Ilmareth": { asset: 'city', at: [452, 616], size: 38, seed: 625245910, variant: 5 },
   "Halcyra": { asset: 'temple', at: [1182, 620], size: 40, seed: 89843570, variant: 1 },
   "Fallowden": { asset: 'village', at: [862, 516], size: 22, seed: 995783178, variant: 2 },
+  "Whitepost": { asset: 'village', at: [881, 509], size: 10, seed: 500112, variant: 1 },
+  "Dunmeer": { asset: 'village', at: [872, 568], size: 16, seed: 736208, variant: 3 },
   "Sevenhaven": { asset: 'port', at: [822, 792], size: 38, seed: 965429814, variant: 1 },
   "Keel": { asset: 'town', at: [1302, 816], size: 24, seed: 275543438, variant: 4 },
   "Marrowport": { asset: 'port', at: [526, 838], size: 30, seed: 672387688, variant: 3 },

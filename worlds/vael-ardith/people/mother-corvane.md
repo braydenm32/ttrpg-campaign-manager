@@ -28,6 +28,18 @@ relations:
   - to: corvel-rise
     kind: keeps
     known: true
+  - to: npc-keld-owes-nothing
+    kind: elder sister of
+    note: "Eight years without a word either way; the crow-letters come unsigned from the weir."
+  - to: npc-mourn
+    kind: put out of the Court
+    note: 3003, for selling a dying soldier's last words to the woman they were about.
+  - to: npc-halloran-pike
+    kind: buries
+    note: At the end of session 5. His last words are the fifth word.
+  - to: npc-skrell
+    kind: leans on
+    note: On the 6th she comes down from the Rise on his arm, for the first time in a year.
 ---
 
 ### Look and voice
@@ -56,7 +68,7 @@ As customers and as future customers. She is helpful, ghoulish and expensive. Sh
 :::gm
 **Secret.** For nine years the Ravelers have noticed that the last words, set side by side, are not random. Corvane has built four of the five words from the Court's ledgers and a Hask priestess's letter: **"the lamp is the ..."**. She lacks the last until [[Halloran Pike]] says it at his funeral in session 5 and she will be sure. She has not told the Rook-Court elders, or Quorl. She also knows [[Brother Tallow]] is frightened of his own lamp.
 
-Her sister Keld, the Court's first watcher of the lantern, bet "never" on [[Spoons]]'s pool in 3003 and vanished the next day; Corvane has not forgiven the lantern for that either.
+Her younger sister [[Keld Owes-Nothing]], the Court's first watcher of the lantern, bet "never" on [[Spoons]]'s pool in 3003 and left the next day; Corvane has not forgiven the lantern for that either. Keld lives nine miles down the river at Sedgemere, as the weir's Raveler, and sends the Court the river's last words by crow, unsigned. Corvane has known the hand for years and has never written back. In session 5, "that was my sister" sends the party to her. See [[The Wager on Never]].
 
 And she has drawn the wrong conclusion. She believes the lamp is what's locking **Hathe's doors**: that since the lantern was lit, the dead can't pass, and that if it went out, the doors would open and the dead could rest. It is half true: the doors are troubled because Hathe is dead and his power is in [[Ilyra of Halcyra]]. But putting out the lamp would open the crack, not the doors.
 
@@ -69,9 +81,9 @@ She loves the dead more than the living. If she becomes certain, she will help p
 
 **Across the arc:**
 1. Receives the drowned man's body from the ford-watch, by Skrell's hands. It gets up on her table. She is delighted.
-2–3. On the red moon night, she counts the walking dead from the chapel roof and sends Quorl to tally the Smokes.
+2–3. On the red moon night, she counts the walking dead from the top of [[Corvel Rise]] (she has not come down in a year) and sends Quorl to tally the Smokes.
 4. Asks Quorl, casually, whether anyone has said anything "odd" lately.
 5. **Last Words**: lends [[Hathe's Door-Key]] to finish old [[Halloran Pike]]'s jammed funeral rite ([[The Funeral That Would Not End]]). Opens the ledger to the PCs (for a price). Reads them the message. Explains her theory, earnestly.
 6. If she learns what the PCs found at the Ninth Stone, she must choose between her theory and the truth. She is old and stubborn.
-7. She can be an ally in resealing the ward (her undertakers know the Rent's dead roads) or a knife in the dark at the last moment (she'll try to snuff the flame "to let them rest"). Let the PCs talk her round, or not.
+7. She can be an ally in resealing the ward (her undertakers know the Rent's dead roads) or a knife in the dark at the last moment (she'll try to snuff the flame "to let them rest"). Let the PCs talk her round, or not. On the 6th she comes down from the Rise for the first time in a year, on [[Skrell]]'s arm, to ask Ysse to put the lamp out.
 8. She is **the friend at the lip**: among the priests above the chasm when the cart reaches the Stone.

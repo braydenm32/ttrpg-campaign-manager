@@ -23,6 +23,10 @@ relations:
   - to: f-concord-houses
     kind: patron of
     known: true
+  - to: npc-brother-audit
+    kind: is served by
+    note: His lay brother on Temple Row.
+    known: true
   - to: people-shellbacks
     kind: is served by, but not worshipped by
     note: The Shellbacks keep his books and pray to someone else.
@@ -41,7 +45,7 @@ The Ledger's law is short. Everything is owed to someone. An oath is a loan of y
 He rules [[The Sevenhaven Concord]] in all but name; the seven bay-cities signed [[The First Concord]] on his altar, and every contract since carries his red-and-black page. In the Regency his priests are tolerated as useful and watched as foreign. The Grimmark clans distrust him and are in debt to him, which is the usual arrangement. In [[Iskaveth]] the Saint's church has outlawed usury and borrows from him through intermediaries. Orc companies sign their contracts under his page because [[The Mothers of the Iron]] insist: a company that breaks contract answers to the Mothers first, and the Ledger second, and nobody has ever asked which is worse.
 
 ### The priesthood
-Auditors. They wear grey, carry a slate, and will hear your prayer, record it, and tell you what it will cost. A prayer for rain is cheap. A prayer for a son's life is dear, and paid in instalments, and if you miss one the god remembers. The senior auditors of [[Sevenhaven]] are called the Bench and are said to be able to recite the debt of every crowned head in Vael Ardith, including the empty one.
+Auditors. They wear grey, carry a slate, and will hear your prayer, record it, and tell you what it will cost. A prayer for rain is cheap. A prayer for a son's life is dear, and paid in instalments, and if you miss one the god remembers. The senior auditors of [[Sevenhaven]] are called the Bench and are said to be able to recite the debt of every crowned head in Vael Ardith, including the empty one. In [[Cinderford]] the Ledger's lectern on [[Temple Row]] is kept by a lay brother, [[Brother Audit]].
 
 ### What the faithful believe
 That the world was made on credit and the final reckoning is the day the books balance; that an honest debtor is holier than a careless rich man; that Corvex has never once lost an argument with [[Aurelan]].

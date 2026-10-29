@@ -33,6 +33,9 @@ relations:
   - to: dannic-rook
     kind: paid
     note: To swap the oil. "One more swap and you're square."
+  - to: npc-brother-audit
+    kind: prayed through
+    note: "Two prayers, dated, in his own words: 17 Reaping and 8 Ashfall."
 ---
 
 ### Look and voice

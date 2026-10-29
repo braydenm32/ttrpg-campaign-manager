@@ -35,7 +35,7 @@ She will not sell it. She has refused, in order: a Glasser who offered a pound o
 
 **In play.**
 - **Session 5:** after Pike's confession, Hennet, asked at the Candle, says "Took you long enough," takes the pot off its hook and puts it in a PC's arms (or gives them Pike's chart, if Vexa's was missed). Set the pot in the orchard's ring and it fits to a hair; that is the clue landing.
-- **Session 8, the dawn of the march:** Hennet asks for it back. She cooks in it for the first time in nine years: the night-of-Cinders soup, barley, salt mutton, onions and the last dried pears from the pear country, and ladles it into every soldier who marches. The 5e effect above applies to all of them. She does not march.
+- **Session 8, before the column leaves the Keep:** Hennet asks for it back. She cooks in it for the first time in nine years: the night-of-Cinders soup, barley, salt mutton, onions and the last dried pears from the pear country, and ladles it into every soldier who marches. The 5e effect above applies to all of them. She does not march.
 - **If the cage is broken** on the road or at the Rent, the pot is the vessel that carried the Shard once without harm and will again: whoever carries the pot is not holding the stone, and the Sleeper does not hear them.
 :::
 

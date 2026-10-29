@@ -13,7 +13,7 @@ fields:
 
 > A long low shed with a stove at one end and forty pallets in two rows, most of them full of sleeping kiln-hands, Glassers, pilgrims who could not afford Temple Row, and one orc with her boots on. The air is thick and warm and smells of bodies and wet ash. At the stove a stout woman with one clouded eye is writing in a book by candlelight, and without looking up says: "Nine for the bed, one for the blanket, and if you dream, you tell me what, that's the house rule."
 
-The Ninepenny is the cheapest roof in Cinderford and the only one that asks about your dreams. Auntie Brace was born in the pear country, lost a husband and both sons at Cinders, and took the grey eye herself that night, a grown woman waking with one eye gone to milk. She has kept the doss-house since because, she says, somebody has to count the sleepers. Her book records, beside every lodger's name, what they dreamed. Most nights it is nothing, or the usual. Three nights either side of a full Ember the entries start to match.
+The Ninepenny is the cheapest roof in Cinderford and the only one that asks about your dreams. [[Auntie Brace]] was born in the pear country, lost a husband and both sons at Cinders, and took the grey eye herself that night, a grown woman waking with one eye gone to milk. She has kept the doss-house since because, she says, somebody has to count the sleepers. For the prices round the town, see [[What Things Cost in the Ashenreach]]. Her book records, beside every lodger's name, what they dreamed. Most nights it is nothing, or the usual. Three nights either side of a full Ember the entries start to match.
 
 ### What is here
 - Forty pallets, a stove, a bucket.

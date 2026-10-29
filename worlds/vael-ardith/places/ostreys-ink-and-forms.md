@@ -15,7 +15,7 @@ fields:
 
 The Hall of Records runs [[The Regency of Ardith]] on forms and does not supply them. This is not malice; it is a line in a budget, cut in 2983 when the Council had other things to pay for, and never put back. So a citizen who must file a Declaration, a Return or a Request for Permission buys the blank from a stationer, and the stationer buys the plates' use from the Office of the Records at a fee, and the whole Regency pays a copper a sheet for the privilege of being governed. Ostrey's has held the Records Street licence for thirty years, first under Wim's father and now under Wim, and sells more forms than any shop in the capital, which is to say more than any shop in the world.
 
-Wim Ostrey is forty, small, exact, and the nephew of Hallam Ostrey, the pretender whose Free Host sat round [[Ardmere]] for two hundred and eleven days in 2994 ([[The Siege of Ardmere]]). He will tell you he is no relation, in the voice of a man who has said it four times a day for seventeen years. What became of the uncle, nobody in the family says; the Regency's report on the siege says the matter was "concluded satisfactorily", and Wim sells that report too, 4 cp, Form H-19, nineteen pages, and has read it more often than anyone alive.
+Wim Ostrey is forty, small, exact, and the nephew of Hallam Ostrey, the hired general whose Free Host of three claimants' contingents sat round [[Ardmere]] for two hundred and eleven days in 2994 ([[The Siege of Ardmere]]). He will tell you he is no relation, in the voice of a man who has said it four times a day for seventeen years. What became of the uncle, nobody in the family says; the Regency's report on the siege says the matter was "concluded satisfactorily", and Wim sells that report too, 4 cp, Form H-19, nineteen pages, and has read it more often than anyone alive.
 
 ### Stock
 - Plain sheet, Hall weight, 1 cp. Treasury blue, 2 cp. Marches grey, 2 cp, "and you will want three, because the Marches lose one".
@@ -32,13 +32,13 @@ Wim Ostrey is forty, small, exact, and the nephew of Hallam Ostrey, the pretende
 Clerks on their way up the hill, buying the day's blanks for their desks out of their own wages. Notaries' boys. Country people with a letter from a prefect and no idea what it means, whom Wim treats with a gentleness that would surprise his customers. An elderly Vesh from the Archive who buys one sheet a day and has for twenty years. And, in Reaping, a quiet clerk with a cold who bought every 9-K in the shop and every one Wim could get from the Office in the fortnight after, paid in new silver, and gave the name of an Under-Collector who, when Wim wrote to confirm the order, had been dead since 3006.
 
 ### Rumours
-- Ostrey is the pretender's bastard and the Quiet Office lets him live because he is useful.
+- Ostrey is the besieging general's bastard and the Quiet Office lets him live because he is useful.
 - The Hall stopped printing 9-K because the Council does not want anyone declaring what it owes.
 - You can buy a blank Regency seal here if you know the word.
 - The order-book under the counter shows who in the capital buys which form, and the Quiet Office reads it monthly.
 
 :::gm
-**Which are true.** 1. Half: he is the pretender's nephew, legitimate, and the Quiet Office lets him live because he is harmless and his order-book is useful. 2. False: the Hall prints them; one buyer took them all. 3. False, and he will sell you the form for reporting the question. 4. True. The order-book is Wim's own, in his own hand, and an Examiner copies it on the first Coinday of each month for a fee Wim does not refuse. He knows what they are. He also keeps a second order-book, the honest one, in which the clerk with the cold is written down with the name he gave, the dead Under-Collector's, and the date, 17 Reaping, and the words *paid in new silver, this year's date, which nobody has*.
+**Which are true.** 1. Half: he is the general's nephew, legitimate, and the Quiet Office lets him live because he is harmless and his order-book is useful. 2. False: the Hall prints them; one buyer took them all. 3. False, and he will sell you the form for reporting the question. 4. True. The order-book is Wim's own, in his own hand, and an Examiner copies it on the first Coinday of each month for a fee Wim does not refuse. He knows what they are. He also keeps a second order-book, the honest one, in which the clerk with the cold is written down with the name he gave, the dead Under-Collector's, and the date, 17 Reaping, and the words *paid in new silver, this year's date, which nobody has*.
 :::
 
 ### Things to do

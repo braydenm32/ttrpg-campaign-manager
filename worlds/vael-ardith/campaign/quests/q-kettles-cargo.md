@@ -10,7 +10,7 @@ fields:
   Given by: Kettle Brindlewake
   Reward: 20 silver and a favour on the river
 gmFields:
-  Sessions: 1 to 2 (side quest)
+  Sessions: 1 to 4 (side quest; offered in session 1)
 relations:
   - to: kettle
     kind: given by
@@ -30,7 +30,7 @@ The cargo is four casks of the company's good lantern oil, sold to Kettle by [[F
 
 There is also a crate that isn't on Kettle's manifest, the warm thirteenth, in the false floor (DC 18 to find). Inside, wrapped in sacking, is a stone hand dug from the glass, Ketterin's right hand from the Ninth Stone's statue, with Lithic letters on the palm, bound for [[Aelith Sorn]], who paid for it through a Glasser. Kettle didn't ask for it and would like it off her barge. See [[The Glass-Fused Hand]].
 
-Runs on the evening of session 2, or between sessions 2 and 3.
+Kettle offers it in session 1. The party is at Fort Mercy on session 2's night and session 3 is the vigil, so it runs any night from the 17th: between sessions 3 and 4.
 
-Outcomes: help Kettle and she becomes the party's eyes on the river (she tells them about the pay wagon's route), and owes them one free passage by water in session 7 or 8. Fail, and Sallow's patrol searches the barge, and Sallow starts to weigh the party. Expose Fennick and the company eats better for a fortnight, then much worse. Keep the stone hand and Aelith Sorn will come asking, politely, then less politely.
+Outcomes: help Kettle and she becomes the party's eyes on the river (she will sell them, once, what she has read in the Assessor's clerk's letters), and owes them one free passage by water in session 7 or 8. Fail, and Sallow's patrol searches the barge, and Sallow starts to weigh the party. Expose Fennick and the company eats better for a fortnight, then much worse. Keep the stone hand and Aelith Sorn will come asking, politely, then less politely.
 :::

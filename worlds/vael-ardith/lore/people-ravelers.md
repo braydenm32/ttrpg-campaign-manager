@@ -23,6 +23,9 @@ The real business is last words. A Raveler who hears you die remembers what you 
 
 Their humour is black and constant. A Raveler at a funeral is the one making the jokes, and the family laughs, and that is the service.
 
+### Customs and superstitions
+The joke at the funeral is the service; a Raveler who stops joking at a graveside is frightened, and the family should be too. A stone pear on a grave means the Ravelers asked and were given leave ([[Stone Pears]]); one on a doorstep means they are coming for somebody inside. The crows are consulted, and lately answer. Never touch the key except to lend it for a funeral, and never ask what it is for, which is the question Corvane is waiting for. The long verse of the Corporal's Song ("and neither was he") is the only human hymn the Court has asked for twice ([[Songs of the March]]). A last word is kept, sold or told to the mother, as agreed; the second-to-last costs more.
+
 ### Names
 A croak of a given name and a deed-name. Raveler children help at burials from six and earn the deed-name at the first they work. Krael Last-Breath, Abek Counts-Twice, Rhauk Hush-Wing, Tessik Buried-Kings, Vorl Half-Ledger, Issk No-Second-Word, Caddock Pale-Beak, Orrick Three-Graves, Mirl Owes-Nothing, Skree Who-Laughed. [[Quorl Many-Words]] got his name for talking back to a dying sergeant. [[Mother Corvane]] has not used her deed-name in forty years and nobody dares ask it.
 

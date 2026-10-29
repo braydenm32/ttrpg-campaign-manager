@@ -23,13 +23,16 @@ relations:
   - to: borrin
     kind: claims to know
     note: From the deep. Two winters back.
+  - to: npc-durn-mallow
+    kind: was prenticed to
+    known: true
 ---
 
 A wiry, beardless, bald Returned dwarf with skin gone the colour of candle wax and eyes that don't like daylight. No shadow, of course. He came up from under the Grimmark two winters ago (hence the second name) and went straight into the deepest, darkest digging work he could find, which in the March means [[Fort Mercy]]'s deep cut. He hums while he works, a slow, tuneless, three-note hum, and stops if anyone asks what it is. He says he will not go below the cellar for any money.
 
 > "I'm not frightened of the dark, friend. I'm frightened of what the light shows."
 
-He is the best cutter Vexa has, and he goes deeper than anyone else will.
+He is the best cutter Vexa has, and he goes deeper than anyone else will. He learned the trade as a boy at [[The Underlook Forge]] in Hollowhall, at [[Durn Mallow]]'s forge, before the war, and still owes the Forge-Warden for a pick.
 
 :::gm
 When he meets [[Borrin Halt]], Mardle goes pale and greets him by name: "You made it up, then. You were ahead of me, down there, two winters back. You said you'd wait." Borrin has no memory of it. What Mardle met in the deep was Borrin's shadow, walking on ahead, wearing Borrin's face. The three-note hum is what it was humming.

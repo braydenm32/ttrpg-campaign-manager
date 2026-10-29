@@ -16,14 +16,14 @@ The kingdoms of the Ardis charged by the crossing. A barge tied at both banks, s
 
 **What it cost.** Thirty-one years of burning boats, drowned toll-houses and raided granaries. Ardmere changed hands nine times. The kingdoms lost a third of their men, and a good part of their dignity.
 
-**How it ended.** By the Charter of the Open River. The kingdoms, exhausted, agreed that the river belonged to nobody and that boats on it were neutral by law. The charter was drafted by a halfling barge-captain who was the only person all four kings trusted, because none of them thought she could possibly want a throne.
+**How it ended.** By the Charter of the Open River. The kingdoms, exhausted, agreed that the river belonged to nobody and that boats on it were neutral by law. The charter was drafted by a halfling barge-captain, Posy Reedmarsh of the Reedmarsh Water (whose eldest daughters have been named for her ever since), who was the only person all four kings trusted, because none of them thought she could possibly want a throne.
 
-**What it left.** The neutrality of [[The Barge Clans]], which to this day is a fact of law, and in the right circumstances a weapon. The rule that no army may stop a barge without a signed writ. And a persistent joke along the Ardis: *"it's not a bridge, it's a barge."* It means, roughly, *I know exactly what I'm doing and you can't prove otherwise.*
+**What it left.** The neutrality of [[The Barge Clans]], which to this day is a fact of law, and in the right circumstances a weapon. The rule that no army may stop a barge without a signed writ. The text of the Charter survives, in the Reedmarsh Water's keeping. And a persistent joke along the Ardis: *"it's not a bridge, it's a barge."* It means, roughly, *I know exactly what I'm doing and you can't prove otherwise.*
 
 **How it is told now.** As a comedy, which it was, until it wasn't.
 
 :::gm
-The captain who drafted the Charter wrote in a private clause that no court has ever tested: a barge may carry any letter, from any hand, to any hand, without being searched. The clans have been the continent's post office and its spies ever since.
+The captain who drafted the Charter wrote in a private clause that no court has ever tested: a barge may carry any letter, from any hand, to any hand, without being searched. The clans have been the continent's post office and its spies ever since. The Reedmarsh Water holds the first of four copies, with the clause in the margin.
 :::
 
 == GM notes ==

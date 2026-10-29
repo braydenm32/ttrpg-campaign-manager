@@ -19,7 +19,7 @@ relations:
     kind: concerns
 ---
 
-Old Halloran Pike of the Ninth Lantern died in his cot, of nothing much, seventy years old and proud of every one. The Ravelers carried him to [[Corvel Rise]] to send him through Hathe's door the proper way, with salt, crow-song and a coin on the tongue.
+Old [[Halloran Pike]] of the Ninth Lantern died in his cot, of nothing much, seventy years old and proud of every one. The Ravelers carried him to [[Corvel Rise]] to send him through Hathe's door the proper way, with salt, crow-song and a coin on the tongue.
 
 He sat up halfway through. Politely. He would like it known that the door is locked, and he isn't going anywhere until somebody opens it.
 

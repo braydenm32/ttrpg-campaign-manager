@@ -28,6 +28,9 @@ relations:
   - to: f-rook-court
     kind: buries its dead with
     known: true
+  - to: npc-aurelio-bask
+    kind: refused
+    known: true
 clocks:
   - name: Mutiny
     segments: 6

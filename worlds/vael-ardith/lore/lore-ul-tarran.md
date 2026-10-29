@@ -32,7 +32,7 @@ Slowly, which is how the Lithic do everything. The stone climbed faster each gen
 
 ### What is left
 - **The Standing Fields** at the Seventh Ward: Tarran-Ulm's ruins and several hundred statues facing the stone. At the heart of them is the Hall of Standing Kings, a roofless hall that no outsider has reached since the delegation of 941, where the king sits on a chair of grey basalt. The Lithic say the statues speak to one of their own, at about a sentence an hour.
-- **The ward-towns**: a barrow at the Third, a drowned quay under the Fifth, sealed galleries beneath the Eighth, and at the Ninth, a town the glass took. The village under [[Cinderford]]'s ford was built on it, and [[The Glass Barrow]] is its upper storeys, fused.
+- **The ward-towns**: a barrow at the Third, a drowned quay under the Fifth, sealed galleries beneath the Eighth, and at the Ninth, a town the glass took. The village under [[Cinderford]]'s ford was built on it, and [[The Glass Barrow]] is its upper storeys, fused. A waystation's road-marker survives at [[Ambercote]] ([[A Lithic Road-Marker]]), and the Ninth Road's culvert runs under [[The Burned Mill]].
 - **The script**: a tall, spare writing read top to bottom, kept by the Lithic and taught to no one. Most of it is the rota, and the glass of the Ashenreach is full of it. Nobody but a Lithic is known to read it.
 - **The count**: AW, which everyone uses and nobody remembers was theirs.
 

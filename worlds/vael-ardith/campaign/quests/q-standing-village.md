@@ -46,19 +46,21 @@ At the end of the night of the full Ember, 16 Ashfall, when the Sleepless have g
 ### Steps
 1. **Get there.** A long day from the bridge by the Burned Mill fork and the glassland track, then south by a goat-track from [[Tally's Cut]]; or half a day from the Cut. Roll on Travellers on the Ash Road once on the road and the Ashenreach Encounters once on the glass.
 2. **The square.** Cass's tour. The rule: don't touch anybody. The two men in Salt Guard tabards at the square's eastern edge, who were never villagers.
-3. **Find out who is coming, and why.** Two crews of Glassers at Tally's Cut do not sleep, and have been told by the Dreaming Widow that the standing of Ambercote "hold the door", and that the two soldiers hold it hardest. They mean to cut them out at the next red moon and carry them to the Rent's lip for the Widow, and they believe the dead will thank them.
+3. **Find out who is coming, and why.** Two crews of Glassers at Tally's Cut do not sleep, and mean to cut the two soldiers out of the glass at the next red moon.
 4. **Stop it.** Talk [[Jeb Marrowick]] down, which cannot be done once a pick is in the square; warn the crew off at the Cut, which can, with Ferrow Gant's help; or be in the square when they come, with Cass between the picks and the Salt Men, which is where she will be.
 5. **Stay a night.** At the full Ember the standing turn their heads east, all of them, and a Hollowborn in the square hears them.
 
 ### Complications
-- The crews are Sleepless and cannot be frightened, only reasoned with or stopped; they are gentle, certain, and twelve strong (cult fanatic leading, the rest cultists; see [[The Sleepless]]).
-- [[Vexa Glassjaw]] has forbidden the village to every Glasser on pain of the glass; she does not know two of her crews are the Widow's, and telling her is a way to stop them, and a way to get two crews killed.
+- The crews cannot be frightened, only reasoned with or stopped; they are gentle, certain, and twelve strong.
+- [[Vexa Glassjaw]] has forbidden the village to every Glasser on pain of the glass.
 - Jeb will not let a pick within a day of the square. Tick's sapper's tools count.
 - Cass wants to see the Smokes. The Widow wants to see Cass. The cousins have mentioned both to both.
 - The Salt Guard tabards: [[Ilse Marrow]] was the Salt Guard's supply clerk and knows the dead men's faces, if anyone thinks to draw them for her.
 
 :::gm
 ### The truth
+The two crews are the Widow's Wakers ([[The Sleepless]]): a cult fanatic leading, the rest cultists, gentle and sure. She has told them the standing of Ambercote "hold the door", and that the two soldiers hold it hardest; they mean to carry them to the Rent's lip for her, and they believe the dead will thank them. Vexa does not know two of her crews are the Widow's: telling her is a way to stop them, and a way to get two crews killed.
+
 The standing of Ambercote are Lithic-touched, the ward's own substance caught in mortal shapes, the same as the Weeping Orchard's trees: the Ninth Road of Ul-Tarran runs under the square and the ward took the blow of Cinders there and made the village its own. They are "standing their watch". At the full Ember they turn toward the Ninth Stone and say, in two hundred voices only a Hollowborn hears, "not yet". The Widow is right that they hold the door; she is wrong about which way. Cut one out of the glass and carry it to the Rent and it is a piece of the ward carried to the crack, which is a small bad thing in itself (the Sleeper clock ticks if a standing figure reaches the lip), and a large bad thing for Jeb and the square, which turns, and does not turn back.
 
 The two Salt Guard men are deserters of the First Company who ran south on the night and were caught by the glass in Ambercote's square. Their names are on no roll. If a PC takes a rubbing of their faces to Marrow she names them, after a long silence: Corwen Hale and a boy called Pettit, both of her own supply detail, both listed by the Salt Guard as dead on the wall. She does not say what it means to her that they ran. She asks for the names to go in the Court's ledger as Salt Guard, not as deserters.

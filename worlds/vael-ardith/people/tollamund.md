@@ -28,6 +28,16 @@ relations:
     note: Home.
   - to: item-lantern
     kind: covets
+  - to: npc-brother-audit
+    kind: reads the prayer-ledger of
+    note: Odessa reads it to her every quarter before it is resealed.
+  - to: npc-thimble-fairlock
+    kind: has asked to carry a lamp
+    note: '"In Leafrot, to Gilt." Sent 11 Ashfall. Unanswered.'
+  - to: npc-tollamund-daughters
+    kind: is run by
+    note: Perrin, Odessa, Sal and Fennel, who finish each other's sentences.
+    known: true
 ---
 
 ### Look and voice
@@ -40,7 +50,7 @@ She speaks very slowly. Each sentence arrives the way a barge comes into dock: l
 > "You think ... I am slow. ... ... I am. ... ... But I was here ... before your empire. ... ... I will be here ... after your company."
 
 ### Who she is
-**Grandmother Tollamund** is three hundred and forty years old and the head of [[Tollamund & Daughters]], the [[Shellbacks|Shellback]] counting-house in [[Cinderford]], a Sevenhaven house older than [[The Concord Houses]] it now banks for. She has bought every debt in the March of Cinders that anyone would sell, including all of the Ninth Lantern's. Her "daughters", Perrin, Odessa and Sal, are sharp, courteous humans in their forties who do her talking and walking. They are not her daughters: the house name is older than any of them, and they are some three hundred years younger than she is. A Concord factor from [[Sevenhaven]], [[Cousin Pennamund]], has lately come to sit beside her and watch, very slowly, her purchases.
+**Grandmother Tollamund** is three hundred and forty years old and the head of [[Tollamund & Daughters]], the [[Shellbacks|Shellback]] counting-house in [[Cinderford]], a Sevenhaven house older than [[The Concord Houses]] it now banks for. She has bought every debt in the March of Cinders that anyone would sell, including all of the Ninth Lantern's. Her "daughters", [[The Tollamund Daughters|Perrin, Odessa and Sal]], are sharp, courteous humans in their forties who do her talking and walking. They are not her daughters: the house name is older than any of them, and they are some three hundred years younger than she is. A Concord factor from [[Sevenhaven]], [[Cousin Pennamund]], has lately come to sit beside her and watch, very slowly, her purchases.
 
 ### What she wants
 To own the company's debt, which she does. To be paid, eventually; she can wait. She can wait longer than anyone in the March will live.
@@ -56,7 +66,7 @@ Politely, patiently, as future clients. She will lend them money at reasonable i
 
 Her instrument is debt: the paper on [[Fennick Bottlebrook]]'s personal loans, which she bought up from his clan, the company's note, and the town's charter that [[Odile Fairweather]] has nearly sold her. When she calls it all in at once (session 7), the Keep and "all fixtures and fittings thereof" become hers in law.
 
-**The wagon.** She advanced 600 gold in the company's name under the third line of Marrow's note, and sent it under an old Regency pay seal; it now stands at 4,800. She drafted the Treaty's pay clause herself, by letter from Sevenhaven in 3002 ("by the signatories, or by whosoever shall hold their debt"), and has not told the Principals what she wants the lantern for. She has not left her chair since 3007, and has left the house twice, both times in it. The three "daughters" are not hers and not all hers: one of them works quietly for [[Cousin Pennamund]].
+**The wagon.** She advanced 600 gold in the company's name under the third line of Marrow's note, and sent it under an old Regency pay seal; it now stands at 4,800. She drafted the Treaty's pay clause herself, by letter from Sevenhaven in 3002 ("by the signatories, or by whosoever shall hold their debt"), and has not told the Principals what she wants the lantern for. On 11 Ashfall she wrote to [[Barge-Mother Thimble Fairlock]] at Sevenhaven asking her to carry "a lamp, with its keeper if the keeper will come", from Cinderford in Leafrot to the House's vault at Gilt; the Mother has not answered. The 11th Foot's seals in Vexa's vault are the one paper in the March she does not hold: see [[Old Tally's Coin]] for what one of them does to her at the Keep gate. She has not left her chair since 3007, and has left the house twice, both times in it. The three "daughters" are not hers and not all hers: one of them works quietly for [[Cousin Pennamund]].
 :::
 
 == GM notes ==

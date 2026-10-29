@@ -31,6 +31,15 @@ relations:
     kind: takes bets on
     note: 3 to 1 he's captain by Longnight.
     known: true
+  - to: npc-keld-owes-nothing
+    kind: holds the stake of
+    note: '"Never", 3003, in the strongbox, grown.'
+  - to: npc-orla-quist
+    kind: has a line held about him by
+  - to: npc-ottun-fray
+    kind: has his odds printed by
+    note: THE BOOK, a sheet a week.
+    known: true
 ---
 
 ### Look and voice
@@ -51,7 +60,7 @@ He runs the company's betting book from a corner table at [[The Last Candle]]: o
 To win the big one. His longest-running pool is on **the night the lantern goes out**: nine years of soldiers have bet a silver on a date, and the pot is real money now: the board says 41 gold, the pot is 43. Spoons will give you forty to one against any named night; the Frostcall window is 14 to 1. He has his own silver on a date coming up very soon.
 
 ### What he knows
-Everyone's debts, everyone's vices, and everyone's odds. Who's drinking with [[Garrick Sallow]]. Who slipped out after curfew. And more than he should about the oil.
+Everyone's debts, everyone's vices, and everyone's odds. Who's drinking with [[Garrick Sallow]]. Who slipped out after curfew. And more than he should about the oil. He has forty to one against the pear at [[The Burned Mill]] falling "this year".
 
 ### How he treats the PCs
 As a fresh market. He opens a book on each PC in their first week (odds on survival, on promotion, on "first to sleep with somebody unwise") and tells them their odds, cheerfully. Bet with him and he becomes a friend for life, a short one or long.
@@ -59,7 +68,7 @@ As a fresh market. He opens a book on each PC in their first week (odds on survi
 :::gm
 **Secret.** Twice, the first time about 30 Reaping (a fortnight before session 1), Spoons saw [[Garrick Sallow]] and [[Dannic Rook]] at the lantern's oil store after midnight, swapping tins. He knew what it meant. He moved his own silver in the lantern pool to the next red moon, and said nothing, to protect the pool. When Rook deserted, Spoons doubled his stake. Sallow's own fat stack sits on "before the red moon's gone".
 
-A Raveler woman bet "never" in 3003 and vanished; she was Keld, [[Mother Corvane]]'s sister and the Court's first watcher of the lantern, and her stake is still in Spoons's strongbox.
+A Raveler woman bet "never" in 3003 and vanished; she was [[Keld Owes-Nothing]], [[Mother Corvane]]'s sister and the Court's first watcher of the lantern, and her stake is still in Spoons's strongbox. If she sees the book in the epilogue she will say: "Don't pay it."
 
 Also among his betting slips, won at cards years ago from a Regency clerk: a torn page of an imperial Treasury ledger with the line *Drainage Works (Western)* on it. He thinks it's funny. It's a thread to [[The Emperor's Digs]].
 
@@ -73,7 +82,7 @@ He is not a monster; he simply never thought it would *work*. Once the lantern g
 **Across the arc:**
 1. Takes bets on the drowned man ("five to two he walks again"). Knows about the oil; says nothing.
 2. Offers odds on the pay wagon ever being found. Tells the PCs the odds have changed when they come back alive.
-3. After the lantern gutters, closes the lantern pool "for maintenance". This is suspicious, and soldiers notice.
+3. After the lantern gutters, closes the lantern pool "for maintenance". This is suspicious, and soldiers notice. This is when he gives the party [[The Wager on Never]], if they ask why.
 4–5. The PCs' best source on who's with Sallow. Gives up what he saw at the oil store if offered a good enough reason or a good enough wager.
 7. Bets on the mutiny, both sides. If cornered, chooses the company, to his own surprise.
-8. Whatever happens to the lantern, he has to pay out or collect. Let him do it, publicly, at the Last Candle. It's a good epilogue.
+8. Whatever happens to the lantern, he has to pay out or collect. Let him do it, publicly, at the Last Candle. It's a good epilogue. The payout by ending is on [[The Wager on Never]].

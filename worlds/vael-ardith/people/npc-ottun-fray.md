@@ -22,7 +22,7 @@ relations:
     note: The wanted bill for Dannic Rook, 13 Ashfall.
   - to: npc-widow-pruitt
     kind: was paid by
-    note: She carried the purse; somebody else stood in the doorway.
+    note: She counted out the coins.
     known: true
   - to: spoons
     kind: prints the odds for

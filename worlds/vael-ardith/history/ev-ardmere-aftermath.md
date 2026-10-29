@@ -15,7 +15,7 @@ The siege ended with a town in ruins and a victory no one could pay for. The Reg
 
 > ARDMERE RECEIPT No. 0412. The bearer is owed, for service in the relief of Ardmere, the sum of thirty-one crowns, payable upon the settlement of the realm. Stamped, signed, numbered.
 
-A soldier could not eat one, and several tried.
+A soldier could not eat one, and several tried ([[An Ardmere Receipt]]).
 
 In the thaw of 2995 a Concord broker arrived with a cart and a clerk and offered the companies forty crowns in the hundred for their receipts, in coin, on the spot. Most took it. By spring every receipt was in a Concord strongroom, and the Concord had learned something it would never forget: that a promise from a shattered state could be bought cheap and sold dear.
 

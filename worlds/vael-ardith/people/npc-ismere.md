@@ -23,6 +23,9 @@ relations:
   - to: sorrel-vey
     kind: drinks with
     known: true
+  - to: npc-hurkul-ninefingers
+    kind: drinks with
+    known: true
 ---
 
 Tall, gaunt, silver-haired and very old, with ink on every inch of skin that shows: her history, battle by battle, back four centuries. Since she crossed her last century mark she has called herself *once-Fenn*, because the house she was born to has gone out of her memory, and the oldest ink on her arms is in a hand she can no longer read.

@@ -35,6 +35,11 @@ relations:
     kind: trusts
     note: More than she should, and not as much as he deserves.
     known: true
+  - to: npc-mab-lennard
+    kind: is remembered by
+    note: The clerk who brought the rope at Dunmeer, fifteen years ago.
+  - to: npc-orla-quist
+    kind: has a line held about her by
 ---
 
 ### Look and voice
@@ -63,7 +68,9 @@ New, which means not yet in anyone's pocket, which means useful. She is blunt wi
 
 She is also the lover of [[Madame Vey]] of [[The Velvet Ledger]]. The whole town knows the Captain uses the Ledger's back stair and pretends not to; most assume it's business, or comfort. It is love. It began as a negotiation for the company's credit and stopped being one very quickly. Sorrel is the only person she lets see her tired. She does not know what Sorrel's tattoos record, or how much of what she tells Sorrel goes into the Ledger's book. Nor does she know that the anonymous "friend of the company" credit in Fennick's books every Coinday is Sorrel's, after Marrow refused her money twice.
 
-She was at Dunmeer in 2996 with the Salt Guard, the winter of the Hanged Corporal, and does not speak of it. She holds the **second cage key**, and her mother's line is one of the ward-sensitive bloodlines: she feels the cage's Rent-facing side run warm when no one else does, and has never told anyone that either.
+She was at Dunmeer in 2996 with the Salt Guard, the winter of the Hanged Corporal, and does not speak of it. There she issued the lieutenant's rope: tent-line from her worst coil, twice, and it broke twice (the first time on purpose). Those four hours were the hours [[Dunmeer]] used to walk its children out. She has never learned what they bought, and she keeps the halter that was finally used in a chest in her room. [[Mab Lennard]] remembers her face. If Marrow is told, post-S8 on Rope Day, give them the table to themselves.
+
+Two of the standing in [[Ambercote]]'s square wear Salt Guard tabards: Corwen Hale and a boy called Pettit, both of her own supply detail, listed by the Salt Guard as dead on the wall. Shown their faces she names them after a long silence and asks for them to go in the ledger as Salt Guard, not as deserters. She holds the **second cage key**, and her mother's line is one of the ward-sensitive bloodlines: she feels the cage's Rent-facing side run warm when no one else does, and has never told anyone that either.
 :::
 
 == GM notes ==

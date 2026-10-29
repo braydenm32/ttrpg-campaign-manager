@@ -33,6 +33,28 @@ calendar:
   moons:
     - { name: Pallas, cycle: 30, offset: 14 } # full on the 15th of every month
     - { name: The Ember, cycle: 23, offset: 1084215 } # the red moon: full on 16 Ashfall 3011, two nights after the campaign opens
+  holidays: # dated feasts and holy days; the Saint's Lamp and the Unveiling move with the moons, so they are not listed. See Feasts, Fasts and Holy Days.
+    - { name: Long Hold, day: 1 Hollowfrost }
+    - { name: Sowing, day: 1 Seedwake }
+    - { name: Stake Day, day: 7 Seedwake }
+    - { name: Greening, day: 1 Bloomtide }
+    - { name: The Turning and the Quay-Moot, day: 7 Bloomtide }
+    - { name: Firstfire, day: 1 Highsun }
+    - { name: Crownfast, day: 15 Highsun }
+    - { name: Shadow-Count, day: 2 Emberwane }
+    - { name: Anvil Night, day: 30 Emberwane }
+    - { name: Eye-Night, day: 17 Reaping }
+    - { name: Last Sheaf, day: 30 Reaping }
+    - { name: "Tally's Day", day: 3 Ashfall }
+    - { name: Cinders Muster, day: 14 Ashfall }
+    - { name: Doorsnight, day: 1 Leafrot }
+    - { name: The Culling, day: 30 Leafrot }
+    - { name: Stonefast, day: 1 Frostcall }
+    - { name: Rope Day, day: 6 Frostcall }
+    - { name: "Widows' Walk", day: 20 Frostcall }
+    - { name: Lastwater, day: 23 Frostcall }
+    - { name: The Reckoning, day: 1 Longnight }
+    - { name: Hearthnight, day: 30 Longnight }
   today: 14 Ashfall 3011 # the date in the world when the campaign starts
 ages: # the parts of history on the timeline; events pick one with "age: <key>"
   - key: myth

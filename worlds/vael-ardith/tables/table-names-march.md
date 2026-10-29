@@ -27,15 +27,15 @@ Humans: pick the nation first, it decides the god and the accent. Hollowborn: sa
 - Cassia Dray, human, Iskavethi, a lamp-carrier at the mission who did not go home. Prays with her hands in the flame and burns them and does not stop.
 - Piers Hartly, human, the toll-keeper's runner, fourteen. Knows what rang wrong before Hebbe says so and has not told her.
 - Margery Cobb, human, keeps goats on the ash-grass under Corvel Rise. Counts them twice at dusk because the first count is sometimes wrong by one, and the one is standing with them.
-- Jem Ashcombe, human, pear-country, carter who still runs the Fallowden road when paid double. Knows Whitepost's yard-book by heart because he has slept under it.
+- Joss Ashcombe, human, pear-country, carter who still runs the Fallowden road when paid double. Knows Whitepost's yard-book by heart because he has slept under it.
 - Ulla Brann, human, Grimmark, Hesk's rival for the Reeve's beeswax. Short, hard, honest, and losing.
 - Edwen Carrow, human, old Regency, keeps the shrine of Aurelan's step swept though the door is locked. Was a clerk of the Mint once and will not say which Seat.
 - Ash (Ashby), Hollowborn, eight by the calendar, the ringleader of the stone-pear game. Grey-name given at five for the colour of everything she owns.
-- Moth (Dunne), Hollowborn, six, follows soldiers. Stops in the lane to let someone past, and the soldier stops too, and does not know why.
-- Still (Cordwain), Hollowborn, nine, born in the Smokes the winter after. Does not speak above a whisper and has never needed to.
+- Moth (Dunne), Hollowborn, seven, follows soldiers. Stops in the lane to let someone past, and the soldier stops too, and does not know why.
+- Still (Cordwain), Hollowborn, eight, born in the Smokes the winter after. Does not speak above a whisper and has never needed to.
 - Cinder (Teal), Hollowborn, seven, Gammer Teal's great-grandson, visiting from Stillwater and homesick for a lake that does not move.
-- Ember (Quay), Hollowborn, five, two grey eyes, born this year's spring. The other children do not play with her and do not know why.
-- Latch (Marlowe), Hollowborn, four, a cousin of Tick's by some reckoning. Named for what he reaches for in his sleep.
+- Ember (Quay), Hollowborn, seven, two grey eyes, born in the last spring the Smokes counted Hollowborn. The other children do not play with her and do not know why.
+- Latch (Marlowe), Hollowborn, seven, a cousin of Tick's by some reckoning. Named for what he reaches for in his sleep.
 - Nettle (Crannock), Hollowborn, nine, late for everything because of the people in the way. Hesk pays her a penny to tell him whether the shop is empty.
 - Hollis Grey, Hollowborn, forty, late-eyed the night of Cinders. Took the eye as a grown man and has never once said what he sees, and his wife has stopped asking.
 - Wren Stillwater, Hollowborn, eleven, one of the seventy who came out of the lake. Will not go near the Cinder. Hums one note when frightened.
@@ -45,7 +45,7 @@ Humans: pick the nation first, it decides the god and the accent. Hollowborn: sa
 - Clove Eavesham, halfling, Kettle's rival, a smaller boat and a louder laugh. Carries the Church's letters and reads them.
 - Spindle Mossbrook, halfling, a child of the Quay, eight. Counts the toll bridge's arches every morning in case one has gone.
 - Dock Pennyford, halfling, lock-keeper's son from downriver, up to see the lantern. Has seen it. Is staying.
-- Marigold Silverweed, halfling, the Ford's midwife since Ottilie Marlowe stopped crossing the town. Delivers the Ford's children and refuses the Smokes', and is ashamed of it.
+- Saffron Silverweed, halfling, the Ford's midwife since Ottilie Marlowe stopped crossing the town. Delivers the Ford's children and refuses the Smokes', and is ashamed of it.
 - Wick Dunmow, halfling, barge-hand with the Fairlocks, lost his boat in a Concord seizure and his temper permanently. Will work for the Ninth for food.
-- Tarrow Brindlewake, halfling, Kettle's uncle, retired to a hut on the Quay. Lights the pipe she never does and tells her stories back to her, wrong.
-- Tansy Fennwater, halfling, a Mother of the Water's granddaughter on her first run. Writes everything down, which no halfling does, and will be in trouble for it at the Moot.
+- Tarrow Brindlewake, halfling, Kettle's aunt, retired to a hut on the Quay. Keeps a pipe in her mouth she never lights and tells Kettle's stories back to her, wrong.
+- Tamsin Fennwater, halfling, a Mother of the Water's granddaughter on her first run. Writes everything down, which no halfling does, and will be in trouble for it at the Moot.

@@ -21,9 +21,16 @@ relations:
     known: true
   - to: sorrel-vey
     kind: pities
+  - to: npc-liriel-tarn
+    kind: daughter of
+    known: true
+  - to: npc-caelo-once-mar
+    kind: was inked by
+    note: Three exam lines, one wrist.
+    known: true
 ---
 
-Seventy, which is young for an elf: slim, freckled, round-faced, with only three tattoos (all on one wrist, all about exams) and ink on every finger from copying. Merane lives in the Temple Row rooms [[Aelith Sorn]] keeps, in the little room off the stair, and carries [[Aelith Sorn]]'s satchels, copies her notes, and asks every question that comes into her head, usually twice.
+Seventy, which is young for an elf: slim, freckled, round-faced, with only three tattoos (all on one wrist, all about exams) and ink on every finger from copying. Merane lives in the Temple Row rooms [[Aelith Sorn]] keeps, in the little room off the stair, and carries [[Aelith Sorn]]'s satchels, copies her notes, and asks every question that comes into her head, usually twice. Her mother is [[Liriel Tarn]], warden of the Wild and keeper of the Unlettered at Ilmareth, who has one tattoo and did not approve of the three.
 
 > "Sorry, but does the ash always taste like that? And is that a real Raveler? Can I ask him about his feathers? Sorry. Sorry."
 

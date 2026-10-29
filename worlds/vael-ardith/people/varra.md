@@ -33,6 +33,9 @@ relations:
     kind: shield-sister of
     note: Signed the roll the same morning.
     known: true
+  - to: npc-hurkul-ninefingers
+    kind: is refused service by
+    known: true
 ---
 
 ### Who she is

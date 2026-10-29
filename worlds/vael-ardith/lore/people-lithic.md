@@ -21,6 +21,9 @@ The Lithic are what is left of [[Ul-Tarran]], the kingdom that rose around the G
 
 They know the Sleeper's true name. They do not say it to outsiders. They do not say much to outsiders; the Lithic are courteous, formal, and so slow in speech that a conversation is a commitment. They keep the old script, which the glass of the Ashenreach is full of, and they teach it to no one.
 
+### Customs and superstitions
+Wardday is theirs: nothing is built or dug, and the surface dwarves come and sit with them. Ketterin's luck is the only luck they recognise, the luck of staying ([[The First Standing]]). Bread is left at a Stander's feet by whoever passes, and a Stander who is never passed goes unfed, which does not kill them and is noticed. The last words are spoken while the mouth still moves and written down by whoever is left; a Lithic who stands with nobody to write them is the loneliest thing on the continent, and Uthrem has been that for forty years. They do not say the Sleeper's name to outsiders, and they do not sing the tenth verse of the tomb-song where a human can hear it ([[Songs of the March]]).
+
 ### Names
 Old, heavy, two syllables, the stress on the first. Omneth, Sarrik, Telune, Hadrun, Ishkeh, Morrun, Quellith, Bastrem, Anuvar, Keth. No family names; a Lithic is named for the ward their line stands at: Sarrik of the Seventh. [[Warden Uthrem]] is Uthrem of the Ninth, and the last of that line.
 

@@ -36,7 +36,6 @@ relations:
     known: true
   - to: h-map-scrap
     kind: will say how much of it is real
-    known: true
 ---
 
 ### Look and voice

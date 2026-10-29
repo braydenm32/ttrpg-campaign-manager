@@ -25,6 +25,9 @@ relations:
     kind: resents
     note: For healing for free.
     known: true
+  - to: npc-nell-harrow
+    kind: quarrels with and buys from
+    known: true
 ---
 
 Fifty, grey-haired, sleeves rolled, hands steady as a carpenter's until about the fourth drink, after which they're steadier. Maud has sewn up three armies and sawn off more legs than she can count, and she counts everything. She sews with fishing line because it holds, and keeps a list of her dead pinned inside her apron.

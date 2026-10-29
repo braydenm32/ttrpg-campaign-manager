@@ -16,7 +16,7 @@ fields:
 The Regency is what the empire became when it stopped having an emperor and did not notice for a while.
 
 ### The land
-Rich river country: the Ardis valley from the Grimmark foothills down to the bays, wheat and vines on the terraces, old imperial roads that are still the best roads on the continent, bridges with the sun of [[Aurelan]] cut into every keystone. The capital, [[Caer Ardith]], sits where the river widens. North of it is [[Ardmere]], which was besieged from spring into the frosts of 2994 and still has the scars; north-east, on the road to the Ashenreach, is the market town of [[Fallowden]], fat and bored.
+Rich river country: the Ardis valley from the Grimmark foothills down to the bays, wheat and vines on the terraces, old imperial roads that are still the best roads on the continent, bridges with the sun of [[Aurelan]] cut into every keystone. The capital, [[Caer Ardith]], sits where the river widens. North of it is [[Ardmere]], which was besieged from spring into the frosts of 2994 and still has the scars; north-east, on the road to the Ashenreach, is the market town of [[Fallowden]], fat and bored. Beyond it the road to the ash runs through the Regency's last post at [[Whitepost]], and two days south of Fallowden, in the marches, lies [[Dunmeer]], where the Corporal was hanged.
 
 ### The people
 Imperial humans mostly, with orc companies in the garrisons (never trusted, never dismissed), halfling barges on every river, Vesh in the archives. The old noble families keep the old titles and quarrel about precedence at parties where nobody has paid the caterers. Everyone below them fills in forms. The Regency counts everything, taxes most of it, and spends what it has on the capital.

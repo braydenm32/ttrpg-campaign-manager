@@ -28,6 +28,12 @@ relations:
     known: true
   - to: sael
     kind: exiled from
+  - to: npc-caelo-once-mar
+    kind: was read by, and sent away
+    note: Eighty years ago. He said he could not read it. She thinks he was embarrassed.
+  - to: npc-mourn
+    kind: is served at the door by
+    known: true
 ---
 
 ### Look and voice
@@ -56,7 +62,7 @@ As guests: warmly, attentively, with interest that may or may not be professiona
 :::gm
 **Secret.** Sorrel Vey is [[Captain Marrow]]'s lover. It began as a negotiation for the company's credit and became something neither of them planned. It is the only thing in Sorrel's life she does not write in the book. She has never said it aloud; in session 4 she says it to [[Sister Seraphine]]'s face, once, on purpose. She keeps a small sleep-talk book of what Ilse murmurs, and has never read it back. When Marrow refused her money twice, Sorrel began paying the company's small debts instead, through an anonymous "friend of the company" credit that turns up in [[Fennick Bottlebrook]]'s books every Coinday. Marrow does not know.
 
-**Her skin** records [[The Saelish Trespass]]: Sael's attempt in 1102 AW to open the Fourth Ward, and what it cost. When Sorrel was a girl, her grandmother, a dying Remembrancer ordered to burn the skins that remembered the Trespass, inked it onto her granddaughter instead. The layers on her back run oldest first: four words (*We came because called*), the list of the Trespass dead, the Fourth Ward's sign; later hands re-inked each as it faded. [[Aelith Sorn]] can read one line in five and has been courting Sorrel for a month for the rest. She will do anything to read it all, including taking it. Sorrel plays Aelith, Seraphine and the Captain against the fourth party in the room, which is her own curiosity.
+**Her skin** records [[The Saelish Trespass]]: Sael's attempt in 1102 AW to open the Fourth Ward, and what it cost. When Sorrel was a girl, her grandmother, a dying Remembrancer ordered to burn the skins that remembered the Trespass, inked it onto her granddaughter instead. The layers on her back run oldest first: four words (*We came because called*), the list of the Trespass dead, the Fourth Ward's sign; later hands re-inked each as it faded. The Inkwright [[Caelo once-Mar]] at Ilmareth read it entire eighty years ago, told her he could not, and told her to leave Sael; that is why she left. [[Aelith Sorn]] can read one line in five and has been courting Sorrel for a month for the rest. She will do anything to read it all, including taking it. Sorrel plays Aelith, Seraphine and the Captain against the fourth party in the room, which is her own curiosity.
 
 She loathes [[Sister Seraphine]], who serves desire too, and in a way Sorrel finds dishonest: "She doesn't sell what people want. She sells them the wanting."
 :::

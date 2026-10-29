@@ -42,7 +42,7 @@ relations:
 A quiet river, a dry hold, and Kettle alive at the end of the season, in that order. Marigold would like Regent to like her. Regent would not.
 
 ### What they know
-Every snag, shelf and shallow between Cinderford and Sevenhaven. Who came aboard, when, and whether they were nervous. Where Kettle keeps the lever for the false floor. What is in it, because they have eyes; and they have never looked, because they have sense.
+Every snag, shelf and shallow between Cinderford and Sevenhaven. Who came aboard, when, and whether they were nervous. Where Kettle keeps the lever for the false floor. What is in it, near enough, because a hold has only so many smells; they have never asked, because they have sense.
 
 ### How they treat the PCs
 Dob nods. Marigold says "Captain's aft," and that is the welcome. A PC who helps pole through the ford shallows without being asked earns a word from Dob, which is something to tell people about. Regent sits in the lap of whoever most dislikes cats.

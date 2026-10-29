@@ -21,11 +21,14 @@ They have none yet. They have mothers. The Hollowborn of [[The Smokes]] are a ge
 
 What is forming in their place of culture is a dream. Every Hollowborn dreams at full red moon, and they have begun to compare notes, and the Sleepless have begun to listen. [[Stillwater]], the hamlet on the grey lake, is where the families who could not bear the Smokes went, and it is the quietest place in the March, and it is not empty.
 
+### Customs and superstitions
+They stop in the lane to let the dead pass, and the whole town has learned to stop with them. Their marbles are [[Stone Pears]], and their game has rules nobody else can follow. They will not eat a blind-fish's head. They count the Ember's twenty-three nights with a rhyme nobody taught them ([[Songs of the March]]), and it ends on the words the stone-touched dead say. The grey-name is given by the other children, never the parents, at about five, and sticks for life; a Hollowborn called by it by an adult looks round for the child who said it. They keep Eye-Night, 17 Reaping, with the lamps out and the doors open.
+
 ### Names
-Parents' names, mostly human, with a grey-name given by the other children: Ash, Cinder, Moth, Still, Ember. Wren Ashby, Sable Cordwain, Haskel Grey, Nettie Lowe, Pip Ashcombe, Dorran Stillwater, Ember Tolliver, Moss Quay, Ilka Dunne, Cass Marrowick. [[Tibbet Marlowe]] is called Tick, because of the sound he made as a baby and because he has never since been able to sit still.
+Parents' names, mostly human, with a grey-name given by the other children: Ash, Cinder, Moth, Still, Ember. Wren Ashby, Sable Cordwain, Haskel Grey, Nettie Lowe, Pip Ashcombe, Dorran Stillwater, Ember Tolliver, Moss Quay, Ilka Dunne, [[Cass Marrowick]]. [[Tibbet Marlowe]] is called Tick, because of the sound he made as a baby and because he has never since been able to sit still.
 
 ### Where they live
-The Smokes, Stillwater, and the fringes of the Ashenreach. A few in [[Ardmere]], born during the siege. Rumour puts some in the Grimmark, near the Eighth, and in Sael, near the Fourth, and both nations deny it.
+The Smokes, Stillwater, the fringes of the Ashenreach, and a dozen at [[Ambercote]], in the glass, whom nobody counted. A few in [[Ardmere]], born during the siege. Rumour puts some in the Grimmark, near the Eighth, and in Sael, near the Fourth, and both nations deny it.
 
 ### How others see them
 Pitied, feared, and useful. Soldiers pay a Hollowborn child a copper to tell them whether a room is empty. The Saint's mission takes them in and is very kind. The Sleepless call them the Dreamers and treat them as prophets, which the children mostly find embarrassing. Most of Cinderford looks at the grey eye and then looks away.

@@ -29,6 +29,13 @@ relations:
   - to: warden-uthrem
     kind: seeks
     note: Has read of him; wants to find him.
+  - to: npc-caelo-once-mar
+    kind: was taught by
+    note: Her Reader's lines are in his hand. She has it written that he was kind.
+    known: true
+  - to: npc-liriel-tarn
+    kind: is distrusted by
+    note: Merane's mother.
 ---
 
 ### Look and voice
@@ -50,7 +57,7 @@ To learn what Sael forgot. Not the small things; the great one. Elves know there
 More history than anyone in the March. The ancient script of [[Ul-Tarran]] (she can half-read it). That the Glassers are digging up Lithic writing. That the keeper of [[The Velvet Ledger]] wears very old ink.
 
 ### How she treats the PCs
-As useful, courteous, temporary acquaintances. She will pay well for relics, writing, rubbings and stories. She is a gracious guest and a genuinely brilliant scholar, and she will help them read things nobody else can.
+As useful, courteous, temporary acquaintances. She will pay well for relics, writing, rubbings and stories: fifty gold for [[A Lithic Road-Marker]], and she will ask, once, where it was found. She is a gracious guest and a genuinely brilliant scholar, and she will help them read things nobody else can.
 
 :::gm
 **Secret.** Aelith will betray anyone to learn what Sael forgot. She came east a week after the Archive of Skins' empty rack, labelled "Vey, S., living, in the Ashenreach", was found. She can read about one line in five of Sorrel's ink, and nobody else in the March can read it at all. She knows the hole in Sael's history is [[The Saelish Trespass]], and she knows that [[Sorrel Vey]]'s skin is the only surviving record of it. She means to read it, with or without Sorrel's consent, and with or without Sorrel attached.

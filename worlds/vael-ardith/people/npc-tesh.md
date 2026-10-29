@@ -32,7 +32,7 @@ Thirty, dark-eyed and long-limbed, with a laugh like a dropped tray and old whit
 She is warm, clever, a gifted listener and an even better liar, and a favourite of half the officers in town. She knows the Lieutenant's opinions, the Assessor's clerk's tea order, and how the Captain takes her wine.
 
 :::gm
-Tesh is of the imperial blood, through a by-blow of Aurel IX's uncle, and she doesn't know it. Imperial lines were bred to feel the wards; she hears [[The Sleeper Below]] in her sleep, which is why she stopped sleeping, and why the glass called to her. [[Ansel Mote]] took tea in the Ledger on his first evening to look at her. [[Marius Vell]]'s office is searching for pliable heirs. If the Regency takes the flame (ending C), Tesh is the puppet they'll put it in the hands of. Mote has her on the fifth line of his cipher ("the girl at the Ledger").
+Tesh is of the imperial blood, through a by-blow of Aurel IX's uncle, and she doesn't know it. Imperial lines were bred to feel the wards; she hears [[The Sleeper Below]] in her sleep, which is why she stopped sleeping, and why the glass called to her. [[Ansel Mote]] took tea in the Ledger on his first evening to look at her. [[Marius Vell]]'s office is searching for pliable heirs. If the Regency takes the flame (ending C), Tesh is the puppet they'll put it in the hands of. Mote has her on the fifth line of his cipher ("the girl at the Ledger"). Her name is on the Curia's list: [[Who is on the Crownfast pardon list?]].
 
 **Beat.** In session 4, one night near the full Ember, she wakes the whole Ledger calling a name in the Sleeper's warm, patient cadence; the name is that of whichever PC is in the house, and she does not remember doing it.
 :::

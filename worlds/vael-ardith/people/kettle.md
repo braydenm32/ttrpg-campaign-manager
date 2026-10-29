@@ -28,6 +28,36 @@ relations:
   - to: fennick
     kind: bought oil from
     note: Four casks of the good stuff.
+  - to: npc-jeb-marrowick
+    kind: trades with
+    note: Other cousins of hers take salt and iron to Ambercote twice a month and bring back cheese and slag.
+    known: true
+  - to: npc-cass-marrowick
+    kind: carries letters for
+    note: Sealed with cheese-wax. One reaches the Keep on the night of 16 Ashfall.
+    known: true
+  - to: npc-posy-reedmarsh
+    kind: answers to
+    note: Her Mother of the Water on this river, who has predicted a bad end for her for thirty years.
+    known: true
+  - to: npc-wendel-hoop
+    kind: buys casks from
+    known: true
+  - to: npc-thimble-fairlock
+    kind: answers to
+    note: '"That one will hang." Kettle has heard it since she was nine.'
+    known: true
+  - to: npc-fallon-wrass
+    kind: owes a true thing to
+    note: He told her "down to the last candle". She tipped him one about Keel.
+  - to: npc-kettle-cousins
+    kind: is cousin to
+    note: Dob and Marigold, on her mother's side. They pole; she talks.
+    known: true
+  - to: npc-nance-oddy
+    kind: carries letters for
+    note: Through her people, who pass the mill with salt for the south.
+    known: true
 ---
 
 ### Look and voice
@@ -40,13 +70,13 @@ Her talk comes at a run and mostly in questions, and every one of them ends in "
 > "I don't take sides. I take cargo. Sides is just cargo that argues."
 
 ### Who she is
-Kettle Brindlewake is captain of the barge *Grey Dumpling*, the busiest vessel on the river Cinder, and Barge-Mother of a clan of [[Halflings|halfling]] bargefolk (her cousins Dob and Marigold pole the barge and say little) who carry grain, letters, salt fish, passengers and anything else that fits in a hold between [[Cinderford]] and the Ardis. Some of what fits in the hold is legal. She runs the floating market on [[The Low Quay]] and is cousin, twice removed, to [[Fennick Bottlebrook]], whom she considers the family disappointment for going straight.
+Kettle Brindlewake is captain of the barge *Grey Dumpling*, the busiest vessel on the river Cinder, and Barge-Mother of a clan of [[Halflings|halfling]] bargefolk (her cousins [[Dob and Marigold]] pole the barge and say little) who carry grain, letters, salt fish, passengers and anything else that fits in a hold between [[Cinderford]] and the Ardis. Some of what fits in the hold is legal. She runs the floating market on [[The Low Quay]] and is cousin, twice removed, to [[Fennick Bottlebrook]], whom she considers the family disappointment for going straight. On the Cinder she answers to [[Barge-Mother Posy Reedmarsh]] at Sedgemere; on the Ardis to [[Barge-Mother Thimble Fairlock]], who trained her on her own deck and has said since Kettle was nine that she will hang.
 
 ### What she wants
 Profit. Gossip. A fine dinner. For the river to keep running and nobody important to notice her. Mostly gossip.
 
 ### What she knows
-Everything that comes down the river and much that goes up it. Who's buying Glasser salvage. Which Regency letters have come for the Assessor's clerk. That [[Dannic Rook]] owed her money. She has a good deal to say about the pay wagon and about where Dannic was and was not on the 12th, and will tell you for a price. Her sources are Nan Crupp at the ferry, [[Thistle Weirford]] with her drum and her sticky fingers, and her own two eyes. She sells to every faction in the March. She tells the PCs first, and cheaper.
+Everything that comes down the river and much that goes up it. Who's buying Glasser salvage. Which Regency letters have come for the Assessor's clerk. That [[Dannic Rook]] owed her money. She has a good deal to say about the pay wagon and about where Dannic was and was not on the 12th, and will tell you for a price. Her sources are Nan Crupp at the ferry, [[Thistle Weirford]] with her drum and her sticky fingers, and her own two eyes. She sells to every faction in the March. She tells the PCs first, and cheaper. Other cousins of hers are the only people in Cinderford who go to [[Ambercote]], and she knows what stands in its square.
 
 ### How she treats the PCs
 She likes them best. She liked [[Varra Nine-Knuckles]] the moment Varra stepped onto her barge and asked if she needed a hand with the ropes. She treats the party like favourite nieces and nephews: feeds them, scolds them, overcharges them slightly less than everyone else, and expects visits.
@@ -57,6 +87,8 @@ She likes them best. She liked [[Varra Nine-Knuckles]] the moment Varra stepped 
 She knows the pay wagon's escort turned back two days out, and that somebody paid them to. She knows Dannic Rook was nowhere on the Quay on the 12th, whatever the poster says.
 
 Last month she bought four casks of the company's good lantern oil from her cousin [[Fennick Bottlebrook]], who needed bread money. She has not sold them yet; they are aboard the *Grey Dumpling*. She smuggles [[Vexa Glassjaw]]'s salvage downriver, including relics that should stay buried. In the false floor of her hold (DC 18) sits a warm thirteenth crate that hums at night: [[The Glass-Fused Hand]], Ketterin's own, bound for [[Aelith Sorn]]. She also carries a sealed vial from the Kneeling Stone, addressed to "the Warden, Ninth Stone".
+
+She fished the lost pay order out of the post-stair box in Thawmere 3009, read it, kept it as insurance, and gave it to [[Barge-Mother Posy Reedmarsh]] on the day Mote arrived (see [[The Lost Pay Order]]). When pressed she blames Regent the cat.
 
 She likes the PCs best because they're the only people in the March who've never tried to buy her.
 :::

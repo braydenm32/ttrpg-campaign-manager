@@ -29,7 +29,7 @@ relations:
 ---
 
 ### Who he was
-Aurel IX, last of the line of Caedric, Emperor of Ardith by the grace of [[Aurelan]], the Crowned Sun. He reigned twenty-two years from [[Caer Ardith]] and was by most accounts a clever, cultivated, distant man who loved architecture and astronomy and disliked people. The coins of his reign show him in profile: a long nose, a high forehead, a slight frown, as though listening to something.
+Aurel IX, last of the line of Caedric, Emperor of Ardith by the grace of [[Aurelan]], the Crowned Sun. He reigned twenty-two years from [[Caer Ardith]] and was by most accounts a clever, cultivated, distant man who loved architecture and astronomy and disliked people. The coins of his reign show him in profile: a long nose, a high forehead, a slight frown, as though listening to something ([[An Emperor's Penny]]).
 
 > "An empire is a promise the dead make to the unborn. I intend to keep it." (Carved over the palace gate. Soldiers have added a word to it in several places.)
 

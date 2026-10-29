@@ -19,7 +19,7 @@ And far to the east, in Halcyra, a woman who walked out of a fire unburnt lifts 
 **The pantheon's priests, from every direction at once, for every reason but the same one.** Run them as a crowd at the lip of the Rent, all talking, none agreeing:
 - [[Seraphine Ashe]] for [[The Unburnt Saint]]: "Let her drink it. She will be merciful. She was one of us." She believes it. Ilyra may even mean it.
 - [[Odile Fairweather]], the Reeve, with the Aurelan shrine's key on her belt, for [[Aurelan]]: the old empire needs an emperor, and a god freed to act can crown one. Any one.
-- Brother Audit, Corvex's lay brother from Temple Row, with an audit: the Nine broke an oath to the gods (the gods' claim on Ysmereth), and a broken oath is theft. Opening the ward is "settling an account".
+- [[Brother Audit]], Corvex's lay brother from Temple Row, with an audit: the Nine broke an oath to the gods (the gods' claim on Ysmereth), and a broken oath is theft. Opening the ward is "settling an account".
 - Sister Brine, the camp priestess, praying in a roar for [[Grum]], sweating and sincere: "The gods are going to eat a god. That's a war. I want to be on the winning side of it."
 - [[Mourn]], the Velvet Ledger's doorkeeper, for [[Isaurana]]. Isaurana's priests do not argue in public. They whisper to each PC privately, about the thing each of them wants most, and how it could be had in a world where the gods are stronger.
 - Even [[Mother Brisk]], priest of [[Maelis]], frightened, who simply wants the dreams to stop, and has been told this will stop them.
@@ -46,7 +46,7 @@ What none of them say aloud: the gods could never reach the Sleeper under mortal
 - **Kettle.** The *Grey Dumpling* is the first thing downriver, and its hold is full.
 - **Hennet's Candle.** She pours for the walking dead of the Seventh, and they pay in tabs.
 - **Corvane.** She sits in the open by the Rise and counts the doors, not one of which opens.
-- **Spoons's pool and Keld's stake.** The pool pays out on the night it went out, and nobody is in a state to collect. Keld's stake, grown for nine years, is the only thing in the strongbox that is still worth anything.
+- **Spoons's pool and Keld's stake.** The pool pays out on the night it went out, and nobody is in a state to collect. Keld's stake, grown for nine years, is the only thing in the strongbox that is still worth anything. ([[The Wager on Never]])
 
 ### Hooks for a second arc
 A war of gods fought over a corpse, with mortals as the ground it's fought on. What happens when a god dies twice? And the gods have now learned that wards can break; the Eighth and Fourth are already weak.

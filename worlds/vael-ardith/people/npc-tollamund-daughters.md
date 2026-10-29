@@ -23,7 +23,7 @@ relations:
     known: true
   - to: npc-pennamund
     kind: one of them reports to
-    note: Perrin, in the margins of the ledgers he audits.
+    note: Perrin, in the margins of the ledgers he is allowed to read.
   - to: fennick
     kind: hold the signature of
     note: Fennel keeps the credit-line file. Fennick has signed things in it he should not have.
@@ -55,11 +55,13 @@ The debts of everyone in the March to the shilling. Who came to the mill after d
 As entries. Courteously. A PC changing a coin gets Perrin's eyebrow; a PC asking a question gets Odessa's answer, which is the Grandmother's; a PC who follows Sal through town is noticed by the third corner and is not minded. Fennel can be bribed in lamp-oil, knows it, and is a little ashamed.
 
 :::gm
-**Secret.** Perrin works, quietly, for [[Cousin Pennamund]]: the Concord Table sent him to find out why the Grandmother is buying the March, and Perrin, who wants the books to balance and has seen what does not, leaves him notes in the margins of the ledgers he audits. She has not told him about the lantern, because she does not know; she has told him about the 600 gold under the third line, and that the pay-box went east to Fort Mercy on the House's own cart. If the party makes an ally of Pennamund, Perrin is how he gets them the House's copy of the loan-chit.
+**Secret.** Perrin works, quietly, for [[Cousin Pennamund]]: the Concord Table sent him to find out why the Grandmother is buying the March, and Perrin, who wants the books to balance and has seen what does not, leaves him notes in the margins of the ledgers he is allowed to read. She has not told him about the lantern, because she does not know; she has told him about the 600 gold under the third line, and that the pay-box went east to Fort Mercy on the House's own cart. If the party makes an ally of Pennamund, Perrin is how he gets them the House's copy of the loan-chit.
 
 **Session 7.** On 5 Leafrot the Grandmother comes to the Keep gate in her chair, a sedan carried by eight porters. Sal walks behind the chair with the note in a leather case; Odessa stands at its right hand and speaks; Perrin stays at the mill, because somebody has to, and because she has arranged to be where Pennamund can find her. Fennel brings up the rear with the lawyers' papers and a bottle of oil for the walk.
 
 **Fennel's price.** A Keel tin of lamp-oil buys a look at the credit-line file: Marrow's note with the third line, Fennick's countersignature, and the entry for the 600-gold advance, dated 20 Reaping and marked "to travel from Fallowden under the Regency's seal, by arrangement". Fennel does not understand what is wrong with it and will not ask.
+
+**The prayer-ledger.** Every quarter [[Brother Audit]] lodges his ledger of prayers with the House, sealed, for carriage to the Bench at Sevenhaven. Odessa opens it and reads every page aloud to the Grandmother before Fennel reseals it with the House's own seal. Tollamund knows what Cinderford prays for, Sallow's two dated prayers included.
 :::
 
 == GM notes ==

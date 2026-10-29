@@ -13,13 +13,14 @@ fields:
 
 > Where the quay planking ends the bank is paved with something black and glossy that was once a street, and on it the Glassers have set out their blankets. Tarnished mail. Belt-buckles. Half a sword with the glass still on the blade like frozen water. A child's shoe. Pears, actual pears, grey and hard as flint, a copper apiece. A woman with six fingers on her left hand and a cudgel in it sits on an upturned helmet in the middle of it all, and when the arguments start she stands up, and they stop.
 
-Everything in the glasslands belongs to whoever digs it out, says the Treaty of Ashes, which did not foresee the Glassers. They dig, and this is where they sell. Most of it is scrap: forty villages' worth of iron, pewter and bone, melted into glass and chipped out again. Some of it is better. Some of it is wrong, and the stall-holders who deal in wrong keep to the downstream end and trade after dark.
+Everything in the glasslands belongs to whoever digs it out, says the Treaty of Ashes, which did not foresee the Glassers. They dig, and this is where they sell. Most of it is scrap: forty villages' worth of iron, pewter and bone, melted into glass and chipped out again. Some of it is better. Some of it is wrong, and the stall-holders who deal in wrong keep to the downstream end and trade after dark. For what things cost elsewhere in town, see [[What Things Cost in the Ashenreach]].
 
 ### Stock (see also Gutter Market Salvage)
 - Scrap iron and bent mail, 2 cp the pound.
 - A serviceable weapon with glass on it, 5 sp to 2 gp. The glass does not come off. Nobody has decided whether this matters.
 - Company badges from the eight dark companies, 1 sp each; the Seventh's go for 5, because of Mother Hennet.
-- Stone pears from the Orchard, 1 cp. They are warm at red moon.
+- [[Stone Pears]] from the Orchard, 1 cp. They are warm at red moon.
+- [[Orchard Amber]], red beads of set sap, 2 sp a bead, more before a red moon.
 - Glass-slag by the sack for the kilns, 1 sp.
 - Fused coin-lumps, sold by weight as silver, 8 sp an ounce; sometimes there is gold in the middle.
 - A Glasser's chart of a dig, 2 sp, usually false (Skelt draws them).
@@ -27,7 +28,7 @@ Everything in the glasslands belongs to whoever digs it out, says the Treaty of 
 - Information about Fort Mercy, 1 sp a sentence, from Tam, who edits.
 
 ### Who is here
-Tam Sixfingers, who keeps the peace with a cudgel and a memory for faces. Glassers in from the plain, dusty, loud, spending it. Kiln-masters' buyers. [[Kettle Brindlewake]]'s cousins, buying for the barges. [[Cousin Pennamund]], the Concord's factor, now and then, who buys the humming things and does not haggle. Brother Audit, Corvex's lay brother, who audits the weights and is tolerated.
+Tam Sixfingers, who keeps the peace with a cudgel and a memory for faces. Glassers in from the plain, dusty, loud, spending it. Kiln-masters' buyers. [[Kettle Brindlewake]]'s cousins, buying for the barges. [[Cousin Pennamund]], the Concord's factor, now and then, who buys the humming things and does not haggle. [[Brother Audit]], Corvex's lay brother, who audits the weights and is tolerated.
 
 ### Rumours
 - Vexa Glassjaw sends her best finds here and keeps the worst.

@@ -24,6 +24,14 @@ relations:
   - to: f-mothers
     kind: writes to
     note: Her mother is Mother Hesha, of the Mothers' council.
+  - to: npc-hurkul-ninefingers
+    kind: argues with
+    known: true
+  - to: npc-nell-harrow
+    kind: buys burn salve from
+    known: true
+  - to: npc-mother-hesha
+    kind: daughter of
 ---
 
 In the orc way she is **Skarra, Hesha's daughter**; the company calls her Burnbrow, because she has had no eyebrows since 2996 and has stopped pretending they'll grow back. A thick, patient orc woman of forty with scorched gauntlets and a pipe she is forbidden to light within fifty paces of her own store.

@@ -35,10 +35,11 @@ Every century the memories of elves fade, so the elves of [[Sael]] write theirs 
 Visiting scholars with letters of introduction, kind questions, and a standing offer to buy anything with writing on it. They call themselves "friends of memory". They are, within their lights, entirely sincere.
 
 ### Structure and ranks
-**Remembrancers** are full scholars. **Inkwrights** are the tattooists, who set the record into skin. **Readers** interpret old ink for the living. **The Unlettered** are young elves with a few lines on them and a great deal of curiosity. Authority comes from how much you remember, not how much you carry.
+**Remembrancers** are full scholars. **Inkwrights** are the tattooists, who set the record into skin. **Readers** interpret old ink for the living. **The Unlettered** are young elves with a few lines on them and a great deal of curiosity. They drink at [[The Unlettered]], the hollow-beech hall below the Archive, which took its name from them. Authority comes from how much you remember, not how much you carry.
 
 ### Notable members
 - [[Aelith Sorn]]: scholar in the field, charming, thorough, never in a hurry.
+- [[Caelo once-Mar]]: Inkwright under the Archive of Skins, tutor of Readers.
 
 ### What they want in the Ashenreach
 Lithic writing, ward-lore, anything older than the empire. They will pay well for rubbings, relics and fragments. They are also, quietly, looking for a book that does not exist: Sael's own account of what it did.
@@ -56,7 +57,7 @@ Gold, libraries, a network of scholars across the continent, and the most patien
 - **A letter:** from Ilmareth, asking politely for a favour that is not polite at all.
 
 :::gm
-Secret aim: recover the memory Sael chose to forget, whatever it costs others. The Saelish Trespass of 1102 AW tried to open the Fourth Ward and failed; the elves burned the skin that remembered. The Remembrancers have begun to suspect, and they want proof. Aelith will betray anyone for a page of the right ink. If the ward cracks, they will count it a price. [[Sorrel Vey]] is not a member, but her back is the first page the Remembrancers would like to read: it records the Trespass, and Aelith came east because the Archive of Skins held an empty rack labelled "Vey, S., living, in the Ashenreach". Aelith can read one line in five. The Remembrancers know the old ink burns at the Ember and fear it; they do not know why.
+Secret aim: recover the memory Sael chose to forget, whatever it costs others. The Saelish Trespass of 1102 AW tried to open the Fourth Ward and failed; the elves burned the skin that remembered. The Remembrancers have begun to suspect, and they want proof. Aelith will betray anyone for a page of the right ink. If the ward cracks, they will count it a price. [[Sorrel Vey]] is not a member, but her back is the first page the Remembrancers would like to read: it records the Trespass, and Aelith came east because the Archive of Skins held an empty rack labelled "Vey, S., living, in the Ashenreach". Aelith can read one line in five. Caelo once-Mar wrote the label on the empty rack. The Remembrancers know the old ink burns at the Ember and fear it; they do not know why.
 :::
 
 == GM notes ==

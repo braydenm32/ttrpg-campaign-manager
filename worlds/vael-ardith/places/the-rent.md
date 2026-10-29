@@ -10,6 +10,11 @@ fields:
   Where: its western end is thirty-eight miles east of Cinderford by the Ash Road; the Ninth Stone, at the north-eastern end, is about sixty
   Dangers: the edge, the dead, the wind out of it, the dreams
   Notable for: the Ninth Stone, the Red Breath, the Lithic road
+relations:
+  - to: quist-and-daughter
+    kind: was surveyed by
+    note: Four times, 3003 to 3009, in the company's pay; the survey cairn at the western end carries her figures.
+    known: true
 ---
 
 > You smell it before you see it: cold stone and pears and something under both like a struck match. Then the plain simply stops. A lip of fused glass, and beyond it air, and the far side a quarter-mile off, and between, going down past where the light goes, a wall of layered rock and glass and darkness that breathes. Slowly. Out, warm, red-tinged, for the length of a long breath. Then in, cold. Along the lip in both directions, as far as you can see, figures standing, facing the gap. They do not turn round. They were not there a moment ago.

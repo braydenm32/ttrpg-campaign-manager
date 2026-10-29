@@ -29,6 +29,8 @@ relations:
   - to: god-sleeper
     kind: worships
     note: And calls herself its widow.
+  - to: npc-nell-harrow
+    kind: is feared by
 ---
 
 ### Look and voice
@@ -49,7 +51,7 @@ Nobody in the Smokes knows her real name. She came up out of Stillwater the nigh
 Rest. She preaches that the buried god under the world is not dead but sleeping, and that if he wakes he will end everything that hurts: hunger, grief, cold, debt, war, the long grey grind of the ash. Rest for everyone, forever. She believes it completely.
 
 ### What she knows
-The dream, better than anyone alive: the vast shape under water, the eye the size of a lake opening, the voice that says a sentence nobody can keep on waking. Who in the Smokes has started to dream it. That the lantern on the hill is "the stopper in the bottle".
+The dream, better than anyone alive: the vast shape under water, the eye the size of a lake opening, the voice that says a sentence nobody can keep on waking. Who in the Smokes has started to dream it. That the lantern on the hill is "the stopper in the bottle". That the charm-wife's knots work, which is why she calls them blinding ([[A Dreamless Charm]]).
 
 ### How she treats the PCs
 As fellow sleepers who haven't woken yet. She is gentle, sad and sincere, and she wants to save them too. Except Tick. She wants Tick very particularly.
@@ -59,7 +61,7 @@ As fellow sleepers who haven't woken yet. She is gentle, sad and sincere, and sh
 
 The Widow is the younger sister of [[Marla Marlowe]], [[Tick]]'s mother, seventeen years her junior, and the younger daughter of [[Ottilie Marlowe]], the Smokes midwife: Tick's aunt. The family fled south to [[Cinderford]] in the war. On the night of [[The Battle of Cinders]], eight-year-old Wenna sat in the cellar of Marlowe's holding her sister's hand while their mother delivered Tick and Marla died. She ran from the house at twelve, to Stillwater on its grey lake, and was one of the children who came up out of it alive the night it drowned ([[The Drowning of Stillwater]]); she came back to the Smokes' cellars with the dream. She knows exactly who Tick is. Her mother has not spoken to her in five years, and goes to the Sleepless meetings sometimes, at the back, just to look at her. Marla's last words were, "Wenna, hold his hand. Don't look up." Wenna looked up. The red moon was rising through the cellar grating, and the Sleeper looked back.
 
-She supplies the Stillwater ash for the poisoned oil, gladly: lake-ash from [[Stillwater]], where the dream runs strongest, which chokes the flame. The Quiet Office thinks it is using her. She thinks the same of them.
+She supplies the Stillwater ash for the poisoned oil, gladly: lake-ash from [[Stillwater]], where the dream runs strongest, which chokes the flame. The Quiet Office thinks it is using her. She thinks the same of them. She has heard from her crews at Tally's Cut of a grey-eyed child at Ambercote who dreams wrong, and she would like very much to meet [[Cass Marrowick]].
 
 She believes Tick is the Sleeper's firstborn, the child of the night it dreamed hardest (she is not wholly wrong: it's why he grew so fast). She wants him at the lip of [[The Rent]] under a full red moon, holding the flame, so the god can wake through him.
 

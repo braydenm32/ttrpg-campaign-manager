@@ -28,6 +28,9 @@ relations:
     kind: opposes
     note: A new god means a new door.
     known: false
+  - to: npc-hurkul-ninefingers
+    kind: holds the writ over
+    known: true
 ---
 
 The Mothers of the Iron are the orcs' mothers, aunts and grandmothers, and they decide who fights, for whom, and for how long. They license every orc company on the continent. A Mother's writ is a contract, and a contract is a promise made in blood. Break it, and you are exiled: no kin, no fire, no name.

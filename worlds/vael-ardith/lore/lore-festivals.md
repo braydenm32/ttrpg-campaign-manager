@@ -21,7 +21,7 @@ The arithmetic matters: a month is five weeks of six days, so the first of every
 
 **1 Seedwake, Sowing** ([[Maelis]]). Seed blessed at the hearth-house on Temple Row. There is nothing to sow in the March but goats, so Mother Brisk blesses the goats.
 
-**7 Seedwake, Stake Day.** The company's own day, an Ironday. A work-party goes out from the bridge with a cart of stakes and finds the Ash Road again, fifty paces and a rag at a time, as far as the Treaty Stone and, in a good year, to the Burned Mill. The town walks out behind it with bread and beer and the children race the cart. The rags are dead men's shirts, torn into strips by the widows the night before, and a stake with a rag on it is a grave-marker as much as a waymark; which is why nobody takes one for firewood, and why the Glassers moving them is a thing people spit about. The roster is pegged on the gatehouse board ([[The Gatehouse Board]]). It has not been filled since 3010.
+**7 Seedwake, Stake Day.** The company's own day, an Ironday. A work-party goes out from the bridge with a cart of stakes and finds the Ash Road again, fifty paces and a rag at a time, as far as the Treaty Stone and, in a good year, to the Burned Mill. The town walks out behind it with bread and beer and the children race the cart. The rags are dead men's shirts, torn into strips by the widows the night before, and a stake with a rag on it is a grave-marker as much as a waymark; which is why nobody takes one for firewood, and why the Glassers moving them is a thing people spit about. The roster is pegged on the gatehouse board (the gatehouse board). It has not been filled since 3010.
 
 **1 Bloomtide, Greening** ([[Orvanne]]). The first day nothing is hunted. Sael's day; in Cinderford a ribbon on the dead tree.
 
@@ -39,7 +39,7 @@ The arithmetic matters: a month is five weeks of six days, so the first of every
 
 **30 Reaping, Last Sheaf** (Maelis). The last sheaf dressed as a woman and burned. In the March, a goat-rope stuffed with ash-grass, and Mother Brisk's Last Sheaf cake, which is better than it sounds.
 
-**3 Ashfall, Tally's Day.** The Glassers' feast, kept since 3008: the day Vexa's crews brought the 11th Foot's pay-chest up out of the glass at [[Tally's Cut]] ([[The Glassers' First Big Find]]). The coin on Old Tally's grave on the lip of the pit is changed with ceremony, every crew at the Cut and the fort drinks at the Ripe One at Ferrow Gant's expense, a digger who was not there has to say why, and it is the only day in the year the Glassers do not dig. By evening every Glasser in the March is drunk and the ones who have reached Cinderford are in the Smokes.
+**3 Ashfall, Tally's Day.** The Glassers' feast, kept since 3008: the day Vexa's crews brought the 11th Foot's pay-chest up out of the glass at [[Tally's Cut]] ([[The Glassers' First Big Find]]). The coin on Old Tally's grave on the lip of the pit is changed with ceremony, every crew at the Cut and the fort drinks at the Ripe One at Ferrow Gant's expense, a digger who was not there has to say why, and it is the only day in the year the Glassers do not dig. The day starts at dawn at the grave, where Ferrow Gant changes the coin ([[Tally's Cut]]). By evening every Glasser in the March is drunk and the ones who have reached Cinderford are in the Smokes.
 
 **13 Ashfall, the eve.** Not a holy day. [[Mirrel Vosk]] takes a bottle to [[The Corporal's Gibbet]] and sits with it, and nobody speaks to him, and the Candle keeps its own roll (below).
 
@@ -61,7 +61,7 @@ The arithmetic matters: a month is five weeks of six days, so the first of every
 
 **20 Frostcall, Widows' Walk.** The Treaty's anniversary, a Coinday. Widows of the eight companies walk out from Fallowden and further to [[The Treaty Stone]], and the company's whole patrol walks out with the Cinderford ones at dawn and back with them at dusk, which is the one day a year the Ninth stands at the Stone in strength. Somebody polishes LIAR out from under the Regency's signature that morning and somebody scratches it back by dark. The Ninth's own mark on the schedule gets touched by every hand that passes.
 
-**23 Frostcall, Lastwater** (Sefra). The fleets drawn up; the drowned-lists read. Nan Crupp reads the Cinder's from her hut door, and it is short, and this year will have a name on it.
+**23 Frostcall, Lastwater** (Sefra). The fleets drawn up; the drowned-lists read. Nan Crupp reads the Cinder's from her hut door, and it is short.
 
 **1 Longnight, the Reckoning** ([[Corvex]]). Every counting-house closes at noon and the books are read aloud. At Tollamund & Daughters, very slowly. Brother Audit reads the Row's prayers back to it on the step.
 
@@ -77,7 +77,7 @@ The anniversary. Nobody in the March says "the anniversary" and means anything e
 
 **Morning.** [[Gerda Hollin]] walks to the Treaty Stone with a pebble, whatever day of the week it is, and the dwarves of the tally go with her.
 
-**Dusk, the cooks' camp.** The company walks out the orchard lane to the ring of fused cookpots at the heart of [[The Weeping Orchard]], where the ninth lantern was first seen lit, and stands there in silence until the light goes, and walks back. Nobody speaks, from the bridge to the bridge. [[Brannoc Saltash]] carries the pot out and the company eats his burnt-hand stew standing, which is whatever is in the stores, scorched on the bottom on purpose, because that is how it was the first time. In 3011 Marrow cancels the muster after the pay notice, and the ring of pots stays empty, and Brannoc carries the stew down to the Candle instead, where nobody remembers to eat it.
+**Dusk, the cooks' camp.** The company walks out the orchard lane to the ring of fused cookpots at the heart of [[The Weeping Orchard]], where the ninth lantern was first seen lit, and stands there in silence until the light goes, and walks back. Nobody speaks, from the bridge to the bridge. [[Brannoc Saltash]] carries the pot out and the company eats his burnt-hand stew standing, which is whatever is in the stores, scorched on the bottom on purpose, because that is how it was the first time.
 
 **Dusk, the river.** The widows set lamps on the Cinder from the Low Quay stair, tallow dips on shingles, one for each name, and watch them go under the bridge. Nan Crupp does not cross while they are on the water. Some of them come to rest against the third pier.
 
@@ -88,11 +88,13 @@ The anniversary. Nobody in the March says "the anniversary" and means anything e
 **The Ninth's lantern** does nothing in particular, which is the point.
 
 :::gm
+**Cinders Muster 3011.** Marrow cancels the silent muster after the pay notice, and the ring of pots stays empty; Brannoc carries the stew down to the Candle instead, where nobody remembers to eat it. Nan's Lastwater list this year will carry one name that was never on a boat: Dannic Rook, whose splash she heard from her door on the night of 7 Ashfall.
+
 **Dates against the sessions.** The five holy days inside the campaign are all meant: Cinders Muster is session 1, rent day is session 2's morning, the Saint's Lamp is sessions 3 and 8, the Unveiling catches the expedition on the road between 5 and 6 (Pallas dark, a Restday, so a Corporal's night: a good night for a refusal), and session 6 goes down to Uthrem on Doorsnight, with every door in Cinderford propped open behind them. No session lands on a festival by accident. Session 4 (20 Ashfall) is a plain Coinday and market day; session 5 (25 Ashfall) a plain Ironday; session 7 (5 Leafrot) a Wardday, the Reeve's court day, which is why Tollamund chose it.
 
-**Tally's Day and Dannic.** 3 Ashfall is the day Skelt guided Dannic Rook into the Glass Barrow by the culvert and came out alone the next morning. It was Tally's Day, and Skelt was the one Glasser in the March missing from the whole of the feast, because he was holding a rope under the third pier; Ferrow Gant noticed, and has not yet said so to Vexa, and will say so to a soldier who buys him a drink and asks about Skelt by name (see [[Tally's Cut]]). Anyone who asks "what day was that?" and knows the Glassers' calendar gets the clue for free.
+**Tally's Day and Dannic.** 3 Ashfall is the day Skelt guided Dannic Rook into the Glass Barrow by the culvert and came out alone the next morning. It was Tally's Day, and Skelt was the one Glasser in the March missing from the whole of the feast, because he was holding a rope at the culvert; Ferrow Gant noticed, and has not yet said so to Vexa, and will say so to a soldier who buys him a drink and asks about Skelt by name (see [[Tally's Cut]]). Anyone who asks "what day was that?" and knows the Glassers' calendar gets the clue for free.
 
-**Eye-Night 3011** was 17 Reaping, the night after Ansel Mote arrived. His first evening was tea at the Velvet Ledger; his second was a round at the Candle, which was full, because the company was kept out of the Smokes that night by Marrow's order. He bought the whole room a drink on Eye-Night and watched who took it. Hennet remembers; it was the first round anyone had stood in the Candle since Sallow's last payday.
+**Eye-Night 3011** was 17 Reaping, the night after Ansel Mote arrived. His first evening was tea at the Velvet Ledger; his second was a round at the Candle, which was full, because the company was kept out of the Smokes that night by Marrow's order. He bought the whole room a drink on Eye-Night and watched who took it. Hennet remembers; it was the first round anyone had stood in the Candle since the company was last paid.
 
 **Cinders night and the bell.** The Reeve's ban on the bell runs from dusk. The three-and-three at noon in session 1 is lawful; a stroke after dark on the 14th would be the first in nine years, and the town would come out to see who dared.
 

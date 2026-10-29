@@ -21,6 +21,9 @@ Humans built the empire and broke it and are currently arguing about who gets th
 
 What a human respects: holding a place. What a human fears: being forgotten, which is why they carve names on everything, including other people's monuments.
 
+### Customs and superstitions
+A bell on the door, rung twice going in and twice coming out, since the Night of Open Eyes; a Smokes house without one is a house the neighbours watch. "Evening, four-and-six": you are greeted by what you owe and are not insulted. Count the stakes on the way out and count them again coming back, and if the numbers differ do not look behind you. Pallas pies on the fifteenth, when everyone is owed something and nobody is paid. Nobody is hanged on a Restday, because the Corporal was, and the one Reeve who tried found the rope gone in the morning. A penny for the Emperor on a dead man's eye, so he can pay the first toll ([[An Emperor's Penny]]). See [[Sayings, Oaths and Curses of the March]] and [[Feasts, Fasts and Holy Days]].
+
 ### Names
 Given names are plain and old; family names come from a place, a trade or a thing. Men: Osric Vane, Hollis Penrow, Lucan Dray, Corin Blythe, Ruadh Fell. Women: Tamsin Crake, Jessamy Harl, Edwen Tarrow, Maud Severin, Bettany Coyle. Plateau names end soft (Ilyra, Seraphine, Amaris); Grimmark names are short and hard (Hesk, Brann, Ulla).
 

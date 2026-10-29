@@ -11,7 +11,7 @@ Roll when the party travels the plain for more than an hour, or when you want a 
 
 Heavier weights go to the common things (patrols, scavengers, weather). The rare entries (the Grey Procession, the Standing Man) are for when the table needs a jolt. Re-roll anything that repeats within a session.
 
-Keys. The burnt wagon is the empty pay wagon, stripped and burnt by the Glassers at the Burned Mill turn-off; the box went on to Fort Mercy, and the bootprint is Thistle Weirford's (she followed the wagon out of curiosity). The Grey Procession is Hathe's door, carried by the dead who have not been let through. The Standing Man's "Not yet" is the Ninth's word, echoed by the Cinders dead.
+Keys. The burnt wagon is the empty pay wagon, stripped and burnt by the Glassers at the Burned Mill turn-off; the box went on to Fort Mercy, and the bootprint is Thistle Weirford's (she followed the wagon out of curiosity). The Grey Procession is Hathe's door, carried by the dead who have not been let through. The Standing Man's "Not yet" is the Ninth's word, echoed by the Cinders dead (see Ambercote, where two hundred and twelve say it at once). For faces on the road rather than the plain, use Travellers on the Ash Road.
 
 == Entries ==
 

@@ -25,7 +25,7 @@ He keeps the shop spotless and the back window shuttered, because the river runs
 - Against a badge of one of the dark companies, 5 cp. Against the Seventh's, 2 sp 5 cp; "half what Gutter Market asks, because of Mother Hennet, and the other half is risk".
 - Against a good cloak, 1 sp. Boots, 6 cp. A fiddle, 3 cp. A sword, 1 gp: "a plain one costs eight at the Forge, I don't lend the difference."
 - Against a ring, by weight, and by how the owner holds her hand when she hands it over.
-- Ardmere Receipts: refused, with a smile. "I'll take it in Ardmere Receipts" is the saying for *no*, and he says it, to a soldier's face, each time. Tollamund would pay forty in the hundred. He does not tell them that.
+- Ardmere Receipts: refused, with a smile. "I'll take it in Ardmere Receipts" is the saying for *no*, and he says it, to a soldier's face, each time. Tollamund would pay forty in the hundred. He does not tell them that. See [[An Ardmere Receipt]].
 
 ### For sale
 Unredeemed pledges only, ticketed, with the day and the loan on the back of the ticket. Boots, 8 cp. A fiddle with three strings, 6 cp. A sergeant's whistle, 2 cp. A Salt Guard tabard, scorched, 5 sp. A dark-lantern, rusted open, 4 sp. A wedding ring on a nail, 2 sp: "a sad one". A dented helm with a hole in it, 1 sp, "I didn't ask whose". A spyglass with a cracked lens, 1 gp. A child's wooden horse, not for sale; it is on the top shelf and has been there four years.

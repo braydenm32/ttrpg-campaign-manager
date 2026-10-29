@@ -18,11 +18,12 @@ The Ford is the oldest quarter and the only one with a square. The bridge crosse
 ### What is here
 - **The toll bridge.** Five arches, rebuilt 3003 on piers that survived the burning. The company's gatehouse holds the west bridge-head and searches what it likes; the toll clerk, [[Mistress Hebbe]], sits in it on the Reeve's son's behalf. At low water the third pier shows a dark hollow at its foot where the river goes in and does not come out.
 - [[The Treaty Bell]], on its post in the square, rung for alarm and for treaty business, and otherwise not.
-- **The company gatehouse**, where recruits sign the book and the duty sergeant keeps the wanted bills. [[Mirrel Vosk]] is there most mornings, reading them aloud for the illiterate with commentary.
-- **The Reeve's house**, grey and square like the rest but with glass in the windows, where [[Odile Fairweather]] holds court on Wardday and dines with whoever is useful on the other five.
+- **[[Ford Street]]**, west from the square to the West Gate: smith, stables, bathhouse, pawnbroker, bakery, and a surveyor with a chain over the door.
+- **The company gatehouse**, where recruits sign the book and the duty sergeant keeps the wanted bills on a board by the door. [[Mirrel Vosk]] is there most mornings, reading them aloud for the illiterate with commentary.
+- [[The Reeve's House]], grey and square like the rest but with glass in the windows, where [[Odile Fairweather]] holds court on Wardday and dines with whoever is useful on the other five.
 - [[Tollamund & Daughters]], the Shellback counting-house, which bought the old mill-house in 3007 and has been quietly buying everything else since.
 - [[The Assessor's Office]], one rented room above the cooper's, busy again this month and already full of paper.
-- **The farrier's shed**, a lean-to against the gatehouse wall: one-eyed, shoes anything on four legs, and says the words at Grum's anvil on Temple Row. He blesses a blade by spitting on it, and it is considered rude to wipe it before he has finished.
+- **The farrier's shed**, a lean-to against the gatehouse wall: the one-eyed smith of [[Ninefingers Forge]] ([[Hurkul Ninefingers]]) shoes anything on four legs here, and says the words at Grum's anvil on Temple Row. He blesses a blade by spitting on it, and it is considered rude to wipe it before he has finished.
 - [[The Glass Barrow]] lies under all of it, though nobody but the Glassers and the drowned have been in.
 
 ### Who is here
@@ -39,7 +40,7 @@ The Reeve. The toll-clerk, [[Mistress Hebbe]], who can tell a Concord coin from 
 :::
 
 ### Things to do
-Pay the toll, or argue about it. Sign the gatehouse book. Watch Hebbe test a coin. Get summoned to the Reeve's table. Be weighed by the Shellbacks' slow eyes. Go down to the water at dawn and see what the river has caught against the piers.
+Pay the toll, or argue about it. Sign the gatehouse book. Watch Hebbe test a coin. Get summoned to the Reeve's table. Be weighed by the Shellbacks' slow eyes. Go down to the water at dawn and see what the river has caught against the piers. Take the Reeve's job about the coin that rang wrong in Hebbe's hand this month, and find out whose pocket it came from.
 
 :::gm
 The dead man in the ford is [[Dannic Rook]], drowned under the third pier on the night of 7 Ashfall; never buried; hooked out of the ford at noon on 14 Ashfall with his boots full of glass-sand. He will not stay on the slab, or in the ground, or out of the river. The hollow under the pier is the way into the Barrow; see [[The Drowned Man]].

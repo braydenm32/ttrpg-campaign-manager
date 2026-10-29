@@ -2,7 +2,7 @@
 type: npc
 name: Skelt
 players: true
-summary: "Fort Mercy Glasser who drinks, sells dig-charts at Gutter Market for two silver, and went into the Glass Barrow with Dannic Rook and came out alone."
+summary: "Fort Mercy Glasser who drinks, sells dig-charts at Gutter Market for two silver, and is said to have gone into the Glass Barrow with Dannic Rook and come out alone."
 parent: fort-mercy
 tags: [ npc, glassers ]
 image: sil:npc-skelt
@@ -12,7 +12,7 @@ fields:
   Ancestry: Human
   Role: Glasser digger
   Faction: The Glassers
-  Where: "Fort Mercy; Gutter Market on market days"
+  Where: "Fort Mercy; Gutter Market on market days; the Ripe One at Tally's Cut when he has walked halfway"
 gmFields:
   5e: "Bandit: AC 12 (leather), HP 11, glass-pick +3 for 1d6+1 piercing. Stealth +4 underground. Runs at half HP, and knows where to run."
 relations:
@@ -30,6 +30,11 @@ relations:
   - to: glass-barrow
     kind: knows the way through
     note: The culvert, the Quay cut, the Red Seam door, and where the spiders nest.
+  - to: q-bakers-hoard
+    kind: will claim salvage in
+  - to: npc-ferrow-gant
+    kind: is suspected by
+    note: Missed the grave at dawn on Tally's Day, and came in on the 5th with rope-burns.
 ---
 
 ### Look and voice
@@ -54,7 +59,7 @@ The Barrow's seven rooms and the two ways in and out. Where the spiders nest. Wh
 As buyers until they mention Dannic, then as a threat. He sells them a chart. He sells them a better chart if they look like they would notice the difference. He tells them the truth for drink, in the Candle, in a corner, in a whisper; or for his skin, at Fort Mercy, when the party has him against a wall and Vexa is not looking.
 
 :::gm
-**Secret.** On 3 Ashfall, for a cut of whatever was in the bundle, Skelt took Dannic Rook into the Barrow by the culvert at low water, past the spiders, down the Cold Stair, and held the rope while Dannic set his stash down in a ring round the Cold Captain's chair and chalked *D.R. 3 Ashfall. Back for the rest* on the wall. Dannic wanted to stay and look at the Red Seam door. Skelt did not. He came out alone by the culvert the next morning; Dannic came out later by the Quay cut, and Skelt did not know that until the wanted bill went up and he realised nobody was asking him questions. He has told nobody what Dannic cached, because he never saw inside the bundle, and he thinks it was Concord coin. It was twelve new Regency shillings and some paper.
+**Secret.** On 3 Ashfall, for a cut of whatever was in the bundle, Skelt took Dannic Rook into the Barrow by the culvert at low water, past the spiders, down the Cold Stair, and held the rope while Dannic set his stash down in a ring round the Cold Captain's chair and chalked *D.R. 3 Ashfall. Back for the rest* on the wall. Dannic wanted to stay and look at the Red Seam door. Skelt did not. He came out alone by the culvert the next morning; Dannic came out later by the Quay cut, and Skelt did not know that until the wanted bill went up and he realised nobody was asking him questions. He has told nobody what Dannic cached, because he never saw inside the bundle, and he thinks it was Concord coin. It was twelve new Regency shillings and some paper. [[Ferrow Gant]] at [[Tally's Cut]] noticed he was not at the grave at dawn on Tally's Day, was not in the Smokes that night, and came in on the 5th with rope-burns; Ferrow will say so to anyone who asks about Skelt by name over a drink. Ferrow's own charts are honest and he will say which of Skelt's are not.
 
 His Gutter Market chart of the Rent is a copy of Pike's ([[A Glasser's Chart]]) with the Choir and the Halfway Ledge left off, because a chart that gets you killed is bad for repeat trade; the rest of his stock is copied from dig tallies at Fort Mercy and padded.
 

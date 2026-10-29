@@ -18,6 +18,8 @@ It has been rung nine times. Once at the signing. Twice for greywinds that reach
 
 The bell-ward's mallet strokes from the bell-house stair, for the ford at dusk and dawn, deaths, fire, and someone in the water, do not count as ringing; nobody touches the rope but on the Keep's order.
 
+The bell is one of three alarm languages in town, with the company's drum and the signal tower's lamps; all three are set down in [[Signals of Cinderford]].
+
 ### Who is here
 Dunny Pike, who holds the post because his father held it, and his father is dead. He takes it seriously enough that the gate-watch have stopped teasing him. He learned the strokes from old [[Halloran Pike]] by the Candle fire, no relation, there being a great many Pikes, and he carries the old man's pipe over to him every evening. His code, struck with the mallet: one stroke, the ford closes; two, a death; three, fire; three and three, someone in the water. Four, he says, is the end of the world, and he has never struck it. He knows everyone who crosses the square and is a better source than the toll-clerk, for the price of a pear.
 

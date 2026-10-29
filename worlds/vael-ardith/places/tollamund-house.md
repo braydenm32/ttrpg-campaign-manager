@@ -15,7 +15,7 @@ fields:
 
 Tollamund & Daughters is a branch of a Sevenhaven house older than the Concord. It opened in Cinderford in 3007 to "offer the garrison the convenience of credit" and within two years held the company's whole arrears, the Reeve's rebuilding loan, the kiln-masters' mortgages and the bridge. In 3009, when the Regency stopped paying, the house bought the Regency's debt to the garrison as well, at a discount, and became, on paper, the only signatory still paying for the peace. It does not say this often. It does not need to.
 
-[[Grandmother Tollamund]] has not been seen to leave her chair since the house opened, and has left the house twice, both times in it. The daughters, Perrin, Odessa and Sal, are humans in their forties, sharp, courteous and perfectly interchangeable, and are her hands, voice and legs. They are not her daughters. They are not, the town suspects, anyone's.
+[[Grandmother Tollamund]] has not been seen to leave her chair since the house opened, and has left the house twice, both times in it. The daughters ([[The Tollamund Daughters]]), Perrin, Odessa and Sal, are humans in their forties, sharp, courteous and perfectly interchangeable, and are her hands, voice and legs. They are not her daughters. They are not, the town suspects, anyone's.
 
 ### Stock
 - Loans at a tenth per quarter, secured on anything. A soldier's pay-chit is accepted as security, which tells you what the house thinks of the Regency.
@@ -44,6 +44,8 @@ Beg a loan. Be refused with great kindness. Change a Concord coin and watch Perr
 By Frostcall Tollamund will own the Reeve, through the charter sale. She wants [[The Lantern of the Ninth]] itself: a ward-flame is, in Shellback belief, the key that opens the way back to [[The Ness of Thurm]]. The Debt called in clock ticks here. The sealed strongboxes hold Glasser salvage bound for Gilt: pieces of ward-glass from the Rent's edge, cold to the touch and humming, which she is collecting for the journey. [[Fennick Bottlebrook]] owes her personally and signs things for her he should not.
 
 The note stands at 4,800 gold: the 4,200 of the credit line plus the 600 she advanced in Ashfall under its third line. The wagon sat in this mill-yard on the night of 6 Ashfall before it went out as a House cart. The quarter's interest, 480 gold, fell due on 14 Ashfall; the Concord's grace ends at sunset on 4 Leafrot, and she collects on 5 Leafrot.
+
+The thirteenth barrel of each salt-tow, unmarked and full of new Sevenhaven silver, is the House's working coin for buying the town (the Reeve's charter, Fennick's credit, Jaspin Sweet's purchases): see [[The Unmarked Barrel]]. Perrin writes the letters, including the one to the Reedmarsh Water offering to buy the Sedgemere mooring.
 :::
 
 == GM notes ==

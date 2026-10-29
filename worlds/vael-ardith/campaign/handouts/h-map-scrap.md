@@ -9,6 +9,10 @@ fields:
   Value: Priceless to anyone going into the Rent; 5 silver to anyone else
 gmFields:
   Show in: Session 2 (traded by Vexa Glassjaw), or Session 5 (from Hennet)
+relations:
+  - to: npc-orla-quist
+    kind: can be read by
+    known: true
 ---
 
 *(A rough chart on stitched hide. North is marked with a crude drawing of a stone leaning over. The Rent runs down the middle like a scar, with notes scrawled along both sides in charcoal.)*

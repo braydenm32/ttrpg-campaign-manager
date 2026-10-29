@@ -46,7 +46,13 @@ He is honest, competent, and therefore posted here. The Regency has never discov
 To keep the bees. To be allowed to do the job properly. To know, before he dies, who is on the other end of the orders he receives, and why a post as unimportant as his has been given the one clerk-seal in the Regency that never fails.
 
 ### What he knows
-Every cart that has come through since 3001: its load, its weight, and what it sounded like. That the glass that comes out of the Rent hums at three paces if it is Lithic and at six if it is angry, and that nobody asks him why it is getting louder. That someone in the capital knew about humming glass before he did, because the line was drafted before he ever heard it.
+Every cart that has come through since 3001: its load, its weight, and what it sounded like. That the glass that comes out of the Rent hums at three paces if it is Lithic and at six if it is angry, and that nobody asks him why it is getting louder.>>>
+<<<
+He is more afraid than he looks.
+===
+Someone in the capital knew about humming glass before he did, because the standing instruction was drafted before he ever heard it hum; he has worked this out and says it to no one.
+
+He is more afraid than he looks.
 
 ### How he treats the PCs
 Courteously and exactly. Every traveller is examined, every cart, every pack; he will not hold up a person for longer than the job needs and will not hurry them. He will look at your sword and ask you to wrap it. He will look at your face and ask nothing at all. If you say "Pell Quillon sent me" he will stop and say, "Is he well?" with an expression you did not expect from a man who examines glass.
@@ -65,6 +71,6 @@ He is more afraid than he looks. A man who has kept the rules for twenty years i
 
 **Across the arc:**
 Prologue: examines the PCs as they come from the west (or leave it), with the sentence.
-4 to 7. By letter: a request to Pardew for the yard-book entry costs 5 sp and a reference to Pell. He writes back in a single exact paragraph: it is a good letter.
+2 to 7. By letter: a request to Pardew for the yard-book entry costs 5 sp and a reference to Pell. He writes back in a single exact paragraph: it is a good letter.
 7. If Pell is in danger, a letter from Pardew arrives with a cedar box: one hundred and forty-one sealed orders and a note: "I thought someone should have the other half."
 Post-S8. He is the first official to hear what happened at the Stone, because the glass goes quiet. He logs it. "Nothing humming."

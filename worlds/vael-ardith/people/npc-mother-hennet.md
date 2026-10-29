@@ -39,6 +39,8 @@ relations:
     kind: crossed off the slate
     note: He paid his tab on 5 Ashfall. Nobody else ever has.
     known: true
+  - to: npc-aurelio-bask
+    kind: buys black crape from
 ---
 
 ### Look and voice
@@ -53,13 +55,13 @@ She calls everyone by their tab total: soldiers, officers, the Reeve. Names are 
 ### Who she is
 Hesper Hennet cooked for the Ruddy Hundred, the Seventh Company on the wall the night of [[The Battle of Cinders]], and came out of it with one arm, one pot and one boy ([[Brannoc Saltash]], then her pot-boy, now the Keep's cook). The Seventh's lantern went dark with the rest; it hangs over her bar now, draped in black, and she will not say how it got there. She ran [[The Ninth Lantern]]'s kitchen through the first two winters, until the arm gave out on the heavy pots, and handed the kitchen to Brannoc. Then she built [[The Last Candle]] at the foot of the hill, before the Keep had a roof, because, she says, soldiers need somewhere to drink more than somewhere to sleep. She was right.
 
-Everything in the Candle is hers and tells a story she will not tell: the dark lantern, the stuffed crow in the Seventh's sergeant-major's hat, the nail in the wall with a loop of rope on it where the soldiers say their private word to the Corporal, and the slate. The slate is the size of a door. Every soldier who ever drank here is on it, the dead included, and nothing is rubbed out. When a column fills she copies it into a book under the bar and starts again, smaller.
+Everything in the Candle is hers and tells a story she will not tell: the dark lantern, the stuffed crow in the Seventh's sergeant-major's hat, the nail in the wall with a loop of rope on it where the soldiers say their private word to the Corporal, and the slate. The slate is the size of a door. Every soldier who ever drank here is on it, the dead included, and nothing is rubbed out. When a column fills she copies it into a book under the bar and starts again, smaller. On the eve of Cinders, the 13th, she reads the oldest columns aloud at dusk, the names with no tab under them, and nobody drinks until she is done; the Seventh's are read last ([[Feasts, Fasts and Holy Days]]).
 
 ### What she wants
 For the Ninth not to die the way the Seventh did. She has watched eight companies go out, and she knows the order the signs come in: late pay, thin stew, a lieutenant buying rounds, a slate that stops filling because the men have stopped coming in. She watches the Ninth for them every night, and will say so to a PC she likes, once.
 
 ### What she knows
-Who owes what, to the penny, for nine years. Who drank with whom. That [[Dannic Rook]] paid his tab in full on 5 Ashfall, two days before he ran, which no soldier has ever done, and that she crossed his name off the slate herself the day they hooked him out of the ford. That [[Fennick Bottlebrook]] says nine days of flour when he means eleven, because recruits eat. That old Halloran Pike by her fire tells the lantern story wrong on purpose. What a company sounds like the week before it breaks.
+Who owes what, to the penny, for nine years. Who drank with whom. That [[Dannic Rook]] paid his tab in full on 5 Ashfall, two days before he ran, which no soldier has ever done, and that she crossed his name off the slate the moment he paid it. That [[Fennick Bottlebrook]] says nine days of flour when he means eleven, because recruits eat. That old Halloran Pike by her fire tells the lantern story wrong on purpose. What a company sounds like the week before it breaks.
 
 ### How she treats the PCs
 As five new lines on the slate. She pours before they ask and chalks before they pay. A PC who drinks on tick and comes back to pay gets a nod; a PC who stops a fight before her ladle has to gets a free bowl; a PC who asks about the Seventh gets the dark lantern pointed at and no more. The night the lantern gutters she stands in the Candle door and looks up the hill for a long time, then goes back in and chalks the date on the slate, in the corner, with nothing beside it.
@@ -67,7 +69,7 @@ As five new lines on the slate. She pours before they ask and chalks before they
 :::gm
 **Secret.** The company's story is true and she lit it. On the night of Cinders a splinter of [[The Ninth Stone]] fell into her cookfire at the cooks' camp in [[The Weeping Orchard]], and the fire burned on the stone with no wood. She lit the ninth lantern from it. [[Halloran Pike]], who was running, carried the lantern up to the Keep; she followed with the stone in a soup-pot, and the boy with the burnt hand followed her (Brannoc says he sang; Pike says he howled). At the Keep she tipped [[The Ward Shard]] out of the pot into [[Brother Tallow]]'s hands. The pot ([[Mother Hennet's Soup-Pot]]) hangs on its own hook in the cold corner of the Candle kitchen, scrubbed clean every Restday, and nothing has been cooked in it since.
 
-She has known Pike was the deserter of the legend since his first night, nine years ago. He drinks free; that is the whole of what has been said between them about it.
+She has known Pike was the deserter of the legend since his first night, seven years ago. He drinks free; that is the whole of what has been said between them about it. She buys a yard of black crape at [[The Turncoat]] on the 25th of every Ashfall and says it is for the bar. It is for the soup-pot's lid.
 
 Under the bar, in a cup: the coin Dannic paid his tab with on 5 Ashfall, one new Regency shilling with this year's date, the first new Regency coin anyone in the Ashenreach had seen in two years. She knows what that says about who was paying him, and is waiting to be asked by someone she trusts.
 
@@ -82,7 +84,8 @@ Under the bar, in a cup: the coin Dannic paid his tab with on 5 Ashfall, one new
 1. Pours, chalks, and stops the brawl with the ladle (Vosk finishes it). Dannic's crossed-out name and the cup under the bar are in plain sight. Roll on the Last Candle rumours.
 2. Tells anyone who asks what the wagon's lateness means, in company terms: "Eight days late is a story. Twelve days late is a funeral."
 3. Feeds the vigil round Lantern Hill out of her own stores and chalks none of it.
-4. Notices who Sallow is buying for and says so to a PC, once.
+4. Notices who Sallow is buying for and says so to a PC, once. Pennamund's clerks come back for the slate-book on market day, the 20th, with an offer to clear every tab: [[The Price Was an Arm]].
 5. Shuts the Candle. "Took you long enough." The pot, or Pike's chart.
-7. Serves Tollamund's porters and lawyers and charges them triple. Puts "the Concord" on the slate and lets them see her do it.
+7. Serves Tollamund's porters and lawyers and charges them triple. Puts "the Concord" on the slate and lets them see her do it. If the party kept her book, she brings it to the gate herself, wrapped in the grey blanket, and stands beside Brother Audit while he reads.
+8 (first, the dawn of the march, 7 Leafrot). She asks for the soup-pot back and cooks in it for the first time in nine years: the night-of-Cinders soup, a bowl for every soldier who marches ([[Mother Hennet's Soup-Pot]]). She does not march.
 8. Dawn after the Rent, whatever happened: she rubs nothing out. If the company stands down, she copies the whole slate into the book, slowly, with the door open, and the soldiers come in one by one to watch their names go.

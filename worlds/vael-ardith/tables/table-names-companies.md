@@ -15,11 +15,11 @@ Roll for an orc, a dwarf, a Vesh or a Raveler when one steps out of the crowd. T
 
 **Iskavethi** names end soft and the Saint's people take a second name from the lamp or the plateau: Ilyra of Halcyra, Seraphine Ashe, Iosune, Soran, Casimira, Dovan Ilm, Amaris Tal, Neriah Lampwright (a Vesh name borrowed, which the Vesh find rude), Teodora Salt, Imre of the Steps, Yusra Coal, Brother Caddis, Sister Oriane.
 
-**Lithic** names are old, heavy, two syllables with the stress on the first, and no family name; a Lithic is named for the ward their line stands at: Uthrem of the Ninth, Sarrik of the Seventh, Quellith of the Third, Hadrun of the Fourth, Telune of the First, Omneth of the Sixth, Keth of the Second, Bastrem of the Fifth, Morrun of the Eighth, Ishkeh of the Ninth (the name before Uthrem's in the Wardens' roll, and the last he will say aloud). Ketterin had no ward-name because she was the first; the Lithic say it with the stress on both syllables, which no human can do.
+**Lithic** names are old, heavy, two syllables with the stress on the first, and no family name; a Lithic is named for the ward their line stands at: Uthrem of the Ninth, Sarrik of the Seventh, Quellith of the Third, Hadrun of the Fourth, Telune of the First, Omneth of the Sixth, Keth of the Second, Bastrem of the Fifth, Morrun of the Eighth, Ishkeh of the Ninth (the name before Uthrem's in the Wardens' roll, and the last he will say aloud). Ketterin had no ward-name because she was the first; the Lithic say her name with the stress on both syllables, which no human can do.
 
 == GM notes ==
 
-Orcs: the epithet is a scar with a story; let the player ask. Dwarves: if the second name is Returned, the dwarf has no shadow and the scene has a cold spot. Vesh: give them something burning to lean toward. Ravelers: the deed-name is the joke and the joke is the prayer. The far peoples' names are for W5's cities and the Treaty Stone's pilgrims; in Cinderford an elf is Aelith or Sorrel or Merane, and a Shellback is Tollamund, and anyone else is news.
+Orcs: the epithet is a scar with a story; let the player ask. Dwarves: if the second name is Returned, the dwarf has no shadow and the scene has a cold spot. Vesh: give them something burning to lean toward. Ravelers: the deed-name is the joke and the joke is the prayer. The far peoples' names are for the cities downriver and the Treaty Stone's pilgrims; in Cinderford an elf is Aelith or Sorrel or Merane, and a Shellback is Tollamund, and anyone else is news.
 
 == Entries ==
 
@@ -35,7 +35,7 @@ Orcs: the epithet is a scar with a story; let the player ask. Dwarves: if the se
 - Ragna Ulvane, surface dwarf, Gerda's tally, blue wire in the plait for Skarn. Swears by the stone that listens and means the gatehouse step.
 - Dagna Coombe, surface dwarf, mason, re-cut the bridge piers in 3003 and checks them every Wardday. Has found something scratched on the third pier and told the Reeve, who has not come to look.
 - Torvald Gault Shadowless, Returned dwarf, sits in the Smokes with his back to the kiln. Holds doors. Will not stand in the drill yard at noon.
-- Ingrid Holm Came-Back, Returned dwarf of the Holm hold, carries letters north for Gerda and reads none of them. Leaves town the day she sees Borrin's shadow move.
+- Ingrid Holm Came-Back, Returned dwarf of the Holm hold, carries letters north for Gerda and reads none of them. Writes to Hold-Mother Greta Holm the day she sees Borrin's shadow move.
 - Eskil Dunn Six-Years, Returned dwarf, a Fort Mercy digger who will go below the cellar and does, nightly, and comes up humming the three notes Mardle Ock hums.
 - Brenna Stillwell, surface dwarf, the Holds' envoy to the Treaty Stone on Widows' Walk, every year, with a barrel of salt-cod for the Ninth's dwarves. Twelve in the barrel. She counts them in front of Gerda.
 - Harrek Mallow, surface dwarf, a cousin of the smith at Hollowhall who forges the key, and has had a letter about it, and has not written back.

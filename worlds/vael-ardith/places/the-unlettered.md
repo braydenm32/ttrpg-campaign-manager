@@ -6,7 +6,7 @@ summary: "A drinking-hall grown from a hollow beech below the Archive of Skins a
 parent: ilmareth
 tags: [ tavern, shop, elves, sael ]
 fields:
-  Keeper: Liriel Tarn, warden of the Wild, four hundred years old and one tattoo
+  Keeper: Liriel Tarn, warden of the Wild, four hundred years old and almost no ink
   Hours: dusk to the hour the Archive's lamps are lit, which is the hour the Readers come down and the Unlettered go up
   House rule: Nothing is remembered here. Pay before you go, because by morning the branch will not know you owed. No ink on the premises. No reading anyone.
 ---
@@ -44,7 +44,7 @@ Drink green wine on a root and be, for one evening, in a room where nobody is re
 :::gm
 The song came up through the Unlettered because a song is not skin. When Sael burned the memory of [[The Saelish Trespass]] in 1102 it burned ink, records, and the tattooed; it could not burn a tune the young sang in a hollow tree, and the tune has gone round the hall for nineteen centuries, changing its words every generation and keeping its chorus, which nobody has been able to read since the generation that could read it chose not to. The four words are *We came because called*, in the oldest script, the same four that open the oldest ink on the oldest elves ([[The Coming of the Elves]]) and the first line on [[Sorrel Vey]]'s back. The verses, as currently sung, are about a fire in a clearing with no trees in it, eleven cups set out and nobody to drink them, and a tree that was planted the next morning to stop a hole. The Unlettered think it is about a wedding.
 
-[[Aelith Sorn]] learned the song here as an Unlettered three centuries ago and does not remember learning it, but it is tattooed on the inside of her left arm in her own first hand, and it is a quarter of why she can read one line in five of Sorrel's ink. The Reader Ilvane was sent by the Circle in Greenreach to take the verses down, which is the Circle finally noticing what the hall has known forever: the thing Sael forgot was left lying in the one place the Remembrancers never look, which is a room with no ink in it.
+[[Aelith Sorn]] learned the song here as an Unlettered nearly three centuries ago and does not remember learning it, but it is tattooed on the inside of her left arm in her own first hand, and it is a quarter of why she can read one line in five of Sorrel's ink. The Reader Ilvane was sent by the Circle in Greenreach to take the verses down, which is the Circle finally noticing what the hall has known forever: the thing Sael forgot was left lying in the one place the Remembrancers never look, which is a room with no ink in it.
 
 Post-session 8: if the party comes to Ilmareth with Sorrel, or with a copy of her back, this is where it can be sung against the ink and read whole, and Liriel will let it happen in her hall, once, with the Readers sent upstairs, because Orvanne's wardens have wanted to know what the forest was before the Trespass for nineteen centuries, and because the branch will not remember it in the morning. See [[Liriel Tarn]] for what she wants in return.
 :::

@@ -19,6 +19,7 @@ Cinderford was a village of six hundred before the war, a ford and a mill and a 
 
 ### The quarters
 - [[The Ford]], on the west bank around the toll bridge: the Treaty Bell, the company gatehouse, the Reeve's house, the counting-house.
+- [[Ford Street]], the high street, running west from the square to the West Gate: the town's shops and its slates.
 - [[Lantern Hill]], above it: [[The Lantern Keep]], the drill yard, the lantern in its cage.
 - [[The Smokes]], downwind to the south: tanneries, glass-dust workshops, the Hollowborn streets.
 - [[The Low Quay]], along the river below the bridge: halfling barges, the floating market, everything that comes and goes without paying toll.
@@ -45,7 +46,7 @@ Sign on at the gatehouse. Drink on tick at [[The Last Candle]]. Lose money to [[
 The quarter-day pay wagon from Fallowden is eight days overdue. Pallas is a night from full. The Ember is two nights from full. The river is lower than anyone remembers, and there is a dead man in the ford who drowned a week ago.
 
 :::gm
-Two of the rumours above are the real secrets: Marrow has paid the company from her own savings for a year and is nearly broke, and the Reeve has quietly agreed to sell the town's charter to the Concord (not in the way the gossips mean; she signs between sessions 3 and 7 and has not sealed it). Cinderford is built on the bones of a Lithic waystation; the Glass Barrow under the ford is its upper hall. The lantern on the hill is holding the Ninth Ward's crack shut, sixty miles away, and nobody in town knows it except, nearly, [[Brother Tallow]]. For the town's temper as the campaign goes on, see the Mutiny clock on the company page and the Sleepless clock in the Smokes.
+Two of the rumours above are the real secrets: Marrow has paid the company from her own savings for a year and is nearly broke, and the Reeve has quietly agreed to sell the town's charter to the Concord (not in the way the gossips mean; she signs between sessions 3 and 7 and has not sealed it). Cinderford is built on the bones of a Lithic waystation; the Glass Barrow under the ford is its upper hall. The lantern on the hill is holding the Ninth Ward's crack shut, sixty miles away, and nobody in town knows it except, nearly, [[Brother Tallow]]. For the town's temper as the campaign goes on, see the Mutiny clock on the company page and the Sleepless clock in the Smokes. For the prices a player can check, see [[What Things Cost in the Ashenreach]]; for stage-business on the street, [[Street Events in Cinderford]].
 :::
 
 == GM notes ==

@@ -40,10 +40,10 @@ Almost nobody, and that's the point. [[Warden Uthrem]] and [[The Last Wardens]] 
 - **Kettle.** The *Grey Dumpling* is first on the river with the news and sells it three times.
 - **Hennet's Candle.** The Last Candle opens at dawn. The slate is still up. She rubs out one name.
 - **Corvane.** She puts the key back in the reliquary and asks Quorl for the eighth entry in his own hand.
-- **Spoons's pool and Keld's stake.** The pool pays out on the night it went out, and Spoons has to find the winner. Keld's stake, grown for nine years, stays in the strongbox.
+- **Spoons's pool and Keld's stake.** The pool pays out on the night it went out, and Spoons has to find the winner. Keld's stake, grown for nine years, stays in the strongbox. ([[The Wager on Never]])
 
 ### Hooks for a second arc
-The Ninth is sealed, for now. The Eighth Ward under the Grimmark is breached, and whatever wears Borrin's shadow came from there. The Fourth Ward in Sael is weak, and [[Aelith Sorn]] now knows how a ward is resealed. And the gods, who wanted the crack, have lost: some of them will take that personally.
+The Ninth is sealed, for now. The Eighth Ward under the Grimmark is breached, and whatever wears Borrin's shadow came from there. The Fourth Ward in Sael is weak, and [[Aelith Sorn]] now knows how a ward is resealed. And the gods, who wanted the crack, have lost: some of them will take that personally. The letter from Ostrakai in [[Mother Casimira]]'s desk says a buried god can be starved; the key [[Durn Mallow]] stopped melting opens the Red Seam door from below; the First Ward's dust on [[Orrin Mallory]]'s sheet was ash until the morning of 10 Leafrot.
 
 == GM notes ==
 

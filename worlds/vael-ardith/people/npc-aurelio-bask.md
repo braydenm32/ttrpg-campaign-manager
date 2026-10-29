@@ -2,7 +2,7 @@
 type: npc
 name: Aurelio Bask
 players: true
-summary: "Tailor of the Turncoat on Ford Street, a Greywake's Spear who ran at Cinders and wears his tabard inside out. Soft, self-mocking, and the only man alive who saw what was in Hennet's pot."
+summary: "Tailor of the Turncoat on Ford Street, a Greywake's Spear who ran at Cinders and wears his tabard inside out. Soft, self-mocking, and funnier than he knows."
 parent: the-turncoat
 aliases: [ Bask ]
 tags: [ npc, cinderford, tailor, deserter, ford-street ]
