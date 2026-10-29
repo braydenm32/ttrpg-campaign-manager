@@ -33,6 +33,8 @@ export function TranscriptPanel({
   const t = recording.transcript
   const [job, setJob] = useState<{ engine: Engine; detail: string; fraction: number; abort: AbortController }>()
   const [error, setError] = useState('')
+  /** Said under the finished transcript, e.g. when AssemblyAI couldn't delete its copy. */
+  const [note, setNote] = useState('')
   const settings = useAiSettings()
 
   const running = useRef<AbortController>(undefined)
@@ -50,6 +52,7 @@ export function TranscriptPanel({
 
   const run = async (engine: Engine) => {
     setError('')
+    setNote('')
     const asset = await db.assets.get(recording.assetId)
     if (!asset) return setError('The audio file for this recording is missing.')
     const abort = new AbortController()
@@ -92,7 +95,7 @@ export function TranscriptPanel({
   }
 
   const runCloud = async (blob: Blob, signal: AbortSignal, progress: (d: string, f?: number) => void) => {
-    const { startCloudJob, waitForCloudJob } = await import('./cloud')
+    const { deleteCloudJob, startCloudJob, waitForCloudJob } = await import('./cloud')
     const key = settings.assemblyKey.trim()
     // A job started earlier may still be running at AssemblyAI; pick it up instead of paying twice.
     let jobId = t?.engine === 'cloud' ? t.pending?.jobId : undefined
@@ -110,6 +113,9 @@ export function TranscriptPanel({
     progress('AssemblyAI is transcribing. This usually takes a few minutes; you can leave this page and come back.', 0.5)
     const lines = await waitForCloudJob(jobId, key, signal)
     await saveTranscript(sessionId, recording.assetId, { engine: 'cloud', model: 'AssemblyAI', lines, speakers: t?.speakers, createdAt: Date.now() })
+    // Saved here, so AssemblyAI's copy can go (unless the GM chose to keep one there).
+    if (!settings.keepAtAssembly && !(await deleteCloudJob(jobId, key)))
+      setNote('The transcript is saved here, but AssemblyAI didn’t delete its copy, so it’s still in your AssemblyAI account. You can delete it there.')
   }
 
   if (job)
@@ -161,22 +167,25 @@ export function TranscriptPanel({
         <p className="muted small">
           On this device: free and private, but slow (roughly real time) and doesn’t tell voices apart. In the cloud: a few
           minutes, names each speaker, and costs well under a dollar for a long session on your own{' '}
-          <Link to={`${worldPath(worldId)}/settings`}>AssemblyAI key</Link>.
+          <Link to={`${worldPath(worldId)}/settings?tab=device`}>AssemblyAI key</Link>.
         </p>
         {error && <p className="error small">{error}</p>}
       </div>
     )
 
   return (
-    <TranscriptView
-      sessionId={sessionId}
-      worldId={worldId}
-      recording={recording}
-      transcript={t}
-      seek={seek}
-      focus={focus}
-      onRedo={() => saveTranscript(sessionId, recording.assetId, undefined)}
-    />
+    <>
+      {note && <p className="notice small">{note}</p>}
+      <TranscriptView
+        sessionId={sessionId}
+        worldId={worldId}
+        recording={recording}
+        transcript={t}
+        seek={seek}
+        focus={focus}
+        onRedo={() => saveTranscript(sessionId, recording.assetId, undefined)}
+      />
+    </>
   )
 }
 
@@ -225,6 +234,7 @@ function TranscriptView({
       <summary>
         <Ico as={Scroll} /> Transcript <span className="muted small">({t.lines.length} lines, {t.engine === 'cloud' ? 'cloud' : 'this device'})</span>
       </summary>
+
       <div className="row wrap transcript-tools">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the transcript" />
         {labels.length > 0 && (

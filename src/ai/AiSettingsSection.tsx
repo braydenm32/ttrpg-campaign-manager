@@ -44,10 +44,16 @@ export function AiSettingsSection() {
               <a href="https://www.assemblyai.com/dashboard/signup" target="_blank" rel="noreferrer">
                 assemblyai.com
               </a>
-              . Recordings you send are processed by AssemblyAI.
+              . Recordings you send are processed by AssemblyAI, and each transcript is deleted from AssemblyAI once it’s saved here.
             </>
           }
         />
+        <label className="check">
+          <input type="checkbox" checked={s.keepAtAssembly} onChange={(e) => setAiSettings({ keepAtAssembly: e.target.checked })} />
+          <span>
+            Keep a copy at AssemblyAI <Help topic="keepAtAssembly" />
+          </span>
+        </label>
         <label>
           On-device speech model
           <select value={s.deviceModel} onChange={(e) => setAiSettings({ deviceModel: e.target.value as 'base' | 'small' })}>
