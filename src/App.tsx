@@ -59,6 +59,7 @@ import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
 import { PlayerTableLink, TableHost, TableSignals } from './atTheTable'
 import { NewCharacterRequestsBanner } from './players/NewCharacters'
 import Handouts from './pages/Handouts'
+import { ExampleDrawingNote } from './example/DrawingNote'
 import { hashRouting, pagePath, setPages, tidyPath, usePathsVersion, worldPath } from './paths'
 
 const Router = hashRouting ? HashRouter : BrowserRouter
@@ -425,6 +426,7 @@ function WorldShell() {
       <main className="content">
         {shareError && <div className="player-banner">Couldn’t refresh: {shareError}</div>}
         {isGM && !shared && <RecordingBar />}
+        {isGM && !shared && world.example && <ExampleDrawingNote worldId={worldId} />}
         {memberOf && <ChooseCharacterBanner world={world} />}
         {shared && <NewsBanner world={world} />}
         {/* What the GM shows is for the table; a public wiki link never pops it up. */}
