@@ -129,6 +129,8 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
   const [kind, setKind] = useState<Kind>('world')
   const [start, setStart] = useState<Start>('sea')
   const [size, setSize] = useState<Size>('medium')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
   const scene: Scene = kind === 'battle' ? 'battle' : start === 'town' ? 'city' : 'world'
   const [w, h] = SIZES[scene][size]
   return (
@@ -137,19 +139,30 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
         className="form"
         onSubmit={async (e) => {
           e.preventDefault()
-          const bg: Background = start === 'sea' ? 'sea' : start === 'rock' ? 'stone' : scene === 'world' ? 'parchment' : 'grass'
-          const ground: GroundId = start === 'rock' ? 'floor' : start === 'sea' || start === 'land' || start === 'town' ? 'grass' : start
-          const drawing = emptyDrawing(bg, scene, ground)
-          // a dungeon starts as solid rock to dig rooms out of
-          if (start === 'rock') drawing.outside = 'rock'
-          const { renderClassic, classicBlob, loadMapFonts } = await import('../mapArt/classic')
-          await loadMapFonts()
-          const blob = await classicBlob(renderClassic(drawing, w, h))
-          const ext = blob.type === 'image/webp' ? 'webp' : blob.type === 'image/png' ? 'png' : 'jpg'
-          const imageId = await saveFileAsAsset(worldId, blob, `${name.trim() || 'Map'}.${ext}`, ['map', 'drawn'])
-          const id = newId()
-          await db.maps.add({ id, worldId, name: name.trim() || 'Untitled map', imageId, width: w, height: h, visibility: 'gm', drawing, createdAt: Date.now() })
-          onCreated(id)
+          if (busy) return
+          setBusy(true)
+          setError('')
+          // let the button show it's working before the drawing ties the page up
+          await new Promise((r) => setTimeout(r, 30))
+          try {
+            const bg: Background = start === 'sea' ? 'sea' : start === 'rock' ? 'stone' : scene === 'world' ? 'parchment' : 'grass'
+            const ground: GroundId = start === 'rock' ? 'floor' : start === 'sea' || start === 'land' || start === 'town' ? 'grass' : start
+            const drawing = emptyDrawing(bg, scene, ground)
+            // a dungeon starts as solid rock to dig rooms out of
+            if (start === 'rock') drawing.outside = 'rock'
+            const { renderClassic, classicBlob, loadMapFonts } = await import('../mapArt/classic')
+            await loadMapFonts()
+            const blob = await classicBlob(renderClassic(drawing, w, h))
+            const ext = blob.type === 'image/webp' ? 'webp' : blob.type === 'image/png' ? 'png' : 'jpg'
+            const imageId = await saveFileAsAsset(worldId, blob, `${name.trim() || 'Map'}.${ext}`, ['map', 'drawn'])
+            const id = newId()
+            await db.maps.add({ id, worldId, name: name.trim() || 'Untitled map', imageId, width: w, height: h, visibility: 'gm', drawing, createdAt: Date.now() })
+            onCreated(id)
+          } catch (err) {
+            console.warn('Could not make the map', err)
+            setError(err instanceof Error && /quota/i.test(err.name + err.message) ? 'This device has run out of room for a new map.' : 'Could not make the map. Try a smaller size, or try again.')
+            setBusy(false)
+          }
         }}
       >
         <label>
@@ -216,11 +229,14 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
           </div>
           <span className="muted">{sizeNote(scene, [w, h])}</span>
         </div>
+        {error && <p className="error small">{error}</p>}
         <div className="row end">
           <button type="button" onClick={onClose}>
             Cancel
           </button>
-          <button className="primary">Start drawing</button>
+          <button className="primary" disabled={busy}>
+            {busy ? 'Making your map…' : 'Start drawing'}
+          </button>
         </div>
       </form>
     </Modal>

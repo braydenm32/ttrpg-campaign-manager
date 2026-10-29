@@ -393,7 +393,8 @@ input[type=range] { padding: 0; }
 input[type=color] { width: 3em; height: 2.2em; padding: 2px; }
 @media (max-width: 800px) {
   .builder .map-body { flex-direction: column; }
-  .builder-tools { flex-direction: row; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; }
+  .builder-tools { flex-direction: row; flex: none; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; }
+  .builder .map-toolbar > strong { flex: 0 1 auto; min-width: 3em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .builder-canvas { min-height: 50vh; }
   .builder-stage { min-height: 50vh; flex: none; }
 }

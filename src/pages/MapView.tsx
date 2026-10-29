@@ -459,9 +459,11 @@ function FogBar({
 
 function pinIcon(p: Pin, entity: Entity | undefined, active: boolean) {
   const glyph = entity ? ENTITY_LABELS[entity.type].icon : p.childMapId ? '🗺️' : '📍'
+  // The colour goes into HTML, so only a plain colour code is used (a synced or imported pin could hold anything).
+  const c = /^#[0-9a-f]{3,8}$/i.test(p.color) ? p.color : COLORS[0]
   return L.divIcon({
     className: '',
-    html: `<div class="map-pin${active ? ' active' : ''}${p.visibility === 'gm' ? ' hidden-pin' : ''}" style="--c:${p.color}"><span>${glyph}</span></div>`,
+    html: `<div class="map-pin${active ? ' active' : ''}${p.visibility === 'gm' ? ' hidden-pin' : ''}" style="--c:${c}"><span>${glyph}</span></div>`,
     iconSize: [30, 30],
     iconAnchor: [15, 36],
   })

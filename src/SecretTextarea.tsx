@@ -32,7 +32,7 @@ export function SecretTextarea({
   const [caret, setCaret] = useState<number | null>(null)
   const pages = useLiveQuery(
     async () =>
-      (await db.entities.where({ worldId }).filter((e) => !e.template).sortBy('name')).map((e) => ({ id: e.id, name: e.name, type: e.type, aliases: e.aliases ?? [] })),
+      (await db.entities.where({ worldId }).filter((e) => !e.template).sortBy('name')).map((e) => ({ id: e.id, name: e.name, type: e.type, aliases: e.aliases ?? [], gm: e.visibility === 'gm' })),
     [worldId],
   ) ?? []
   const pcs = pages.filter((p) => p.type === 'pc')
@@ -78,7 +78,11 @@ export function SecretTextarea({
           .filter((h) => h.score >= 0)
           .sort((a, b) => a.score - b.score || a.p.name.length - b.p.name.length)
           .slice(0, 8)
-          .map((h) => h.p)
+          .map(({ p }) => {
+            // Found by a nickname of a GM-only page: link by that nickname, so the real name stays out of the text.
+            const alias = p.name.toLowerCase().includes(query) ? undefined : p.aliases.find((a) => a.toLowerCase().includes(query))
+            return { ...p, alias, link: p.gm && alias ? alias : p.name }
+          })
       : []
   const linkTo = (name: string) => {
     const typed = mention![1].length + mention![2].length
@@ -161,7 +165,7 @@ export function SecretTextarea({
             setActive((a) => (a + (e.key === 'ArrowDown' ? 1 : n - 1)) % n)
           } else if (e.key === 'Enter' || e.key === 'Tab') {
             e.preventDefault()
-            linkTo(pageHits[Math.min(active, n - 1)].name)
+            linkTo(pageHits[Math.min(active, n - 1)].link)
           } else if (e.key === 'Escape') {
             e.preventDefault()
             setDismissed(mentionAt)
@@ -193,11 +197,11 @@ export function SecretTextarea({
               aria-selected={i === Math.min(active, pageHits.length - 1)}
               className={`chip ${i === Math.min(active, pageHits.length - 1) ? 'on' : ''}`}
               onMouseDown={(e) => e.preventDefault()}
-              onClick={() => linkTo(p.name)}
+              onClick={() => linkTo(p.link)}
             >
               <TypeIcon type={p.type} /> {p.name}
               {/* Found by another name: say which. */}
-              {!p.name.toLowerCase().includes(query) && <span className="muted"> ({p.aliases.find((a) => a.toLowerCase().includes(query))})</span>}
+              {p.alias && <span className="muted"> ({p.alias})</span>}
             </button>
           ))}
           <span className="small muted">↑↓ to choose, Enter to link, Esc to close</span>

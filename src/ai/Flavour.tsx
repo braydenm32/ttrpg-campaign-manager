@@ -73,8 +73,15 @@ ${nearby(world, entities, parentId)}`,
   )
 }
 
-/** Turns "**Secret:** …" in flavour into a GM-only passage before it's saved. */
-export const keepSecretsSecret = (text: string) => text.replace(/^\*\*Secret:?\*\*:?\s*(.+)$/im, ':::gm\n**Secret:** $1\n:::')
+/**
+ * Turns the "Secret" part of flavour into a GM-only passage before it's saved: everything from the
+ * line that starts it ("**Secret:**", "- **Secret**", "3. Secret (GM only):", "### Secret"...) to
+ * the end, since it's asked for last and may run over several lines.
+ */
+export const keepSecretsSecret = (text: string) => {
+  const at = text.search(/^[ \t]*(?:[-*+][ \t]+|\d+[.)][ \t]*|#{1,6}[ \t]*)?[*_]{0,2}Secrets?\b[ \t]*(?:[*_]{1,2}|:|\(|$)/im)
+  return at < 0 ? text : `${text.slice(0, at)}:::gm\n${text.slice(at).trim()}\n:::`
+}
 
 /** On an NPC's page: a few lines they might say, for the GM to read out in character. */
 export function NpcLines({ world, entity, entities }: { world: World; entity: Entity; entities: Entity[] }) {

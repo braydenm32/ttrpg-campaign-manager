@@ -45,7 +45,7 @@ export const HELP = {
   news: 'What’s happened since you last looked: new pages, handouts and session recaps, answers to your questions, and what changed on pages you already had (new writing, someone’s fate, a clock that moved). Tap one to read it, and “Got it” when you’re done.',
   backupReminder: 'A reminder to download a backup of this world every two weeks (monthly with cloud sync on). Save the file somewhere safe, like Google Drive or a USB stick. “Later” asks again in a week.',
   aliases:
-    'Other names this page goes by, like “the Harbourmaster” for Corvin Vane. A [[link]] to any of them finds this page. Nicknames are for you: players don’t see them. Renaming a page updates every link to it.',
+    'Other names this page goes by, like “the Harbourmaster” for Corvin Vane. A [[link]] to any of them finds this page. Nicknames are for you: players don’t see them. Renaming a page updates every link to it. For a GM-only page, text your players can read keeps the old name (so the new one stays secret), and the old name is added here.',
   gmTags: 'Tags only you see, like “traitor” or “recurring”. Players get the ordinary tags of a revealed page, never these.',
   history:
     'Every time you save a page, the version before is kept on this device (the last 40). Look at an old version or restore it; restoring keeps today’s version too.',
@@ -101,7 +101,7 @@ export const HELP = {
   gmOnly:
     'Tick this and the piece, line or label is only on your copy of the map: players get a picture without it. On your copy it has a red dashed line round it so you know. Handy for a cult’s hidden lair on a world map, a secret tunnel, or a label with a note to yourself. A piece linked to a page stays GM only too.',
   secretRooms:
-    'Rooms and passages dug with this ticked are only on your copy, washed in red; players see solid rock (or plain ground) there. Put a secret door from the "GM only" pieces where a secret passage meets a room. When the players find the door, select it and press "Players found it": the door and the secret rooms behind it show up on their copy.',
+    'Rooms and passages dug with this ticked are only on your copy, washed in red; players see solid rock (or plain ground) there, and the pieces, labels and lines inside them are left off their copy too (a piece there that’s linked to a page becomes GM only). Put a secret door from the "GM only" pieces where a secret passage meets a room. When the players find the door, select it and press "Players found it": the door and the secret rooms behind it show up on their copy.',
   playersCopy:
     'Shows the map as players get it, without the secret doors, traps, secret rooms and anything ticked GM only. Untick to go back to your own copy. Players never receive your copy, only theirs (with the fog of war on top, if it’s on).',
   exportMap:

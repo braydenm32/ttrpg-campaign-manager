@@ -328,7 +328,8 @@ function EntityEditor({ entity, onDone }: { entity: Entity; onDone: () => void }
     const next = { ...d, ...order, name: d.name.trim() || 'Untitled', updatedAt: Date.now() }
     await saveEntity(next)
     // Renamed: links to the old name (and :::for passages, for a player character) follow it.
-    if (!next.template) await renameLinks(worldId, entity, next)
+    const renamed = next.template ? '' : await renameLinks(worldId, entity, next)
+    if (renamed) alert(renamed)
     onDone()
   }
   const saveAsTemplate = async () => {
