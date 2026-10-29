@@ -71,7 +71,7 @@ Seraphine's courtship of Marrow is half the Saint's work and half her own. She w
 **Across the arc:**
 1–2. Seen at the edges: feeding the hungry soldiers when the pay fails, which makes the company love her.
 3. On the red moon night, she walks the Smokes unafraid, and the dreamers part for her.
-4. **The House of Unburnt Light**: offers to "save" the flame by taking it to Halcyra. Courts Marrow openly; courts the PCs privately. The Saint speaks through her to each PC once.
+4. **The House of Unburnt Light**: offers to "save" the flame by taking it to Halcyra. Courts Marrow openly; courts the PCs privately. The Saint speaks through her to each PC once. If a PC attacks her, she does not fight back. At 0 hit points she does not die: her eyes go gold, Ilyra says through her "Not yet", the striker is frightened of her until dawn, and the Lamp-Wardens see the party off the grounds. Add one segment to The Saint ascends clock.
 5–6. If refused, grows colder. Iskavethi pilgrims arrive in numbers.
 7. **Three Knives**: the church's move: a crowd of faithful march on Lantern Hill to "carry the flame home", with Seraphine at the front, glowing.
 8. At the Rent, under the red moon, the Saint speaks through her fully. She can be saved (talked back to herself) or lost (she burns, beautifully, and becomes a door for Ilyra).

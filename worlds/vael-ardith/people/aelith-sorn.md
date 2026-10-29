@@ -75,5 +75,5 @@ She also wants [[The Ward Shard]] and the lantern. The Remembrancers' oldest fra
 4. Has been courting Sorrel for a month; makes a formal offer for a "transcription". Refused.
 5. Helps the PCs read the Rook-Court ledger or the Lithic glass, in exchange for copies.
 6. Wants to come into the Rent. If she does, she will try to copy the Ninth Stone and to reach Uthrem first.
-7. **Three Knives**: in the chaos, she makes her move on Sorrel: a sleeping draught, a hired barge, a cutting-table. The PCs can stop it.
+7. Not part of **Three Knives**, which is full. If you want her move on Sorrel (a sleeping draught, a hired barge, a cutting-table), run it as a side scene on another night; the PCs can stop it.
 8. If she learns the truth of the Trespass, she has to decide whether to take it home. She will.

@@ -9,12 +9,12 @@ fields:
 ---
 
 ### How it plays out on the night
-Under the full red moon (9 Leafrot) the party carries [[The Lantern of the Ninth]] down the north wall of [[The Rent]] to [[The Ninth Stone]]: three hundred feet of old rope steps, the Glass Stair, the Halfway Ledge, and a short traverse onto the Warden's Shelf. Nobody makes it easy. Run the night as a gauntlet of at least four challenges, each one costing something:
+Under the full red moon (9 Leafrot) the party carries [[The Lantern of the Ninth]] down the north wall of [[The Rent]] to [[The Ninth Stone]]: three hundred feet of old rope steps, the Glass Stair, the Halfway Ledge, and a short traverse onto the Warden's Shelf. Nobody makes it easy. Run the night as session 8 lays it out (scenes 3 to 5), each step costing something; whoever the party crossed on the road has already come for the lantern there, in the gauntlet:
 
-1. **The descent under pursuit.** Whichever factions the party has crossed come after the lantern: Quiet Office knives in the rope steps, Sallow's mutineers if the mutiny wasn't broken, Glassers who think the flame is worth more than their lives.
-2. **The Choir.** The Sleeper's leak speaks in the voices of the party's dead. Every PC hears someone they've lost. Wisdom saves, and good roleplay, to keep walking.
-3. **The priests at the lip.** [[Seraphine Ashe]] and priests of three or four gods are waiting, and each of them has a reason the party should stop (see [[Ending: Let It Crack]]). Some of them are very persuasive. One of them is a friend: [[Mother Corvane]], who has come to the lip to ask the party not to do this.
-4. **The stone itself.** The flame must be set back into the crack where the shard came from, and the ward needs a heart: a living, willing one. [[Warden Uthrem]] offers first, but he's nearly spent and it may not hold. A PC can choose. [[Ysse Lampwright]] is the one the flame has been calling. The rubbing's warning matters: a heart that is *taken* rots, so nobody can be pushed in.
+1. **The priests at the lip.** [[Seraphine Ashe]] and the priests of five gods are waiting, and each of them has a reason the party should stop (see [[Ending: Let It Crack]]). Some of them are very persuasive. One of them is a friend: [[Mother Corvane]], who has come to put the lamp out so the dead can go home, and who listens only if Quorl reads all eight sentences aloud.
+2. **The flame speaks.** As the Ember tops the sky, the flame says "Keep me" aloud, in a warm voice that is not the Ninth's.
+3. **The descent and the Choir.** The rope steps and the Glass Stair by Ember-light, with the company holding the lip behind. The Sleeper's leak speaks in the voices of the party's dead. Every PC hears someone they've lost. Wisdom saves, and good roleplay, to keep walking. If the lip gives way, whoever is still set on the lamp comes down behind them.
+4. **The stone itself.** The flame must be set back into the crack where the shard came from, and the ward needs a heart: a living, willing one. [[Warden Uthrem]] offers first, but he's nearly spent, someone has to lift him the ten feet into the crack, and without the Standing rite it may not hold. A PC can choose. [[Ysse Lampwright]] is the one the flame has been calling. The rubbing's warning matters: a heart that is *taken* rots, so nobody can be pushed in.
 
 When the heart is given, the crack closes with a sound like a held breath let go. The shard goes back into the heart-socket; the crack closes over a night; the flame in Ysse's hands goes out. [[Ilse Marrow|Captain Marrow]] reads the contract aloud at the Stone, and the company stands down. The cage on Lantern Hill is dark when they get home, and the ninth pole at Corvel Rise gets its lantern. The Ember dims to copper over a season and goes dark by Longnight if the seal holds the year.
 
@@ -38,7 +38,7 @@ Almost nobody, and that's the point. [[Warden Uthrem]] and [[The Last Wardens]] 
 - **The Reeve's charter.** Odile seals it or tears it up; Cinderford learns which by spring.
 - **Pell.** Pell Quillon files the last form of his career, Form 44-A, and for once it is stamped.
 - **Kettle.** The *Grey Dumpling* is first on the river with the news and sells it three times.
-- **Hennet's Candle.** The Last Candle opens at dawn. The slate is still up. She rubs out one name.
+- **Hennet's Candle.** The Last Candle opens at dawn. The slate is still up. She chalks a new line and rubs nothing out.
 - **Corvane.** She puts the key back in the reliquary and asks Quorl for the eighth entry in his own hand.
 - **Spoons's pool and Keld's stake.** The pool pays out on the night it went out, and Spoons has to find the winner. Keld's stake, grown for nine years, stays in the strongbox. ([[The Wager on Never]])
 
@@ -47,4 +47,4 @@ The Ninth is sealed, for now. The Eighth Ward under the Grimmark is breached, an
 
 == GM notes ==
 
-This ending should feel earned and expensive. Don't let it be the obvious right answer handed over by an NPC: let the party find the rubbing, read it, argue about it. If Hold-Mother [[Greta Holm]] is present at the Stone, the seal holds and the roll is skipped. If no PC volunteers and Uthrem goes in alone without her, roll a d6 at the end of the epilogue: on a 1-2, the seal holds only a year.
+This ending should feel earned and expensive. Don't let it be the obvious right answer handed over by an NPC: let the party find the rubbing, read it, argue about it. Only Uthrem's heart needs the roll. If he is the heart and Hold-Mother [[Greta Holm]] is not at the Stone to say the Standing rite, roll a d6 at the end of the epilogue: on a 1-2 the seal holds only a year; otherwise it holds about twenty. With Greta there, or with a PC or Ysse as the heart, the seal holds and there is no roll.

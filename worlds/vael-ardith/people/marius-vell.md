@@ -58,7 +58,7 @@ What the old imperial archives hold, which is more than anyone alive has read. T
 
 He knows what the flame is, roughly, from the archives of [[The Emperor's Digs]]: a light of the Nine, a leash on what's under the wards. He also knows that imperial bloodlines hear the Sleeper, which is why no living heir has been allowed near the throne. His plan: find a pliable heir of the blood, put the flame in their hands, and stand behind them. He thinks he can control the voice that comes out of them. He is wrong.
 
-His own claimant, a cousin of the blood in the capital, has stopped speaking and is failing; the Sleeper has taken his voice. Vell needs another line, and [[Tesh]] at the Velvet Ledger is it.
+His own claimant, a cousin of the blood in the capital, has stopped speaking and is failing; the Sleeper has taken his voice. Vell needs another line, and [[Tesh]] at the Velvet Ledger is it. If Mote escapes in session 7, the Quiet Office sends her east to the Rent; in the Use It ending she is the puppet the holder hears first.
 :::
 
 == GM notes ==

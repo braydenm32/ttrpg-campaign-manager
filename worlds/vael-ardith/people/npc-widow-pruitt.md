@@ -30,7 +30,7 @@ relations:
   - to: npc-ottun-fray
     kind: paid
     note: Counted out the ten silver for the wanted bill, 13 Ashfall.
-    known: true
+    known: false
 ---
 
 Sixty, thin, black-clad, sharp-nosed, with a brass abacus she treats as both instrument and weapon. Widow Pruitt has kept the books of [[The Assessor's Office]] alone for two years, writing to the capital monthly to ask for help and receiving, monthly, more forms. The letters go to her niece, [[Edda Haverleigh]], a Disbursing Clerk in the Hall of Records, whose name is on the bottom of every pay notice the company has had since 3009. She is delighted [[Pell Quillon]] has finally come, and horrified by how nice he is.

@@ -39,7 +39,7 @@ Each stop below is a real page or screen you can open now. The little **?** butt
 
 **Random tables.** **Prep → Generators & tables** has tables for this world, like [[Ashenreach Encounters]], [[Sleeper Dreams]] and [[Last Words]]. There are tables for the road ([[Travellers on the Ash Road]]), the street ([[Street Events in Cinderford]]), the shelf ([[What the Shop Has Today]]), the tavern ([[Company Gossip]]), people's mouths ([[Sayings, Oaths and Curses of the March]]) and their names ([[Soldier Names]], plus two Names tables for the other peoples). Tables can roll dice and call other tables.
 
-**Session prep and the Lectern.** Every session is fully prepped: a strong start, scenes and clues to tick off, and fights that say which party they were built for. Each session's notes open with a "last time" recap to read aloud and a catch-up box for clues the party missed. At the Lectern, "Run" on a fight adds everyone to initiative, and each session's Lectern already knows its opening scene and who's there.
+**Session prep and the Lectern.** Every session is fully prepped: a strong start, scenes and clues to tick off, and fights that say which party they were built for. Each session's notes open with a "last time" recap to read aloud and an "If they missed something" list for clues the party missed. At the Lectern, "Run" on a fight adds everyone to initiative, and each session's Lectern already knows its opening scene and who's there.
 
 **History in ages.** **World → Timeline** splits history into ages, from the myths before the count, through [[The Battle of Cinders]], to the campaign's own events, which start on 14 Ashfall.
 

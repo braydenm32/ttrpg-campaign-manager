@@ -90,4 +90,4 @@ He is patient, methodical and completely without malice. He likes Pell, genuinel
 4–5. If the PCs get close, Bray or a hired thug tries to kill whoever's investigating. Mote is never there.
 6. While the PCs are in the Rent, he tightens his grip on Sallow and sends a report to Caer Ardith (a page the PCs can intercept through [[Kettle Brindlewake]]).
 7. **Three Knives**: makes his move on the night of the 5th, with two hired knives. Burns the Assessor's files, then comes for the lantern and Ysse's key. Kills Bray if Bray talks. Unmasked, he fights only to escape.
-8. If he lives, he's at the Rent, waiting for the flame to change hands.
+8. If he escapes in session 7, the Quiet Office sends [[Tesh]] east on a post-cart ([[Kettle Brindlewake]] sees it go), and he is at the Rent, waiting for the flame to change hands. In the Use It ending, Tesh is the puppet the holder hears first.

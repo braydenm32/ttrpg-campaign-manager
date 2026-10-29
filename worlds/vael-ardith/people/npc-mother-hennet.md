@@ -37,7 +37,7 @@ relations:
     known: true
   - to: dannic-rook
     kind: crossed off the slate
-    note: He paid his tab on 5 Ashfall. Nobody else ever has.
+    note: The last name she crossed off.
     known: true
   - to: npc-aurelio-bask
     kind: buys black crape from
@@ -61,17 +61,19 @@ Everything in the Candle is hers and tells a story she will not tell: the dark l
 For the Ninth not to die the way the Seventh did. She has watched eight companies go out, and she knows the order the signs come in: late pay, thin stew, a lieutenant buying rounds, a slate that stops filling because the men have stopped coming in. She watches the Ninth for them every night, and will say so to a PC she likes, once.
 
 ### What she knows
-Who owes what, to the penny, for nine years. Who drank with whom. That [[Dannic Rook]] paid his tab in full on 5 Ashfall, two days before he ran, which no soldier has ever done, and that she crossed his name off the slate the moment he paid it. That [[Fennick Bottlebrook]] says nine days of flour when he means eleven, because recruits eat. That old Halloran Pike by her fire tells the lantern story wrong on purpose. What a company sounds like the week before it breaks.
+Who owes what, to the penny, for nine years. Who drank with whom. That [[Dannic Rook]] was the last soldier whose tab she crossed off, and why, which she has told nobody. That [[Fennick Bottlebrook]] says nine days of flour when he means eleven, because recruits eat. What a company sounds like the week before it breaks.
 
 ### How she treats the PCs
-As five new lines on the slate. She pours before they ask and chalks before they pay. A PC who drinks on tick and comes back to pay gets a nod; a PC who stops a fight before her ladle has to gets a free bowl; a PC who asks about the Seventh gets the dark lantern pointed at and no more. The night the lantern gutters she stands in the Candle door and looks up the hill for a long time, then goes back in and chalks the date on the slate, in the corner, with nothing beside it.
+As five new lines on the slate. She pours before they ask and chalks before they pay. A PC who drinks on tick and comes back to pay gets a nod; a PC who stops a fight before her ladle has to gets a free bowl; a PC who asks about the Seventh gets the dark lantern pointed at and no more.
 
 :::gm
+The night the lantern gutters (end of session 1) she stands in the Candle door and looks up the hill for a long time, then goes back in and chalks the date on the slate, in the corner, with nothing beside it.
+
 **Secret.** The company's story is true and she lit it. On the night of Cinders a splinter of [[The Ninth Stone]] fell into her cookfire at the cooks' camp in [[The Weeping Orchard]], and the fire burned on the stone with no wood. She lit the ninth lantern from it. [[Halloran Pike]], who was running, carried the lantern up to the Keep; she followed with the stone in a soup-pot, and the boy with the burnt hand followed her (Brannoc says he sang; Pike says he howled). At the Keep she tipped [[The Ward Shard]] out of the pot into [[Brother Tallow]]'s hands. The pot ([[Mother Hennet's Soup-Pot]]) hangs on its own hook in the cold corner of the Candle kitchen, scrubbed clean every Restday, and nothing has been cooked in it since.
 
 She has known Pike was the deserter of the legend since his first night, seven years ago. He drinks free; that is the whole of what has been said between them about it. She buys a yard of black crape at [[The Turncoat]] on the 25th of every Ashfall and says it is for the bar. It is for the soup-pot's lid.
 
-Under the bar, in a cup: the coin Dannic paid his tab with on 5 Ashfall, one new Regency shilling with this year's date, the first new Regency coin anyone in the Ashenreach had seen in two years. She knows what that says about who was paying him, and is waiting to be asked by someone she trusts.
+Dannic paid his tab in full on 5 Ashfall, two days before he ran, which no soldier has ever done, and she crossed his name off the slate the moment he paid it. Under the bar, in a cup: the coin he paid with, one new Regency shilling with this year's date, the first new Regency coin anyone in the Ashenreach had seen in two years. She knows what that says about who was paying him, and is waiting to be asked by someone she trusts.
 
 **Session 5.** When Pike dies in his cot on the night of the 24th she shuts the Candle for the night: the first time it has closed in nine years, a sign the whole town reads. Asked at the bar what Pike's confession means, she says only "Took you long enough." If the party never got [[A Glasser's Chart]] from Vexa, she takes Pike's own copy out of the book under the bar and puts it on the counter.
 :::

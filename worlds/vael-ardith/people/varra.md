@@ -24,7 +24,6 @@ relations:
   - to: grashka
     kind: granddaughter of
     note: Her lineage name, which she may no longer speak.
-    known: true
   - to: mirrel-vosk
     kind: drills under
     note: He knows more about her than he says.
@@ -39,7 +38,7 @@ relations:
 ---
 
 ### Who she is
-In the orc way her name is **Varra, Grashka's daughter's daughter**, and until last winter she said it the way other people say a prayer. She may not say it now. The [[The Mothers of the Iron|Mothers of the Iron]] took that name from her when they cast her out. The other name she earned at twelve, when she caught a falling portcullis chain that would have taken her mother's head, and left the first knuckle of her little finger in the links. Ten knuckles on a soldier's hands; she has nine. Her mother's company did the arithmetic, and it stuck.
+In the orc way she had a longer name, the line of her mothers, and until last winter she said it the way other people say a prayer. She may not say it now. The [[The Mothers of the Iron|Mothers of the Iron]] took that name from her when they cast her out. The other name she earned at twelve, when she caught a falling portcullis chain that would have taken her mother's head, and left the first knuckle of her little finger in the links. Ten knuckles on a soldier's hands; she has nine. Her mother's company did the arithmetic, and it stuck.
 
 ### Look
 Big even for an orc: slate-grey skin, a jaw like a shut gate, tusks capped in old brass (one cap missing, lost to a tavern table in Fallowden). She shaves the sides of her head and wears the rest in a single braid with a lead weight tied in the end, which is less a fashion than a weapon. Her mail is good, her boots are bad, and the stump of her little finger is wrapped in red thread, which among orcs means *I am still owed*.
@@ -73,7 +72,7 @@ No company licensed by the Mothers will take her, and [[The Ninth Lantern]] hold
 A soldier who chose her conscience once and paid for it with everything. Every contract, oath and order in this campaign asks her the same question again: would she?
 
 :::for Varra Nine-Knuckles
-**Your secret.** Your grandmother is Grashka, now Mother of Mothers, and thirty years ago she was the orc of the Iron Guard who struck the blow that killed Emperor Aurel IX. Your mother told you once, drunk, and never again. Nobody alive outside the Mothers' council knows the Kingslayer's name. If the Regency learned it, every agent they have would want you, as bait or as proof or as a head on a gate.
+**Your secret.** In the orc way your full name is **Varra, Grashka's daughter's daughter**. Your grandmother is Grashka, now Mother of Mothers, and thirty years ago she was the orc of the Iron Guard who struck the blow that killed Emperor Aurel IX. Your mother told you once, drunk, and never again. Nobody alive outside the Mothers' council knows the Kingslayer's name. If the Regency learned it, every agent they have would want you, as bait or as proof or as a head on a gate.
 
 Your grandmother told you only one thing about it, the night before you went to your first war: "There are worse things than a dead emperor. Pray you never see one." She has never explained. You have never stopped wondering.
 :::
@@ -83,7 +82,7 @@ Your grandmother told you only one thing about it, the night before you went to 
 - [[Sergeant Vosk]] served under Grashka in the Iron Guard and recognised the face at once. He stood at the door of the Gilded Gallery the afternoon she struck. Whether he tells Varra he knows (and what he saw) is a good session 3 or 5 scene.
 - [[Ansel Mote]] has a Quiet Office file on the Mothers' lineages. If he learns who Varra is, she becomes a target in **Three Knives** (session 7): a Kingslayer's blood to hang publicly, or a hostage to force the Mothers' hand.
 - In **Into the Rent** (session 6), [[Warden Uthrem]] explains that Aurel IX was digging at three ward sites. That is why Grashka killed him. Varra is the only person in the party who can carry that truth to the Mothers, and be believed.
-- In the finale, a letter from Grashka can arrive (or Grashka herself, if you want a big entrance): the Mothers will back resealing the ward, at a price. Ending her exile is one of the prices on the table.
+- In session 7 a letter from Grashka arrives ([[Grashka's Letter]]): the Mothers will back resealing the ward, at a price. Ending her exile is one of the prices on the table. If Varra wrote to the Mothers, the Rust Choir catches the column at dusk on 8 Leafrot and holds part of the lip; if not, only the Fist who carried the letter comes. Grashka herself is an optional, silent cameo at the lip.
 - The Mothers always knew where she was. Skarra is [[Mother Hesha]]'s daughter and writes home monthly; Hesha sits on Grashka's council and reads every letter. The Rust Choir is Varra's mother's company, and it is free to be hired again. The Mothers' lever in session 7 is Grashka's letter.
 - Optional twist: Grashka chose that contract for the Rust Choir knowing her granddaughter would refuse it, and so put Varra where the Mothers needed eyes. Never confirm it outright.
 :::

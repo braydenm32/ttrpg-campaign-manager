@@ -11,7 +11,7 @@ fields:
   Reward: "PAID chalked under your name on the slate, the first in nine years; or every tab on the slate cleared"
 gmFields:
   Sessions: 4 to 7 (side quest; the book can be the second hole in the contract in session 7)
-  Clocks: "Concord −1 if the certified book reaches the Keep gate in session 7; Mutiny −2 if the book is read and Marrow's savings come out; Quiet Office +1 if it burns"
+  Clocks: "Debt called in −1 if the certified book reaches the Keep gate in session 7; Mutiny −2 if the book is read and Marrow's savings come out; Quiet Office +1 if it burns"
 relations:
   - to: npc-mother-hennet
     kind: given by

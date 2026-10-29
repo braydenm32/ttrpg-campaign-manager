@@ -46,11 +46,11 @@ He is honest, competent, and therefore posted here. The Regency has never discov
 To keep the bees. To be allowed to do the job properly. To know, before he dies, who is on the other end of the orders he receives, and why a post as unimportant as his has been given the one clerk-seal in the Regency that never fails.
 
 ### What he knows
-Every cart that has come through since 3001: its load, its weight, and what it sounded like. That the glass that comes out of the Rent hums at three paces if it is Lithic and at six if it is angry, and that nobody asks him why it is getting louder.>>>
-<<<
-He is more afraid than he looks.
-===
+Every cart that has come through since 3001: its load, its weight, and what it sounded like. That the glass that comes out of the Rent hums at three paces if it is Lithic and at six if it is angry, and that nobody asks him why it is getting louder.
+
+:::gm
 Someone in the capital knew about humming glass before he did, because the standing instruction was drafted before he ever heard it hum; he has worked this out and says it to no one.
+:::
 
 He is more afraid than he looks.
 

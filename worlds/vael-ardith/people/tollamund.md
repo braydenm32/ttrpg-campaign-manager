@@ -50,7 +50,7 @@ She speaks very slowly. Each sentence arrives the way a barge comes into dock: l
 > "You think ... I am slow. ... ... I am. ... ... But I was here ... before your empire. ... ... I will be here ... after your company."
 
 ### Who she is
-**Grandmother Tollamund** is three hundred and forty years old and the head of [[Tollamund & Daughters]], the [[Shellbacks|Shellback]] counting-house in [[Cinderford]], a Sevenhaven house older than [[The Concord Houses]] it now banks for. She has bought every debt in the March of Cinders that anyone would sell, including all of the Ninth Lantern's. Her "daughters", [[The Tollamund Daughters|Perrin, Odessa and Sal]], are sharp, courteous humans in their forties who do her talking and walking. They are not her daughters: the house name is older than any of them, and they are some three hundred years younger than she is. A Concord factor from [[Sevenhaven]], [[Cousin Pennamund]], has lately come to sit beside her and watch, very slowly, her purchases.
+**Grandmother Tollamund** is three hundred and forty years old and the head of [[Tollamund & Daughters]], the [[Shellbacks|Shellback]] counting-house in [[Cinderford]], a Sevenhaven house older than [[The Concord Houses]] it now banks for. She has bought up a good deal of the March's paper, and the Ninth Lantern has eaten on her credit since 3009. Her "daughters", [[The Tollamund Daughters|Perrin, Odessa and Sal]], are sharp, courteous humans in their forties who do her talking and walking. They are not her daughters: the house name is older than any of them, and they are some three hundred years younger than she is. A Concord factor from [[Sevenhaven]], [[Cousin Pennamund]], has lately come to sit beside her and watch, very slowly, her purchases.
 
 ### What she wants
 To own the company's debt, which she does. To be paid, eventually; she can wait. She can wait longer than anyone in the March will live.
@@ -63,6 +63,8 @@ Politely, patiently, as future clients. She will lend them money at reasonable i
 
 :::gm
 **Secret.** Tollamund wants the lantern. Not the town, not the company, not even the debt: the flame. Asked straight, she says only: "It is a key. ... To a door ... my people closed." She believes a light of the Nine is the only thing that can open the way back to [[The Ness of Thurm]], which her people sealed behind them when they left in 1350. Her grandmother's grandmother told her of it: the mountains running down to the sea, the long slow songs, the night they went. She will not say why they went. She wants to go home before she dies.
+
+Since 3009 the Concord houses have bought the garrison's wage-debt at forty in the hundred, and since the Gilt Run nearly all of it sits with her; by the Treaty clause she drafted herself, that makes the House the garrison's paymaster.
 
 Her instrument is debt: the paper on [[Fennick Bottlebrook]]'s personal loans, which she bought up from his clan, the company's note, and the town's charter that [[Odile Fairweather]] has nearly sold her. When she calls it all in at once (session 7), the Keep and "all fixtures and fittings thereof" become hers in law.
 
@@ -78,5 +80,5 @@ Her instrument is debt: the paper on [[Fennick Bottlebrook]]'s personal loans, w
 2. Knows exactly where the pay wagon went, because she sent it. A PC who shows her the loan-chit from the strongbox gets a courteous explanation of the third line, and a receipt.
 4. Begins collecting: Fennick's loans, Odile's charter.
 5. If a PC wins her trust (patience is the only way), she speaks of the Ness and the sea. A rare, sad scene.
-7. **Three Knives**: on the 5th she comes to the Keep gate in her chair, a sedan carried by eight porters, with Sal and two lawyers walking behind and the Reeve at her elbow (it is court day). She calls in every debt at once and takes possession of the Keep. Lawful, bloodless, devastating.
-8. If the flame is resealed and out, she closes her ledger, says "Ah," and nothing for a long time. If it's taken, she bids for it.
+7. **Three Knives**: on the 5th she comes to the Keep gate in her chair, a sedan carried by eight porters, with Sal and two lawyers walking behind and the Reeve at her elbow (it is court day). She calls in every debt at once. One History or Investigation check, DC 15 (anyone may Help), decides the argument at the gate (page seven, the Treaty's own wording). On a failure the House holds the company's wages, stores and gatehouse as its paper, but never the lamp. Lawful, bloodless, devastating.
+8. She does not go to the lip. She has herself carried as far as the Burned Mill and watches the road east from her chair. If the flame is resealed and out, she closes her ledger, says "Ah," and nothing for a long time. If it's taken, she bids for it.

@@ -34,7 +34,7 @@ relations:
     known: true
   - to: npc-cass-marrowick
     kind: carries letters for
-    note: Sealed with cheese-wax. One reaches the Keep on the night of 16 Ashfall.
+    note: Sealed with cheese-wax.
     known: true
   - to: npc-posy-reedmarsh
     kind: answers to
@@ -76,7 +76,7 @@ Kettle Brindlewake is captain of the barge *Grey Dumpling*, the busiest vessel o
 Profit. Gossip. A fine dinner. For the river to keep running and nobody important to notice her. Mostly gossip.
 
 ### What she knows
-Everything that comes down the river and much that goes up it. Who's buying Glasser salvage. Which Regency letters have come for the Assessor's clerk. That [[Dannic Rook]] owed her money. She has a good deal to say about the pay wagon and about where Dannic was and was not on the 12th, and will tell you for a price. Her sources are Nan Crupp at the ferry, [[Thistle Weirford]] with her drum and her sticky fingers, and her own two eyes. She sells to every faction in the March. She tells the PCs first, and cheaper. Other cousins of hers are the only people in Cinderford who go to [[Ambercote]], and she knows what stands in its square.
+Everything that comes down the river and much that goes up it. Who's buying Glasser salvage. Which Regency letters have come for the Assessor's clerk. That [[Dannic Rook]] owed her money. She has a good deal to say about the pay wagon and about Dannic Rook, and will tell you for a price. Her sources are Nan Crupp at the ferry, [[Thistle Weirford]] with her drum and her sticky fingers, and her own two eyes. She sells to every faction in the March. She tells the PCs first, and cheaper. Other cousins of hers are the only people in Cinderford who go to [[Ambercote]], and she knows what stands in its square.
 
 ### How she treats the PCs
 She likes them best. She liked [[Varra Nine-Knuckles]] the moment Varra stepped onto her barge and asked if she needed a hand with the ropes. She treats the party like favourite nieces and nephews: feeds them, scolds them, overcharges them slightly less than everyone else, and expects visits.
@@ -100,8 +100,8 @@ She likes the PCs best because they're the only people in the March who've never
 **Across the arc:**
 1. Saw the drowned man go in. Didn't see who with. Saw a clerk's ink-stained cuffs on the bridge.
 2. Knows the pay wagon's route and that its escort turned back, paid. Points the PCs to [[Fort Mercy]].
-3. Hides children from the dreamers on the Grey Dumpling.
+3. Hides children from the dreamers on the Grey Dumpling. One of [[Cass Marrowick]]'s letters, sealed with cheese-wax, reaches the Keep through her on the night of 16 Ashfall.
 4–5. Sells the PCs a copy of one of Mote's letters (or gives it free, if they've earned it): "Report on the lamp. Progress satisfactory."
 6. Ferries the expedition upriver toward the Rent.
-7. Can get anyone out of town by water. Or bring anyone in. Her favour to a friend of the party: one free passage by water in session 7 or 8.
+7. Can get anyone out of town by water. Or bring anyone in. If Mote escapes, she sees the post-cart that takes [[Tesh]] east, and tells the party. Her favour to a friend of the party: one free passage by water in session 7 or 8.
 8. Whatever happens, she's on the quay afterwards, selling hot chestnuts and the story.

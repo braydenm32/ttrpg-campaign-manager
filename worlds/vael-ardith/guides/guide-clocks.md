@@ -34,13 +34,13 @@ Vell's hand, ticking when nobody looks.
 ### Debt called in (8, starts at 2)
 Tollamund's ledger. The players can see this one too.
 - **Ticks:** the quarter's interest unpaid on 14 Ashfall (already counted); the loan-chit is read and the party learns the debt is 4,800; grace ends at sunset on 4 Leafrot; the Reeve signs the charter; a soldier's pay-chit is pledged at the mill; the strongbox coin is spent on anything but the debt; the silver in the thirteenth barrel is traced to the House with proof ([[The Unmarked Barrel]]), and the House notices it has been seen and moves its calendar up.
-- **Rolls back:** 480 gold paid on the interest −2; the Treaty's page seven found and read aloud −1; Pennamund turns against the Grandmother −1; the Reeve tears up the charter −1.
+- **Rolls back:** 480 gold paid on the interest −1; the Treaty's page seven found and read aloud −1; Pennamund turns against the Grandmother −1; the Reeve tears up the charter −1; Mother Hennet's certified slate-book brought to the Keep gate (S7) −1.
 - **At 8:** Tollamund collects on 5 Leafrot (S7) with lawyers, the Reeve and the clause; at full before S7, she comes early and brings Concord lances to the gate.
 
 ### The Saint ascends (8, starts at 3)
 Ilyra's hunger, through Seraphine's warmth.
-- **Ticks:** the lantern gutters (S1, S3); the House feeds the town or the company; a PC is healed at the House and owes; Ysse accepts the first invitation; a full Ember; a soldier is "saved".
-- **Rolls back:** the Saint's hunger exposed in front of witnesses −1; the party refuses the House in public −1; the lantern given into someone else's keeping, so the Church loses its chance −2.
+- **Ticks:** the lantern gutters (S1, S3); the House feeds the town or the company; a PC is healed at the House and owes; Ysse accepts the first invitation; a full Ember; a soldier is "saved"; a PC strikes Seraphine (S4 or S7).
+- **Rolls back:** the Saint's hunger exposed in front of witnesses −1 (Seraphine shamed in front of her faithful in S7 counts); the party refuses the House in public −1 (Ysse refusing Seraphine in front of the crowd in S7 counts); the lantern given into someone else's keeping, so the Church loses its chance −2.
 - **At 8:** Ilyra ascends within the year: this is the Let It Crack aftermath. Short of full, the clock sets how hard Seraphine fights in S8 (5 or under: she asks; 6 or 7: she takes).
 
 ### Last words decoded (4, starts at 1)
@@ -51,7 +51,7 @@ Corvane's slow certainty.
 
 ### The Sleepless rise (6, starts at 2)
 The Widow's congregation.
-- **Ticks:** a full Ember passes (S3, S8); a new convert, especially a soldier; a night the lantern gutters; the Hollowborn PC engages with the dream in public; the Orchard sap is drunk at a meeting.
+- **Ticks:** a full Ember passes (S3, S8); a new convert, especially a soldier; a night the lantern gutters; the Hollowborn PC engages with the dream in public; the Orchard sap is drunk at a meeting; Ambry Coyle's nail touches the flame (S7).
 - **Rolls back:** the Widow reached as a person, through Ottilie or Tick −1; Gammer Teal speaks to the Smokes −1; the company stops a sleepwalk without blood −1.
 - **At 6:** the Sleepless march in force on the Rent, sixty adults and their children, to watch the lamp go out. They arrive on the lip in S8 whatever the clock says; at full they arrive first, and are standing between the party and the Stone.
 
@@ -60,7 +60,10 @@ The world clock. One segment for each failing ward: the Fourth weak, the Eighth 
 - **Ticks:** +1 at each full Ember (16 Ashfall, S3; 9 Leafrot, S8), and nothing else unless you speed it up. Spells in the Rent or within a mile of the Ninth Stone always frost the nearest wall. The Barrow and the Cold Seam frost and feed the Cold Captain but never tick this clock.
 - **Speeding it up (your choice, one at a time):** +1 if the lantern goes fully out for more than a breath; a d6 for each spell near the Stone or in the Rent, ticking on a 1 (or 1 to 2 for a fast clock); +1 for battle sorcery near the Stone; +1 when a PC answers the Choir or drinks the Orchard's sap at full Ember; +1 for a finished Sleepless rite; +1 each time the flame speaks through its holder. Full list on [[The Sleeper Below]].
 - **Rolls back:** Reseal the Ward −3. Nothing else.
-- **Thresholds:** **6**, the dream reaches the whole March of Cinders and the Cinders dead stand on the lip (S8 as written); **9**, the Ashenreach dead rise at a red moon unaided; **12**, it speaks through whoever holds the flame. 9 and 12 belong to the Let It Crack and Use It aftermaths. Left alone the clock reaches 5 by S8, so the dead of Cinders stay down; with one or two accelerators it reaches 6 and they stand for the finale.
+- **Thresholds:** **6**, the dream reaches the whole March of Cinders and the Cinders dead get up out of the ash and walk to the Stone (in S8 only if you sped the clock up); **9**, the Ashenreach dead rise at a red moon unaided; **12**, it speaks through whoever holds the flame. 9 and 12 belong to the Let It Crack and Use It aftermaths. Left alone the clock reaches 5 by S8, so the dead of Cinders stay down; with one or two accelerators it reaches 6 and they stand for the finale. The still figures that line the lip in S6 and S8 are not these: they are the war's dead, drawn there a few at each red moon over nine years. They do not move while watched, and they only turn round in Let It Crack.
+
+### The Lip (6, session 8 only)
+A short clock for the finale, kept on scrap paper rather than a page: how long the people holding the Rent's lip can keep everyone else off the rope steps while the party is below. Session 8, scene 4 ("Holding the lip") sets its starting ticks, what ticks it and what buys ticks back. If it fills, whoever still wants the lamp comes down behind the party.
 
 ### Moving them between sessions
 Before each session, read the previous session's "How it ends" and tick what the players caused in the open. Then move one clock in the dark, the faction that lost most by the players' choices, and let its consequence arrive at the Keep gate as the strong start. Keep the Sleeper for red moons and the Stone; it is the only clock the players should never see ticked.

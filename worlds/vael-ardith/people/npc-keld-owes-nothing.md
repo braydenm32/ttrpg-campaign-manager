@@ -12,9 +12,10 @@ statusKnown: true
 fields:
   Ancestry: Raveler
   Role: Raveler of the weir; takes the drowned and says the door-words
-  Faction: The Rook-Court (once its first watcher of the lantern)
+  Faction: The Rook-Court, once
   Where: Sedgemere, the stilt-hut at the weir's end
 gmFields:
+  Secret: Once the Rook-Court's first watcher of the lantern
   5e: "Acolyte (Raveler, no flight): AC 11, HP 22, shovel +3 (1d6+1). Recalls the last words of anyone she heard die. Spare the Dying at will, which she does not call magic. Advantage on Insight against anyone who is paying."
 relations:
   - to: mother-corvane
@@ -53,11 +54,16 @@ She is also the keeper of **the slate**: a black board the length of a door, on 
 Quiet. To go on doing the work. For the river to keep bringing her people and for nobody to ask why she has not gone back to town.
 
 ### What she knows
-The river. The slate is the best record in the March of what has come down the Cinder since the flood, and she knows which of its entries are lies by what the water did. She knows the cold water of the 8th and the 13th was not weather. She knows who she is, and who her sister is, and what a dying Salt Guard man whispered to her in the winter after Cinders, which is why she bet.
+The river. The slate is the best record in the March of what has come down the Cinder since the flood, and she knows which of its entries are lies by what the water did.
+
+:::gm
+She knows the cold water of the 8th and the 13th was not weather. She knows who she is, and who her sister is, and what a dying Salt Guard man whispered to her in the winter after Cinders, which is why she bet.
+:::
 
 ### How she treats the PCs
 Courteously, from the doorway, standing. She will answer a question that is asked directly and respectfully. She will not volunteer. A PC who helps lift a body off the stakes without being asked, and does not flinch, is a person she will talk to for the length of a cup of tea. [[Quorl Many-Words]] gets a long look, and then nothing, and then, at dusk, one sentence she did not have to say.
 
+:::gm
 **The slate** (read aloud, in the order she reads it; she begins in the middle):
 
 > *A baker's apron, flour in the seams. 3003. The wearer not found.*
@@ -69,6 +75,7 @@ Courteously, from the doorway, standing. She will answer a question that is aske
 > *A stave, new oak, a Concord brand half burnt through, silver filings in the crack. Reaping 3011. I kept it.*
 > *8 Ashfall: cold water, glass in it, a drowned smell, nobody.*
 > *13 Ashfall: the same, colder. Nobody.*
+:::
 
 :::gm
 **Secret.** She is the Raveler woman who bet "never" with [[Spoons Aldane]] on the night of the First Renewal, 14 Ashfall 3003, and vanished the next day. For a year she had been the Rook-Court's first watcher of the lantern: set by [[Mother Corvane]], her elder sister, to sit by the Candle fire and the Keep's wall and listen to everything the dying of the March said near it. She walked nine miles down the towpath at dawn on the 15th and has not been back to Cinderford in eight years. The sisters quarrelled at the Rise the week before, over the same sentence.

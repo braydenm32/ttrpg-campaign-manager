@@ -38,23 +38,27 @@ He lets a sentence go off on its own halfway through an image and comes back wit
 > "I have kept lamps for forty winters. I have never kept one that kept me back."
 
 ### Who he is
-Brother Tallow was a lamp-keeper in a Vesh library when the war came, and a lamp-keeper in a field hospital when the war came closer. On the night of [[The Battle of Cinders]] he was one of the cooks, drivers and walking wounded hiding in the pear orchard behind the lines, and he followed a ninth lantern nobody had counted up to the Keep. He did not light it; the company's legend names who did, and he lets the legend talk. He was the one who knelt and fed it oil at dawn when it nearly guttered. He has tended it every night since, in its iron cage on [[Lantern Hill]], and in nine years it has not gone out. He carries the first of the three cage keys on a cord round his neck, until Marrow takes it from him in session 3 and gives it to Ysse.
+Brother Tallow was a lamp-keeper in a Vesh library when the war came, and a lamp-keeper in a field hospital when the war came closer. On the night of [[The Battle of Cinders]] he was one of the cooks, drivers and walking wounded hiding in the pear orchard behind the lines, and he followed a ninth lantern nobody had counted up to the Keep. He did not light it; the company's legend names who did, and he lets the legend talk. He was the one who knelt and fed it oil at dawn the morning after Cinders, while the cage was still hot. He has tended it every night since, in its iron cage on [[Lantern Hill]], and in nine years it has not gone out. He carries the first of the three cage keys on a cord round his neck.
 
 ### What he wants
 To keep the flame lit. To teach [[Ysse Lampwright]] everything before his eyes go entirely. To be wrong about what he suspects.
 
 ### What he knows
-The lantern's moods, which he talks about like a horse's: it leans east in a greywind, toward the Rent; it burns blue at full red moon; it has once, during a storm, burned for a whole night with an empty reservoir. He knows the oil has been tasting wrong for three weeks. He has been blaming his tongue.
+The lantern's moods, which he talks about like a horse's: it leans east in a greywind, toward the Rent; it burns blue at full red moon; it has once, during a storm, burned for a whole night with an empty reservoir.
 
 ### How he treats the PCs
 Gentle, delighted by visitors, especially ones who ask questions. He is fiercely protective of Ysse and a little in awe of her. He asks every PC to describe the flame to him, every time they see it, "so I know it's still pretty".
 
 :::gm
-**Secret.** In the lantern's iron base, beneath the cage, lies a splinter of grey stone ([[The Ward Shard]]) that [[Mother Hennet]] carried up from the orchard in a soup-pot the night the lantern was lit, still burning. Tallow set it there with his own hands, has kept it there for nine years, cleaned round it, and told nobody that it is always cold, even with the flame standing on it.
+**The oil.** He knows the oil has been tasting wrong for three weeks. He has been blaming his tongue.
+
+**Secret.** In the lamp's bowl, under the flame, lies a splinter of grey stone ([[The Ward Shard]]) that [[Mother Hennet]] carried up from the orchard in a soup-pot the night the lantern was lit, still burning. Tallow set it there with his own hands, has kept it there for nine years, cleaned round it, and told nobody that it is always cold, even with the flame standing on it.
 
 He suspects what the flame is. He noticed in the first year that it casts no heat on one side, the side facing [[The Rent]]; that it brightens when someone casts a spell nearby, as if it were feeding; that Vesh-sight shows it as a thin place in the world, the way a ward looks. He believes it is a piece of a ward, burning. He is afraid to say so, because if it's true, the company's contract, the town's peace and the lives of everyone in the March hang on one old blind moth trimming a wick, and he is not sure he can bear being that important.
 
 He confides only in [[Mother Corvane]], an old friend, and even to her only in hints.
+
+He keeps the first cage key until session 3, when Marrow takes it from his neck and gives it to Ysse.
 :::
 
 == GM notes ==

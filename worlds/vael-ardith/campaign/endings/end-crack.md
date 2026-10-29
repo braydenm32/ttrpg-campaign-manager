@@ -18,7 +18,7 @@ And far to the east, in Halcyra, a woman who walked out of a fire unburnt lifts 
 ### Who pushes for it
 **The pantheon's priests, from every direction at once, for every reason but the same one.** Run them as a crowd at the lip of the Rent, all talking, none agreeing:
 - [[Seraphine Ashe]] for [[The Unburnt Saint]]: "Let her drink it. She will be merciful. She was one of us." She believes it. Ilyra may even mean it.
-- [[Odile Fairweather]], the Reeve, with the Aurelan shrine's key on her belt, for [[Aurelan]]: the old empire needs an emperor, and a god freed to act can crown one. Any one.
+- [[Odile Fairweather]], the Reeve, with the Aurelan shrine's key on a cord round her neck, for [[Aurelan]]: the old empire needs an emperor, and a god freed to act can crown one. Any one.
 - [[Brother Audit]], Corvex's lay brother from Temple Row, with an audit: the Nine broke an oath to the gods (the gods' claim on Ysmereth), and a broken oath is theft. Opening the ward is "settling an account".
 - Sister Brine, the camp priestess, praying in a roar for [[Grum]], sweating and sincere: "The gods are going to eat a god. That's a war. I want to be on the winning side of it."
 - [[Mourn]], the Velvet Ledger's doorkeeper, for [[Isaurana]]. Isaurana's priests do not argue in public. They whisper to each PC privately, about the thing each of them wants most, and how it could be had in a world where the gods are stronger.

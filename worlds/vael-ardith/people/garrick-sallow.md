@@ -54,13 +54,13 @@ Garrick Sallow is the third son of a minor Regency house in the [[Fallowden]] co
 Command. A paid company. A commission from someone who can afford one. To be on the winning side, once, from the start.
 
 ### What he knows
-Which soldiers are angriest and what each of them wants. That the Regency could pay, if the company served it directly. That there are people in the Regency who would very much like the lantern brought "under proper authority".
+Which soldiers are angriest and what each of them wants. That the Regency could pay, if the company served it directly. That the lantern matters to people a long way above the Keep.
 
 ### How he treats the PCs
 Charming. He buys new recruits a drink at [[The Last Candle]] in their first week and asks about their families. He will try to recruit at least one PC to his "reasonable" view, and he will remember who said no.
 
 :::gm
-**Secret.** Sallow is paid by [[The Quiet Office]], through [[Ansel Mote]], to break the company: mutiny, then a new captain (him), then the lantern handed to the Regency "for safekeeping". He was promised a captaincy under the Regency and a seat on the March's council. He tells himself he's saving the company. The money is very good.
+**Secret.** Sallow is paid by [[The Quiet Office]], through [[Ansel Mote]], to break the company: mutiny, then a new captain (him), then the lantern handed to the Regency "for safekeeping". He was promised a captaincy under the Regency and a seat on the March's council. He knows there are people in the Regency who would very much like the lantern brought "under proper authority". He tells himself he's saving the company. The money is very good.
 
 He paid [[Dannic Rook]], who owed money all over the company, to swap the lantern's good oil for tins cut with ash (the tins came from Mote; the ash, Sallow has never asked, came from [[The Dreaming Widow]] and smells of lake water). The idea: frighten the soldiers, make the flame look like it's failing on Marrow's watch. He does not know what the flame is. He thinks it's a symbol. He would be appalled to learn he has been strangling a ward. Mote has given him a Quiet Office copy of the second cage key (Marrow's). It will not open the first lock, so it is useless without the lamp-keeper's key.
 
@@ -77,5 +77,5 @@ He does not know that Mote drowned Rook. He thinks Rook simply ran, and he is re
 3. After the lantern gutters, says aloud what everyone's thinking: "It's going out on her watch."
 4–5. Builds his faction; tries to recruit a PC. If a PC investigates the oil too closely, Bray is quietly told to stop them.
 6. With the PCs gone into the Rent, he makes his move in the Keep; the PCs return to a company half-turned.
-7. **Three Knives**: the mutiny breaks open. If unmasked (Mote's silver, Bray's confession), most soldiers turn on him. Mote will try to kill him before he can talk.
+7. **Three Knives**: the mutiny breaks open. If unmasked (Mote's silver, Bray's confession), most soldiers turn on him. Mote will try to kill him before he can talk. If he wins, he marches the lantern west on the Ardmere road with about sixty soldiers; the party can catch the column at its camp about fifteen miles out at first light on the 8th and turn it, with Sallow in the lead (see session 8, "If they missed something").
 8. If he survives, he may be the one who has to decide whether to stand with the company at the end. Give him a moment of redemption or of cowardice; let the players' choices decide which.

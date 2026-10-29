@@ -35,8 +35,21 @@ The campaign opens on the quarter-day the pay does not come, which is also the n
 | 7 | Three Knives | 5 to 6 Leafrot | 4 | The Keep gate, the Assessor's Office, the drill yard | Mote's night; the Lamp-Wardens on the Halcyra road; the mutiny in the yard | [[The Clerk's Cipher]]; [[Grashka's Letter]]; how many soldiers march |
 | 8 | The Lantern Gutters | 7 to 9 Leafrot | 5 | The Ash Road, the Rent's lip, the Ninth Stone | One or two from the gauntlet; the Saint's champion; the dead of Cinders (only at Sleeper 6) | An ending: [[Ending: Reseal the Ward]], [[Ending: Let It Crack]] or [[Ending: Use It]] |
 
+### How a session page is laid out
+Each session opens with a few bullets: the *Sky* and *Weather* for the day, *Touch these* (one-line beats for the regulars, to drop in wherever they fit), *In between* (what happened since the last session), *Level-up*, and in session 7 *If the party…* for the one choice that changes session 8. From session 2 on, the **Goal** comes next, then **Running this session**: a **Last time** box to read aloud, **Where the PCs are**, **The party should have**, **If they missed something** (a way back to each of that session's clues the party missed) and **The session at a glance**. Session 1 has its own opening notes in their place. The scenes follow in order, each ending with **Development** and, where something is found, **Treasure**; then **How it ends** and **If the party wanders**. The four short parts at the foot of the page (Strong start, Scenes, Clues and Lectern) are the prep sheet the app shows at the table: the opening, the scenes and clues to tick off, and what the Lectern shows.
+
+### Rules and numbers
+The numbers in the notes are for D&D 5e (2014 rules). DCs follow the 5e scale: 10 is easy, 15 is medium and 20 is hard. Every fight names the 5e creature it reskins (zombie, giant spider, wight, bandit, bandit captain, berserker, cult fanatic, shadow, ghoul, giant scorpion, specter, spy, thug, veteran or priest), and all of them are in the free 5e System Reference Document (SRD). The note gives hit points, AC, attacks and damage, plus whatever has changed; take speed, senses, saves, initiative and other traits from the SRD entry. Where a note says "page stats", the NPC's own page has the numbers and they win over the SRD. Where it says "scaled", the note's numbers replace the SRD's. Each fight ends "Built for five level-N PCs" with how hard it is (easy, medium or hard by the 2014 Dungeon Master's Guide's XP thresholds). In another system, keep the shape of each fight (how many foes, what they do, when they break or stop) and set the numbers to that difficulty by your own rules.
+
 ### Levels
 The campaign uses milestones. Level up at the **end** of sessions 1, 3, 5 and 7, so the party plays at levels 1, 2, 2, 3, 3, 4, 4 and 5. If you use experience points instead, the fights alone fall well short: give each PC a story award at the end of each session about equal to the session's biggest fight, and check the table above to stay on pace. Every fight in the sessions says which party it was built for. They were not built for a party that is behind.
+
+**Levelling the five pregens.** Their pages give them at level 1. At each level-up, add hit points (Varra 8, Borrin 9, Quorl 6, Tick 6, Ysse 5) and the 5e class features below. At level 4 each raises their best ability score by 2. The subclasses are the ones in the SRD, so nobody needs another book.
+- **Varra (fighter).** 2: Action Surge. 3: Champion (Improved Critical). 4: Strength 18. 5: Extra Attack.
+- **Ysse (wizard).** Two new spells in her book at each level; 2nd-level spells at 3, 3rd-level at 5. 2: Evocation (Sculpt Spells); Abjuration or Divination from the Player's Handbook suit her as well. 4: Intelligence 18.
+- **Borrin (ranger).** 2: Archery fighting style and spells (*hunter's mark* and *cure wounds*). 3: Hunter (Colossus Slayer) and Primeval Awareness. 4: Dexterity 18. 5: Extra Attack and 2nd-level spells.
+- **Tick (rogue).** 2: Cunning Action. 3: Thief (Fast Hands: rule that throwing one of his flasks is a bonus action) and Sneak Attack 2d6. 4: Dexterity 18. 5: Uncanny Dodge and Sneak Attack 3d6.
+- **Quorl (cleric of the Doors, the Life domain).** 2: Channel Divinity (Turn Undead and Preserve Life). 3: 2nd-level spells, with *lesser restoration* and *spiritual weapon* always prepared. 4: Wisdom 18. 5: Destroy Undead (CR 1/2) and 3rd-level spells, with *beacon of hope* and *revivify* always prepared.
 
 ### Where the PCs start
 Session 1 has the default opening (five new recruits, about to be sworn in at the quarter-day muster), a short prologue for the night before, and four other ways in: already-sworn soldiers, strangers off the post-road, townsfolk with business on the hill, and your players' own characters. See "Before you start" in session 1. Players making their own characters should read the [[Player's Guide]] and pick a tie to the Ninth.
@@ -53,13 +66,13 @@ The factions keep moving whether the party is watching or not. If the players go
 | 20 Ashfall | Seraphine's letter. Ignored, she comes to the Keep gate at noon with bread for the whole company. |
 | 22 and 28 Ashfall | Salt-tow windows at Sedgemere ([[The Unmarked Barrel]]). |
 | 24 Ashfall, night | Old Halloran Pike dies in his cot. |
-| 25 Ashfall | Pike's funeral on Corvel Rise. He will not lie down until the new ones come. |
+| 25 Ashfall | Pike's funeral on Corvel Rise. He will not lie down until the new ones come. The last day a letter can bring [[Hold-Mother Greta Holm]] to the Stone by the 9th: she needs a fortnight's warning. |
 | 30 Ashfall | The Unveiling: Pallas dark. |
 | 1 Leafrot | Doorsnight: doors propped open till dawn. |
 | 4 Leafrot, sunset | Grace on the Tollamund note ends. |
 | 5 Leafrot | Court day. Tollamund calls in the debt at the Keep gate. That night, Mote comes for the key and the lantern. |
-| 6 Leafrot | Seraphine comes for Ysse; Corvane comes down; Sallow's mutiny; Grashka's letter arrives. |
-| 7 Leafrot, dawn | The company carries the lantern east. If Sallow won the yard, he pours the last cut tin instead. |
+| 6 Leafrot | At dawn a hired knife comes for Vosk. Seraphine comes for Ysse; Corvane comes down; Sallow's mutiny; Grashka's letter arrives. |
+| 7 Leafrot, dawn | The company carries the lantern east. If Sallow won the yard, he pours the last cut tin instead and marches the lantern west on the Ardmere road with about sixty soldiers (session 8, "If they missed something"). |
 | 9 Leafrot | Full Ember. If the lantern is not at the Ninth Stone, it goes out at midnight, and Let It Crack happens to the company at home. |
 
 ### Between sessions
@@ -69,14 +82,14 @@ Part Two and Part Three leave room for the party to choose. These are the open w
 |---|---|---|
 | After session 3 | 17 to 19 Ashfall | [[Kettle's Cargo]]; Nib and Mote's black ledger; [[Gammer Teal]] at Stillwater; [[The Wager on Never]] |
 | After session 4 | 21 to 24 Ashfall | [[The Unmarked Barrel]] (22nd); [[The Price Was an Arm]]; [[Bellwether]] and the jar; [[Sap from the Weeping Orchard]] |
-| After session 5 | 26 to 28 Ashfall | [[Ambercote]] ([[The Standing Village]]); [[Keld Owes-Nothing]] at Sedgemere; a letter to [[Hold-Mother Greta Holm]] (send it now or she can't come); the Treaty Stone |
+| After session 5 | 26 to 28 Ashfall | [[Ambercote]] ([[The Standing Village]]); [[Keld Owes-Nothing]] at Sedgemere; the Treaty Stone. (A letter to [[Hold-Mother Greta Holm]] sent now is too late for the Stone: it had to go on the 25th, in session 5.) |
 | After session 6 | 2 to 4 Leafrot | The ride home. Only short errands in town: [[Brother Audit]], [[Wendel Hoop]], Pardew's box from [[Whitepost]] |
 
 A day in town is a scene or two. A day's ride out and back is a short session of its own. If the players want a whole evening of side quests, run one between sessions 4 and 5: nothing on the main line is due until Pike dies on the 24th.
 
 ### Keeping it moving
 
-**Every big answer has three ways in.** If the party misses one, another is waiting. Each session's opener has a "catch-up" box for its own clues; these are the four that matter most:
+**Every big answer has three ways in.** If the party misses one, another is waiting. Each session's "If they missed something" list covers its own clues; these are the four that matter most:
 - *Sallow is behind the swaps:* Spoons cracks (session 3), Bray folds after the oil store (session 3), or the unsigned letter in Sallow's room (session 3). Brother Audit's ledger can also do it in session 7.
 - *The pay was Concord coin:* the strongbox (session 2), Hebbe's toll-log (session 2), or Nance Oddy's Toll at the Burned Mill (session 2).
 - *The lantern was lit from a stone:* Pike's confession (session 5), Aurelio Bask the tailor (session 5), or Tallow confronted at the Keep (session 5).

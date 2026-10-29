@@ -42,7 +42,11 @@ Mourn was Rook-Court once, a fledgling at Cinders carrying bodies with the rest,
 To be the one who hears it. A Raveler who leaves the Court does not stop being a Raveler: Mourn remembers every last word spoken in that house, and there have been a few, and keeps them, and will not say for whom.
 
 ### What they know
-Who uses the back stair, and when. Who paid for tea and asked nothing. Which of the house's visitors are afraid of the Captain and which of the Captain's friend. That the Assessor's clerk looked at Tesh for an hour and did not blink. What [[Mother Corvane]] is really after, which Mourn will not tell the Court and might tell a PC who makes them laugh at the right thing.
+Who uses the back stair, and when. Who paid for tea and asked nothing. Which of the house's visitors are afraid of the Captain and which of the Captain's friend. What [[Mother Corvane]] is really after, which Mourn will not tell the Court and might tell a PC who makes them laugh at the right thing.
+
+:::gm
+Mourn also knows that the Assessor's clerk, on his first evening in town, looked at Tesh for an hour and did not blink.
+:::
 
 ### How they treat the PCs
 With amusement, which is worse than contempt. Mourn opens the door, takes the knives, writes down what the PCs call themselves, and corrects the spelling. Quorl gets a long look and "Many-Words. She still talking about you?" and no more unless he earns it. A PC who confesses something true gets in free.

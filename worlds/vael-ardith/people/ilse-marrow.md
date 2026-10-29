@@ -23,7 +23,6 @@ relations:
   - to: sorrel-vey
     kind: visits
     note: By the back stair. The town pretends not to know.
-    known: true
   - to: sorrel-vey
     kind: loves
     note: That part, nobody knows.
@@ -58,12 +57,14 @@ Ilse Marrow was a supply clerk with the Salt Guard, one of the eight companies t
 Her people fed, paid if possible, alive if not. A winter without a funeral. A contract that means something. She would very much like an evening off.
 
 ### What she knows
-The real state of the company's money, which is none. That the Regency has paid nothing since Hollowfrost 3009 ([[The Regency Stops Paying]]); that [[Tollamund & Daughters]]' credit line kept the company in rations and powder after that; and that the Concord has been buying up the debt. That [[Garrick Sallow]] wants her job. That the lantern matters more than anyone in the company understands, though she couldn't say why; she just knows she sleeps worse when it flickers.
+The real state of the company's money, which is none. That the Regency has paid nothing since Hollowfrost 3009 ([[The Regency Stops Paying]]); and that [[Tollamund & Daughters]]' credit line kept the company in rations and powder after that. That [[Garrick Sallow]] wants her job. That the lantern matters more than anyone in the company understands, though she couldn't say why; she just knows she sleeps worse when it flickers.
 
 ### How she treats the PCs
-New, which means not yet in anyone's pocket, which means useful. She is blunt with them, fair, and quietly kind: she learns their names on day one and uses them. She gives them the jobs she can't trust to anyone with a history: following the drowned man, chasing the pay, watching the oil.
+New, which means not yet in anyone's pocket, which means useful. She is blunt with them, fair, and quietly kind: she learns their names on day one and uses them. She gives them the jobs she can't trust to anyone with a history.
 
 :::gm
+**What else she knows.** That the Concord has been buying up the company's debt.
+
 **Secret.** For the last year Marrow has paid the company out of her own savings, coin by coin, everything she had put by for a farm she was never going to buy. It ran out in Reaping. The day the pay doesn't come is the first day she has nothing left to cover it with. She has told no one; she thinks not even [[Fennick Bottlebrook]] knows. Fennick noticed by arithmetic and has been hiding it in the books.
 
 She is also the lover of [[Madame Vey]] of [[The Velvet Ledger]]. The whole town knows the Captain uses the Ledger's back stair and pretends not to; most assume it's business, or comfort. It is love. It began as a negotiation for the company's credit and stopped being one very quickly. Sorrel is the only person she lets see her tired. She does not know what Sorrel's tattoos record, or how much of what she tells Sorrel goes into the Ledger's book. Nor does she know that the anonymous "friend of the company" credit in Fennick's books every Coinday is Sorrel's, after Marrow refused her money twice.
@@ -84,5 +85,5 @@ Two of the standing in [[Ambercote]]'s square wear Salt Guard tabards: Corwen Ha
 4. **The House of Unburnt Light**: [[Sister Seraphine]] courts her openly and offers the Saint's coin for the flame. She is tempted, badly. If the PCs learn about Sorrel, they can use it, or protect it.
 5. **Last Words**: learns where the lantern was really lit; starts to understand what she's guarding.
 6. **Into the Rent**: stays behind to hold the town.
-7. **Three Knives**: Sallow's mutiny breaks. She will be deposed, locked up or killed unless the PCs act. If she falls, Vosk or a PC takes command.
+7. **Three Knives**: Sallow's mutiny breaks. She will be deposed, locked up or killed unless the PCs act. If she falls, Vosk or a PC takes command. If Sallow wins, he locks her and Vosk in the oil-room and marches the lantern west on the Ardmere road; they get out on the night of the 7th (see session 8, "If they missed something").
 8. **The Lantern Gutters**: the contract says the company ends if the lantern goes out. She will ask the PCs to choose the ending knowing it may end her company. She will not order them.

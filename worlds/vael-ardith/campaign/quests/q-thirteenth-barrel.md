@@ -59,7 +59,7 @@ Hebbe makes the party toll-free for life: their names go into the toll-log under
 
 Hebbe suspects, not knows. She can ring a coin, not a motive.
 
-**Outcomes.** Trace the silver with proof (the stave, the barrel-count, Cobb's cord, a roll of Tollamund silver): Concord clock +1 (the House notices it has been seen, and moves its calendar up), and the party has a clean case that the House is buying Cinderford with coin the Regency has not paid. Keep Posy's tithe out of what is shown to Hebbe: Posy gives up the pay order. Show the tithe: the Quay-Moot may depose Posy, Kettle becomes the senior Mother on the river and does not want to be, and the Clans swear off the March for a season. Do nothing: the silver arrives, the charter is sealed on 5 Leafrot, and nobody is surprised.
+**Outcomes.** Trace the silver with proof (the stave, the barrel-count, Cobb's cord, a roll of Tollamund silver): Debt called in clock +1 (the House notices it has been seen, and moves its calendar up), and the party has a clean case that the House is buying Cinderford with coin the Regency has not paid. Keep Posy's tithe out of what is shown to Hebbe: Posy gives up the pay order. Show the tithe: the Quay-Moot may depose Posy, Kettle becomes the senior Mother on the river and does not want to be, and the Clans swear off the March for a season. Do nothing: the silver arrives, the charter is sealed on 5 Leafrot, and nobody is surprised.
 
 **The Concord factor.** Cousin Pennamund can be shown a roll of the House's own coin and the stave and asked who sent it. He will say, in a very shaken voice, that he did not.
 :::
