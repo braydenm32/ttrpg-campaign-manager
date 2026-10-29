@@ -32,7 +32,7 @@ function sizesFor(d: Drawing, W: number, H: number) {
 const finish = async (chosen: Drawing, drawing: Drawing, W: number, H: number) =>
   chosen === drawing ? drawing : (await import('./mapArt/classic')).playersCopy(drawing, W, H)
 
-const plural =(n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
 /** Download a drawn map as a PNG, or (battle maps and dungeons) as a Universal VTT file with its walls, doors and lights. */
 export function ExportMap({ name, drawing, width, height, onClose }: { name: string; drawing: Drawing; width: number; height: number; onClose: () => void }) {

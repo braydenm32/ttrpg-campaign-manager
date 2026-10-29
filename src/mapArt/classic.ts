@@ -1261,7 +1261,7 @@ export function playersCopy(d: Drawing, W: number, H: number): Drawing {
   return { ...base, shapes: base.shapes.filter((s) => !inside(s)) }
 }
 /** Where pieces can stand: underground, only inside the rooms; above ground, anywhere. */
-export const floorTest =(d: Drawing, W: number, H: number): ((x: number, y: number) => boolean) => {
+export const floorTest = (d: Drawing, W: number, H: number): ((x: number, y: number) => boolean) => {
   if (d.outside !== 'rock') return () => true
   return roomTest(d, W, H) ?? (() => false)
 }

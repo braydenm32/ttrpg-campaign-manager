@@ -79,7 +79,7 @@ ${nearby(world, entities, parentId)}`,
  * the end, since it's asked for last and may run over several lines.
  */
 export const keepSecretsSecret = (text: string) => {
-  const at = text.search(/^[ \t]*(?:[-*+][ \t]+|\d+[.)][ \t]*|#{1,6}[ \t]*)?(?:\*\*|__)?Secrets?\b[ \t]*(?:\*\*|__|:|\(|$)/im)
+  const at = text.search(/^[ \t]*(?:[-*+][ \t]+|\d+[.)][ \t]*|#{1,6}[ \t]*)?[*_]{0,2}Secrets?\b[ \t]*(?:[*_]{1,2}|:|\(|$)/im)
   return at < 0 ? text : `${text.slice(0, at)}:::gm\n${text.slice(at).trim()}\n:::`
 }
 
