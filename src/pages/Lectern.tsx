@@ -6,7 +6,7 @@ import { Link, useParams } from 'react-router-dom'
 import { partyOf } from '../sessions'
 import { DraftText, Empty } from '../components'
 import { PagePicker } from '../PagePicker'
-import { ENTITY_LABELS, blankLectern, db, newId, type Combatant, type Entity, type LecternState } from '../db'
+import { ENTITY_LABELS, blankLectern, db, newId, type Combatant, type Entity, type LecternState, type Session, type World } from '../db'
 import { modifierFrom, roll, rollDie } from '../dice'
 import { addCombatants, fieldOf, fromEntity, initiativeOrder, numberFrom } from '../encounters'
 import {
@@ -33,10 +33,10 @@ import { ShowPanel } from '../showing'
 import { WorldToday } from '../calendar'
 import { ClocksPanel } from '../clocks'
 import { Ico, TypeIcon } from '../icons'
-import { Armchair, BookOpen, CastleTurret, CloudFog, DiceFive, FlagCheckered, MapTrifold, Eye, EyeSlash, Prohibit, Shield, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
+import { Armchair, BookOpen, CastleTurret, CloudFog, DiceFive, FlagCheckered, Keyboard, MapTrifold, Eye, EyeSlash, Prohibit, Shield, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { clockText, RollDetail, RollLog, timeLeft, useNow } from '../atTheTable'
-import { setLiveSession, shareRoll, useTable } from '../cloud/table'
+import { clockText, GoLive, RollDetail, RollLog, timeLeft, useNow } from '../atTheTable'
+import { shareRoll, useLiveSession, useTable } from '../cloud/table'
 
 /**
  * The Lectern: one screen for running a session at the table.
@@ -49,10 +49,8 @@ export default function Lectern() {
   const { isGM } = useViewMode()
   const session = useLiveQuery(async () => (await db.sessions.get(sessionId)) ?? null, [sessionId])
   const entities = useVisibleEntities(worldId)
-  // Opening the Lectern starts the live link to players' Common Room for this session.
-  useEffect(() => {
-    if (isGM && session && session.worldId === worldId) setLiveSession(worldId, session.id)
-  }, [isGM, session?.id, session?.worldId, worldId]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Opening the Lectern sends nothing: players see this session only once the GM goes live with it.
+  const live = useLiveSession(worldId) === sessionId
 
   if (session === undefined) return null
   if (!isGM) return <Empty>The Lectern is a GM tool. Switch back to the GM view to use it.</Empty>
@@ -74,15 +72,23 @@ export default function Lectern() {
         if (fresh.length) s.entityIds = [...s.entityIds, ...fresh]
       })
 
+  const shareTo = live && world?.cloud?.enabled && lectern.share?.rolls && !lectern.share.off ? worldId : undefined
+
   return (
     <div className="page wide lectern-page">
+      <FightBar lectern={lectern} edit={edit} />
+      <LecternKeys lectern={lectern} edit={edit} shareTo={shareTo} />
       <header className="page-header">
         <div>
           <div className="row spread">
             <Link to={`${worldPath(worldId)}/s/${session.id}`}>← Session notes</Link>
-            <Link className="button" to={`${worldPath(worldId)}/s/${session.id}?end=1`} title="Recap, show players, start the next session">
-              <Ico as={FlagCheckered} /> End session
-            </Link>
+            <div className="row wrap lectern-actions">
+              {world && <GoLive world={world} session={session} />}
+              {world?.cloud?.enabled && <Help topic="goLive" />}
+              <Link className="button" to={`${worldPath(worldId)}/s/${session.id}?end=1`} title="Recap, show players, start the next session">
+                <Ico as={FlagCheckered} /> End session
+              </Link>
+            </div>
           </div>
           <h1>
             <Ico as={BookOpen} /> The Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
@@ -110,14 +116,14 @@ export default function Lectern() {
         <div className="lectern-col">
           <LecternPrep session={session} worldId={worldId} />
           <Initiative lectern={lectern} edit={edit} entities={entities} campaignId={session.campaignId} />
-          <Timers lectern={lectern} edit={edit} shared={!!world?.cloud?.enabled && !lectern.share?.off} />
+          <Timers lectern={lectern} edit={edit} shared={!!world?.cloud?.enabled} />
           <ClocksPanel worldId={worldId} entities={entities} />
         </div>
         <div className="lectern-col">
-          {world?.cloud?.enabled && <CommonRoomPanel worldId={worldId} lectern={lectern} edit={edit} />}
+          {world?.cloud?.enabled && <CommonRoomPanel world={world} session={session} lectern={lectern} edit={edit} live={live} />}
           {world && <ShowPanel world={world} sceneText={lectern.sceneText} />}
           <Soundboard worldId={worldId} compact />
-          <Dice lectern={lectern} edit={edit} shareTo={world?.cloud?.enabled && lectern.share?.rolls && !lectern.share.off ? worldId : undefined} />
+          <Dice lectern={lectern} edit={edit} shareTo={shareTo} />
           <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
           <QuickNote sessionId={session.id} />
           <QuickGenerators lectern={lectern} edit={edit} worldId={worldId} parentId={lectern.sceneId} />
@@ -127,9 +133,11 @@ export default function Lectern() {
   )
 }
 
+type Edit = (fn: (l: LecternState) => void) => unknown
+
 interface PanelProps {
   lectern: LecternState
-  edit: (fn: (l: LecternState) => void) => unknown
+  edit: Edit
 }
 
 function Scene({ lectern, edit, entities, worldId }: PanelProps & { entities: Entity[]; worldId: string }) {
@@ -301,6 +309,30 @@ const field = fieldOf
 
 const ordered = initiativeOrder
 
+/** Passes the turn on (1) or back (-1), counting rounds; on a fight that hasn't started, starts it. */
+function stepTurn(edit: Edit, dir: 1 | -1) {
+  return edit((l) => {
+    const order = ordered(l.combat.combatants)
+    if (!order.length) return
+    const i = order.findIndex((c) => c.id === l.combat.activeId)
+    if (i < 0) {
+      l.combat.activeId = order[0].id
+      l.combat.round = Math.max(1, l.combat.round)
+      return
+    }
+    let j = i + dir
+    if (j >= order.length) {
+      j = 0
+      l.combat.round++
+    } else if (j < 0) {
+      if (l.combat.round <= 1) return
+      j = order.length - 1
+      l.combat.round--
+    }
+    l.combat.activeId = order[j].id
+  })
+}
+
 function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { entities: Entity[]; campaignId: string }) {
   const { round, activeId } = lectern.combat
   const list = ordered(lectern.combat.combatants)
@@ -316,27 +348,7 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
     const e = entities.find((x) => x.id === c.entityId)
     return e ? modifierFrom(field(e, /^(init|initiative)/i)) : 0
   }
-  const step = (dir: 1 | -1) =>
-    edit((l) => {
-      const order = ordered(l.combat.combatants)
-      if (!order.length) return
-      const i = order.findIndex((c) => c.id === l.combat.activeId)
-      if (i < 0) {
-        l.combat.activeId = order[0].id
-        l.combat.round = Math.max(1, l.combat.round)
-        return
-      }
-      let j = i + dir
-      if (j >= order.length) {
-        j = 0
-        l.combat.round++
-      } else if (j < 0) {
-        if (l.combat.round <= 1) return
-        j = order.length - 1
-        l.combat.round--
-      }
-      l.combat.activeId = order[j].id
-    })
+  const step = (dir: 1 | -1) => stepTurn(edit, dir)
   const change = (id: string, fn: (c: Combatant) => void) =>
     edit((l) => {
       const c = l.combat.combatants.find((x) => x.id === id)
@@ -344,12 +356,17 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
     })
 
   return (
-    <section className="card lectern-panel">
+    <section className="card lectern-panel" id="lectern-initiative">
       <div className="row spread">
         <h2>
           <Ico as={Sword} /> Initiative <Help topic="initiative" />
         </h2>
-        <span className="muted">{round > 0 ? `Round ${round}` : 'Not started'}</span>
+        <span className="row">
+          <span className="muted">{round > 0 ? `Round ${round}` : 'Not started'}</span>
+          <button className="ghost small lectern-keys-button" title="Keyboard shortcuts (press ?)" aria-label="Keyboard shortcuts" onClick={() => window.dispatchEvent(new Event(SHOW_KEYS))}>
+            <Ico as={Keyboard} />
+          </button>
+        </span>
       </div>
       <div className="row wrap">
         <button onClick={() => step(-1)} disabled={!activeId}>◀ Back</button>
@@ -575,15 +592,21 @@ const toNumber = (v: string) => {
 
 const QUICK_DICE = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100']
 
+/** Rolls dice on the Lectern (and for players to see, if the GM chose that). Throws on dice it can't read. */
+function rollOnLectern(edit: Edit, text: string, shareTo?: string) {
+  const r = roll(text)
+  edit((l) => void (l.rolls = [{ ...r, id: newId(), at: Date.now() }, ...l.rolls].slice(0, 30)))
+  if (shareTo) void shareRoll(shareTo, { who: 'GM', expr: r.expr, total: r.total, detail: r.detail, crit: r.crit })
+  return r
+}
+
 function Dice({ lectern, edit, shareTo }: PanelProps & { shareTo?: string }) {
   const [expr, setExpr] = useState('')
   const [error, setError] = useState('')
   const doRoll = (text: string) => {
     try {
-      const r = roll(text)
+      rollOnLectern(edit, text, shareTo)
       setError('')
-      edit((l) => void (l.rolls = [{ ...r, id: newId(), at: Date.now() }, ...l.rolls].slice(0, 30)))
-      if (shareTo) void shareRoll(shareTo, { who: 'GM', expr: r.expr, total: r.total, detail: r.detail, crit: r.crit })
     } catch (err) {
       setError((err as Error).message)
     }
@@ -768,8 +791,8 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
 }
 
 /** What players' Common Room shows of this session, and what they're rolling. */
-function CommonRoomPanel({ worldId, lectern, edit }: PanelProps & { worldId: string }) {
-  const { rolls } = useTable(worldId)
+function CommonRoomPanel({ world, session, lectern, edit, live }: PanelProps & { world: World; session: Session; live: boolean }) {
+  const { rolls } = useTable(world.id)
   const share = lectern.share ?? {}
   const set = (key: keyof NonNullable<LecternState['share']>, on: boolean) =>
     edit((l) => void (l.share = { ...l.share, [key]: on || undefined }))
@@ -779,31 +802,26 @@ function CommonRoomPanel({ worldId, lectern, edit }: PanelProps & { worldId: str
       <h2>
         <Ico as={Armchair} /> Players’ Common Room <Help topic="tableLink" />
       </h2>
+      <GoLive world={world} session={session} />
+      <p className="muted small">
+        {live
+          ? 'They see the scene’s name (once its page is revealed), the music, your timers, and whose turn it is once you start combat. Never HP, conditions or your notes.'
+          : 'Players see nothing of this session until you go live. Their dice and signals still reach you.'}
+      </p>
       <label className="row small">
-        <input type="checkbox" checked={!share.off} onChange={(e) => set('off', !e.target.checked)} />
-        Share this session live with players
+        <input type="checkbox" checked={!share.hideNames} onChange={(e) => set('hideNames', !e.target.checked)} />
+        <span>
+          Show names of foes and allies in the turn order <span className="muted">(anyone from a page players haven’t seen still shows as “Enemy 1”)</span>
+        </span>
       </label>
-      {share.off ? (
-        <p className="muted small">Players see nothing live from this session. Their dice and signals still reach you.</p>
-      ) : (
-        <>
-          <p className="muted small">
-            They see the scene’s name (once its page is revealed), the music, and whose turn it is once you start combat. Never HP, conditions or your notes.
-          </p>
-          <label className="row small">
-            <input type="checkbox" checked={!share.hideNames} onChange={(e) => set('hideNames', !e.target.checked)} />
-            Show names of foes and allies in the turn order
-          </label>
-          <label className="row small">
-            <input type="checkbox" checked={!share.noMusic} onChange={(e) => set('noMusic', !e.target.checked)} />
-            Show what music is playing
-          </label>
-          <label className="row small">
-            <input type="checkbox" checked={!!share.rolls} onChange={(e) => set('rolls', e.target.checked)} />
-            Players see my dice rolls
-          </label>
-        </>
-      )}
+      <label className="row small">
+        <input type="checkbox" checked={!share.noMusic} onChange={(e) => set('noMusic', !e.target.checked)} />
+        Show what music is playing
+      </label>
+      <label className="row small">
+        <input type="checkbox" checked={!!share.rolls} onChange={(e) => set('rolls', e.target.checked)} />
+        Players see my dice rolls
+      </label>
       {theirs.length > 0 ? (
         <>
           <h3 className="small">Players’ rolls</h3>
@@ -977,7 +995,130 @@ function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {
           <button disabled={!(Number(custom) > 0)}>Start</button>
         </form>
       </div>
-      {shared && timers.length > 0 && <p className="muted small">Players see timers in their Common Room unless you hide them.</p>}
+      {shared && timers.length > 0 && <p className="muted small">While you’re live, players see timers in their Common Room unless you hide them.</p>}
     </section>
+  )
+}
+
+/** Asks the shortcut list to open (from the keyboard button). */
+const SHOW_KEYS = 'lectern-show-keys'
+
+/** Shown to the GM on phones while a fight is on: the round, whose turn, and the buttons, always in reach. */
+function FightBar({ lectern, edit }: PanelProps) {
+  const { round, activeId } = lectern.combat
+  const turn = lectern.combat.combatants.find((c) => c.id === activeId)
+  if (!turn) return null
+  const jump = () => {
+    const row = document.querySelector('#lectern-initiative .combatant.active') ?? document.getElementById('lectern-initiative')
+    row?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+  return (
+    <div className="fight-bar" role="toolbar" aria-label="Combat">
+      <button className="ghost" onClick={() => stepTurn(edit, -1)} aria-label="Back a turn" title="Back a turn">
+        ◀
+      </button>
+      <button className="link fight-bar-turn" onClick={jump} title="Show them in the initiative list">
+        <span>
+          <span className="muted">Round {round} · </span>
+          <b>{turn.name}</b>’s turn
+        </span>
+      </button>
+      <Help topic="fightBar" />
+      <button className="primary" onClick={() => stepTurn(edit, 1)}>
+        Next ▶
+      </button>
+    </div>
+  )
+}
+
+const KEYS: [string, string][] = [
+  ['N or →', 'Next turn'],
+  ['B or ←', 'Back a turn'],
+  ['D', 'Roll a d20'],
+  ['?', 'Show or hide this list'],
+]
+
+/**
+ * Keyboard shortcuts for running a fight, ignored while typing in a box or with Ctrl, Alt or ⌘
+ * held. Next and Back only work once combat has started, so a stray key can't start a fight
+ * (and show it to players). Rolls made from the keyboard pop up briefly, since the dice may be
+ * off screen.
+ */
+function LecternKeys({ lectern, edit, shareTo }: PanelProps & { shareTo?: string }) {
+  const [sheet, setSheet] = useState(false)
+  const [toast, setToast] = useState<{ text: string; crit?: string; at: number }>()
+  const latest = useRef({ lectern, edit, shareTo })
+  useEffect(() => {
+    latest.current = { lectern, edit, shareTo }
+  })
+  useEffect(() => {
+    const show = (text: string, crit?: string) => setToast({ text, crit, at: Date.now() })
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || e.defaultPrevented) return
+      const el = e.target as HTMLElement | null
+      if (el?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return
+      const { lectern: l, edit: change, shareTo: to } = latest.current
+      const key = e.key
+      if (key === '?') {
+        e.preventDefault()
+        return setSheet((x) => !x)
+      }
+      if (key === 'Escape') return setSheet(false)
+      if (e.shiftKey) return
+      const next = key === 'n' || key === 'N' || key === 'ArrowRight'
+      if (next || key === 'b' || key === 'B' || key === 'ArrowLeft') {
+        e.preventDefault()
+        if (!l.combat.activeId) return show('No fight running yet. Press “Start combat” first.')
+        void stepTurn(change, next ? 1 : -1)
+      } else if (key === 'd' || key === 'D') {
+        e.preventDefault()
+        const r = rollOnLectern(change, 'd20', to)
+        show(`d20: ${r.total}`, r.crit)
+      }
+    }
+    const open = () => setSheet(true)
+    window.addEventListener('keydown', onKey)
+    window.addEventListener(SHOW_KEYS, open)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener(SHOW_KEYS, open)
+    }
+  }, [])
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(undefined), 2500)
+    return () => clearTimeout(t)
+  }, [toast])
+  return (
+    <>
+      {toast && (
+        <div key={toast.at} className={`lectern-toast ${toast.crit ?? ''}`} role="status">
+          {toast.text}
+        </div>
+      )}
+      {sheet && (
+        <div className="lectern-keys card" role="dialog" aria-label="Keyboard shortcuts">
+          <div className="row spread">
+            <h3>
+              <Ico as={Keyboard} /> Keyboard shortcuts <Help topic="lecternKeys" />
+            </h3>
+            <button className="ghost small" onClick={() => setSheet(false)} aria-label="Close">
+              ✕
+            </button>
+          </div>
+          <dl>
+            {KEYS.map(([k, what]) => (
+              <div key={k}>
+                <dt>
+                  <kbd>{k}</kbd>
+                </dt>
+                <dd>{what}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="muted small">Not while you’re typing in a box. Next and Back work once combat has started.</p>
+        </div>
+      )}
+    </>
   )
 }

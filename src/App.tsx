@@ -56,7 +56,7 @@ const RelationWeb = lazy(() => import('./pages/RelationWeb'))
 import ClocksPage from './clocks'
 import SafetyPage, { XCardAlert, XCardButton } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
-import { PlayerTableLink, TableHost, TableSignals } from './atTheTable'
+import { LiveBadge, PlayerTableLink, TableHost, TableSignals } from './atTheTable'
 import { NewCharacterRequestsBanner } from './players/NewCharacters'
 import Handouts from './pages/Handouts'
 import { hashRouting, pagePath, setPages, tidyPath, usePathsVersion, worldPath } from './paths'
@@ -348,6 +348,7 @@ function WorldShell() {
           ))}
         </nav>
         <SearchButton worldId={worldId} world={world} />
+        {ownWorld && world.cloud?.enabled && <LiveBadge world={world} />}
         {ownWorld && (
           <div className="segmented gm-switch" title={HELP.viewingAs}>
             <button className={isGM ? 'on' : ''} onClick={() => setMode('gm')}>GM</button>

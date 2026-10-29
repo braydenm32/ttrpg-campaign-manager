@@ -1,12 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type Entity, type World } from './db'
+import { db, type Entity, type Session, type World } from './db'
 import { roll } from './dice'
-import { answerSignal, gmIdOf, linkAsHost, linkAsPlayer, publishTable, sendSignal, shareRoll, tableStateFor, useLiveSession, useTable, type SignalKind, type TableState } from './cloud/table'
+import {
+  answerSignal,
+  gmIdOf,
+  linkAsHost,
+  linkAsPlayer,
+  publishTable,
+  sendSignal,
+  setLiveSession,
+  shareRoll,
+  tableStateFor,
+  useLiveSession,
+  useTable,
+  type SignalKind,
+  type TableState,
+} from './cloud/table'
 import { useCharacterOwners } from './players/owners'
 import { usePlaying } from './sound/player'
 import { Ico } from './icons'
-import { Coffee, DiceFive, HandWaving, Sparkle, Sword, Timer } from '@phosphor-icons/react'
+import { Broadcast, Coffee, DiceFive, HandWaving, Sparkle, Sword, Timer } from '@phosphor-icons/react'
+import { worldPath } from './paths'
 
 /**
  * The live table, both ends: the GM's app tells players what's happening (TableHost) and hears
@@ -14,10 +30,19 @@ import { Coffee, DiceFive, HandWaving, Sparkle, Sword, Timer } from '@phosphor-i
  * turn. The Common Room and the Lectern use the pieces below.
  */
 
-/** For the GM: keeps players' Common Room in step with the session being run. Draws nothing. */
+/** For the GM: keeps players' Common Room in step with the session they went live with. Draws nothing. */
 export function TableHost({ world }: { world: World }) {
   const sessionId = useLiveSession(world.id)
-  const session = useLiveQuery(() => (sessionId ? db.sessions.get(sessionId).then((s) => s ?? null) : null), [sessionId])
+  // Until a new lookup answers, the last answer comes back: each one counts only for what it looked up.
+  const found = useLiveQuery(async () => sessionId && { id: sessionId, session: (await db.sessions.get(sessionId)) ?? null }, [sessionId])
+  const session = !sessionId ? null : found && found.id === sessionId ? found.session : undefined
+  // A live session that's been deleted stops being live.
+  useEffect(() => {
+    if (sessionId && session === null) setLiveSession(world.id, undefined)
+  }, [sessionId, session, world.id])
+  const campaignId = session?.campaignId
+  const foundCampaign = useLiveQuery(async () => campaignId && { id: campaignId, campaign: (await db.campaigns.get(campaignId)) ?? null }, [campaignId])
+  const campaign = !campaignId ? null : foundCampaign && foundCampaign.id === campaignId ? foundCampaign.campaign : undefined
   const lectern = session?.lectern
   const ids = [lectern?.sceneId, ...(lectern?.combat.combatants.map((c) => c.entityId) ?? [])].filter((x): x is string => !!x)
   const key = ids.join(',')
@@ -27,8 +52,8 @@ export function TableHost({ world }: { world: World }) {
   )
   const sounds = useLiveQuery(() => db.sounds.where({ worldId: world.id }).toArray(), [world.id])
   const playing = usePlaying()
-  const ready = session !== undefined && pages !== undefined && sounds !== undefined
-  const state = ready && session && session.worldId === world.id ? tableStateFor(session, pages, sounds, playing) : null
+  const ready = session !== undefined && pages !== undefined && sounds !== undefined && campaign !== undefined
+  const state = ready && session && session.worldId === world.id ? tableStateFor(session, pages, sounds, playing, campaign ?? undefined) : null
   const json = ready ? JSON.stringify(state) : ''
   const latest = useRef<TableState | null>(null)
   useEffect(() => {
@@ -38,6 +63,56 @@ export function TableHost({ world }: { world: World }) {
   }, [json, world.id])
   useEffect(() => linkAsHost(world.id, () => latest.current), [world.id])
   return null
+}
+
+/** For the GM, in the top bar of every screen in the world: the session they're live with, and Stop. */
+export function LiveBadge({ world }: { world: World }) {
+  const sessionId = useLiveSession(world.id)
+  const session = useLiveQuery(() => (sessionId ? db.sessions.get(sessionId) : undefined), [sessionId])
+  if (!sessionId || session?.id !== sessionId) return null
+  return (
+    <div className="live-badge" role="status">
+      <Link to={`${worldPath(world.id)}/s/${session.id}/lectern`} title={`Players are following session ${session.number} live. Open its Lectern`}>
+        <span className="live-dot" /> Live<span className="live-badge-session"> · #{session.number}</span>
+      </Link>
+      <button className="ghost small" onClick={() => setLiveSession(world.id, undefined)} title="Stop sharing this session live with players">
+        Stop
+      </button>
+    </div>
+  )
+}
+
+/**
+ * The Lectern's switch for the live link: players see nothing of a session until the GM goes
+ * live with it. Going live with one session stops any other in the same world.
+ */
+export function GoLive({ world, session }: { world: World; session: Session }) {
+  const live = useLiveSession(world.id)
+  const lookup = useLiveQuery(() => (live && live !== session.id ? db.sessions.get(live) : undefined), [live, session.id])
+  const other = lookup?.id === live ? lookup : undefined
+  if (!world.cloud?.enabled) return null
+  const goLive = () => {
+    setLiveSession(world.id, session.id)
+    // Older sessions could be set to share nothing; going live means sharing.
+    if (session.lectern?.share?.off) db.sessions.where('id').equals(session.id).modify((s) => void (s.lectern!.share = { ...s.lectern!.share, off: undefined }))
+  }
+  if (live === session.id)
+    return (
+      <span className="live-badge" role="status">
+        <span className="live-dot" /> Live to players
+        <button className="ghost small" onClick={() => setLiveSession(world.id, undefined)} title="Stop sharing this session live. Players stop seeing it as being played">
+          Stop
+        </button>
+      </span>
+    )
+  return (
+    <span className="row wrap">
+      {other && <span className="muted small">Session {other.number} is live now.</span>}
+      <button className="go-live" onClick={goLive} title={other ? `Stops session ${other.number} and goes live with this one` : 'Players’ Common Room starts showing this session as being played'}>
+        <Ico as={Broadcast} /> {other ? 'Go live with this one instead' : 'Go live to players'}
+      </button>
+    </span>
+  )
 }
 
 const SIGNAL_TEXT: Record<SignalKind, string> = {
