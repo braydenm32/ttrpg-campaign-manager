@@ -23,7 +23,7 @@ He means to assess the company at once. The company is trying to work out whethe
 - **The window**, which looks straight down on the bridge and the gatehouse, and from which a patient man could count every coin that crosses.
 
 ### Who is here
-Pell, who means every word. Widow Pruitt, who does the sums. Nib, who runs errands and is paid in biscuits. And [[Ansel Mote]], a thin clerk with a cold, who copies, files and fetches, lodges above Gannet's Tallow & Wicks on Temple Row, and is somehow never in the room when anyone looks for him. Below, in the yard under the floor, [[Wendel Hoop]] the cooper, the landlord, who has not been paid the Regency's rent since 3009 and hears every word through his ceiling.
+Pell, who means every word. Widow Pruitt, who does the sums. Nib, who runs errands and is paid in biscuits. And [[Ansel Mote]], a thin clerk, who copies, files and fetches, lodges above Gannet's Tallow & Wicks on Temple Row, and is somehow never in the room when anyone looks for him. Below, in the yard under the floor, [[Wendel Hoop]] the cooper, the landlord, who has not been paid the Regency's rent since 3009 and hears every word through his ceiling.
 
 ### Rumours
 - The Assessor is here to seize the lantern for the Regency.
@@ -36,10 +36,12 @@ Pell, who means every word. Widow Pruitt, who does the sums. Nib, who runs erran
 :::
 
 ### Things to do
-Be assessed. Fill in Form 7 (Persons Under Arms, Mercenary, Foreign) and discover it has no box for "unpaid". Watch Pell defend the Regency to a room of soldiers with such obvious decency that nobody hits him. Notice that Mote's cough stops when he thinks nobody is listening. Count the crates: nine arrived, ten are in the room.
+Be assessed. Fill in Form 7 (Persons Under Arms, Mercenary, Foreign) and discover it has no box for "unpaid". Watch Pell defend the Regency to a room of soldiers with such obvious decency that nobody hits him.
 
 :::gm
 Mote is the Quiet Office's assassin, in town to start a mutiny through [[Garrick Sallow]] and, if the lantern can be made to fail "naturally", to see that it does. On his first evening he took tea at the Velvet Ledger's parlour to look at Tesh; on his second he stood a round at the Last Candle. He asked nothing in either, and tipped well. Since Reaping he has been buying sealed Keel oil tins at the chandlery through "a clerk with a cold", paid in advance, in the Office's name. Pell knows nothing; the tenth crate is Mote's, and holds a crossbow, three vials and a Regency seal Pell does not have. The Quiet Office clock ticks here. Pell's Form 44-A, if the Captain signs it, is a real lever: see session 2, [[The Missing Pay]].
+
+A PC who watches the room can notice that Mote's cough stops when he thinks nobody is listening, and can count the crates: nine arrived, ten are in the room.
 :::
 
 == GM notes ==

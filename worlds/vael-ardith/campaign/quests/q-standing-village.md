@@ -41,7 +41,7 @@ At the end of the night of the full Ember, 16 Ashfall, when the Sleepless have g
 
 *Come and see the square before the moon is full again. They are going to cut the Salt Men out and Uncle Jeb will kill them. You were in the door. Cass, Ambercote, 212.*
 
-[[Ambercote]] is the village the rumour means, twenty miles out in the southern glass, where two hundred and twelve people stand fused where they stood on the night of Cinders and a dozen living graze goats in the lee of them. The cousins, asked, will say that much, and that the girl is eight, and that the headman is the quietest man they have ever been afraid of. The next full Ember is 9 Leafrot. The one after that is the end of the campaign.
+[[Ambercote]] is the village the rumour means, twenty miles out in the southern glass, where two hundred and twelve people stand fused where they stood on the night of Cinders and a dozen living graze goats in the lee of them. The cousins, asked, will say that much, and that the girl is eight, and that the headman is the quietest man they have ever been afraid of. The next full Ember is 9 Leafrot, and the campaign ends on it.
 
 ### Steps
 1. **Get there.** A long day from the bridge by the Burned Mill fork and the glassland track, then south by a goat-track from [[Tally's Cut]]; or half a day from the Cut. Roll on Travellers on the Ash Road once on the road and the Ashenreach Encounters once on the glass.

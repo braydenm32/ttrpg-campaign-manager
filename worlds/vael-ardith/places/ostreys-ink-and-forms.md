@@ -29,7 +29,7 @@ Wim Ostrey is forty, small, exact, and the nephew of Hallam Ostrey, the hired ge
 - Forms for the dead: a Census of the Deceased, Form 30-D, 2 cp, a page with forty lines. The Ashenreach's assessors order these by the ream.
 
 ### Who is here
-Clerks on their way up the hill, buying the day's blanks for their desks out of their own wages. Notaries' boys. Country people with a letter from a prefect and no idea what it means, whom Wim treats with a gentleness that would surprise his customers. An elderly Vesh from the Archive who buys one sheet a day and has for twenty years. And, in Reaping, a quiet clerk with a cold who bought every 9-K in the shop and every one Wim could get from the Office in the fortnight after, paid in new silver, and gave the name of an Under-Collector who, when Wim wrote to confirm the order, had been dead since 3006.
+Clerks on their way up the hill, buying the day's blanks for their desks out of their own wages. Notaries' boys. Country people with a letter from a prefect and no idea what it means, whom Wim treats with a gentleness that would surprise his customers. An elderly Vesh from the Archive who buys one sheet a day and has for twenty years.
 
 ### Rumours
 - Ostrey is the besieging general's bastard and the Quiet Office lets him live because he is useful.
@@ -42,9 +42,11 @@ Clerks on their way up the hill, buying the day's blanks for their desks out of 
 :::
 
 ### Things to do
-Buy a 44-A for the company and discover that the clerk behind you is buying a 7-R for the same garrison. Ask for a 9-K and be told, with real regret, that there are none in the capital, and have a name taken. Ask Wim about his uncle and get a lecture on the word "relation". Ask him about the clerk with the cold, after buying something expensive, and be shown the honest order-book, briefly, upside down, with a thumb on the name. Order a Census of the Deceased and feel his eyes on you as he counts the lines.
+Buy a 44-A for the company and discover that the clerk behind you is buying a 7-R for the same garrison. Ask for a 9-K and be told, with real regret, that there are none in the capital, and have a name taken. Ask Wim about his uncle and get a lecture on the word "relation". Order a Census of the Deceased and feel his eyes on you as he counts the lines.
 
 :::gm
+**The clerk with the cold.** In Reaping a quiet clerk with a cold bought every 9-K in the shop and every one Wim could get from the Office in the fortnight after, paid in new silver, and gave the name of an Under-Collector who, when Wim wrote to confirm the order, had been dead since 3006. A PC who asks Wim about him, after buying something expensive, is shown the honest order-book, briefly, upside down, with a thumb on the name.
+
 The Quiet Office cornered the capital's 9-K supply in Reaping for a dull reason and a sharp one. The dull reason is that a 9-K is the form the Ninth Lantern must file to dispute [[Pell Quillon]]'s tax notice ([[The Assessor's Lost Form]]), and an Office that wanted the garrison's default to look lawful preferred that nobody in Caer Ardith could file the same form on the company's behalf. The sharp reason is that [[Ansel Mote]] writes his reports to the capital in a cipher of column widths on the back of 9-K blanks, because a tax form in a tax clerk's bag is the one paper nobody opens; the Office needed a stock of blanks that could not be traced to a sale, and bought them all, under a dead man's name. Mote's own tenth crate holds a ream of them. The clerk with the cold who bought them was not Mote, who was already in Cinderford by the 17th; it was another of the Office's clerks, who use the cold as a sign the way other men use a ribbon.
 
 Wim's honest order-book is evidence: a Quiet Office purchase in a dead official's name, dated, in new Regency silver. Shown to Pell it is a second thread to pull beside the Treasury ledger; shown to Edda Haverleigh it frightens her into producing her copy of the zero. Wim will not hand the book over. He will let it be read, once, by someone who has bought a travelling case.

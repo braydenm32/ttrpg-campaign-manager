@@ -39,7 +39,7 @@ The Rent opened on the night of the Battle of Cinders, when the sorcery of eight
 :::
 
 ### Things to do
-Reach it: a day and a half's ride to the western end, and the Ninth Stone, at the north-eastern end, is two hard days' ride, three on foot or with a cart. Stand on the lip and breathe its breath. Count the dead and lose count. Find the old rope steps and go down a hundred of them, and feel the Ember through the rock. Reach the Ninth Stone's foot and meet the one who is waiting.
+Reach it: a day and a half's ride to the western end, and the Ninth Stone, at the north-eastern end, is two hard days' ride, three on foot or with a cart. Stand on the lip and breathe its breath. Count the dead and lose count. Find the old rope steps and go down a hundred of them, and feel the Ember through the rock. Reach the Ninth Stone's foot.
 
 :::gm
 The Rent is the Ninth Ward's crack made visible. The standing dead are its leakage: Hathe's door is broken and the Sleeper's dreams draw them here. They are harmless unless the crack widens (Let it crack), when they turn round. Session 6 brings the party here by the Ash Road or the Cold Seam; session 8 ends here under a full red moon. Every spell cast within a mile of the lip is felt by [[Warden Uthrem]] as a blow.

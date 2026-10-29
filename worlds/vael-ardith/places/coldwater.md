@@ -15,8 +15,8 @@ Coldwater is misnamed: a hot spring comes up under its harbour and the water ste
 Above the village stands the Kneeling Stone, a Lithic figure the height of two men, on one knee, head bowed, facing inland toward the mountains. The surface dwarves of the Holds say it is a saint of [[Tharos]] and have built a shrine at its feet. The Coldwater say it moved, once, in their great-grandmothers' time, and has not been quite in the same position since.
 
 ### Hook
-The Kneeling Stone wept this spring. Clear water from the eyes for three days, not the spring's, cold as the Reach. The dwarven priest of the shrine sent a vial of it south to Hollowhall and another, by a halfling courier, to "someone at the Ninth Stone", an address the courier had never heard of. The courier was [[Kettle Brindlewake]]. She still has the vial.
+The Kneeling Stone wept this spring. Clear water from the eyes for three days, not the spring's, cold as the Reach. The dwarven priest of the shrine sent a vial of it south to Hollowhall, and another away by a halfling courier.
 
 :::gm
-The vial is addressed to the Warden, [[Warden Uthrem]]: the shrine's priest knows, from Last Warden gossip, that one of the order has stood at the Ninth Stone for forty years. Kettle has not found a way to deliver it.
+The second vial went by [[Kettle Brindlewake]], addressed to "someone at the Ninth Stone", an address she had never heard of, and she still has it. It is meant for the Warden, [[Warden Uthrem]]: the shrine's priest knows, from Last Warden gossip, that one of the order has stood at the Ninth Stone for forty years. Kettle has not found a way to deliver it.
 :::

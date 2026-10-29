@@ -41,7 +41,7 @@ Tam Hollowell was a mason out of [[Skarn]], a good one, with a wife and a worksh
 Not to be asked. And, under that, to be told where the others are, by somebody who knows.
 
 ### What he knows
-The deep roads under the Grimmark as far as the place where he stops remembering. The names of the eleven who went under with him. That one of them was a hunter called Halt, who was ahead of him on the road the last time he remembers anything at all.
+The deep roads under the Grimmark as far as the place where he stops remembering. The names of the eleven who went under with him. That one of them was a hunter called Halt.
 
 ### How he treats the PCs
 With a mild, absent courtesy, until [[Borrin Halt]] walks in. Then he stands up, and the bowl drops, and he says Borrin's name, and after that he will not be in the same room as him, and will not say why.

@@ -66,13 +66,13 @@ Marrow, very calmly, asks the party to get the Assessor out of her sight before 
 - Anyone who saw the wanted poster can compare it with Mote's signature as witness on the tax notice (Investigation DC 13): the same small neat hand.
 - If they challenge Mote about the poster, he is puzzled and helpful. "I signed it for the Office, as clerks do. I wrote down the description I was given. If it is wrong I will have it taken down." He does, by noon. Widow Pruitt, asked, confirms the Office paid the printer on the 13th on his word, and adds, pointedly, that nobody told her who gave the description. Nothing ties him to the river, he is a Regency officer, and Marrow tells the party straight that she cannot lock up a clerk over a bad poster. If the PAID IN FULL chit is shown with Mote at Pell's elbow, he looks at the seal one second longer than a clerk should, and says nothing.
 - Insight DC 15 on Mote: he's not nervous at all, and he should be.
-- If the party shows Pell the PAID IN FULL pay-chit from the Barrow, he goes the colour of his coat. "That isn't a Treasury seal. That is somebody's *private* seal, and nobody should have a private seal on a pay-chit." He asks to keep it. He will start asking the Treasury questions by post, and by session 5 he will have found where the Ninth's wages went.
+- If the party shows Pell the PAID IN FULL pay-chit from the Barrow, he goes the colour of his coat. "That isn't a Treasury seal. That is somebody's *private* seal, and nobody should have a private seal on a pay-chit." He asks to copy it, copies it out there and then, seal and all, for his letters, and hands the original back: the party will want it in session 7. He will start asking the Treasury questions by post, and by session 5 he will have found where the Ninth's wages went.
 
 **Development.** Once Pell is off Marrow's doorstep, she asks the question everyone is thinking: where is the wagon? If the party remembers Kettle's "ask me tomorrow", they go to the Low Quay. If they don't, Fennick sends them to Mistress Hebbe's toll-log at the gatehouse. Either way, by mid-morning they know a sealed cart went east on the 7th, and the greywind is building. Go to scene 2. If they stay to help Pell hunt for Form 9-K, give it a few minutes of comedy among the crates, then move on: it is not here ([[The Assessor's Lost Form]]). If they'd rather tail Mote, he spends the morning copying at his desk, and nothing he does is worth watching, which is the point.
 
 **If the party calls at the mill.** Tollamund & Daughters is in the old mill by the bridge, a hundred yards from the gatehouse, and Kettle has just named the House's cart. Odessa receives them at the counter, courteous and useless: the House sends glass-carts east every week, and keeps no record it can show without the Principals' leave. The Grandmother does not look up. Fennel the scribe can be bribed in lamp-oil for a look at the day-book, which confirms only that a sealed cart left the yard at dawn on the 7th. It costs an hour, and the House now knows the party is asking.
 
-**Treasure.** None. If the party shows Pell the PAID IN FULL chit, he asks to keep it, and it is worth letting him.
+**Treasure.** None. If the party shows Pell the PAID IN FULL chit, he asks to copy it, and it is worth letting him; he hands the original back.
 
 ---
 
@@ -131,7 +131,9 @@ An abandoned Regency fort that burned in 3005, now a Glassers' den. [[Vexa Glass
 ### How it ends
 The party beds down in Fort Mercy's yard under two moons, the box at their feet and the chit in someone's coat, while the greywind hisses over the glass. In the small hours, everyone in the fort wakes at once. That is where session 3 begins: the dream, the ride home, and Fennick counting the coin. (If you want session 2 to end at home, play session 3's first two scenes now and open session 3 at dusk.)
 
-**Clocks.** Debt called in ticks when the loan-chit is read and the party learns what the company owes. Nothing else moves tonight. See [[The Clocks]].
+**Clocks.** Debt called in ticks when the loan-chit is read and the party learns what the company owes. Nothing else moves tonight, unless the strongbox was not found: then the pay wagon stays lost, and the Quiet Office ticks. See [[The Clocks]].
+
+**Clocks after session 2:** Mutiny 3, Quiet Office 2 (3 if the box was not found), Debt called in 3, the Saint ascends 4, Last words decoded 2, the Sleepless rise 3, the Sleeper stirs 3.
 
 ### If the party wanders
 - **Ford Street before they ride.** Hearthday and rent day: Ada's Hearthday loaf and the Pallas pies are on the board at [[The Baker's Wife]], everyone is short, and Spoons has the rent odds chalked in the street ([[Feasts, Fasts and Holy Days]]). [[The Baker's Hoard]] pays off today if the ring came back. Mules at [[The Bridle & Yoke]] are 5 cp a day; the Assessor's mule is boarded there from today and refuses the hill. [[Quist & Daughter, Surveyors]] sells the Ash Road stake-chart for 5 cp. Harrow's Simples sells [[A Dreamless Charm]] for a silver, and tomorrow night is the full Ember.

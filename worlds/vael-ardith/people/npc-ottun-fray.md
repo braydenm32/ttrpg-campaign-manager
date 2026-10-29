@@ -33,7 +33,7 @@ relations:
 ### Look and voice
 A broad bald man of sixty with black hands. Not dirty: black, ink to the elbows, worked into the creases so deep it will go into the ground with him. He wears a leather apron, a pencil in each ear and an expression of permanent professional interest, as if every face he meets might need setting in type. Thirty years beside a press have left him a little deaf and very loud.
 
-> "Ten silver! Ten! The first paid work the Regency's put through my door in two years, and it's a dead man. I set the A.M. myself. I didn't know what he meant by it. Still don't. Nice clean initials, though."
+> "Ten silver! Ten! The first paid work the Regency's put through my door in two years, and it's a deserter. I set the A.M. myself. I didn't know what he meant by it. Still don't. Nice clean initials, though."
 
 > "Every wanted man in the March has the same face, friend. It's my brother-in-law's. He was never wanted for anything in his life, gods rest him, and look at him now."
 

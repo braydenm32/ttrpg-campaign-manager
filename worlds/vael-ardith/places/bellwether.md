@@ -26,7 +26,7 @@ The custom is the March's custom, and Bellwether keeps it harder than most: **a 
 - **The lane gate**, where the road from the ford meets the orchard lane, and where the best view in the March sits in Marn's upper window.
 
 ### Who is here
-Marn Tolliver and her household. Old Dace on his bench, nodding at things. Hobart Pyle and the dogs. The Ninth Lantern's forage-corporal every few days with a tally-stick and a hope. And at dusk on Coinday a boy from [[The Assessor's Office]] with a handcart, who is paid in biscuits and does not know what he is carrying.
+Marn Tolliver and her household. Old Dace on his bench, nodding at things. Hobart Pyle and the dogs. The Ninth Lantern's forage-corporal every few days with a tally-stick and a hope.
 
 ### Why visit
 Goat's milk, the only milk in the town; goat cheese, hard and soft; wool; a quiet place where the company's patrol will stop and eat. The Tollivers see whatever walks the orchard lane after dark, and they keep a **tally** (a cord of knots on the upper window's frame, one for each night something went up the lane) which they will show to anyone who brings salt. One knot for each red moon, and in it the number of lanterns that went up: a dozen, then twenty, then forty. Nobody has ever counted who came down.
@@ -44,13 +44,17 @@ The company is paid in goats from here. The Ninth's steadings pay their tithe to
 **Which are true.** 1. True, and the line is the pale ash: see below. 2. False, but a bell does ring on its own about once a month, and the household takes it as the visit of a polite neighbour. 3. True. 4. True at the full Ember: the lane runs a hundred yards further than it does by day, and then, at dawn, a hundred yards shorter. 5. True: the dogs do not bark at the dead and do bark at Hollowborn, which the Tollivers find insulting on the dogs' behalf.
 :::
 
+:::gm
 ### Hook
 The goats will not cross the line where the ash gets deep, and the line has moved twenty yards toward the houses since Ashfall began. Marn thinks it is the greywinds. The goats know better. Anyone who walks the line (Survival DC 12) finds the ash along it is paler than the plain's, near-white. (A Wisdom (Survival) DC 15, or a sniff from anyone who has stood on the Stillwater jetty, adds that it smells, very faintly, of lake water: the clue is Marn's to give after the guttering, see below.)
+:::
 
 ### Things to do
-Ring the bell and wait. Buy cheese. Let Marn talk about goats and tolls for an hour, and listen to what she says between. Look at the tally cord in the upper window. Walk the orchard lane to the Orchard at dusk, or not. Watch the boy with the handcart come at dusk on Coinday and see where he goes. Count the goats, and count them again, and then be told why you were wrong.
+Ring the bell and wait. Buy cheese. Let Marn talk about goats and tolls for an hour, and listen to what she says between. Look at the tally cord in the upper window. Walk the orchard lane to the Orchard at dusk, or not. Count the goats, and count them again, and then be told why you were wrong.
 
 :::gm
+**The boy with the handcart.** At dusk on Coinday a boy from [[The Assessor's Office]] comes with a handcart. He is paid in biscuits and does not know what he is carrying. A PC who watches the lane can see him come and follow where he goes.
+
 **The jars.** Since Reaping, pale ash from Stillwater has come through Bellwether in clay jars, sealed with wax, in carts of Smokes families going home from the lake, on the Widow's word. The jars are left in the Tollivers' goat-shed for a friend of the Widow's and a copper a jar. At dusk on Coinday (2, 8, 14, 20, 26) **Nib**, the Assessor's errand boy, comes with the Office's handcart (a Regency sun on the tailboard) and takes them away, for "blotting-sand". He thinks it is blotting-sand. The carts spill ash on the way, and the spilled lake-ash is the pale line the goats will not cross: the goats can smell lake water, and a goat is a creature that knows what it knows.
 
 Marn did not know what was in the jars until the lantern guttered on the 14th. She has not said anything, because she was paid, and because she is now frightened, and because the man who paid is Ambry Coyle, who has not slept in eleven days and is a gentle man whom nobody wants to cross. She will tell the PCs about the jars, and the cart, if the company forgives a season's goats. See [[Goodwife Marn Tolliver]].

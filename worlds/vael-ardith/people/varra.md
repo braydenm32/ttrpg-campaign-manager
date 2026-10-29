@@ -61,7 +61,7 @@ The Mothers heard the case in three days. Nobody argued that the village deserve
 No company licensed by the Mothers will take her, and [[The Ninth Lantern]] holds its writ from the Mothers like every other. Signing an exile could cost the company that writ. [[Captain Marrow]] looked at her hand, looked at the roll, and said, "Can you hold a line? Good. You're hired. The pay is late. And the Mothers haven't sent anyone to check on us in nine years, so that's a problem for another day." The pay has been late ever since.
 
 ### Ties
-- **[[Sergeant Vosk]]**, the company's orc Second Blade, looked at her face for a long moment on the first day and said nothing at all. She is fairly sure he knows whose granddaughter she is.
+- **[[Sergeant Vosk]]**, the company's orc Second Blade, looked at her face for a long moment on the first day and said nothing at all. She is fairly sure he knows more about her family than he has said.
 - **[[Skarra]]**, the company's orc sapper, nodded at her over a pipe she is forbidden to light and said nothing about her name. Skarra writes home every month. Varra has not asked to whom.
 - **[[Kettle Brindlewake]]** brought her downriver on a barge full of salt fish and charged her nothing, which worries her.
 - **[[Borrin Halt]]** signed the roll the same morning. She is the only one in the barracks who doesn't flinch at the place his shadow should be. They share a bench, a whetstone and an unspoken agreement not to ask.

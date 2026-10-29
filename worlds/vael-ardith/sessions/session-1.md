@@ -116,7 +116,7 @@ On the way down the hill the party passes [[The Gatehouse Board]]. The poster in
 - [[Halloran Pike]], seventy, bearded, a limp, by the fire, drinking free. He tells new faces the lantern story, wrong in one place on purpose, and watches to see who corrects him: the deserter who carried it up the hill walked into the Rent "three years later" and was never seen again. Hennet, passing with a jug, says "Two," and keeps walking.
 - [[Dunstan Bray]], Sallow's corporal: big, ruddy, everybody's friend. "Nobody's saying *mutiny*, lad. We're just saying *hungry*. Out loud. Together."
 - Optional: [[Aelith Sorn]], an elf with ink on her cuffs, asking veterans about the battle and paying in coppers. She'll pay real silver for anything the party brings out of the Barrow.
-- Tavern regulars: roll on [[Tavern Patrons]] as you like, and on [[Last Candle Rumours]], using only the entries marked safe for session 1.
+- Tavern regulars: roll on [[Tavern Patrons]] as you like, and on [[Last Candle Rumours]], rerolling any entry tagged for later.
 
 **Checks.**
 - Investigation DC 12 on one of Sallow's coins: new Caer Ardith mint, this year's date. Nobody in the Ashenreach has seen new Regency silver in two years. Hennet's cup holds the same coin.
@@ -224,7 +224,7 @@ This is the Cold Captain of the Seventh, the Ruddy Hundred, whose lantern went d
 - Destroyed, he comes apart into ash and frost. On him: the Seventh's badge (Mother Hennet will want it) and, in his coat, a note folded and refolded in a woman's hand: *come home*.
 
 **The find.**
-- **A grey company blanket bundle**, holding a purse of twelve new Caer Ardith silver (the same mint as Sallow's round and Hennet's cup); a scrap of paper in Dannic's scrawl, *"S. says one more swap and Im square. Then the clerk wants a word. Dont like the clerk."* ([[Dannic's Note]]); and a pay-chit of the Ninth Lantern for 3009, stamped PAID IN FULL under a Regency seal nobody in the company has ever seen. (Pell will know it, in session 2 or later: it is Marius Vell's private seal.)
+- **A grey company blanket bundle**, holding a purse of twelve new Caer Ardith silver (the same mint as Sallow's round and Hennet's cup); a scrap of paper in Dannic's scrawl, *"S. says one more swap and Im square. Then the clerk wants a word. Dont like the clerk."* ([[Dannic's Note]]); and a pay-chit of the Ninth Lantern for 3009, stamped PAID IN FULL under a Regency seal nobody in the company has ever seen. (Pell will know it, in session 2 or later: it is Marius Vell's private seal. Dannic lifted the chit from Sallow's dispatch case. It shows two things: Sallow carries Quiet Office paper, and someone with Vell's seal has marked the Ninth's wages for 3009 paid in full, the first year the company saw none of them. In session 7 it is one of the proofs laid out against Sallow in the yard.)
 - **Three tins.** One is clean lantern oil. One is [[The Cut Oil Tin]]: a dented Keel tin, Keel bell on the base, grey-wax moth seal, grey slurry that smells of lake water. The third is empty and still smells of it. Dannic was taking good oil out and putting cut oil in.
 - How it got here, for the GM: he cached it on 3 Ashfall, with Skelt on the rope; the tins he carried out on the 7th came down with his body.
 - **Behind the chair**, a crack in the wall runs down and east into the Red Seam (Barrow area 7): sixty feet on, a door of grey Lithic stone with no handle, and a hairline of red light pulsing under the glass in front of it. The door does not open this session. Let them look, and let it unsettle them.
@@ -266,6 +266,8 @@ Tick the Mutiny clock (to 3, or 4 if a PC backed Sallow in the yard). End the se
 **Development.** Marrow wants the tin, the note and the chit on her table by dawn, and asks the party to sleep in the Keep tonight "in case". Nobody else does much sleeping. Session 2 opens at dawn with hammering at the gate, so end here, on the hill. If the players want to act tonight (go after Hesk, search Sallow's quarters), give them one short scene and let it come to nothing much: Hesk is closing up, and says what his book says (he sold the tins, he did not cut them), which gets them nothing new tonight; and Sallow is drinking in the yard with forty witnesses.
 
 **End of session: level 2. Mutiny clock 3 of 6 (4 if a PC backed Sallow in the yard).** The guttering also ticks The Quiet Office closes in (to 2), The Saint ascends (to 4) and The Sleepless rise (to 3). Last words decoded goes to 2 when Skrell carries Dannic's words to the Chapel, and one more if Quorl took the chapel congregation's words by rite. See [[The Clocks]].
+
+**Clocks after session 1:** Mutiny 3 (4 if a PC backed Sallow), Quiet Office 2, Debt called in 2, the Saint ascends 4, Last words decoded 2 (3 by rite), the Sleepless rise 3, the Sleeper stirs 3.
 
 ---
 

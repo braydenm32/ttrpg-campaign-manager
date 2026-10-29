@@ -18,7 +18,7 @@ The campaign opens on the quarter-day the pay does not come, which is also the n
 
 **Part One: The Pay and the Poison** (sessions 1 to 3, levels 1 to 2, 14 to 16 Ashfall). Three days and nights. The pay notice reads nothing, a drowned deserter walks out of the ford, and his trail leads into [[The Glass Barrow]] and a tin of poisoned oil. The lantern gutters. The party chases the missing pay wagon to [[Fort Mercy]] and finds the money was never the Regency's, then gets home for the worst night of the year: the full red moon, a town that dreams one dream, and a second guttering that puts Brother Tallow on his back and the first cage key in Ysse's hand. *By the end of Part One the players know someone is poisoning the flame, roughly who, and that the company owes money it never saw.*
 
-**Part Two: What the Flame Is** (sessions 4 and 5, level 3, 17 to 28 Ashfall). The pace slows and the party chooses where to go. The Saint's church courts them at [[The House of Unburnt Light]]; Sorrel Vey's [[The Velvet Ledger]] trades in secrets; Sallow is exposed or goes to ground. Old Pike sits up at his own funeral on [[Corvel Rise]] and tells the truth about the night the lantern was lit; the Rook-Court's ledger spells out five words; and the party finds what is burning in the lamp's bowl. *By the end of Part Two the players know the flame is a piece of the ward, and that someone has to go to the Stone.*
+**Part Two: What the Flame Is** (sessions 4 and 5, level 3, 17 to 28 Ashfall). The pace slows and the party chooses where to go. The Saint's church courts them at [[The House of Unburnt Light]]; Sorrel Vey's [[The Velvet Ledger]] trades in secrets; Marrow arrests Sallow in front of the company and confines him, or he stays free and goes to ground. Old Pike sits up at his own funeral on [[Corvel Rise]] and tells the truth about the night the lantern was lit; the Rook-Court's ledger spells out five words; and the party finds what is burning in the lamp's bowl. *By the end of Part Two the players know the flame is a piece of the ward, and that someone has to go to the Stone.*
 
 **Part Three: The Lip of the Rent** (sessions 6 to 8, levels 4 to 5, 29 Ashfall to 9 Leafrot). The party rides east to [[The Rent]], climbs down to [[Warden Uthrem]], and hears the truth of the Godslaying. They come home to find every faction moving at once: the Concord at the gate, Mote with his knives, the Saint's wardens, and Sallow's mutiny. Then the company carries the lantern east under the next full red moon, and the party decides what becomes of it. *The campaign ends at the Ninth Stone with one of three endings.*
 
@@ -62,11 +62,11 @@ The factions keep moving whether the party is watching or not. If the players go
 | 14 Ashfall | Pay notice for 0 silver. Dannic climbs out of the ford at noon. The lantern gutters towards midnight. |
 | 15 Ashfall | Pell arrives with the tax notice. If nobody rides for the wagon, Marrow sends Vosk; he is back on the 17th with the box and two wounded. |
 | 16 Ashfall | Full Ember. The town dreams one dream; the Sleepless sit round Lantern Hill; at midnight the lantern gutters again and Tallow collapses. |
-| 17 to 19 Ashfall | Tallow sleeps and wakes nearly blind. Sallow's people go quiet. |
+| 17 to 19 Ashfall | Tallow sleeps and wakes almost completely blind. Sallow's people go quiet. |
 | 20 Ashfall | Seraphine's letter. Ignored, she comes to the Keep gate at noon with bread for the whole company. |
 | 22 and 28 Ashfall | Salt-tow windows at Sedgemere ([[The Unmarked Barrel]]). |
 | 24 Ashfall, night | Old Halloran Pike dies in his cot. |
-| 25 Ashfall | Pike's funeral on Corvel Rise. He will not lie down until the new ones come. The last day a letter can bring [[Hold-Mother Greta Holm]] to the Stone by the 9th: she needs a fortnight's warning. |
+| 25 Ashfall | Pike's funeral on Corvel Rise. He will not lie down until the new ones come. That evening [[Gerda Hollin]] offers to write to her grandmother: it is the last day a letter can bring [[Hold-Mother Greta Holm]] to the Stone by the 9th, since she needs a fortnight from the day it goes. |
 | 30 Ashfall | The Unveiling: Pallas dark. |
 | 1 Leafrot | Doorsnight: doors propped open till dawn. |
 | 4 Leafrot, sunset | Grace on the Tollamund note ends. |
@@ -82,7 +82,7 @@ Part Two and Part Three leave room for the party to choose. These are the open w
 |---|---|---|
 | After session 3 | 17 to 19 Ashfall | [[Kettle's Cargo]]; Nib and Mote's black ledger; [[Gammer Teal]] at Stillwater; [[The Wager on Never]] |
 | After session 4 | 21 to 24 Ashfall | [[The Unmarked Barrel]] (22nd); [[The Price Was an Arm]]; [[Bellwether]] and the jar; [[Sap from the Weeping Orchard]] |
-| After session 5 | 26 to 28 Ashfall | [[Ambercote]] ([[The Standing Village]]); [[Keld Owes-Nothing]] at Sedgemere; the Treaty Stone. (A letter to [[Hold-Mother Greta Holm]] sent now is too late for the Stone: it had to go on the 25th, in session 5.) |
+| After session 5 | 26 to 28 Ashfall | [[Ambercote]] ([[The Standing Village]]); [[Keld Owes-Nothing]] at Sedgemere; the Treaty Stone. (A letter to [[Hold-Mother Greta Holm]] sent now is too late for the Stone: it had to go on the 25th, when Gerda offered at the end of session 5.) |
 | After session 6 | 2 to 4 Leafrot | The ride home. Only short errands in town: [[Brother Audit]], [[Wendel Hoop]], Pardew's box from [[Whitepost]] |
 
 A day in town is a scene or two. A day's ride out and back is a short session of its own. If the players want a whole evening of side quests, run one between sessions 4 and 5: nothing on the main line is due until Pike dies on the 24th.

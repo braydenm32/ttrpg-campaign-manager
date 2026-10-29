@@ -26,7 +26,7 @@ Nobody can say what is wrong with it. Everyone who has eaten the bread knows som
 - **The guest rooms**, four, better than anything in the Keep, offered to the Captain and declined, offered to [[Aelith Sorn]], who sleeps there most nights since the Church took notice of her.
 
 ### Who is here
-Sister Seraphine, who wears a plain red robe on the road and white and saffron at home, and who is kind, beautiful in a way that is hard to look at and hard to stop looking at, and entirely sincere. Brother Caddis, who runs the kitchen and is the best cook in the March and knows it, and young [[Brother Iosune]], who carries the bread. The six Lamp-Wardens, quiet men and women in red surcoats on the road and white-and-gold tabards inside, who carry no weapons anyone has seen. The sick. Aelith Sorn, in the best guest room, being charming. At supper a lutenist plays, Halcyran wine is poured to anyone who sits, and the house does not ask for anything yet.
+Sister Seraphine, who wears a plain red robe on the road and white and saffron at home, and who is kind, beautiful in a way that is hard to look at and hard to stop looking at, and entirely sincere. Brother Caddis, who runs the kitchen and is the best cook in the March and knows it, and young [[Brother Iosune]], who carries the bread. The six Lamp-Wardens, quiet men and women in red surcoats on the road and white-and-gold tabards inside, who wear no swords inside the House; their blades hang in the gatehouse. The sick. Aelith Sorn, in the best guest room, being charming. At supper a lutenist plays, Halcyran wine is poured to anyone who sits, and the house does not ask for anything yet.
 
 ### Rumours
 - The garden grows because the Saint blessed the soil.
@@ -35,7 +35,7 @@ Sister Seraphine, who wears a plain red robe on the road and white and saffron a
 - The mission is buying the company's debt from Tollamund.
 
 :::gm
-**Which are true.** 1. The soil is from the plateau. It would grow anywhere. The pears, though, are a different matter. 2. They are. Iskaveth's best. They are also devout. 3. She can heal that too. She has chosen, twice, not to, for people who refused the lamp. 4. False. It is offering to. Tollamund has not answered. Slowly.
+**Which are true.** 1. The soil is from the plateau. It would grow anywhere. The pears, though, are a different matter. 2. They are. Iskaveth's best. They are also devout. Any Warden called to trouble takes a longsword from the gatehouse first, so in session 4 they come armed. 3. She can heal that too. She has chosen, twice, not to, for people who refused the lamp. 4. False. It is offering to. Tollamund has not answered. Slowly.
 :::
 
 ### Things to do

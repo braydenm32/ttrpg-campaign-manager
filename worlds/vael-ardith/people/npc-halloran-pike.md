@@ -45,7 +45,7 @@ Seventy and looks it: a beard like a hedge in winter, a limp he came back with, 
 
 > "Then the deserter walked into the Rent and was never seen again. Which is more than you can say for most people who walk into things."
 
-> "Don't tell me the real story, son. I was there. That's why I don't tell it."
+> "Don't tell me the real story, son."
 
 ### Who he is
 Old Pike has sat by the Candle fire for seven years, since he signed on in 3004 at sixty-three, too old to carry a pike and too stubborn to be told so. He stood two years of gate watches and then they let him be. He has not paid for a drink in all that time, which the recruits think is a kindness and the veterans do not discuss. He taught Dunny Pike the bell codes when the boy's father died, and is forever saying he is no relation: "There are a great many Pikes. Spear and fish both."

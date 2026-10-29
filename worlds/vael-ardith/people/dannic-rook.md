@@ -42,12 +42,12 @@ relations:
     kind: was guided by
 ---
 
-### Who he was
+### Who he is
 Private Dannic Rook, twenty-four: sandy hair, freckles, a crooked front tooth, a laugh you could hear across the drill yard, and a burn scar on the back of his left hand shaped like a key. He was a foundling raised by the Ravelers at [[Corvel Rise]], and ran from them at sixteen and soldiered with two other companies before he drifted into [[The Ninth Lantern]] four years ago, which the Ravelers took philosophically. A gambler and a decent shot. He owed money to half the company, including eleven silver to [[Spoons]] and rather more to [[Kettle Brindlewake]].
 
 He was on the lantern store detail. On the night of 7 Ashfall he walked out of the Keep with two tins of lamp-oil and a grey company blanket and no goodbye. A wanted notice went up in town on the 13th. The company has a pool on whether he made it to the river.
 
-> "I'll pay you back Restday, Spoons. Swear on the Corporal." (His last words to anyone in the company. Spoons wrote them down.)
+> "I'll pay you back Restday, Spoons. Swear on the Corporal." (The last thing he said to anyone in the company before he ran. Spoons wrote it down.)
 
 ### What people say
 That he'd been jumpy for three weeks: couldn't sleep, kept checking the lantern, asked Brother Tallow once whether a flame could "get sick". That he'd been drinking with the Lieutenant, which isn't like Sallow. That he'd come into money, briefly, and lost it at dice. That a man on the bridge the night he ran saw him arguing with someone in the dark.

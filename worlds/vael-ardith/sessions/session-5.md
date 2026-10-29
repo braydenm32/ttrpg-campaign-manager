@@ -2,7 +2,7 @@
 number: 5
 title: Last Words
 worldDate: 25 Ashfall 3011
-pages: [ mother-corvane, quorl, ilse-marrow, npc-halloran-pike, npc-mother-hennet, npc-brannoc-saltash, npc-skrell, brother-tallow, aelith-sorn, dreaming-widow, npc-ambry-coyle, marla-marlowe, dannic-rook, pell-quillon, spoons, last-candle, corvel-rise, weeping-orchard, doorkeepers-chapel, lantern-keep, treaty-stone, item-door-key, item-shard, item-last-words-ledger, item-glass-hand, item-treaty, h-map-scrap, q-raveler-funeral, q-weeping-sap, f-rook-court, god-hathe, ambercote, npc-jeb-marrowick, npc-cass-marrowick, q-standing-village, item-orchard-amber, item-road-marker, npc-keld-owes-nothing, sedgemere, the-thirteenth-barrel, npc-posy-reedmarsh, q-lost-pay-order, item-hennets-soup-pot, q-wager-on-never, q-price-was-an-arm, lore-songs, npc-caelo-once-mar, npc-aurelio-bask, table-last-words, npc-greta-holm ]
+pages: [ mother-corvane, quorl, ilse-marrow, npc-halloran-pike, npc-mother-hennet, npc-brannoc-saltash, npc-skrell, brother-tallow, aelith-sorn, dreaming-widow, npc-ambry-coyle, marla-marlowe, dannic-rook, pell-quillon, spoons, last-candle, corvel-rise, weeping-orchard, doorkeepers-chapel, lantern-keep, treaty-stone, item-door-key, item-shard, item-last-words-ledger, item-glass-hand, item-treaty, h-map-scrap, q-raveler-funeral, q-weeping-sap, f-rook-court, god-hathe, ambercote, npc-jeb-marrowick, npc-cass-marrowick, q-standing-village, item-orchard-amber, item-road-marker, npc-keld-owes-nothing, sedgemere, the-thirteenth-barrel, npc-posy-reedmarsh, q-lost-pay-order, item-hennets-soup-pot, q-wager-on-never, q-price-was-an-arm, lore-songs, npc-caelo-once-mar, npc-aurelio-bask, table-last-words, npc-greta-holm, npc-gerda-hollin ]
 encounters:
   - name: Orchard pilgrims
     notes: "Cult fanatic: Multiattack two daggers +4, 1d4+2; spells (spell save DC 11, spell attack +3; four 1st-level and three 2nd-level slots): command (Wis DC 11), inflict wounds (melee spell attack, 3d10 necrotic), hold person (Wis DC 11, concentration). Inflict wounds can drop a hurt level-3 caster in one hit, so the scraper opens with command and hold person and keeps inflict wounds for whoever strikes first. Four commoners who scrape sap and shove. They won't let outsiders take the sap, and they back off the moment Tick or any Hollowborn asks them to. Built for five level-3 PCs: easy."
@@ -128,7 +128,7 @@ At the orchard's heart is the cooks' camp, where the company should have mustere
 ---
 
 ### Optional: the Treaty Stone
-If there's time, or if Pell asks for an escort, ride three miles east along the staked road to [[The Treaty Stone]]: pilgrims, widows leaving pebbles, the grille over the Original Treaty, and, scratched into the glass at the Stone's foot by a Raveler witness in 3002, the pay clause as it was really signed: *"by the signatories, or by whosoever shall hold their debt."* Pell reads it twice and says, "Oh dear." It is half of the argument the party needs in session 7. (This can also go on session 6's road east.)
+If there's time, or if Pell asks for an escort, ride three miles east along the staked road to [[The Treaty Stone]]: pilgrims, widows leaving pebbles, the grille over the Original Treaty, and, scratched into the glass at the Stone's foot by a Raveler witness in 3002, the pay clause as it was really signed: *"by the signatories, or by whosoever shall hold their debt."* Pell reads it twice and says, "Oh dear." It is half of the argument the party needs in session 7, and it is Tollamund's half. The other half is behind the grille: if the party brought Marrow's key (she lends it for the asking), Pell's right of inspection stands in for the Reeve's, and he can open the grille and turn to page seven of [[The Original Treaty]], which nobody has read. (This can also go on session 6's road east.)
 
 **Development.** A three-mile ride each way: an afternoon, back by dusk. Fit it in after the ledger, instead of the Orchard, only if the party can come back for the Orchard another day before the 29th.
 
@@ -139,7 +139,11 @@ Tallow will not tip the sap in without the Captain there, and sends a wick runni
 
 At the Keep, a drop of sap tipped into the oil-port makes the lantern burn tall and white, and every wick-lamp on the hill burns white with it, for a whole day. For a moment Ysse sees a standing figure in the flame, enormous and very tired, looking at her. Tallow: "It wants to go home." Marrow watches every lamp in the yard go white, and that is what decides her: "If that's what's keeping it lit, I want to know who's holding the other end." Someone has to go to the Ninth Stone.
 
+[[Gerda Hollin]] has the gate tonight and hears it from the wicks before the party is out of the oil-room. She stops them under the arch: "A ward-stone. If there's a Warden left at it, my grandmother keeps the rite for the ones who stand. She'd come, if somebody asked. Nobody ever asks." She will write tonight if the party wants her to (see "Hollowhall, by letter").
+
 **End of session: level 4.**
+
+**Clocks after session 5:** Mutiny 3, Quiet Office 3 (one more if Hennet's slate-book burned), Debt called in 4 (the Reeve signed the charter in the days before; one more if the barrel's silver was traced), the Saint ascends as session 4 left it, Last words decoded 4 (full), the Sleepless rise 4, the Sleeper stirs 4.
 
 ### If the party wanders
 - **The night the Candle is shut.** Mote's hired knife, a stranger off the Low Quay, comes with lamp-oil for the loft and the slate-book under the bar. A party watching the Candle catches him; he knows only that "a clerk" paid him. Nobody watching: the loft burns, the slate is scorched black and the book is gone ([[The Price Was an Arm]]).
@@ -147,7 +151,7 @@ At the Keep, a drop of sap tipped into the oil-port makes the lantern burn tall 
 - **Sedgemere and Keld.** "That was my sister" sends the party nine miles down the towpath (a day) or half a day by barge. [[Keld Owes-Nothing]] answers a question asked directly and respectfully, from her doorway, and gives the fifth word to anyone who tells her the truth about the lamp. She comes to the Stone only for someone who says, in person, that the lamp is to be given back.
 - **Posy's pay order.** If the party has earned it, [[Barge-Mother Posy Reedmarsh]] hands over the 3009 order on the quay: [[The Lost Pay Order]].
 - **Ambercote** (a long day, 26 to 28 Ashfall). The standing are plain by daylight, and the Sleepless crews come at the next red moon, 9 Leafrot: a fortnight. See [[Ambercote]] and [[The Standing Village]]. [[Orchard Amber]], cut at dawn on the 17th, is at Gutter Market for two silver.
-- **Hollowhall, by letter.** To have [[Hold-Mother Greta Holm]] at the Stone on 9 Leafrot, someone must send for her now: she needs a fortnight's warning and a barge or a horse.
+- **Hollowhall, by letter.** To have [[Hold-Mother Greta Holm]] at the Stone on 9 Leafrot, the letter must go tonight, as Gerda offers at the end of "How it ends": she needs a fortnight from the day it goes, and a barge or a horse. Gerda writes it if asked, and so can a dwarf PC. Sent later, it is too late for the 9th.
 - **If Sorrel is threatened**, a note reaches the Velvet Ledger by barge in an old square hand: "I could read it. I am sorry. Come home, or do not; but do not let her cut it. C." Sorrel does not understand it for a day. See [[Caelo once-Mar]].
 
 == Strong start ==

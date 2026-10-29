@@ -139,9 +139,11 @@ If they never corner Spoons, session 4 still needs evidence. Two other ways in: 
 ---
 
 ### How it ends
-Dawn comes. The Sleepless rise and walk home, smiling as if they'd won something. If the flame held, it is thin and steady; Tallow lives but doesn't wake for a day. Ysse holds the first key and is, whether anyone has said it yet, the keeper of the lantern. Tallow, half-conscious, as they carry him in: "It isn't oil it wants. It never was." Tick the Sleepless clock. As the Sleepless go, Kettle's cousins come up from the Low Quay to the Keep gate with a slate wrapped in goat-hair and sealed with cheese-wax, for "the Hollowborn soldier": [[The Standing Village]]. Give it to Tick's player.
+Dawn comes. The Sleepless rise and walk home, smiling as if they'd won something. If the flame held, it is thin and steady; Tallow lives but doesn't wake for a day. Ysse holds the first key and is, whether anyone has said it yet, the keeper of the lantern. Tallow, half-conscious, as they carry him in: "It isn't oil it wants. It never was." Tick the night's clocks (below). As the Sleepless go, Kettle's cousins come up from the Low Quay to the Keep gate with a slate wrapped in goat-hair and sealed with cheese-wax, for "the Hollowborn soldier": [[The Standing Village]]. Give it to Tick's player.
 
 **End of session: level 3.**
+
+**Clocks after session 3:** the full Ember and the second guttering are one night, and tick the Quiet Office, the Saint, the Sleepless and the Sleeper once each: Mutiny 3, Quiet Office 3, Debt called in 3, the Saint ascends 5, Last words decoded 2, the Sleepless rise 4, the Sleeper stirs 4. The strongbox moves two of them: spent on wages, Mutiny 2 and Debt called in 4; the 480 paid, Mutiny 4 and Debt called in 2. A Sleepless hurt at the vigil, or Tick sitting with them at midnight, ticks the Sleepless once more.
 
 ### If the party wanders
 - **Midnight in town.** Bell, drum and tower disagree when the lantern gutters: Dunny strikes two, a death; Thistle beats Stand to; Noume gets three flashes from inside the Rent. See [[Signals of Cinderford]].

@@ -26,7 +26,7 @@ The house's real trade is knowing. People say things here. They are encouraged t
 - A letter delivered unopened to anyone in the March, 5 sp, by a barge-clan runner who owes the house.
 
 ### Who is here
-Madame Vey. Her second, a Raveler called [[Mourn]] who tends the door and laughs at the wrong things. The house: Perrow from Fallowden, Tesh who was a Glasser, two Iskavethi who left Halcyra, a Vesh boy who plays the lute and watches the lamps. [[Garrick Sallow]] on Coinday nights. The Assessor's clerk [[Ansel Mote]], once, who paid for tea and asked nothing, which Vey found interesting.
+Madame Vey. Her second, a Raveler called [[Mourn]] who tends the door and laughs at the wrong things. The house: Perrow from Fallowden, Tesh who was a Glasser, two Iskavethi who left Halcyra, a Vesh boy who plays the lute and watches the lamps. [[Garrick Sallow]] on Coinday nights.
 
 ### Rumours
 - Madame Vey is three hundred years old and cannot read her own skin.
@@ -43,6 +43,8 @@ Confess, and be told what it was worth. Buy a secret and discover it was about y
 
 :::gm
 Vey's tattoos record [[The Saelish Trespass]]: she was inked as a child by a grandmother, a dying Remembrancer who chose not to burn the record, and she has never been able to read it. The oldest layers lie nearest the spine and later hands have re-inked the fading lines. [[Aelith Sorn]] can read one line in five, and has been calling on her for a month; nobody else in the March can read it at all. The Saint's envoy has also come to tea. Vey plays all three against the fourth, which is her own curiosity. Session 4 passes through here.
+
+The Assessor's clerk [[Ansel Mote]] came once, paid for tea and asked nothing, which Vey found interesting. He was looking at Tesh (see [[The Assessor's Office]]).
 :::
 
 == GM notes ==

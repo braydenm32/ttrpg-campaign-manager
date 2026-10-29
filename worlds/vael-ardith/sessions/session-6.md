@@ -126,6 +126,8 @@ Nobody rides the ash by night. The party camps on the lip for Doorsnight, with t
 
 **Development.** Two days' hard ride home, the 2nd and the 3rd, and nothing on the road but ash and a few Sleepless pilgrims walking east, who do not look up. The party rides into Cinderford on the evening of the 3rd and finds the company half-turned (session 7, "In between"). Session 7 opens on the morning of the 5th, so the party has the 4th: a day to rest, talk to Marrow and get ready.
 
+**Clocks after session 6:** Mutiny 3, Quiet Office 2 (Pell filed his Claim of Arrears while the party was away), Debt called in 5 (grace runs out at sunset on the 4th, before session 7 opens), the Saint ascends as session 4 left it, Last words decoded 4, the Sleepless rise 4, the Sleeper stirs 4 (more only if you are speeding it up).
+
 ### If the party wanders
 - **Orla's cairn.** If [[Orla Quist]] came along (3 gp and a copy of the sheet), she paces the near cairn at the Rent's western end, thirty-eight miles out by the Ash Road, and gets thirty-three. She says nothing for a mile, then: "I owe a Glasser an apology." The 3011 line on her slate is no longer blank.
 - **Doorsnight at home.** Tonight every door in the Smokes and the Keep's hall door stand propped till dawn, and the Ravelers sit in the Doorkeeper's Chapel's black doorway in a row. When the party gets home on the 3rd, the doors are shut again and the town is quieter than it was.
