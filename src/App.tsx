@@ -9,7 +9,7 @@ import { Armchair, GlobeHemisphereWest, House, List, Play, Shield, SlidersHorizo
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db'
 import { nextSessions, useCampaigns, useWorldSessions } from './threads'
-import { ForcePlayerView, useViewMode, ViewModeProvider } from './viewMode'
+import { ForcePlayerView, useViewMode, ViewModeProvider, WorldViewMode } from './viewMode'
 import { finishSignInRedirect, useAuthSession, verifyEmailLink } from './cloud/auth'
 import { cloudErrorMessage, supabase } from './cloud/client'
 import { leaveWorld } from './cloud/players'
@@ -210,7 +210,12 @@ function WorldLayout() {
       <WorldShell />
     </ForcePlayerView>
   )
-  return <WorldShell />
+  // Keyed, so each world starts from its own remembered view and no previewed player.
+  return (
+    <WorldViewMode key={worldId} worldId={worldId}>
+      <WorldShell />
+    </WorldViewMode>
+  )
 }
 
 /** An address inside a world that goes nowhere. */
