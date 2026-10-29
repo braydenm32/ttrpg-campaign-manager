@@ -14,6 +14,7 @@ import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks
 import { Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
 import { formatTime, recordingSupported, systemAudioSupported, type RecordSource } from '../recorder'
+import { RecordingSaveWarning } from '../RecordingBar'
 import { addBookmark, beginRecording, discardRecording, endRecording, recoverRecording, unsavedRecordings, useLiveRecording } from '../recordingStore'
 import { ThreadCard } from '../ThreadCard'
 import { newThread, useWorldSessions } from '../threads'
@@ -301,6 +302,7 @@ function Recorder({ session }: { session: Session }) {
               ■ Stop & save
             </button>
           </div>
+          <RecordingSaveWarning live={active} />
           <form
             className="row"
             onSubmit={(e) => {

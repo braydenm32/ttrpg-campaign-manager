@@ -17,6 +17,8 @@ export interface LiveRecording {
   rec: ActiveRecording
   bookmarks: Bookmark[]
   bytes: number
+  /** Pieces that couldn't be saved as it went (the device is nearly full, say): a crash now would lose them. */
+  unsaved: number
 }
 
 let live: LiveRecording | undefined
@@ -50,10 +52,14 @@ export async function beginRecording(session: Session, source: RecordSource) {
     db.recordingChunks
       .add({ recordingId, sessionId: session.id, worldId: session.worldId, startedAt: current.rec.startedAt, seq: seq++, mime: current.rec.mime, blob: piece, bookmarks: current.bookmarks })
       .catch(() => {
-        // Storage full or blocked: the recording still lives in memory until Stop.
+        // Storage full or blocked: the recording still lives in memory until Stop, but the GM is told
+        // it no longer survives a crash.
+        if (live?.recordingId !== recordingId) return
+        live = { ...live, unsaved: live.unsaved + 1 }
+        emit()
       })
   })
-  live = { recordingId, sessionId: session.id, worldId: session.worldId, sessionNumber: session.number, rec, bookmarks: [], bytes: 0 }
+  live = { recordingId, sessionId: session.id, worldId: session.worldId, sessionNumber: session.number, rec, bookmarks: [], bytes: 0, unsaved: 0 }
   window.addEventListener('beforeunload', warnOnLeave)
   emit()
 }
@@ -67,7 +73,11 @@ export function addBookmark(text: string) {
 /** Recordings being saved after Stop: their pieces are still there for a moment, but they aren't cut off. */
 const saving = new Set<string>()
 
-/** Stops the recording and saves it as one file on the session. */
+/**
+ * Stops the recording and saves it as one file on the session. Saving needs about as much free space
+ * again as the recording takes, so on a full device it can fail: then the recording is handed over as
+ * a downloaded file instead of being lost.
+ */
 export async function endRecording() {
   const cur = live
   if (!cur) return
@@ -77,7 +87,19 @@ export async function endRecording() {
   emit()
   try {
     const blob = await cur.rec.stop()
-    await attach(cur.sessionId, cur.worldId, cur.sessionNumber, cur.rec.startedAt, blob, cur.bookmarks)
+    try {
+      await attach(cur.sessionId, cur.worldId, cur.sessionNumber, cur.rec.startedAt, blob, cur.bookmarks)
+    } catch (err) {
+      const name = fileName(cur.sessionNumber, cur.rec.startedAt, blob.type)
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = name.replace(/[\\/:*?"<>|]+/g, '-')
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(a.href), 60_000)
+      throw new Error(
+        `The recording couldn’t be saved in the app (${(err as Error).message || 'this device may be full'}), so it has been downloaded as a file instead: ${name}. Keep that file somewhere safe.`,
+      )
+    }
     await db.recordingChunks.where({ recordingId: cur.recordingId }).delete()
   } finally {
     saving.delete(cur.recordingId)
