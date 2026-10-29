@@ -32,7 +32,7 @@ It is the town's high street and the only street in the March a stranger would c
 - And the square itself, with [[The Treaty Bell]] on its post, the company gatehouse with [[Mistress Hebbe]] in it, the old mill with [[Tollamund & Daughters]] in that, and River Lane running down beside the mill-race to the water.
 
 ### Who is here
-Dawn: bakers, the gate-spearmen yawning, [[Dunny Pike]] crossing the square at a run with the first signal of the day. Morning: housewives with baskets, kiln-hands off shift going home the long way, soldiers on errands for [[Fennick Bottlebrook]] that involve a lot of standing in doorways. Noon: the street at its busiest and loudest; [[Mirrel Vosk]] at the gatehouse reading the bills aloud with commentary. Dusk: the ford closes (one stroke of the bell), lamps are lit, the shops put up their shutters one by one from the west, and the steam from the Salt Lake turns pink. Night: the Reeve's watch, two at a time, and whoever is drinking in the Hock's back room. [[Ansel Mote]] goes up and down at dusk with his scarf over his chin and buys nothing.
+Dawn: bakers, the gate-spearmen yawning, [[Dunny Pike]] crossing the square at a run with the first signal of the day. Morning: housewives with baskets, kiln-hands off shift going home the long way, soldiers on errands for [[Fennick Bottlebrook]] that involve a lot of standing in doorways. Noon: the street at its busiest and loudest; [[Mirrel Vosk]] at the gatehouse reading the bills aloud with commentary. Dusk: the ford closes (one stroke of the bell), lamps are lit, the shops put up their shutters one by one from the west, and the steam from the Salt Lake turns pink. Night: the Reeve's watch, two at a time, and whoever is drinking in the Hock's back room. [[Ansel Mote]] goes up and down at dusk and buys nothing.
 
 On Coinday, everyone, plus the hawkers from the Low Quay and a hedge-priest of Orvanne selling blessings by the ribbon. On Wardday, the Reeve's justice and a very orderly crowd. On Restday the street sleeps late and the Smokes comes in by the back doors.
 
@@ -53,7 +53,7 @@ Walk the length of it at dusk and be looked at from every door. Get a horse shod
 :::gm
 Ford Street is the most watched six hundred paces in the March, and the one thing that happened in it unwatched is the thing that matters. On the night of 6 Ashfall Tollamund's wagon came to the mill-yard by the river road outside the palisade and down River Lane, never passing a shop door. The Bridle & Yoke's gate-book, Hebbe's log and the Salt Lake's steam each hold one fragment. Nobody on the street saw it, which is how the street knows it was done on purpose.
 
-Sallow's men drink in the Hock's back room on Tideday and Wardday nights. They talk, and Bushel Tarrowdown writes it down for Tollamund. Mote walks the street at dusk to be seen walking it, then goes home along Temple Row by the back lanes; he has been counting how many of the street's shopkeepers owe Tollamund (nine of ten), because Vell wants to know who the Concord already owns.
+Sallow's men drink in the Hock's back room on Tideday and Wardday nights. They talk, and Bushel Tarrowdown writes it down for Tollamund. Mote walks the street at dusk to be seen walking it, with his scarf over his chin, then goes home along Temple Row by the back lanes; he has been counting how many of the street's shopkeepers owe Tollamund (nine of ten), because Vell wants to know who the Concord already owns.
 :::
 
 == GM notes ==

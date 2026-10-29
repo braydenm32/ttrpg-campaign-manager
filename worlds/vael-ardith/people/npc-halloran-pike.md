@@ -45,7 +45,7 @@ Seventy and looks it: a beard like a hedge in winter, a limp he came back with, 
 
 > "Then the deserter walked into the Rent and was never seen again. Which is more than you can say for most people who walk into things."
 
-> "Don't tell me the real story, son. I was there. That's why I don't tell it."
+> "Don't tell me the real story, son."
 
 ### Who he is
 Old Pike has sat by the Candle fire for seven years, since he signed on in 3004 at sixty-three, too old to carry a pike and too stubborn to be told so. He stood two years of gate watches and then they let him be. He has not paid for a drink in all that time, which the recruits think is a kindness and the veterans do not discuss. He taught Dunny Pike the bell codes when the boy's father died, and is forever saying he is no relation: "There are a great many Pikes. Spear and fish both."
@@ -59,7 +59,11 @@ To die in his cot with nobody owing him anything, and to tell the real story onc
 What the ash plains were like the first winter, before the Ash Road was staked. Every verse of the Corporal's song, including the three that were cut ([[Songs of the March]]). Which of the Candle's stories about the night of Cinders are wrong and exactly how. Something about the Rent that makes him stop talking when the Glassers come in.
 
 ### How he treats the PCs
-As an audience. He tells them the lantern legend their first night, wrong in one place, and watches to see who corrects him; whoever does gets the corner of the hearth next to him and a different wrong version every night after. He is kind to Ysse and will not look at the lantern when she is near it. He calls Borrin "the other one who came back".
+As an audience. He tells them the lantern legend their first night, wrong in one place, and watches to see who corrects him; whoever does gets the corner of the hearth next to him and a different wrong version every night after. He is kind to Ysse and will not look at the lantern when she is near it.
+
+:::gm
+He calls Borrin "the other one who came back".
+:::
 
 :::gm
 **Secret.** He is the deserter of the company's legend. On the night of Cinders he was running, and he ran through the cooks' camp in [[The Weeping Orchard]], and [[Mother Hennet]] put a lit lantern in his hands and told him to carry it up to the Keep, and for the first time that night he did what he was told. He carried the ninth lantern up Lantern Hill with a one-armed cook behind him and a boy with a burnt hand behind her, and when it was hung he kept walking, east, two days, to the lip of [[The Rent]]. He stood there a night. He lost his nerve. He walked west again and worked barges on the Ardis for two years, then came back to Cinderford under his own name, with a beard and a limp, and signed on as a wick. Nobody looked twice at another Pike. Hennet looked once.

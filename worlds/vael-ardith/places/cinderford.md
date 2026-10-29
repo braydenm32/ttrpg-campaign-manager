@@ -36,17 +36,19 @@ Reeve [[Odile Fairweather]] runs the town, holds court in the Ford on Wardday, a
 - The Velvet Ledger knows what you did before you do.
 
 :::gm
-**Which are true.** 1. True, and worse: since 3009. 2. True: she will not discuss it, and is nearly broke. 3. Close: the Reeve calls it slander, but see below. 4. False. It has never gone out. Yet. 5. More or less true.
+**Which are true.** 1. True in effect: the Regency has paid nothing since Hollowfrost 3009, and the Captain's own money, which paid the men from Reaping last year, ran out this Reaping. 2. True until Reaping, when her savings ran out: she will not discuss it. 3. Close: the Reeve calls it slander, but see below. 4. False. It has never gone out. Yet. 5. More or less true.
 :::
 
 ### Things to do
 Sign on at the gatehouse. Drink on tick at [[The Last Candle]]. Lose money to [[Spoons Aldane]]. Buy salvage you should not at [[Gutter Market]]. Pray on Temple Row and be overheard. Watch the bridge at dawn, when the river is low and the piers show, and see what the night has caught against them.
 
 ### On 14 Ashfall 3011
-The quarter-day pay wagon from Fallowden is eight days overdue. Pallas is a night from full. The Ember is two nights from full. The river is lower than anyone remembers, and there is a dead man in the ford who drowned a week ago.
+The quarter-day pay wagon from Fallowden is eight days overdue. Pallas is a night from full. The Ember is two nights from full. The river is lower than anyone remembers.
 
 :::gm
-Two of the rumours above are the real secrets: Marrow has paid the company from her own savings for a year and is nearly broke, and the Reeve has quietly agreed to sell the town's charter to the Concord (not in the way the gossips mean; she signs between sessions 3 and 7 and has not sealed it). Cinderford is built on the bones of a Lithic waystation; the Glass Barrow under the ford is its upper hall. The lantern on the hill is holding the Ninth Ward's crack shut, sixty miles away, and nobody in town knows it except, nearly, [[Brother Tallow]]. For the town's temper as the campaign goes on, see the Mutiny clock on the company page and the Sleepless clock in the Smokes. For the prices a player can check, see [[What Things Cost in the Ashenreach]]; for stage-business on the street, [[Street Events in Cinderford]].
+There is a dead man in the ford who drowned a week ago: [[Dannic Rook]], hooked out at noon in session 1 (see [[The Ford]]).
+
+Two of the rumours above are the real secrets: Marrow paid the company from her own savings for a year, until they ran out in Reaping, and the Reeve has quietly agreed to sell the town's charter to the Concord (not in the way the gossips mean; she signs between sessions 3 and 7 and has not sealed it). Cinderford is built on the bones of a Lithic waystation; the Glass Barrow under the ford is its upper hall. The lantern on the hill is holding the Ninth Ward's crack shut, sixty miles away, and nobody in town knows it except, nearly, [[Brother Tallow]]. For the town's temper as the campaign goes on, see the Mutiny clock on the company page and the Sleepless clock in the Smokes. For the prices a player can check, see [[What Things Cost in the Ashenreach]]; for stage-business on the street, [[Street Events in Cinderford]].
 :::
 
 == GM notes ==

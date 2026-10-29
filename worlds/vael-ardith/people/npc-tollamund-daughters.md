@@ -49,7 +49,11 @@ Fennel has been with the house since it opened, took the post because it was the
 What the Grandmother wants, before she says it. Each of them is also, privately, a person, and the party can find out which one wants what if they take the trouble: Perrin wants the books to balance, Odessa wants to be asked a question she has not already answered, Sal wants to see Sevenhaven again, and Fennel wants to be paid on time.
 
 ### What they know
-The debts of everyone in the March to the shilling. Who came to the mill after dark and how often. Which strongboxes in the vault are whose. What the Grandmother wants with the lantern, which they will never say, and which only Odessa has fully understood.
+The debts of everyone in the March to the shilling. Who came to the mill after dark and how often. Which strongboxes in the vault are whose.
+
+:::gm
+They also know what the Grandmother wants with the lantern, which they will never say, and which only Odessa has fully understood.
+:::
 
 ### How they treat the PCs
 As entries. Courteously. A PC changing a coin gets Perrin's eyebrow; a PC asking a question gets Odessa's answer, which is the Grandmother's; a PC who follows Sal through town is noticed by the third corner and is not minded. Fennel can be bribed in lamp-oil, knows it, and is a little ashamed.

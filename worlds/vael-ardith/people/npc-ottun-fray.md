@@ -23,7 +23,7 @@ relations:
   - to: npc-widow-pruitt
     kind: was paid by
     note: She counted out the coins.
-    known: true
+    known: false
   - to: spoons
     kind: prints the odds for
     note: THE BOOK, a sheet a week, nailed up at the Candle.
@@ -33,7 +33,7 @@ relations:
 ### Look and voice
 A broad bald man of sixty with black hands. Not dirty: black, ink to the elbows, worked into the creases so deep it will go into the ground with him. He wears a leather apron, a pencil in each ear and an expression of permanent professional interest, as if every face he meets might need setting in type. Thirty years beside a press have left him a little deaf and very loud.
 
-> "Ten silver! Ten! The first paid work the Regency's put through my door in two years, and it's a dead man. I set the A.M. myself. I didn't know what he meant by it. Still don't. Nice clean initials, though."
+> "Ten silver! Ten! The first paid work the Regency's put through my door in two years, and it's a deserter. I set the A.M. myself. I didn't know what he meant by it. Still don't. Nice clean initials, though."
 
 > "Every wanted man in the March has the same face, friend. It's my brother-in-law's. He was never wanted for anything in his life, gods rest him, and look at him now."
 
@@ -44,13 +44,13 @@ He prints whatever pays. Wanted bills, from a single woodcut face he cut in his 
 
 When [[Pell Quillon]] nailed the Tax Notice to the Keep gate, Fray ran off fifty copies at cost and pasted them up from the West Gate to the Smokes, "so the whole town can see what the Regency thinks a lamp is worth". Pell came round to thank him and left looking unwell.
 
-He has not stopped talking about the wanted bill since the morning he set it. It was the Assessor's Office's money, counted out by the Widow Pruitt, ten silver offered for the man "alive", and he is prouder of the clean type on that bill than of anything he has printed in the March.
+He has not stopped talking about the wanted bill since the morning he set it. It was the Assessor's people's money, counted out across his counter, ten silver offered for the man "alive", and he is prouder of the clean type on that bill than of anything he has printed in the March.
 
 ### What he wants
 Paying work, a new set of capitals (his Q has been broken since 3006 and he sets it as an O with a comma), and to be thought of as the town's memory, which he quietly believes he is: every job he has set since 3004 is on the spike behind the press.
 
 ### What he knows
-Who has posted what, and when, and who paid. What the Reeve's next ordinance says, two days before she reads it. Which of Spoons's odds were changed at the last minute, and by how much. The poster trail of Cinderford, in order.
+Who has posted what, and when. What the Reeve's next ordinance says, two days before she reads it. Which of Spoons's odds were changed at the last minute, and by how much. The poster trail of Cinderford, in order.
 
 ### How he treats the PCs
 As customers and as an audience. He will print anything for them (a handbill, 2 cp; a hundred, 1 sp; a wanted bill with his brother-in-law's face, 3 sp) and tell them all about the last job while he does it. He is no good at secrets and knows it, and tells people so as a kind of warning.

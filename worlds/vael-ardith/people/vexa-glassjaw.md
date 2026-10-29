@@ -54,7 +54,7 @@ In the orc way she was once **Vexa, Harrag's daughter**. The [[The Mothers of th
 To dig deeper. Under the glasslands there are older things than villages: walls, carvings, roads. The deeper she goes the stranger they get, and the better they sell.
 
 ### What she knows
-The glasslands better than anyone. Where the dead are thickest under the glass. That something has been buying up Lithic relics in quantity: a Remembrancer, paying in Sael silver; and a quieter buyer for the Saint's chapel. That the fort's old records vault holds a box of half-burned imperial papers she's never bothered to read, and the 11th Foot's roll of company seals, which she has never seen a use for. That something happened out on the ash road a week ago that she is not discussing.
+The glasslands better than anyone. Where the dead are thickest under the glass. That something has been buying up Lithic relics in quantity: a Remembrancer, paying in Sael silver; and a quieter buyer for the Saint's chapel. That the fort's old records vault holds a box of half-burned imperial papers she's never bothered to read, and the 11th Foot's roll of company seals, which she has never seen a use for.
 
 ### How she treats the PCs
 As customers or competitors. She respects strength and despises soldiers who serve for nothing. She'll be interested in [[Varra Nine-Knuckles]] at once (another exile), and try to recruit her.

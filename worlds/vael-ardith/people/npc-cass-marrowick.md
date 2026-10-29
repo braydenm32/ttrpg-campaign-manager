@@ -49,7 +49,7 @@ She talks fast and precisely, like someone who has had to explain the same thing
 
 > "Two hundred and twelve. I count them every morning. Nobody's ever gone. I count anyway, in case."
 
-> "The lake children dream a big eye. I don't. I dream a door, and it's closing, and that's good, and I'm the only one, and I don't like being the only one."
+> "The lake children dream a big eye. I don't. I dream something else, and I'm the only one, and I don't like being the only one."
 
 ### Who she is
 Cass was born in the cider-house cellar at Ambercote in Bloomtide 3003, eight months after the night her mother Mardy carried her down the cellar steps unborn and came up into a village of glass. She is one of the Hollowborn, with the grey eye, and she is eight, and she looks eight, because only the six born in Cinderford on the night itself grew fast; everyone else born to the ash is a child, and she is a child. She has never been further from the square than the goat-grass.
@@ -59,19 +59,19 @@ She keeps the roll. When she was five her uncle gave her a slate and the job of 
 ### What she wants
 To see [[The Smokes]], where Kettle's cousins say there are more than thirty children with the eye, and a girl called Still who draws the dream on walls, and to find out whether any of them dream what she dreams. And not to have the dream the lake children have. Kettle's cousins have told her about the Dreaming Widow's sermons, kindly, and she has lain awake since, because the big eye under the water is not what she sees, and she has begun to be afraid that hers is wrong.
 
-She also wants, with the whole of her eight-year-old heart, the soldier with the grey eye at the Keep to come and see the square, because she has seen him in the dream and he was standing in the door.
+She also wants, with the whole of her eight-year-old heart, the soldier with the grey eye at the Keep to come and see the square.
 
 ### What she knows
-All two hundred and twelve names, and which of them were kind. That at the full Ember the standing turn east and say, all at once, very faint, "not yet", and that she is the only person in Ambercote who hears it, except that once her uncle went white at red moon and would not say why. That two of the standing are not villagers and are called the Salt Man and the Other Salt Man on her slate. That the Old Post in the square turns under your hand, a little, toward the east, and that Uncle Jeb says not to tell the Glassers. That there is a grey-eyed soldier at the Keep called Tick, because the cousins told her, and that he is the one in her dream, because she knows his face.
+All two hundred and twelve names, and which of them were kind. That at the full Ember the standing turn east and say, all at once, very faint, "not yet", and that she is the only person in Ambercote who hears it, except that once her uncle went white at red moon and would not say why. That two of the standing are not villagers and are called the Salt Man and the Other Salt Man on her slate. That the Old Post in the square turns under your hand, a little, toward the east, and that Uncle Jeb says not to tell the Glassers. That there is a grey-eyed soldier at the Keep called Tick, because the cousins told her.
 
 ### How she treats the PCs
-As visitors, which means a tour, fast and complete, and the rule, and the names. A Hollowborn PC she stops in front of and looks at with the grey eye and says, "Which do you dream?" and will not move until she is answered. [[Tibbet Marlowe|Tick]] she knows on sight, and goes very quiet, and takes his hand, and leads him to the door of the cider-house and says, "That's where you were standing," and nothing else for an hour. Quorl she likes at once, because he writes things down.
+As visitors, which means a tour, fast and complete, and the rule, and the names. A Hollowborn PC she stops in front of and looks at with the grey eye and says, "Which do you dream?" and will not move until she is answered. When [[Tibbet Marlowe|Tick]] comes, she goes very quiet, and takes his hand. Quorl she likes at once, because he writes things down.
 
 :::gm
 ### The secret
 Every Hollowborn in the March dreams the same dream at the full Ember: the vast shape under water, the eye opening, the sentence nobody keeps. Cass does not. She dreams a long corridor and a door at the end of it standing open with a light behind it, and a hand on the door from the inside, and the door closing, slowly, and the light going thin and then out, and a feeling she has no word for and the adults would call relief. It is the Reseal ending, dreamed in advance: the one Hollowborn dream in the March in which the ward holds. The Ninth, the Youngest of the Nine, is dreaming it through her, because the Road runs under her square and she was born on it.
 
-In the dream, standing in the door as it closes, is a lanky young man with a grey left eye and burn-scars on his forearms, and she knows his face better than her uncle's. It is Tick. She has never met him. It is why her letter goes to "the Hollowborn soldier at the Keep" ([[The Standing Village]]), and why the Dreaming Widow, who has heard from her Sleepless crews at Tally's Cut that there is a grey-eyed child at Ambercote who dreams wrong, would like very much to meet her, and must not.
+In the dream, standing in the door as it closes, is a lanky young man with a grey left eye and burn-scars on his forearms, and she knows his face better than her uncle's. It is Tick. She has never met him. When she does, she knows him on sight, leads him to the door of the cider-house and says, "That's where you were standing," and nothing else for an hour. It is why her letter goes to "the Hollowborn soldier at the Keep" ([[The Standing Village]]), and why the Dreaming Widow, who has heard from her Sleepless crews at Tally's Cut that there is a grey-eyed child at Ambercote who dreams wrong, would like very much to meet her, and must not.
 
 Cass's dream is the party's one true omen that the ward can be resealed, and the only sign that the Ninth is still awake enough to want it. Do not explain it. Let her tell it, badly, to a Hollowborn PC, and let the player work out whose door it is.
 

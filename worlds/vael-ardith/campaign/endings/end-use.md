@@ -17,7 +17,7 @@ Whoever holds it (a PC, the company, a faction leader) can do terrible, useful t
 
 ### Who pushes for it, and how
 - **[[The Sleeper Below]], secretly.** This is the ending it wants, and it hides that well. Through Ysse's dreams it has been saying "keep me" in the Ninth's warm voice for seven sessions. On the night it speaks through the flame directly, sounding reasonable, sounding kind: why give your life to a stone? Why let the gods feed? Keep the lamp. Be the lock. Be the key.
-- **[[The Quiet Office]]** for [[Marius Vell]]: he wants the flame in Caer Ardith beside an empty throne, and a puppet emperor who hears what he's told.
+- **[[The Quiet Office]]** for [[Marius Vell]]: he wants the flame in Caer Ardith beside an empty throne, and a puppet emperor who hears what he's told. If [[Ansel Mote]] escaped in session 7, he sent for [[Tesh]], and she stands at the back of the crowd on the lip: the puppet Vell meant for his throne, who already hears the voice under the stair. Hers is the first voice the holder hears answering in the dark.
 - **[[The Concord Houses]]**: [[Grandmother Tollamund]] calls in the debt with the lantern as collateral, and very slowly explains that the Shellbacks would keep it safe. She wants it as the key home to the Ness of Thurm, and she doesn't say why.
 - **[[Garrick Sallow]]**, if alive: "We hold it. The company. Nobody pays us? Now they pay us."
 - **[[Aelith Sorn]]** and [[The Remembrancers]], who want to study it, which is how it starts.

@@ -25,7 +25,7 @@ The [[The Ninth Lantern|Ninth Lantern]] holds [[Cinderford]] under the [[The Tre
 Now the pay hasn't come, half the company is muttering, and the flame is not what it was. The party's job is the oldest one in soldiering: keep the light on, and find out who wants it dark.
 
 ### What the party knows
-- The pay is late again. Very late.
+- The pay notice came with nothing in it again. The Regency has paid nothing since Hollowfrost 3009, and the company has stopped asking when.
 - [[Brother Tallow]] tends [[The Lantern of the Ninth]] and says it has never once guttered.
 - Everyone in town has an opinion about the lantern. Most of them want something from it.
 

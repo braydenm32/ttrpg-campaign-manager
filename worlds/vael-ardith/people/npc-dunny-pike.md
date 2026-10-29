@@ -30,7 +30,11 @@ A skinny, solemn boy of twelve with a bowl haircut, enormous ears and a rope-bur
 
 He strikes his signals with a mallet from the bell-house stair; the rope stays knotted up out of reach and is pulled only on the Keep's order, which has happened nine times in nine years. All the town's codes, his and the company's, are set down in [[Signals of Cinderford]]. One stroke closes the ford; two is a death; three is a fire; three and three means someone is in the water. Dunny learned the codes from old [[Halloran Pike]], whose pipe Dunny fetches from the Candle each evening, and who is no relation: "there are a great many Pikes".
 
-He knows everyone who crosses the square and when, and is a better source than the toll-clerk, for the price of a pear. At noon on 14 Ashfall he struck three and three when the ford-watch hooked the drowned man out of the shallows, and he has not stopped thinking about it.
+He knows everyone who crosses the square and when, and is a better source than the toll-clerk, for the price of a pear.
+
+:::gm
+At noon on 14 Ashfall (session 1) he strikes three and three when the ford-watch hook the drowned man out of the shallows, and he does not stop thinking about it.
+:::
 
 == GM notes ==
 

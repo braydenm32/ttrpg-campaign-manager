@@ -18,8 +18,10 @@ The old imperial road runs on from here to Cinderford: four days in good weather
 The town is bored, rich, and quietly ashamed of the view to the east on clear days.
 
 ### Hook
-The quarter-day pay wagon that should have reached Cinderford this Ashfall did leave Fallowden on 2 Ashfall, under an escort in Regency colours. The Three Cups' ostler will swear to it. It overnighted in the wagon-yard at [[Whitepost]] on the 4th. The escort's sergeant paid for his drinks in new Concord silver.
+The quarter-day pay wagon that should have reached Cinderford this Ashfall did leave Fallowden on 2 Ashfall, under an escort in Regency colours. The Three Cups' ostler will swear to it.
 
 :::gm
+The wagon overnighted in the wagon-yard at [[Whitepost]] on the 4th. The escort's sergeant paid for his drinks at the Three Cups in new Concord silver.
+
 The escort was Concord-hired; it was paid off at [[Whitepost]], the waystation two days west of Cinderford, on 4 Ashfall (the yard-book has it), and Tollamund's own drivers took the wagon on. The Regency has paid nothing since 1 Hollowfrost 3009. In Ashfall [[Tollamund & Daughters]] advanced 600 gold in new Sevenhaven coin in the company's name, under the third line of Marrow's note, and sent it under an old Regency pay seal. The wagon left Fallowden on 2 Ashfall; its escort was paid off two days west of Cinderford on the 4th; her drivers brought it into the mill-yard at the Ford on the night of the 6th; at dawn on the 7th it crossed the bridge as a sealed House cart and turned off at the Burned Mill for Fort Mercy, where Cousin Pennamund had Vexa hold it "until collected". The note now stands at 4,800 gold. (The sergeant's Concord silver is his own pay, spent at the Three Cups.)
 :::

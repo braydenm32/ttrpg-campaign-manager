@@ -47,10 +47,10 @@ His voice is gravel, and almost everything he says is a joke, delivered with the
 > "That's the Sergeant up there." (He points at the red moon.) "Always watching. Never pays. Exactly like me."
 
 ### Who he is
-He is "Mirrel, Vosk's son" in the orc way, of Mother Vosk's line, which he mentions to no one. Mirrel Vosk has been a soldier for thirty-four years, which is longer than most of the company has been alive. He has served in five companies and buried four of them. He is the Ninth Lantern's **Second Blade**, the captain's deputy by orc custom, who stands at her left and says the things she can't. He carries the third of the three cage keys. Old soldiers say he was Iron Guard in the old days, before the [[Kingslayers]] got their name. He says he was a baker.
+He is "Mirrel, Vosk's son" in the orc way, of Mother Vosk's line, which he mentions to no one. Mirrel Vosk has been a soldier for thirty-four years, which is longer than most of the company has been alive. He has served in five companies and buried four of them. He is the Ninth Lantern's **Second Blade**, the captain's deputy by orc custom, who stands at her left and says the things she can't. He carries the third of the three cage keys. Old soldiers say he served the old empire once, and nobody has ever got him to say where. He says he was a baker.
 
 ### What he wants
-To keep recruits alive long enough to be useful, and the useful ones alive long enough to get old. To see [[Captain Marrow]] sleep a full night. To never again stand in a palace.
+To keep recruits alive long enough to be useful, and the useful ones alive long enough to get old. To see [[Captain Marrow]] sleep a full night. To keep the company out of other people's palaces.
 
 ### What he knows
 Every soldier in the company by name, and which of them are wobbling toward [[Garrick Sallow]]. How to hold a wall with forty people. That the red moon makes the dead restless; he was at Cinders, and he saw what walked the ash the next night.
@@ -61,7 +61,7 @@ Hard, then fair, then fond, in that order, and he never admits to the third. He 
 :::gm
 **Secret.** Vosk served in the Iron Guard under Grashka, now Mother of Mothers. On the afternoon of 14 Frostcall 2981 he stood at the door of the Gilded Gallery in [[Caer Ardith]] during petitions on the bean tax, and watched Grashka step out of the line. It took one blow. Then the Guard walked out, all of them, and he walked with them, and nobody stopped them. That was [[The Kingslaying]].
 
-He has never told anyone. He thinks the Mothers had a reason. He has never known what it was, and once a year, on the eve of Cinders (13 Ashfall), he takes a bottle to the [[The Corporal's Gibbet|Corporal's Gibbet]] and doesn't talk about it.
+He has never told anyone, and he has never again wanted to stand in a palace. He thinks the Mothers had a reason. He has never known what it was, and once a year, on the eve of Cinders (13 Ashfall), he takes a bottle to the [[The Corporal's Gibbet|Corporal's Gibbet]] and doesn't talk about it.
 
 He recognised Grashka's face in Varra's the moment she walked in.
 
@@ -78,5 +78,5 @@ On the evening of the Kingslaying he handed his sword to a young barracks smith 
 3. On the red moon night, holds the gate against the dreamers without killing any of them, which is harder.
 4–5. If Varra asks him straight, he tells her about the palace: "The Guard did it. I held the door." He never names the hand. Not before.
 6. Wants to go into the Rent; Marrow won't let both of them leave.
-7. The mutiny's key: if Vosk stands with Marrow, half the company follows him. Sallow knows this and tries to have him killed first. A strong scene for the PCs to prevent.
+7. The mutiny's key: if Vosk stands with Marrow, half the company follows him. Sallow knows this and sends a hired knife for him at dawn on the 6th. A strong scene for the PCs to prevent.
 8. If the company ends, he says he'll finally open that bakery.

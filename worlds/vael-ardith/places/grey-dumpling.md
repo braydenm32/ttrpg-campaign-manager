@@ -20,7 +20,7 @@ The Grey Dumpling has been in the Brindlewake clan for four generations and in K
 - **Regent**, the cat, who hates everyone equally and is therefore trusted.
 
 ### Who is here
-[[Kettle Brindlewake]]. Her cousins [[Dob and Marigold]], who pole and say little. Passengers, sometimes; this week a Remembrancer's trunk, empty and waiting for a hand to fill it, and a sealed box addressed to someone at the Ninth Stone, which nobody has claimed because nobody is supposed to live there.
+[[Kettle Brindlewake]]. Her cousins [[Dob and Marigold]], who pole and say little. Passengers, sometimes; this week a Remembrancer's trunk, empty and waiting for a hand to fill it, and a sealed box that nobody has claimed.
 
 ### Rumours
 - The Dumpling can get into the Barrow under the ford by a culvert from the Quay.

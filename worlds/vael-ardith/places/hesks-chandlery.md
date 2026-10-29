@@ -40,8 +40,10 @@ Hesk. His apprentice [[Mirrit]], a Hollowborn girl, nine by the calendar and twe
 :::
 
 ### Things to do
-Buy a dark-lantern for the Barrow. Ask Hesk about the Keep's oil and get twenty minutes on the subject. See his order-book, if he trusts you: sealed Keel tins at full price, one to "the Assessor's Office, paid in advance", by a clerk with a cold, and eleven more since Reaping, the same way.
+Buy a dark-lantern for the Barrow. Ask Hesk about the Keep's oil and get twenty minutes on the subject. See his order-book, if he trusts you.
 
 :::gm
+**The order-book.** Sealed Keel tins at full price, one to "the Assessor's Office, paid in advance", by a clerk with a cold, and eleven more since Reaping, the same way.
+
 Hesk did not cut the oil. The cut tin in the Barrow was his sealed Keel oil, opened, cut with Stillwater lake-ash (supplied by the Dreaming Widow's people) and resealed with Hesk's own grey wax, which anyone could lift from his bin. Who did the cutting is the question of [[Who Is Poisoning the Flame?]]; the order-book is a lead, not an answer. [[Spoons Aldane]] saw the swaps done, and who resealed. Hesk stopped selling to the Keep in Thawmere, so the flame lost his blend's accidental drop of Orchard sap; that, and the cut oil, are why it thins.
 :::

@@ -53,7 +53,7 @@ With immense, tired relief. He has rehearsed what he'll say for nine years. He t
 :::gm
 **Secret and purpose.** Uthrem has waited nine years for someone who can hear the flame: "the one the flame calls". When [[Ysse Lampwright]] arrives (**Into the Rent**, session 6), he says her name before she gives it. The Ninth inside the stone has told him about her.
 
-He knows the three ways forward (the endings): reseal (a heart for the ward: his, which buys only a short time; a willing PC's; or Ysse's), let it crack, or take the flame. He will tell the PCs the cost of each honestly. He will beg them not to take the flame: "Whoever holds it will hear him." *(The sigh.)* "And he is very persuasive." *(The sigh.)* "He persuaded me once."
+He knows the three ways forward (the endings): reseal (a heart for the ward: his, which buys about twenty years with the Standing rite and perhaps only one without it; a willing PC's; or Ysse's), let it crack, or take the flame. He will tell the PCs the cost of each honestly. He will beg them not to take the flame: "Whoever holds it will hear him." *(The sigh.)* "And he is very persuasive." *(The sigh.)* "He persuaded me once."
 
 He also recognises at once what wears [[Borrin Halt]]'s shadow, and is afraid of it.
 :::
@@ -66,4 +66,4 @@ He also recognises at once what wears [[Borrin Halt]]'s shadow, and is afraid of
 1–5. Never seen. Hints only: the dream of a stone with a crack and someone sitting at its foot; a rubbing from the Ninth Stone ([[A Rubbing from the Ninth Stone]]) shows a figure carved at the base that wasn't there in old drawings.
 6. **Into the Rent**: the PCs reach him. He tells the truth about the Godslaying, the wards and the flame.
 7. If the PCs leave him, he holds on. He sends the party back with a message for whoever will listen.
-8. At the end, if resealing is chosen, he offers himself first. If a PC or Ysse goes instead, he holds their hand while it happens, and then finally lets himself finish turning to stone.
+8. At the end, if resealing is chosen, he offers himself first; he cannot climb, so someone has to lift him the ten feet into the crack. If a PC or Ysse goes instead, he holds their hand while it happens, and then finally lets himself finish turning to stone.

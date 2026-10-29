@@ -15,7 +15,7 @@ Gilt Water is a long inland bay reached through a gap in the cliffs barely wide 
 This is where the Concord keeps the money. Every great Shellback house has a vault under Gilt, cut into the living rock, and the goldsmiths' street is guarded by veterans who are paid on time, which is the surest sign of wealth on the continent.
 
 ### Hook
-The vault of Tollamund & Daughters at Gilt has taken a delivery every month for a year: a single sealed crate from the Ashenreach, by way of Cowl, carried by Glassers and paid for in advance. The vault clerks say the crates are heavy, cold, and hum.
+One of the great vaults at Gilt has taken a delivery every month for a year: a single sealed crate from the Ashenreach, by way of Cowl, paid for in advance. The vault clerks say the crates are heavy, cold, and hum.
 
 :::gm
 The crates are Tollamund's: ward-glass from the after-dark trade at Gutter Market, moved by [[The Glassers]] through Cowl into the vault of [[Tollamund & Daughters]]. Grandmother Tollamund is stockpiling it for something she has not told the Principals, and it is one of the reasons the Concord clock "Debt called in" ticks faster than the debt alone would explain.

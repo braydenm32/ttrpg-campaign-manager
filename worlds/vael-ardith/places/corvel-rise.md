@@ -37,7 +37,7 @@ fields:
 :::
 
 ### Things to do
-Bury someone properly. Climb to the roosts and be looked at by sixty crows and sixty Ravelers and not know the difference. Ask to see the ledger and be refused; ask Quorl, and be shown a page. Stand at the ninth pole. Be told by Mother Corvane, if she judges it time, four of the five words.
+Bury someone properly. Climb to the roosts and be looked at by sixty crows and sixty Ravelers and not know the difference. Ask to see the ledger and be refused; ask Quorl, and be shown a page. Stand at the ninth pole. Be told the Court's last words, if Mother Corvane judges you ready.
 
 :::gm
 The Rook-Court's clock, Last words decoded, lives here. Corvane holds four of the five words of *the lamp is the lock*, built from the Court's ledgers and the Hask priestess's letter, and has guessed the fifth; she believes snuffing the lamp frees Hathe's doors and lets the dead rest, and she is wrong. The ledger's last words, read together, spell it out across nine years, and session 5 is where the party reads enough of them to see it. The Door-Key in the reliquary is the item [[Hathe's Door-Key]]; the Lithic doors on that road were shut by the standing dead, so the key of the dead turns them: the Glass Barrow's, the Cold Seam landing's and, in the end, the root of the Ninth Stone. The Court lends it for funerals. Corvane is "the friend" at the lip in session 8. Corvane will give it to Quorl when he asks the right question, which is not "can I have it" but "what is it for".

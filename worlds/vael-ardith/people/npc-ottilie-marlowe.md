@@ -37,12 +37,12 @@ Small, stooped, sixty-two and looking older, with a voice like a rusty gate, for
 
 > "Push, love. No, *push*. You're not shelling peas. There. There she is. Oh, look at her, she's *looking* at something."
 
-She is brusque, practical, and quietly terrified of the red moon. She calls Tick "my lad" and scolds him like a ten-year-old, which, by the calendar, he nearly is. Ask her about the six born the night of Cinders, Tick among them, and she goes quiet, and then says she has delivered two thousand babies and only six ever came out already counting the days. She measured all six against her cellar door until they stopped growing. The door is still there, and so are the marks.
+She is brusque, practical, and quietly terrified of the red moon. She calls Tick "my lad" and scolds him like a ten-year-old, which, by the calendar, he nearly is. Ask her about the six born the night of Cinders, Tick among them, and she goes quiet, and then says she has delivered two thousand babies and only six ever came out already counting the days.
 
 :::gm
 Ottilie's younger daughter, Wenna, ran away from Marlowe's at twelve, and is now [[The Dreaming Widow]]. Ottilie knows. She has never told Tick. She goes to Sleepless meetings sometimes, at the back, just to look at her daughter's face. If the PCs earn her trust, she is the key to reaching the Widow as a person, not a prophet.
 
 On the dawn after Cinders she gave Marla's last words, "Wenna, hold his hand. Don't look up", to the Raveler fledgling who came for the body, [[Quorl Many-Words]], who wrote them down as *told*, not heard.
 
-The marks on her cellar door jump at every full Ember: the Cinders-born grew in steps, one for each red moon. Ottilie has noticed and written it in the Maelis birth-rolls kept by [[Mother Brisk]], and told no one. It is the plainest clue to [[Why did the Cinders-born grow up so fast?]].
+She measured all six against her cellar door until they stopped growing. The door is still there, and so are the marks. They jump at every full Ember: the Cinders-born grew in steps, one for each red moon. Ottilie has noticed and written it in the Maelis birth-rolls kept by [[Mother Brisk]], and told no one. It is the plainest clue to [[Why did the Cinders-born grow up so fast?]].
 :::

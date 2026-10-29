@@ -60,7 +60,11 @@ The company back. Not the Keep, not the town: the stake-party, in Seedwake, with
 She also wants the pear to fall, and is afraid of it, and does not say either.
 
 ### What she knows
-How many stakes stand this morning and stood last night, which Glasser crews use the track and how often they come back one short, and who moves the stakes, and she will answer a plain question about it plainly. The count of every party east and west for eight years, which is to say she knows exactly how many soldiers the Ninth sent out in each spring and that it was fewer every year. What came past her fork on 7 and 8 Ashfall, and the drummer-girl on the 9th. That Kettle's people take salt and iron south twice a month to somewhere they do not name. That the dwarf Gerda leaves a pebble at the Stone and a loaf at the mill and talks to the tree before she talks to Nance. That the pear has started to go red.
+How many stakes stand this morning and stood last night, which Glasser crews use the track and how often they come back one short, and who moves the stakes, and she will answer a plain question about it plainly. The count of every party east and west for eight years, which is to say she knows exactly how many soldiers the Ninth sent out in each spring and that it was fewer every year. That Kettle's people take salt and iron south twice a month to somewhere they do not name. That the dwarf Gerda leaves a pebble at the Stone and a loaf at the mill and talks to the tree before she talks to Nance. That the pear has started to go red.
+
+:::gm
+She also knows what came past her fork on 7 and 8 Ashfall (on the 7th, the sealed House cart that turned off the Ash Road for Fort Mercy), and the drummer-girl on the 9th.
+:::
 
 ### How she treats the PCs
 As a count first and people second, which she thinks is good manners. Soldiers of the Ninth get the blank springs, once, in full. Anyone who fills their skins and goes is counted and forgotten. Anyone who sits on the bench, lets her finish a sentence, and does not touch the tree is fed: ash-bread, cheese that has come a long way, and water that tastes of the Stone's cistern, which is to say of pilgrims' tears. A Hollowborn who looks at the wheel-pit and then at her gets a long look back and the question she has never asked anyone: "How many?"

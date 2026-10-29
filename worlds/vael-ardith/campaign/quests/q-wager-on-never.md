@@ -29,7 +29,7 @@ relations:
 
 > "There's one slip in the strongbox that isn't a date. 'Never.' Placed the first morning, by a Raveler woman, five crowns, old gold, and she was gone by the next. Nine years. I've been adding to it every quarter-day out of my own pocket because that's how a book works, friend, an uncollected stake grows, and it's grown. If that lamp goes out, I pay the date and I'm sad. If it doesn't, ever, I owe a bird I can't find more than the pool's worth, and she'll have been right, and I don't like what that means about the lamp. I want the book closed before the next red moon. Find her. Find out why she bet it."
 
-He will not say what he saw at the oil store. He will say, if pressed, that a bookmaker likes to know which way a thing is going to go before he closes the book on it, and that lately he does not.
+If he hasn't already told the party what he saw at the oil store, he won't now. If he has, he looks like a man who would like something else to think about. He will say, if pressed, that a bookmaker likes to know which way a thing is going to go before he closes the book on it, and that lately he does not.
 
 ### What is known
 - The pool opened the morning after the first renewal ([[The Ninth's First Renewal]]); the best early odds were three weeks. Spoons's own copper is on a date very soon.
@@ -50,12 +50,12 @@ He will not say what he saw at the oil store. He will say, if pressed, that a bo
 
 ### Complications
 - Corvane does not want Keld found, and Skrell will be in the party's way, politely, with a shovel.
-- Spoons "closes the book for maintenance" after the first guttering, and the company notices, and the Mutiny clock notices.
+- Spoons "closes the book for maintenance" on the night of the second guttering (session 3), and the company notices, and the Mutiny clock notices.
 - Keld will not come back to Cinderford for Spoons, for Corvane, or for the lamp. The one thing that moves her is a person who comes to Sedgemere in person with the news that the lamp is to be *given back*, not put out, and means it. Then she will come to the Stone.
 - The stake is worth more than the pool. If Keld wins, Spoons is ruined, and he will say so.
 
 ### Reward
-Spoons's marker: once, before the end, he gives the party a thing he knows and would otherwise sell, which may be what he saw at the oil store. And the fifth word: Keld has had all five since 3002, and if the party brings her, or brings her words, to Corvane before session 5, the Rook-Court's clock fills early and Corvane's funeral for old Pike is not the first time she hears it.
+Spoons's marker: once, before the end, he gives the party a thing he knows and would otherwise sell (if they don't have it yet, what he saw at the oil store). And the fifth word: Keld has had all five since 3002, and if the party brings her, or brings her words, to Corvane before session 5, the Rook-Court's clock fills early and Corvane's funeral for old Pike is not the first time she hears it.
 
 **The truth.** Keld is Corvane's younger sister, set by Corvane to be the Rook-Court's first watcher of the lantern for the year after Cinders, and in that first winter a Salt Guard man dying in her arms in the Smokes gave her "the lamp is the lock" whole, before anyone else had heard more than a word of it; the sentence the dying have been saying in pieces for nine years ([[What are the dying whispering to Quorl?]]), she got in one. She put it beside what Corvane had been saying all winter and understood that the lamp could not be put out, only given back. She told Corvane the conclusion and kept the words. Corvane, who loves the dead more than the living, said: then put it out and let them rest. Keld said: then I will bet it never goes out. She bet five crowns on "never" the morning of the renewal, walked nine miles down the towpath at dawn on the 15th, and has kept the weir at Sedgemere since. Her own page has her voice and her slate; this page only needs her reason, and her answer to the strongbox, which is "Don't pay it."
 

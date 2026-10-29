@@ -48,13 +48,13 @@ Those who have heard her say her voice is low, fond and enormous.
 Ilyra was a healer with a mercenary company at [[The Battle of Cinders]], one of thousands on the plain when the battle-sorcery set the ash alight. She walked into the fire to pull out the wounded and walked out at dawn, unburnt, carrying three dying men, and with her hands she healed the dying for three days without sleeping. The red moon rose the same night. She spent five years in prayer on the Iskaveth plateau, unseen, before she let them declare her: in 3007 the theocracy of [[Iskaveth]] named her a living saint ([[The Saint Declared]]). Since then she has been seen only at the lattice of the Lamp Court on full-Ember nights. Today the faith of [[The Unburnt Saint]] spreads west from Halcyra, and its priests say plainly that she is becoming a god.
 
 ### What she wants
-To heal the world's pain, all of it, and to do that she needs more power than any mortal has ever held.
+To heal the world's pain, all of it.
 
 ### What she knows
 What the faithful tell her, which is everything they think she wants to hear. The rest is hers to say.
 
 :::gm
-**What she wants, and what she knows.** Godhood, though she would never use the word. She knows what she is becoming, what she took, and what the flame in Cinderford is.
+**What she wants, and what she knows.** Godhood, though she would never use the word: to heal all of the world's pain she needs more power than any mortal has ever held. She knows what she is becoming, what she took, and what the flame in Cinderford is.
 
 **The truth.** Hathe, Keeper of Doors, died of the battle-sorcery that broke him open; Ilyra was beside him in the fire as he went, and took what was left of him. She did not choose to, at first: what a healer does with a dying thing is take its weight. She has chosen every day since. She is ascending on it. That is why the dead don't pass: the god of the threshold is gone, and his doors answer, poorly, to her. Prayers to Hathe reach her now. She answers some.
 

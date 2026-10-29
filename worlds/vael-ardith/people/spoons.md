@@ -60,7 +60,7 @@ He runs the company's betting book from a corner table at [[The Last Candle]]: o
 To win the big one. His longest-running pool is on **the night the lantern goes out**: nine years of soldiers have bet a silver on a date, and the pot is real money now: the board says 41 gold, the pot is 43. Spoons will give you forty to one against any named night; the Frostcall window is 14 to 1. He has his own silver on a date coming up very soon.
 
 ### What he knows
-Everyone's debts, everyone's vices, and everyone's odds. Who's drinking with [[Garrick Sallow]]. Who slipped out after curfew. And more than he should about the oil. He has forty to one against the pear at [[The Burned Mill]] falling "this year".
+Everyone's debts, everyone's vices, and everyone's odds. Who's drinking with [[Garrick Sallow]]. Who slipped out after curfew. He has forty to one against the pear at [[The Burned Mill]] falling "this year".
 
 ### How he treats the PCs
 As a fresh market. He opens a book on each PC in their first week (odds on survival, on promotion, on "first to sleep with somebody unwise") and tells them their odds, cheerfully. Bet with him and he becomes a friend for life, a short one or long.

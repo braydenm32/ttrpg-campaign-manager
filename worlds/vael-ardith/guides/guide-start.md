@@ -13,9 +13,9 @@ A continent held shut by nine ancient wards, with a dead god buried under it. Ni
 It's grim and funny in about equal parts: real stakes and hard choices, soldiers' gallows humour, and a Regency that still sends tax forms to the front in triplicate.
 
 ### Run it in five minutes
-1. Read [[The Lantern Gutters]], the main quest. Its GM section lays out the whole eight-session arc and how the clues connect.
-2. Open **Prep**, then the campaign **The Lantern Gutters**, then **Session 1: Payday**. The notes are a full script with read-aloud text, and the prep has a strong start, seven scenes, clues and three fights ready to go.
-3. Hand out the five characters: [[Varra Nine-Knuckles]], [[Ysse Lampwright]], [[Borrin Halt]], [[Tibbet Marlowe]] and [[Quorl Many-Words]].
+1. Read [[Running The Lantern Gutters]], the GM's chapter: the background, the campaign's three parts, every session on one table, and what to do when the table goes off script. [[The Lantern Gutters]], the main quest, shows how the clues connect.
+2. Open **Prep**, then the campaign **The Lantern Gutters**, then **Session 1: Payday**. The notes are a full script with read-aloud text: where the PCs start (with a prologue and four other ways in), seven scenes that each end with a **Development** note saying what happens next, and the treasure. The prep has a strong start, the scenes, clues and three fights ready to go.
+3. Hand out the five characters: [[Varra Nine-Knuckles]], [[Ysse Lampwright]], [[Borrin Halt]], [[Tibbet Marlowe]] and [[Quorl Many-Words]]. Point everyone at the [[Player's Guide]]; players making their own characters pick a tie to the Ninth from it.
 4. Press **Run** to open the Lectern. Read the opening aloud. You're playing.
 
 Between sessions, the Campaign section has side quests that grow out of the town ([[The Wager on Never]], [[The Baker's Hoard]], [[The Unmarked Barrel]] and others), and the loose threads that run past session 8 if you want a second campaign.
@@ -39,7 +39,7 @@ Each stop below is a real page or screen you can open now. The little **?** butt
 
 **Random tables.** **Prep → Generators & tables** has tables for this world, like [[Ashenreach Encounters]], [[Sleeper Dreams]] and [[Last Words]]. There are tables for the road ([[Travellers on the Ash Road]]), the street ([[Street Events in Cinderford]]), the shelf ([[What the Shop Has Today]]), the tavern ([[Company Gossip]]), people's mouths ([[Sayings, Oaths and Curses of the March]]) and their names ([[Soldier Names]], plus two Names tables for the other peoples). Tables can roll dice and call other tables.
 
-**Session prep and the Lectern.** Session 1 is fully prepped: a strong start, scenes and clues to tick off, and three fights. At the Lectern, "Run" on a fight adds everyone to initiative. The Lectern already knows the opening scene and who's at the muster.
+**Session prep and the Lectern.** Every session is fully prepped: a strong start, scenes and clues to tick off, and fights that say which party they were built for. Each session's notes open with a "last time" recap to read aloud and an "If they missed something" list for clues the party missed. At the Lectern, "Run" on a fight adds everyone to initiative, and each session's Lectern already knows its opening scene and who's there.
 
 **History in ages.** **World → Timeline** splits history into ages, from the myths before the count, through [[The Battle of Cinders]], to the campaign's own events, which start on 14 Ashfall.
 

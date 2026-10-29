@@ -32,7 +32,7 @@ The Reeve. The toll-clerk, [[Mistress Hebbe]], who can tell a Concord coin from 
 ### Rumours
 - The toll-box takes more in a week than the company is owed in a month.
 - Tollamund's daughters are the same daughter three times.
-- There is a door under the third pier and the drowned deserter went through it.
+- There is a door under the third pier, and the drowned go through it.
 - The Reeve keeps the key to the Aurelan chapel on Temple Row and will not say why.
 
 :::gm

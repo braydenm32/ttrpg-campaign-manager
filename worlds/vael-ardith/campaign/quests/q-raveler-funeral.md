@@ -9,7 +9,7 @@ fields:
   Given by: Mother Corvane, through Quorl
   Reward: A page of the Rook-Court’s ledger
 gmFields:
-  Sessions: 4 to 5 (side quest)
+  Sessions: "5 (the first scene of Last Words; Pike dies the night of 24 Ashfall)"
 relations:
   - to: mother-corvane
     kind: given by
@@ -30,5 +30,5 @@ Since [[Hathe]] died, his doors don't always open. Pike's door is jammed by the 
 
 When the door finally opens, Pike says his last words properly, and they are the same as the seven Quorl has already heard, so Pike makes the eighth: **"The lamp is the lock."** Corvane, standing by, goes very still. She has had four words of five from the ledgers and has guessed the fifth; now a dying man says all five aloud. This hands the party into session 5 and the Rook-Court's ledger.
 
-If it goes wrong (the key is refused, the rite is botched), Pike gets up and goes home to the Keep, where he sits on his cot and won't leave. The company is not thrilled.
+No roll: whoever says the rhyme with the key in hand opens the door. It only goes wrong if the key is refused or nobody will say it. Then Pike gets up and goes home to the Keep, where he sits on his cot and won't leave. The company is not thrilled.
 :::

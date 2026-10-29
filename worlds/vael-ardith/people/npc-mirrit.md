@@ -49,8 +49,7 @@ On her evening off she sits by the door of [[The Last Candle]] for the noise, an
 For Hesk to live, which he will not, and for the Keep to buy his oil again, which she thinks would make the lantern happier, though she could not tell you why she thinks a lantern can be happy. A room with a door. One day in which nothing stands behind anyone.
 
 ### What she knows
-- The chandlery's order-book by heart: one sealed Keel tin to "the Assessor's Office, paid in advance", by a clerk with a cold, and eleven more since Reaping, the same way. She served him herself, by daylight, every time.
-- How the moth seal is pressed, where the wax bin is, and that anyone who stood at the counter for a minute could reach both.
+- The chandlery's order-book, which she keeps by heart and will not show anyone without a reason.
 - That Hesk's blend burns cleaner than anyone else's, and that she is the only one who knows the recipe besides him.
 - Most of the Smokes by sight, living and otherwise.
 
@@ -58,6 +57,8 @@ For Hesk to live, which he will not, and for the Keep to buy his oil again, whic
 As customers: fair prices, exact change, no conversation she has not been paid for. She warms, slowly, to anyone who treats Hesk as a man rather than a cough, and to anyone who buys a lamp-trimmer's kit and knows what it is. With [[Tick]] she is courteous and flat. The six do not seek each other out; there is nothing one of them could tell the others. She is the one person in the Smokes he has never made laugh, and he keeps trying.
 
 :::gm
+**What the order-book says.** One sealed Keel tin to "the Assessor's Office, paid in advance", by a clerk with a cold, and eleven more since Reaping, the same way. She served him herself, by daylight, every time. She also knows how the moth seal is pressed, where the wax bin is, and that anyone who stood at the counter for a minute could reach both.
+
 **Secret.** The clerk with a cold was [[Ansel Mote]], and Mirrit knows two things about him nobody else does.
 
 First, the cold is false. The first time he came in he asked, very humbly, how the moth seal was made, and turned the brass stamp over in his gloved hands while she went into the back for his tin. Through the curtain she saw him stop sniffing the moment she was out of sight, and press the stamp into something in his palm. When she came back he was wiping his glove. That is how the cut tins came to carry Hesk's own seal. She worked it out the day the gossip reached the Smokes that the lantern's oil had been cut, and has told no one, because the stamp was in her hand before it was in his, and she believes it makes the thinning of the lantern partly hers.

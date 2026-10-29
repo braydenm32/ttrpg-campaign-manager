@@ -23,7 +23,7 @@ Opening the cage to tend the flame, trim the soot from the bars and look at the 
 Anyone planning to steal, douse, or move the flame. The keys also work as a test of trust: whoever refuses to hand theirs over has something to hide.
 
 :::gm
-Three locks, three keys (Tallow the first, Marrow the second, Vosk the third). Sallow has had a copy of the second made by the Quiet Office; Mote has a copy of the third. Neither fits the first lock, so even together they cannot open the cage without the lamp-keeper's key. In session 3, when Tallow collapses, Marrow takes his key from his neck and gives it to Ysse.
+Three locks, three keys (Tallow the first, Marrow the second, Vosk the third). Sallow has had a copy of the second made by the Quiet Office; Mote has a copy of the third. Neither fits the first lock, so even together they cannot open the cage without the lamp-keeper's key. The keys do not hold the cage to the wall: it is bolted into its niche, and anyone with time and tools can unbolt it and carry it off whole and still locked (Mote's knives try in session 7; the company does it in session 8). What the keys guard is the lamp inside, and the shard in its bowl: nobody lifts those out without all three. That is why a thief who wants the lamp, and not just a locked iron box, needs the keeper's key. In session 3, when Tallow collapses, Marrow takes his key from his neck and gives it to Ysse.
 :::
 
 == GM notes ==

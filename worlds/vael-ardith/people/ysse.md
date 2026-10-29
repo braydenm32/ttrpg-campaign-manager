@@ -58,7 +58,7 @@ Officially: to apprentice under Brother Tallow, keep the oil log, trim the wick,
 - **[[Tick]]** calls her "Moth", brings her things that burn oddly from the glass, and is the only one who asks what she sees in the flame.
 - **[[Quorl Many-Words]]** shares the night watch on Lantern Hill with her. She keeps the flame; he keeps the words of the dead. They have long, strange conversations at three in the morning.
 - **[[Borrin Halt]]**: where his shadow should be, she sees something she cannot name. She has not told him.
-- **[[Sister Seraphine]]** has invited her to the House twice "to talk about fire". Both times Ysse went home and couldn't sleep.
+- **[[Sister Seraphine]]** has sent word twice inviting her to the House "to talk about fire". Ysse has not gone, and both nights she couldn't sleep.
 
 ### Playing her
 Curiosity as courage. She will walk into the dark for a question. The campaign will eventually offer her an answer she might not survive.

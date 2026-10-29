@@ -16,9 +16,11 @@ Where the Ardis finally reaches the sea it spreads into the Bay of Tolls, and Se
 The city is loud, salt-stained, polyglot, and honest in a way that has nothing to do with virtue: the weights are true because false weights are bad for business, and the contracts are binding because [[Corvex]] audits them personally. The temple of Corvex is the biggest building in the city. The temple of [[Sefra]] is the oldest, and her face here is the Toll-Keeper, who takes a tenth of every drowning.
 
 ### Hook
-A clerk of the Long Counting-House, drunk at [[The Seventh Chair]] on the Ledger Island causeway, told a halfling barge-captain that the Table had "bought the ash", meaning the Ashenreach's debts, Regency share and all, "down to the last candle". The halfling was [[Kettle Brindlewake]]. She has been thinking about what it means ever since. The clerk, [[Fallon Wrass]], has since been promoted to a room with no window.
+A clerk of the Long Counting-House, drunk at [[The Seventh Chair]] on the Ledger Island causeway, told a halfling barge-captain that the Table had "bought the ash".
 
 :::gm
+He meant the Ashenreach's debts, Regency share and all, "down to the last candle". The halfling was [[Kettle Brindlewake]]. She has been thinking about what it means ever since. The clerk, [[Fallon Wrass]], has since been promoted to a room with no window.
+
 The clerk was right, and the Table knows it. It also knows that the chart on [[Grandmother Tollamund]]'s wall is missing a corner, and has decided that is Tollamund's affair for now.
 :::
 
