@@ -38,25 +38,25 @@ Her voice is harsh and amused, and it clicks.
 > "You want a relic, little soldier? Dig. Want it without digging? Pay."
 
 ### Who she is
-In the orc way she was once **Vexa, Harrag's daughter**. The [[The Mothers of the Iron|Mothers]] took the name twenty years ago, when Grashka herself cast her out for selling her company's contract to the highest bidder in the middle of a siege. She calls herself Vexa of Nobody now, and laughs about it. She has run [[The Glassers]] out of [[Fort Mercy]], the old abandoned Regency fort on the ash, for eight years: salvage gangs who cut into the glasslands, the villages war-sorcery fused into glass, and dig out what's inside.
+In the orc way she was once **Vexa, Harrag's daughter**. The [[The Mothers of the Iron|Mothers]] took the name twenty years ago, when Grashka herself cast her out for selling her company's contract to the highest bidder in the middle of a siege. She calls herself Vexa of Nobody now, and laughs about it. She has led [[The Glassers]] for eight years and held [[Fort Mercy]], the old abandoned Regency fort on the ash, for three: salvage gangs who cut into the glasslands, the villages war-sorcery fused into glass, and dig out what's inside.
 
 ### What she wants
 To dig deeper. Under the glasslands there are older things than villages: walls, carvings, roads. The deeper she goes the stranger they get, and the better they sell.
 
 ### What she knows
-The glasslands better than anyone. Where the dead are thickest under the glass. That something has been buying up Lithic relics in quantity: a Remembrancer, paying in Sael silver; and a quieter buyer for the Saint's chapel. That the fort's old records vault holds a box of half-burned imperial papers she's never bothered to read. That something happened out on the ash road two weeks ago that she is not discussing.
+The glasslands better than anyone. Where the dead are thickest under the glass. That something has been buying up Lithic relics in quantity: a Remembrancer, paying in Sael silver; and a quieter buyer for the Saint's chapel. That the fort's old records vault holds a box of half-burned imperial papers she's never bothered to read. That something happened out on the ash road a week ago that she is not discussing.
 
 ### How she treats the PCs
 As customers or competitors. She respects strength and despises soldiers who serve for nothing. She'll be interested in [[Varra Nine-Knuckles]] at once (another exile), and try to recruit her.
 
 :::gm
-**Secret.** Thirty feet under Fort Mercy, Vexa's diggers broke into a Lithic chamber fused into black glass, and on the glass is writing: the angular script of [[Ul-Tarran]]. She can't read it. She thinks it's a map. It is in fact a warning, and part of an account of the Godslaying, carved by the Lithic before they turned to stone. Its last line reads, if anyone ever reads it, "The lamp holds the lock; the heart holds the lamp."
+**Secret.** Thirty feet below the cellar panel at Fort Mercy, Vexa's diggers broke into a Lithic chamber fused into black glass, and on the glass is writing: the angular script of [[Ul-Tarran]]. She can't read it. She thinks it's a map. It is in fact a warning, and part of an account of the Godslaying, carved by the Lithic before they turned to stone. Its last line reads, if anyone ever reads it, "The lamp holds the lock; the heart holds the lamp."
 
 She has sold rubbings to [[Aelith Sorn]]. She has kept the best piece back. She has been dreaming about it. Some of her crews are Sleepless.
 
-The Ninth Lantern's pay-wagon strongbox is in her cellar, kept "until collected" (details on [[Fort Mercy]]), and she knows it should not be there. She doesn't care whether that makes sense.
+The Ninth Lantern's pay-wagon strongbox is in her cellar, kept "until collected" on [[Cousin Pennamund]]'s word (details on [[Fort Mercy]]), and she knows it should not be there. She and her crew were paid to receive it. She doesn't care whether that makes sense.
 
-The half-burned papers in the records vault are the surviving notes of Ilbert Crane, the Emperor's Master of Works ([[The Emperor's Digs]]). One of his three digs was at the foot of the Ninth Stone.
+The half-burned papers in the records vault are the surviving notes of Ilbert Crane, the Emperor's Master of Works ([[The Emperor's Digs]]). One of his three digs was at the foot of the Ninth Stone. Her second, the dowser [[Ottoline Crane]], is his granddaughter; she came east after the 3005 fire to find what survived of his papers, and she knows the Cold Seam is on his drawings.
 :::
 
 == GM notes ==

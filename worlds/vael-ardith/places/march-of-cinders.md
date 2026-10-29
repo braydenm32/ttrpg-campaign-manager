@@ -28,14 +28,18 @@ The March is what the Treaty of Ashes calls the land ten miles either side of th
 [[The Ninth Lantern]] holds the ford under the treaty and patrols as far east as the Treaty Stone, further when paid, which is to say not lately. Reeve [[Odile Fairweather]] speaks for the townsfolk. The steading families answer to nobody and pay the company in goats. [[The Glassers]] come in from Fort Mercy to sell at Gutter Market and are tolerated as long as they leave their picks at the bridge.
 
 ### Rumours
-- The Treaty Stone bleeds at red moon. (False. That is the Orchard.)
-- The Regency is sending a new garrison to replace the Ninth. (False, so far.)
-- There is a Lithic city under the whole March and the ford is its roof. (Truer than anyone likes.)
-- The pear trees will fruit again when the lantern goes out. (Who knows.)
+- The Treaty Stone bleeds at red moon.
+- The Regency is sending a new garrison to replace the Ninth.
+- There is a Lithic city under the whole March and the ford is its roof.
+- The pear trees will fruit again when the lantern goes out.
+
+:::gm
+**Which are true.** 1. False. That is the Orchard. 2. False, so far. 3. Truer than anyone likes. 4. Who knows.
+:::
 
 ### Things to do
 Escort a steading's goats across the ford. Walk the eastern patrol to the Treaty Stone and back before the wind turns. Help a family dig out after a greywind. Take a Glasser's coin to guide a dig. Carry a letter to the mission and see what the Sister offers for the trouble.
 
 :::gm
-The March is the campaign's home ground; everything in sessions 1 to 5 happens within a day's walk of the ford. Keep it small and familiar until the Rent expedition in session 6 makes the horizon suddenly real.
+The March is the campaign's home ground; everything in sessions 1 to 5 happens within two days' walk of the ford. Keep it small and familiar until the Rent expedition in session 6 makes the horizon suddenly real.
 :::

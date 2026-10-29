@@ -31,10 +31,10 @@ On the water. The Ardis from [[Ardmere]] to [[Sevenhaven]] is theirs; the Cinder
 Useful, cheerful, untrustworthy in exactly the way you would expect and no other. Everyone uses them. Everyone assumes they are being sold to the other side as well, and they are right, and they keep using them, because the alternative is walking. Soldiers like them; quartermasters fear them.
 
 ### Playing a halfling
-You are small, overlooked and listening. Decide your clan and your boat and which Mother of the Water you answer to, because you do answer to one, wherever you are. You know a little about everyone and you can get a letter anywhere for a price, and you are honest about what you sell, which is everything. Play the warmth as real and the neutrality as a weapon.
+You are small, overlooked and listening. Decide your clan and your boat and which Mother of the Water you answer to, because you do answer to one, wherever you are. You know a little about everyone and you can get a letter anywhere for a price, and you are honest about what you sell, which is everything. The warmth is real and so is the neutrality, and the second is the sharper tool.
 
 :::gm
-The Barge Clans run the best courier and intelligence network on the continent and sell to all sides, and the sides know it, and still buy, because the Clans have never once lied about what they carry; they only charge both parties. The Mothers of the Water meet once a year on the water at [[Sevenhaven]] and decide what the continent will know next season. The Quiet Office, the Concord Houses and the Mothers of the Iron all pay them. [[Fennick Bottlebrook]]'s cooked books are balanced by a halfling loan he has not told the captain about, and the lender is a clan, and the clan sells to [[Grandmother Tollamund]].
+The Barge Clans run the best courier and intelligence network on the continent and sell to all sides, and the sides know it, and still buy, because the Clans have never once lied about what they carry; they only charge both parties. The Mothers of the Water meet once a year on the water at [[Sevenhaven]] and decide what the continent will know next season. The Quiet Office, the Concord Houses and the Mothers of the Iron all pay them. [[Fennick Bottlebrook]]'s cooked books are balanced by a loan he has not told the captain about, in order: a clan loan he hid from her; the clan sold the paper to [[Grandmother Tollamund]]; later he borrowed against Ferrowyn paper.
 :::
 
 == GM notes ==

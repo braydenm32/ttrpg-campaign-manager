@@ -33,5 +33,5 @@ In the orc way she is **Skarra, Hesha's daughter**; the company calls her Burnbr
 She thinks [[Tick]] is a genius who will die young and take a wall with him. He thinks she's a coward who uses three times the fuse she needs. She sends him a jar of burn salve every Restday without a note.
 
 :::gm
-Skarra's mother is Mother Hesha, who sits on the Mothers' council. Skarra writes home every month. Her last letter mentioned that "an exile with nine knuckles" has signed with the company. The Mothers now know where [[Varra Nine-Knuckles]] is. Whether they act, and how, is the GM's lever for sessions 5 to 8.
+Skarra's mother is Mother Hesha, who sits on the Mothers' council. Skarra writes home every month. Her last letter mentioned that "an exile with nine knuckles" has signed with the company. The Mothers now know where [[Varra Nine-Knuckles]] is. Whether they act, and how, is the GM's lever for sessions 5 to 8; the Mothers' lever in session 7 is Grashka's letter. [[Mother Hesha]] reads every one of Skarra's letters aloud to the council.
 :::

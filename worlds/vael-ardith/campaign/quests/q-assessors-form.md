@@ -24,7 +24,14 @@ Without it he must tax the company in full. With it, he can stop. He is close to
 :::gm
 [[Ansel Mote]] took it. The form carries a Regency counter-seal in wax, and Mote has been using its blank reverse for his cipher reports to the Quiet Office (see the loose thread about the clerk's writing). It is in a locked drawer of Mote's desk at [[The Assessor's Office]], under a false bottom (Investigation DC 14 to find, Thieves' tools DC 13 to open).
 
-On its back, in a tiny, neat hand: columns of numbers that look like tax tables. They are a cipher. A wizard or anyone with a week and a dictionary (Intelligence DC 16, or Ysse with an hour) gets one line out: **"S. paid. Oil done by the red moon. Assessor knows nothing."**
+On its back, in a tiny, neat hand: columns of numbers that look like tax tables. They are a cipher, and the column widths are letters. A wizard or anyone with a week and a dictionary (Intelligence DC 16, or Ysse with an hour) gets four lines out:
+
+*S. paid.*
+*Oil done by the red moon.*
+*Lamp to be taken under Levy default; escort at Ardmere.*
+*Assessor knows nothing.*
+
+A fifth line, found only by a second hour or a DC 18 check, mentions "the girl at the Ledger": Tesh, whom Mote went to look at on his first evening in town. Handout: h-mote-cipher.
 
 Returning the form makes Pell an ally for life. He will stamp anything for them, once, in triplicate.
 :::

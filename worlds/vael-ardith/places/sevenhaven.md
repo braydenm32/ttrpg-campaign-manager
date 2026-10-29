@@ -17,3 +17,7 @@ The city is loud, salt-stained, polyglot, and honest in a way that has nothing t
 
 ### Hook
 A clerk of the Long Counting-House, drunk at a quayside tavern, told a halfling barge-captain that the Table had "bought the ash", meaning the Ashenreach's debts, Regency share and all, "down to the last candle". The halfling was [[Kettle Brindlewake]]. She has been thinking about what it means ever since.
+
+:::gm
+The clerk was right, and the Table knows it. It also knows that the chart on [[Grandmother Tollamund]]'s wall is missing a corner, and has decided that is Tollamund's affair for now.
+:::

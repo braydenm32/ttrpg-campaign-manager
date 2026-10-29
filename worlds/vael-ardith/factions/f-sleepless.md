@@ -8,7 +8,7 @@ gmFields:
   Crest: An open eye behind a closed lid, scratched in chalk on doors
   Leader: The Dreaming Widow
   Meeting place: Cellars in the Smokes, and the dry fountain
-  Strength: About sixty, mostly Hollowborn
+  Strength: About sixty adults, and their Hollowborn children
 relations:
   - to: dreaming-widow
     kind: follows

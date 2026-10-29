@@ -20,7 +20,7 @@ relations:
 A sliver of grey stone, hard as bone and rough as a quarry floor, about the length of a finger. It is cold in the hand even when it lies in a fire. Held to the light, it shows faint lines like the veins in a leaf. It hums, very quietly, if you press it to your ear.
 
 ### What it is
-When the Battle of Cinders broke the Ninth Ward, a piece of the [[The Ninth Stone|Ninth Stone]] flew free in the blast and landed in the embers of the Ruddy Hundred's cookfire, at the cooks' camp in what is now [[The Weeping Orchard]]. It burned there without wood. Mother Hennet lit the lantern from that fire and carried the stone itself up to the Keep in a soup-pot, and [[Brother Tallow]] has kept it under the lantern's cage ever since.
+When the Battle of Cinders broke the Ninth Ward, a piece of the [[The Ninth Stone|Ninth Stone]] flew free in the blast and landed in the embers of the Ruddy Hundred's cookfire, at the cooks' camp in what is now [[The Weeping Orchard]]. It burned there without wood. Mother Hennet lit the lantern from that fire and carried the stone itself up to the Keep in a soup-pot, and [[Brother Tallow]] has kept it in the lamp's bowl, under the flame, ever since.
 
 ### What it holds
 The Ninth Ward is the work of one of the Nine, who poured their divinity into the stone to bury a god. That stone is cracked, and the Shard is part of it still. While it burns, a thread of the ward remains whole; take it away, and the crack spreads.

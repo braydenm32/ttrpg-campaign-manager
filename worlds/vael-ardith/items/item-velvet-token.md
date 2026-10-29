@@ -6,7 +6,7 @@ tags: [ gear, secrets ]
 image: item:item-velvet-token
 heldBy: velvet-ledger
 fields:
-  Value: 20 gold
+  Value: Not for sale; a gift worth a favour
   Weight: Negligible
   Rarity: Uncommon
 gmFields:

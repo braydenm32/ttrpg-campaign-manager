@@ -8,20 +8,22 @@ tags: [ ferry ]
 fields:
   Keeper: Nan Crupp, halfling, Barge Clans, eighty if a day
   Fare: 1 cp, or something true you have not told anyone
-  Hours: first light to the Ember rising; never after
+  Hours: from first light until the Ember is up, which some nights is not at all
 ---
 
-> A flat punt on a rope slung bank to bank, below the last barge, with a halfling woman in a tarred hat sitting in the stern smoking a pipe. The east bank is forty yards off. "Penny," she says, "or tell me something. No soldier's lies. Something you ain't said." She holds out a hand like a walnut.
+> A flat punt on a rope slung bank to bank, below the last barge, with a halfling woman in a tarred hat sitting in the stern smoking a pipe. The east bank is forty yards off. "Penny," she says, "or tell me something. No soldier's lies. Something you ain't said." She holds out a hand like a knot in a tarred rope.
 
 The bridge takes a penny; so does the ferry, and the ferry does not have a gate-watch at the far end asking your business. The company tolerates it because the company uses it. Nan Crupp has poled it since the bridge was a wreck, and claims to have taken more secrets across the Cinder than the Velvet Ledger has in its book, "and cheaper".
 
-She stops at dusk. Not sunset: the Ember. When the red moon clears the eastern plain she ties up and goes home, and no fare has ever changed her mind. Asked why, she says the river is somebody else's after dark.
+She stops when the Ember is up. Not at sunset: the Ember. On nights it rises early she is gone before the lamps are lit, and on a few nights she does not cross at all. She ties up and goes into her tarred hulk-hut by the landing, and watches the river from the door, and no fare has ever changed her mind. Asked why, she says the river is somebody else's after dark.
 
 ### Rumours
-- Nan sells what she hears to Kettle. (True; it is a clan arrangement. She sells it slowly and leaves out the names.)
-- She once ferried the Emperor's murderer across, in 2981, and would not say which way. (She says so herself. Nobody has checked.)
-- Something stands in the shallows under the third pier at Ember-rise and watches the punt. (True since the 7th.)
+- Nan sells what she hears to Kettle.
+- She once ferried the Emperor's murderer across, in 2981, and would not say which way.
+- Something stands in the shallows under the third pier at Ember-rise and watches the punt.
 
 :::gm
-Nan did once ferry someone across in 2981 whom she will not name; [[Grashka]] was in the Ashenreach that year. Nan ferried [[Dannic Rook]] east and back twice in the days before he drowned, and he paid in sentences both times. The first was "I know who waters the lamp." The second, coming back, was "I shouldn't have looked at it." She will give the PCs the first for a penny and the second for a secret of their own.
+**Which are true.** 1. True; it is a clan arrangement. She sells it slowly and leaves out the names. 2. She says so herself. Nobody has checked, and it is true. 3. True since the 7th: it is Dannic Rook's body.
+
+In Frostcall 2981 Nan ferried a tall, silent orc with a pike for a staff across the Cinder, and has told no one; the orc was [[Grashka]]. On the night of 7 Ashfall she saw a scarfed man and a splash from her hut door, and she has not decided who to tell. A week before the campaign she saw "Borrin" standing on the ford at midnight (see [[Borrin Halt]]). Nan ferried [[Dannic Rook]] east and back twice in the days before he drowned, and he paid in sentences both times. The first was "I know who waters the lamp." The second, coming back, was "I shouldn't have looked at it." She will give the PCs the first for a penny and the second for a secret of their own.
 :::

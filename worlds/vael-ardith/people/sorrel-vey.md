@@ -31,9 +31,9 @@ relations:
 ---
 
 ### Look and voice
-Tall and unhurried, with the stillness of someone who knows she's being watched and has decided to allow it. Black hair worn loose; eyes the grey of woodsmoke. From her collarbones to her fingertips she is covered in ink: dense, ancient, faded elven script and pictures, coiling down her arms and across her shoulders, words in a hand no living elf can read. Her gowns are cut to show it, because, as she says, a temple should display its scripture. A Raveler called Mourn keeps her door and laughs at the wrong things.
+Tall and unhurried, with the stillness of someone who knows she's being watched and has decided to allow it. Black hair worn loose; eyes the grey of woodsmoke. From her collarbones to her fingertips she is covered in ink: dense, ancient, faded elven script and pictures, coiling down her arms and across her shoulders, words in a hand hardly an elf in town can read. Her gowns are cut to show it, because, as she says, a temple should display its scripture. A Raveler called [[Mourn]] keeps her door and laughs at the wrong things.
 
-Her voice is low and amused, and she makes every visitor feel they are the only interesting person to come through the door all week.
+She lets a silence run a beat longer than is comfortable, smiles into it, and makes every visitor feel they are the only interesting person to come through the door all week. Her voice is low and amused.
 
 > "Everyone who comes through my door wants something, darling. The ones who know what it is are cheap. The ones who don't, I keep."
 
@@ -45,7 +45,7 @@ Her voice is low and amused, and she makes every visitor feel they are the only 
 She came out of [[Sael]] eighty years ago and has never gone back.
 
 ### What she wants
-Information, as all Isaurana's priests do. And one thing more, privately: to have the ink on her own skin read. She doesn't know what it says. She knows it is old, that her grandmother inked it onto her when she was a girl, and that the Remembrancers of Sael would very much like to read it. A few of them, she suspects, would rather it were gone.
+Information, as all Isaurana's priests do. And one thing more, privately: to have the ink on her own skin read. She doesn't know what it says. She knows it is old, that her grandmother inked it onto her when she was a girl, two centuries ago, and that the Remembrancers of Sael would very much like to read it. A few of them, she suspects, would rather it were gone.
 
 ### What she knows
 More than anyone in town, about almost everyone. Who's sleeping with whom, who's owed what, who visited the Saint's mission at midnight. She knows the Velvet Ledger's book has exactly one entry about [[Ansel Mote]]: *Paid for tea. Asked nothing.* It worries her more than any other line in the book.
@@ -54,9 +54,9 @@ More than anyone in town, about almost everyone. Who's sleeping with whom, who's
 As guests: warmly, attentively, with interest that may or may not be professional. She will trade a secret for a secret, never for coin. She enjoys clever people and is merciless to clumsy ones.
 
 :::gm
-**Secret.** Sorrel Vey is [[Captain Marrow]]'s lover. It began as a negotiation for the company's credit and became something neither of them planned. It is the only thing in Sorrel's life she does not write in the book.
+**Secret.** Sorrel Vey is [[Captain Marrow]]'s lover. It began as a negotiation for the company's credit and became something neither of them planned. It is the only thing in Sorrel's life she does not write in the book. She has never said it aloud; in session 4 she says it to [[Sister Seraphine]]'s face, once, on purpose. She keeps a small sleep-talk book of what Ilse murmurs, and has never read it back. When Marrow refused her money twice, Sorrel began paying the company's small debts instead, through an anonymous "friend of the company" credit that turns up in [[Fennick Bottlebrook]]'s books every Coinday. Marrow does not know.
 
-**Her skin** records [[The Saelish Trespass]]: Sael's attempt in 1102 AW to open the Fourth Ward, and what it cost. The Remembrancers burned every skin that remembered; this copy survived. [[Aelith Sorn]] can read parts of it, and has been courting Sorrel for a month for the rest. She will do anything to read it all, including taking it. Sorrel plays Aelith, Seraphine and the Captain against the fourth party in the room, which is her own curiosity.
+**Her skin** records [[The Saelish Trespass]]: Sael's attempt in 1102 AW to open the Fourth Ward, and what it cost. When Sorrel was a girl, her grandmother, a dying Remembrancer ordered to burn the skins that remembered the Trespass, inked it onto her granddaughter instead. The layers on her back run oldest first: four words (*We came because called*), the list of the Trespass dead, the Fourth Ward's sign; later hands re-inked each as it faded. [[Aelith Sorn]] can read one line in five and has been courting Sorrel for a month for the rest. She will do anything to read it all, including taking it. Sorrel plays Aelith, Seraphine and the Captain against the fourth party in the room, which is her own curiosity.
 
 She loathes [[Sister Seraphine]], who serves desire too, and in a way Sorrel finds dishonest: "She doesn't sell what people want. She sells them the wanting."
 :::

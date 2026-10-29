@@ -25,25 +25,29 @@ Cinderford was a village of six hundred before the war, a ford and a mill and a 
 - [[Temple Row]], the lane along the hill's foot: a shrine to every god, and one to a dead one.
 
 ### Who runs it
-Reeve [[Odile Fairweather]] runs the town, holds court in the Ford on Wardday, and has outlasted four company captains. Captain [[Ilse Marrow]] runs the Ninth Lantern, which is to say the walls, the bridge and the law east of the river. Between them is a courtesy that has worn thin in places. The Regency's man is Assessor [[Pell Quillon]], newly arrived, with forms. The Concord's is [[Grandmother Tollamund]], who arrived four years ago and has not been seen to stand up since.
+Reeve [[Odile Fairweather]] runs the town, holds court in the Ford on Wardday, and has outlasted three company captains and is working on the fourth. Captain [[Ilse Marrow]] runs the Ninth Lantern, which is to say the walls, the bridge and the law east of the river. Between them is a courtesy that has worn thin in places. The Regency's man is Assessor [[Pell Quillon]], who arrives on the 15th with forms. The Concord's is [[Grandmother Tollamund]], who has sat in the old mill at the Ford since 3007 and has not been seen to stand up since.
 
 ### Rumours
-- The company has not been paid since Reaping. (True, and worse: since 3009.)
-- The Captain has been paying the men out of her own purse. (She will not discuss it.)
-- The Reeve is selling the town. (The Reeve calls this slander.)
-- The lantern went out for a moment last Frostcall and Brother Tallow lit it again from his pipe. (False. It has never gone out. Yet.)
-- The Velvet Ledger knows what you did before you do. (More or less true.)
+- The company has not been paid since Reaping.
+- The Captain has been paying the men out of her own purse.
+- The Reeve is selling the town.
+- The lantern went out for a moment last Frostcall and Brother Tallow lit it again from his pipe.
+- The Velvet Ledger knows what you did before you do.
+
+:::gm
+**Which are true.** 1. True, and worse: since 3009. 2. True: she will not discuss it, and is nearly broke. 3. Close: the Reeve calls it slander, but see below. 4. False. It has never gone out. Yet. 5. More or less true.
+:::
 
 ### Things to do
 Sign on at the gatehouse. Drink on tick at [[The Last Candle]]. Lose money to [[Spoons Aldane]]. Buy salvage you should not at [[Gutter Market]]. Pray on Temple Row and be overheard. Watch the bridge at dawn, when the river is low and the piers show, and see what the night has caught against them.
 
 ### On 14 Ashfall 3011
-The quarter-day pay wagon from Fallowden is twelve days late. Pallas is a night from full. The Ember is two. The river is lower than anyone remembers, and there is a dead man in the ford who was buried a week ago.
+The quarter-day pay wagon from Fallowden is eight days overdue. Pallas is a night from full. The Ember is two nights from full. The river is lower than anyone remembers, and there is a dead man in the ford who drowned a week ago.
 
 :::gm
-Two of the rumours above are true: Marrow has paid the company from her own savings for a year and is nearly broke, and the Reeve has quietly agreed to sell the town's charter to the Concord (not in the way the gossips mean). Cinderford is built on the bones of a Lithic waystation; the Glass Barrow under the ford is its upper hall. The lantern on the hill is holding the Ninth Ward's crack shut, thirty miles away, and nobody in town knows it except, nearly, [[Brother Tallow]]. For the town's temper as the campaign goes on, see the Mutiny clock on the company page and the Sleepless clock in the Smokes.
+Two of the rumours above are the real secrets: Marrow has paid the company from her own savings for a year and is nearly broke, and the Reeve has quietly agreed to sell the town's charter to the Concord (not in the way the gossips mean; she signs between sessions 3 and 7 and has not sealed it). Cinderford is built on the bones of a Lithic waystation; the Glass Barrow under the ford is its upper hall. The lantern on the hill is holding the Ninth Ward's crack shut, sixty miles away, and nobody in town knows it except, nearly, [[Brother Tallow]]. For the town's temper as the campaign goes on, see the Mutiny clock on the company page and the Sleepless clock in the Smokes.
 :::
 
 == GM notes ==
 
-Run the town as a character: tired, funny, holding on out of habit. The bells ring the watches from the Keep; the Treaty Bell rings only for alarm or treaty business. Market day is Coinday. The Reeve's court is Wardday. Rents fall due at Pallas full, the 15th, which this month is the day after session 1 starts: everyone is short.
+Run the town as a character: tired, funny, holding on out of habit. The bells ring the watches from the Keep; the Treaty Bell's rope is pulled only for alarm or treaty business (the bell-ward's mallet strokes for the ford, deaths and fire do not count). Market day is Coinday. The Reeve's court is Wardday. Rents fall due at Pallas full, the 15th, which this month is the day after session 1 starts: everyone is short.

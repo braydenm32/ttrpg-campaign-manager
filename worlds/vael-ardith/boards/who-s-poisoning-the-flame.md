@@ -15,6 +15,9 @@ cards:
   - { key: n-coin, x: 80, y: 400, text: "Sallow paid for a round with NEW Regency silver, this year's mint. Dannic had the same coin in his purse.", color: "#f6e27a" }
   - { key: n-poster, x: 80, y: 760, text: 'Wanted poster: "last seen on the 12th". He drowned on the 7th. Signed A.M.', color: "#f4a6a6" }
   - { key: n-ledger, x: 1350, y: 760, text: "Fennick's oil ledger: four casks too many burned this quarter. Where did the oil go?", color: "#a6d4f4" }
+  - { key: n-orderbook, x: 1350, y: 160, text: "Hesk's order-book: sealed Keel tins bought three weeks running, paid in advance, by a clerk with a cold. Same grey wax, same moth.", color: "#a6d4f4" }
+  - { key: n-slate, x: 80, y: 580, text: "Hennet's slate: Dannic's tab crossed off on the 5th, paid in NEW Regency silver. She keeps the coin in a cup under the bar.", color: "#f6e27a" }
+  - { key: n-oilroom, x: 420, y: 860, text: "The oil-room under the cage needs no key. Swap the tins in the store, and Tallow pours the poison in himself at dawn. Who could get in?", color: "#f4a6a6" }
   - { key: n-note, x: 380, y: 420, text: "Dannic's note: \"S. says one more swap and Im square. Then the clerk wants a word.\"", color: "#f6e27a" }
 strings:
   - { from: dannic, to: tin, label: carried }
@@ -33,4 +36,10 @@ strings:
   - { from: fennick, to: tollamund, label: owes money to }
   - { from: seraphine, to: tin, label: "wants it lit, not out?" }
   - { from: tollamund, to: tin, label: why would a bank? }
+  - { from: n-orderbook, to: tin, label: same wax }
+  - { from: n-orderbook, to: mote, label: a clerk with a cold? }
+  - { from: n-slate, to: dannic, label: paid with }
+  - { from: n-slate, to: n-coin, label: the same silver }
+  - { from: n-oilroom, to: dannic, label: swapped here }
+  - { from: n-oilroom, to: sallow, label: who holds the post? }
 ---

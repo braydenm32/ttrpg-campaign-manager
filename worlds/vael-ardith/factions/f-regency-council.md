@@ -10,7 +10,7 @@ fields:
   Crest: An empty throne in gold on deep blue, a wax seal pressed into the seat
   Seat: Caer Ardith
   Leader: Regent-Chancellor Marius Vell
-  Strength: A civil service, a few regiments, the Quiet Office
+  Strength: A civil service, a few regiments, the Council's clerks
 relations:
   - to: f-quiet-office
     kind: commands
@@ -32,11 +32,11 @@ The Regency Council has ruled [[The Regency of Ardith]] since the Kingslaying in
 Ledgers, seals and polite regret. The Council is an administration pretending to be a government. It does not lose battles; it loses the paperwork about battles. Letters from [[Caer Ardith]] still reach the front in triplicate, asking after the garrison's readiness, the state of the walls, and why Form 11-C was filed on the wrong colour of paper.
 
 ### Structure and ranks
-Seven Councillors, each holding a "Seat" (Treasury, War, Justice, Charters, the River, the Mint, and the Seal). Over them the Regent-Chancellor. Beneath them the civil service: Collectors, Under-Collectors, Assistant Under-Collectors, and a great sea of clerks. Rank is shown by the number of ribbons on a document.
+Eleven Councillors. Seven hold the great Seats (Treasury, War, Justice, Charters, the River, the Mint and the Seal); four hold lesser ones (Works, the Records, the Marches, and the Chair). Vell controls nine. Over them all, the Regent-Chancellor. Beneath them the civil service: Collectors, Under-Collectors, Assistant Under-Collectors, and a great sea of clerks. Rank is shown by the number of ribbons on a document.
 
 ### Notable members
 - [[Marius Vell]]: Regent-Chancellor, patient, courteous, never in a hurry.
-- [[Pell Quillon]]: Fourth Assistant Under-Collector at [[The Assessor's Office]]; harmless, honest, doomed.
+- [[Pell Quillon]]: Fourth Assistant Under-Collector at [[The Assessor's Office]]; harmless and honest.
 
 ### What they want in the Ashenreach
 Quiet, taxes, and no debt that can be called in. They want the treaty honoured on paper, the company paid by someone else, and their name on the credit. They are also, increasingly, interested in the lantern.
@@ -45,7 +45,7 @@ Quiet, taxes, and no debt that can be called in. They want the treaty honoured o
 As staff. Orders arrive; thanks do not. Anyone who does the Council a visible favour is offered a title they cannot afford to hold.
 
 ### Resources
-The treasury, such as it is; the river tolls; the Quiet Office; the old imperial archives, which hold maps nobody should be able to find.
+The treasury, such as it is; the river tolls; the old imperial archives, which hold maps nobody should be able to find.
 
 ### How they act
 - **A Form arrives:** an audit, an inventory, a census, a permission to apply for permission.
@@ -54,7 +54,7 @@ The treasury, such as it is; the river tolls; the Quiet Office; the old imperial
 - **Silence:** the correspondence stops, which is worse.
 
 :::gm
-Vell wants the power of the ward to crown a puppet emperor. The old imperial bloodlines were bred for ward-sensitivity, and the Council keeps a claimant in comfortable rooms in the capital, a quiet young cousin who has begun to hear things at night. Vell does not need a good emperor. He needs one who can stand near the Ninth Stone and carry what the ward gives, while Vell holds the pen. The Ninth Lantern is the key, and the Quiet Office was sent to Cinderford to turn it.
+Vell wants the power of the ward to crown a puppet emperor. The old imperial bloodlines were bred for ward-sensitivity, and the Council keeps a claimant in comfortable rooms in the capital, a quiet young cousin who has begun to hear things at night and has stopped speaking: he is failing, which is why Vell wants [[Tesh]]. Vell does not need a good emperor. He needs one who can stand near the Ninth Stone and carry what the ward gives, while Vell holds the pen. The Ninth Lantern is the key, and the Quiet Office was sent to Cinderford to turn it.
 :::
 
 == GM notes ==

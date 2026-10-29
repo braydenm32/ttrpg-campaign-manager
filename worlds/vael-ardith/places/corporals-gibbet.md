@@ -17,12 +17,16 @@ Nobody built it. One morning in 3005 it was there, a gallows post at the end of 
 [[The Hanged Corporal]] was a corporal hanged at Dunmeer in 2996, six years before Cinders, for refusing to burn a village. The village burned anyway. Soldiers started praying to him out of spite, the way you spit on an officer's grave, and it has begun, very quietly, to work. A prayer at the Gibbet is a refusal: *I won't*. Twice in the company's memory a sergeant has woken up with the welts of a flogging meant for the ranker who prayed.
 
 ### Who is here
-Soldiers, at night, alone, who do not talk about it. [[Mirrel Vosk]], once a year, on the eve of the battle's anniversary, with a bottle. [[Varra Nine-Knuckles]] will find, if she comes here, that an orc's refusal of a contract is the kind of prayer the Corporal hears.
+Soldiers, at night, alone, who do not talk about it. [[Mirrel Vosk]], once a year, on the eve of Cinders (the 13th of Ashfall), with a bottle. [[Varra Nine-Knuckles]] will find, if she comes here, that an orc's refusal of a contract is the kind of prayer the Corporal hears.
 
 ### Rumours
-- The Corporal was from the Ninth. (The Ninth did not exist. He was from the First, which is why Marrow will not speak of it.)
-- Pray here before a mutiny and the mutiny fails. (Or succeeds. The Corporal was not fussy about which side was giving orders.)
-- Touch the noose and you will be hanged yourself within the year. (Nobody has tested it sober.)
+- The Corporal was from the Ninth.
+- Pray here before a mutiny and the mutiny fails.
+- Touch the noose and you will be hanged yourself within the year.
+
+:::gm
+**Which are true.** 1. False: the Ninth did not exist yet. He was a Regency levy corporal under the First Company's command (the Salt Guard, Marrow's old company), which is why Marrow will not speak of it. The soldiers call him Dask. 2. Or succeeds. The Corporal was not fussy about which side was giving orders. 3. Nobody has tested it sober.
+:::
 
 :::gm
 The Corporal is ascending on refusal and is the one ascending power in the campaign with no interest in the crack. A PC who prays here before a defining refusal (Varra turning down the Mothers again, anyone refusing the Saint, the company refusing Sallow) gets advantage on the roll that follows, once per session, and the GM should describe the rope creaking.

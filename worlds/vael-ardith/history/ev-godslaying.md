@@ -16,7 +16,7 @@ Every year in the world is counted from this one. The [[The Reckoning of Years|R
 
 **What the god was** is where the stories divide. The Lithic say only "the Sleeper". The elves have a name for him on their skins, and cannot read it. The Iskavethi say the dead god was a tyrant. The Concord's historians say it was an unpaid account.
 
-**What it left.** [[The Nine Great Wards]] pin the continent shut. The buried god is called [[The Sleeper Below]]: somewhere between death, coma and undeath. Magic works because the god is not entirely gone, and every spell draws on a ward and costs someone, somewhere.
+**What it left.** [[The Nine Great Wards]] pin the continent shut. The buried god is called the Sleeper Below: somewhere between death, coma and undeath. Magic works because the god is not entirely gone, and every spell draws on a ward and costs someone, somewhere.
 
 ### How it's told now
 Mothers in the Grimmark tell it as a warning about pride. Soldiers tell it as the worst contract in history. In Iskaveth they tell it as a failure of mercy. Nobody tells it as a victory, even though that's what it was.

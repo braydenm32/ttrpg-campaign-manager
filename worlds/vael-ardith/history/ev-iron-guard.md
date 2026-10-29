@@ -2,7 +2,7 @@
 type: event
 name: The Breeding of the Iron Guard
 players: true
-summary: Imperial magi bred the orc soldier caste that would guard the throne for eight hundred years, then kill the last Emperor.
+summary: Imperial magi bred the orc soldier caste that would guard the throne for nearly nine centuries, then kill the last Emperor.
 parent: caer-ardith
 tags: [ empire, orcs ]
 age: imperial

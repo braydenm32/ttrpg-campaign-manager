@@ -11,7 +11,7 @@ fields:
   Notable for: the Empty Throne, the Hall of Records, assassins with excellent manners
 ---
 
-Caer Ardith is the biggest city on the continent and the most carefully swept. Seven bridges cross the Ardis under the walls; the Sun Palace stands on the island between them, and in its heart the Empty Throne sits under a dust sheet that is changed every morning by a man whose family has held the post for nine generations.
+Caer Ardith is the biggest city on the continent and the most carefully swept. Seven bridges cross the Ardis under the walls; the Sun Palace stands on the island between them, and in its heart the Empty Throne sits under a dust sheet that is changed every morning by a man whose family has kept the throne room's keys for nine generations.
 
 The city runs on paper. The Hall of Records fills three streets and every transaction in the Regency ends up in it, in triplicate, sooner or later. Vesh archivists keep the stacks; halfling couriers run the corridors; the Quiet Office has a door on every floor and no sign on any of them.
 

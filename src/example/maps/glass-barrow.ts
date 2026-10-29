@@ -86,7 +86,7 @@ function glassBarrow(): Drawing {
   put('bm-sacks', s(8.2, 4.9), 0.6 * G, 2, 30)
   put('bm-crate', s(7.4, 4.6), 0.35 * G, 1, 20)
   put('dg-arch', s(12, 8.2), G, 0, 0)
-  add(label(id('note'), "smugglers' cut to the Low Quay, 200 yds", s(5.5, 10.25), 15, 'place'))
+  add(label(id('note'), "smugglers' cut to the Low Quay, 50 yds", s(5.5, 10.25), 15, 'place'))
   add(label(id('note'), 'deep water', s(9.6, 7.7), 14, 'place'))
 
   // ---- 3. the bakery: front fallen in, three ovens at the back, webs ----

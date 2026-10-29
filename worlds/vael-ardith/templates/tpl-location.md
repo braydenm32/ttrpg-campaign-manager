@@ -22,11 +22,13 @@ gmFields:
 - Something to do, buy or steal.
 
 ### Rumours
-- Something true.
-- Something half true.
-- Something wrong but useful.
+- A rumour players can hear.
+- Another.
+- A third.
 
 :::gm
+**Which are true.** 1. True. 2. Half true: … 3. False, but useful: …
+
 ### The truth
 What lies under it, who really runs it, and what the party could find.
 
@@ -36,4 +38,4 @@ Who comes running, how fast, and how many.
 
 == GM notes ==
 
-Set "Inside" (the parent) so the place sits in its town or region. Every place in Vael Ardith has a sensory hook and something to do.
+Set "Inside" (the parent) so the place sits in its town or region. Never put a rumour's verdict in brackets in the list: players can read the list. Verdicts go in the gm block. Every place in Vael Ardith has a sensory hook and something to do.

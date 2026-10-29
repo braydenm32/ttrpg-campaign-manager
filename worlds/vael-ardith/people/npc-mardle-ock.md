@@ -25,7 +25,7 @@ relations:
     note: From the deep. Two winters back.
 ---
 
-A wiry, beardless, bald Returned dwarf with skin gone the colour of candle wax and eyes that don't like daylight. No shadow, of course. He came up from under the Grimmark two winters ago (hence the second name) and went straight into the deepest, darkest digging work he could find, which in the March means [[Fort Mercy]]'s deep cut. He hums while he works, a slow, tuneless, three-note hum, and stops if anyone asks what it is.
+A wiry, beardless, bald Returned dwarf with skin gone the colour of candle wax and eyes that don't like daylight. No shadow, of course. He came up from under the Grimmark two winters ago (hence the second name) and went straight into the deepest, darkest digging work he could find, which in the March means [[Fort Mercy]]'s deep cut. He hums while he works, a slow, tuneless, three-note hum, and stops if anyone asks what it is. He says he will not go below the cellar for any money.
 
 > "I'm not frightened of the dark, friend. I'm frightened of what the light shows."
 
@@ -33,4 +33,6 @@ He is the best cutter Vexa has, and he goes deeper than anyone else will.
 
 :::gm
 When he meets [[Borrin Halt]], Mardle goes pale and greets him by name: "You made it up, then. You were ahead of me, down there, two winters back. You said you'd wait." Borrin has no memory of it. What Mardle met in the deep was Borrin's shadow, walking on ahead, wearing Borrin's face. The three-note hum is what it was humming.
+
+Mardle says he won't go below the cellar, but he does, alone and at night. He sits at the lip of [[The Cold Seam]] and hums the three notes until Brakk's voice stops asking for rope.
 :::

@@ -16,3 +16,7 @@ Soldiers like Harrowquay. It is loud, cheap and full of people who understand th
 
 ### Hook
 Three recruiters in Harrowquay are signing men for a company called the Red Lamp, "to relieve a treaty garrison in the March of Cinders at the Concord's expense". Nobody in the March has heard of the Red Lamp, or of any relief.
+
+:::gm
+The Red Lamp is a [[The Quiet Office]] drop: a paper company whose recruits are meant to arrive in the March as the "relief" that will take the Keep once the lamp is taken under Levy default (Mote's cipher: *Lamp to be taken under Levy default; escort at Ardmere*). Each signed man ticks the Quiet Office clock.
+:::

@@ -24,7 +24,7 @@ The Regency Council declared the throne vacant on 3 Longnight 2981 AW. By spring
 **How it is told now.** By veterans, in the evenings, and never in order. They remember the weather, the food and one particular dog. Ask them who was winning and they stare at you until you buy another round.
 
 :::gm
-The war was not an accident of ambition. Several of the pretenders were prompted, quietly, by agents of the Quiet Office, to keep the realm divided. A weakened empire is a Regency that cannot be asked, politely, to give the throne back.
+The war was not an accident of ambition. Most of it needed no help. Where it could, the Quiet Office fed it: a loan here, a rumour there, never enough to be called a plan. A weakened empire is a Regency that cannot be asked, politely, to give the throne back.
 :::
 
 == GM notes ==

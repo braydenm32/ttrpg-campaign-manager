@@ -26,21 +26,25 @@ The house's real trade is knowing. People say things here. They are encouraged t
 - A letter delivered unopened to anyone in the March, 5 sp, by a barge-clan runner who owes the house.
 
 ### Who is here
-Madame Vey. Her second, a Raveler called Mourn who tends the door and laughs at the wrong things. The house: Perrow from Fallowden, Tesh who was a Glasser, two Iskavethi who left Halcyra, a Vesh boy who plays the lute and watches the lamps. [[Garrick Sallow]] on Coinday nights. The Assessor's clerk [[Ansel Mote]], once, who paid for tea and asked nothing, which Vey found interesting. The Captain, by the back stair, which the whole town knows and pretends not to.
+Madame Vey. Her second, a Raveler called [[Mourn]] who tends the door and laughs at the wrong things. The house: Perrow from Fallowden, Tesh who was a Glasser, two Iskavethi who left Halcyra, a Vesh boy who plays the lute and watches the lamps. [[Garrick Sallow]] on Coinday nights. The Assessor's clerk [[Ansel Mote]], once, who paid for tea and asked nothing, which Vey found interesting. The Captain, by the back stair, which the whole town knows and pretends not to.
 
 ### Rumours
-- Madame Vey is three hundred years old and cannot read her own skin. (True, both.)
-- The Blue Room has a listening pipe. (True; the goddess listens.)
-- Vey has a book that names every spy in town. (False. She has a suspicion or two, which is not the same.)
-- The Captain is paying the company with Vey's money. (False. Vey offered. Marrow refused. Twice.)
+- Madame Vey is three hundred years old and cannot read her own skin.
+- The Blue Room has a listening pipe.
+- Vey has a book that names every spy in town.
+- The Captain is paying the company with Vey's money.
+
+:::gm
+**Which are true.** 1. True, both. 2. True; the goddess listens. 3. False. She has a suspicion or two, which is not the same. 4. False. Vey offered; Marrow refused, twice. Vey pays the company's small debts anyway, through Fennick's books, and Marrow does not know.
+:::
 
 ### Things to do
 Confess, and be told what it was worth. Buy a secret and discover it was about you. Sit in the parlour long enough to see who uses the back stair. Be asked, very gently, by an elf with ink to her eyelids, whether anyone in your party reads old scripts.
 
 :::gm
-Vey's tattoos record [[The Saelish Trespass]]: she was inked as a child by a grandmother who chose not to burn the record, and she has never been able to read it. [[Aelith Sorn]] can, partly, and has been courting her for a month. The Saint's envoy has also come to tea. Vey plays all three against the fourth, which is her own curiosity. Session 4 lives here.
+Vey's tattoos record [[The Saelish Trespass]]: she was inked as a child by a grandmother, a dying Remembrancer who chose not to burn the record, and she has never been able to read it. The oldest layers lie nearest the spine and later hands have re-inked the fading lines. [[Aelith Sorn]] can read one line in five, and has been calling on her for a month; nobody else in the March can read it at all. The Saint's envoy has also come to tea. Vey plays all three against the fourth, which is her own curiosity. Session 4 passes through here.
 :::
 
 == GM notes ==
 
-Vey is amused, patient, and uses silence as a tool. She likes people who tell the truth badly. She loves Ilse Marrow, has told nobody, and would burn the ledger for her, which is the one thing she must never say out loud. The house treats every PC as a potential source; the players should feel seen, flattered, and slightly fleeced.
+Vey is amused, patient, and uses silence as a tool. She likes people who tell the truth badly. She loves Ilse Marrow, has told nobody, and would burn the ledger for her, which is the one thing she has never said aloud, until she says it to Seraphine Ashe's face, on purpose. The house treats every PC as a potential source; the players should feel seen, flattered, and slightly fleeced.

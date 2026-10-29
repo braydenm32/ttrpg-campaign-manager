@@ -61,6 +61,8 @@ Money, forged papers, a little poison, the ear of anyone who ever filed a tax re
 
 :::gm
 Secret aim: carry out Marius Vell's order. Mote has a stack of unsigned forms, a sleeping draught, and a ledger of everyone in the Keep who is owed more than they can bear. He is not cruel; he is patient. Mote will not act until the clock fills, or until Sallow fails, or until somebody finds him out. If exposed, he claims to be a clerk, and an excellent one.
+
+**What the Office has done.** In 2979 it coded the Emperor's Digs as *Drainage Works (Western)*, a deliberately dull, deliberately wrong line item. It burned the Fort Mercy vault of Ilbert Crane's papers in 3005 (the fire that killed 261). It stopped the Ninth's pay on 1 Hollowfrost 3009: the Treasury still signs the wages out every quarter "to Account Deferred, by order of the Regent-Chancellor", and Vell's own office takes them. And this year it runs the oil plot through Mote: Keel tins bought at Hesk's, cut with Stillwater ash, resealed in Hesk's grey wax, handed to Sallow, swapped in by Dannic. The Salt Feud and the 3006 riot are not its work, whatever the Smokes say.
 :::
 
 == GM notes ==

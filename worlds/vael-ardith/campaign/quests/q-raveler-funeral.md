@@ -26,9 +26,9 @@ He sat up halfway through. Politely. He would like it known that the door is loc
 [[Mother Corvane]] would like the funeral finished. Her rookery is full of mourners, two of them fainted, and the bread is going stale.
 
 :::gm
-Since [[Hathe]] died, his doors don't always open. Pike's door is jammed by the same cold leak that raised [[Dannic Rook]]. The way through is [[Hathe's Door-Key]], kept in the Rook-Court's reliquary; Corvane will lend it to Quorl (or a PC who earns it) to finish the rite.
+Since [[Hathe]] died, his doors don't always open. Pike's door is jammed by the same cold leak that raised [[Dannic Rook]]. The way through is [[Hathe's Door-Key]], kept in the reliquary at Corvel Rise and lent for funerals; Corvane will lend it to Quorl (or a PC who earns it) to finish the rite.
 
-When the door finally opens, Pike says his last words properly, and they are the same as the seven Quorl has already heard: **"The lamp is the lock."** Corvane, standing by, goes very still. She has been waiting for one more voice to be sure. This hands the party into session 5 and the Rook-Court's ledger.
+When the door finally opens, Pike says his last words properly, and they are the same as the seven Quorl has already heard, so Pike makes the eighth: **"The lamp is the lock."** Corvane, standing by, goes very still. She has had four words of five from the ledgers and has guessed the fifth; now a dying man says all five aloud. This hands the party into session 5 and the Rook-Court's ledger.
 
 If it goes wrong (the key is refused, the rite is botched), Pike gets up and goes home to the Keep, where he sits on his cot and won't leave. The company is not thrilled.
 :::

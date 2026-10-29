@@ -32,7 +32,7 @@ relations:
 ### Look and voice
 Eighty years old and still the tallest orc in any room: stooped, white-maned, broad as a gate, her grey skin seamed with sixty years of scars. Her tusks are capped in iron. She walks with a pike for a staff and has never once leaned on it in public. Her eyes are pale yellow and very steady. She wears no crown and no jewel; her only ornament is a ring of knuckle-bones on a cord, one for every orc she has exiled.
 
-She speaks slowly and rarely, in a voice like a millstone, and she does not repeat herself.
+She does not repeat herself, so people learn to listen the first time. What she says arrives low and flat, like a millstone turning over.
 
 > "A contract is the only wall we have, child. Everyone hates us. Everyone needs us. The contract is what stands between those two things."
 
@@ -41,7 +41,7 @@ She speaks slowly and rarely, in a voice like a millstone, and she does not repe
 ### Who she is
 In the orc way she is **Grashka, Ulvra's daughter**, and she is **Mother of Mothers**: first among [[The Mothers of the Iron]], the orc matriarchs who license, bind and judge every orc mercenary company in [[Vael Ardith]]. Her word sends companies to war and calls them off the field. Thirty years ago she was a commander of the Iron Guard, the orc soldier caste the empire bred in 2104 to guard its emperors. Everyone knows the Guard murdered Emperor Aurel IX in [[The Kingslaying]]. Nobody outside the Mothers knows whose hand struck.
 
-She is [[Varra Nine-Knuckles]]'s grandmother. She heard Varra's case herself, and cast her out herself, and took the knuckle herself.
+She is [[Varra Nine-Knuckles]]'s grandmother. She heard Varra's case herself, and cast her out herself, and took the knuckle Varra put into her hand: the one Varra lost at twelve in a portcullis chain, which her mother had kept.
 
 ### What she wants
 The wards shut. The companies paid. The orcs alive. In that order.
@@ -57,4 +57,4 @@ Casting Varra out broke her heart. Whether she chose that contract for the Rust 
 
 == GM notes ==
 
-Grashka should appear late if at all: a letter in session 5 or 7, a messenger with a knuckle-bone, or (for a big finale) Grashka herself arriving at the Rent with an orc company at her back. Her offer: the Mothers will back resealing the ward. The price: Varra comes home, and swears to the Iron again. Or something harder.
+Grashka should appear late if at all: a letter in session 7, a messenger with a knuckle-bone, or (for a big finale) Grashka herself arriving at the Rent with an orc company at her back. Her offer: the Mothers will back resealing the ward. The price: Varra comes home, and swears to the Iron again. Or something harder.

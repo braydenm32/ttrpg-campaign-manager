@@ -8,7 +8,7 @@ tags: [ orcs, mercenaries ]
 image: crest:f-mothers
 fields:
   Crest: A clenched grey fist holding a broken chain, on iron red
-  Seat: The Iron Hearths, wherever the Mother of Mothers sits
+  Seat: The Iron Hearths, wherever the Mother of Mothers sits; their hall in Ardmere is the one anyone can find
   Leader: Grashka, Mother of Mothers
   Strength: Every orc company on the continent
 relations:
@@ -42,6 +42,9 @@ The people who keep the peace by being too expensive to fight. The Kingslayers a
 - [[Grashka]]: Mother of Mothers, ancient, iron-hard, grandmother of [[Varra Nine-Knuckles]].
 - [[Sergeant Vosk]]: Second Blade of the Ninth; old soldiers say he was once of the Iron Guard.
 
+### Others you will meet
+- [[Skarra]]: the Ninth's orc sapper, who writes home to her mother every month and does not say what about.
+
 ### What they want in the Ashenreach
 A garrison that holds, a contract that is honoured, and no one poking at the Ninth Ward. They will tolerate the Ninth Lantern for as long as it keeps its word. If it does not, they will say so once, plainly.
 
@@ -49,7 +52,7 @@ A garrison that holds, a contract that is honoured, and no one poking at the Nin
 Orcs get a measuring look and a short sentence. Everyone else gets courtesy and a precise sense of what is not being said. Varra, an exile, gets nothing from them but cold, and that is its own kind of message.
 
 :::for Varra Nine-Knuckles
-Your grandmother Grashka struck the blow that killed the Emperor. Whenever a Daughter of the Writ passes you in silence, that is why they will not look at you, and why they will not speak of it.
+Your grandmother Grashka struck the blow that killed the Emperor. Almost nobody outside the Mothers' council knows you are her granddaughter, and Vosk has said nothing. When a Daughter of the Writ passes you in silence, it is because you are an exile; they would be no warmer if they knew the rest.
 :::
 
 ### Resources
@@ -62,7 +65,7 @@ Soldiers, discipline, the writs that bind the companies, and a network of aunts 
 - **A quiet visit:** to the Treaty Stone, at night, by orcs who do not wish to be seen.
 
 :::gm
-Secret aim: keep the wards shut. They ordered the Kingslaying because Aurel IX was digging at three ward sites to open one, and nobody would believe them. They still hold that line. Grashka suspects the Ninth Ward is the next one in danger, and the Mothers will move to close the crack by force, or to destroy whatever opens it. They have an understanding with the [[The Last Wardens|Last Wardens]]; they do not tell the company.
+Secret aim: keep the wards shut. They ordered the Kingslaying because Aurel IX was digging at three ward sites to open one, and nobody would believe them. They still hold that line. Grashka suspects the Ninth Ward is the next one in danger, and the Mothers will move to close the crack by force, or to destroy whatever opens it. They have an understanding with the [[The Last Wardens|Last Wardens]]; they do not tell the company. [[Mother Hesha]] of Grashka's council reads Skarra's monthly letters about Varra and carries the council's answer back.
 :::
 
 == GM notes ==

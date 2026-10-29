@@ -33,3 +33,6 @@ If the party is far from shelter, treat a greywind as a Constitution-save hazard
 - The wind carries a distant bell. It is the Treaty Bell, from the Ford. It has not been rung today.
 - Soft rain, the first in weeks. The ash turns to grey paste that clings to boots and takes a day to dry.
 - A greywind from the north, cold and fast. Fires will not stay lit.
+- The first frost of the season. Every puddle on the Ash Road wears a skin of grey ice, and the horses blow white.
+- Black ice under a dusting of ash. The road looks dry. Every wagon on it is going to slide at least once.
+- Early snow, mixed with ash, falls in flat grey flakes. By noon the plain looks like a blotter, and the sound of the world is gone.

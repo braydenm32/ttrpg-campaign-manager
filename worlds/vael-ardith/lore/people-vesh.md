@@ -22,7 +22,7 @@ The Vesh keep the light. In every nation they are the lamp-wardens, the lighthou
 They are quiet, dry, exact and nocturnal. A Vesh household wakes at dusk. They mark the passing of the year not by the sun but by the lamps lit; a Vesh's age is counted in winters, because winter has the longest nights. They have no god of their own and keep everyone else's lamps impartially. See [[Brother Tallow]].
 
 ### Names
-Soft given names, occupational surnames from the trades of light. Oume Wickmoor, Ilet Candleby, Tessel Lampwright, Auvi Sconce, Mirre Taperling, Peth Ashwick, Soli Mothwaite, Ennu Lanternby, Faelle Oilgrove, Dusk Tallow. [[Ysse Lampwright]] is a cousin, distantly, of half the lamp-wardens in the Regency.
+Soft given names, occupational surnames from the trades of light. Oume Wickmoor, Ilet Candleby, Tessel Lampwright, Auvi Sconce, Mirre Taperling, Peth Ashwick, Soli Mothwaite, Ennu Lanternby, Faelle Oilgrove, Dusk Ember. [[Ysse Lampwright]] is a cousin, distantly, of half the lamp-wardens in the Regency.
 
 ### Where they live
 Where there are lamps worth keeping: lighthouses on the seven bays, the imperial archive at [[Caer Ardith]], the Saint's lamp-halls at [[Halcyra]], and the Lantern Keep at [[Cinderford]], where [[The Lantern of the Ninth]] burns and the Vesh who keep it are the only two people in the company who never look away from it.
@@ -31,7 +31,7 @@ Where there are lamps worth keeping: lighthouses on the seven bays, the imperial
 Harmless, useful, a bit odd. Soldiers call them moths and mean it kindly. Wizards hire them as apprentices and find them unnervingly good at noticing when a spell is about to go wrong. Nobody asks what else they notice.
 
 ### Playing a Vesh
-You are drawn to what burns and know better. Decide what your flame is: a lamp, a spell, a person, a question. You are precise, night-waking, cold-blooded in the literal sense and warm in most others, and you have a weakness you can name, which makes you more dangerous than the ones who cannot. Play the hunger as curiosity with teeth.
+You are drawn to what burns and know better. Decide what your flame is: a lamp, a spell, a person, a question. You are precise, night-waking, cold-blooded in the literal sense and warm in most others, and you have a weakness you can name, which makes you more dangerous than the ones who cannot. Treat the hunger as a guest with teeth.
 
 :::gm
 Vesh can see where a ward is thin. To a Vesh who looks, the air over a weak place in a Great Ward has a sheen like heat over a road, and the Ninth Ward's crack is a wound of light across half the sky. Most Vesh ignore it on principle; the ones who stared at it went to Cinders and did not come home, and the lamp-wardens' guild has a quiet rule about looking up. [[Brother Tallow]] broke the rule nine years ago, worked out what the lantern was lit from, and has been afraid to say so ever since. [[Ysse Lampwright]] can feel the flame failing and has begun to hear it in her sleep; the flame is the Sleeper's door and she is the moth at it.

@@ -38,22 +38,26 @@ relations:
 ### Who he is
 Tibbet Marlowe was born in the cellar of Marlowe's, his family's house in [[The Smokes]], on the night of [[The Battle of Cinders]], while the plain outside burned and the sky turned red. His grandmother delivered him. His mother died before dawn. He is called **Tick** for the sound he made as a baby and because he has never since sat still; the soldiers assume it's the noise a fuse makes just before it doesn't, and he lets them.
 
-He was one of the first [[The Hollowborn|Hollowborn]]. Thirty-one were born in the Smokes in the two years after Cinders. The twenty-five born after that night are seven and eight years old now, and act it. The six born on the night itself do not. Tick is nine by the calendar, and anyone can see he is not nine. Like the other five, he grew like a weed in ash: walking at four months, talking at six, a gangly lad by three and a man grown by seven. [[Ottilie Marlowe|Mam Ottilie]], the grandmother who raised him and the Smokes' midwife, says he "came out already listening". Nobody knows why the Cinders-born grew so fast, and the midwives of [[Maelis]] have stopped guessing out loud. He has a man's hands, a man's appetites, and occasionally a child's conviction that he cannot possibly die.
+He was one of the first [[The Hollowborn|Hollowborn]], the fourth of the six Cinders-born. Thirty-one were born in the Smokes in the two years after Cinders. The twenty-five born after that night are seven and eight years old now, and act it. The six born on the night itself do not. Tick is nine by the calendar, and anyone can see he is not nine. Like the other five, he grew like a weed in ash: walking at four months, talking at six, a gangly lad by three and a man grown by seven. [[Ottilie Marlowe|Mam Ottilie]], the grandmother who raised him and the Smokes' midwife, says he "came out already listening". Nobody knows why the Cinders-born grew so fast, and the midwives of [[Maelis]] have stopped guessing out loud. He has a man's hands, a man's appetites, and occasionally a child's conviction that he cannot possibly die.
 
 ### Look
 Lanky, sooty, quick, with a wide mouth that is usually grinning and burn-scars on both forearms like a map of bad decisions. His right eye is brown. His left is the milky grey of all Hollowborn eyes, the one that sees the dead, and it is never quite looking where the other one is. He wears a sapper's leather apron with a dozen loops for fuses, and smells permanently of saltpetre and tannery.
 
 ### Manner
-Fast talker, faster hands. Names his charges ("Little Maelis", "Sorry Darling", "The Reeve's Tax Return"). Laughs when things go bang, every time, even when he shouldn't. Talks to people who aren't there, briefly, and then carries on as if nothing happened.
+Fast talker, faster hands. Names his charges ("Little Maelis", "Sorry Darling", "The Reeve's Tax Return"). Laughs when things go bang, every time, even when he shouldn't.
+
+> "This one's called Aunt Hortense, because it comes round once a year, smells of onions and nobody wants it in the house. Stand back. No, further. *Further.*"
+
+> "I'm not saying it'll go off. I'm saying it's got opinions. Mostly about you." Talks to people who aren't there, briefly, and then carries on as if nothing happened.
 
 ### Background
-Raised by Mam Ottilie and half the Smokes' tanneries, Tick learned his trade from glass-diggers, who need things blown up, and soldiers, who need things blown up more. He was selling blasting-powder to the Glassers before his second birthday, which is a joke the Smokes tell and isn't quite one. He knows every cellar, drain and rooftop in the quarter.
+Raised by Mam Ottilie and half the Smokes' tanneries, Tick learned his trade from glass-diggers, who need things blown up, and soldiers, who need things blown up more. He was selling blasting-powder to the Glassers before his second birthday, which is a joke the Smokes tell and isn't quite one. He knows every cellar, drain and rooftop in the quarter. At about seven by the calendar he outgrew Ottilie's boxroom, and slept a year at [[The Ninepenny]] among the lodgers, who learned to leave their boots out of his reach.
 
 ### Why you're in Cinderford
 He's from here. [[The Ninth Lantern]] hired him for his munitions after he cleared a collapsed street with one charge and only a little bit of fire, and because [[Fennick Bottlebrook]] can pay him in barrels of salvage, which is cheaper than coin.
 
 ### Ties
-- **[[Quorl Many-Words]]**: the Doorkeeper's Chapel backs onto the Smokes, and Quorl spent his fledgling years running its errands; they have known each other since Tick was (briefly) small. Quorl says the Rook-Court has Tick's mother's last words in its ledger. Tick has never asked to hear them.
+- **[[Quorl Many-Words]]**: the Doorkeeper's Chapel stands where Tanners' Lane runs into the Smokes, a short run from Marlowe's, and Quorl spent his fledgling years running its errands; they have known each other since Tick was (briefly) small. Quorl says the Rook-Court has Tick's mother's last words in its ledger. Tick has never asked to hear them.
 - **[[Ysse Lampwright]]**: "Moth". He brings her things from the glass that burn the wrong colour. She is the only one who looks at the empty space beside him and doesn't look away.
 - **[[Varra Nine-Knuckles]]** is his self-appointed bodyguard since he nearly took her eyebrows off. He is grateful and slightly in awe.
 - **[[Skarra]]**, the company's orc sapper, thinks he's reckless. He thinks she's slow. They're both right.

@@ -24,7 +24,7 @@ In the Grimmark Holds, a feud is a form of weather. The Salt Feud began on 9 Lon
 **How it is told now.** By the Grimmark, as a comedy and a tragedy in the same breath. By visitors, with confusion.
 
 :::gm
-The Dunmarrow reeve was right: there were only twelve barrels. A Harl tallyman had been paid to count one extra, by a Quiet Office agent who wished to keep the Grimmark divided and the passes poor.
+The Dunmarrow reeve was right: there were only twelve barrels. The Harl tallyman miscounted, drunk, and could not afterwards admit it in front of his clan. Nobody was behind it. The Grimmark did this to itself, and the Quiet Office merely noticed how cheaply it kept two clans from the passes.
 :::
 
 == GM notes ==

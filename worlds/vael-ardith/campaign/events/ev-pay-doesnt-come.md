@@ -18,5 +18,5 @@ At the morning muster on [[Lantern Hill]], [[Ilse Marrow|Captain Marrow]] read t
 [[Garrick Sallow]] said what half the company was thinking. [[Mirrel Vosk|Sergeant Vosk]] said something rude enough to make the other half laugh. Nobody was paid.
 
 :::gm
-The day the campaign begins. The company's Mutiny clock starts at 2 of 6.
+The day the campaign begins, the Ashfall quarter-day and the ninth anniversary of Cinders. The company's Mutiny clock starts at 2 of 6. The notice came by post-rider on the 13th; the wagon is eight days overdue.
 :::

@@ -19,10 +19,10 @@ A tall, narrow ledger bound in black cloth, its edges soft with handling. Each p
 Names, mostly. Some words are mundane ("Tell my brother the dog was his"). Some are rude. Some are quiet. Some are prayers. A few are in languages Quorl does not speak and has copied phonetically, at the cost of his sleep.
 
 ### How it is kept
-Quorl copies every entry up the chain to [[Mother Corvane]] once a month. The Court has done this for every battlefield since the war. They are the only archive of the dead the world has.
+Quorl copies every entry up to [[Mother Corvane]] once a month. The Court has done this for every battlefield since the war. They are the only archive of the dead the world has.
 
 :::gm
-Seven of the entries, spread across years, say the same sentence in different voices. Read together with the other Court ledgers, the whole record spells "the lamp is the lock". Quorl has not yet put it together; Corvane has. If the ledger is stolen, burned, or read aloud at the wrong place, the dead listen.
+Quorl copies every entry except seven. Seven dying soldiers, spread across nine years, whispered the same sentence to him in different voices, and he wrote those in his own notebook, not the Court's. Read together with the other Court ledgers, the record spells "the lamp is the lock". Quorl has noticed. He has not understood. Corvane has four words of five. Halloran Pike's last words, at his funeral in S5, make eight. If the ledger is stolen, burned, or read aloud at the wrong place, the dead listen.
 :::
 
 == GM notes ==

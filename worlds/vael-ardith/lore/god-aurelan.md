@@ -50,7 +50,7 @@ The Solar Curia: judges in black edged with gold, Lectors who read the law aloud
 He and [[Corvex]] have quarrelled since [[The First Imperial Loan]]; law says a crown is above debt, the ledger says nothing is. His priests call Grum the sun's hound. He does not admit that [[The Hanged Corporal]] exists, which is more attention than he gives most. His Curia has sent polite letters to [[Halcyra]], because a saint on the throne would still be a throne.
 
 ### Holy days
-Crownfast, 15 Highsun, under the full pale moon at the top of the year: oaths of office renewed, prisoners pardoned by the dozen, the empty throne garlanded. In [[Cinderford]], [[Pell Quillon]] keeps it alone at [[The Assessor's Office]] with one candle and the correct form.
+Crownfast, 15 Highsun, under the full pale moon at the height of summer, the empire's founding day: oaths of office renewed, prisoners pardoned by the dozen, the empty throne garlanded. In [[Cinderford]] the shrine of Aurelan on [[Temple Row]] has been locked since 3002; the Reeve keeps the only key and on Crownfast opens it alone, with one candle. [[Pell Quillon]], who keeps Crownfast with one candle wherever he is posted, has not yet spent one here.
 
 :::gm
 The Curia's genealogists know what the imperial line was bred for, and the senior Lectors know that no living heir can sit the throne without hearing the Sleeper. They want one anyway: a ward-sensitive emperor is a hand on the leash.

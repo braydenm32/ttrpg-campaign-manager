@@ -45,8 +45,6 @@ Seven **Houses**, one per bay, each ruled by a **Principal**. Under them, **Fact
 
 ### Notable members
 - [[Grandmother Tollamund]]: Shellback banker, 340 years old, who holds the Ninth Lantern's paper.
-- [[Fennick Bottlebrook]]: not a member, but owes the House a favour he cannot repay.
-- [[Odile Fairweather]]: the town's reeve, who dines with the House more often than she admits.
 
 ### What they want in the Ashenreach
 Peace until the debt matures. Then a clean transfer of every claim the Regency has made on the march. They would like the company to stay, because an unpaid army is cheaper than a paid one, and to be sad about leaving.
@@ -65,6 +63,8 @@ Money, shipping, the best lawyers on the continent, a mercenary company or two o
 
 :::gm
 Secret aim: buy every debt in the Ashenreach and so own it, the lantern with it. The Houses think this is a good investment. Tollamund thinks it is a key: the Shellbacks left [[The Ness of Thurm]] for a reason they do not discuss, and the lantern may open the way home. She has not told the Principals. The Debt clock fills when the company misses a payment, the reeve signs, or the Regency sells its claim. At 8 the House calls the note, and the company is repossessed along with its flame.
+
+[[Fennick Bottlebrook]] is not a member, but owes the House a favour he cannot repay (he co-signed the credit line). [[Odile Fairweather]], the town's reeve, dines with the House more often than she admits, and has agreed to sell it her charter.
 :::
 
 == GM notes ==

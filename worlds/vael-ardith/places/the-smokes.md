@@ -24,14 +24,18 @@ The Smokes is the south end of town, downwind of everything, and it is where Cin
 - **Marlowe's**, the house [[Tibbet Marlowe]] was born in, still standing, still his.
 
 ### Who is here
-The Hollowborn families: the Marlowes, the Teals, the Crannocks, forty households that keep their own counsel and bury their own. Hesk the chandler. Auntie Brace at the Ninepenny. And somewhere, not in any house you can point to, [[The Dreaming Widow]], who speaks in the Widow's yard on the nights the Ember is near full, and whom the company has never managed to arrest because nobody will say which door she went in.
+The Hollowborn families: the Marlowes, the Teals, the Crannocks, forty households that keep their own counsel and bury their own. The children are nine or younger and born to it, by the tally of the birth-rolls; the grown ones with a grey eye took it the night of the battle or the night the lake rose, and are called late-eyed, politely, to their faces. Hesk the chandler. Auntie Brace at the Ninepenny. And somewhere, not in any house you can point to, [[The Dreaming Widow]], who speaks in the Widow's yard on the nights the Ember is near full, and whom the company has never managed to arrest because nobody will say which door she went in.
 
 ### Rumours
-- The Hollowborn all dream the same dream. (True, at red moon.)
-- The Widow is the Reeve's sister. (False. She is somebody else's.)
-- The kilns' dust is what gives the children the eye. (False. They were born with it.)
-- The dead walk the Smokes at red moon and the Hollowborn go out to talk to them. (True.)
-- The Sleepless are harmless: sad people who want to sleep. (They were, once.)
+- The Hollowborn all dream the same dream.
+- The Widow is the Reeve's sister.
+- The kilns' dust is what gives the children the eye.
+- The dead walk the Smokes at red moon and the Hollowborn go out to talk to them.
+- The Sleepless are harmless: sad people who want to sleep.
+
+:::gm
+**Which are true.** 1. True, at red moon. 2. False. She is somebody else's. 3. False. They were born with it. 4. True. 5. They were, once.
+:::
 
 ### Things to do
 Buy candles. Be looked at by children. Help a kiln-hand who has collapsed in the dust. Hear the Widow preach, from a doorway, with your hood up. Follow someone from the yard and lose them in a lane that was not there yesterday. Be recognised, if you are Hollowborn, by people who knew your mother.

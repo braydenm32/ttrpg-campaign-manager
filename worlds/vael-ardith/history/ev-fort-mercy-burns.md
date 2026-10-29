@@ -25,7 +25,7 @@ order: 160
 **How it is told now.** The Ninth Lantern's old hands will not discuss it. The Glassers, who live there now, say the place is quiet at night, and that the quiet is the worst part.
 
 :::gm
-The strangers were agents of the Quiet Office. The vault held the surviving papers of Ilbert Crane's secret digs, and the burning was meant to destroy them. It did not entirely succeed. Marius Vell does not know that one copy of Crane's survey is still in the glass beneath the fort.
+The strangers were agents of the Quiet Office. The vault held the surviving papers of Ilbert Crane's secret digs, and the burning was meant to destroy them. It did not entirely succeed. Marius Vell does not know that one copy of Crane's survey is still in the glass beneath the fort. The commander "away that night on a matter of paperwork" was Captain Orrin Hale, now a clerk in Caer Ardith who drinks, and who has never asked who wrote the paperwork.
 :::
 
 == GM notes ==

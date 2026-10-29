@@ -26,14 +26,18 @@ The Low Quay is where the Cinder comes in from the north and goes out to the sou
 Kettle, when she is in. Her cousins. Old Nan Crupp at the ferry. The Market Reeve of Gutter Market, Tam Sixfingers, who is a Glasser and counts as the Quay's only law. Soldiers off duty. The occasional Quiet Office clerk pretending to buy fish.
 
 ### Rumours
-- The barges carry more Concord silver up the river than the Regency has minted in a decade. (True.)
-- There is a passage from the Quay into the Barrow under the ford and the smugglers use it. (True; Kettle's people know it.)
-- Kettle sells to the Saint's mission, the Reeve, the Glassers and the Keep, and tells each what the others bought. (True, though she edits.)
-- The post-stair box has never lost a letter. (False. It lost one, in 3009. It was the pay order.)
+- The barges carry more Concord silver up the river than the Regency has minted in a decade.
+- There is a passage from the Quay into the Barrow under the ford and the smugglers use it.
+- Kettle sells to the Saint's mission, the Reeve, the Glassers and the Keep, and tells each what the others bought.
+- The post-stair box has never lost a letter.
+
+:::gm
+**Which are true.** 1. True. 2. True; Kettle's people know it. 3. True, though she edits. 4. False. It lost one, in 3009. It was the pay order.
+:::
 
 ### Things to do
 Buy supper. Send a letter home. Hire a barge. Ask Kettle a question and pay for the answer in gossip. Watch a Concord factor count out silver to a Glasser for a crate that hums. Find out what the price of the ferry is, and why it is in last words.
 
 :::gm
-Kettle likes the PCs best of all her customers and will say so, which is worth more than it sounds. The smugglers' passage from the Quay's culvert into the Barrow (area 6, the Sump) is how Dannic Rook got in, and it is how the PCs can get out if the Drowned Step floods. She has the vial of water from the Kneeling Stone at Coldwater and no idea what to do with it.
+Kettle likes the PCs best of all her customers and will say so, which is worth more than it sounds. The smugglers' passage from the Quay's culvert into the Barrow (area 2, the Flooded Street) is a way out for the PCs, and Skelt and the smugglers use it in the other direction. She has the vial of water from the Kneeling Stone at Coldwater and no idea what to do with it.
 :::

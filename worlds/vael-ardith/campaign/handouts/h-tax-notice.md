@@ -32,10 +32,10 @@ NOW THEREFORE the Assessed is required to pay:
 |---|---|
 | Hearth Levy, at one part in ten of wages intended | 418 silver |
 | Garrison Tithe | 209 silver |
-| Tax on Lamps and Lights (Burning), one lamp, nine years, continuously | 3,285 silver |
+| Tax on Lamps and Lights (Burning), one lamp, nine years, continuously, at a silver a night | 3,240 silver |
 | Fee for the Assessment of Fees | 12 silver |
 | Fee for the Preparation of this Notice, in Triplicate | 3 silver |
-| **Total Demanded** | **3,927 silver** |
+| **Total Demanded** | **3,882 silver** |
 
 Payment is due within thirty days. The Assessed may dispute this Notice by Form 9-K (Declaration of Wages Owed But Not Payable, Countersigned), which the Assessor regrets is at present unavailable.
 
@@ -48,4 +48,6 @@ Payment is due within thirty days. The Assessed may dispute this Notice by Form 
 **When to show it.** Session 2's strong start, when [[Pell Quillon]] nails it to the Keep gate (apologising to the gate as he does). Give the players all three copies if you can print them; one in blue ink is the joke.
 
 **What it reveals.** That the Regency is taxing a company it hasn't paid: comedy, but also the Quiet Office's lever, since an unpaid tax bill gives the Regency legal grounds to seize "the property of the Assessed", which means the lantern. Note the witness: A. Mote. Compare his signature with the hand on [[Wanted: Dannic Rook]] (Investigation DC 13): it's the same small, neat hand. Also note the reference to Form 9-K, which sets up [[The Assessor's Lost Form]].
+
+The sums are deliberately absurd. The Hearth Levy is assessed on the Regency's own ledger of "wages intended" (Pell cannot explain it either); the lamp tax is a silver a night for nine years (3,240); Pell calls it "the Lantern Duty" and the assessment fee "the Fee for Fees". Form 44-A (Declaration of Non-Receipt of Imperial Funds) is the separate form the company files to claim the arrears.
 :::

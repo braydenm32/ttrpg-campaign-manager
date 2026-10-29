@@ -34,9 +34,9 @@ relations:
 ---
 
 ### Look and voice
-Thirty, and lovely the way a fire in winter is lovely: you find yourself drawn nearer without deciding to. Copper-dark skin, black hair bound in gold thread, and eyes the colour of embers, a shade they turned the year she took her vows. She wears the Saint's white and saffron, open at the throat. Her hands are smooth and unmarked. She holds them in candle flames while she talks, absently, the way other people fidget.
+Thirty, and lovely the way a fire in winter is lovely: you find yourself drawn nearer without deciding to. Copper-dark skin, black hair bound in gold thread, and eyes of amber that sometimes burn gold and, at the full red moon, go ember-red. In the House she wears the Saint's white and saffron, open at the throat; on the road she wears a plain red robe. Her hands are smooth and unmarked. She holds them in candle flames while she talks, absently, the way other people fidget.
 
-Her voice is warm, low and intimate, and she touches people when she speaks to them: a hand on the arm, a palm on the cheek. She is funny, too, and a little tired, which is worse: it makes her easy to like.
+She touches people when she speaks to them, a hand on the arm, a palm on the cheek, and her voice drops to meet them. She is funny, too, and a little tired, which is worse: it makes her easy to like.
 
 > "You're cold. Everyone in this town is cold. Come and sit nearer the fire."
 
@@ -45,7 +45,7 @@ Her voice is warm, low and intimate, and she touches people when she speaks to t
 ### Who she is
 Sister Seraphine Ashe is the envoy of [[The Church of the Unburnt Saint]] to the March of Cinders, and mistress of [[The House of Unburnt Light]], the mission outside town where the hungry are fed, the sick are tended, the lonely are comforted, and everyone is warm. It is a little too comfortable. People go for a bowl of soup and stay for a week.
 
-She was born in [[Qerath]] by the Glass Sea, walked the coals at [[Halcyra]] at sixteen, and was chosen to come west by [[Ilyra of Halcyra]] herself, who touched her face and said, "You'll do."
+She was born in [[Qerath]] by the Glass Sea, walked the coals at [[Halcyra]] at sixteen, and was chosen to come west by [[Ilyra of Halcyra]] herself, who touched her face and said, "You'll do." She left Halcyra on foot, under a vow; the mission's goods came after her by cart, and its cut stone by mule.
 
 ### What she wants
 The town, for the Saint. The flame, for the Saint, "to keep it safe". And the people around the flame, especially the ones it seems to trust.
@@ -57,7 +57,7 @@ That the Saint walked out of the fire at Cinders unburnt. That the Ninth Lantern
 As people worth saving, which is flattering and frightening. She feeds them, mends their wounds without charge, listens. She learns what each one wants and offers it, gently, in the Saint's name. Each PC who visits the House should feel the pull: warmth, belonging, a longing they didn't know they had.
 
 :::gm
-**Secret.** The Saint speaks through Seraphine. Not always: in prayer, at full red moon, and whenever Ilyra wishes to look at someone through her eyes. When it happens her eyes go fully ember-red, the room grows hot, and her voice drops half an octave and becomes very, very old.
+**Secret.** The Saint speaks through Seraphine. Not always: in prayer, at full red moon, and whenever Ilyra wishes to look at someone through her eyes. When Ilyra looks through her quietly (as in session 4) her amber eyes burn gold. At the full red moon, or when the Saint takes her fully (session 8), they go ember-red, the room grows hot, and her voice drops half an octave and becomes very, very old.
 
 Through her, [[Ilyra of Halcyra]] wants the PCs: Ysse as a keeper, Quorl because his prayers to Hathe reach Ilyra now, Tick because he was born the night Ilyra rose, Borrin because she can smell what wears his shadow, Varra because of whose blood she carries.
 

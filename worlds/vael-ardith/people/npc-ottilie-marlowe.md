@@ -27,7 +27,7 @@ relations:
     note: Stands at the back of meetings to look at her daughter.
 ---
 
-Small, stooped, nearly seventy, with a voice like a rusty gate, forearms like a blacksmith's and a bag that clanks. Mam Ottilie has delivered nearly every child born in [[The Smokes]] since the war, including thirty-one of the first [[The Hollowborn|Hollowborn]], and the birth-rolls in her hand note each one ("one eye wrong, otherwise fine", underlined twice). She lives in Marlowe's, the narrow house where her grandson [[Tick]] was born, and she raised him there.
+Small, stooped, sixty-two and looking older, with a voice like a rusty gate, forearms like a blacksmith's and a bag that clanks. Mam Ottilie has delivered nearly every child born in [[The Smokes]] since the war, including thirty-one of the first [[The Hollowborn|Hollowborn]], and the birth-rolls in her hand note each one ("one eye wrong, otherwise fine", underlined twice). She lives in Marlowe's, the narrow house where her grandson [[Tick]] was born, and she raised him there.
 
 > "Push, love. No, *push*. You're not shelling peas. There. There she is. Oh, look at her, she's *looking* at something."
 
@@ -36,5 +36,7 @@ She is brusque, practical, and quietly terrified of the red moon. She calls Tick
 :::gm
 Ottilie's younger daughter, Wenna, ran away from Marlowe's at twelve, and is now [[The Dreaming Widow]]. Ottilie knows. She has never told Tick. She goes to Sleepless meetings sometimes, at the back, just to look at her daughter's face. If the PCs earn her trust, she is the key to reaching the Widow as a person, not a prophet.
 
-The marks on her cellar door jump at every full Ember: the Cinders-born grew in steps, one for each red moon. Ottilie has noticed and written it in the Maelis birth-rolls, and told no one. It is the plainest clue to [[Why did the Cinders-born grow up so fast?]].
+On the dawn after Cinders she gave Marla's last words, "Wenna, hold his hand. Don't look up", to the Raveler fledgling who came for the body, [[Quorl Many-Words]], who wrote them down as *told*, not heard.
+
+The marks on her cellar door jump at every full Ember: the Cinders-born grew in steps, one for each red moon. Ottilie has noticed and written it in the Maelis birth-rolls kept by [[Mother Brisk]], and told no one. It is the plainest clue to [[Why did the Cinders-born grow up so fast?]].
 :::

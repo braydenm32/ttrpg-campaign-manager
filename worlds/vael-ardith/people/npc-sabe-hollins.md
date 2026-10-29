@@ -1,10 +1,10 @@
 ---
 type: npc
-name: Sabe Hollins
+name: Sabe Hallows
 players: true
 summary: Seven-year-old Hollowborn girl in the Smokes, called Still, who draws the red-moon dream in chalk on the walls.
 parent: the-smokes
-aliases: [ Still ]
+aliases: [ Still, Sabe Hollins ]
 tags: [ npc, smokes, hollowborn, child ]
 image: sil:npc-sabe-hollins
 status: alive
@@ -12,8 +12,10 @@ statusKnown: true
 fields:
   Ancestry: Human (Hollowborn)
   Role: Child of the Smokes
-  Faction: None (her parents are Sleepless)
+  Faction: None
   Where: The Smokes, on any wall she can reach
+gmFields:
+  Faction: The Sleepless (her parents are Sleepless)
 relations:
   - to: dreaming-widow
     kind: follows

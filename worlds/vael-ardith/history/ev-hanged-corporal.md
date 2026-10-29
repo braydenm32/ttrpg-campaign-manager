@@ -11,7 +11,7 @@ date: 12 Frostcall 2996 AW
 order: 55
 ---
 
-The village of Dunmeer lay in the Fallowden marches, held for the wrong pretender by the wrong people. On 12 Frostcall 2996 AW, a Restday, a column of the Regency's levies was ordered to burn it.
+The village of Dunmeer lay in the Fallowden marches, held for the wrong pretender by the wrong people. On 12 Frostcall 2996 AW, a Restday, a column of the Regency's levies, marching under the command of the First Company, was ordered to burn it.
 
 **The corporal.** His name is blotted from the record with what the clerks swear was spilled ink. One surviving muster-roll has a corporal *H. Len-* in that column, which may be him or may be more ink. He was thirty-four, they say, a cheesemaker's son turned soldier. The Ninth Lantern calls him Dask, the orc companies Hob, and [[Ardmere]] Little Fenn. He was told to fire the thatch of a village that held, by the roll, eleven old people and forty children. He put down his torch, and told the lieutenant he wasn't going to.
 
@@ -23,6 +23,8 @@ The village of Dunmeer lay in the Fallowden marches, held for the wrong pretende
 
 :::gm
 The Corporal is ascending. Every soldier who invokes him in refusal feeds him a little, and the Hanged Corporal is on his way to being the god of the common soldier's no. He has no priests, no temple, and no politics. That may make him the most dangerous god in the room.
+
+Ilse Marrow was at Dunmeer as the Salt Guard's supply clerk, and does not speak of it.
 :::
 
 == GM notes ==

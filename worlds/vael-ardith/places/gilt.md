@@ -16,3 +16,7 @@ This is where the Concord keeps the money. Every great Shellback house has a vau
 
 ### Hook
 The vault of Tollamund & Daughters at Gilt has taken a delivery every month for a year: a single sealed crate from the Ashenreach, by way of Cowl, carried by Glassers and paid for in advance. The vault clerks say the crates are heavy, cold, and hum.
+
+:::gm
+The crates are Tollamund's: ward-glass from the after-dark trade at Gutter Market, moved by [[The Glassers]] through Cowl into the vault of [[Tollamund & Daughters]]. Grandmother Tollamund is stockpiling it for something she has not told the Principals, and it is one of the reasons the Concord clock "Debt called in" ticks faster than the debt alone would explain.
+:::

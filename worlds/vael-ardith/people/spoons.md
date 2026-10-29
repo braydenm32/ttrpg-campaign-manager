@@ -43,12 +43,12 @@ He talks like a man who never stops working a crowd.
 > "Everything's a bet, friend. Breakfast's a bet. *Getting up* is a bet. I just write it down."
 
 ### Who he is
-Corporal Aldane has been called **Spoons** so long that the company roll lists him that way. Nobody agrees why. He says it's because he plays them (he does, badly, at every wake). Old hands say it's because he once killed a Regency sergeant with one. He was at Cinders as a camp sutler, selling dice and gin to men who would be dead by morning, and somehow walked into the ninth lantern's light with his pockets full.
+Corporal Aldane has been called **Spoons** so long that the company roll lists him that way. Nobody agrees why. He says it's because he plays them (he does, badly, at every wake). Old hands say it's because he once killed a Regency sergeant with one. Those who were at Ardmere say he was pot-boy to the orc company called the Long Spoons, and came through the water-gate with the first pot when the siege broke, and that the name was the company's before it was his. He was at Cinders as a camp sutler, selling dice and gin to men who would be dead by morning, and somehow walked into the ninth lantern's light with his pockets full.
 
 He runs the company's betting book from a corner table at [[The Last Candle]]: odds on births, deaths, promotions, desertions, weather, the Captain's temper, the colour of the Reeve's hat. His book is honest. He's very proud of that.
 
 ### What he wants
-To win the big one. His longest-running pool is on **the night the lantern goes out**: nine years of soldiers have bet a copper on a date, and the pot is real money now. Spoons has his own copper on a date coming up very soon.
+To win the big one. His longest-running pool is on **the night the lantern goes out**: nine years of soldiers have bet a silver on a date, and the pot is real money now: the board says 41 gold, the pot is 43. Spoons will give you forty to one against any named night; the Frostcall window is 14 to 1. He has his own silver on a date coming up very soon.
 
 ### What he knows
 Everyone's debts, everyone's vices, and everyone's odds. Who's drinking with [[Garrick Sallow]]. Who slipped out after curfew. And more than he should about the oil.
@@ -57,7 +57,9 @@ Everyone's debts, everyone's vices, and everyone's odds. Who's drinking with [[G
 As a fresh market. He opens a book on each PC in their first week (odds on survival, on promotion, on "first to sleep with somebody unwise") and tells them their odds, cheerfully. Bet with him and he becomes a friend for life, a short one or long.
 
 :::gm
-**Secret.** A fortnight before session 1, Spoons saw [[Garrick Sallow]] and [[Dannic Rook]] at the lantern's oil store after midnight, swapping tins. He knew what it meant. He moved his own copper in the lantern pool to the next red moon, and said nothing, to protect the pool. When Rook deserted, Spoons doubled his stake.
+**Secret.** Twice, the first time about 30 Reaping (a fortnight before session 1), Spoons saw [[Garrick Sallow]] and [[Dannic Rook]] at the lantern's oil store after midnight, swapping tins. He knew what it meant. He moved his own silver in the lantern pool to the next red moon, and said nothing, to protect the pool. When Rook deserted, Spoons doubled his stake. Sallow's own fat stack sits on "before the red moon's gone".
+
+A Raveler woman bet "never" in 3003 and vanished; she was Keld, [[Mother Corvane]]'s sister and the Court's first watcher of the lantern, and her stake is still in Spoons's strongbox.
 
 Also among his betting slips, won at cards years ago from a Regency clerk: a torn page of an imperial Treasury ledger with the line *Drainage Works (Western)* on it. He thinks it's funny. It's a thread to [[The Emperor's Digs]].
 

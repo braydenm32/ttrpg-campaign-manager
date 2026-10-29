@@ -16,17 +16,21 @@ The Grey Dumpling has been in the Brindlewake clan for four generations and in K
 
 ### Aboard
 - **The parlour**, aft: a stove, a table, four chairs, a shelf of letters tied with string and sorted by destination. Kettle serves tea and does business here, and the tea is always good.
-- **The hold**, forward: cargo, bunks for six, and under the boards a space the size of a coffin, currently holding nothing, Kettle says.
+- **The hold**, forward: cargo, bunks for six, and under the boards a space a good deal bigger than the hold has any right to, currently holding nothing, Kettle says.
 - **Regent**, the cat, who hates everyone equally and is therefore trusted.
 
 ### Who is here
-[[Kettle Brindlewake]]. Her cousins Dob and Marigold, who pole and say little. Passengers, sometimes; this week a Remembrancer's luggage, waiting for its owner, and a sealed box addressed to "the Warden, Ninth Stone", which nobody has claimed because nobody lives there.
+[[Kettle Brindlewake]]. Her cousins Dob and Marigold, who pole and say little. Passengers, sometimes; this week a Remembrancer's trunk, empty and waiting for a hand to fill it, and a sealed box addressed to someone at the Ninth Stone, which nobody has claimed because nobody is supposed to live there.
 
 ### Rumours
-- The Dumpling can get into the Barrow under the ford by a culvert from the Quay. (True: it is where the false floor's cargo used to come from.)
-- Kettle carried the Concord's clerks' letters to Fallowden the week before the pay wagon vanished. (True. She read them.)
-- Regent is a Quiet Office cat. (Nobody can prove otherwise.)
+- The Dumpling can get into the Barrow under the ford by a culvert from the Quay.
+- Kettle carried the Concord's clerks' letters to Fallowden the week before the pay wagon vanished.
+- Regent is a Quiet Office cat.
 
 :::gm
-Kettle is the campaign's best neutral: she knows a piece of nearly everything and likes the PCs best, which she will prove by telling them one true thing free each session. The sealed box for the Warden holds the vial of water from the Kneeling Stone at [[Coldwater]]; if the PCs carry it to [[Warden Uthrem]] in session 6, he weeps, and the ward holds one month longer.
+**Which are true.** 1. True: it is where the false floor's cargo used to come from. 2. True. She read them. 3. Nobody can prove otherwise.
+
+Kettle is the campaign's best neutral: she knows a piece of nearly everything and likes the PCs best, which she will prove by telling them one true thing free each session. The sealed box, labelled "the Warden, Ninth Stone", holds the vial of water from the Kneeling Stone at [[Coldwater]]; if the PCs carry it to [[Warden Uthrem]] in session 6, he weeps, and the ward holds one month longer.
+
+**The hold.** Under the false floor (DC 18 Investigation) lie four casks of the company's good Keel oil, which Fennick sold to Kettle for bread and wrote up as burned, and which she has not resold; and the warm thirteenth crate, which holds the Glass-Fused Hand. Kettle reads [[Ansel Mote]]'s letters and knows he is no clerk. The Remembrancer's trunk is [[Aelith Sorn]]'s own, empty, waiting for a hand.
 :::

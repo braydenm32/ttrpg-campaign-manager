@@ -11,11 +11,11 @@ date: 14 Ashfall 3003 AW
 order: 120
 ---
 
-One year to the day after the battle, the signatories met to renew the garrison contracts of the Ashenreach. The roll listed eight companies. All eight were dead or disbanded. A ninth, on no roll at all, was standing in the hall holding a lantern.
+One year to the day after the battle, the signatories met to renew the garrison contracts of the Ashenreach, and a Regency clerk read the roll aloud. *Salt Guard.* Silence. *Greywake's Spears.* Silence. *Iron Tithe.* Silence. *Ruddy Hundred.* A woman with one arm, at the back of the hall, said they had a great many dead, thank you. Four names more, and four more silences. All eight were dead or disbanded. A ninth, on no roll at all, was standing in the hall holding a lantern.
 
 **The problem.** The Ninth was not on the roll. Its members were deserters, cooks, wounded and walking dead. Its founding was unrecorded. But its lantern was lit, and the Keep was held, and the first captain, who had no title and no pay, refused to sit down until somebody did the arithmetic.
 
-**The clause.** A Regency drafter, confident that the lantern would go out within a week, proposed a contract: the Ninth would hold the Keep and the ford, paid like any company, and *stand down if the lantern ever goes out*. The Concord's clerk, equally confident, signed. Nobody read it twice. It has been in force ever since.
+**The clause.** A Regency drafter, confident that the lantern would go out within a week, proposed a contract: the Ninth would be paid like any company, and the contract, carved over the hall door since and read to every recruit, says: *"The company shall hold the Keep and the ford for the signatories, and shall stand down if the lantern ever goes out."* The Concord's clerk, equally confident, signed. Nobody read it twice. It has been in force ever since.
 
 **What it left.** A company with a legal existence and an unusual weakness: one flame. [[The Ninth Lantern]] has held the Keep for nine years. The lantern has never gone out.
 
@@ -24,7 +24,7 @@ One year to the day after the battle, the signatories met to renew the garrison 
 **How it is told now.** In the company, as a point of pride: *they bet against us and we're still here*. In the Regency's files, as an administrative oversight.
 
 :::gm
-Spoons's first pool recorded one oddity: a bettor who put a large wager on "never". She was a Raveler woman who vanished the next day. The wager has never been collected, and sits in Spoons's strongbox, growing.
+Spoons's first pool recorded one oddity: a bettor who put a large wager on "never". She was a Raveler woman called Keld, Mother Corvane's sister and the Court's first watcher of the lantern, and she vanished the next day. The wager has never been collected, and sits in Spoons's strongbox, growing.
 :::
 
 == GM notes ==

@@ -38,5 +38,7 @@ A REWARD of **TEN SILVER** is offered for information leading to his return, ali
 
 **What it reveals.** The poster was issued on the 13th and claims a sighting on the 12th. Dannic has clearly been in the water about a week: bloated, grey, eels in his coat. Quorl or anyone with Medicine DC 11 confirms he died around the 7th. So someone invented the sighting. "A.M." is [[Ansel Mote]], who came to town ahead of the Assessor to "set the office in order". He wanted the company to blame a living runaway, not look for a body. The poster's reward for return *alive* is a nice touch of his: it costs nothing to offer.
 
-The burn scar shaped like a key is a match for [[Hathe's Door-Key]]: Dannic was raised by the Ravelers, then ran from them. A thread for Quorl, if you want it.
+The burn scar shaped like a key is a match for [[Hathe's Door-Key]]: Dannic was a Raveler foundling of Corvel Rise, and ran at sixteen. A thread for Quorl, if you want it.
+
+**Mote's guesswork.** Mote never saw Dannic alive. Dannic was twenty-four, had both ears and talked like a Corvel Rise foundling; the key-shaped scar is right. Anyone who knew him (Quorl, Hennet, Spoons, Pruitt) spots it. Ottun Fray set the type on Temple Row, and Pruitt paid the printer on the 13th.
 :::

@@ -13,10 +13,10 @@ relations:
     kind: concerns
 ---
 
-**The question.** Seven soldiers, dying years apart, have said the same last words to [[Quorl Many-Words]]. What does it mean, and who is speaking through them?
+**The question.** Seven soldiers, dying years apart, have said the same last words to [[Quorl Many-Words]]. What does it mean, and who is speaking through them? Quorl has noticed; he has not understood. He wrote all seven in his own notebook, not the Court's ledger.
 
-**What the GM knows.** The sentence is **"The lamp is the lock."** The dead are close to the Sleeper's leak when they die, and what leaks up is the truth of the ward: the lantern's flame is what keeps the crack shut. [[Mother Corvane]]'s ledger of every last word since the war says the same thing, spread over a thousand mouths. She already guesses.
+**What the GM knows.** The sentence is **"The lamp is the lock."** The dead are close to the Sleeper's leak when they die, and what leaks up is the truth of the ward: the lantern's flame is what keeps the crack shut. [[Mother Corvane]]'s ledgers of every last word since the war say the same thing, spread over a thousand mouths: she has four words of five and has guessed the fifth. The five words are "the lamp is the lock"; [[Halloran Pike]] makes the eighth whisperer.
 
 **Where the answer lies.** [[The Funeral That Would Not End]]; the Rook-Court's ledger at [[Corvel Rise]]; [[The Rook-Court]]'s clock.
 
-**Payoff.** Session 5.
+**Payoff.** Session 5, where Quorl gets the reveal: Pike's confession, and the sentence said whole.

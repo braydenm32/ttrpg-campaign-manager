@@ -16,13 +16,15 @@ gmFields:
 A plain key of black iron, about the length of a hand, with a bow shaped like a closed door. The teeth are worn smooth. It hangs on a leather cord and is always slightly cold, as though it were somewhere else.
 
 ### What it is
-One of the keys Hathe, Keeper of Doors, handed to the first Raveler priests. When the god died at Cinders, the keys stopped answering. This one, kept in [[The Doorkeeper's Chapel]], is the only one that still does.
+One of the keys Hathe, Keeper of Doors, handed to the first Raveler priests. When the god died at Cinders, the keys stopped answering. This one, kept in the reliquary at [[Corvel Rise]] and lent for funerals, is the only one that still does.
 
 ### What it does
 It opens anything a dead person closed: a locked tomb, a grave sealed by a curse, a door in the house of a ghost. It does nothing to ordinary locks. When the dead are near it, the iron warms, and the bow seems to blink.
 
 :::gm
-Hathe did not die by accident. Ilyra drank his dying power. The key still carries a thread of that power, and anyone holding it feels a cold pull from Halcyra. [[Mother Corvane]] will lend it to a PC she trusts for a good reason, such as opening a sealed grave, but not for long. The Saint's envoy would pay anything for it.
+Hathe did not die by accident. Ilyra took what was left of him, though she did not choose to. The key still carries a thread of that power, and anyone holding it feels a cold pull from Halcyra. [[Mother Corvane]] will lend it to a PC she trusts for a good reason, such as opening a sealed grave, but not for long. The Saint's envoy would pay anything for it.
+
+It opens Lithic doors on one road: the Barrow's Red Seam, the Cold Seam landing, the Stone's root. The doors there were shut by the standing dead, so the key of the dead turns them.
 :::
 
 == GM notes ==

@@ -35,7 +35,7 @@ relations:
 ---
 
 ### What is known
-Nine years ago a camp healer named [[Ilyra of Halcyra]] walked into the sorcerous fire at [[The Battle of Cinders]] to pull out the wounded and walked out again with her hair unsinged and three dying men in her arms, and the plain burning behind her to the horizon. She has not been burned by anything since. She has not aged. In 3007 the temple-council of [[Halcyra]] declared her a living saint, and the declaration was a formality; the plateau had been praying to her for five years. See [[The Saint Declared]].
+Nine years ago a camp healer named [[Ilyra of Halcyra]] walked into the sorcerous fire at [[The Battle of Cinders]] to pull out the wounded and walked out again with her hair unsinged and three dying men in her arms, and the plain burning behind her to the horizon. She has not been burned by anything since. She has not aged. In 3007 the Synod of Lamps, sitting in the Hall of Coals at [[Halcyra]], declared her a living saint, and the declaration was a formality; the plateau had been praying to her for five years. See [[The Saint Declared]].
 
 Her mercy is real. That is the first thing anyone says who has met her, and the second thing is that they would have followed her anywhere, and the third thing, said more quietly, is that they still want to.
 

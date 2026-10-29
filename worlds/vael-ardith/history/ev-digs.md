@@ -14,14 +14,14 @@ Two years before the Kingslaying, the Emperor Aurel IX began, in secret, to dig.
 
 **The plan.** Aurel heard the voice that every Emperor heard, and unlike his fathers he believed it. He came to think that one of the Nine Great Wards could be opened, that the god beneath could be used, and that an Emperor who held its power would be an Emperor in fact. He put the Master of Works, a precise and joyless man named Ilbert Crane, in charge of three digs.
 
-**The sites.** In the hills above [[Hollowhall]], where the dwarves' oldest stair gave on a sealed door. In the western marches along the Cinder, in the grain fields beside a leaning stone. And at a third place the Emperor's own papers refer to only as *the Wet Hill*.
+**The sites.** First, at a place the Emperor's own papers refer to only as *the Wet Hill*. Second, in the hills above [[Hollowhall]], where the dwarves' oldest stair gave on a sealed door. Third, in the marches along the Cinder, in the grain fields beside a leaning stone.
 
 **The paperwork.** All three digs were recorded as *Drainage Works (Western)*, a line item the Treasury had been carrying for years. The clerks who processed the budget thought it was dull. In the whole of the Quiet Office's files, it appears under forty-one different codes.
 
 **What it left.** Crane's notes, partly burned. A crew of labourers who were paid well and never spoke of it. A crack in an old stone, which [[The Mothers of the Iron|the Mothers]] heard about from a cook. And, two years later, an Emperor dead on the floor of the Gilded Gallery.
 
 :::gm
-The cracked stone in the western marches is the Ninth Stone, then standing in the grain fields east of Cinderford, where the Rent runs now. Digging at its base weakened it before the Battle of Cinders did. Crane's surviving notes are at Fort Mercy, in a records vault, until its burning.
+The cracked stone in the marches is the Ninth Stone, then standing in the grain fields east of Cinderford, where the Rent's northern lip is now, at its north-eastern end. Digging at its base weakened it before the Battle of Cinders did. Filed as *Drainage Works (Western)*: deliberately dull, deliberately wrong. Crane's surviving notes were at Fort Mercy, in a records vault, until its burning.
 :::
 
 == GM notes ==

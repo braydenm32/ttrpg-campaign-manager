@@ -39,6 +39,10 @@ Small, narrow, and grey-brown as a moth's wing, with large dark eyes that catch 
 ### Manner
 Quiet, precise, and then suddenly not: get her talking about flames and she talks for an hour. Nocturnal, so she is sharp at midnight and useless at noon. Leans toward any lit lamp without noticing. Apologises to candles before she snuffs them, a Vesh habit she has stopped explaining.
 
+> "Sorry. It's only for a moment. You were very good." (To a candle, before she pinches it.)
+
+> "I'm not afraid of the dark. I just think it should be introduced first."
+
 ### Background
 Ysse was a copyist in a Vesh lamp-library in the Regency, the kind that keeps every lamp burning all night so the readers can work. She was good at it, too good: she started noticing where the old wards ran thin, as all Vesh can, and writing it down, which almost no Vesh does. Her elders told her it was rude. The Vesh have a long tradition of seeing things and politely saying nothing.
 
@@ -67,7 +71,7 @@ And it has started speaking in your dreams. Not words, at first: warmth, and wei
 
 :::gm
 **How her secret pays off.**
-- The voice is (mostly) the Ninth: one of [[The Nine]], awake inside [[The Ninth Stone]], speaking through the shard that lights the lantern. At full Ember a second voice answers it, warmer and kinder and far more patient. That one is [[The Sleeper Below]]. Ysse should not be able to tell them apart until session 6, when [[A Rubbing from the Ninth Stone]] spells it out: "It is not the Ninth asking. The One Below is asking."
+- Both voices are warm. The Ninth (the Youngest of the [[The Nine|Nine]], awake inside [[The Ninth Stone]], speaking through the shard that lights the lantern) is tired and stone-slow and asks her to **stand**: "Not yet." "Hold." "You came." "Stand with me." At full Ember a second voice answers it, a shade too kind and too patient: [[The Sleeper Below]], counterfeiting that warmth, and asking to be **kept**: "Keep me." She can tell them apart only by what they ask. In session 6, [[A Rubbing from the Ninth Stone]] spells it out: "Do not listen when it asks to be kept."
 - [[Warden Uthrem]] has been waiting nine years for "the one the flame calls". It is Ysse. When she reaches the Ninth Stone in **Into the Rent**, he says her name before she gives it.
 - In ending A, Ysse is one of the three possible living hearts for the ward (with Uthrem and any willing PC). The flame wants her. That is not the same as her having to say yes.
 - Her spell tally matters: every spell cast near the Rent drains the ward. Let her player keep the count and let it bite in session 8.

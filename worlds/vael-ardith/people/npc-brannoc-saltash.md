@@ -26,13 +26,13 @@ relations:
     known: true
 ---
 
-Big, bald, red-armed and sweating, with a leather apron and a voice like a kettle coming to the boil. Brannoc was pot-boy to Mother Hennet in the Ruddy Hundred's kitchen the night of [[The Battle of Cinders]]: he is the boy with the burnt hand in the company's story of the ninth lantern, and he will show you the scar if you ask, and not if you don't. He has cooked for [[The Ninth Lantern]] ever since, and every Restday he carries a bowl of his stew down to [[The Last Candle]] so that Hennet can tell him it wants salt.
+Big, bald, red-armed and sweating, with a leather apron and a voice like a kettle coming to the boil. Brannoc was pot-boy to [[Mother Hennet]] in the Ruddy Hundred's kitchen the night of [[The Battle of Cinders]]: he is the boy with the burnt hand who followed the lantern up the hill in the company's story of the ninth lantern, and he will show you the scar if you ask, and not if you don't. He says he sang on the way up; [[Halloran Pike]] says he howled. Hennet gave him the Ninth's kitchen after she lost the arm, and every Restday he carries a bowl of his stew down to [[The Last Candle]] so that she can tell him it wants salt.
 
 He swears entirely in prayer, which the company finds more frightening than ordinary swearing:
 
 > "[[Maelis]] bless this bastard pot and every bastard who eats from it. [[Grum]] keep the fire hot under that useless halfling's feet. Hearth Mother forgive me, *who took the salt?*"
 
-He feeds the company on eleven days of rations stretched to thirty, and he knows exactly how hungry everyone is. If the pay doesn't come, he's the first to know the mood, and the last to say it out loud.
+He feeds the company on eleven days of rations stretched to three weeks, and he knows exactly how hungry everyone is. If the pay doesn't come, he's the first to know the mood, and the last to say it out loud.
 
 == GM notes ==
 

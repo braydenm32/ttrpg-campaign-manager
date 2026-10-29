@@ -51,4 +51,4 @@ Her faces look away from the Ness because something is there that she will not l
 
 == GM notes ==
 
-Use her for texture in Concord scenes: seven contradictory blessings, seven fee schedules. If the party takes ship, the tide-warden's drowned-list is a handout waiting to happen: names of the lost, including one from the Ninth Lantern who was never on a boat.
+Use her for texture in Concord scenes: seven contradictory blessings, seven fee schedules. If the party takes ship, the tide-warden's drowned-list is a handout waiting to happen: names of the lost, including one from the Ninth Lantern who was never on a boat: Dannic Rook, added after 7 Ashfall in a hand nobody saw write it.

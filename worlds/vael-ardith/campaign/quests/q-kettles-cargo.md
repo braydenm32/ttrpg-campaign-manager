@@ -26,9 +26,11 @@ relations:
 She pays in silver, which in Cinderford this month is very nearly a miracle.
 
 :::gm
-The cargo is twelve casks of the company's good lantern oil, sold to Kettle by [[Fennick Bottlebrook]] so he could buy bread and boots. Fennick is not poisoning the flame; he is feeding the company the only way he can. If the party opens a cask, the oil is clean and golden, the opposite of [[The Cut Oil Tin]].
+The cargo is four casks of the company's good lantern oil, sold to Kettle by [[Fennick Bottlebrook]] so he could buy bread. He wrote twelve up as burned, and only eight were. Fennick is not poisoning the flame; he is feeding the company the only way he can. If the party opens a cask, the oil is clean and golden, the opposite of [[The Cut Oil Tin]].
 
-There is also a thirteenth crate that isn't on Kettle's manifest. It is warm. Inside, wrapped in sacking, is a stone hand dug from the glass, with Lithic letters on the palm, bound for [[Aelith Sorn]], who paid a Glasser for it. Kettle didn't load it and would like it off her barge.
+There is also a crate that isn't on Kettle's manifest, the warm thirteenth, in the false floor (DC 18 to find). Inside, wrapped in sacking, is a stone hand dug from the glass, Ketterin's right hand from the Ninth Stone's statue, with Lithic letters on the palm, bound for [[Aelith Sorn]], who paid for it through a Glasser. Kettle didn't ask for it and would like it off her barge. See [[The Glass-Fused Hand]].
 
-Outcomes: help Kettle and she becomes the party's eyes on the river (she tells them about the pay wagon's route in session 2). Expose Fennick and the company eats better for a fortnight, then much worse. Keep the stone hand and Aelith Sorn will come asking, politely, then less politely.
+Runs on the evening of session 2, or between sessions 2 and 3.
+
+Outcomes: help Kettle and she becomes the party's eyes on the river (she tells them about the pay wagon's route), and owes them one free passage by water in session 7 or 8. Fail, and Sallow's patrol searches the barge, and Sallow starts to weigh the party. Expose Fennick and the company eats better for a fortnight, then much worse. Keep the stone hand and Aelith Sorn will come asking, politely, then less politely.
 :::

@@ -9,14 +9,14 @@ Roll when a PC eats in the mess, stands a watch, or asks around. Gossip is cheap
 
 == GM notes ==
 
-Use gossip to move clocks: Mutiny ticks up when the grumbling is loud; Debt ticks up when the rumour is of the Concord. Fennick's rumours should be accurate; Spoons's should have odds attached.
+Use gossip to move clocks: Mutiny ticks up when the grumbling is loud; Debt ticks up when the rumour is of the Concord. Fennick's rumours should be accurate; Spoons's should have odds attached. The salt ring round the cage is Halloran Pike's. "The dead deserter" is only gossip after session 1; before that, it is a rumour of a living one.
 
 == Entries ==
 
-- 3x "No pay again this week. That's six. I've started counting in seasons."
+- 3x "No pay again this quarter. That's ten quarters. I've started counting in years."
 - 3x "Fennick's cooking the books. He told the cook to boil the bones twice. Twice!"
 - 2x "Sallow's been practising a speech in the privy. I heard him say 'friends and fellow soldiers' to a wall."
-- 2x "Spoons has the lantern going out at Frostcall. He's got fourteen to one. I'm in for a silver."
+- 2x "Spoons has the lantern going out at Frostcall, 14 to 1. I'm in for a silver."
 - 2x "Vosk says the recruits will be lucky to survive the month. He's said that about every batch. They've all survived. It's unsettling."
 - "Captain Marrow hasn't eaten in two days. She gives it to the sentries. I saw her."
 - "There's a woman in the Smokes who sells charms against bad dreams. Half the Keep goes there on Restday."

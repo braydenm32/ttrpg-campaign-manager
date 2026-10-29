@@ -1,7 +1,7 @@
 ---
 type: item
 name: The Melted Crown
-summary: A gold circlet slumped and fused with green glass, said to belong to an emperor who is not yet dead.
+summary: A gold circlet slumped and fused with green glass, said to belong to the last emperor, murdered thirty years ago.
 tags: [ salvage, imperial ]
 image: item:item-melted-crown
 heldBy: vexa-glassjaw
@@ -22,7 +22,7 @@ Vexa Glassjaw's crews dug it from the glass at Fort Mercy and have been trying t
 Nothing, if you are sensible. Put it on and you hear a distant, grave voice counting. It stops when you take it off.
 
 :::gm
-The crown is a ward-sensitive relic. Marius Vell has been trying to find it for two years, and the Council's claimant would hear the Sleeper more clearly with it. The Glassers have no idea, but Vexa suspects something and is holding out for a better price. The Church of the Unburnt Saint has made an offer.
+It is Aurel's heir's circlet ("Crowned Sun's Heir"). Ilbert Crane carried it east to the 2979 dig at the Ninth, because the Digs needed a relic that heard the ward; it was lost there and dug from the glass at Fort Mercy. The counting voice is the Sleeper's. The crown is a ward-sensitive relic. Marius Vell has been trying to find it for two years, and the Council's claimant would hear the Sleeper more clearly with it. The Glassers have no idea, but Vexa suspects something and is holding out for a better price. The Church of the Unburnt Saint has made an offer.
 :::
 
 == GM notes ==

@@ -1,5 +1,5 @@
 ---
-version: 2 # raise by one to offer everyone with an older copy of the example a fresh one
+version: 3 # raise by one to offer everyone with an older copy of the example a fresh one
 name: Vael Ardith
 system: Any system (5e notes for the GM)
 color: "#6b4a2b"

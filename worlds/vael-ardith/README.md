@@ -51,6 +51,8 @@ Notes players never see.
 - The **file name is the page's key** (`fennick.md` is `fennick`). Other files point at pages by key: `parent`, `relations`, `heldBy`, session `pages`, board cards.
 - Text links use the page's **name** instead: `[[Fennick Bottlebrook]]`, or `[[Fennick Bottlebrook|the quartermaster]]`.
 - Pages are **GM only** unless they say `players: true`.
+- Secrets go in a `:::gm` block (closed with `:::`) or under `== GM notes ==`. **Rumour lists are player-visible**: write the rumours plain and put the truth key in a `:::gm` block straight after the list ("Which are true: 1. … 2. …").
+- A link from player text to a GM-only page shows players a locked name. Use it only for places they will find; otherwise write the name as plain text.
 - `type` is one of: location, npc, pc, faction, item, event, quest, shop, deity, lore, thread, table, custom.
 
 ## The five rules that stop mistakes

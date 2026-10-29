@@ -29,7 +29,7 @@ A small, scruffy, rust-black Raveler with a handcart, a sackcloth hood and the f
 
 > "Dead, is he? Lovely. Lift with your knees, I'm not carrying two of you."
 
-He is cheerful, profane and deeply kind to the bereaved, and he has a joke for every kind of death. He tells the PCs, whenever they head out, which joke he's saving for each of them.
+Now that [[Mother Corvane]] no longer comes down from the Rise, Skrell runs her errands as well as her bodies. He is cheerful, profane and deeply kind to the bereaved, and he has a joke for every kind of death. He tells the PCs, whenever they head out, which joke he's saving for each of them.
 
 :::gm
 Skrell and [[Dannic Rook]] were fledgling-mates at Corvel Rise before Dannic ran away to soldier. When the drowned man walks, Skrell knows the key-shaped scar on his hand at once, and goes very quiet. He has no joke for that one. He'll tell Quorl, if Quorl asks, that Dannic got the scar as a boy, touching something in the Rook-Court's reliquary he shouldn't have.

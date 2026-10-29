@@ -23,14 +23,13 @@ const PLACE_PAGES: Record<string, string> = {
   Halcyra: 'halcyra',
   Qerath: 'qerath',
   Cinderford: 'cinderford',
-  'the Lantern Keep': 'lantern-keep',
 }
 const townId = (name: string) => `town-${name.toLowerCase().replace(/[^a-z]+/g, '-')}`
 
 const rentEnd = (): Point => [RENT.spine[RENT.spine.length - 2], RENT.spine[RENT.spine.length - 1]]
 
-/** The Nine Great Wards: a loose ring through the interior. The ninth leans over the Rent's northern end. */
-const WARDS: Point[] = [[470, 292], [690, 212], [1100, 194], [1235, 452], [1285, 724], [1000, 774], [640, 802], [380, 500], [rentEnd()[0] + 8, rentEnd()[1] - 2]]
+/** The Nine Great Wards, where lore-wards puts them: under the capital, north of Ardmere, south of Fallowden, in the Saelwood, at Sevenhaven, near Qerath, in the Standing Fields, above Hollowhall, and the Ninth leaning over the Rent's north-eastern end. */
+const WARDS: Point[] = [[746, 600], [800, 372], [846, 552], [380, 500], [838, 832], [1238, 572], [1050, 640], [688, 284], [rentEnd()[0] + 8, rentEnd()[1] - 2]]
 
 function continent(): Drawing {
   const shapes: Shape[] = []

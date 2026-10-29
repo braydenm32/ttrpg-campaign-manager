@@ -12,7 +12,7 @@ order: 20
 
 The Long Dreaming is the stretch of time, tens of thousands of years by the loosest guess, between the gods and the first mortal footprint. It has no date, because nobody was awake to count.
 
-**The Lithic account.** [[The Sleeper Below]], then simply a god of dreams and endings, grew lonely and dreamed company. Mortals were what he dreamed when he could not think of anything else to be. This is why every mortal has a thought they cannot finish: it is the shape of the dream's edge.
+**The Lithic account.** The Sleeper Below, then simply a god of dreams and endings, grew lonely and dreamed company. Mortals were what he dreamed when he could not think of anything else to be. This is why every mortal has a thought they cannot finish: it is the shape of the dream's edge.
 
 **The Saelish account.** The elves were not dreamed. They walked out of the forest already complaining, and everyone else was a sort of echo. [[Humans]], in particular, were an accident in the mud. This account is not widely repeated outside [[Sael]].
 

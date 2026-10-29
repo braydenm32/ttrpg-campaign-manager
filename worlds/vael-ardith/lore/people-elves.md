@@ -31,12 +31,12 @@ Soft, long, two or three syllables, with a house-name that changes when the hous
 Beautiful, sad and not to be trusted with a promise older than a century. Humans find them melancholy; orcs find them soft; Ravelers, who trade in last words, find them fascinating, because an elf's last words are usually a question.
 
 ### Playing an elf
-Decide what is written on you and what it was for. Pick three tattoos: one you can read, one you can nearly read, one you cannot. The GM will tell you what the third one meant, eventually. You are patient, polite and quietly frightened of the next century; play the fear as curiosity. You are good at listening because you have had to be.
+Decide what is written on you and what it was for. Pick three tattoos: one you can read, one you can nearly read, one you cannot. The GM will tell you what the third one meant, eventually. You are patient, polite and quietly frightened of the next century; let the fear show only as questions. You are good at listening because you have had to be.
 
 :::gm
-In 1102 AW Sael tried to open the Fourth Ward ([[The Saelish Trespass]]), failed, and lost most of a generation doing it. The survivors did the one thing elves can do that nobody else can: they chose to forget. They burned the skin that remembered, flayed the Remembrancers' records and let the century take the rest. The Fourth Ward has been weak ever since and the Saelwood has been drinking from it, and the elves do not know why their forest is slowly dying from the roots.
+In 1102 AW Sael tried to open the Fourth Ward ([[The Saelish Trespass]]), failed, and lost the circle, eleven dead, and a generation's memory, burned on purpose. The survivors did the one thing elves can do that nobody else can: they chose to forget. They burned the skin that remembered, flayed the Remembrancers' records and let the century take the rest. The Fourth Ward has been weak ever since and the Saelwood has been drinking from it, and the elves do not know why their forest is slowly dying from the roots.
 
-The record survived once. [[Sorrel Vey]]'s tattoos are a copy of a copy, inked on her by a dying Remembrancer two centuries ago, and she cannot read them, and [[Aelith Sorn]] can. Why the elves tried to open the ward, and who told them to, is the forgotten god's business: see [[Orvanne]].
+The record survived once. [[Sorrel Vey]]'s tattoos were inked on her as a girl, two centuries ago, by her grandmother, a dying Remembrancer who would not burn the record. Sorrel cannot read them, and [[Aelith Sorn]] can read one line in five. Why the elves tried to open the ward, and who told them to, is the forgotten god's business: see [[Orvanne]].
 :::
 
 == GM notes ==

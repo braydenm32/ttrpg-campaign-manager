@@ -31,7 +31,7 @@ relations:
 ---
 
 ### Look and voice
-The icons in [[The House of Unburnt Light]] show her as she was: a plain, sturdy camp healer of twenty-five in a blood-stained apron, walking out of a wall of fire with her hair unsinged and three dying men in her arms. Pilgrims who have seen her in [[Halcyra]] since say she no longer looks plain. Her skin has a light under it, like a lamp behind paper. Her hair moves when there is no wind. People who stand near her feel warm, then wanted, then afraid, in that order. Nobody has seen her sleep, eat, or bleed in nine years.
+The icons in [[The House of Unburnt Light]] show her as she was: a plain, sturdy camp healer of twenty-five in a blood-stained apron, walking out of a wall of fire with her hair unsinged and three dying men in her arms. She is thirty-four now. Pilgrims who have glimpsed her through the lattice of the Lamp Court in [[Halcyra]] say she no longer looks plain. Her skin has a light under it, like a lamp behind paper. Her hair moves when there is no wind. People who come near the lattice feel warm, then wanted, then afraid, in that order. Nobody has seen her sleep, eat, or bleed in nine years.
 
 Those who have heard her say her voice is low, fond and enormous.
 
@@ -39,17 +39,21 @@ Those who have heard her say her voice is low, fond and enormous.
 
 > "I don't want worship. I want *you* to stop hurting. Is that so terrible?"
 
+> "Do they still argue about the soup in Cinderford? Good. Keep arguing about the soup. It means nobody has died of it."
+
 ### Who she is
-Ilyra was a healer with a mercenary company at [[The Battle of Cinders]], one of thousands on the plain when the battle-sorcery set the ash alight. She walked into the fire to pull out the wounded and walked out at dawn, unburnt, carrying three dying men, and with her hands she healed the dying for three days without sleeping. The red moon rose the same night. In 3007 the theocracy of [[Iskaveth]] declared her a living saint ([[The Saint Declared]]). Today the faith of [[The Unburnt Saint]] spreads west from Halcyra, and its priests say plainly that she is becoming a god.
+Ilyra was a healer with a mercenary company at [[The Battle of Cinders]], one of thousands on the plain when the battle-sorcery set the ash alight. She walked into the fire to pull out the wounded and walked out at dawn, unburnt, carrying three dying men, and with her hands she healed the dying for three days without sleeping. The red moon rose the same night. She spent five years in prayer on the Iskaveth plateau, unseen, before she let them declare her: in 3007 the theocracy of [[Iskaveth]] named her a living saint ([[The Saint Declared]]). Since then she has been seen only at the lattice of the Lamp Court on full-Ember nights. Today the faith of [[The Unburnt Saint]] spreads west from Halcyra, and its priests say plainly that she is becoming a god.
 
 ### What she wants
-Godhood, though she would never use the word. She wants to heal the world's pain, all of it, and to do that she needs more power than any mortal has ever held.
+To heal the world's pain, all of it, and to do that she needs more power than any mortal has ever held.
 
 ### What she knows
-What she is becoming. What she took. What the flame in Cinderford is.
+What the faithful tell her, which is everything they think she wants to hear. The rest is hers to say.
 
 :::gm
-**The truth.** Hathe, Keeper of Doors, did not die by accident. The battle-sorcery broke him open; Ilyra was beside him in the fire as he died, and she drank his dying power. She did not choose to, at first: what a healer does with a dying thing is take its weight. She has chosen every day since. She is ascending on it. That is why the dead don't pass: the god of the threshold is gone, and his doors answer, poorly, to her. Prayers to Hathe reach her now. She answers some.
+**What she wants, and what she knows.** Godhood, though she would never use the word. She knows what she is becoming, what she took, and what the flame in Cinderford is.
+
+**The truth.** Hathe, Keeper of Doors, died of the battle-sorcery that broke him open; Ilyra was beside him in the fire as he went, and took what was left of him. She did not choose to, at first: what a healer does with a dying thing is take its weight. She has chosen every day since. She is ascending on it. That is why the dead don't pass: the god of the threshold is gone, and his doors answer, poorly, to her. Prayers to Hathe reach her now. She answers some.
 
 Her church wants the Ninth Ward's crack to open fully, so that she can drink the leak and become a full god. She would call it mercy. She may even be right that she'd be a kinder god than most. She would also be a god who ate two others to get there.
 

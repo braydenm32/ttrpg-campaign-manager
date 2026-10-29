@@ -1,6 +1,7 @@
 ---
 type: location
 name: The Ness of Thurm
+players: true
 summary: "A broad mountainous wedge running west from the middle of Sael's coast, almost splitting the Hollow Sea, barred by the elves at its root. Old charts show Shellback ruins on its southern slopes. New charts say: here the charts fail."
 parent: sael
 tags: [ peninsula, mountains, ruin, mystery ]
@@ -19,12 +20,14 @@ Ships that round the point, which is the only way from the northern Hollow Sea t
 ### What is known for certain
 Very little. The elves will not say what the wall is for. The Shellbacks change the subject, slowly. [[Grandmother Tollamund]] has been asked, by a very brave clerk, and answered: "Not yet."
 
+:::gm
 ### What the GM knows
 - The Shellbacks did not leave the Ness. They were put out of it, by something they call the Slow One and never name aloud. Their god, or their landlord. The distinction is unclear even to them.
 - They believe a ward-flame, held in the right hands, will open the way back. That is why Tollamund wants the Ninth Lantern, and why the Concord Houses are buying the Ashenreach's debt instead of simply calling it in.
 - The elven wall is older than the elves' arrival in 690 AW. They do not remember building it. They are afraid that they did.
 - The great peak at the root is hollow. The Shellbacks' word for it is the same as their word for a shell.
 - Nothing in the campaign requires the party to go to the Ness. It is where the Shellbacks' thread leads if the players pull it, and a strong candidate for a second campaign.
+:::
 
 == GM notes ==
 

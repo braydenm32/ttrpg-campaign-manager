@@ -21,7 +21,7 @@ It's grim and funny in about equal parts: real stakes and hard choices, soldiers
 ### A tour of the app, using this world
 Each stop below is a real page or screen you can open now. The little **?** buttons next to headings explain any feature in a sentence or two.
 
-**Secrets on a page.** Open [[Varra Nine-Knuckles]]. Some passages show a 🔒: those are GM-only and players never see them. Others are marked for one character: only Varra's player reads that she is the Kingslayer's granddaughter. Every PC page has one. [[Quorl Many-Words]] is a good second look.
+**Secrets on a page.** Open [[Varra Nine-Knuckles]]. Some passages show a 🔒: those are GM-only and players never see them. Others are marked for one character: only Varra's player reads that her grandmother is the Kingslayer. Every PC page has one. [[Quorl Many-Words]] is a good second look.
 
 **Places inside places.** [[The Lantern Keep]] sits inside [[Lantern Hill]], inside [[Cinderford]], inside [[The March of Cinders]], inside [[The Ashenreach]]. The sidebar opens down to wherever you are, and each place lists what's inside it.
 
@@ -29,7 +29,7 @@ Each stop below is a real page or screen you can open now. The little **?** butt
 
 **Alive, dead, missing.** [[Dannic Rook]] is marked dead (which doesn't stop him climbing out of the river). Status shows in lists, at the Lectern and on corkboards.
 
-**Clocks.** [[The Ninth Lantern]] has a Mutiny clock; most factions have one. The big one is on [[The Sleeper Below]]: twelve slices, three filled, ticked at every full red moon. **Play → Clocks** shows them all.
+**Clocks.** [[The Ninth Lantern]] has a Mutiny clock; most factions have one. The big one is on [[The Sleeper Below]]: twelve slices, three filled, ticked at each full Ember. **Play → Clocks** shows them all.
 
 **Loose threads.** **Prep → Loose threads** holds every mystery you've left dangling, like "Who is cutting the lantern oil?" and "Why does Borrin's shadow lag?". Each says what you know and when it pays off, and a thread that goes cold gets flagged.
 
@@ -49,11 +49,19 @@ Each stop below is a real page or screen you can open now. The little **?** butt
 
 **Templates.** Making an NPC or a place? Pick "From template: NPC (Vael Ardith style)" from the New menu and you get the headings this world uses, ready to fill.
 
-**Handouts ready to show.** **Prep → Handouts** lists six letters, notices and charts under "Ready to show", like the [[Pay Notice]] and [[A Perfumed Letter]]. "Reveal and show" puts one on every player's screen at the right moment.
+**Handouts ready to show.** **Prep → Handouts** lists the letters, notices and charts under "Ready to show", like the [[Pay Notice]] and [[A Perfumed Letter]]. "Reveal and show" puts one on every player's screen at the right moment.
 
-**Maps.** The atlas of Vael Ardith is coming in a later update. Meanwhile, **World → Maps** is where you can upload your own or draw one in the map builder.
+**Maps.** Five maps ship with this world: the continent, the Ashenreach, Cinderford, the Glass Barrow and the Lip of the Rent. **World → Maps** opens them, and is also where you can upload your own or draw one in the map builder.
 
 **Preview as a player.** At the bottom of the sidebar, "Viewing as" switches to Player and shows exactly what your table sees: all the secrets vanish. Try it on [[Varra Nine-Knuckles]], then switch back.
+
+### Handy numbers
+- **Money.** Ten copper (cp) make a silver (sp); ten silver make a gold (gp). An old imperial crown is one gold piece. A loft bed at the Last Candle is 1 sp, small beer 1 cp, fish stew 3 cp. Two coins matter in play: new Regency silver from the Caer Ardith mint (the Quiet Office's money) and new Concord coin from the Sevenhaven mint (the pay-wagon money).
+- **Travel from Cinderford.** House of Unburnt Light, a quarter-hour. Weeping Orchard, an hour's walk. Treaty Stone, an hour. Fort Mercy, 22 miles: a day's ride. The Ninth Stone, about 60 miles: two hard days' ride, three on foot or with a cart. Fallowden, four days by cart. Caer Ardith, eight days by wagon.
+
+:::gm
+**Debt, in layers.** The Ashenreach was mortgaged long before the company: the marches along the Cinder were collateral for the First Imperial Loan in 2650; the Ardmere Receipts were bought up at forty in the hundred in 2995; the Regency stopped the Ninth's wages on 1 Hollowfrost 3009 and the Concord bought the garrison's debt at forty in the hundred; and in 3010, after the Gilt run, Tollamund took House Ferrowyn's whole portfolio of Regency paper. Every layer ends at the same counter in the old mill at the Ford.
+:::
 
 ### Make it yours
 Rename people, cut factions, add your players' own characters. Your own worlds work exactly the same way. Have a good game, and keep the light on.

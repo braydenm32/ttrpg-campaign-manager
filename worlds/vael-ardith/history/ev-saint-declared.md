@@ -11,13 +11,13 @@ date: 1 Highsun 3007 AW
 order: 190
 ---
 
-For five years the woman who walked out of the fire at Cinders lived quietly in [[Halcyra]], in a house of healers, treating the sick for no fee. The crowds outside grew each month. On the first of Highsun 3007 AW, her people came to her door and asked a question.
+For five years the woman who walked out of the fire at Cinders was not seen. She had treated the sick in a house of healers in [[Halcyra]] for no fee, and then gone up onto the plateau to pray, and the crowds outside the empty house grew each month. On the first of Highsun 3007 AW, her people came to her door and asked a question.
 
-**The declaration.** The High Council of Iskaveth, meeting in the Hall of Coals, declared [[Ilyra of Halcyra]] a living saint, *Unburnt*, favoured of the first flame. The bells of the city rang for a day. Fire-priests walked barefoot through the streets, and a thousand households lit lamps for her.
+**The declaration.** The Synod of Lamps, sitting in the Hall of Coals in the Lamp Court at [[Halcyra]], declared [[Ilyra of Halcyra]] a living saint, *Unburnt*, favoured of the first flame. The bells of the city rang for a day. Fire-priests walked barefoot through the streets, and a thousand households lit lamps for her.
 
-**What she said.** Almost nothing. She is said to have stood on the balcony, looked at the crowd, and smiled. Witnesses disagree on whether it was the smile of a woman moved, or of a woman counting.
+**What she said.** Almost nothing. She is said to have stood behind the lattice of the Lamp Court's balcony, looked at the crowd, and smiled. Witnesses disagree on whether it was the smile of a woman moved, or of a woman counting.
 
-**What followed.** Pilgrims by the thousand. A flowering of small shrines. A church, [[The Church of the Unburnt Saint]], with its own vestments, liturgy and clerks. And a slow, steady rise in her reputation as a bringer of mercy, healer of the hopeless and, in whispers, the one who will heal the continent.
+**What followed.** Pilgrims by the thousand. A flowering of small shrines. A church, [[The Church of the Unburnt Saint]], with its own vestments, liturgy and clerks. And a street-song in Halcyra that counts the smile, *one for the sick, one for the crowd, one for me*, and, in whispers, the claim that she is the one who will heal the continent.
 
 **How it is told now.** In Iskaveth, as a holy morning. In the Regency, as an irritant. By the Concord, as a growing market. By the soldiers of the Ninth Lantern, who were there that night and saw her walk out of the fire, with a certain amount of suspicion. They don't say why.
 

@@ -29,7 +29,11 @@ Lanky, red-haired, freckled, and one half of the Dunmore twins, the best crossbo
 
 > "Two hundred paces." "Hundred and eighty." "Two hundred." "You've been wrong since the womb, Jory." "*I* came out first."
 
-They shoot together, though, and when they do, nothing within two hundred paces (or a hundred and eighty) lives long. Jory is the steadier of the two, a little slower, very loyal to [[Captain Marrow]].
+They shoot together, though, and when they do, nothing within two hundred paces (or a hundred and eighty) lives long. Jory is the steadier of the two, a little slower, very loyal to [[Captain Marrow]]. **Wants:** one argument with his brother that ends. **Fears:** that Jessom is right about something.
+
+:::gm
+One night on the east wall, Jory saw Borrin at the parapet staring out toward the Rent, when Borrin was asleep in the barracks. He told only Jessom, who said he was drunk. The Dunmores are cousins of [[Ilse Marrow]]'s mother's line, a ward-sensitive family, and neither twin knows it; they only know the cage hums in their teeth.
+:::
 
 == GM notes ==
 

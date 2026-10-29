@@ -321,6 +321,8 @@ From most hidden to least:
 
 Every `:::gm` or `:::for` needs its closing `:::` line. If one is missing, everything after it stays hidden (so nothing leaks), and the checker warns you.
 
+**Rumours.** Rumour lists are player-visible. Write the rumours plain and put the truth key in a `:::gm` block straight after the list ("Which are true: 1. … 2. …"). Never put a verdict in brackets inside the list.
+
 ### 6d. Links and relationships
 
 - **In the text**, link by name: `[[Lantern Keep]]`, or with different words: `[[Lantern Keep|the Keep]]`. A link to a page that doesn't exist yet is allowed (it shows as a "no page yet" link), and the checker mentions it as a warning in case it's a typo.
@@ -339,6 +341,7 @@ Every `:::gm` or `:::for` needs its closing `:::` line. If one is missing, every
 
   `kind` is the label on the line between them. `note` and `known` are optional. You only need to write a relationship on one of the two pages.
 - **Aliases** let links find a page by other names: `aliases: [ The Captain, Old Marrow ]`.
+- **Links and secrets.** A link from player text to a GM-only page shows players a locked name. Use it only for places they will find; otherwise write the name as plain text.
 
 ### 6e. The timeline: events, ages and dates
 
