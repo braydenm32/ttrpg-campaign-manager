@@ -1120,7 +1120,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
           </button>
         </div>
       </div>
-      {exporting && <ExportMap name={map.name} drawing={drawing} width={W} height={H} onClose={() => setExporting(false)} />}
+      {exporting && <ExportMap mapId={map.id} fog={map.fog?.on ? map.fog : undefined} name={map.name} drawing={drawing} width={W} height={H} onClose={() => setExporting(false)} />}
       <div className="map-body">
         <div className="builder-tools">
           {TOOLS.map((t) => (
