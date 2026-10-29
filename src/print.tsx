@@ -6,6 +6,7 @@ import { foeCount } from './encounters'
 import { Help } from './help'
 import { asPlayerSees, useAssetUrl, useVisibleEntities, useWorld } from './hooks'
 import { Markdown } from './Markdown'
+import { listedEntries } from './tables'
 import { StatusBadge } from './status'
 import { ForcePlayerView, useViewMode } from './viewMode'
 import { Ico, PageIcon } from './icons'
@@ -97,7 +98,7 @@ function PrintEntity({ world, id }: { world: World; id: string }) {
       <Markdown text={e.body} entities={entities} worldId={world.id} showSecrets={isGM} />
       {e.type === 'table' && (
         <ol className="table-entries">
-          {(e.entries ?? []).filter((x) => x.trim() && !x.trim().startsWith('#')).map((x, i) => (
+          {listedEntries(e, isGM).map((x, i) => (
             <li key={i}>{x}</li>
           ))}
         </ol>

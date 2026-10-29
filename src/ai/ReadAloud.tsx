@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Session } from '../db'
 import { Help } from '../help'
 import { Ico } from '../icons'
-import { stripSecrets } from '../Markdown'
+import { splitSecrets } from '../Markdown'
 import { plainLinks } from '../text'
 import { getAiSettings, setAiSettings, useAiSettings } from './settings'
 
@@ -30,9 +30,16 @@ const useReading = () =>
     () => reading,
   )
 
-/** Markdown as sentences to say: no links, markup or secrets. */
+/**
+ * Markdown as sentences to say: no links, markup or secrets. Not even a player's own passages: read
+ * aloud, the whole table would hear them.
+ */
 export function speakable(markdown: string) {
-  return plainLinks(stripSecrets(markdown))
+  const said = splitSecrets(markdown)
+    .filter((s) => s.kind === 'text')
+    .map((s) => s.body)
+    .join('\n')
+  return plainLinks(said)
     .replace(/^[ \t]*:::.*$/gm, '')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')

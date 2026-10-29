@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import type { Entity } from './db'
 import { roll, rollDie } from './dice'
 import { Help } from './help'
-import { Markdown } from './Markdown'
+import { Markdown, stripSecrets } from './Markdown'
 import { Ico } from './icons'
 import { DiceFive } from '@phosphor-icons/react'
 import { pagePath, typePath } from './paths'
@@ -13,7 +13,7 @@ import { pagePath, typePath } from './paths'
  *  - "3x Goblins" makes an entry three times as likely (so does writing it three times).
  *  - "{2d6}" inside an entry rolls dice: "{2d6} goblins" gives "7 goblins".
  *  - "{Weather}" rolls on the table called Weather, so tables can build on each other.
- *  - Blank lines and lines starting with # are ignored.
+ *  - Blank lines and lines starting with # are ignored (notes for the GM: players never get them).
  */
 
 interface Entry {
@@ -29,6 +29,14 @@ export function tableEntries(t: Entity): Entry[] {
       const m = line.match(/^(\d+)\s*[x×]\s+(.+)$/i)
       return m ? { text: m[2], weight: Math.max(1, Math.min(1000, Number(m[1]))) } : { text: line, weight: 1 }
     })
+}
+
+/** A table's lines as listed on its page: no # notes, and for players no secret passages (a line can be one). */
+export function listedEntries(t: Entity, showSecrets: boolean) {
+  return (t.entries ?? [])
+    .filter((line) => line.trim() && !line.trim().startsWith('#'))
+    .map((line) => (showSecrets ? line : stripSecrets(line).trim()))
+    .filter(Boolean)
 }
 
 /** Rolls on a table. Other tables are looked up by name for "{Table name}". */

@@ -7,7 +7,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, TagInput, VisibilityBadge, VisibilityToggle } from '../components'
 import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, newId, PICKER_TYPES, saveEntity, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus } from '../db'
 import { HistoryButton } from '../History'
-import { TableRoller } from '../tables'
+import { listedEntries, TableRoller } from '../tables'
 import { newThread, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
 import { asPlayerSees, saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
@@ -149,7 +149,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             <div className="card">
               <TableRoller tables={[e, ...entities.filter((x) => x.type === 'table' && x.id !== e.id)]} fixed={e} worldId={worldId} entities={entities} showSecrets={isGM} />
               <ol className="table-entries">
-                {(e.entries ?? []).filter((x) => x.trim() && !x.trim().startsWith('#')).map((x, i) => (
+                {listedEntries(e, isGM).map((x, i) => (
                   <li key={i}>{x}</li>
                 ))}
               </ol>

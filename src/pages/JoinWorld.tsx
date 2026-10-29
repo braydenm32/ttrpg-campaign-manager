@@ -26,11 +26,14 @@ export default function JoinWorld() {
   // Keep the invite if the player has to go off and confirm their email first.
   useEffect(() => pendingInvite.set(token), [token])
 
+  // Everyone in the world sees this name, so an empty box never falls back to the player's email.
+  const tableName = name.trim() || String(user?.user_metadata?.full_name ?? '').trim() || 'Player'
+
   const join = async () => {
     setBusy(true)
     setError('')
     try {
-      const { cloudId, isGM, name: worldName } = await joinWorld(token, name.trim() || user?.email?.split('@')[0] || user?.user_metadata?.full_name || '')
+      const { cloudId, isGM, name: worldName } = await joinWorld(token, tableName)
       pendingInvite.set(null)
       if (isGM) {
         // A co-GM (or the GM opening their own link): bring down the full world, secrets and all, rather than a player copy.
@@ -87,8 +90,9 @@ export default function JoinWorld() {
           >
             <label>
               What should the table call you?
-              <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={user.email?.split('@')[0] || user.user_metadata?.full_name} maxLength={60} />
+              <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Sam" maxLength={60} />
             </label>
+            <p className="muted small">Others in the world will see you as “{tableName}”.</p>
             <p className="muted small">Signed in as {user.email || user.user_metadata?.full_name}.</p>
             <div className="row end">
               <button className="primary" disabled={busy}>
