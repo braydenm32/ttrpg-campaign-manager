@@ -52,7 +52,7 @@ interface ToolDef {
 
 const WORLD_TOOLS: ToolDef[] = [
   { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a piece, line or label to edit it, drag to move it' },
-  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll to zoom' },
+  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll, pinch or use + and − to zoom' },
   { id: 'land', icon: '🖌', label: 'Land', hint: 'Drag to paint land; switch to Water to carve out seas, bays and lakes. The coast draws itself' },
   { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw rivers, roads, trails and borders' },
   { id: 'stamp', icon: '⛰', label: 'Place', hint: 'Click to place a piece. Click and hold, then drag, to scatter lots of them' },
@@ -62,7 +62,7 @@ const WORLD_TOOLS: ToolDef[] = [
 
 const BATTLE_TOOLS: ToolDef[] = [
   { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a piece, line or label to edit it, drag to move it' },
-  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll to zoom' },
+  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll, pinch or use + and − to zoom' },
   { id: 'land', icon: '🖌', label: 'Ground', hint: 'Drag to paint grass, dirt, sand, stone, mud, snow, floors or water. Where two kinds meet they blend softly' },
   { id: 'room', icon: '🧱', label: 'Rooms', hint: 'Drag to dig out a room, passage or cave. Rooms that touch join up, and the walls draw themselves' },
   { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw fences, hedges, stone walls and cliff edges' },
@@ -73,7 +73,7 @@ const BATTLE_TOOLS: ToolDef[] = [
 
 const CITY_TOOLS: ToolDef[] = [
   { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a piece, line or label to edit it, drag to move it' },
-  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll to zoom' },
+  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll, pinch or use + and − to zoom' },
   { id: 'land', icon: '🖌', label: 'Ground', hint: 'Drag to paint grass, dirt, sand, paving stones, mud, snow or water: squares, gardens, ponds and canals' },
   { id: 'coast', icon: '🌊', label: 'Coast', hint: 'Drag to paint land; switch to Sea to carve out the sea, a harbour or a lake. The coast draws itself' },
   { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw streets, town walls, stone walls, fences, hedges and rivers' },
@@ -281,7 +281,11 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     | { kind: 'move'; id: string; start: Point; before: Drawing }
     | { kind: 'scatter'; before: Drawing; placed: Shape[]; start: Point; at: Point; t0: number; moved: boolean; fits: (asset: string, p: Point) => boolean }
     | { kind: 'erase'; before: Drawing; ids: Set<string> }
+    | { kind: 'pinch'; view: typeof view; mid: Point; dist: number }
   >(undefined)
+  // Fingers (and pens and mice) on the map, so a second finger zooms instead of breaking the stroke.
+  const pointers = useRef(new Map<number, { at: Point; touch: boolean }>())
+  const owner = useRef<number>(undefined)
   const scatterTimer = useRef<number>(undefined)
   const ringRef = useRef<SVGCircleElement>(null)
   const spaceDown = useRef(false)
@@ -850,7 +854,36 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     return { at: best.at, turn: Math.round(((turn % 360) + 360) % 360) }
   }
 
+  /** Two fingers between them: the point halfway, and how far apart they are. */
+  const twoFingers = (): { mid: Point; dist: number } => {
+    const [a, b] = [...pointers.current.values()].map((x) => x.at)
+    return { mid: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], dist: Math.max(1, Math.hypot(a[0] - b[0], a[1] - b[1])) }
+  }
+  /** Drops the stroke under way without keeping any of it (a second finger came down to zoom). */
+  const abandonGesture = () => {
+    const g = gesture.current
+    gesture.current = undefined
+    window.clearInterval(scatterTimer.current)
+    setDraft([])
+    setRoomDraft(undefined)
+    if (g && (g.kind === 'scatter' || g.kind === 'erase' || g.kind === 'move')) setDrawing(g.before)
+  }
+
   const onPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
+    // the first finger (or any mouse press) starts afresh, so a lost "finger up" can't get stuck
+    if (e.isPrimary) pointers.current.clear()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    pointers.current.set(e.pointerId, { at: [e.clientX, e.clientY], touch: e.pointerType === 'touch' })
+    if (pointers.current.size > 1) {
+      // two fingers: pinch to zoom and drag to move about; any other extra touch (a palm, say) is ignored
+      const all = [...pointers.current.values()]
+      if (pointers.current.size === 2 && all.every((x) => x.touch) && gesture.current?.kind !== 'pinch') {
+        abandonGesture()
+        gesture.current = { kind: 'pinch', view, ...twoFingers() }
+      }
+      return
+    }
+    owner.current = e.pointerId
     const p = toMap(e)
     const hit = shapeAt(e.target)
     if (tool === 'hand' || e.button === 1 || spaceDown.current) {
@@ -904,11 +937,25 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       if (hit) gesture.current = { kind: 'move', id: hit, start: p, before: drawing }
       if (!hit) gesture.current = { kind: 'pan', client: [e.clientX, e.clientY], view }
     }
-    e.currentTarget.setPointerCapture(e.pointerId)
   }
 
   const onPointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
     const g = gesture.current
+    const finger = pointers.current.get(e.pointerId)
+    if (finger) finger.at = [e.clientX, e.clientY]
+    if (g?.kind === 'pinch') {
+      if (pointers.current.size < 2) return
+      const { mid, dist } = twoFingers()
+      const box = svgRef.current!.getBoundingClientRect()
+      const k0 = g.view.w / canvas.w
+      // the map point that was between the fingers stays between them
+      const at: Point = [g.view.x + (g.mid[0] - box.left) * k0, g.view.y + (g.mid[1] - box.top) * k0]
+      const w = Math.min(W * 3, Math.max(W / 20, (g.view.w * g.dist) / dist))
+      const k = w / canvas.w
+      setView({ x: at[0] - (mid[0] - box.left) * k, y: at[1] - (mid[1] - box.top) * k, w, h: g.view.h * (w / g.view.w) })
+      return
+    }
+    if (g && e.pointerId !== owner.current) return
     if (tool === 'stamp' && (!g || g.kind === 'scatter')) showRing(toMap(e))
     if (!g) return
     if (g.kind === 'erase') {
@@ -952,8 +999,16 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     }
   }
 
-  const onPointerUp = () => {
+  const onPointerUp = (e: ReactPointerEvent<SVGSVGElement>) => {
+    pointers.current.delete(e.pointerId)
     const g = gesture.current
+    // a lifted finger ends a pinch; the other one does nothing until it's lifted too
+    if (g?.kind === 'pinch') {
+      gesture.current = undefined
+      return
+    }
+    if (e.pointerId !== owner.current) return
+    owner.current = undefined
     gesture.current = undefined
     window.clearInterval(scatterTimer.current)
     if (!g) return
@@ -1006,13 +1061,17 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     }
   }
 
-  const onWheel = (e: React.WheelEvent<SVGSVGElement>) => {
-    const [mx, my] = toMap(e)
-    const k = Math.exp(e.deltaY * 0.0015)
+  /** Zooms by k (under 1 is closer), keeping the map point (mx, my) where it is on screen. */
+  const zoomAt = (mx: number, my: number, k: number) => {
     const w = Math.min(W * 3, Math.max(W / 20, view.w * k))
     const ratio = w / view.w
     setView({ x: mx - (mx - view.x) * ratio, y: my - (my - view.y) * ratio, w, h: view.h * ratio })
   }
+  const onWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+    const [mx, my] = toMap(e)
+    zoomAt(mx, my, Math.exp(e.deltaY * 0.0015))
+  }
+  const zoomBy = (k: number) => zoomAt(view.x + view.w / 2, view.y + view.h / 2, k)
 
   const fit = () => fitView(canvas.w, canvas.h)
   const html = useMemo(() => classicHitSvg(drawing), [drawing])
@@ -1048,6 +1107,12 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
           </button>
           <button onClick={redo} disabled={!future.length} title="Redo (Ctrl+Shift+Z)">
             ↷ Redo
+          </button>
+          <button onClick={() => zoomBy(0.8)} title="Zoom in (you can also scroll, or pinch with two fingers)" aria-label="Zoom in">
+            +
+          </button>
+          <button onClick={() => zoomBy(1.25)} title="Zoom out" aria-label="Zoom out">
+            −
           </button>
           <button onClick={fit}>⤢ Fit</button>
           <button onClick={() => setExporting(true)} title="Download as a picture or a virtual tabletop file">
