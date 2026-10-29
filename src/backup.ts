@@ -1,4 +1,5 @@
 import { strFromU8, strToU8, unzipSync, Zip, ZipDeflate, ZipPassThrough } from 'fflate'
+import { loadInBackground } from './worldLoading'
 import { db, newId, type Asset, type Board, type Campaign, type Entity, type Pin, type Session, type Sound, type World, type WorldMap } from './db'
 
 /**
@@ -149,22 +150,10 @@ export async function importWorld(file: File): Promise<string> {
     )
   }
   if (b.format !== 'campaign-codex-world') throw new Error('This file is not a Warded Atlas world backup.')
-  const missing: string[] = []
+  // Files written into the backup itself (older backups) are ready now; files in the zip are
+  // unpacked after the world opens (see below), as they're the slow part.
   const blobs = new Map<string, Blob>()
-  for (const a of b.assets) {
-    if (a.data !== undefined) {
-      blobs.set(a.id, base64ToBlob(a.data, a.mime))
-      continue
-    }
-    let data: Uint8Array<ArrayBuffer> | undefined
-    try {
-      data = isZip ? entry(`files/${a.id}`) : undefined
-    } catch {
-      data = undefined
-    }
-    if (!data && a.size) missing.push(a.name)
-    blobs.set(a.id, new Blob([data ?? new Uint8Array()], { type: a.mime }))
-  }
+  for (const a of b.assets) if (a.data !== undefined) blobs.set(a.id, base64ToBlob(a.data, a.mime))
   const ids = new Map<string, string>()
   const id = (old: string) => {
     if (!ids.has(old)) ids.set(old, newId())
@@ -189,9 +178,7 @@ export async function importWorld(file: File): Promise<string> {
       showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId) } : undefined,
       handouts: b.world.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId) })),
     })
-    await db.assets.bulkAdd(
-      b.assets.map(({ data: _data, ...a }) => ({ ...a, id: id(a.id), worldId, blob: blobs.get(a.id)! })),
-    )
+    await db.assets.bulkAdd(b.assets.flatMap(({ data: _data, ...a }) => (blobs.has(a.id) ? [{ ...a, id: id(a.id), worldId, blob: blobs.get(a.id)! }] : [])))
     await db.campaigns.bulkAdd(b.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))
     await db.entities.bulkAdd(
       // Who each page was shown to belongs to the old world's players: a copy starts with nobody,
@@ -258,11 +245,42 @@ export async function importWorld(file: File): Promise<string> {
     )
     await db.sounds.bulkAdd((b.sounds ?? []).map((x) => ({ ...x, id: id(x.id), worldId, assetId: opt(x.assetId) })))
   })
+  unpackFiles(worldId, b.assets.filter((a) => !blobs.has(a.id)), id, isZip ? entry : () => undefined, b).catch((e: Error) =>
+    alert(`The world was imported, but unpacking its files stopped: ${e.message}. Import the backup again to get them all.`),
+  )
+  return worldId
+}
+
+/**
+ * Unpacks a backup's files into the world it was imported as, the pictures that show first (the
+ * cover, page pictures, maps) before the rest and recordings last. The world is open meanwhile.
+ */
+async function unpackFiles(
+  worldId: string,
+  files: WorldBackup['assets'],
+  id: (old: string) => string,
+  entry: (name: string) => Uint8Array<ArrayBuffer> | undefined,
+  b: WorldBackup,
+) {
+  const shown = new Set([b.world.coverId, ...b.entities.map((e) => e.imageId), ...b.maps.flatMap((m) => [m.imageId, m.playerImageId])])
+  const rank = (a: WorldBackup['assets'][number]) => (shown.has(a.id) ? 0 : a.mime.startsWith('audio/') || a.mime.startsWith('video/') ? 2 : 1)
+  const ordered = [...files].sort((x, y) => rank(x) - rank(y))
+  const missing: string[] = []
+  await loadInBackground(worldId, 'unpacking', ordered, async ({ data: _data, ...a }) => {
+    let data: Uint8Array<ArrayBuffer> | undefined
+    try {
+      data = entry(`files/${a.id}`)
+    } catch {
+      data = undefined
+    }
+    if (!data && a.size) missing.push(a.name)
+    if (!(await db.worlds.get(worldId))) return false
+    await db.assets.add({ ...a, id: id(a.id), worldId, blob: new Blob([data ?? new Uint8Array()], { type: a.mime }) })
+  })
   if (missing.length)
     alert(
       `The world was imported, but ${missing.length === 1 ? 'one file was' : `${missing.length} files were`} missing from the backup and came in empty: ${missing.slice(0, 5).join(', ')}${missing.length > 5 ? '…' : ''}. The backup may be damaged; if you have another copy, try that one too.`,
     )
-  return worldId
 }
 
 function base64ToBlob(data: string, mime: string) {

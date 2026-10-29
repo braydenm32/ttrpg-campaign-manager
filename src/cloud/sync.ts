@@ -1,4 +1,5 @@
 import Dexie from 'dexie'
+import { loadInBackground } from '../worldLoading'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { db, keepVersion, type Asset, type Entity, type SyncMeta, type World } from '../db'
 import { sendOnce } from './live'
@@ -145,7 +146,16 @@ export const DOWNLOAD_FAILED = 'download'
 type Removed = Parameters<typeof binRemovedElsewhere>[1]
 const BINNED = new Set<string>(['campaigns', 'sessions', 'assets', 'boards', 'sounds', 'maps', 'pins'])
 
-async function pullWorld(worldId: string) {
+type Pulled = { table_name: SyncedTable; id: string; data: Record<string, unknown> | null; deleted: boolean; updated_at: string }
+
+/** Files being fetched in the background after a world was downloaded: pulls leave them alone. */
+const fetchingLater = new Set<string>()
+
+/**
+ * Pulls a world's changes. With `later`, files this device has no copy of yet aren't downloaded
+ * here but collected in it, so the world can open first (see downloadCloudWorld).
+ */
+async function pullWorld(worldId: string, later?: Pulled[]) {
   const removed: Removed = []
   const world = await db.worlds.get(worldId)
   const last = (world?.cloud?.pullVersion ?? 1) >= PULL_VERSION ? world?.cloud?.lastPulledAt : undefined
@@ -168,10 +178,14 @@ async function pullWorld(worldId: string) {
     const { data, error } = await query.order('updated_at').order('table_name').order('id').limit(500)
     if (error) throw error
     if (!data.length) break
-    for (const rec of data as { table_name: SyncedTable; id: string; data: Record<string, unknown> | null; deleted: boolean; updated_at: string }[]) {
-      const ok = await applyRemote(worldId, rec.table_name, rec.id, rec.data, rec.deleted, removed)
+    for (const rec of data as Pulled[]) {
+      const key = metaKey(rec.table_name, rec.id)
+      // A file left for later (or already on its way) holds the pull back to it, so it isn't skipped for good.
+      const leave = rec.table_name === 'assets' && !!rec.data && !rec.deleted && (fetchingLater.has(key) || (!!later && !(await db.assets.get(rec.id))))
+      if (leave && !fetchingLater.has(key)) later?.push(rec)
+      const ok = leave || (await applyRemote(worldId, rec.table_name, rec.id, rec.data, rec.deleted, removed))
+      if (leave && (!retryFrom || rec.updated_at < retryFrom)) retryFrom = rec.updated_at
       if (!ok) {
-        const key = metaKey(rec.table_name, rec.id)
         const tries = (downloadTries.get(key) ?? 0) + 1
         downloadTries.set(key, tries)
         if (tries < 5) {
@@ -428,7 +442,8 @@ async function planPush(worldId: string) {
   for (const r of rows) {
     const key = metaKey(r.table, r.id)
     const hash = fingerprint(r.data)
-    const meta = metas.get(key)
+    // A file that arrived from the cloud between the two reads above (see fetchLater) has its note by now.
+    const meta = metas.get(key) ?? (r.table === 'assets' ? await db.syncMeta.get(key) : undefined)
     metas.delete(key)
     if (meta && !meta.deleted && meta.hash === hash) continue
     if (meta?.failed && meta.hash === hash) {
@@ -857,6 +872,8 @@ export async function listCloudWorlds(): Promise<CloudWorld[]> {
 export async function downloadCloudWorld(cw: CloudWorld) {
   // Counts as a sync, so a sync started meanwhile waits for it instead of downloading every file a second time.
   await idle()
+  // The pages come first, so the world opens; its files follow in the background.
+  const later: Pulled[] = []
   const job = oneTabAtATime(async () => {
     if (!(await db.worlds.get(cw.id))) {
       const now = Date.now()
@@ -869,11 +886,49 @@ export async function downloadCloudWorld(cw: CloudWorld) {
       await db.worlds.update(cw.id, { cloud: { enabled: true } })
     }
     confirmed.add(cw.id)
-    await quietly(() => pullWorld(cw.id))
+    await quietly(() => pullWorld(cw.id, later))
+    for (const rec of later) fetchingLater.add(metaKey('assets', rec.id))
   })
   running = job.finally(() => {
     running = undefined
   })
   await running
+  void fetchLater(cw.id, later)
   schedule(200)
+}
+
+/** Downloads a newly arrived world's files, pictures first and recordings last, while it's open. */
+async function fetchLater(worldId: string, files: Pulled[]) {
+  const rank = (r: Pulled) => (/^(audio|video)\//.test(String(r.data?.mime ?? '')) ? 1 : 0)
+  try {
+    await loadInBackground(worldId, 'downloading', [...files].sort((a, b) => rank(a) - rank(b)), async (rec) => {
+      const key = metaKey('assets', rec.id)
+      try {
+        const { data: file, error } = await supabase.storage.from('assets').download(storagePath(worldId, rec.id))
+        // One that fails is fetched again by the next sync.
+        if (error || !file || !rec.data) return
+        // The file and its sync record are saved together, so a sync running meanwhile never takes
+        // it for a new upload; only these writes are kept from counting as edits.
+        const kept = await quietly(() =>
+          db.transaction('rw', [db.worlds, db.assets, db.syncMeta], async () => {
+            if (!(await db.worlds.get(worldId))) return false
+            // Already here, or deleted on another device while it waited.
+            if ((await db.assets.get(rec.id)) || (await db.syncMeta.get(key))?.deleted) return true
+            await db.assets.put({ ...(rec.data as unknown as Asset), blob: file })
+            await db.syncMeta.put({ key, worldId, hash: fingerprint(rec.data!), base: rec.data! })
+            return true
+          }),
+        )
+        // The world was deleted meanwhile.
+        if (!kept) return false
+      } catch {
+        // Fetched again by the next sync.
+      } finally {
+        fetchingLater.delete(key)
+      }
+    })
+  } finally {
+    for (const rec of files) fetchingLater.delete(metaKey('assets', rec.id))
+    schedule(200)
+  }
 }

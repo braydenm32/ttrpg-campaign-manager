@@ -59,7 +59,9 @@ import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
 import { LiveBadge, PlayerTableLink, TableHost, TableSignals } from './atTheTable'
 import { NewCharacterRequestsBanner } from './players/NewCharacters'
 import Handouts from './pages/Handouts'
-import { ExampleDrawingNote } from './example/DrawingNote'
+import { finishExampleWorld } from './example/load'
+import { finishSampleWorld } from './sample'
+import { WorldLoadingNote } from './WorldLoadingNote'
 import { hashRouting, pagePath, setPages, tidyPath, usePathsVersion, worldPath } from './paths'
 import { ClaudeJobChips, LeaveGuard } from './ai/LeaveGuard'
 import { useGuardedNavigate } from './ai/leave'
@@ -289,6 +291,13 @@ function WorldShell() {
   const campaigns = useCampaigns(worldId)
   const sessions = useWorldSessions(worldId)
   const maps = useLiveQuery(() => db.maps.where({ worldId }).count(), [worldId]) ?? 0
+  // An example or sample world closed before its pictures and maps were all drawn carries on drawing them.
+  const example = !!world?.example
+  const sample = !!world?.sample
+  useEffect(() => {
+    if (example) void finishExampleWorld(worldId)
+    if (sample) void finishSampleWorld(worldId)
+  }, [example, sample, worldId])
   useEffect(() => {
     if (!menuOpen) return
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpenAt(undefined)
@@ -437,7 +446,7 @@ function WorldShell() {
       <main className="content">
         {shareError && <div className="player-banner">Couldn’t refresh: {shareError}</div>}
         {isGM && !shared && <RecordingBar />}
-        {isGM && !shared && world.example && <ExampleDrawingNote worldId={worldId} />}
+        <WorldLoadingNote worldId={worldId} />
         {memberOf && <ChooseCharacterBanner world={world} />}
         {shared && <NewsBanner world={world} />}
         {/* What the GM shows is for the table; a public wiki link never pops it up. */}
