@@ -29,6 +29,7 @@ import { QuestBox, questProgress } from '../quests'
 import { Ico, TypeIcon } from '../icons'
 import { Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Sparkle, Spiral, Television } from '@phosphor-icons/react'
 import { initials } from '../text'
+import { ImportSheetButton } from '../sheets/ImportSheet'
 import { pagePath, resolvePage, typePath, usePathsVersion, worldPath } from '../paths'
 
 export default function EntityPage() {
@@ -151,6 +152,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               </button>
             )}
             {!e.template && <Help topic="revealQuietly" />}
+            {e.type === 'pc' && !e.template && world && <ImportSheetButton worldId={worldId} system={world.system} into={e} label="Update from sheet" />}
             <HistoryButton entity={e} />
             <button className="primary" onClick={onEdit}>
               <Ico as={PencilSimple} /> Edit
