@@ -108,7 +108,7 @@ It uses your Claude subscription, so it costs nothing extra. The answer comes ba
 ### 5a. Recording a session
 
 1. Get everyone's OK to record first.
-2. Open the session (**Prep → your campaign → the session**) and press **Start recording**.
+2. Open the session (**Session**, or **Session › All sessions** for another one) and press **Start recording**.
    - At the table: choose **In person: this device's microphone**. A laptop in the middle of the table works; a cheap USB conference microphone works better.
    - Online: choose **Online: microphone + call audio (Discord, Zoom…)**, pick the tab or screen with the call when the browser asks, and tick **Share audio**.
 3. Press **Bookmark** at big moments (a death, a twist, a new NPC). Claude gets them as hints.
@@ -135,9 +135,9 @@ On the session page, under **Write up this session**:
 4. Under **Keep the world up to date**, go through Claude's suggestions: new NPCs and places that came up, lines for existing pages, quest progress, relationships, timeline events, deaths and captures, loot changing hands, loose threads, and things that contradict your notes. Untick or **Edit** anything wrong; tick **Players can see this line** or **Add to timeline** where you want them.
 5. Press **Add N changes to the world**.
 
-New pages start GM only; lines on existing pages go under a "Session log" heading. **World → The Chronicle** lists every change by session, and each page's **History** can roll any one back.
+New pages start GM only; lines on existing pages go under a "Session log" heading. **Story › Chronicle** lists every change by session, and each page's **History** can roll any one back.
 
-### 5d. The Archivist (Prep → The Archivist)
+### 5d. The Archivist (More › Workshop › The Archivist)
 
 - **Ask your world:** type a question ("Who would want the party dead?") and press **Ask**. Claude looks up the pages it needs and answers only from your notes, with links, saying when something is secret. Ask follow-ups in the same box; they're cheaper because Claude remembers what it already read.
 - **Check for contradictions:** pick **The whole world** or **One page and its neighbours**, then **Check now**. Each problem comes with a suggested fix; tick it off when it's dealt with. The whole world reads everything, so it's the priciest button in the app (the button tells you first). Once a month is plenty.
@@ -146,7 +146,7 @@ New pages start GM only; lines on existing pages go under a "Session log" headin
 
 Under **Prep with Claude**, press **Suggest prep**. Claude reads the last two sessions, the party, open threads and running clocks, and suggests a strong start, scenes, secrets and clues, and who to have ready. Untick what you don't want; the rest goes onto your prep sheet.
 
-### 5f. Flavour for generators (Prep → Generators)
+### 5f. Flavour for generators (More › Workshop › Generators)
 
 Roll a tavern, shop or person, then under **Flavour with Claude** press **Add flavour**: a read-aloud description, rumours tied to your world, and one secret (kept GM only when you save).
 
