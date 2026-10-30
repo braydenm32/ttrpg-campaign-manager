@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, HashRouter, Link, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useWorld } from './hooks'
 import { AreaSidebar, AreaTabs, BottomBar, FrameProvider, frameLinks, isDeep, phoneTabIds, useFrame, WorldDate, WorldTile } from './Sidebar'
+import { ToastHost } from './undo'
 import type { AreaId } from './nav'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db'
@@ -347,6 +348,7 @@ function WorldShell() {
         </main>
       </div>
       <BottomBar frame={frame} links={links} />
+      <ToastHost />
     </div>
     </FrameProvider>
   )

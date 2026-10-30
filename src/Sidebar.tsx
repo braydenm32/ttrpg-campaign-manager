@@ -12,9 +12,8 @@ import { useGmInbox } from './players/inbox'
 import { useCharacterOwners } from './players/owners'
 import { nextSessions, useCampaigns, useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
-import { useLiveSession } from './cloud/table'
-import { useLiveRecording } from './recordingStore'
-import { playedAlready, sessionFirstTab } from './sessions'
+import { isPlayed, sessionFirstTab } from './sessions'
+import { usePlayingNow } from './stage'
 import { pagePath, resolvePage, worldPath } from './paths'
 import { formatDate } from './calendar'
 import { syncNow, syncStore } from './cloud/sync'
@@ -48,17 +47,15 @@ export function useFrame(world: World | null | undefined): Frame {
   const campaigns = useCampaigns(worldId)
   const handouts = useVisibleHandouts(world, entities).length
   const inbox = useGmInbox(viewer === 'gm' ? world : undefined, entities)
-  const liveId = useLiveSession(worldId)
-  const recording = useLiveRecording()
+  const playingNow = usePlayingNow(worldId)
 
-  // The session being played right now (recorded on this device, or live to players), else the next one to play.
-  const playing = viewer === 'gm' ? sessions.find((s) => s.id === (recording?.worldId === worldId ? recording.sessionId : liveId)) : undefined
-  const next = nextSessions(campaigns, sessions)[0]?.session
-  const inHand = playing ?? next
+  // The session in hand: the one being played (started, live or recording), else the next one to play.
+  const first = viewer === 'gm' ? nextSessions(campaigns, sessions, playingNow)[0] : undefined
+  const inHand = first?.session
   const openId = pathname.match(/^\/w\/[^/]+\/s\/([^/]+)/)?.[1]
   const focus = sessions.find((s) => s.id === openId) ?? inHand
   const w = worldPath(worldId)
-  const sessionHome = playing ? `${w}/s/${playing.id}/lectern` : next && !playedAlready(next) ? `${w}/s/${next.id}?tab=prep` : `${w}/session`
+  const sessionHome = first?.underWay ? `${w}/s/${first.session.id}/lectern` : inHand && !isPlayed(inHand) ? `${w}/s/${inHand.id}?tab=prep` : `${w}/session`
   const visibleIds = new Set(entities.map((e) => e.id))
 
   const facts: NavFacts = {

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type InputHTMLAttributes, type ReactNode }
 import type { Visibility } from './db'
 import { Ico } from './icons'
 import { Lock } from '@phosphor-icons/react'
+import { saving } from './undo'
 
 export function VisibilityToggle({
   value,
@@ -107,6 +108,7 @@ export function Empty({ children }: { children: ReactNode }) {
  * A text box that keeps what you type locally and saves every change. Saved values come back a moment later,
  * so reading them straight back while typing would drop keystrokes. With `saveOn="leave"` it saves once,
  * when you press Enter or move on, for boxes whose value reorders a list (so rows don't jump while you type).
+ * Each save lights any <SavedMark /> on screen.
  */
 export function DraftText({
   value,
@@ -115,7 +117,7 @@ export function DraftText({
   rows,
   saveOn,
   ...rest
-}: { value: string; onCommit: (v: string) => void; multiline?: boolean; rows?: number; saveOn?: 'leave' } & Omit<
+}: { value: string; onCommit: (v: string) => unknown; multiline?: boolean; rows?: number; saveOn?: 'leave' } & Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'value' | 'onChange'
 >) {
@@ -124,15 +126,19 @@ export function DraftText({
     value: draft ?? value,
     onFocus: () => setDraft(value),
     onBlur: () => {
-      if (saveOn === 'leave' && draft !== null && draft !== value) onCommit(draft)
+      if (saveOn === 'leave' && draft !== null && draft !== value) saving(onCommit(draft))
       setDraft(null)
     },
     onChange: (e: { target: { value: string } }) => {
       setDraft(e.target.value)
-      if (saveOn !== 'leave') onCommit(e.target.value)
+      if (saveOn !== 'leave') saving(onCommit(e.target.value))
     },
     ...(saveOn === 'leave' ? { onKeyDown: (e: { key: string; currentTarget: { blur: () => void } }) => e.key === 'Enter' && e.currentTarget.blur() } : {}),
   }
-  return multiline ? <textarea rows={rows} placeholder={rest.placeholder} {...props} /> : <input {...rest} {...props} />
+  return multiline ? (
+    <textarea rows={rows} placeholder={rest.placeholder} className={rest.className} aria-label={rest['aria-label']} id={rest.id} autoFocus={rest.autoFocus} {...props} />
+  ) : (
+    <input {...rest} {...props} />
+  )
 }
 

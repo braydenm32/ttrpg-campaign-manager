@@ -1345,3 +1345,25 @@ a.more-item:hover { border-color: var(--accent); }
 .people-switch a { padding: .45em .9em; text-decoration: none; color: inherit; }
 .people-switch a.on { background: var(--accent); color: var(--accent-ink); }
 @media (max-width: 800px) { .people-switch a { min-height: 44px; display: inline-flex; align-items: center; } }
+
+/*
+ * Undo notes and "Saved" (src/undo.tsx): a small note along the bottom with Undo, instead of asking
+ * "are you sure?" before a quick remove; and a muted "Saved" by titles and boxes that autosave.
+ */
+.undo-toast { position: fixed; z-index: 2400; left: 50%; bottom: 1.5em; transform: translateX(-50%); display: flex; align-items: center; gap: .6em; max-width: min(560px, calc(100vw - 2em)); padding: .35em .4em .35em 1em; border-radius: var(--radius); background: var(--text); color: var(--bg); box-shadow: var(--shadow); font-weight: 500; }
+.undo-toast > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.undo-toast .undo-button { background: transparent; border-color: transparent; color: var(--bg); font-weight: 700; min-height: 44px; text-decoration: underline; text-underline-offset: .2em; }
+.undo-toast .undo-close { color: var(--bg); min-width: 44px; min-height: 44px; justify-content: center; opacity: .7; }
+.saved-mark { display: inline-flex; align-items: center; gap: .25em; min-width: 4.5em; font: 500 .8rem var(--font-body); color: var(--muted); opacity: 0; transition: opacity .3s; }
+.saved-mark.on { opacity: 1; }
+@media (max-width: 800px) {
+  body:has(.app-shell.with-bottom-bar) .undo-toast { bottom: calc(var(--bottombar-h) + .75em); }
+  .undo-toast { width: calc(100vw - 2em); }
+}
+
+/* A session's stage (src/stage.tsx): Planned, Preparing, Playing, Played. */
+.stage-wrap { display: inline-flex; align-items: center; gap: .2em; }
+.stage-chip { display: inline-flex; align-items: center; gap: .35em; padding: .3em .65em; border-radius: 6px; border: 0; background: var(--panel-2); color: var(--text); font: 600 .78rem/1 var(--font-body); white-space: nowrap; }
+.stage-chip.warn { background: color-mix(in srgb, var(--accent) 18%, transparent); color: color-mix(in srgb, var(--accent) 80%, var(--text)); }
+.stage-chip.good { background: color-mix(in srgb, var(--good) 18%, transparent); color: color-mix(in srgb, var(--good) 75%, var(--text)); }
+.stage-chip.done { background: transparent; color: var(--muted); box-shadow: inset 0 0 0 1px var(--border); }

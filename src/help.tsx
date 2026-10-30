@@ -134,7 +134,22 @@ export const HELP = {
 
   // Sessions
   session:
-    'One game night. Keep 🔒 GM notes for yourself and a 👁 player recap for the table. Record the session, then turn the recording into a transcript and a recap.',
+    'One game night, in three stages along the top: Prepare (the plan), Play (the Lectern, at the table) and Wrap up (notes, the players’ recap, the recording, then “Mark as played”). Everything saves as you type.',
+  stages:
+    'Where a session is: Planned (nothing written yet), Preparing (it has a plan), Playing (you pressed “Start playing”, or it’s live or recording) and Played (you marked it played in Wrap up, it has a recap, or its date has gone by). Once a session is played, the next one becomes the one the Desk and the Session area open.',
+  startPlaying:
+    'Marks the session as being played and opens the Lectern. Nothing is shown to players until you choose to (Go live, Show players).',
+  sessionTitle: 'Click the number or the title to change it. It saves as you type.',
+  sessionDetails:
+    'The real date you play (leave it empty until it’s set; booking a date on the campaign page fills it in), the date in your world, and whether players can read this session’s recap. Print and Delete are here too.',
+  featured: 'The pages this session is about. People you put in a scene at the Lectern are added by themselves.',
+  wrapUp:
+    'After play, in order: your notes, the recording and its transcript, the write-up from Claude, the players’ recap, highlights, and changes to your pages. Then “Mark as played”, and the next session is ready to prepare.',
+  markPlayed:
+    'Marks this session played and moves on: the next session (made now if there isn’t one, with the clues and scenes you didn’t reach) becomes the one the Desk and the Session area open. Undo puts it back.',
+  revealRecap:
+    'Players can read the recap and the highlights, and see who featured, once the session is shown to them. GM notes, the prep, the recording and the transcript stay yours.',
+  undo: 'Removed something by mistake? The note at the bottom of the screen has Undo for a few seconds.',
   recording:
     'Record from one microphone for games at the table, or the microphone plus your Discord or Zoom audio for online games. Add bookmarks while you play to jump back to big moments. Recording carries on while you use the rest of the app (the Lectern, maps, pages), and is saved every few seconds, so if the app closes by accident you can recover it here. Always get everyone’s OK before recording. Recordings are big, so they stay on the device that made them; their transcripts sync to your other devices.',
   transcript:
@@ -149,7 +164,15 @@ export const HELP = {
     'Where this page’s name (or a nickname) was said out loud in a session’s transcript. Click a time to open the session and play that moment, if the recording is on this device.',
   sessionMentions: 'Sessions whose notes or recap link to this page.',
   lectern:
-    'The Lectern is your screen while you run the session: the current scene, who is there, loose threads, initiative, dice, quick notes and improvised names, all on one page.',
+    'The Lectern is your screen while you run the session: the scene and its read-aloud text, who is there, the fight, the party, and tools (show players, dice, loot, sounds). On a computer it’s three columns; on a phone the row of buttons at the top jumps to each part. “Wrap up” ends the session.',
+  nextScene:
+    'Goes on to the next scene you planned: ticks off this one, and puts the next one’s place, read-aloud text and people on screen (and its fight, sounds and handout, if its card has them). Undo puts the last scene back.',
+  sceneChange:
+    'Choosing another place starts a new scene: the read-aloud text and who’s here are replaced with what you planned for that place (or cleared). Undo puts the last scene back.',
+  quickNote: 'Jot something down without stopping the game. It goes at the end of this session’s GM notes, with the time. What you’ve typed is kept if you leave the Lectern and come back.',
+  lecternJump: 'Jumps to that part of the Lectern. Back brings you to the same place again.',
+  partyFound:
+    'What the party actually found: add coins to the purse, or give them an item (a new item page, GM only until you reveal it, carried by the party). Nothing random.',
   prep:
     'Plan the session: a strong start, the scenes you expect, secrets and clues, and fights ready to run. At the Lectern you tick scenes and clues off as they happen.',
   strongStart: 'How the session opens. Starting in the middle of something happening gets the table going fast.',
@@ -168,7 +191,6 @@ export const HELP = {
   playersScreen: 'A clean screen for a TV or second monitor at the table. It shows whatever you’re showing players, and nothing else.',
   initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go. In the ± box, type +5 to heal or -5 to damage; a plain number follows the button you press, and Undo puts HP back. “Something else…” in the condition list lets you type your own. With a keyboard, N moves to the next turn (press ? for all the shortcuts).',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',
-  quickNote: 'Jot something down mid-session. It is added to this session’s GM notes with the time.',
   randomTables:
     'Your own tables to roll on: one entry per line. "3x Goblins" makes an entry three times as likely, {2d6} rolls dice inside an entry, and {Weather} rolls on your table called Weather.',
   improvise: 'Need a name or a tavern right now? Roll one here and save it into your world if it sticks.',
@@ -180,6 +202,7 @@ export const HELP = {
   assets: 'Every file in this world: map images, portraits and handouts. Mark a file revealed to let players see it.',
   loot:
     'What the party has: the stash, what each player character carries and the party’s coin. Set "Carried by" on any item page. Players see the revealed items and the coins in the purse; things an NPC, shop or place holds are listed only for you.',
+  lootSteps: 'Use − and + to take coins out of the purse or put them in, by the amount in the box (1 to start with). Click the number to type a new total instead.',
   importPages:
     'Bring pages in from Obsidian (or any Markdown notes), a Kanka export or a World Anvil export. Everything arrives as 🔒 GM only, so you can tidy up before revealing anything.',
   importSheet:
@@ -210,9 +233,9 @@ export const HELP = {
     'A co-GM sees and edits everything in this world, secrets included, from their own account. Only you can invite or remove co-GMs, manage players and links, or delete the cloud copy.',
   schedule:
     'Suggest a few dates for the next session. Players who joined mark each one yes, maybe or no, and you book the one that works. Booking makes the session with that date and shows it to players. Times show in each person’s own time zone.',
-  nextSession: 'Each campaign’s coming session, with its prep and the Lectern one click away, and how many scenes and clues are ready.',
+  nextSession: 'Each campaign’s session in hand, with its stage (Preparing, Playing, Played), how many scenes and clues are planned, and one button for what comes next: prepare it, play it, or wrap it up.',
   endSession:
-    'Wrap up after play: transcribe the recording, write the recap with Claude, show the session to players and move the world’s date on. “Start next session” carries over the clues they didn’t find, the scenes they didn’t reach, and where the party is.',
+    'What’s done and what’s left before you mark the session played: the recording transcribed, the recap written, your pages updated, the session shown to players, the world’s date moved on. “Mark as played” then gets the next session ready, carrying over the clues they didn’t find, the scenes they didn’t reach, and where the party is.',
   partyCampaign: 'When a world has more than one group, pick which campaign this character plays in. The campaign page and the Lectern’s “Add the party” then only show that group.',
   trackAsThread: 'Quests are what the players know they’re doing. A loose thread is your own tracker for it: how pressing it is, and a warning when it goes cold.',
   claimRequests: 'A player asked to play one of your characters. Approve it and they can edit that character’s sheet and read passages written for them.',

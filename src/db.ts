@@ -657,6 +657,14 @@ export interface Session {
   prep?: SessionPrep
   /** The in-world date when this session starts. */
   worldDate?: CalDate
+  /**
+   * When the GM pressed "Start playing" (or moved to the next scene at the Lectern), and when they
+   * marked it played at the end of Wrap up. Together with the date and the recap they give the
+   * session's stage (src/sessions.ts, sessionStage). Not indexed; GM-only (players get the session
+   * from a list of player-safe fields in public.player_view, which leaves these out).
+   */
+  startedAt?: number
+  playedAt?: number
   createdAt: number
 }
 
@@ -734,6 +742,8 @@ export interface LecternState {
   sceneText: string
   /** NPCs and others present in the scene. */
   presentIds: string[]
+  /** The planned scene (from the prep) being played now, so "Next scene" knows where it is. */
+  planSceneId?: string
   combat: { round: number; activeId?: string; combatants: Combatant[] }
   rolls: { id: string; expr: string; total: number; detail: string; crit?: 'high' | 'low'; at: number }[]
   /**
