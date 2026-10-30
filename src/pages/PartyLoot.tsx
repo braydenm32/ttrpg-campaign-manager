@@ -8,10 +8,12 @@ import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { Backpack } from '@phosphor-icons/react'
 import { pagePath } from '../paths'
+import { partyLoot, quantityLabel } from '../counts'
 
 /**
- * Party loot: every item someone is carrying, grouped by who has it, plus the party's coin.
- * An item's holder is set on its page ("Carried by"); here the GM can hand things around quickly.
+ * Party loot: the party's coin, the party stash and what each player character carries. The GM also
+ * sees what others carry (NPCs, shops, places) and what nobody does. An item's holder is set on its
+ * page ("Carried by"); here the GM can hand things around quickly.
  */
 export default function PartyLoot() {
   const { worldId, world } = useWorld()
@@ -19,23 +21,15 @@ export default function PartyLoot() {
   const entities = useVisibleEntities(worldId)
   if (!world) return null
 
-  const items = entities.filter((e) => e.type === 'item')
-  const carried = items.filter((e) => e.heldBy)
-  const holders = entities.filter((e) => (e.type === 'pc' || e.type === 'npc') && carried.some((i) => i.heldBy === e.id))
+  const loot = partyLoot(entities, world)
   // Player characters always get a section, even with empty pockets.
-  const pcs = entities.filter((e) => e.type === 'pc')
-  // Items whose holder was deleted or is hidden go in the stash rather than vanishing.
-  const known = (id?: string) => id === 'party' || entities.some((e) => e.id === id)
   const groups: { id: string; name: string; link?: string; items: Entity[] }[] = [
-    { id: 'party', name: '🎒 Party stash', items: carried.filter((i) => !known(i.heldBy) || i.heldBy === 'party') },
-    ...[...new Map([...pcs, ...holders].map((h) => [h.id, h])).values()].map((h) => ({
-      id: h.id,
-      name: `${h.type === 'pc' ? '🛡️' : '🧙'} ${h.name}`,
-      link: `${pagePath(worldId, h.id)}`,
-      items: carried.filter((i) => i.heldBy === h.id),
-    })),
+    { id: 'party', name: '🎒 Party stash', items: loot.stash },
+    ...loot.members.map(({ holder: h, items }) => ({ id: h.id, name: `🛡️ ${h.name}`, link: pagePath(worldId, h.id), items })),
   ]
-  const loose = items.filter((i) => !i.heldBy)
+  // Who else can be picked as a carrier: whoever carries something now.
+  const others = [...new Set(loot.elsewhere.map((i) => i.heldBy!))].flatMap((id) => entities.filter((e) => e.id === id))
+  const holders = [...groups, ...others.map((h) => ({ id: h.id, name: `${h.type === 'npc' ? '🧙' : '📍'} ${h.name}` }))]
 
   return (
     <div className="page">
@@ -44,24 +38,30 @@ export default function PartyLoot() {
           <Ico as={Backpack} /> Party loot <Help topic="loot" />
         </h1>
       </header>
-      <CoinPurse world={world} editable={isGM} />
+      <CoinPurse world={world} coin={isGM ? (world.partyCoin ?? []) : loot.coin} editable={isGM} />
       {groups.map((g) => (
         <section key={g.id}>
           <h2>{g.link ? <Link to={g.link}>{g.name}</Link> : g.name}</h2>
           {g.items.length === 0 ? (
             <p className="muted small">Nothing carried.</p>
           ) : (
-            <ItemList items={g.items} worldId={worldId} holders={groups} isGM={isGM} />
+            <ItemList items={g.items} worldId={worldId} holders={holders} isGM={isGM} />
           )}
         </section>
       ))}
+      {isGM && loot.elsewhere.length > 0 && (
+        <section>
+          <h2>Carried by others</h2>
+          <ItemList items={loot.elsewhere} worldId={worldId} holders={holders} isGM={isGM} />
+        </section>
+      )}
       {isGM && (
         <section>
           <h2>Items nobody is carrying</h2>
-          {loose.length === 0 ? (
+          {loot.loose.length === 0 ? (
             <Empty>Every item is with someone. New treasure? Make an item page and set who carries it.</Empty>
           ) : (
-            <ItemList items={loose} worldId={worldId} holders={groups} isGM={isGM} />
+            <ItemList items={loot.loose} worldId={worldId} holders={holders} isGM={isGM} />
           )}
         </section>
       )}
@@ -85,7 +85,7 @@ function ItemList({ items, worldId, holders, isGM }: { items: Entity[]; worldId:
                 onChange={(e) => db.entities.update(i.id, { quantity: Math.max(0, Number(e.target.value) || 0), updatedAt: Date.now() })}
               />
             ) : (
-              <span className="qty">{i.quantity ?? 1}×</span>
+              quantityLabel(i) && <span className="qty">{quantityLabel(i)}</span>
             )}{' '}
             <Link to={`${pagePath(worldId, i.id)}`}>{i.name}</Link> <VisibilityBadge value={i.visibility} />
             {i.summary && <span className="muted small"> · {i.summary}</span>}
@@ -112,8 +112,8 @@ function ItemList({ items, worldId, holders, isGM }: { items: Entity[]; worldId:
 
 const DEFAULT_COIN = ['pp', 'gp', 'sp', 'cp']
 
-function CoinPurse({ world, editable }: { world: World; editable: boolean }) {
-  const coin = world.partyCoin ?? []
+/** The purse. The GM edits every line (an empty one too); players see the coins there are. */
+function CoinPurse({ world, coin, editable }: { world: World; coin: { name: string; amount: number }[]; editable: boolean }) {
   const [adding, setAdding] = useState('')
   const save = (next: World['partyCoin']) => db.worlds.update(world.id, { partyCoin: next, updatedAt: Date.now() })
   if (!editable && !coin.length) return null
