@@ -1,7 +1,7 @@
 import { ReadAloud } from '../ai/ReadAloud'
 import { binSession } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Help } from '../help'
+import { Help, HELP } from '../help'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { PrepHelper } from '../ai/PrepHelper'
@@ -9,9 +9,9 @@ import { RecapPanel } from '../ai/RecapPanel'
 import { Highlights } from '../highlights'
 import { SpotlightPanel } from '../ai/Spotlight'
 import { TranscriptPanel } from '../ai/TranscriptPanel'
-import { DraftText, Empty, VisibilityToggle } from '../components'
+import { DraftText, Empty } from '../components'
 import { PagePicker } from '../PagePicker'
-import { db, ENTITY_LABELS, type Entity, type Recording, type Session } from '../db'
+import { db, ENTITY_LABELS, THREAD_STATUS, type Campaign, type Entity, type Recording, type Session, type World } from '../db'
 import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
@@ -19,40 +19,44 @@ import { SecretNamesWarning } from '../SecretNamesWarning'
 import { formatTime, recordingSupported, systemAudioSupported, type RecordSource } from '../recorder'
 import { RecordingSaveWarning } from '../RecordingBar'
 import { addBookmark, beginRecording, discardRecording, endRecording, recoverRecording, unsavedRecordings, useLiveRecording } from '../recordingStore'
-import { ThreadCard } from '../ThreadCard'
-import { canSeeSession, newThread, useWorldSessions } from '../threads'
+import { canSeeSession, newThread } from '../threads'
 import { useViewMode } from '../viewMode'
 import { PrepSheet } from '../prep'
 import { PrintButton } from '../print'
 import { CalDateInput, formatDate } from '../calendar'
 import { DiscordButton, forDiscord } from '../discord'
-import { EndSessionChecklist } from '../EndSession'
+import { ShowToPlayers, useFinish, useNextSession, WrapUpChecklist } from '../EndSession'
 import { Ico, TypeIcon } from '../icons'
-import { BookOpen, BookmarkSimple, CalendarBlank, ClipboardText, Eye, FlagCheckered, Lock, Microphone, Spiral, Warning } from '@phosphor-icons/react'
+import { BookmarkSimple, CheckCircle, Eye, FlagCheckered, ListChecks, Lock, Microphone, PencilSimple, Play, Spiral, UsersThree, Warning, X } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { sessionFirstTab } from '../sessions'
+import { sessionFirstTab, startPlaying, type SessionStage } from '../sessions'
+import { prepCounts } from '../counts'
+import { StageChip, useSessionStage } from '../stage'
+import { JumpRow, jumpTo, useKeepScroll } from '../jump'
+import { removeWithUndo, SavedMark, saving } from '../undo'
 
+/**
+ * A session. For the GM it's two of the Session area's three stages (the third, Play, is the
+ * Lectern): Prepare (?tab=prep), the plan first; and Wrap up (?tab=notes, ?tab=recap, ?end=1), the
+ * after-session tools in order, ending with "Mark as played". A strip across the top shows the
+ * stage, the number and title (edited in place) and the one thing to do next. Players get the
+ * recap, read-only.
+ */
 export default function SessionPage() {
   const { worldId, world } = useWorld()
   const { sessionId = '' } = useParams()
   const { isGM } = useViewMode()
-  const navigate = useNavigate()
   const session = useLiveQuery(async () => (await db.sessions.get(sessionId)) ?? null, [sessionId])
   const campaign = useLiveQuery(async () => (session ? ((await db.campaigns.get(session.campaignId)) ?? null) : undefined), [session?.campaignId])
   const entities = useVisibleEntities(worldId)
-  const [params, setParams] = useSearchParams()
-  const live = useLiveRecording()
-  // A session with nothing written or recorded yet opens on its prep; one that has been played opens on the notes.
-  const firstTab = session ? sessionFirstTab(session) : 'notes'
-  const tab = (['notes', 'recap', 'prep'] as const).find((t) => t === params.get('tab')) ?? firstTab
-  // Each tab is a step in Back, like the Session tabs at the top (Prepare, Wrap up).
-  const setTab = (t: 'notes' | 'recap' | 'prep') => setParams({ tab: t })
+  const [params] = useSearchParams()
+  const stage = useSessionStage(session)
+  useKeepScroll(!!session && !!world)
 
   if (session === undefined || (session && campaign === undefined)) return null
   // Players get a session only once it's revealed, and never from a campaign the GM keeps hidden.
   if (session === null || !canSeeSession(session, campaign, isGM) || (campaign && campaign.worldId !== worldId))
     return <Empty>Session not found.</Empty>
-  const update = (patch: Partial<Session>) => db.sessions.update(session.id, patch)
   const featured = entities.filter((e) => session.entityIds.includes(e.id))
 
   if (!isGM)
@@ -82,127 +86,318 @@ export default function SessionPage() {
       </div>
     )
 
+  if (!world || !stage) return null
+  const tab = params.get('tab')
+  // Wrap up for its own addresses; Prepare for ?tab=prep; with no tab named, where the session is.
+  const view = params.get('end') === '1' || tab === 'notes' || tab === 'recap' ? 'wrap' : tab === 'prep' ? 'prep' : sessionFirstTab(session) === 'prep' ? 'prep' : 'wrap'
+  const props = { session, campaign, world, entities, stage }
   return (
-    <div className="page">
-      {campaign && <Link to={`${worldPath(worldId)}/c/${campaign.id}`}>← {campaign.name}</Link>}
-      <header className="page-header">
-        <div className="row">
-          <span className="session-number">#</span>
-          <DraftText className="num-input" type="number" value={String(session.number)} onCommit={(v) => update({ number: Number(v) || 0 })} />
-          <DraftText className="title-input" value={session.title} onCommit={(title) => update({ title })} />
-        </div>
-        <div className="row">
-          <input type="date" value={session.date} onChange={(e) => update({ date: e.target.value })} />
-          <VisibilityToggle value={session.visibility} onChange={(v) => update({ visibility: v })} />
-          <PrintButton to={`${worldPath(worldId)}/print/s/${session.id}`} />
-          <Link className="button primary" to={`${worldPath(worldId)}/s/${session.id}/lectern`}>
-            <Ico as={BookOpen} /> Run at the Lectern
-          </Link>
-          {params.get('end') !== '1' && (
-            <button title="Recap, show players, next session" onClick={() => setParams({ end: '1' }, { replace: true })}>
-              <Ico as={FlagCheckered} /> Wrap up
-            </button>
-          )}
-        </div>
-      </header>
+    <div className={`page session-page ${view}`}>
+      <SessionStrip {...props} view={view} />
+      {view === 'prep' ? <PrepareView {...props} /> : <WrapUpView {...props} focus={params.get('end') === '1' ? 'finish' : tab === 'recap' ? 'recap' : undefined} />}
+    </div>
+  )
+}
 
-      {world?.calendar && (
-        <div className="row wrap small">
-          <span>
-            <Ico as={CalendarBlank} /> In the world <Help topic="worldToday" />
+interface ViewProps {
+  session: Session
+  campaign: Campaign | null | undefined
+  world: World
+  entities: Entity[]
+  stage: SessionStage
+}
+
+/**
+ * The strip across the top of Prepare and Wrap up: the stage, "#1 Payday" (click to change; it
+ * saves as you type), what's planned at a glance, and one button for what comes next.
+ */
+function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep' | 'wrap' }) {
+  const navigate = useNavigate()
+  const w = worldPath(world.id)
+  const update = (patch: Partial<Session>) => db.sessions.update(session.id, patch)
+  const counts = prepCounts(session.prep)
+  const fights = session.prep?.encounters.length ?? 0
+  const next = useNextSession(session)
+  const { finish, busy, blocked } = useFinish(session)
+  const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
+  const stats = [
+    counts.scenes.total ? plural(counts.scenes.total, 'scene') : '',
+    counts.clues.total ? plural(counts.clues.total, 'clue') : '',
+    fights ? plural(fights, 'fight') : '',
+    session.date ? `played ${session.date}` : 'no date set',
+  ].filter(Boolean)
+  const lectern = `${w}/s/${session.id}/lectern`
+
+  let action
+  if (view === 'prep' && (stage === 'planned' || stage === 'preparing'))
+    action = (
+      <button
+        className="primary"
+        title={HELP.startPlaying}
+        onClick={async () => {
+          await startPlaying(session.id)
+          navigate(lectern)
+        }}
+      >
+        <Ico as={Play} weight="fill" /> Start playing
+      </button>
+    )
+  else if (stage === 'playing' && view === 'prep')
+    action = (
+      <Link className="button primary" to={lectern}>
+        <Ico as={Play} weight="fill" /> Back to the table
+      </Link>
+    )
+  else if (stage !== 'played')
+    action = (
+      <button className="primary" onClick={finish} disabled={busy || !!blocked} title={blocked ?? HELP.markPlayed}>
+        <Ico as={CheckCircle} /> Mark as played
+      </button>
+    )
+  else
+    action = next ? (
+      <Link className="button primary" to={`${w}/s/${next.id}?tab=prep`}>
+        <Ico as={ListChecks} /> Prepare #{next.number}
+      </Link>
+    ) : view === 'prep' ? (
+      <Link className="button" to={`${w}/s/${session.id}?tab=notes`}>
+        <Ico as={FlagCheckered} /> Wrap up
+      </Link>
+    ) : null
+
+  return (
+    <section className="session-strip" aria-label="This session">
+      <div className="strip-title">
+        <StageChip stage={stage} help />
+        <h1 className="session-title">
+          <span className="session-hash" aria-hidden>
+            #
           </span>
-          <CalDateInput calendar={world.calendar} value={session.worldDate} onChange={(worldDate) => update({ worldDate })} />
-          {world.calendar.today && (
-            <button className="small" onClick={() => update({ worldDate: world.calendar!.today })}>
-              Use today ({formatDate(world.calendar, world.calendar.today, false)})
-            </button>
-          )}
-        </div>
-      )}
-      {world && params.get('end') === '1' && (
-        <EndSessionChecklist world={world} session={session} onClose={() => setParams({}, { replace: true })} />
-      )}
-      <div id="session-recorder">
+          <DraftText className="session-num" inputMode="numeric" aria-label="Session number" title={HELP.sessionTitle} saveOn="leave" value={String(session.number)} onCommit={(v) => update({ number: Number(v) || 0 })} />
+          <DraftText className="session-name" aria-label="Session title" title={HELP.sessionTitle} value={session.title} onCommit={(title) => update({ title })} />
+        </h1>
+        <SavedMark />
+      </div>
+      <div className="strip-facts">
+        <span className="statline">
+          {stats.map((s) => (
+            <span key={s}>{s}</span>
+          ))}
+          <span>{session.visibility === 'players' ? <><Ico as={Eye} /> players can read it</> : <><Ico as={Lock} /> GM only</>}</span>
+        </span>
+        <span className="grow" />
+        {action}
+      </div>
+    </section>
+  )
+}
+
+/** Prepare: the plan first (as readable cards), who's in it, ideas from Claude, then the session's details. */
+function PrepareView({ session, campaign, world, entities }: ViewProps) {
+  return (
+    <>
+      <JumpRow
+        label="Parts of the plan"
+        className="phone-only"
+        targets={[
+          { id: 'plan', label: 'Start' },
+          { id: 'scenes', label: 'Scenes' },
+          { id: 'clues', label: 'Clues' },
+          { id: 'fights', label: 'Fights' },
+          { id: 'gm-notes', label: 'Notes' },
+          { id: 'people', label: 'People' },
+          { id: 'details', label: 'Details' },
+        ]}
+      />
+      <PrepSheet session={session} entities={entities} worldId={world.id} />
+      <NotesCard session={session} entities={entities} worldId={world.id} id="gm-notes" />
+      <FeaturedSection session={session} entities={entities} worldId={world.id} />
+      <PrepHelper world={world} session={session} entities={entities} />
+      <SessionDetails session={session} campaign={campaign} world={world} entities={entities} />
+    </>
+  )
+}
+
+/**
+ * Wrap up: notes, the recording and its transcript, the write-up from Claude (with changes to your
+ * pages), the players' recap, highlights, spotlight, threads and who featured, then the checklist
+ * that ends with "Mark as played".
+ */
+function WrapUpView({ session, campaign, world, entities, stage, focus }: ViewProps & { focus?: 'finish' | 'recap' }) {
+  const worldId = world.id
+  const update = (patch: Partial<Session>) => saving(db.sessions.update(session.id, patch))
+  // Arriving from "End session" or a recap link: go straight to that part.
+  const jumped = useRef(false)
+  useEffect(() => {
+    if (!focus || jumped.current) return
+    jumped.current = true
+    requestAnimationFrame(() => jumpTo(focus))
+  }, [focus])
+  return (
+    <>
+      <JumpRow
+        label="Parts of the wrap-up"
+        className="phone-only"
+        targets={[
+          { id: 'notes', label: 'Notes' },
+          { id: 'recording', label: 'Recording' },
+          { id: 'writeup', label: 'Write-up' },
+          { id: 'recap', label: 'Recap' },
+          { id: 'highlights', label: 'Highlights' },
+          { id: 'finish', label: 'Finish' },
+        ]}
+      />
+      <p className="muted small wrap-intro">
+        After the game, top to bottom: your notes, the recording, the write-up, the players’ recap, then mark it played. <Help topic="wrapUp" />
+      </p>
+      <NotesCard session={session} entities={entities} worldId={worldId} id="notes" />
+      <div id="recording">
         <Recorder session={session} />
       </div>
-      <div id="session-recap">{world && <RecapPanel world={world} session={session} entities={entities} />}</div>
-      <SpotlightPanel session={session} entities={entities} />
-
-      <div className="segmented tabs">
-        <button className={tab === 'prep' ? 'on' : ''} onClick={() => setTab('prep')}>
-          <Ico as={ClipboardText} /> Prep
-        </button>
-        <button className={tab === 'notes' ? 'on' : ''} onClick={() => setTab('notes')}>
-          <Ico as={Lock} /> GM notes
-        </button>
-        <button className={tab === 'recap' ? 'on' : ''} onClick={() => setTab('recap')}>
-          <Ico as={Eye} /> Player recap
-        </button>
+      <div id="writeup">
+        <RecapPanel world={world} session={session} entities={entities} />
       </div>
-      <Help topic="session" />
-      {tab === 'prep' ? (
-        <>
-          {world && <PrepHelper world={world} session={session} entities={entities} />}
-          <PrepSheet session={session} entities={entities} worldId={worldId} />
-        </>
-      ) : tab === 'notes' ? (
-        <DraftText
-          multiline
-          rows={14}
-          value={session.notes}
-          placeholder="Prep, what happened, loose threads… Use [[Name]] to link pages."
-          onCommit={(notes) => update({ notes })}
-        />
-      ) : (
+      <section className="card wrap-card" id="recap">
+        <div className="plan-head">
+          <h2>
+            <Ico as={Eye} /> The players’ recap <Help topic="revealRecap" />
+          </h2>
+          <SavedMark />
+        </div>
         <SecretTextarea
           worldId={worldId}
-          rows={14}
+          rows={10}
           value={session.recap}
-          placeholder="What the players get to read. Shown in the player view once this session is revealed."
+          placeholder="What the players get to read, once you show this session to them."
           onChange={(v) => update({ recap: v })}
         />
-      )}
-      {tab === 'recap' && <SecretNamesWarning worldId={worldId} texts={[session.recap]} />}
-      {tab === 'recap' && session.recap.trim() && <ReadAloud text={session.recap} id={`recap-${session.id}`} className="small" />}
-      {tab === 'recap' && session.recap.trim() && (
-        <DiscordButton
-          worldId={worldId}
-          label="💬 Post recap to Discord"
-          title={`Session ${session.number}: ${session.title}`}
-          text={() => forDiscord(session.recap)}
-          confirmText={
-            session.visibility === 'players'
-              ? undefined
-              : 'This session is still GM only. Post the player recap to Discord anyway? Secret passages are left out.'
-          }
-        />
-      )}
-      {tab !== 'prep' && (
-        <details>
-          <summary>Preview</summary>
-          <Markdown text={tab === 'notes' ? session.notes : session.recap} entities={entities} worldId={worldId} showSecrets />
-        </details>
-      )}
-
-      <Highlights session={session} entities={entities} worldId={worldId} isGM />
-
-      <section>
-        <h2>Featured in this session</h2>
-        <FeaturedList
-          worldId={worldId}
-          entities={featured}
-          onRemove={(id) => update({ entityIds: session.entityIds.filter((x) => x !== id) })}
-        />
-        <PagePicker
-          entities={entities.filter((e) => !session.entityIds.includes(e.id))}
-          placeholder="+ Add an NPC, place, item…"
-          onPick={(id) => id && update({ entityIds: [...session.entityIds, id] })}
-        />
+        <SecretNamesWarning worldId={worldId} texts={[session.recap]} />
+        {session.recap.trim() && (
+          <div className="row wrap">
+            <ReadAloud text={session.recap} id={`recap-${session.id}`} className="small" />
+            <DiscordButton
+              worldId={worldId}
+              label="💬 Post recap to Discord"
+              title={`Session ${session.number}: ${session.title}`}
+              text={() => forDiscord(session.recap)}
+              confirmText={session.visibility === 'players' ? undefined : 'This session is still GM only. Post the player recap to Discord anyway? Secret passages are left out.'}
+            />
+          </div>
+        )}
+        {session.recap.trim() && (
+          <details>
+            <summary>Preview</summary>
+            <Markdown text={session.recap} entities={entities} worldId={worldId} showSecrets />
+          </details>
+        )}
+        <ShowToPlayers session={session} campaign={campaign} entities={entities} />
       </section>
+      <div id="highlights">
+        <Highlights session={session} entities={entities} worldId={worldId} isGM />
+      </div>
+      {/* Who talked and who got the spotlight only means something once it's been played. */}
+      {(stage === 'playing' || stage === 'played') && <SpotlightPanel session={session} entities={entities} />}
+      <SessionThreads session={session} entities={entities} worldId={worldId} />
+      <FeaturedSection session={session} entities={entities} worldId={worldId} />
+      <WrapUpChecklist world={world} session={session} campaign={campaign} entities={entities} played={stage === 'played'} />
+    </>
+  )
+}
 
-      <SessionThreads sessionId={session.id} entities={entities} worldId={worldId} />
+/** Notes longer than this show folded, with "Show all". */
+const LONG_NOTES = 900
 
-      <div className="row end">
+/**
+ * The session's GM notes: read as a page (long ones folded), or edited in place with Edit. Empty
+ * notes open ready to type. The same notes the Lectern's quick notes add to. Only the GM sees them.
+ */
+function NotesCard({ session, entities, worldId, id }: { session: Session; entities: Entity[]; worldId: string; id: string }) {
+  const [editing, setEditing] = useState(!session.notes.trim())
+  const [all, setAll] = useState(false)
+  const long = session.notes.length > LONG_NOTES
+  return (
+    <section className="card wrap-card" id={id}>
+      <div className="plan-head">
+        <h2>
+          <Ico as={Lock} /> GM notes <Help topic="gmNotes" />
+        </h2>
+        <SavedMark />
+        {session.notes.trim() && (
+          <button type="button" className={editing ? 'primary' : ''} onClick={() => setEditing(!editing)}>
+            {editing ? 'Done' : <><Ico as={PencilSimple} /> Edit</>}
+          </button>
+        )}
+      </div>
+      {editing ? (
+        <DraftText
+          multiline
+          grow
+          className="notes-text"
+          aria-label="GM notes"
+          value={session.notes}
+          placeholder="What happened, who they met, what’s left hanging… Use [[Name]] to link pages. Only you see these."
+          onCommit={(notes) => saving(db.sessions.update(session.id, { notes }))}
+        />
+      ) : (
+        <>
+          <div className={`notes-view ${long && !all ? 'folded' : ''}`}>
+            <Markdown text={session.notes} entities={entities} worldId={worldId} showSecrets />
+          </div>
+          {long && (
+            <button type="button" className="link show-all" onClick={() => setAll(!all)}>
+              {all ? 'Show less' : 'Show all of the notes'}
+            </button>
+          )}
+        </>
+      )}
+    </section>
+  )
+}
+
+/** The real date, the date in the world, who can read it, Print and Delete: at the end of Prepare. */
+function SessionDetails({ session, campaign, world, entities }: Omit<ViewProps, 'stage'>) {
+  const navigate = useNavigate()
+  const live = useLiveRecording()
+  const w = worldPath(world.id)
+  const update = (patch: Partial<Session>) => saving(db.sessions.update(session.id, patch))
+  return (
+    <section className="card session-details" id="details">
+      <h2>
+        Session details <Help topic="sessionDetails" />
+      </h2>
+      <div className="details-grid">
+        <label>
+          <span>The date you play</span>
+          <span className="row">
+            <input type="date" value={session.date} onChange={(e) => update({ date: e.target.value })} />
+            {session.date && (
+              <button type="button" className="ghost" onClick={() => update({ date: '' })} aria-label="Clear the date">
+                <Ico as={X} />
+              </button>
+            )}
+          </span>
+        </label>
+        {world.calendar && (
+          <div className="label">
+            <span>
+              In the world <Help topic="worldToday" />
+            </span>
+            <CalDateInput calendar={world.calendar} value={session.worldDate} onChange={(worldDate) => update({ worldDate })} />
+            {world.calendar.today && (
+              <button type="button" className="small" onClick={() => update({ worldDate: world.calendar!.today })}>
+                Use today ({formatDate(world.calendar, world.calendar.today, false)})
+              </button>
+            )}
+          </div>
+        )}
+        <div className="label">
+          <span>Players</span>
+          <ShowToPlayers session={session} campaign={campaign} entities={entities} />
+        </div>
+      </div>
+      <div className="row wrap details-actions">
+        <PrintButton to={`${w}/print/s/${session.id}`} />
+        <span className="grow" />
         <button
           className="danger"
           disabled={live?.sessionId === session.id}
@@ -210,13 +405,63 @@ export default function SessionPage() {
           onClick={async () => {
             if (!confirm('Delete this session and its recordings? You can restore it from World settings for a month.')) return
             await binSession(session.id)
-            navigate(campaign ? `${worldPath(worldId)}/c/${campaign.id}` : `${worldPath(worldId)}`)
+            navigate(campaign ? `${w}/c/${campaign.id}` : w)
           }}
         >
           Delete session
         </button>
       </div>
-    </div>
+    </section>
+  )
+}
+
+/** How many featured pages show before "Show all". */
+const FEATURED_AT_FIRST = 12
+
+/** The pages this session is about: a dozen at first, the rest a tap away. Taking one off has Undo. */
+function FeaturedSection({ session, entities, worldId }: { session: Session; entities: Entity[]; worldId: string }) {
+  const [all, setAll] = useState(false)
+  const featured = entities.filter((e) => session.entityIds.includes(e.id))
+  const shown = all ? featured : featured.slice(0, FEATURED_AT_FIRST)
+  const ids = (fn: (list: string[]) => void) =>
+    db.sessions
+      .where('id')
+      .equals(session.id)
+      .modify((s) => fn(s.entityIds))
+  const remove = (id: string) => {
+    const name = entities.find((e) => e.id === id)?.name ?? 'That page'
+    let at = -1
+    void removeWithUndo(
+      `“${name}” taken off this session`,
+      () =>
+        ids((list) => {
+          at = list.indexOf(id)
+          if (at >= 0) list.splice(at, 1)
+        }),
+      () => ids((list) => void (list.includes(id) || list.splice(Math.max(0, at), 0, id))),
+    )
+  }
+  return (
+    <section className="card featured-card" id="people">
+      <div className="plan-head">
+        <h2>
+          <Ico as={UsersThree} /> Featured in this session <Help topic="featured" />
+        </h2>
+        {featured.length > 0 && <span className="muted small">{featured.length}</span>}
+      </div>
+      {featured.length === 0 && <p className="muted small">Nobody yet. People you put in a scene at the Lectern are added here.</p>}
+      <FeaturedList worldId={worldId} entities={shown} onRemove={remove} />
+      {featured.length > FEATURED_AT_FIRST && (
+        <button type="button" className="link show-all" onClick={() => setAll(!all)}>
+          {all ? 'Show fewer' : `Show all ${featured.length}`}
+        </button>
+      )}
+      <PagePicker
+        entities={entities.filter((e) => !session.entityIds.includes(e.id))}
+        placeholder="+ Add an NPC, place, item…"
+        onPick={(id) => id && ids((list) => void (list.includes(id) || list.push(id)))}
+      />
+    </section>
   )
 }
 
@@ -231,7 +476,7 @@ function FeaturedList({
 }) {
   if (!entities.length) return null
   return (
-    <div className="tags">
+    <div className="tags featured-chips">
       {entities.map((e) => (
         <span key={e.id} className="tag">
           <Link to={`${pagePath(worldId, e.id)}`}>
@@ -248,7 +493,8 @@ function FeaturedList({
   )
 }
 
-function Recorder({ session }: { session: Session }) {
+/** Recording the session, its recordings and their transcripts. Also folded into the Lectern. */
+export function Recorder({ session }: { session: Session }) {
   const [source, setSource] = useState<RecordSource>('mic')
   const live = useLiveRecording()
   const active = live?.sessionId === session.id ? live : undefined
@@ -338,7 +584,7 @@ function Recorder({ session }: { session: Session }) {
             record a private conversation without everyone’s consent.
           </p>
           <span className="muted small">Keeps recording while you use the rest of the app, and saves as it goes.</span>
-          <select value={source} onChange={(e) => setSource(e.target.value as RecordSource)}>
+          <select value={source} onChange={(e) => setSource(e.target.value as RecordSource)} aria-label="What to record">
             <option value="mic">In person: this device's microphone</option>
             {systemAudioSupported() && <option value="mic+system">Online: microphone + call audio (Discord, Zoom…)</option>}
           </select>
@@ -368,8 +614,8 @@ function Playback({ sessionId, recording }: { sessionId: string; recording: Reco
   const audio = useRef<HTMLAudioElement>(null)
   // "Heard in" on a page links here with ?play=<recording>&t=<seconds>: jump to that moment.
   const [params] = useSearchParams()
-  const jumpTo = params.get('play') === assetId ? Number(params.get('t')) : undefined
-  const focus = jumpTo !== undefined && !Number.isNaN(jumpTo) ? jumpTo : undefined
+  const jumpToTime = params.get('play') === assetId ? Number(params.get('t')) : undefined
+  const focus = jumpToTime !== undefined && !Number.isNaN(jumpToTime) ? jumpToTime : undefined
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (focus !== undefined) box.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
@@ -440,32 +686,46 @@ function Playback({ sessionId, recording }: { sessionId: string; recording: Reco
   )
 }
 
-/** Threads this session raised or tied off, plus a quick way to add one. */
-function SessionThreads({ sessionId, entities, worldId }: { sessionId: string; entities: Entity[]; worldId: string }) {
-  const sessions = useWorldSessions(worldId)
+/** Threads this session raised or tied off, one line each, plus a quick way to add one. */
+function SessionThreads({ session, entities, worldId }: { session: Session; entities: Entity[]; worldId: string }) {
   const [name, setName] = useState('')
-  const threads = entities.filter((e) => e.type === 'thread' && (e.raisedIn === sessionId || e.tiedOffIn === sessionId))
+  const threads = entities.filter((e) => e.type === 'thread' && (e.raisedIn === session.id || e.tiedOffIn === session.id))
   return (
-    <section>
-      <h2><Ico as={Spiral} /> Loose threads from this session</h2>
-      {threads.map((t) => (
-        <ThreadCard key={t.id} thread={t} entities={entities} sessions={sessions} worldId={worldId} currentSessionId={sessionId} />
-      ))}
+    <section className="card wrap-card" id="threads">
+      <div className="plan-head">
+        <h2>
+          <Ico as={Spiral} /> Loose threads from this session
+        </h2>
+        <Link className="small" to={`${worldPath(worldId)}/threads`}>
+          All threads
+        </Link>
+      </div>
+      {threads.length > 0 ? (
+        <ul className="thread-lines">
+          {threads.map((t) => (
+            <li key={t.id}>
+              <Link to={pagePath(worldId, t.id)}>{t.name}</Link>{' '}
+              <span className="muted small">
+                · {t.tiedOffIn === session.id ? 'tied off here' : THREAD_STATUS[t.threadStatus ?? 'open'].label.toLowerCase()}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="muted small">None raised or tied off in this session yet.</p>
+      )}
       <form
-        className="row"
+        className="row plan-add"
         onSubmit={async (e) => {
           e.preventDefault()
           if (!name.trim()) return
-          await db.entities.add(newThread(worldId, name.trim(), sessionId))
+          await db.entities.add(newThread(worldId, name.trim(), session.id))
           setName('')
         }}
       >
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Add a thread this session left hanging" />
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Add a thread this session left hanging" aria-label="New loose thread" />
         <button disabled={!name.trim()}>Add</button>
       </form>
-      <Link className="small" to={`${worldPath(worldId)}/threads`}>
-        See all loose threads
-      </Link>
     </section>
   )
 }
