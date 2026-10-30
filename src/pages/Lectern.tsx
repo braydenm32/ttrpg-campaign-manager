@@ -1,6 +1,7 @@
 import { PreviouslyOn } from '../ai/ReadAloud'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
+import { PartyGlance } from '../partyGlance'
 import { FoldingProvider, LECTERN_PANELS, LecternPanel, useFolding } from '../lecternPanel'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
@@ -133,7 +134,7 @@ export default function Lectern() {
           <div className="lectern-col">
             <Scene lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
             <Present lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
-            <Party entities={entities} campaignId={session.campaignId} worldId={worldId} />
+            {world && <Party world={world} entities={entities} campaignId={session.campaignId} />}
             <LecternThreads lectern={lectern} entities={entities} worldId={worldId} sessionId={session.id} />
           </div>
           <div className="lectern-col">
@@ -939,33 +940,30 @@ function CommonRoomPanel({ world, session, lectern, edit, live }: PanelProps & {
   )
 }
 
-/** The party at a glance, with inspiration to hand out. */
-function Party({ entities, campaignId, worldId }: { entities: Entity[]; campaignId: string; worldId: string }) {
+/** The party at a glance (the details the GM picked), with inspiration to hand out. */
+function Party({ world, entities, campaignId }: { world: World; entities: Entity[]; campaignId: string }) {
   const party = partyOf(entities, campaignId)
   if (!party.length) return null
   const give = (e: Entity, n: number) => db.entities.update(e.id, { inspiration: Math.max(0, (e.inspiration ?? 0) + n) || undefined, updatedAt: Date.now() })
   return (
-    <LecternPanel id="party" name="The party" keywords="characters pcs inspiration players" title={<><Ico as={Shield} /> The party <Help topic="inspiration" /></>}>
-      <ul className="lectern-party">
-        {party.map((e) => (
-          <li key={e.id} className="row spread">
-            <span>
-              <Link to={pagePath(worldId, e.id)}>{e.name}</Link> <StatusBadge entity={e} />
+    <LecternPanel id="party" name="The party" keywords="characters pcs inspiration players ac perception glance" title={<><Ico as={Shield} /> The party <Help topic="inspiration" /></>}>
+      <PartyGlance
+        world={world}
+        party={party}
+        extra={(e) => (
+          <span className="row inspiration-control" title="Inspiration (players can see it)">
+            <button className="ghost small" aria-label={`Take inspiration from ${e.name}`} disabled={!e.inspiration} onClick={() => give(e, -1)}>
+              −
+            </button>
+            <span className={e.inspiration ? 'inspired' : 'muted'}>
+              <Ico as={Sparkle} /> {e.inspiration ?? 0}
             </span>
-            <span className="row inspiration-control" title="Inspiration (players can see it)">
-              <button className="ghost small" aria-label={`Take inspiration from ${e.name}`} disabled={!e.inspiration} onClick={() => give(e, -1)}>
-                −
-              </button>
-              <span className={e.inspiration ? 'inspired' : 'muted'}>
-                <Ico as={Sparkle} /> {e.inspiration ?? 0}
-              </span>
-              <button className="ghost small" aria-label={`Give ${e.name} inspiration`} onClick={() => give(e, 1)}>
-                +
-              </button>
-            </span>
-          </li>
-        ))}
-      </ul>
+            <button className="ghost small" aria-label={`Give ${e.name} inspiration`} onClick={() => give(e, 1)}>
+              +
+            </button>
+          </span>
+        )}
+      />
     </LecternPanel>
   )
 }

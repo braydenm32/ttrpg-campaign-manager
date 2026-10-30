@@ -181,6 +181,8 @@ export interface World {
   coverId?: string
   /** The world's own colour, one of WORLD_COLORS, for its cover and book. */
   color?: string
+  /** The details shown as columns in "party at a glance" (AC, Passive Perception…). Unset: picked from what the party has. */
+  partyFields?: string[]
   /** The party's money, e.g. [{ name: 'gp', amount: 120 }]. Shown on the party loot page. */
   partyCoin?: { name: string; amount: number }[]
   /** The world's own calendar (months, weekdays, moons) and today's date in the world. */

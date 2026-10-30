@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { DraftText, Empty, VisibilityBadge, VisibilityToggle } from '../components'
 import { db, GAME_SYSTEMS, type Campaign } from '../db'
 import { useLiveRecording } from '../recordingStore'
+import { PartyGlance } from '../partyGlance'
 import { bookNextSession, createNextSession, partyOf } from '../sessions'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
@@ -131,6 +132,8 @@ export default function CampaignPage() {
           <h2>The party</h2>
           {pcs.length === 0 ? (
             <Empty>Add Player Characters in the codex.</Empty>
+          ) : isGM && world ? (
+            <PartyGlance world={world} party={pcs} />
           ) : (
             <ul className="entity-list">
               {pcs.map((e) => (

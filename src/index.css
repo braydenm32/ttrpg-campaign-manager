@@ -1184,3 +1184,13 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 
 /* A warning under a text box: players would read the name of a GM-only page */
 .secret-names { margin: .3em 0; padding: .35em .6em; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 4px; color: var(--text); }
+
+/* Party at a glance */
+.party-glance .table-scroll { overflow-x: auto; }
+.party-glance table { width: 100%; border-collapse: collapse; font-size: .92em; }
+.party-glance th, .party-glance td { text-align: left; padding: .25em .5em; border-bottom: 1px solid var(--border); vertical-align: top; }
+.party-glance th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+.party-glance td:first-child { white-space: nowrap; }
+.party-glance-extra { width: 1%; white-space: nowrap; }
+.party-glance-choose { display: flex; flex-wrap: wrap; gap: .3em 1em; margin-top: .4em; }
+.party-glance-choose form { flex-basis: 100%; }

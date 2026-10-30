@@ -287,6 +287,8 @@ export const HELP = {
     'Type to find a panel (“initiative”, “dice”, “music”) or a page by name. Only the matching panels show, opened, and matching pages appear above them with their GM notes and buttons to add them to the scene. Click a panel’s title to fold it away; this device remembers which you folded. “Fold all” leaves just the titles.',
   wantedPages:
     'Names you’ve written as [[links]] in pages or sessions that no page answers to yet, most mentioned first. Pick one and choose a type to make its page (it starts as GM only). You can also click a grey dashed link anywhere to make its page.',
+  partyGlance:
+    'Every character in one table, with the details you choose as columns: AC, Passive Perception, Languages, Darkvision, anything from their pages. Choose columns once and they show here and at the Lectern. Only you see this table.',
   lecternNotes:
     'This session’s GM notes, the same ones as on the session page. Add a line with the time from the box (it goes at the end), or press Edit to change them.',
 } as const
