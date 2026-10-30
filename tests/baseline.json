@@ -177,7 +177,7 @@
   },
   "phone gm /w/:worldId/p/:entityId (player character)": {
     "problems": [],
-    "smallTargets": 78
+    "smallTargets": 79
   },
   "phone gm /w/:worldId/p/:entityId (quest)": {
     "problems": [],
@@ -247,7 +247,7 @@
   },
   "phone gm /w/:worldId/settings (data and backup)": {
     "problems": [],
-    "smallTargets": 16
+    "smallTargets": 18
   },
   "phone gm /w/:worldId/settings (players and sharing)": {
     "problems": [],
