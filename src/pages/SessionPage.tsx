@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { PrepHelper } from '../ai/PrepHelper'
 import { RecapPanel } from '../ai/RecapPanel'
+import { Highlights } from '../highlights'
 import { SpotlightPanel } from '../ai/Spotlight'
 import { TranscriptPanel } from '../ai/TranscriptPanel'
 import { DraftText, Empty, VisibilityToggle } from '../components'
@@ -73,6 +74,7 @@ export default function SessionPage() {
         ) : (
           <Empty>No recap yet.</Empty>
         )}
+        <Highlights session={session} entities={entities} worldId={worldId} isGM={false} />
         <FeaturedList worldId={worldId} entities={featured} />
       </div>
     )
@@ -178,6 +180,8 @@ export default function SessionPage() {
           <Markdown text={tab === 'notes' ? session.notes : session.recap} entities={entities} worldId={worldId} showSecrets />
         </details>
       )}
+
+      <Highlights session={session} entities={entities} worldId={worldId} isGM />
 
       <section>
         <h2>Featured in this session</h2>

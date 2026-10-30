@@ -322,6 +322,10 @@ export interface Campaign {
   schedule?: DateOption[]
   /** The date the GM booked for the next session, so players can see it. */
   booked?: DateOption
+  /** "The story so far": a catch-up of the whole campaign for players (and anyone joining late). */
+  storySoFar?: string
+  /** The session number the story so far was written up to, so the GM can tell when it's behind. */
+  storySoFarUpTo?: number
   createdAt: number
 }
 
@@ -571,9 +575,20 @@ export interface Recording {
   transcript?: Transcript
 }
 
+export interface SessionHighlight {
+  id: string
+  kind: 'moment' | 'quote' | 'award'
+  /** The moment, what was said, or the award's title. */
+  text: string
+  /** Who said it, or who won the award. */
+  who?: string
+}
+
 export interface RecapDraft {
   gm: string
   players: string
+  /** Highlights Claude picked out, for the GM to keep or drop. */
+  highlights?: SessionHighlight[]
   /** "claude-api" when made in the app, "pasted" when pasted back from claude.ai. */
   source: 'claude-api' | 'pasted'
   /** Changes to the world Claude suggested from the session, for the GM to tick and apply. */
@@ -630,6 +645,8 @@ export interface Session {
   visibility: Visibility
   entityIds: string[]
   recordings: Recording[]
+  /** Moments, quotes and awards from the session, for players to look back on. Shown with the recap. */
+  highlights?: SessionHighlight[]
   /** The last AI recap draft, kept until the GM uses or discards it. Always GM-only. */
   recapDraft?: RecapDraft
   /** Changes made to the world from this session (the Chronicle). Always GM-only. */

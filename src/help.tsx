@@ -319,6 +319,10 @@ export const HELP = {
     'Name your world’s seasons and when each starts; “Use the usual four” places spring, summer, autumn and winter like Earth’s. The season shows with the date, and with the climate it decides the weather you roll. Players see the season and the weather.',
   journey:
     'Run a trip day by day. Say where to, how far (or use a route you measured with the map ruler) and how fast. “Next day on the road” moves the world’s date on, rolls the weather (a blizzard or gale halves the day), checks for an encounter on a table of yours and counts down rations. “Rest a day” does the same without moving.',
+  highlights:
+    'The best bits of a session: memorable moments, lines worth quoting and playful awards (“Bravest Fool”). Players see them with the session’s recap and in the Common Room. When Claude writes the recap it suggests some; tick the ones to keep.',
+  storySoFar:
+    'A catch-up of the whole campaign, for players before a session and for anyone joining late. Write it yourself, or have Claude write it from the player recaps (never from your GM notes). Players also get every session’s recap underneath, in order.',
   lecternNotes:
     'This session’s GM notes, the same ones as on the session page. Add a line with the time from the box (it goes at the end), or press Edit to change them.',
 } as const

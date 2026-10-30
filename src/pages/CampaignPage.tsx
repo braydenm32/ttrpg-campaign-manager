@@ -6,6 +6,7 @@ import { DraftText, Empty, VisibilityBadge, VisibilityToggle } from '../componen
 import { db, GAME_SYSTEMS, type Campaign } from '../db'
 import { useLiveRecording } from '../recordingStore'
 import { PartyGlance } from '../partyGlance'
+import { StorySoFar } from '../highlights'
 import { questProgress } from '../quests'
 import { bookNextSession, createNextSession, partyOf } from '../sessions'
 import { useVisibleEntities, useWorld } from '../hooks'
@@ -106,6 +107,8 @@ export default function CampaignPage() {
           }}
         />
       )}
+
+      {world && <StorySoFar world={world} campaign={campaign} sessions={sessions} entities={entities} isGM={isGM} />}
 
       <div className="two-col">
         <section>
