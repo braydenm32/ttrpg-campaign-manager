@@ -25,6 +25,7 @@ import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { Backpack, CastleTurret, ChatCircleDots, MusicNotes, Notepad, Scroll, Shield, Sparkle, Spiral, Sword, Television, UsersThree } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
+import { PlayerDowntime } from '../players/Downtime'
 
 /**
  * The Common Room: the players' front page for a world, and their seat at the table. Tabs keep it
@@ -647,6 +648,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
           )}
         </Card>
       ))}
+      {ctx.memberOf && <PlayerDowntime world={ctx.world} mine={ctx.mine} />}
       {ctx.memberOf && (
         <section className="card room-card">
           <p className="muted small">Your character died, retired or left? Write up the next one for your GM.</p>

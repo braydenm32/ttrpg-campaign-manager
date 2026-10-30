@@ -301,6 +301,10 @@ export const HELP = {
     'The steps to finish this quest. Players see the ones with an open eye and can follow the ticks as you make them. A step with a closed eye stays yours alone (a hidden goal, a twist) until you click the eye to tell them.',
   rewards:
     'What finishing the quest is worth. A reward stays hidden from players until you click its eye. “Give to the party” puts any coins in its text (like “200 gp”) into the party’s purse and its item into the party stash, and shows it to players.',
+  downtime:
+    'Tell your GM what your character does between sessions: training, research, crafting, visiting someone, working a job. Only your GM sees it, and their answer appears here, for you alone.',
+  downtimeGm:
+    'What your players’ characters are doing between sessions. Answer each one (only that player sees your answer) and it moves to Answered. Players send these from their character tab in the Common Room.',
   lecternNotes:
     'This session’s GM notes, the same ones as on the session page. Add a line with the time from the box (it goes at the end), or press Edit to change them.',
 } as const
