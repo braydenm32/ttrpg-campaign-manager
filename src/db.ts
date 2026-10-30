@@ -616,10 +616,28 @@ export interface CheckItem {
   done: boolean
 }
 
+/**
+ * A scene the GM expects, and (optionally) everything it needs, so "Start" at the Lectern sets it
+ * all going at once: where it is, the read-aloud text, who's there, the music, a fight, something
+ * to show the players and pages to reveal.
+ */
+export interface PrepScene extends CheckItem {
+  placeId?: string
+  readAloud?: string
+  presentIds?: string[]
+  soundIds?: string[]
+  /** One of this session's planned encounters. */
+  encounterId?: string
+  /** Put on players' screens when it starts: a page (revealed first) or a picture from the world's files. */
+  show?: { kind: 'page'; entityId: string } | { kind: 'image'; assetId: string }
+  /** GM-only pages revealed to everyone when it starts. */
+  revealIds?: string[]
+}
+
 /** The session prep sheet: how it opens, likely scenes, clues to drop and fights ready to run. */
 export interface SessionPrep {
   strongStart: string
-  scenes: CheckItem[]
+  scenes: PrepScene[]
   /** Secrets and clues the players might find this session; ticked once they do. */
   clues: CheckItem[]
   encounters: Encounter[]

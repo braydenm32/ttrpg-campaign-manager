@@ -141,7 +141,7 @@ export default function Lectern() {
             <LecternThreads lectern={lectern} entities={entities} worldId={worldId} sessionId={session.id} />
           </div>
           <div className="lectern-col">
-            <LecternPrep session={session} worldId={worldId} />
+            {world && <LecternPrep session={session} world={world} entities={entities} />}
             <SessionNotes session={session} entities={entities} worldId={worldId} />
             <Initiative lectern={lectern} edit={edit} entities={entities} campaignId={session.campaignId} />
             <Timers lectern={lectern} edit={edit} shared={!!world?.cloud?.enabled} />

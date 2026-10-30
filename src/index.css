@@ -1230,3 +1230,9 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .roll-call-form { display: flex; flex-direction: column; gap: .4em; margin-top: .4em; }
 .roll-call-prompt { top: calc(var(--topbar-h) + 4.8em); }
 .roll-call-prompt input.hp-input { width: 4.5em; }
+
+/* Scene cards */
+.scene-card-editor { display: flex; flex-direction: column; gap: .5em; margin: .3em 0 .8em 1.8em; padding: .7em .8em; border-left: 3px solid var(--accent); background: var(--panel-2); border-radius: 0 var(--radius) var(--radius) 0; }
+.scene-card-editor label { display: flex; flex-direction: column; gap: .2em; }
+.scene-card-editor label > span:first-child { font-size: .85em; color: var(--muted); }
+.scene-start { margin-right: .4em; padding: .1em .5em; }
