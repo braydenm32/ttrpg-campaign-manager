@@ -52,14 +52,12 @@
     "smallTargets": 3
   },
   "phone gm /w/:worldId/archivist": {
-    "problems": [
-      "sideways scroll"
-    ],
-    "smallTargets": 10
+    "problems": [],
+    "smallTargets": 5
   },
   "phone gm /w/:worldId/archivist (check for contradictions)": {
     "problems": [],
-    "smallTargets": 10
+    "smallTargets": 8
   },
   "phone gm /w/:worldId/assets": {
     "problems": [],
