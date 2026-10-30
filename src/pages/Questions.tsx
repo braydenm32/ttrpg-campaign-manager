@@ -10,6 +10,7 @@ import { useViewMode } from '../viewMode'
 import { GmDowntime } from '../players/Downtime'
 import { Ico } from '../icons'
 import { EyeClosed, Question } from '@phosphor-icons/react'
+import { needsAnswer } from '../counts'
 
 /** Questions: the GM's inbox of players' questions, or a player's own questions and answers. */
 export default function Questions() {
@@ -43,7 +44,7 @@ function GmInbox({ world }: { world: World }) {
     if (available) listPlayers(world.id).then((r) => setMembers(r.members)).catch(() => {})
   }, [available, world.id])
   if (!available) return <Empty>Turn on cloud sync and invite your players (World settings) so they can send you questions.</Empty>
-  const open = questions.filter((q) => !q.answer)
+  const open = questions.filter(needsAnswer)
   const done = questions.filter((q) => q.answer)
   const card = (q: PlayerQuestion) => (
     <InboxItem key={q.id} world={world} q={q} who={members.find((m) => m.userId === q.userId)?.name ?? 'A player'} pages={pages} onChange={reload} />

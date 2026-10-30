@@ -1,4 +1,3 @@
-import { useLiveQuery } from 'dexie-react-hooks'
 import { HELP } from './help'
 import { useState, type ReactNode } from 'react'
 import { matchPath, NavLink, useLocation } from 'react-router-dom'
@@ -24,14 +23,13 @@ import {
   BookBookmark,
   Books,
 } from '@phosphor-icons/react'
-import { db, ENTITY_LABELS, ENTITY_TYPES, type CustomType, type Entity, type EntityType } from './db'
+import { ENTITY_LABELS, ENTITY_TYPES, type CustomType, type Entity, type EntityType } from './db'
 import { treeRoots, useVisibleEntities, useWorld } from './hooks'
 import { Ico, TypeIcon } from './icons'
 import { nextSessions, useCampaigns, useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
-import { useGmQuestions } from './players/Questions'
-import { useDowntime } from './players/Downtime'
-import { useCharacterOwners } from './players/owners'
+import { useGmInbox } from './players/inbox'
+import { codexKey, countByType, isOpenThread, openLeads, pagesIn, partyLoot, tickingClocks, useVisibleHandouts, useVisibleMaps } from './counts'
 import { pagePath, resolveCustom, resolvePage, SECTION_WORDS, sectionType, typePath, worldPath } from './paths'
 
 /** Longest list shown under a codex section before linking to the full list. */
@@ -62,13 +60,13 @@ export function modeOf(pathname: string, isGM: boolean): WorldMode | undefined {
  * down to wherever you are.
  */
 export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }) {
-  const { isGM, canSee } = useViewMode()
+  const { isGM } = useViewMode()
   const { world } = useWorld()
   const { pathname } = useLocation()
   const entities = useVisibleEntities(worldId)
   const sessions = useWorldSessions(worldId)
   const campaigns = useCampaigns(worldId)
-  const maps = useLiveQuery(() => db.maps.where({ worldId }).sortBy('name'), [worldId]) ?? []
+  const maps = useVisibleMaps(worldId)
   // Sections the user opened or closed by hand; anything not listed follows where you are.
   const [manual, setManual] = useState<Record<string, boolean>>({})
   const [allTypes, setAllTypes] = useState(false)
@@ -113,23 +111,25 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
     </>
   )
 
-  const countOf = (t: EntityType) => entities.filter((e) => e.type === t).length
+  const counts = countByType(entities, world)
+  const countOf = (key: string) => counts.get(key) ?? 0
   const kindParam = at('other/:kind')?.kind
   const kind = (kindParam && resolveCustom(worldId, kindParam)) ?? at('type/custom/:kind')?.kind ?? (currentEntity?.type === 'custom' ? currentEntity.customType : undefined)
-  const hasLoot = entities.some((e) => e.type === 'item' && e.heldBy) || !!world?.partyCoin?.length
-  const gmQuestions = useGmQuestions(isGM && mode === 'play' ? world : undefined)
-  const downtime = useDowntime(isGM && mode === 'play' && world?.cloud?.enabled ? world : undefined)
-  const waiting = gmQuestions.questions.filter((q) => !q.answer).length + downtime.list.filter((d) => !d.answer).length
-  const hasLinks = entities.some((e) => e.relations?.length)
-  const clockCount = entities.reduce((n, e) => n + (e.clocks ?? []).filter((c) => c.filled < c.segments).length, 0)
-  const handouts = world?.handouts?.length ?? 0
-  const { owners } = useCharacterOwners(isGM && mode === 'play' && world?.cloud?.enabled ? world : undefined)
-  const pendingClaims = [...owners.values()].filter((o) => o.pending).length
+  const hasLoot = partyLoot(entities, world).any
+  const inbox = useGmInbox(isGM && mode === 'play' ? world : undefined, entities)
+  const waiting = inbox.questions.length + inbox.downtime
+  const visibleIds = new Set(entities.map((e) => e.id))
+  // Like the relationship web: a link only counts when the page at its other end can be seen.
+  const hasLinks = entities.some((e) => e.relations?.some((r) => visibleIds.has(r.to)))
+  const clockCount = tickingClocks(entities).length
+  const handouts = useVisibleHandouts(world, entities).length
+  const pendingClaims = inbox.claims
   // Safety tools are for the table, not for wiki readers.
   const safetyLink = !world?.shared?.token && (isGM || !!world?.safety?.lines.length || !!world?.safety?.veils.length || !!world?.safety?.notes.trim() || !!world?.safety?.xcard) && (
     <NavLink to={`${worldPath(worldId)}/safety`} title={HELP.safety}><Ico as={HandPalm} /> Safety tools</NavLink>
   )
-  const openThreads = entities.filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active')).length
+  const openThreads = entities.filter(isOpenThread).length
+  const leads = openLeads(entities).length
   const next = nextSessions(campaigns, sessions)[0]?.session
 
   const roots = treeRoots(entities)
@@ -161,10 +161,11 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
   }
 
   const pageList = (t: EntityType, custom?: CustomType) => {
-    const list = entities.filter((e) => e.type === t && (!custom || e.customType === custom.id))
+    const key = custom ? `custom:${custom.id}` : t === 'custom' ? 'other' : t
+    const list = pagesIn(entities, world, key)
     // Keep the current page in view even if the list is long.
     const shown = list.slice(0, MAX_CHILDREN)
-    if (currentEntity?.type === t && !shown.includes(currentEntity)) shown.push(currentEntity)
+    if (currentEntity && codexKey(currentEntity, world) === key && !shown.includes(currentEntity)) shown.push(currentEntity)
     return (
       <div className="nav-children">
         {shown.map((e: Entity) => (
@@ -187,6 +188,8 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
     const used = builtIn.filter((t) => countOf(t) > 0 || t === type)
     const shown = allTypes || (isGM && !used.length) ? builtIn : used
     const hidden = isGM ? builtIn.length - shown.length : 0
+    // Custom pages with no custom type of their own (or one since removed) are "Other pages".
+    const otherOpen = type === 'custom' && !world?.customTypes?.some((c) => c.id === kind)
     return (
       <>
         {shown.map((t) => {
@@ -207,7 +210,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
           )
         })}
         {world?.customTypes?.map((c) => {
-          const n = entities.filter((e) => e.type === 'custom' && e.customType === c.id).length
+          const n = countOf(`custom:${c.id}`)
           if (!n && !isGM) return null
           const key = `custom:${c.id}`
           const auto = type === 'custom' && kind === c.id
@@ -224,6 +227,18 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
             </div>
           )
         })}
+        {countOf('other') > 0 && (
+          <div>
+            <div className="nav-row">
+              {caret('other', otherOpen, ENTITY_LABELS.custom.many.toLowerCase())}
+              <NavLink end to={`${typePath(worldId, 'custom')}`}>
+                <TypeIcon type="custom" /> {ENTITY_LABELS.custom.many}
+                <span className="count">{countOf('other')}</span>
+              </NavLink>
+            </div>
+            {open('other', otherOpen) && pageList('custom')}
+          </div>
+        )}
         {(hidden > 0 || allTypes) && (
           <div className="nav-row">
             <span className="nav-caret-space" />
@@ -278,13 +293,11 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
             </div>
             {open('maps', inMaps) && maps.length > 0 && (
               <div className="nav-children">
-                {maps
-                  .filter((m) => canSee(m.visibility))
-                  .map((m) => (
-                    <NavLink key={m.id} to={`${worldPath(worldId)}/maps/${m.id}`}>
-                      {m.name}
-                    </NavLink>
-                  ))}
+                {maps.map((m) => (
+                  <NavLink key={m.id} to={`${worldPath(worldId)}/maps/${m.id}`}>
+                    {m.name}
+                  </NavLink>
+                ))}
               </div>
             )}
             <div className="nav-row">
@@ -373,7 +386,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
             <NavLink to={`${worldPath(worldId)}/loot`} title={HELP.loot}><Ico as={Backpack} /> Party loot</NavLink>
           </>,
         )}
-        {(world?.cloud?.enabled || gmQuestions.available) &&
+        {(world?.cloud?.enabled || inbox.available) &&
           group(
             'players',
             'Players',
@@ -385,7 +398,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
                   {pendingClaims ? <span className="count alert">{pendingClaims}</span> : null}
                 </NavLink>
               )}
-              {gmQuestions.available && (
+              {inbox.available && (
                 <NavLink to={`${worldPath(worldId)}/questions`} title={HELP.questionsGm}>
                   <Ico as={ChatCircleDots} /> Questions and downtime
                   {waiting ? <span className="count alert">{waiting}</span> : null}
@@ -409,7 +422,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
         <>
           <NavLink to={`${worldPath(worldId)}/threads`} title={HELP.leads}>
             <Ico as={Spiral} /> Leads
-            {openThreads ? <span className="count">{openThreads}</span> : null}
+            {leads ? <span className="count">{leads}</span> : null}
           </NavLink>
           {handouts > 0 && <NavLink to={`${worldPath(worldId)}/handouts`} title={HELP.handouts}><Ico as={Newspaper} /> Handouts</NavLink>}
           {hasLoot && <NavLink to={`${worldPath(worldId)}/loot`} title={HELP.loot}><Ico as={Backpack} /> Party loot</NavLink>}

@@ -10,16 +10,14 @@ import { initials } from '../text'
 import { nextSessions, URGENCY, useCampaigns, useWorldSessions } from '../threads'
 import { WantedPages } from '../wanted'
 import { questProgress } from '../quests'
-import { useDowntime } from '../players/Downtime'
 import { useViewMode } from '../viewMode'
 import { BackupReminder } from '../BackupReminder'
 import WikiHome from './WikiHome'
 import CommonRoom from './CommonRoom'
 import { showDate, upcoming } from '../players/Schedule'
-import { useLiveQuery } from 'dexie-react-hooks'
-import { ClockFace, useAllClocks } from '../clocks'
-import { useGmQuestions } from '../players/Questions'
-import { useCharacterOwners } from '../players/owners'
+import { ClockFace } from '../clocks'
+import { useGmInbox } from '../players/inbox'
+import { clockSize, isOpenQuest, openThreads as openThreadsOf, prepCounts, tickingClocks } from '../counts'
 import { Ico, TypeIcon } from '../icons'
 import { ChatCircleDots, Hourglass, ListChecks, Play, Plus, Spiral, UserCirclePlus } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
@@ -35,12 +33,9 @@ export default function Dashboard() {
   const [newCampaign, setNewCampaign] = useState(false)
 
   const recent = [...entities].filter((e) => e.type !== 'thread').sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 8)
-  const urgencyRank = { high: 0, normal: 1, low: 2 }
-  const openThreads = entities
-    .filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active'))
-    .sort((a, b) => urgencyRank[a.threadUrgency ?? 'normal'] - urgencyRank[b.threadUrgency ?? 'normal'] || b.updatedAt - a.updatedAt)
-  const openQuests = entities.filter((e) => e.type === 'quest' && (e.questStatus === 'open' || e.questStatus === 'active'))
-  const clocks = useAllClocks(entities).filter(({ clock }) => clock.filled < clock.segments)
+  const openThreads = openThreadsOf(entities)
+  const openQuests = entities.filter(isOpenQuest)
+  const clocks = tickingClocks(entities)
 
   if (!world) return null
   // Opened from a public wiki link: a tidy front page for readers instead of the GM's overview.
@@ -57,7 +52,7 @@ export default function Dashboard() {
 
       <div className="home-grid">
         <NextSessions worldId={worldId} onNewCampaign={() => setNewCampaign(true)} />
-        <NeedsYou world={world} threads={openThreads.filter((t) => t.threadUrgency === 'high')} />
+        <NeedsYou world={world} entities={entities} />
         <WantedPages worldId={worldId} entities={entities} sessions={sessions} />
         <section className="card">
           <h3>
@@ -73,7 +68,7 @@ export default function Dashboard() {
                   <span>
                     {clock.name}
                     <small className="muted">
-                      {clock.filled} of {clock.segments} · {owner.name}
+                      {clock.filled} of {clockSize(clock)} · {owner.name}
                     </small>
                   </span>
                 </Link>
@@ -127,7 +122,7 @@ export default function Dashboard() {
               {openQuests.map((e) => (
                 <li key={e.id}>
                   <Link to={`${pagePath(worldId, e.id)}`}>{e.name}</Link>
-                  <span className="muted"> · {e.questStatus}{questProgress(e) && ` · ${questProgress(e)}`}</span>
+                  <span className="muted"> · {e.questStatus ?? 'open'}{questProgress(e) && ` · ${questProgress(e)}`}</span>
                 </li>
               ))}
             </ul>
@@ -213,13 +208,8 @@ function PageTile({ entity: e, world }: { entity: Entity; world: World }) {
 }
 
 /** What's waiting on the GM: questions, character claims and urgent threads. */
-function NeedsYou({ world, threads }: { world: World; threads: Entity[] }) {
-  const questions = useGmQuestions(world)
-  const waiting = questions.questions.filter((q) => !q.answer)
-  const { owners } = useCharacterOwners(world.cloud?.enabled ? world : undefined)
-  const claims = [...owners.values()].filter((o) => o.pending).length
-  const downtime = useDowntime(world.cloud?.enabled ? world : undefined).list.filter((d) => !d.answer).length
-  const count = waiting.length + claims + downtime + threads.length
+function NeedsYou({ world, entities }: { world: World; entities: Entity[] }) {
+  const { questions: waiting, claims, downtime, urgentThreads: threads, total: count } = useGmInbox(world, entities)
   return (
     <section className="card needs-you">
       <h3>
@@ -324,7 +314,7 @@ function NewCampaign({
 function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampaign: () => void }) {
   const navigate = useNavigate()
   const campaigns = useCampaigns(worldId)
-  const sessions = useLiveQuery(() => db.sessions.where({ worldId }).toArray(), [worldId]) ?? []
+  const sessions = useWorldSessions(worldId)
   const cards = nextSessions(campaigns, sessions)
   const booked = campaigns.filter((c) => c.status !== 'finished' && upcoming(c) && !cards.some((x) => x.campaign.id === c.id))
   return (
@@ -338,8 +328,9 @@ function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampai
         </p>
       )}
       {cards.map(({ campaign: c, session: next }) => {
-        const clues = next.prep?.clues.filter((x) => !x.done && x.text.trim()).length ?? 0
-        const scenes = next.prep?.scenes.filter((x) => !x.done && x.text.trim()).length ?? 0
+        const prep = prepCounts(next.prep)
+        const clues = prep.clues.left
+        const scenes = prep.scenes.left
         const when = upcoming(c)
         // The newest session is shown even once it's been played; then the useful next step is planning the one after.
         const played = !!next.recap.trim() || (!!next.date && next.date < localDate())
