@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { Help } from '../help'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Empty } from '../components'
 import { PagePicker } from '../PagePicker'
 import { db, THREAD_STATUS, type Entity, type ThreadStatus } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { ThreadCard } from '../ThreadCard'
-import { COLD_AFTER, latestSession, newThread, sessionsSinceTouched, threadLinks, URGENCY, useWorldSessions } from '../threads'
+import { COLD_AFTER, newThread, sessionInHand, sessionsSinceTouched, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
+import { isOpenQuest, isOpenThread } from '../counts'
+import { questProgress } from '../quests'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { Graph, Spiral } from '@phosphor-icons/react'
-import { typePath } from '../paths'
+import { pagePath, typePath } from '../paths'
 
 const COLUMNS: ThreadStatus[] = ['open', 'active', 'resolved', 'dropped']
 const URGENCY_ORDER = { high: 0, normal: 1, low: 2 }
@@ -22,6 +24,7 @@ export default function Threads() {
   const navigate = useNavigate()
   const entities = useVisibleEntities(worldId)
   const sessions = useWorldSessions(worldId)
+  const campaigns = useCampaigns(worldId)
   const [name, setName] = useState('')
   const [involves, setInvolves] = useState('')
   const [urgency, setUrgency] = useState<NonNullable<Entity['threadUrgency']>>('normal')
@@ -37,10 +40,10 @@ export default function Threads() {
       (!filter || threadLinks(t, entities, isGM).some((e) => e.id === filter)) &&
       (!q || t.name.toLowerCase().includes(q) || t.summary.toLowerCase().includes(q)),
   )
-  const latest = latestSession(sessions)
-  const cold = threads.filter(
-    (t) => (t.threadStatus === 'open' || t.threadStatus === 'active') && sessionsSinceTouched(t, sessions) >= COLD_AFTER,
-  ).length
+  const latest = sessionInHand(campaigns, sessions)
+  const cold = threads.filter((t) => isOpenThread(t) && sessionsSinceTouched(t, sessions) >= COLD_AFTER).length
+  // Players' leads are their open quests as well as the threads, as in the Common Room.
+  const quests = isGM ? [] : entities.filter(isOpenQuest)
   const columns = isGM ? (showClosed ? COLUMNS : COLUMNS.slice(0, 2)) : COLUMNS.slice(0, 3)
   const sorted = (status: ThreadStatus) =>
     shown
@@ -114,8 +117,24 @@ export default function Threads() {
         )}
       </div>
 
+      {quests.length > 0 && (
+        <section>
+          <h2>
+            Quests <span className="count">{quests.length}</span>
+          </h2>
+          <ul className="entity-list">
+            {quests.map((e) => (
+              <li key={e.id}>
+                <Link to={pagePath(worldId, e.id)}>{e.name}</Link>
+                <span className="muted"> · {e.questStatus ?? 'open'}{questProgress(e) && ` · ${questProgress(e)}`}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {threads.length === 0 ? (
-        <Empty>{isGM ? 'No loose threads yet. Add one above, or from the Lectern during a game.' : 'Nothing shared yet.'}</Empty>
+        !quests.length && <Empty>{isGM ? 'No loose threads yet. Add one above, or from the Lectern during a game.' : 'Nothing shared yet.'}</Empty>
       ) : (
         <div className="thread-board" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
           {columns.map((status) => {

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { VisibilityBadge } from './components'
 import { db, THREAD_STATUS, type Entity, type Session } from './db'
 import { COLD_AFTER, sessionsSinceTouched, setThreadStatus, threadLinks, URGENCY } from './threads'
+import { isOpenThread } from './counts'
 import { plainLinks } from './text'
 import { useViewMode } from './viewMode'
 import { Ico, TypeIcon } from './icons'
@@ -35,7 +36,7 @@ export function ThreadCard({
   const status = t.threadStatus ?? 'open'
   const links = threadLinks(t, entities, isGM)
   const idle = sessionsSinceTouched(t, sessions)
-  const unresolved = status === 'open' || status === 'active'
+  const unresolved = isOpenThread(t)
   const urgency = URGENCY[t.threadUrgency ?? 'normal']
   const raised = sessionName(sessions, t.raisedIn)
   const tied = sessionName(sessions, t.tiedOffIn)
