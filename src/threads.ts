@@ -25,16 +25,24 @@ export function useCampaigns(worldId: string) {
   return useLiveQuery(() => db.campaigns.where({ worldId }).filter((c) => isGM || c.visibility !== 'gm').toArray(), [worldId, isGM]) ?? []
 }
 
+/** Whether a session reaches the viewer: players get it once it's revealed, and never from a campaign the GM keeps hidden. */
+export const canSeeSession = (s: Session, campaign: Pick<Campaign, 'visibility'> | null | undefined, isGM: boolean) =>
+  isGM || (s.visibility === 'players' && !!campaign && campaign.visibility !== 'gm')
+
+/** Sessions in the order they were played: by date (undated ones first), then by number. */
+export const bySessionOrder = (a: Session, b: Session) => (a.date || '').localeCompare(b.date || '') || a.number - b.number
+
 /** All sessions in a world the viewer may see, oldest first (none from a hidden campaign, for players). */
 export function useWorldSessions(worldId: string) {
   const { isGM } = useViewMode()
   return (
     useLiveQuery(async () => {
-      const hidden = isGM ? new Set<string>() : new Set((await db.campaigns.where({ worldId }).filter((c) => c.visibility === 'gm').toArray()).map((c) => c.id))
-      return db.sessions
+      const campaigns = new Map((await db.campaigns.where({ worldId }).toArray()).map((c) => [c.id, c]))
+      const list = await db.sessions
         .where({ worldId })
-        .filter((s) => isGM || (s.visibility === 'players' && !hidden.has(s.campaignId)))
-        .sortBy('date')
+        .filter((s) => canSeeSession(s, campaigns.get(s.campaignId), isGM))
+        .toArray()
+      return list.sort(bySessionOrder)
     }, [worldId, isGM]) ?? []
   )
 }
@@ -56,11 +64,21 @@ export function nextSessions(campaigns: Campaign[], sessions: Session[]) {
     .sort((a, b) => (a.session.date || '9999').localeCompare(b.session.date || '9999'))
 }
 
-/** The session most recently played (or the newest one, if none has a date yet). */
+/** A session that has been played: dated today or earlier, or written up without a date. */
+const isPlayed = (s: Session, today = localDate()) => (s.date ? s.date <= today : !!s.recap.trim())
+
+/** The session most recently played (or the newest one, if none has been played yet). */
 export function latestSession(sessions: Session[]) {
-  const today = localDate()
-  const played = sessions.filter((s) => s.date && s.date <= today)
-  return played.at(-1) ?? sessions.at(-1)
+  const sorted = [...sessions].sort(bySessionOrder)
+  return sorted.filter((s) => isPlayed(s)).at(-1) ?? sorted.at(-1)
+}
+
+/**
+ * The session in hand, for "raised in" and "tied off in": the one most recently played, or before
+ * any has been played, the coming one (the same one Home and the sidebar offer to run).
+ */
+export function sessionInHand(campaigns: Campaign[], sessions: Session[]) {
+  return [...sessions].sort(bySessionOrder).filter((s) => isPlayed(s)).at(-1) ?? nextSessions(campaigns, sessions)[0]?.session ?? latestSession(sessions)
 }
 
 /**
