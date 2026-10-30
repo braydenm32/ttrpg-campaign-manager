@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom'
 import { Help } from './help'
 import { db, type CalDate, type Entity, type Session, type World, type WorldCalendar } from './db'
 import { Ico } from './icons'
-import { CalendarBlank, Confetti, DiceFive } from '@phosphor-icons/react'
+import { CalendarBlank, CloudSun, Confetti, DiceFive } from '@phosphor-icons/react'
 import { pagePath, worldPath } from './paths'
 import { DraftText } from './components'
+import { CLIMATES, FEELS, seasonIcon, seasonOn, usualSeasons, weatherFor } from './weather'
 
 /**
  * In-world calendars: month and day names, the era after the year, and moons. Dates are stored as
@@ -444,6 +445,65 @@ export function CalendarEditor({ world }: { world: World }) {
             </button>
           </details>
           <details>
+            <summary>Seasons and weather ({c.seasons?.length ?? 0} seasons)</summary>
+            <p className="muted small">
+              Each season runs from the day it starts until the next one. The season and the climate decide the weather you roll. <Help topic="seasons" />
+            </p>
+            <label className="inline-check small">
+              Climate
+              <select value={world.climate ?? 'temperate'} onChange={(e) => db.worlds.update(world.id, { climate: e.target.value as never, updatedAt: Date.now() })}>
+                {CLIMATES.map((x) => (
+                  <option key={x.id} value={x.id}>
+                    {x.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {(c.seasons ?? []).map((s, i) => (
+              <div key={i} className="row field-row wrap">
+                <DraftText value={s.name} onCommit={(name) => change({ seasons: c.seasons!.map((x, j) => (j === i ? { ...x, name } : x)) })} aria-label="Season name" />
+                <span className="muted small">starts</span>
+                <select value={s.day} onChange={(e) => change({ seasons: c.seasons!.map((x, j) => (j === i ? { ...x, day: Number(e.target.value) } : x)) })} aria-label="Day">
+                  {Array.from({ length: Math.max(1, baseDays(c.months[s.month] ?? { name: '', days: 1 })) }, (_, d) => (
+                    <option key={d} value={d + 1}>
+                      {d + 1}
+                    </option>
+                  ))}
+                </select>
+                <select value={s.month} onChange={(e) => change({ seasons: c.seasons!.map((x, j) => (j === i ? { ...x, month: Number(e.target.value), day: 1 } : x)) })} aria-label="Month">
+                  {c.months.map((m, j) => (
+                    <option key={j} value={j}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="muted small">weather like</span>
+                <select value={s.feel} onChange={(e) => change({ seasons: c.seasons!.map((x, j) => (j === i ? { ...x, feel: e.target.value as never } : x)) })} aria-label="Weather like">
+                  {FEELS.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.icon} {f.label}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" className="ghost" onClick={() => change({ seasons: c.seasons!.filter((_, j) => j !== i) })}>
+                  ×
+                </button>
+              </div>
+            ))}
+            <div className="row wrap">
+              <button type="button" onClick={() => change({ seasons: [...(c.seasons ?? []), { name: 'Season', month: c.today?.month ?? 0, day: 1, feel: 'spring' }] })}>
+                + Season
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => (!c.seasons?.length || confirm('Replace your seasons with the usual four?')) && change({ seasons: usualSeasons(c) })}
+              >
+                Use the usual four
+              </button>
+            </div>
+          </details>
+          <details>
             <summary>Moons ({c.moons.length})</summary>
             {c.moons.map((m, i) => (
               <div key={i} className="row field-row">
@@ -527,11 +587,30 @@ export function WorldToday({ world, isGM }: { world: World; isGM: boolean }) {
   const days = toDays(c, c.today)
   const move = (n: number) => db.worlds.update(world.id, { calendar: { ...c, today: addDays(c, c.today!, n) }, updatedAt: Date.now() })
   const week = c.weekdays.length || 10
+  const season = seasonOn(c, c.today)
+  const weather = world.weather
+  const stale = weather?.on && toDays(c, weather.on) !== days
   return (
     <div className="world-today">
       <span>
         <Ico as={CalendarBlank} /> <strong>{formatDate(c, c.today)}</strong> <Help topic="worldToday" />
       </span>
+      {season && (
+        <span className="small">
+          {seasonIcon(season)} {season.name}
+        </span>
+      )}
+      {weather?.text && (
+        <span className={`small weather${stale ? ' muted' : ''}`} title={stale ? `Rolled for ${formatDate(c, weather.on, false)}` : 'Today’s weather'}>
+          <Ico as={CloudSun} /> {stale && 'Last: '}
+          {weather.text}
+        </span>
+      )}
+      {isGM && (
+        <button className="ghost small" onClick={() => db.worlds.update(world.id, { weather: weatherFor(c, c.today, world.climate), updatedAt: Date.now() })} title="Roll today’s weather from the season and climate. Players see it.">
+          <Ico as={CloudSun} /> {weather ? 'Reroll weather' : 'Roll weather'}
+        </button>
+      )}
       {holidaysOn(c, c.today).map((h) => (
         <span key={h} className="holiday small">
           <Ico as={Confetti} /> {h}

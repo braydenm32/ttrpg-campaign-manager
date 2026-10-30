@@ -4,6 +4,7 @@ import { Help } from '../help'
 import { PartyGlance } from '../partyGlance'
 import { GmScreenPanel } from '../gmScreen'
 import { CallForRoll } from '../rollCallPanel'
+import { JourneyPanel } from '../journey'
 import { NameGenerator, TreasureGenerator } from '../moreGenerators'
 import { FoldingProvider, LECTERN_PANELS, LecternPanel, useFolding } from '../lecternPanel'
 import { useEffect, useRef, useState } from 'react'
@@ -146,6 +147,7 @@ export default function Lectern() {
             <Initiative lectern={lectern} edit={edit} entities={entities} campaignId={session.campaignId} />
             <Timers lectern={lectern} edit={edit} shared={!!world?.cloud?.enabled} />
             <ClocksPanel worldId={worldId} entities={entities} />
+            {world && <JourneyPanel world={world} lectern={lectern} edit={edit} entities={entities} partySize={partyOf(entities, session.campaignId, { activeOnly: true }).length} />}
           </div>
           <div className="lectern-col">
             {world?.cloud?.enabled && <CommonRoomPanel world={world} session={session} lectern={lectern} edit={edit} live={live} />}

@@ -11,6 +11,7 @@ import { joinRoom, JOINED, sendOnce, type LiveRoom } from './live'
  *    - "dice" (players): a roll the whole table sees.
  *    - "signal" (player → GM): "I'd like to do something", "I need a break" or "I'll use inspiration".
  *    - "call-answer" (player → GM): a player's result for the roll the GM called for.
+ *    - "ping" (anyone): "look here", a spot on a map everyone looking at that map sees for a moment.
  *  - "table:<world>", where only a GM can send (public.channel_allowed), so players can trust it:
  *    - "table" (GM → players): the session being played, the scene, whose turn it is, the music.
  *    - "dice" (GM): the GM's own rolls.
@@ -73,8 +74,21 @@ export interface CallAnswer {
   crit?: 'high' | 'low'
 }
 
+/** "Look here": a spot on a map (the GM's map id, image coordinates [y, x]). */
+export interface MapPing {
+  id: string
+  mapId: string
+  at: [number, number]
+  who: string
+  /** From the GM (drawn in the GM's colour). */
+  gm?: boolean
+  /** When it arrived, on this device's clock. */
+  time: number
+}
+
 interface TableStore {
   table: TableState | null
+  pings: MapPing[]
   /** For the GM: players' results for called rolls. */
   answers: CallAnswer[]
   /** For a player: the calls answered from here, and the result. */
@@ -88,7 +102,7 @@ interface TableStore {
   sent: Record<string, 'sent' | 'seen'>
 }
 
-const empty: TableStore = { table: null, heard: 0, rolls: [], signals: [], sent: {}, answers: [], answered: {} }
+const empty: TableStore = { table: null, pings: [], heard: 0, rolls: [], signals: [], sent: {}, answers: [], answered: {} }
 const stores = new Map<string, TableStore>()
 const listeners = new Map<string, Set<() => void>>()
 const links = new Map<string, { members: LiveRoom; table: LiveRoom; host: boolean }>()
@@ -214,6 +228,23 @@ function readRoll(p: Record<string, unknown>): TableRoll | null {
 /** Signed "GM". From the members' room, where any player can send, that's a player posing as the GM once the GM's room works. */
 const posingAsGM = (p: Record<string, unknown>) => /^\s*gm\s*$/i.test(text(p.who))
 
+function readPing(p: Record<string, unknown>, fromGM: boolean): MapPing | null {
+  const at = p.at as unknown[]
+  if (!text(p.id) || !text(p.mapId) || !Array.isArray(at) || at.length !== 2) return null
+  return { id: text(p.id), mapId: text(p.mapId), at: [num(at[0]), num(at[1])], who: text(p.who, 40) || 'Someone', gm: fromGM && p.gm === true, time: Date.now() }
+}
+
+const addPing = (cloudId: string, ping: MapPing) =>
+  update(cloudId, (s) => (s.pings.some((x) => x.id === ping.id) ? s : { ...s, pings: [...s.pings.filter((x) => Date.now() - x.time < 10_000), ping].slice(-20) }))
+
+/** Points at a spot on a map for everyone looking at it. */
+export function sendPing(cloudId: string, mapId: string, at: [number, number], who: string) {
+  const link = links.get(cloudId)
+  const ping = { id: newId(), mapId, at, who, gm: !!link?.host }
+  addPing(cloudId, { ...ping, time: Date.now() })
+  return link?.host ? sendAsGM(cloudId, 'ping', ping) : send(cloudId, 'ping', ping)
+}
+
 const addRoll = (cloudId: string, r: TableRoll) =>
   update(cloudId, (s) => (s.rolls.some((x) => x.id === r.id) ? s : { ...s, rolls: [r, ...s.rolls].slice(0, 30) }))
 
@@ -243,6 +274,10 @@ export function linkAsPlayer(cloudId: string) {
       if (!fromGM && gmRoomWorks && posingAsGM(p)) return
       const roll = readRoll(p)
       if (roll) addRoll(cloudId, roll)
+    })
+    r.on('ping', (p) => {
+      const ping = readPing(p, fromGM || !gmRoomWorks)
+      if (ping) addPing(cloudId, ping)
     })
     r.on<{ id?: unknown }>('signal-seen', (p) => {
       if (!fromGM && gmRoomWorks) return
@@ -317,6 +352,10 @@ export function linkAsHost(cloudId: string, current: () => TableState | null) {
       const roll = readRoll(p)
       if (roll) addRoll(cloudId, roll)
     })
+  members.on('ping', (p) => {
+    const ping = readPing(p, false)
+    if (ping) addPing(cloudId, ping)
+  })
   members.on('call-answer', (p) => {
     const callId = text(p.callId)
     const call = current()?.call

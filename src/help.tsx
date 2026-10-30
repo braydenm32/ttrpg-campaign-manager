@@ -309,6 +309,16 @@ export const HELP = {
     'Ask the table for a roll. Type a line like “@all roll perception 15” (everyone rolls Perception, DC 15), “@Wren @Silas stealth dc 12 secret” or “@all d20+2 strength”, or fill in the boxes. While you’re live, the players asked get a Roll button with their bonus filled in from their character’s details, and their results land here, marked pass or fail. Roll for anyone who isn’t online. “Secret” keeps results from the other players; “Tell them the DC” shows it. Press Done to clear it.',
   sceneCards:
     'Give a planned scene everything it needs: where it happens, read-aloud text, who’s there, sounds to play, one of this session’s fights, a picture or page to show players, and GM-only pages to reveal. At the Lectern, ▶ Start on the scene does it all at once and ticks it as played (it asks before revealing anything).',
+  ruler:
+    'Measure a route: click points along it on the map and the total distance shows, with how many days it takes on foot, riding, by wagon or by ship. On a battle map drawn here, one square is 5 feet. GM: if the map has no scale yet, measure something you know the length of and name it.',
+  ping:
+    'Point at a spot on the map. Everyone looking at the same map (you and your players, while you’re live) sees a pulsing ring there for a few seconds, with your name.',
+  mapScale:
+    'How far the map is from its left edge to its right, so the ruler can measure distances and travel time. You can also set it with the ruler: measure a road or river you know the length of and name it.',
+  seasons:
+    'Name your world’s seasons and when each starts; “Use the usual four” places spring, summer, autumn and winter like Earth’s. The season shows with the date, and with the climate it decides the weather you roll. Players see the season and the weather.',
+  journey:
+    'Run a trip day by day. Say where to, how far (or use a route you measured with the map ruler) and how fast. “Next day on the road” moves the world’s date on, rolls the weather (a blizzard or gale halves the day), checks for an encounter on a table of yours and counts down rations. “Rest a day” does the same without moving.',
   lecternNotes:
     'This session’s GM notes, the same ones as on the session page. Add a line with the time from the box (it goes at the end), or press Edit to change them.',
 } as const

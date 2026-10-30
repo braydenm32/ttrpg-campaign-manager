@@ -189,6 +189,10 @@ export interface World {
   partyCoin?: { name: string; amount: number }[]
   /** The world's own calendar (months, weekdays, moons) and today's date in the world. */
   calendar?: WorldCalendar
+  /** What the weather is usually like where the party is, for rolling the day's weather. Unset: temperate. */
+  climate?: Climate
+  /** Today's weather, as last rolled or written by the GM. Players see it with the date. */
+  weather?: Weather
   /** Named ages of history, oldest first, that split the timeline's history into sections. */
   ages?: TimelineAge[]
   /** Set on the ready-made example world (its content version), so Home can find it and offer a fresh copy. */
@@ -261,6 +265,26 @@ export interface WorldCalendar {
   weekdayOffset?: number
   /** Today in the world. The GM moves it on as time passes in the game. */
   today?: CalDate
+  /** Seasons, each from the day it starts until the next one starts (wrapping round the year). */
+  seasons?: Season[]
+}
+
+/** A season of the world's year. feel decides the weather it brings. */
+export interface Season {
+  name: string
+  month: number
+  day: number
+  feel: SeasonFeel
+}
+export type SeasonFeel = 'winter' | 'spring' | 'summer' | 'autumn'
+export type Climate = 'cold' | 'temperate' | 'warm' | 'desert' | 'tropical'
+
+export interface Weather {
+  text: string
+  /** The world date it was rolled for, so an old forecast reads as old. */
+  on?: CalDate
+  /** Bad enough to halve travel (blizzard, sandstorm, gale). */
+  slow?: boolean
 }
 
 /** Something the GM puts on every player's screen. */
@@ -464,7 +488,16 @@ export interface WorldMap {
   playerImageId?: string
   /** Fog of war: players see only the areas the GM has uncovered. */
   fog?: MapFog
+  /** How far things are: this many image pixels are this distance. Players get it too, for the ruler. */
+  scale?: MapScale
   createdAt: number
+}
+
+export interface MapScale {
+  pixels: number
+  distance: number
+  /** miles, km, leagues, ft or m. */
+  unit: string
 }
 
 /** An area uncovered (or covered again) on a map, in image coordinates [y, x] like pins. Later shapes win. */
@@ -696,6 +729,23 @@ export interface LecternState {
   rollCall?: RollCall
   /** Countdowns ("the bridge falls in 3 minutes"): endsAt while running, left (ms) while paused. Hidden ones aren't shown to players. */
   timers?: LecternTimer[]
+  /** A journey under way: where to, how far, how fast, and each day on the road so far. */
+  journey?: Journey
+}
+
+export interface Journey {
+  to: string
+  distance: number
+  unit: string
+  pace: string
+  /** How far they've come, in the same unit. */
+  travelled: number
+  /** The random table rolled on for encounters, and the chance each day (1 in encounterChance). */
+  encounterTableId?: string
+  encounterChance?: number
+  /** Rations left, if counted; each day on the road eats one per character. */
+  rations?: number
+  days: { n: number; date?: string; went: number; weather?: string; encounter?: string }[]
 }
 
 export interface RollCall {

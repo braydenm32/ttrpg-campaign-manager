@@ -1236,3 +1236,26 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .scene-card-editor label { display: flex; flex-direction: column; gap: .2em; }
 .scene-card-editor label > span:first-child { font-size: .85em; color: var(--muted); }
 .scene-start { margin-right: .4em; padding: .1em .5em; }
+
+/* Map ruler, scale and pings */
+.measure-bar { align-items: center; }
+.measure-total { font-size: 1.15em; font-weight: 600; color: var(--accent); }
+.measure-paces { display: inline-flex; flex-wrap: wrap; gap: .25em .9em; }
+.measure-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid #1b1508; box-sizing: border-box; }
+.route-note { margin: .3em 0; }
+.map-ping { position: relative; width: 40px; height: 40px; pointer-events: none; }
+.map-ping span { position: absolute; inset: 0; border-radius: 50%; border: 3px solid #4fc3f7; animation: map-ping 1.4s ease-out infinite; }
+.map-ping span + span { animation-delay: .7s; }
+.map-ping.gm span { border-color: #d9ad55; }
+@keyframes map-ping { from { transform: scale(.2); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .map-ping span { animation: none; transform: scale(.8); } .map-ping span + span { display: none; } }
+.leaflet-tooltip.ping-name { font-weight: 600; padding: 1px 6px; }
+
+/* Seasons, weather and journeys */
+.world-today .weather { display: inline-flex; gap: .3em; align-items: baseline; }
+.journey-plan input:not(.hp-input) { width: 100%; }
+.journey-progress { height: 8px; border-radius: 999px; background: var(--panel-2); overflow: hidden; margin: .4em 0; }
+.journey-progress span { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.journey-log { margin: .6em 0 0; padding-left: 0; list-style: none; display: grid; gap: .45em; max-height: 18em; overflow: auto; }
+.journey-log li { border-left: 2px solid var(--panel-2); padding-left: .6em; }
+.journey-encounter > div, .journey-encounter p { display: inline; margin: 0; }
