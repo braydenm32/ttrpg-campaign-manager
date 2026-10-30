@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { PartyGlance } from '../partyGlance'
 import { GmScreenPanel } from '../gmScreen'
+import { NameGenerator, TreasureGenerator } from '../moreGenerators'
 import { FoldingProvider, LECTERN_PANELS, LecternPanel, useFolding } from '../lecternPanel'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
@@ -164,7 +165,7 @@ export default function Lectern() {
                 }}
               />
             )}
-            <QuickGenerators lectern={lectern} edit={edit} worldId={worldId} parentId={lectern.sceneId} />
+            {world && <QuickGenerators lectern={lectern} edit={edit} world={world} entities={entities} parentId={lectern.sceneId} />}
           </div>
         </div>
         {query.trim() && <p className="muted small lectern-search-note">Showing the panels that match “{query.trim()}”. Clear the search to see them all.</p>}
@@ -826,9 +827,10 @@ function SessionNotes({ session, entities, worldId }: { session: Session; entiti
   )
 }
 
-type GenKind = 'npc' | 'tavern' | 'shop'
+type GenKind = 'npc' | 'tavern' | 'shop' | 'name' | 'loot'
 
-function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: string; parentId?: string }) {
+function QuickGenerators({ edit, world, entities, parentId }: PanelProps & { world: World; entities: Entity[]; parentId?: string }) {
+  const worldId = world.id
   const [kind, setKind] = useState<GenKind>('npc')
   const [shopKind, setShopKind] = useState(SHOP_KIND_NAMES[0])
   const [npc, setNpc] = useState<GeneratedNpc>(() => generateNpc())
@@ -841,7 +843,7 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
       const n = generateNpc()
       setNpc(n)
       setGreeting(npcGreeting(n))
-    } else {
+    } else if (k === 'tavern' || k === 'shop') {
       const p = k === 'tavern' ? generateTavern() : generateShop(sk)
       setPlace(p)
       setGreeting(npcGreeting(p.keeper))
@@ -861,7 +863,7 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
     <LecternPanel id="improvise" name="Improvise" keywords="generate npc tavern shop name random" title={<><Ico as={DiceFive} /> Improvise <Help topic="improvise" /></>}>
       <div className="row wrap">
         <div className="segmented">
-          {(['npc', 'tavern', 'shop'] as const).map((k) => (
+          {(['npc', 'tavern', 'shop', 'name', 'loot'] as const).map((k) => (
             <button
               key={k}
               className={kind === k ? 'on' : ''}
@@ -870,7 +872,7 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
                 reroll(k)
               }}
             >
-              {k === 'npc' ? '🧙 NPC' : k === 'tavern' ? '🍺 Tavern' : '⚒️ Shop'}
+              {{ npc: '🧙 NPC', tavern: '🍺 Tavern', shop: '⚒️ Shop', name: '🏷️ Names', loot: '💰 Treasure' }[k]}
             </button>
           ))}
         </div>
@@ -888,28 +890,36 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
           </select>
         )}
       </div>
-      {kind === 'npc' ? (
-        <div className="small">
-          <strong>{npc.name}</strong>, a {npc.manner} {npc.ancestry} {npc.role} with {npc.look}.
-          <div>
-            <b>Wants:</b> {npc.wants}.
-          </div>
-          <div className="secret">
-            <b>Secret:</b> {npc.secret}.
-          </div>
-        </div>
+      {kind === 'name' ? (
+        <NameGenerator world={world} entities={entities} compact />
+      ) : kind === 'loot' ? (
+        <TreasureGenerator world={world} compact />
       ) : (
-        <div className="small">
-          <strong>{place.name}</strong>: {place.summary}. Run by {place.keeper.name}, {place.keeper.manner}.
-        </div>
+        <>
+          {kind === 'npc' ? (
+            <div className="small">
+              <strong>{npc.name}</strong>, a {npc.manner} {npc.ancestry} {npc.role} with {npc.look}.
+              <div>
+                <b>Wants:</b> {npc.wants}.
+              </div>
+              <div className="secret">
+                <b>Secret:</b> {npc.secret}.
+              </div>
+            </div>
+          ) : (
+            <div className="small">
+              <strong>{place.name}</strong>: {place.summary}. Run by {place.keeper.name}, {place.keeper.manner}.
+            </div>
+          )}
+          <blockquote className="small">{greeting}</blockquote>
+          <div className="row wrap">
+            <button onClick={() => reroll(kind)}><Ico as={DiceFive} /> Reroll</button>
+            <button className="primary" onClick={save} disabled={!!savedName}>
+              {savedName ? '✓ Saved' : kind === 'npc' ? 'Save and add to scene' : 'Save and set as scene'}
+            </button>
+          </div>
+        </>
       )}
-      <blockquote className="small">{greeting}</blockquote>
-      <div className="row wrap">
-        <button onClick={() => reroll(kind)}><Ico as={DiceFive} /> Reroll</button>
-        <button className="primary" onClick={save} disabled={!!savedName}>
-          {savedName ? '✓ Saved' : kind === 'npc' ? 'Save and add to scene' : 'Save and set as scene'}
-        </button>
-      </div>
     </LecternPanel>
   )
 }

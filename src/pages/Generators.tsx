@@ -20,7 +20,8 @@ import { useKept } from '../ai/kept'
 import { Markdown } from '../Markdown'
 import { TablesPanel } from '../tables'
 import { Ico } from '../icons'
-import { DiceFive } from '@phosphor-icons/react'
+import { Coins, DiceFive, IdentificationCard } from '@phosphor-icons/react'
+import { NameGenerator, StarterTables, TreasureGenerator } from '../moreGenerators'
 import { pagePath, typePath } from '../paths'
 
 type Kind = 'tavern' | 'shop' | 'npc'
@@ -120,7 +121,24 @@ export default function Generators() {
         </button>
       </div>
       {world && !flavour && <GeneratorFlavour world={world} entities={entities} preview={rolled} parentId={parentId || undefined} onUse={setFlavour} />}
+      {world && (
+        <div className="home-grid">
+          <section className="card">
+            <h2>
+              <Ico as={IdentificationCard} /> Names
+            </h2>
+            <NameGenerator world={world} entities={entities} />
+          </section>
+          <section className="card">
+            <h2>
+              <Ico as={Coins} /> Treasure
+            </h2>
+            <TreasureGenerator world={world} />
+          </section>
+        </div>
+      )}
       <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
+      {world && <StarterTables world={world} tables={entities.filter((e) => e.type === 'table')} />}
     </div>
   )
 }

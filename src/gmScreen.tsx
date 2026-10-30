@@ -86,7 +86,7 @@ function Pinned({ world, entities, ids }: { world: World; entities: Entity[]; id
           </summary>
           {e.summary && <p className="muted small">{e.summary}</p>}
           {e.type === 'table' ? (
-            <TableRoller tables={[e]} worldId={world.id} entities={entities} showSecrets />
+            <TableRoller tables={entities.filter((t) => t.type === 'table')} fixed={e} worldId={world.id} entities={entities} showSecrets />
           ) : (
             <>
               {e.fields.length > 0 && (
