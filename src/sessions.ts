@@ -74,3 +74,9 @@ export function partyOf(entities: Entity[], campaignId: string | undefined, { ac
       (!activeOnly || !e.status || e.status === 'alive'),
   )
 }
+
+/** The part of a session that opens when the address names none: its prep until something is written or recorded, then the notes. */
+export const sessionFirstTab = (s: Pick<Session, 'notes' | 'recordings'>) => (!s.notes.trim() && !s.recordings.length ? 'prep' : 'notes')
+
+/** Whether a session has been played: it has a recap, or its date has gone by. */
+export const playedAlready = (s: Pick<Session, 'recap' | 'date'>) => !!s.recap.trim() || (!!s.date && s.date < localDate())

@@ -143,3 +143,7 @@ export function prepCounts(prep: Partial<SessionPrep> | undefined) {
 
 /** A player's question or downtime action still waiting on the GM's answer. */
 export const needsAnswer = (x: { answer?: string | null }) => !x.answer
+
+/** Whether the table has any safety tools set up (lines, veils, notes or the X-card): players see Table rules only then. */
+export const hasSafety = (world: Pick<World, 'safety'> | null | undefined) =>
+  !!world?.safety && (!!world.safety.lines.length || !!world.safety.veils.length || !!world.safety.notes.trim() || !!world.safety.xcard)
