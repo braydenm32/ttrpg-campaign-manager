@@ -289,6 +289,8 @@ export const HELP = {
     'Names you’ve written as [[links]] in pages or sessions that no page answers to yet, most mentioned first. Pick one and choose a type to make its page (it starts as GM only). You can also click a grey dashed link anywhere to make its page.',
   partyGlance:
     'Every character in one table, with the details you choose as columns: AC, Passive Perception, Languages, Darkvision, anything from their pages. Choose columns once and they show here and at the Lectern. Only you see this table.',
+  gmScreen:
+    'Your own GM screen. Pin pages you look up every session (house rules, a monster, a random table) to read them here, save rolls you make again and again (“Goblin attack d20+4”) as buttons, and ask the Archivist a question without leaving the Lectern. Only you see it.',
   lecternNotes:
     'This session’s GM notes, the same ones as on the session page. Add a line with the time from the box (it goes at the end), or press Edit to change them.',
 } as const

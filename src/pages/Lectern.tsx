@@ -2,6 +2,7 @@ import { PreviouslyOn } from '../ai/ReadAloud'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { PartyGlance } from '../partyGlance'
+import { GmScreenPanel } from '../gmScreen'
 import { FoldingProvider, LECTERN_PANELS, LecternPanel, useFolding } from '../lecternPanel'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
@@ -150,6 +151,19 @@ export default function Lectern() {
             <Soundboard worldId={worldId} compact />
             <Dice lectern={lectern} edit={edit} shareTo={shareTo} />
             <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
+            {world && (
+              <GmScreenPanel
+                world={world}
+                entities={entities}
+                onRoll={(expr, name) => {
+                  try {
+                    return rollOnLectern(edit, expr, shareTo, name)
+                  } catch (err) {
+                    return { error: (err as Error).message }
+                  }
+                }}
+              />
+            )}
             <QuickGenerators lectern={lectern} edit={edit} worldId={worldId} parentId={lectern.sceneId} />
           </div>
         </div>
@@ -688,10 +702,11 @@ const toNumber = (v: string) => {
 const QUICK_DICE = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100']
 
 /** Rolls dice on the Lectern (and for players to see, if the GM chose that). Throws on dice it can't read. */
-function rollOnLectern(edit: Edit, text: string, shareTo?: string) {
+function rollOnLectern(edit: Edit, text: string, shareTo?: string, label?: string) {
   const r = roll(text)
-  edit((l) => void (l.rolls = [{ ...r, id: newId(), at: Date.now() }, ...l.rolls].slice(0, 30)))
-  if (shareTo) void shareRoll(shareTo, { who: 'GM', expr: r.expr, total: r.total, detail: r.detail, crit: r.crit })
+  const expr = label ? `${label}: ${r.expr}` : r.expr
+  edit((l) => void (l.rolls = [{ ...r, expr, id: newId(), at: Date.now() }, ...l.rolls].slice(0, 30)))
+  if (shareTo) void shareRoll(shareTo, { who: 'GM', expr, total: r.total, detail: r.detail, crit: r.crit })
   return r
 }
 

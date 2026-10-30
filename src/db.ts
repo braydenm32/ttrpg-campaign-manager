@@ -181,6 +181,8 @@ export interface World {
   coverId?: string
   /** The world's own colour, one of WORLD_COLORS, for its cover and book. */
   color?: string
+  /** The GM screen at the Lectern: pinned pages and saved rolls. GM-only, never sent to players. */
+  gmScreen?: GmScreen
   /** The details shown as columns in "party at a glance" (AC, Passive Perception…). Unset: picked from what the party has. */
   partyFields?: string[]
   /** The party's money, e.g. [{ name: 'gp', amount: 120 }]. Shown on the party loot page. */
@@ -212,6 +214,12 @@ export interface World {
    * (token) or joined with an invite (memberOf, the GM's cloud world id).
    */
   shared?: SharedInfo
+}
+
+/** The GM screen at the Lectern: pages pinned for reference, and dice rolls saved as buttons. */
+export interface GmScreen {
+  pages: string[]
+  rolls: { id: string; name: string; expr: string }[]
 }
 
 /** A date on the world's calendar. month is the position in the calendar's list (from 0), day starts at 1. */

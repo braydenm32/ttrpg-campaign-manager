@@ -45,7 +45,7 @@ export default function Archivist() {
           <Ico as={Scales} /> Check for contradictions
         </button>
       </div>
-      {tab === 'ask' ? <Ask world={world} entities={entities} sessions={sessions} /> : <Continuity world={world} entities={entities} sessions={sessions} />}
+      {tab === 'ask' ? <AskWorld world={world} entities={entities} sessions={sessions} /> : <Continuity world={world} entities={entities} sessions={sessions} />}
     </div>
   )
 }
@@ -90,7 +90,7 @@ const NEW_CONVERSATION: Conversation = { turns: [], history: [], spent: 0 }
 /** Questions are short jobs, so they use the quicker model. */
 const ASK_MODEL = QUICK_MODEL
 
-function Ask({ world, entities, sessions }: { world: World; entities: Entity[]; sessions: Session[] }) {
+export function AskWorld({ world, entities, sessions }: { world: World; entities: Entity[]; sessions: Session[] }) {
   const settings = useAiSettings()
   const key = settings.anthropicKey.trim()
   // The conversation and the question being typed outlive this panel, and so does a question
