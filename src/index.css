@@ -1274,3 +1274,14 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .story-so-far details { margin-top: .6em; }
 .party-glance-value { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 3em; max-width: 16em; }
 .downtime-toasts { right: auto; left: 1em; }
+
+/* Character sheet import */
+.sheet-import .sheet-way { border-top: 1px solid var(--border); padding-top: .6em; display: flex; flex-direction: column; gap: .4em; align-items: flex-start; }
+.sheet-import .sheet-way h3 { margin: 0; font-size: 1em; }
+.sheet-import .sheet-way ul { margin: 0; padding-left: 1.2em; }
+.sheet-import .sheet-way form, .sheet-import .sheet-way textarea, .sheet-import .claude-job { width: 100%; }
+.sheet-import .sheet-way form input { flex: 1; min-width: 0; }
+.sheet-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5em, 1fr)); gap: .3em .8em; margin: 0; }
+.sheet-fields dt { font-size: .8em; color: var(--muted); }
+.sheet-fields dd { margin: 0; }
+.sheet-body { white-space: pre-wrap; max-height: 16em; overflow: auto; font-size: .85em; }

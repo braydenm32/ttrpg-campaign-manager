@@ -183,6 +183,8 @@ export const HELP = {
     'What the party has: the stash, what each player character carries and the party’s coin. Set "Carried by" on any item page. Players see the revealed items and the coins in the purse; things an NPC, shop or place holds are listed only for you.',
   importPages:
     'Bring pages in from Obsidian (or any Markdown notes), a Kanka export or a World Anvil export. Everything arrives as 🔒 GM only, so you can tidy up before revealing anything.',
+  importSheet:
+    'Bring a character in from another tool. A file: Foundry VTT’s Export Data (any game), D&D Beyond or Pathbuilder data, or a fillable PDF sheet. A link: a public D&D Beyond character or Pathbuilder’s Export JSON. Anything else (Roll20, Demiplane, notes): paste the sheet’s text and Claude sorts it. Gear becomes item pages the character carries. Import again after a level-up to update the same page; your GM notes and secrets stay as they are.',
   exportMarkdown: 'Download every page as Markdown files in folders, ready to open in Obsidian or any notes app. GM notes and secrets are included, so keep it to yourself.',
   discord:
     'Post recaps and session dates to your group’s Discord channel. In Discord: Server settings, Integrations, Webhooks, New webhook, then copy its link here. The link is kept on this device only.',

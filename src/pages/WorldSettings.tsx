@@ -117,7 +117,7 @@ export default function WorldSettings() {
             <BackupButton worldId={worldId} />
           </section>
 
-          <ImportPages worldId={worldId} />
+          <ImportPages worldId={worldId} system={world.system} />
 
           <RecentlyDeleted />
 

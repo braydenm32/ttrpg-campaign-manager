@@ -29,6 +29,7 @@ import { QuestBox, questProgress } from '../quests'
 import { Ico, TypeIcon } from '../icons'
 import { Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Sparkle, Spiral, Television } from '@phosphor-icons/react'
 import { initials } from '../text'
+import { ImportSheetButton } from '../sheets/ImportSheet'
 import { pagePath, resolvePage, typePath, usePathsVersion, worldPath } from '../paths'
 import { canSeeMap, quantityLabel } from '../counts'
 import { pinRevealed } from '../fog'
@@ -154,6 +155,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               </button>
             )}
             {!e.template && <Help topic="revealQuietly" />}
+            {e.type === 'pc' && !e.template && world && <ImportSheetButton worldId={worldId} system={world.system} into={e} label="Update from sheet" />}
             <HistoryButton entity={e} />
             <button className="primary" onClick={onEdit}>
               <Ico as={PencilSimple} /> Edit
@@ -292,6 +294,22 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
                   <dd>{f.value}</dd>
                 </div>
               ))}
+              {(e.type === 'pc' || e.type === 'npc') && entities.some((x) => x.type === 'item' && x.heldBy === e.id) && (
+                <div>
+                  <dt>Carries</dt>
+                  <dd>
+                    {entities
+                      .filter((x) => x.type === 'item' && x.heldBy === e.id)
+                      .map((x, i) => (
+                        <span key={x.id}>
+                          {i > 0 && ', '}
+                          <Link to={pagePath(worldId, x.id)}>{x.name}</Link>
+                          {(x.quantity ?? 1) > 1 && ` (${x.quantity})`}
+                        </span>
+                      ))}
+                  </dd>
+                </div>
+              )}
               {(ownMaps.length > 0 || pins.length > 0) && (
                 <div>
                   <dt>Maps</dt>
