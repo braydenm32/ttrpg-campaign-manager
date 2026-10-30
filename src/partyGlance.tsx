@@ -13,9 +13,29 @@ import { StatusBadge } from './status'
 
 const norm = (k: string) => k.trim().toLowerCase()
 
-/** A character's value for a detail, by name. */
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * A character's value for a detail, by name. Without a detail of that name, a number written after
+ * the name inside a longer detail counts too, so "AC" finds 15 in a stat line like "AC 15 (leather), HP 13".
+ */
 export function detailOf(e: Entity, key: string) {
-  return e.fields.find((f) => norm(f.key) === norm(key))?.value ?? ''
+  const own = e.fields.find((f) => norm(f.key) === norm(key))?.value
+  if (own !== undefined) return own
+  const k = key.trim()
+  if (!k) return ''
+  const re = new RegExp(`(?:^|[\\s,;(])${escape(k)}\\s*:?\\s*([+-]?\\d+)`, 'i')
+  for (const f of e.fields) {
+    const m = f.value.match(re)
+    if (m) return m[1]
+  }
+  return ''
+}
+
+/** Details too long for a column (whole stat lines, backstory). */
+const isLong = (party: Entity[], key: string) => {
+  const values = party.map((e) => detailOf(e, key)).filter(Boolean)
+  return values.length > 0 && values.reduce((n, v) => n + v.length, 0) / values.length > 30
 }
 
 /** Every detail name the party has, most common first. */
@@ -35,8 +55,11 @@ function partyKeys(party: Entity[]) {
 /** The columns to show: the GM's choice, or (until they choose) up to four details most of the party has. */
 export function glanceColumns(world: World, party: Entity[]) {
   if (world.partyFields) return world.partyFields
-  const keys = partyKeys(party)
-  return keys.filter((k) => party.filter((e) => detailOf(e, k)).length >= Math.max(1, Math.ceil(party.length / 2))).slice(0, 4)
+  const most = (k: string) => party.filter((e) => detailOf(e, k)).length >= Math.max(1, Math.ceil(party.length / 2))
+  const picked = partyKeys(party).filter((k) => most(k) && !isLong(party, k))
+  // Armour and hit points written inside a stat line still make good columns.
+  const fromStats = ['AC', 'HP'].filter((k) => !picked.some((p) => norm(p) === norm(k)) && most(k))
+  return [...fromStats, ...picked].slice(0, 4)
 }
 
 export function PartyGlance({ world, party, extra }: { world: World; party: Entity[]; extra?: (e: Entity) => ReactNode }) {
@@ -64,7 +87,15 @@ export function PartyGlance({ world, party, extra }: { world: World; party: Enti
                   <Link to={pagePath(world.id, e.id)}>{e.name}</Link> <StatusBadge entity={e} />
                 </td>
                 {columns.map((k) => (
-                  <td key={k}>{detailOf(e, k) || <span className="muted">–</span>}</td>
+                  <td key={k}>
+                    {detailOf(e, k) ? (
+                      <span className="party-glance-value" title={detailOf(e, k)}>
+                        {detailOf(e, k)}
+                      </span>
+                    ) : (
+                      <span className="muted">–</span>
+                    )}
+                  </td>
                 ))}
                 {extra && <td className="party-glance-extra">{extra(e)}</td>}
               </tr>

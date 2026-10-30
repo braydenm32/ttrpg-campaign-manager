@@ -181,7 +181,7 @@ export function Markdown({
           const missing = (ev.target as HTMLElement).closest('[data-missing]') as HTMLElement | null
           if (missing && isGM && !stillLinks && !previewAs) {
             const r = missing.getBoundingClientRect()
-            setMaking({ name: missing.dataset.missing!, left: Math.max(12, Math.min(r.left, window.innerWidth - 332)), top: r.bottom + 6 })
+            setMaking({ name: missing.dataset.missing!, left: Math.max(12, Math.min(r.left, window.innerWidth - 332)), top: r.bottom + 230 > window.innerHeight ? Math.max(12, r.top - 226) : r.bottom + 6 })
             return
           }
           const a = (ev.target as HTMLElement).closest('a[data-internal]') as HTMLAnchorElement | null
