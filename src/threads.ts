@@ -75,7 +75,7 @@ export function latestSession(sessions: Session[]) {
 
 /**
  * The session in hand, for "raised in" and "tied off in": the one most recently played, or before
- * any has been played, the coming one (the same one Home and the sidebar offer to run).
+ * any has been played, the coming one (the same one the Desk offers to run).
  */
 export function sessionInHand(campaigns: Campaign[], sessions: Session[]) {
   return [...sessions].sort(bySessionOrder).filter((s) => isPlayed(s)).at(-1) ?? nextSessions(campaigns, sessions)[0]?.session ?? latestSession(sessions)

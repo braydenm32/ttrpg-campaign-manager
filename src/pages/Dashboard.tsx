@@ -256,7 +256,7 @@ function NeedsYou({ world, entities }: { world: World; entities: Entity[] }) {
   )
 }
 
-function NewCampaign({
+export function NewCampaign({
   worldId,
   defaultSystem,
   onClose,

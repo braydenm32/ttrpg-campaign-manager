@@ -30,6 +30,7 @@ import { EndSessionChecklist } from '../EndSession'
 import { Ico, TypeIcon } from '../icons'
 import { BookOpen, BookmarkSimple, CalendarBlank, ClipboardText, Eye, FlagCheckered, Lock, Microphone, Spiral, Warning } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
+import { sessionFirstTab } from '../sessions'
 
 export default function SessionPage() {
   const { worldId, world } = useWorld()
@@ -42,9 +43,10 @@ export default function SessionPage() {
   const [params, setParams] = useSearchParams()
   const live = useLiveRecording()
   // A session with nothing written or recorded yet opens on its prep; one that has been played opens on the notes.
-  const firstTab = session && !session.notes.trim() && !session.recordings.length ? 'prep' : 'notes'
+  const firstTab = session ? sessionFirstTab(session) : 'notes'
   const tab = (['notes', 'recap', 'prep'] as const).find((t) => t === params.get('tab')) ?? firstTab
-  const setTab = (t: 'notes' | 'recap' | 'prep') => setParams(t === firstTab ? {} : { tab: t }, { replace: true })
+  // Each tab is a step in Back, like the Session tabs at the top (Prepare, Wrap up).
+  const setTab = (t: 'notes' | 'recap' | 'prep') => setParams({ tab: t })
 
   if (session === undefined || (session && campaign === undefined)) return null
   // Players get a session only once it's revealed, and never from a campaign the GM keeps hidden.
