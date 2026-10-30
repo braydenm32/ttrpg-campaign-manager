@@ -25,6 +25,7 @@ import { CalDateInput, formatDate, toDays } from '../calendar'
 import { RelationsBox } from '../relations'
 import { SessionMentions } from '../sessionMentions'
 import { ClocksBox } from '../clocks'
+import { QuestBox, questProgress } from '../quests'
 import { Ico, TypeIcon } from '../icons'
 import { Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Sparkle, Spiral, Television } from '@phosphor-icons/react'
 import { initials } from '../text'
@@ -104,6 +105,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             {e.type === 'event' &&
               ` · ${e.eventEra === 'campaign' ? 'during the campaign' : (world?.ages?.find((a) => a.id === e.eventAge)?.name ?? 'before the campaign')}`}
             {e.questStatus && ` · ${e.questStatus}`}
+            {e.type === 'quest' && questProgress(e) && ` · ${questProgress(e)}`}
             {e.type === 'thread' && ` · ${THREAD_STATUS[e.threadStatus ?? 'open'].label}`}
             {e.type === 'thread' && e.threadUrgency && e.threadUrgency !== 'normal' && ` · ${URGENCY[e.threadUrgency].icon} ${URGENCY[e.threadUrgency].label}`}
             <LastSeen entity={e} sessions={sessions} worldId={worldId} />
@@ -202,6 +204,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           )}
           {isGM && world && !e.template && e.type === 'npc' && <NpcLines world={world} entity={e} entities={entities} />}
           {(e.body || (isGM && e.gmNotes)) && <div className="fleuron" aria-hidden="true">❦</div>}
+          {!e.template && e.type === 'quest' && <QuestBox quest={e} entities={entities} isGM={isGM} worldId={worldId} />}
           {!e.template && <ClocksBox entity={e} isGM={isGM} worldId={worldId} />}
           {!e.template && <RelationsBox entity={e} entities={entities} isGM={isGM} worldId={worldId} />}
           {world && <PlayerNotesBox world={world} entityId={e.id} entities={entities} />}

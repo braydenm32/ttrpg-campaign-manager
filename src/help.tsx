@@ -297,6 +297,10 @@ export const HELP = {
     'Roll a pile of treasure, from pocket change to a dragon’s hoard: coins, gems, art and odd things, sometimes something magical. “Give to the party” puts the coins in the party’s purse and the rest in the party stash, where players can see it. Gem and art values are in gold pieces; change anything afterwards on Party loot.',
   starterTables:
     'Ready-made random tables (rumours, plot hooks, road and wilderness encounters, dungeon dressing, trinkets, NPC quirks, town events) to get you rolling. They start as GM only, and you can change, add or remove any line.',
+  objectives:
+    'The steps to finish this quest. Players see the ones with an open eye and can follow the ticks as you make them. A step with a closed eye stays yours alone (a hidden goal, a twist) until you click the eye to tell them.',
+  rewards:
+    'What finishing the quest is worth. A reward stays hidden from players until you click its eye. “Give to the party” puts any coins in its text (like “200 gp”) into the party’s purse and its item into the party stash, and shows it to players.',
   lecternNotes:
     'This session’s GM notes, the same ones as on the session page. Add a line with the time from the box (it goes at the end), or press Edit to change them.',
 } as const

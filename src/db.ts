@@ -349,6 +349,10 @@ export interface Entity {
   eventOrder?: number
   /** Quests: status. */
   questStatus?: 'open' | 'active' | 'done' | 'failed'
+  /** Quests: the steps to finish it. Ones players don't know about yet stay GM-only. */
+  objectives?: QuestObjective[]
+  /** Quests: what finishing it is worth. Ones players don't know about yet stay GM-only. */
+  rewards?: QuestReward[]
   /** Loose threads: where the thread stands, how pressing it is, and the sessions that raised and tied it off. */
   threadStatus?: ThreadStatus
   threadUrgency?: 'low' | 'normal' | 'high'
@@ -377,6 +381,27 @@ export interface Entity {
   inspiration?: number
   createdAt: number
   updatedAt: number
+}
+
+export interface QuestObjective {
+  id: string
+  text: string
+  done: boolean
+  /** Whether players know about this step. Unticked, it stays GM-only (a twist, a hidden goal). */
+  known?: boolean
+}
+
+export interface QuestReward {
+  id: string
+  text: string
+  /** Whether players know what's on offer. */
+  known?: boolean
+  /** Coins handed to the party's purse when it's given. */
+  coins?: { name: string; amount: number }[]
+  /** An item page that goes into the party stash when it's given. */
+  itemId?: string
+  /** Set once handed out. */
+  given?: boolean
 }
 
 export interface Relation {

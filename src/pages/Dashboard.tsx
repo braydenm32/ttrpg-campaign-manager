@@ -9,6 +9,7 @@ import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { initials } from '../text'
 import { nextSessions, URGENCY, useCampaigns, useWorldSessions } from '../threads'
 import { WantedPages } from '../wanted'
+import { questProgress } from '../quests'
 import { useViewMode } from '../viewMode'
 import { BackupReminder } from '../BackupReminder'
 import WikiHome from './WikiHome'
@@ -125,7 +126,7 @@ export default function Dashboard() {
               {openQuests.map((e) => (
                 <li key={e.id}>
                   <Link to={`${pagePath(worldId, e.id)}`}>{e.name}</Link>
-                  <span className="muted"> · {e.questStatus}</span>
+                  <span className="muted"> · {e.questStatus}{questProgress(e) && ` · ${questProgress(e)}`}</span>
                 </li>
               ))}
             </ul>

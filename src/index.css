@@ -1210,3 +1210,11 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .treasure-list { list-style: none; padding: 0; margin: .5em 0; display: flex; flex-direction: column; gap: .15em; }
 .starter-tables { margin: .6em 0; }
 .starter-tables .card { display: flex; flex-direction: column; gap: .3em; }
+
+/* Quest objectives and rewards */
+.quest-box h2 { display: flex; align-items: baseline; gap: .4em; }
+.objective-list { list-style: none; padding: 0; margin: .3em 0 .6em; display: flex; flex-direction: column; gap: .2em; }
+.objective-list li { display: flex; align-items: center; justify-content: space-between; gap: .5em; padding: .15em .3em; border-radius: 6px; }
+.objective-list li.done > label span, .objective-list li.done > span:first-child { text-decoration: line-through; color: var(--muted); }
+.objective-list li.gm-only { background: var(--secret-bg, rgba(160, 60, 60, .08)); }
+.known-toggle.on { color: var(--accent); }

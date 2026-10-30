@@ -6,6 +6,7 @@ import { DraftText, Empty, VisibilityBadge, VisibilityToggle } from '../componen
 import { db, GAME_SYSTEMS, type Campaign } from '../db'
 import { useLiveRecording } from '../recordingStore'
 import { PartyGlance } from '../partyGlance'
+import { questProgress } from '../quests'
 import { bookNextSession, createNextSession, partyOf } from '../sessions'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
@@ -152,6 +153,7 @@ export default function CampaignPage() {
               {quests.map((e) => (
                 <li key={e.id}>
                   <Link to={`${pagePath(worldId, e.id)}`}><Ico as={Compass} /> {e.name}</Link>
+                  {questProgress(e) && <span className="muted"> · {questProgress(e)}</span>}
                 </li>
               ))}
             </ul>
