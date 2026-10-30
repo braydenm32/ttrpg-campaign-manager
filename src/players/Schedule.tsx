@@ -94,7 +94,8 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
         {options.map((o) => {
           const here = all.filter((a) => a.optionId === o.id)
           const mine = shared?.me ? here.find((a) => a.userId === shared.me)?.answer : undefined
-          const yes = here.filter((a) => a.answer === 'yes').length
+          // Only players still in the group count, so it never reads "4 of 3".
+          const yes = here.filter((a) => a.answer === 'yes' && people.some((p) => p.userId === a.userId)).length
           return (
             <li key={o.id}>
               <div className="row spread wrap">

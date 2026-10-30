@@ -6,7 +6,8 @@ import { StatusBadge } from '../status'
 import { ENTITY_TYPES, typeLabel, type Entity, type EntityType } from '../db'
 import { treeRoots, useVisibleEntities, useWorld } from '../hooks'
 import { NewPageButton } from '../NewPage'
-import { TableRoller } from '../tables'
+import { listedEntries, TableRoller } from '../tables'
+import { pagesIn } from '../counts'
 import { StarterTables } from '../moreGenerators'
 import { useViewMode } from '../viewMode'
 import { pagePath, resolveCustom, sectionType, usePathsVersion } from '../paths'
@@ -23,10 +24,11 @@ export default function EntityList() {
   const [tag, setTag] = useState('')
 
   if (!ENTITY_TYPES.includes(type as EntityType)) return <Empty>Unknown category.</Empty>
-  if (type === 'custom' && world && !world.customTypes?.some((c) => c.id === kind)) return <Empty>This page type has been removed.</Empty>
+  if (type === 'custom' && kind && world && !world.customTypes?.some((c) => c.id === kind)) return <Empty>This page type has been removed.</Empty>
   const t = type as EntityType
   const label = typeLabel({ type: t, customType: kind }, world)
-  const ofType = all.filter((e) => e.type === t && (t !== 'custom' || e.customType === kind))
+  // With no custom type named, the custom section is "Other pages": custom pages with no type of their own.
+  const ofType = pagesIn(all, world, t !== 'custom' ? t : kind ? `custom:${kind}` : 'other')
   const tags = [...new Set(ofType.flatMap((e) => e.tags))].sort()
   const q = query.trim().toLowerCase()
   const filtered = ofType.filter(
@@ -42,9 +44,9 @@ export default function EntityList() {
     <div className="page">
       <header className="page-header">
         <h1>
-          {label.icon} {label.many} <Help topic={t === 'table' ? 'randomTables' : t === 'custom' ? 'customTypes' : 'codex'} />
+          {label.icon} {label.many} <Help topic={t === 'table' ? 'randomTables' : t === 'custom' && kind ? 'customTypes' : 'codex'} />
         </h1>
-        {isGM && world && <NewPageButton world={world} type={t} customType={kind} />}
+        {isGM && world && (t !== 'custom' || kind) && <NewPageButton world={world} type={t} customType={kind} />}
       </header>
       {t === 'table' && ofType.length > 0 && (
         <div className="card">
@@ -70,7 +72,7 @@ export default function EntityList() {
       ) : (
         <div className="card-grid">
           {filtered.map((e) => (
-            <EntityCard key={e.id} worldId={worldId} entity={e} />
+            <EntityCard key={e.id} worldId={worldId} entity={e} isGM={isGM} />
           ))}
         </div>
       )}
@@ -78,7 +80,7 @@ export default function EntityList() {
   )
 }
 
-function EntityCard({ worldId, entity: e }: { worldId: string; entity: Entity }) {
+function EntityCard({ worldId, entity: e, isGM }: { worldId: string; entity: Entity; isGM: boolean }) {
   return (
     <Link className="card" to={`${pagePath(worldId, e.id)}`}>
       <h3>
@@ -88,7 +90,7 @@ function EntityCard({ worldId, entity: e }: { worldId: string; entity: Entity })
       <div className="tags">
         {e.questStatus && <span className={`tag status-${e.questStatus}`}>{e.questStatus}</span>}
         <StatusBadge entity={e} />
-        {e.type === 'table' && <span className="tag">{e.entries?.filter((x) => x.trim()).length ?? 0} entries</span>}
+        {e.type === 'table' && <span className="tag">{listedEntries(e, isGM).length} entries</span>}
         {e.tags.map((t) => (
           <span key={t} className="tag">
             {t}

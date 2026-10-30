@@ -1,4 +1,3 @@
-import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -11,12 +10,13 @@ import { Ico } from '../icons'
 import { MapTrifold, PencilSimple } from '@phosphor-icons/react'
 import { worldPath } from '../paths'
 import { playersImageId } from '../fog'
+import { useVisibleMaps } from '../counts'
 
 export default function MapList() {
   const { worldId } = useWorld()
-  const { isGM, canSee } = useViewMode()
+  const { isGM } = useViewMode()
   const navigate = useNavigate()
-  const maps = useLiveQuery(() => db.maps.where({ worldId }).filter((m) => canSee(m.visibility)).sortBy('name'), [worldId, isGM]) ?? []
+  const maps = useVisibleMaps(worldId)
   const [busy, setBusy] = useState(false)
   const [drawing, setDrawing] = useState(false)
   useRedrawOldMaps(isGM ? maps : [])

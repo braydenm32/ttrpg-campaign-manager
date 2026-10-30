@@ -1,8 +1,7 @@
-import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Empty } from '../components'
-import { db, ENTITY_LABELS, ENTITY_TYPES, type World } from '../db'
+import { ENTITY_LABELS, ENTITY_TYPES, type World } from '../db'
 import { WorldCover } from '../WorldCover'
 import { useVisibleEntities } from '../hooks'
 import { Markdown } from '../Markdown'
@@ -12,6 +11,7 @@ import { useCampaigns, useWorldSessions } from '../threads'
 import { Ico, TypeIcon } from '../icons'
 import { Hourglass, MapTrifold } from '@phosphor-icons/react'
 import { pagePath, typePath, worldPath } from '../paths'
+import { countByType, useVisibleMaps } from '../counts'
 
 /**
  * The front page of a world opened from a public wiki link: a tidy read-only wiki of everything the
@@ -23,13 +23,15 @@ export default function WikiHome({ world }: { world: World }) {
   const entities = useVisibleEntities(worldId)
   const sessions = useWorldSessions(worldId)
   const campaigns = useCampaigns(worldId)
-  const maps = useLiveQuery(() => db.maps.where({ worldId }).sortBy('name'), [worldId]) ?? []
+  const maps = useVisibleMaps(worldId)
   const [query, setQuery] = useState('')
   const searchable = useSearchable(worldId)
   const results = searchWorld(query, { worldId, world, ...searchable })
   const recaps = [...sessions].filter((s) => s.recap.trim()).sort((a, b) => b.date.localeCompare(a.date) || b.number - a.number)
-  const types = ENTITY_TYPES.filter((t) => t !== 'custom').map((t) => [t, entities.filter((e) => e.type === t).length] as const).filter(([, n]) => n)
-  const custom = (world.customTypes ?? []).map((c) => [c, entities.filter((e) => e.type === 'custom' && e.customType === c.id).length] as const).filter(([, n]) => n)
+  const counts = countByType(entities, world)
+  // Custom pages with no custom type of their own are "Other pages", after the built-in types.
+  const types = [...ENTITY_TYPES.filter((t) => t !== 'custom'), 'custom' as const].map((t) => [t, counts.get(t === 'custom' ? 'other' : t) ?? 0] as const).filter(([, n]) => n)
+  const custom = (world.customTypes ?? []).map((c) => [c, counts.get(`custom:${c.id}`) ?? 0] as const).filter(([, n]) => n)
   const recent = [...entities].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 6)
 
   return (

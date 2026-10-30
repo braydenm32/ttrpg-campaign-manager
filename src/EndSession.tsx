@@ -9,6 +9,7 @@ import { Ico } from './icons'
 import { FlagCheckered } from '@phosphor-icons/react'
 import { worldPath } from './paths'
 import { setLiveSession, useLiveSession } from './cloud/table'
+import { prepCounts } from './counts'
 
 /**
  * Wrapping up after play, in one place: transcribe the recording, write the recap with Claude,
@@ -31,8 +32,9 @@ export function EndSessionChecklist({ world, session, onClose }: { world: World;
   const recorded = session.recordings.length
   const transcribed = session.recordings.filter((r) => r.transcript && !r.transcript.pending).length
   const transcribing = session.recordings.some((r) => r.transcript?.pending)
-  const leftClues = (session.prep?.clues ?? []).filter((c) => !c.done && c.text.trim()).length
-  const leftScenes = (session.prep?.scenes ?? []).filter((c) => !c.done && c.text.trim()).length
+  const { clues: { left: leftClues }, scenes: { left: leftScenes } } = prepCounts(session.prep)
+  // Only pages that are still there: a page deleted since keeps its id in the session.
+  const featured = useLiveQuery(async () => (await db.entities.bulkGet(session.entityIds)).filter(Boolean).length, [session.entityIds]) ?? session.entityIds.length
   const next = later?.[0]
   const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
@@ -73,9 +75,9 @@ export function EndSessionChecklist({ world, session, onClose }: { world: World;
       ),
     },
     {
-      done: session.entityIds.length > 0,
-      label: session.entityIds.length ? `${session.entityIds.length} featured in this session` : 'Nobody featured yet',
-      detail: !session.entityIds.length && 'People you add to the scene at the Lectern are listed automatically. Add others under “Featured in this session”.',
+      done: featured > 0,
+      label: featured ? `${featured} featured in this session` : 'Nobody featured yet',
+      detail: !featured && 'People you add to the scene at the Lectern are listed automatically. Add others under “Featured in this session”.',
     },
     {
       done: session.visibility === 'players',

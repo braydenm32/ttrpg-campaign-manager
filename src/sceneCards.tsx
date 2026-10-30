@@ -21,14 +21,18 @@ export const hasCard = (s: PrepScene) =>
 /** What starting a scene will do, in a few words, for its button's tooltip. */
 export function cardSummary(s: PrepScene, entities: Entity[], session: Session) {
   const name = (id: string) => entities.find((e) => e.id === id)?.name
+  // Count only pages that are still there.
+  const there = (id: string) => entities.some((e) => e.id === id)
+  const present = (s.presentIds ?? []).filter(there).length
+  const reveal = (s.revealIds ?? []).filter(there).length
   const bits = [
     s.placeId && `scene: ${name(s.placeId) ?? 'a place'}`,
     s.readAloud?.trim() && 'read-aloud text',
-    s.presentIds?.length && `${s.presentIds.length} here`,
+    present && `${present} here`,
     s.soundIds?.length && `${s.soundIds.length} sound${s.soundIds.length === 1 ? '' : 's'}`,
     s.encounterId && `fight: ${session.prep?.encounters.find((e) => e.id === s.encounterId)?.name ?? 'an encounter'}`,
     s.show && 'show players',
-    s.revealIds?.length && `reveal ${s.revealIds.length}`,
+    reveal && `reveal ${reveal}`,
   ].filter(Boolean)
   return bits.join(' · ')
 }
