@@ -9,7 +9,9 @@ import { Modal } from '../components'
 import { db, type Entity, type World } from '../db'
 import { useCharacterOwners } from './owners'
 import { Ico } from '../icons'
-import { MaskHappy, PencilSimple } from '@phosphor-icons/react'
+import { FileArrowUp, MaskHappy, PencilSimple } from '@phosphor-icons/react'
+import { ImportSheet } from '../sheets/ImportSheet'
+import { playerSheet } from '../sheets/apply'
 import { pagePath } from '../paths'
 
 /** On a player character's page: who plays them, their player's notes, and claim / let go buttons. */
@@ -73,7 +75,7 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
         </button>
       )}
 
-      {owner?.mine && !owner.pending && memberOf && <EditMyCharacter entity={entity} cloudId={memberOf} />}
+      {owner?.mine && !owner.pending && memberOf && <EditMyCharacter entity={entity} cloudId={memberOf} system={world.system} />}
       {owner?.mine ? (
         <PlayerNotes key={entity.id} initial={owner.notes} onSave={(notes) => savePlayerNotes(memberOf!, entity.id, notes)} />
       ) : (
@@ -104,13 +106,14 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
 }
 
 /** The player's own editor for their character: summary, details and a write-up in their words. */
-function EditMyCharacter({ entity, cloudId }: { entity: Entity; cloudId: string }) {
+function EditMyCharacter({ entity, cloudId, system }: { entity: Entity; cloudId: string; system: string }) {
   const [open, setOpen] = useState(false)
   const [summary, setSummary] = useState(entity.summary)
   const [fields, setFields] = useState(entity.fields)
   const [playerBody, setPlayerBody] = useState(entity.playerBody ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [importing, setImporting] = useState(false)
   const start = () => {
     setSummary(entity.summary)
     setFields(entity.fields.length ? entity.fields : [{ key: '', value: '' }])
@@ -144,6 +147,9 @@ function EditMyCharacter({ entity, cloudId }: { entity: Entity; cloudId: string 
             <p className="muted small">
               <Help topic="editCharacter" /> Your GM sees these changes. Their own description and secrets stay as they are.
             </p>
+            <button type="button" onClick={() => setImporting(true)}>
+              <Ico as={FileArrowUp} /> Fill in from a character sheet
+            </button>
             <label>
               One-line summary
               <input value={summary} onChange={(e) => setSummary(e.target.value)} maxLength={500} placeholder="e.g. Half-elf bard with a stolen lute" />
@@ -176,6 +182,20 @@ function EditMyCharacter({ entity, cloudId }: { entity: Entity; cloudId: string 
             </div>
           </form>
         </Modal>
+      )}
+      {importing && (
+        <ImportSheet
+          worldId={entity.worldId}
+          system={system}
+          into={entity}
+          onSheet={(sheet) => {
+            const next = playerSheet({ ...entity, summary, fields, playerBody }, sheet)
+            setSummary(next.summary)
+            setFields(next.fields)
+            setPlayerBody(next.playerBody)
+          }}
+          onClose={() => setImporting(false)}
+        />
       )}
     </>
   )

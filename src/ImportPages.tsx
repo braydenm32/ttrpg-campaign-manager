@@ -4,6 +4,7 @@ import { Help } from './help'
 import { applyImport, exportMarkdown, planImport, readFiles, type ImportPlan, type ImportSource } from './importers'
 import { Ico } from './icons'
 import { Folder } from '@phosphor-icons/react'
+import { ImportSheetButton } from './sheets/ImportSheet'
 
 const SOURCES: { id: ImportSource; label: string; hint: string; accept: string; folder?: boolean }[] = [
   { id: 'markdown', label: '📝 Obsidian or Markdown', hint: 'Pick your vault folder, a .zip of it, or some .md files.', accept: '.md,.markdown,.zip', folder: true },
@@ -12,7 +13,7 @@ const SOURCES: { id: ImportSource; label: string; hint: string; accept: string; 
 ]
 
 /** World settings: bring pages in from other tools, or take them out as Markdown. */
-export function ImportPages({ worldId }: { worldId: string }) {
+export function ImportPages({ worldId, system }: { worldId: string; system: string }) {
   const [plan, setPlan] = useState<ImportPlan>()
   const [busy, setBusy] = useState('')
   const [done, setDone] = useState('')
@@ -110,6 +111,13 @@ export function ImportPages({ worldId }: { worldId: string }) {
       {busy && <p className="muted small">{busy}</p>}
       {done && <p className="small">{done}</p>}
       {error && <p className="error small">{error}</p>}
+      <h3>
+        🛡️ Character sheets <Help topic="importSheet" />
+      </h3>
+      <div className="row wrap">
+        <ImportSheetButton worldId={worldId} system={system} />
+        <span className="muted small">From D&D Beyond, Foundry VTT, Pathbuilder, a fillable PDF, or any sheet’s text.</span>
+      </div>
       <h3>
         📤 Export as Markdown <Help topic="exportMarkdown" />
       </h3>
