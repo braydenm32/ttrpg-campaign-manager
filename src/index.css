@@ -1340,3 +1340,8 @@ a.more-item:hover { border-color: var(--accent); }
 .everything-card.empty-kind .icon { color: var(--muted); }
 .room-rules { margin: 1.2em 0 0; text-align: center; }
 .room-rules a { display: inline-flex; align-items: center; gap: .4em; min-height: 44px; }
+
+.people-switch { margin-bottom: 1em; }
+.people-switch a { padding: .45em .9em; text-decoration: none; color: inherit; }
+.people-switch a.on { background: var(--accent); color: var(--accent-ink); }
+@media (max-width: 800px) { .people-switch a { min-height: 44px; display: inline-flex; align-items: center; } }
