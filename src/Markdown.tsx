@@ -10,6 +10,7 @@ import { nameIndex, namesOf } from './links'
 import { characterNames, useViewMode } from './viewMode'
 import { TypeIcon } from './icons'
 import { hrefFor, pagePath } from './paths'
+import { MakePagePopover } from './wanted'
 
 type Segment = { kind: 'text' | 'gm' | 'foryou'; body: string } | { kind: 'for'; names: string[]; body: string }
 
@@ -117,7 +118,9 @@ export function Markdown({
 }) {
   const navigate = useNavigate()
   // Previewing as one player: passages for their characters show as they would for them.
-  const { previewAs } = useViewMode()
+  const { previewAs, isGM } = useViewMode()
+  // The GM can click a link to a page that doesn't exist yet to make it.
+  const [making, setMaking] = useState<{ name: string; left: number; top: number }>()
   const forViewer = (previewAs ? characterNames(previewAs.characterNames) : []).join('\n')
   const html = useMemo(() => {
     const viewer = new Set(forViewer.split('\n').filter(Boolean))
@@ -141,7 +144,7 @@ export function Markdown({
     src = src.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, name: string, label?: string) => {
       const target = byName.get(name.trim().toLowerCase())
       const shown = escapeHtml(label ?? name)
-      if (!target) return `<span class="wikilink missing" title="No page yet">${shown}</span>`
+      if (!target) return `<span class="wikilink missing" title="No page yet" data-missing="${escapeHtml(name.trim())}">${shown}</span>`
       return `<a class="wikilink" href="${hrefFor(pagePath(worldId, target.id))}" data-internal="1" data-id="${target.id}">${shown}</a>`
     })
     return DOMPurify.sanitize(marked.parse(src, { async: false }) as string)
@@ -175,6 +178,12 @@ export function Markdown({
         ref={box}
         className="markdown"
         onClick={(ev) => {
+          const missing = (ev.target as HTMLElement).closest('[data-missing]') as HTMLElement | null
+          if (missing && isGM && !stillLinks && !previewAs) {
+            const r = missing.getBoundingClientRect()
+            setMaking({ name: missing.dataset.missing!, left: Math.max(12, Math.min(r.left, window.innerWidth - 332)), top: r.bottom + 230 > window.innerHeight ? Math.max(12, r.top - 226) : r.bottom + 6 })
+            return
+          }
           const a = (ev.target as HTMLElement).closest('a[data-internal]') as HTMLAnchorElement | null
           if (a) {
             ev.preventDefault()
@@ -203,6 +212,7 @@ export function Markdown({
         dangerouslySetInnerHTML={{ __html: html }}
       />
       {peek && <LinkPeek {...peek} />}
+      {making && <MakePagePopover worldId={worldId} {...making} onClose={() => setMaking(undefined)} />}
     </>
   )
 }

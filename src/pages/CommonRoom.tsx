@@ -23,8 +23,10 @@ import { SignalButtons, TableDice, TimerInline, TimerList, TurnOrder, useMe } fr
 import { gmIdOf, localIdOf, sendSignal, useTable, type TableState } from '../cloud/table'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
-import { Backpack, CastleTurret, ChatCircleDots, MusicNotes, Notepad, Scroll, Shield, Sparkle, Spiral, Sword, Television, UsersThree } from '@phosphor-icons/react'
+import { Backpack, BookOpenText, CastleTurret, ChatCircleDots, MusicNotes, Notepad, Scroll, Shield, Sparkle, Spiral, Sword, Television, UsersThree } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
+import { PlayerDowntime } from '../players/Downtime'
+import { Highlights, StorySoFar } from '../highlights'
 
 /**
  * The Common Room: the players' front page for a world, and their seat at the table. Tabs keep it
@@ -238,6 +240,7 @@ function Overview({ ctx, campaigns, sessions, go }: { ctx: RoomContext; campaign
   const searchable = useSearchable(worldId)
   const results = searchWorld(query, { worldId, world, ...searchable })
   const last = latestSession(sessions.filter((s) => s.recap.trim()))
+  const story = campaigns.find((c) => c.id === last?.campaignId) ?? (campaigns.length === 1 ? campaigns[0] : undefined)
   const voting = campaigns.filter((c) => c.schedule?.length)
   const leads = openLeads(entities)
   const clocks = useAllClocks(entities).filter(({ clock }) => clock.filled < clock.segments)
@@ -308,11 +311,17 @@ function Overview({ ctx, campaigns, sessions, go }: { ctx: RoomContext; campaign
               <div className="recap-peek">
                 <Markdown text={last.recap} entities={entities} worldId={worldId} showSecrets={false} />
               </div>
+              <Highlights session={last} entities={entities} worldId={worldId} isGM={false} />
             </>
           ) : (
             <p className="muted small">No recaps yet. Your GM’s write-up of each session lands here.</p>
           )}
         </Card>
+        {story && (story.storySoFar?.trim() || sessions.filter((s) => s.campaignId === story.id && s.recap.trim()).length > 1) && (
+          <Card title="The story so far" icon={BookOpenText} className="wide" help="storySoFar">
+            <StorySoFar world={world} campaign={story} sessions={sessions} entities={entities} isGM={false} compact />
+          </Card>
+        )}
         {(loot.length > 0 || coin.length > 0) && (
           <Card title="Party loot" icon={Backpack} to={`${worldPath(worldId)}/loot`}>
             {coin.length > 0 && (
@@ -647,6 +656,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
           )}
         </Card>
       ))}
+      {ctx.memberOf && <PlayerDowntime world={ctx.world} mine={ctx.mine} />}
       {ctx.memberOf && (
         <section className="card room-card">
           <p className="muted small">Your character died, retired or left? Write up the next one for your GM.</p>

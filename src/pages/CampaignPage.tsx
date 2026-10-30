@@ -5,6 +5,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { DraftText, Empty, VisibilityBadge, VisibilityToggle } from '../components'
 import { db, GAME_SYSTEMS, type Campaign } from '../db'
 import { useLiveRecording } from '../recordingStore'
+import { PartyGlance } from '../partyGlance'
+import { StorySoFar } from '../highlights'
+import { questProgress } from '../quests'
 import { bookNextSession, createNextSession, partyOf } from '../sessions'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
@@ -105,6 +108,8 @@ export default function CampaignPage() {
         />
       )}
 
+      {world && <StorySoFar world={world} campaign={campaign} sessions={sessions} entities={entities} isGM={isGM} />}
+
       <div className="two-col">
         <section>
           <h2>
@@ -131,6 +136,8 @@ export default function CampaignPage() {
           <h2>The party</h2>
           {pcs.length === 0 ? (
             <Empty>Add Player Characters in the codex.</Empty>
+          ) : isGM && world ? (
+            <PartyGlance world={world} party={pcs} />
           ) : (
             <ul className="entity-list">
               {pcs.map((e) => (
@@ -149,6 +156,7 @@ export default function CampaignPage() {
               {quests.map((e) => (
                 <li key={e.id}>
                   <Link to={`${pagePath(worldId, e.id)}`}><Ico as={Compass} /> {e.name}</Link>
+                  {questProgress(e) && <span className="muted"> · {questProgress(e)}</span>}
                 </li>
               ))}
             </ul>

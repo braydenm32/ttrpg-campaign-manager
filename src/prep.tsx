@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { DraftText } from './components'
 import { PagePicker } from './PagePicker'
-import { blankLectern, blankPrep, db, newId, type CheckItem, type Encounter, type Entity, type Session, type SessionPrep } from './db'
+import { blankLectern, blankPrep, db, newId, type CheckItem, type Encounter, type Entity, type Session, type SessionPrep, type World } from './db'
 import { addCombatants, encounterCombatants, foeCount, foeFromEntity, numberFrom } from './encounters'
 import { Help } from './help'
+import { cardSummary, hasCard, SceneCardEditor, startScene } from './sceneCards'
+import { LecternPanel } from './lecternPanel'
 import { StatusBadge } from './status'
 import { Ico, TypeIcon } from './icons'
 import { ClipboardText, FilmSlate, MagnifyingGlass, Sword } from '@phosphor-icons/react'
@@ -55,7 +57,17 @@ export function PrepSheet({ session, entities, worldId }: { session: Session; en
         />
       </label>
       <h3><Ico as={FilmSlate} /> Scenes you expect</h3>
-      <CheckList items={prep.scenes} placeholder="A scene that might happen, e.g. ‘Ambush at the ford’" doneLabel="Played" onEdit={(fn) => edit((p) => fn(p.scenes))} />
+      <CheckList
+        items={prep.scenes}
+        placeholder="A scene that might happen, e.g. ‘Ambush at the ford’"
+        doneLabel="Played"
+        onEdit={(fn) => edit((p) => fn(p.scenes))}
+        extra={{
+          label: (x) => (hasCard(x) ? '🎬 Card ✓' : '🎬 Card'),
+          title: 'Give this scene its place, read-aloud text, people, sounds, fight, handout and reveals, to start them all at once at the Lectern',
+          render: (x, change) => <SceneCardEditor scene={x} session={session} entities={entities} onChange={change} />,
+        }}
+      />
       <h3>
         <Ico as={MagnifyingGlass} /> Secrets and clues <Help topic="clues" />
       </h3>
@@ -68,19 +80,23 @@ export function PrepSheet({ session, entities, worldId }: { session: Session; en
   )
 }
 
-function CheckList({
+function CheckList<T extends CheckItem>({
   items,
   placeholder,
   doneLabel,
   onEdit,
+  extra,
 }: {
-  items: CheckItem[]
+  items: T[]
   placeholder: string
   doneLabel: string
-  onEdit: (fn: (list: CheckItem[]) => void) => void
+  onEdit: (fn: (list: T[]) => void) => void
+  /** More to each item, behind a button (scene cards). */
+  extra?: { label: (x: T) => string; title: string; render: (x: T, change: (fn: (x: T) => void) => void) => ReactNode }
 }) {
   const [text, setText] = useState('')
-  const change = (id: string, fn: (x: CheckItem) => void) =>
+  const [open, setOpen] = useState<string>()
+  const change = (id: string, fn: (x: T) => void) =>
     onEdit((list) => {
       const x = list.find((i) => i.id === id)
       if (x) fn(x)
@@ -88,7 +104,8 @@ function CheckList({
   return (
     <div className="check-list">
       {items.map((x, i) => (
-        <div key={x.id} className={`row check-item ${x.done ? 'done' : ''}`}>
+        <div key={x.id}>
+        <div className={`row check-item ${x.done ? 'done' : ''}`}>
           <input type="checkbox" checked={x.done} title={doneLabel} onChange={(e) => {
               // Read it now: the box springs back to the saved value before the change is saved.
               const v = e.target.checked
@@ -108,6 +125,11 @@ function CheckList({
           >
             ↑
           </button>
+          {extra && (
+            <button className={`ghost small ${open === x.id ? 'on' : ''}`} title={extra.title} aria-expanded={open === x.id} onClick={() => setOpen(open === x.id ? undefined : x.id)}>
+              {extra.label(x)}
+            </button>
+          )}
           <button className="ghost" title="Remove" onClick={() =>
               onEdit((list) => {
                 // A second click finds nothing to remove (and must not remove the last one instead).
@@ -118,6 +140,8 @@ function CheckList({
             ✕
           </button>
         </div>
+        {extra && open === x.id && extra.render(x, (fn) => change(x.id, fn))}
+        </div>
       ))}
       <form
         className="row"
@@ -125,7 +149,7 @@ function CheckList({
           e.preventDefault()
           const t = text.trim()
           if (!t) return
-          onEdit((list) => void list.push({ id: newId(), text: t, done: false }))
+          onEdit((list) => void list.push({ id: newId(), text: t, done: false } as T))
           setText('')
         }}
       >
@@ -298,7 +322,8 @@ function FoeTable({ enc, entities, worldId, onChange }: { enc: Encounter; entiti
 }
 
 /** The prep sheet at the Lectern: the opening, scenes and clues to tick off, and fights to start. */
-export function LecternPrep({ session, worldId }: { session: Session; worldId: string }) {
+export function LecternPrep({ session, world, entities }: { session: Session; world: World; entities: Entity[] }) {
+  const worldId = world.id
   const prep = { ...blankPrep(), ...session.prep }
   // Fights already added to the initiative list from here, so a second tap asks first instead of doubling them.
   const [loaded, setLoaded] = useState<string[]>([])
@@ -306,6 +331,19 @@ export function LecternPrep({ session, worldId }: { session: Session; worldId: s
   const empty = !prep.strongStart && !prep.scenes.length && !prep.clues.length && !prep.encounters.length
   const tick = (list: 'scenes' | 'clues', x: CheckItem) => (
     <label key={x.id} className={`check-item ${x.done ? 'done' : ''}`}>
+      {list === 'scenes' && hasCard(x) && (
+        <button
+          type="button"
+          className="small scene-start"
+          title={`Start this scene: ${cardSummary(x, entities, session)}`}
+          onClick={(e) => {
+            e.preventDefault()
+            void startScene(world, session, x)
+          }}
+        >
+          ▶ Start
+        </button>
+      )}
       <input
         type="checkbox"
         checked={x.done}
@@ -322,15 +360,17 @@ export function LecternPrep({ session, worldId }: { session: Session; worldId: s
   )
   const found = prep.clues.filter((c) => c.done).length
   return (
-    <section className="card lectern-panel">
-      <div className="row spread">
-        <h2>
-          <Ico as={ClipboardText} /> Prep <Help topic="prep" />
-        </h2>
+    <LecternPanel
+      id="prep"
+      name="Prep"
+      keywords="scenes clues secrets encounters strong start plan"
+      title={<><Ico as={ClipboardText} /> Prep <Help topic="prep" /></>}
+      extra={
         <Link className="small" to={`${worldPath(worldId)}/s/${session.id}?tab=prep`}>
           Edit prep
         </Link>
-      </div>
+      }
+    >
       {empty && <p className="muted small">No prep for this session yet. Plan scenes, clues and fights from the session page.</p>}
       {prep.strongStart && (
         <div className="small">
@@ -373,6 +413,6 @@ export function LecternPrep({ session, worldId }: { session: Session; worldId: s
           {loaded.length > 0 && <div className="muted">Added to the Initiative list. Tap again to add another set.</div>}
         </div>
       )}
-    </section>
+    </LecternPanel>
   )
 }

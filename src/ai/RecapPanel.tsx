@@ -10,6 +10,7 @@ import { Ico } from '../icons'
 import { ClipboardText, Eye, Lock, PenNib, Sparkle } from '@phosphor-icons/react'
 import { worldPath } from '../paths'
 import { WorldUpdatesReview } from './WorldUpdatesReview'
+import { HighlightsDraft } from '../highlights'
 import { dollars, modelName } from './claude'
 import { ModelTag } from './ClaudeJob'
 import { moveJob, startJob, stopJob, takeFinished, useJob } from './jobs'
@@ -256,6 +257,8 @@ function RecapDraftReview({ world, session, entities, note }: { world: World; se
           <span className="muted small">Players will see it once you reveal this session.</span>
         )}
       </div>
+
+      <HighlightsDraft session={session} entities={entities} worldId={worldId} />
 
       <WorldUpdatesReview world={world} session={session} entities={entities} />
 

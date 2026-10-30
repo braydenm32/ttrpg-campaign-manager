@@ -7,6 +7,7 @@ import { ENTITY_TYPES, typeLabel, type Entity, type EntityType } from '../db'
 import { treeRoots, useVisibleEntities, useWorld } from '../hooks'
 import { NewPageButton } from '../NewPage'
 import { TableRoller } from '../tables'
+import { StarterTables } from '../moreGenerators'
 import { useViewMode } from '../viewMode'
 import { pagePath, resolveCustom, sectionType, usePathsVersion } from '../paths'
 
@@ -50,6 +51,7 @@ export default function EntityList() {
           <TableRoller tables={ofType} worldId={worldId} entities={all} showSecrets={isGM} />
         </div>
       )}
+      {t === 'table' && isGM && world && <StarterTables world={world} tables={ofType} />}
       <div className="row wrap">
         <input className="search" placeholder="Filter…" value={query} onChange={(e) => setQuery(e.target.value)} />
         {tags.length > 0 && (

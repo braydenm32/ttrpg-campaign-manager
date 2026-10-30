@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Entity, type Session, type World } from './db'
 import { roll } from './dice'
+import { bonusFor, withBonus } from './rollCall'
 import {
+  answerCall,
   answerSignal,
   gmIdOf,
   linkAsHost,
@@ -21,7 +23,7 @@ import {
 import { useCharacterOwners } from './players/owners'
 import { usePlaying } from './sound/player'
 import { Ico } from './icons'
-import { Broadcast, Coffee, DiceFive, HandWaving, Sparkle, Sword, Timer } from '@phosphor-icons/react'
+import { Broadcast, Coffee, DiceFive, HandWaving, Megaphone, Sparkle, Sword, Timer } from '@phosphor-icons/react'
 import { worldPath } from './paths'
 
 /**
@@ -169,7 +171,80 @@ export function useMe(world: World) {
 export function PlayerTableLink({ world }: { world: World }) {
   const cloudId = world.shared!.memberOf!
   useEffect(() => linkAsPlayer(cloudId), [cloudId])
-  return <YourTurn world={world} cloudId={cloudId} />
+  return (
+    <>
+      <YourTurn world={world} cloudId={cloudId} />
+      <RollCallPrompt world={world} cloudId={cloudId} />
+    </>
+  )
+}
+
+/** For a player: the GM called for a roll that includes them. A Roll button, with their bonus filled in. */
+function RollCallPrompt({ world, cloudId }: { world: World; cloudId: string }) {
+  const { table, answered } = useTable(cloudId)
+  const { characters } = useMe(world)
+  const call = table?.call
+  const asked = call ? characters.filter((c) => !call.to.length || call.to.includes(gmIdOf(c.id))) : []
+  const [bonus, setBonus] = useState<Record<string, string>>({})
+  const [closed, setClosed] = useState('')
+  const [error, setError] = useState('')
+  if (!call || !asked.length || closed === call.id) return null
+  const done = answered[call.id]
+  const go = async (c: Entity) => {
+    const b = bonus[c.id] ?? String(bonusFor(c, call.label))
+    try {
+      const r = roll(withBonus(call.dice, Number(b) || 0))
+      setError('')
+      await answerCall(cloudId, { callId: call.id, entityId: gmIdOf(c.id), who: c.name.split(' ')[0], expr: `${call.label}: ${r.expr}`, total: r.total, detail: r.detail, crit: r.crit }, !!call.secret)
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
+  return (
+    <div className="your-turn roll-call-prompt" role="alert">
+      <Ico as={Megaphone} />
+      <div>
+        <strong>
+          Your GM asks for a roll: {call.label}
+          {call.dc !== undefined && <span className="muted"> (DC {call.dc})</span>}
+        </strong>
+        {done !== undefined ? (
+          <div className="small">
+            You rolled <b>{done}</b>{call.dc !== undefined && (done >= call.dc ? ' ✓' : ' ✗')}. {call.secret ? 'Only your GM sees it.' : 'Everyone at the table sees it.'}
+          </div>
+        ) : (
+          asked.map((c) => (
+            <form
+              key={c.id}
+              className="row wrap small"
+              onSubmit={(e) => {
+                e.preventDefault()
+                void go(c)
+              }}
+            >
+              {asked.length > 1 && <span>{c.name.split(' ')[0]}</span>}
+              <span>
+                {call.dice} +
+              </span>
+              <input
+                className="hp-input"
+                type="number"
+                value={bonus[c.id] ?? String(bonusFor(c, call.label))}
+                onChange={(e) => setBonus({ ...bonus, [c.id]: e.target.value })}
+                aria-label="Your bonus"
+                title="Your bonus for this roll"
+              />
+              <button className="primary">
+                <Ico as={DiceFive} /> Roll
+              </button>
+            </form>
+          ))
+        )}
+        {error && <div className="error small">{error}</div>}
+      </div>
+      <button onClick={() => setClosed(call.id)}>{done !== undefined ? 'OK' : 'Later'}</button>
+    </div>
+  )
 }
 
 function YourTurn({ world, cloudId }: { world: World; cloudId: string }) {

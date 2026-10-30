@@ -283,6 +283,48 @@ export const HELP = {
     'Players can read this text, and it links to a GM-only page, so they would see that page’s name. Move the link into a :::gm secret, give it a label like [[Lord Vexis|the stranger]], or reveal the page. This is only a warning; nothing is blocked.',
   backupRecordings:
     'Recordings can be very large. Leave this unticked for a small backup that has everything except the audio; transcripts, bookmarks and the rest of each session are kept. Tick it to keep the audio too.',
+  lecternSearch:
+    'Type to find a panel (“initiative”, “dice”, “music”) or a page by name. Only the matching panels show, opened, and matching pages appear above them with their GM notes and buttons to add them to the scene. Click a panel’s title to fold it away; this device remembers which you folded. “Fold all” leaves just the titles.',
+  wantedPages:
+    'Names you’ve written as [[links]] in pages or sessions that no page answers to yet, most mentioned first. Pick one and choose a type to make its page (it starts as GM only). You can also click a grey dashed link anywhere to make its page.',
+  partyGlance:
+    'Every character in one table, with the details you choose as columns: AC, Passive Perception, Languages, Darkvision, anything from their pages. Choose columns once and they show here and at the Lectern. Only you see this table.',
+  gmScreen:
+    'Your own GM screen. Pin pages you look up every session (house rules, a monster, a random table) to read them here, save rolls you make again and again (“Goblin attack d20+4”) as buttons, and ask the Archivist a question without leaving the Lectern. Only you see it.',
+  names:
+    'Names for people, places, taverns and ships, in eight styles (Common, Elvish, Dwarvish, Orcish, Halfling, Northern, Southern, Infernal). “Like my world’s names” learns from the names already in your world (your NPCs for people, your locations for places) and makes up new ones that sound the same. Press More for another batch.',
+  treasure:
+    'Roll a pile of treasure, from pocket change to a dragon’s hoard: coins, gems, art and odd things, sometimes something magical. “Give to the party” puts the coins in the party’s purse and the rest in the party stash, where players can see it. Gem and art values are in gold pieces; change anything afterwards on Party loot.',
+  starterTables:
+    'Ready-made random tables (rumours, plot hooks, road and wilderness encounters, dungeon dressing, trinkets, NPC quirks, town events) to get you rolling. They start as GM only, and you can change, add or remove any line.',
+  objectives:
+    'The steps to finish this quest. Players see the ones with an open eye and can follow the ticks as you make them. A step with a closed eye stays yours alone (a hidden goal, a twist) until you click the eye to tell them.',
+  rewards:
+    'What finishing the quest is worth. A reward stays hidden from players until you click its eye. “Give to the party” puts any coins in its text (like “200 gp”) into the party’s purse and its item into the party stash, and shows it to players.',
+  downtime:
+    'Tell your GM what your character does between sessions: training, research, crafting, visiting someone, working a job. Only your GM sees it, and their answer appears here, for you alone.',
+  downtimeGm:
+    'What your players’ characters are doing between sessions. Answer each one (only that player sees your answer) and it moves to Answered. Players send these from their character tab in the Common Room.',
+  callForRoll:
+    'Ask the table for a roll. Type a line like “@all roll perception 15” (everyone rolls Perception, DC 15), “@Wren @Silas stealth dc 12 secret” or “@all d20+2 strength”, or fill in the boxes. While you’re live, the players asked get a Roll button with their bonus filled in from their character’s details, and their results land here, marked pass or fail. Roll for anyone who isn’t online. “Secret” keeps results from the other players; “Tell them the DC” shows it. Press Done to clear it.',
+  sceneCards:
+    'Give a planned scene everything it needs: where it happens, read-aloud text, who’s there, sounds to play, one of this session’s fights, a picture or page to show players, and GM-only pages to reveal. At the Lectern, ▶ Start on the scene does it all at once and ticks it as played (it asks before revealing anything).',
+  ruler:
+    'Measure a route: click points along it on the map and the total distance shows, with how many days it takes on foot, riding, by wagon or by ship. On a battle map drawn here, one square is 5 feet. GM: if the map has no scale yet, measure something you know the length of and name it.',
+  ping:
+    'Point at a spot on the map. Everyone looking at the same map (you and your players, while you’re live) sees a pulsing ring there for a few seconds, with your name.',
+  mapScale:
+    'How far the map is from its left edge to its right, so the ruler can measure distances and travel time. You can also set it with the ruler: measure a road or river you know the length of and name it.',
+  seasons:
+    'Name your world’s seasons and when each starts; “Use the usual four” places spring, summer, autumn and winter like Earth’s. The season shows with the date, and with the climate it decides the weather you roll. Players see the season and the weather.',
+  journey:
+    'Run a trip day by day. Say where to, how far (or use a route you measured with the map ruler) and how fast. “Next day on the road” moves the world’s date on, rolls the weather (a blizzard or gale halves the day), checks for an encounter on a table of yours and counts down rations. “Rest a day” does the same without moving.',
+  highlights:
+    'The best bits of a session: memorable moments, lines worth quoting and playful awards (“Bravest Fool”). Players see them with the session’s recap and in the Common Room. When Claude writes the recap it suggests some; tick the ones to keep.',
+  storySoFar:
+    'A catch-up of the whole campaign, for players before a session and for anyone joining late. Write it yourself, or have Claude write it from the player recaps (never from your GM notes). Players also get every session’s recap underneath, in order.',
+  lecternNotes:
+    'This session’s GM notes, the same ones as on the session page. Add a line with the time from the box (it goes at the end), or press Edit to change them.',
 } as const
 
 export type HelpTopic = keyof typeof HELP

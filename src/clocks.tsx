@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Empty } from './components'
 import { db, newId, type Clock, type Entity } from './db'
 import { Help } from './help'
+import { LecternPanel } from './lecternPanel'
 import { useVisibleEntities, useWorld } from './hooks'
 import { useViewMode } from './viewMode'
 import { Ico, TypeIcon } from './icons'
@@ -174,16 +175,13 @@ export function ClocksPanel({ worldId, entities }: { worldId: string; entities: 
   const all = useAllClocks(entities).filter(({ clock }) => clock.filled < clock.segments)
   if (!all.length) return null
   return (
-    <section className="card lectern-panel">
-      <h2>
-        <Ico as={Timer} /> <Link to={`${worldPath(worldId)}/clocks`}>Clocks</Link> <Help topic="clocks" />
-      </h2>
+    <LecternPanel id="clocks" name="Clocks" keywords="progress countdown plan faction" title={<><Ico as={Timer} /> <Link to={`${worldPath(worldId)}/clocks`}>Clocks</Link> <Help topic="clocks" /></>}>
       <div className="clock-list compact">
         {all.map(({ clock, owner }) => (
           <ClockRow key={clock.id} clock={clock} owner={owner} isGM showOwner worldId={worldId} />
         ))}
       </div>
-    </section>
+    </LecternPanel>
   )
 }
 

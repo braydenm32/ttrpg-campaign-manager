@@ -7,6 +7,7 @@ import { Help } from '../help'
 import { useWorld } from '../hooks'
 import { AskForm, pageLink, QuestionList, useGmQuestions } from '../players/Questions'
 import { useViewMode } from '../viewMode'
+import { GmDowntime } from '../players/Downtime'
 import { Ico } from '../icons'
 import { EyeClosed, Question } from '@phosphor-icons/react'
 
@@ -56,7 +57,7 @@ function GmInbox({ world }: { world: World }) {
         <button onClick={reload}>↻ Refresh</button>
       </header>
       {error && <p className="error">{error}</p>}
-      {questions.length === 0 && <Empty>No questions yet. Players can ask you about any page they can see, or anything at all.</Empty>}
+      {questions.length === 0 && <p className="muted">No questions yet. Players can ask you about any page they can see, or anything at all.</p>}
       {open.length > 0 && <h2>Waiting for you ({open.length})</h2>}
       {open.map(card)}
       {done.length > 0 && (
@@ -65,6 +66,7 @@ function GmInbox({ world }: { world: World }) {
           {done.map(card)}
         </details>
       )}
+      <GmDowntime world={world} names={(id) => members.find((m) => m.userId === id)?.name ?? 'A player'} />
     </div>
   )
 }

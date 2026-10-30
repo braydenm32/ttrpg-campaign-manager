@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Help } from './help'
+import { LecternPanel } from './lecternPanel'
 import { db, newId, type Entity, type Showing, type World } from './db'
 import { saveFileAsAsset, useAssetUrl, useBlobUrl, useVisibleEntities } from './hooks'
 import { Markdown, stripSecrets } from './Markdown'
@@ -229,10 +230,7 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
   const revealed = entities.filter((e) => e.visibility === 'players')
   const hidden = entities.filter((e) => e.visibility !== 'players' && !e.template)
   return (
-    <section className="card lectern-panel">
-      <h2>
-        <Ico as={Television} /> Show players <Help topic="showPlayers" />
-      </h2>
+    <LecternPanel id="show" name="Show players" keywords="handout picture screen tv reveal" title={<><Ico as={Television} /> Show players <Help topic="showPlayers" /></>}>
       {world.showing ? (
         <div className="row wrap small">
           <span>
@@ -338,7 +336,7 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
           </Link>
         </>
       )}
-    </section>
+    </LecternPanel>
   )
 }
 

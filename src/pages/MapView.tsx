@@ -16,12 +16,16 @@ import { SecretNamesWarning } from '../SecretNamesWarning'
 import { useViewMode } from '../viewMode'
 import { circleShape, fogOverlay, pinRevealed, playersImageId, rectShape, removeFog, renderPlayerFog } from '../fog'
 import { Ico, TypeIcon } from '../icons'
-import { CloudFog, DoorOpen, DownloadSimple, Eye, HandPalm, MapPin, PencilSimple, SlidersHorizontal } from '@phosphor-icons/react'
+import { CloudFog, Crosshair, DoorOpen, DownloadSimple, Eye, HandPalm, MapPin, PencilSimple, Ruler, SlidersHorizontal } from '@phosphor-icons/react'
+import { MeasureBar, ScaleSetting } from '../mapMeasure'
+import { saveRoute } from '../journey'
+import { gmIdOf, sendPing, useTable, type MapPing } from '../cloud/table'
+import { useMe } from '../atTheTable'
 import { pagePath, worldPath } from '../paths'
 import { ExportMap } from '../ExportMap'
 import { toClassic } from '../mapDrawing'
 
-type Tool = 'select' | 'pin' | 'region' | 'fog-rect' | 'fog-shape' | 'fog-circle' | 'fog-room'
+type Tool = 'select' | 'pin' | 'region' | 'fog-rect' | 'fog-shape' | 'fog-circle' | 'fog-room' | 'measure' | 'ping'
 const COLORS = ['#e0b354', '#d9534f', '#5bc0de', '#5cb85c', '#a678de', '#f0f0f0']
 /** Names show on the map from this far in past "whole map in view" (zoom steps), so a zoomed-out map isn't covered in labels. */
 const NAMES_FROM = 0.5
@@ -63,7 +67,7 @@ export default function MapView() {
 }
 
 function MapEditor({ map, url }: { map: WorldMap; url: string }) {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const { isGM, canSee } = useViewMode()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
@@ -78,6 +82,13 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const allMaps = useLiveQuery(() => db.maps.where({ worldId }).filter((m) => canSee(m.visibility)).sortBy('name'), [worldId, isGM]) ?? []
   const [tool, setTool] = useState<Tool>('select')
   const [draft, setDraft] = useState<[number, number][]>([])
+  const [measure, setMeasure] = useState<[number, number][]>([])
+  const [routeNote, setRouteNote] = useState('')
+  // Pings travel on the live link: a synced world for the GM, a joined one for a player.
+  const cloudId = world?.shared?.memberOf ?? (world && !world.shared && world.cloud?.enabled ? world.id : undefined)
+  const { pings } = useTable(cloudId)
+  const me = useMe(world ?? ({ id: '' } as never))
+  const gmMapId = gmIdOf(map.id)
   const [showSettings, setShowSettings] = useState(false)
   const [fogBar, setFogBar] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -100,7 +111,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const byId = useMemo(() => new Map(entities.map((e) => [e.id, e])), [entities])
 
   useEffect(() => {
-    if (!isGM) setTool('select')
+    if (!isGM) setTool((t) => (t === 'measure' || t === 'ping' ? t : 'select'))
   }, [isGM])
 
   // Keep the players' fogged picture up to date, a moment after the GM stops changing the fog.
@@ -157,6 +168,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setDraft([])
+        setMeasure([])
         setFogCorner(undefined)
         setTool('select')
       }
@@ -191,6 +203,23 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
             Show names <Help topic="pinNames" />
           </label>
           {showNames && !zoomedIn && <span className="muted small">Zoom in to see them</span>}
+          <div className="segmented">
+            <button
+              className={tool === 'measure' ? 'on' : ''}
+              onClick={() => {
+                setMeasure([])
+                setTool(tool === 'measure' ? 'select' : 'measure')
+              }}
+              title="Measure a distance (and how long it takes to travel)"
+            >
+              <Ico as={Ruler} /> Ruler
+            </button>
+            {cloudId && (
+              <button className={tool === 'ping' ? 'on' : ''} onClick={() => setTool(tool === 'ping' ? 'select' : 'ping')} title="Click the map to point at a spot for everyone looking at this map">
+                <Ico as={Crosshair} /> Ping
+              </button>
+            )}
+          </div>
           {isGM && (
             <>
             <div className="segmented">
@@ -247,6 +276,25 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
           )}
         </div>
       </div>
+      {tool === 'measure' && (
+        <MeasureBar
+          map={map}
+          points={measure}
+          isGM={isGM}
+          onUndo={() => setMeasure((m) => m.slice(0, -1))}
+          onClear={() => setMeasure([])}
+          onJourney={(distance, unit) => {
+            saveRoute(worldId, { distance, unit, from: map.name })
+            setRouteNote('Saved. Open a session’s Lectern: its Journey panel offers this route.')
+          }}
+        />
+      )}
+      {tool === 'measure' && routeNote && <p className="notice small route-note">{routeNote}</p>}
+      {tool === 'ping' && (
+        <div className="map-toolbar measure-bar">
+          <span className="small">Click the map to point at a spot. Everyone looking at this map sees it for a few seconds.</span> <Help topic="ping" />
+        </div>
+      )}
       {isGM && exporting && exportDrawing && (
         <ExportMap mapId={map.id} name={map.name} drawing={exportDrawing} fog={fog} width={map.width} height={map.height} onClose={() => setExporting(false)} />
       )}
@@ -288,7 +336,10 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
           <ClickHandler
             onClick={(pos) => {
               if (tool.startsWith('fog')) fogClick(pos)
-              else if (tool === 'pin') addPin(pos)
+              else if (tool === 'measure') setMeasure((m) => [...m, pos])
+              else if (tool === 'ping') {
+                if (cloudId) void sendPing(cloudId, gmMapId, pos, isGM ? 'GM' : me.who)
+              } else if (tool === 'pin') addPin(pos)
               else if (tool === 'region') setDraft((d) => [...d, pos])
               else {
                 setTapped(undefined)
@@ -371,6 +422,15 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
             )
           })}
           {draft.length > 0 && <Polyline positions={draft} pathOptions={{ color: '#fff', dashArray: '4 4' }} />}
+          {tool === 'measure' && measure.length > 0 && (
+            <>
+              <Polyline positions={measure} pathOptions={{ color: '#ffd36b', weight: 3, dashArray: '8 6', className: 'measure-line' }} interactive={false} />
+              {measure.map((pt, i) => (
+                <Marker key={i} position={pt} icon={measureDot} interactive={false} />
+              ))}
+            </>
+          )}
+          <Pings pings={pings.filter((p) => p.mapId === gmMapId)} />
           {fogCorner && <Marker position={fogCorner} icon={cornerIcon} interactive={false} />}
         </MapContainer>
         {(selected || showSettings) && (
@@ -390,6 +450,35 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
     </div>
   )
 }
+
+const measureDot = L.divIcon({ className: '', html: '<div class="measure-dot"></div>', iconSize: [10, 10], iconAnchor: [5, 5] })
+
+/** Pings on this map: a ring that pulses for a few seconds, with who sent it. */
+function Pings({ pings }: { pings: MapPing[] }) {
+  const [now, setNow] = useState(() => Date.now())
+  const fresh = pings.filter((p) => now - p.time < PING_FOR)
+  const key = fresh.map((p) => p.id).join(',')
+  useEffect(() => {
+    if (!key) return
+    const t = setInterval(() => setNow(Date.now()), 500)
+    return () => clearInterval(t)
+  }, [key])
+  // A new ping arrives: count from now, so it isn't gone before it's drawn.
+  useEffect(() => setNow(Date.now()), [pings.length])
+  return (
+    <>
+      {fresh.map((p) => (
+        <Marker key={p.id} position={p.at} icon={pingIcon(p.gm)} interactive={false}>
+          <Tooltip permanent direction="top" offset={[0, -18]} className="ping-name">
+            {p.who}
+          </Tooltip>
+        </Marker>
+      ))}
+    </>
+  )
+}
+const PING_FOR = 5000
+const pingIcon = (gm?: boolean) => L.divIcon({ className: '', html: `<div class="map-ping${gm ? ' gm' : ''}"><span></span><span></span></div>`, iconSize: [40, 40], iconAnchor: [20, 20] })
 
 /** A pin's name: on hover, or kept showing (when names are on and the map is zoomed in far enough). */
 function PinName({ label, on, center }: { label: string; on: boolean; center?: boolean }) {
@@ -789,6 +878,7 @@ function MapSettings({ map, entities, onClose, onDeleted }: { map: WorldMap; ent
         </select>
         <small className="muted">Pins linked to that location will offer "Enter map".</small>
       </label>
+      <ScaleSetting map={map} />
       <button
         className="danger"
         onClick={async () => {

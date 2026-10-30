@@ -3,6 +3,7 @@ import { formatDate } from '../calendar'
 import { transcriptText } from './transcript'
 import { readUpdates, UPDATES_HEADING, updatesInstructions } from './worldUpdates'
 import { claudeCost, CUT_OFF, friendly, MODEL } from './claude'
+import { HIGHLIGHTS_HEADING, highlightsInstructions, parseHighlights } from '../highlights'
 
 export const GM_HEADING = '## GM summary'
 export const PLAYER_HEADING = '## Player recap'
@@ -57,13 +58,16 @@ Session ${session.number}: ${session.title}${session.date ? `, played ${session.
 
 Below is a transcript of the session recorded at the table. It was made automatically, so expect misheard words, cross-talk and out-of-character chatter. Speaker names may be generic labels. Read it for what actually happened in the story.
 
-Write three things, using exactly these three headings and nothing before the first one:
+Write four things, using exactly these four headings and nothing before the first one:
 
 ${GM_HEADING}
 For the GM's own notes. A concise account of what happened, in order, as bullet points grouped under short scene headings (use ### for those). Note decisions the players made, NPCs met, items gained or lost, promises and threats, and anything the GM said would happen later. Finish with a short "Left hanging" list of unresolved hooks and questions the players raised.
 
 ${PLAYER_HEADING}
 For the players to read before next session. Two to five short paragraphs in a warm "previously on…" voice, past tense, about the characters rather than the players. Only include what happened at the table. Do not use anything from the GM's notes below, which may contain secrets.
+
+${HIGHLIGHTS_HEADING}
+${highlightsInstructions()}
 
 ${UPDATES_HEADING}
 ${updatesInstructions()}
@@ -82,6 +86,7 @@ export function parseRecap(text: string) {
     { key: 'gm', at: t.search(/^#{1,3}\s*GM summary\s*$/im) },
     { key: 'players', at: t.search(/^#{1,3}\s*Player recap\s*$/im) },
     { key: 'updates', at: t.search(/^#{1,3}\s*World updates\s*$/im) },
+    { key: 'highlights', at: t.search(/^#{1,3}\s*Highlights\s*$/im) },
   ]
     .filter((h) => h.at >= 0)
     .sort((a, b) => a.at - b.at)
@@ -93,7 +98,7 @@ export function parseRecap(text: string) {
   const read = part.updates !== undefined ? readUpdates(part.updates) : undefined
   // "Nothing to change" only when Claude said so: a missing or garbled list is shown to the GM as it is.
   const updatesProblem = !read ? '' : read.readable ? undefined : part.updates
-  return { gm: part.gm ?? '', players: part.players ?? '', updates: read?.updates ?? [], updatesProblem }
+  return { gm: part.gm ?? '', players: part.players ?? '', highlights: part.highlights ? parseHighlights(part.highlights) : undefined, updates: read?.updates ?? [], updatesProblem }
 }
 
 /** Writes the recap with the GM's own Anthropic API key, streaming text as it arrives. */

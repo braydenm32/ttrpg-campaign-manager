@@ -248,6 +248,12 @@ a.card:hover, button.card:hover { border-color: var(--accent); text-decoration: 
 .wikilink { text-decoration-style: solid; }
 .wikilink.missing { color: var(--muted); text-decoration-style: dashed; text-decoration-color: var(--muted); }
 .player-mode .wikilink.missing { text-decoration: none; color: inherit; }
+.markdown .wikilink.missing[data-missing] { cursor: pointer; }
+.player-mode .markdown .wikilink.missing[data-missing] { cursor: auto; }
+.popover-backdrop { position: fixed; inset: 0; z-index: 2999; }
+.link-peek.make-page { pointer-events: auto; display: block; }
+.make-page-buttons { display: flex; flex-wrap: wrap; gap: .2em; }
+.wanted-pages li { margin-bottom: .2em; }
 .editor textarea { font-family: ui-monospace, Menlo, monospace; font-size: .92rem; }
 details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
 
@@ -423,6 +429,21 @@ button.social.facebook .social-icon { background: #1877f2; }
 .lectern { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr); gap: 1em; align-items: start; }
 .lectern-col { display: flex; flex-direction: column; gap: 1em; min-width: 0; }
 .lectern-panel h2 { margin: 0 0 .2em; font-size: 1.15rem; }
+.lectern-panel-head { display: flex; align-items: center; gap: .3em; margin-bottom: .2em; }
+.lectern-panel-head h2 { flex: 1; margin: 0; cursor: pointer; user-select: none; min-width: 0; }
+.lectern-panel-head > .row { flex: none; }
+.lectern-panel .fold-toggle { padding: .15em .3em; flex: none; line-height: 1; }
+.lectern-panel .fold-toggle svg { transition: transform .15s; }
+.lectern-panel.folded { padding-top: .5em; padding-bottom: .5em; }
+.lectern-panel.folded .lectern-panel-head { margin: 0; }
+.lectern-panel.folded .fold-toggle svg { transform: rotate(-90deg); }
+.lectern-tools { margin-bottom: .8em; gap: .5em; }
+.lectern-search { flex: 1 1 260px; max-width: 520px; }
+.lectern-found { margin-bottom: 1em; }
+.lectern-found h2 { margin: 0 0 .4em; }
+.lectern-found-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .8em; }
+.lectern-notes { max-height: 22em; overflow: auto; font-size: .95em; }
+.lectern-search-note { margin-top: 1em; }
 .lectern-panel .secret { margin: .4em 0; }
 .lectern-panel blockquote { margin: .3em 0; padding-left: .8em; border-left: 3px solid var(--border); font-style: italic; }
 .present { border-top: 1px solid var(--border); padding-top: .5em; display: flex; flex-direction: column; gap: .25em; }
@@ -1163,3 +1184,92 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 
 /* A warning under a text box: players would read the name of a GM-only page */
 .secret-names { margin: .3em 0; padding: .35em .6em; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 4px; color: var(--text); }
+
+/* Party at a glance */
+.party-glance .table-scroll { overflow-x: auto; }
+.party-glance table { width: 100%; border-collapse: collapse; font-size: .92em; }
+.party-glance th, .party-glance td { text-align: left; padding: .25em .5em; border-bottom: 1px solid var(--border); vertical-align: top; }
+.party-glance th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+.party-glance td:first-child { white-space: nowrap; }
+.party-glance-extra { width: 1%; white-space: nowrap; }
+.party-glance-choose { display: flex; flex-wrap: wrap; gap: .3em 1em; margin-top: .4em; }
+.party-glance-choose form { flex-basis: 100%; }
+
+/* GM screen at the Lectern */
+.gm-screen-pinned, .gm-screen-rolls { display: flex; flex-direction: column; gap: .5em; margin-top: .5em; }
+.gm-screen-page { border-top: 1px solid var(--border); padding-top: .3em; }
+.gm-screen-page summary { cursor: pointer; display: flex; align-items: center; gap: .3em; }
+.gm-screen-page summary button { margin-left: auto; }
+.saved-roll { display: inline-flex; align-items: center; }
+.wide-dice { width: 7em; }
+
+/* Names and treasure */
+.name-list { list-style: none; padding: 0; margin: .5em 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .2em .8em; }
+.name-list li { display: flex; align-items: center; gap: .2em; }
+.name-list li > span { flex: 1; font-family: var(--font-display); font-size: 1.05em; }
+.treasure-list { list-style: none; padding: 0; margin: .5em 0; display: flex; flex-direction: column; gap: .15em; }
+.starter-tables { margin: .6em 0; }
+.starter-tables .card { display: flex; flex-direction: column; gap: .3em; }
+
+/* Quest objectives and rewards */
+.quest-box h2 { display: flex; align-items: baseline; gap: .4em; }
+.objective-list { list-style: none; padding: 0; margin: .3em 0 .6em; display: flex; flex-direction: column; gap: .2em; }
+.objective-list li { display: flex; align-items: center; justify-content: space-between; gap: .5em; padding: .15em .3em; border-radius: 6px; }
+.objective-list li.done > label span, .objective-list li.done > span:first-child { text-decoration: line-through; color: var(--muted); }
+.objective-list li.gm-only { background: var(--secret-bg, rgba(160, 60, 60, .08)); }
+.known-toggle.on { color: var(--accent); }
+
+/* Call for a roll */
+.roll-call-results { list-style: none; padding: 0; margin: .4em 0; display: flex; flex-direction: column; gap: .2em; }
+.roll-call-results li { display: flex; align-items: center; gap: .5em; flex-wrap: wrap; padding: .15em .35em; border-radius: 6px; }
+.roll-call-results li > button { margin-left: auto; }
+.roll-call-who { min-width: 6em; font-weight: 600; }
+.roll-call-results li.pass { background: color-mix(in srgb, var(--good) 14%, transparent); }
+.roll-call-results li.fail { background: color-mix(in srgb, var(--danger) 14%, transparent); }
+.roll-call-results .tag { margin-left: .4em; }
+.roll-call-form { display: flex; flex-direction: column; gap: .4em; margin-top: .4em; }
+.roll-call-prompt { top: calc(var(--topbar-h) + 4.8em); }
+.roll-call-prompt input.hp-input { width: 4.5em; }
+
+/* Scene cards */
+.scene-card-editor { display: flex; flex-direction: column; gap: .5em; margin: .3em 0 .8em 1.8em; padding: .7em .8em; border-left: 3px solid var(--accent); background: var(--panel-2); border-radius: 0 var(--radius) var(--radius) 0; }
+.scene-card-editor label { display: flex; flex-direction: column; gap: .2em; }
+.scene-card-editor label > span:first-child { font-size: .85em; color: var(--muted); }
+.scene-start { margin-right: .4em; padding: .1em .5em; }
+
+/* Map ruler, scale and pings */
+.measure-bar { align-items: center; }
+.measure-total { font-size: 1.15em; font-weight: 600; color: var(--accent); }
+.measure-paces { display: inline-flex; flex-wrap: wrap; gap: .25em .9em; }
+.measure-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid #1b1508; box-sizing: border-box; }
+.route-note { margin: .3em 0; }
+.map-ping { position: relative; width: 40px; height: 40px; pointer-events: none; }
+.map-ping span { position: absolute; inset: 0; border-radius: 50%; border: 3px solid #4fc3f7; animation: map-ping 1.4s ease-out infinite; }
+.map-ping span + span { animation-delay: .7s; }
+.map-ping.gm span { border-color: #d9ad55; }
+@keyframes map-ping { from { transform: scale(.2); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .map-ping span { animation: none; transform: scale(.8); } .map-ping span + span { display: none; } }
+.leaflet-tooltip.ping-name { font-weight: 600; padding: 1px 6px; }
+
+/* Seasons, weather and journeys */
+.world-today .weather { display: inline-flex; gap: .3em; align-items: baseline; }
+.journey-plan input:not(.hp-input) { width: 100%; }
+.journey-progress { height: 8px; border-radius: 999px; background: var(--panel-2); overflow: hidden; margin: .4em 0; }
+.journey-progress span { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.journey-log { margin: .6em 0 0; padding-left: 0; list-style: none; display: grid; gap: .45em; max-height: 18em; overflow: auto; }
+.journey-log li { border-left: 2px solid var(--panel-2); padding-left: .6em; }
+.journey-encounter > div, .journey-encounter p { display: inline; margin: 0; }
+
+/* Session highlights and the story so far */
+.highlight-list { list-style: none; padding: 0; margin: .4em 0; display: grid; gap: .4em; }
+.highlight-list li { display: flex; gap: .5em; align-items: baseline; }
+.highlight-list li > button { margin-left: auto; }
+.highlight-kind { color: var(--accent); flex: none; }
+.highlight-text > div, .highlight-text p { display: inline; margin: 0; }
+.highlight-text q { font-style: italic; }
+.highlight-add input:not(.highlight-who) { flex: 1 1 14em; }
+.highlight-who { width: 10em; }
+.room-card .highlights h2 { font-size: 1em; margin-top: .8em; }
+.story-so-far .story-draft { margin-top: .6em; }
+.story-so-far details { margin-top: .6em; }
+.party-glance-value { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 3em; max-width: 16em; }

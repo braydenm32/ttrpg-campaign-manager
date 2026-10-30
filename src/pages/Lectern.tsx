@@ -1,6 +1,12 @@
 import { PreviouslyOn } from '../ai/ReadAloud'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
+import { PartyGlance } from '../partyGlance'
+import { GmScreenPanel } from '../gmScreen'
+import { CallForRoll } from '../rollCallPanel'
+import { JourneyPanel } from '../journey'
+import { NameGenerator, TreasureGenerator } from '../moreGenerators'
+import { FoldingProvider, LECTERN_PANELS, LecternPanel, useFolding } from '../lecternPanel'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { partyOf } from '../sessions'
@@ -33,7 +39,7 @@ import { ShowPanel } from '../showing'
 import { WorldToday } from '../calendar'
 import { ClocksPanel } from '../clocks'
 import { Ico, TypeIcon } from '../icons'
-import { Armchair, BookOpen, CastleTurret, CloudFog, DiceFive, FlagCheckered, Keyboard, MapTrifold, Eye, EyeSlash, Prohibit, Shield, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
+import { Armchair, BookOpen, CastleTurret, CloudFog, DiceFive, FlagCheckered, Keyboard, MapTrifold, NotePencil, Eye, EyeSlash, Prohibit, Shield, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
 import { clockText, GoLive, RollDetail, RollLog, timeLeft, useNow } from '../atTheTable'
 import { shareRoll, useLiveSession, useTable } from '../cloud/table'
@@ -51,6 +57,8 @@ export default function Lectern() {
   const entities = useVisibleEntities(worldId)
   // Opening the Lectern sends nothing: players see this session only once the GM goes live with it.
   const live = useLiveSession(worldId) === sessionId
+  const [query, setQuery] = useState('')
+  const folding = useFolding(query)
 
   if (session === undefined) return null
   if (!isGM) return <Empty>The Lectern is a GM tool. Switch back to the GM view to use it.</Empty>
@@ -106,29 +114,72 @@ export default function Lectern() {
           )}
         </div>
       </header>
-      <div className="lectern">
-        <div className="lectern-col">
-          <Scene lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
-          <Present lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
-          <Party entities={entities} campaignId={session.campaignId} worldId={worldId} />
-          <LecternThreads lectern={lectern} entities={entities} worldId={worldId} sessionId={session.id} />
+      <FoldingProvider value={folding.value}>
+        <div className="lectern-tools row wrap">
+          <input
+            type="search"
+            className="lectern-search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
+            placeholder="Find a panel or a page… (initiative, dice, Mirela)"
+            aria-label="Find a panel or a page"
+          />
+          <Help topic="lecternSearch" />
+          <button className="ghost small" onClick={() => folding.foldAll(LECTERN_PANELS)}>
+            Fold all
+          </button>
+          <button className="ghost small" onClick={folding.openAll}>
+            Open all
+          </button>
         </div>
-        <div className="lectern-col">
-          <LecternPrep session={session} worldId={worldId} />
-          <Initiative lectern={lectern} edit={edit} entities={entities} campaignId={session.campaignId} />
-          <Timers lectern={lectern} edit={edit} shared={!!world?.cloud?.enabled} />
-          <ClocksPanel worldId={worldId} entities={entities} />
+        {query.trim() && <FoundPages query={query} entities={entities} worldId={worldId} lectern={lectern} edit={edit} />}
+        <div className="lectern">
+          <div className="lectern-col">
+            <Scene lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
+            <Present lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
+            {world && <Party world={world} entities={entities} campaignId={session.campaignId} />}
+            <LecternThreads lectern={lectern} entities={entities} worldId={worldId} sessionId={session.id} />
+          </div>
+          <div className="lectern-col">
+            {world && <LecternPrep session={session} world={world} entities={entities} />}
+            <SessionNotes session={session} entities={entities} worldId={worldId} />
+            <Initiative lectern={lectern} edit={edit} entities={entities} campaignId={session.campaignId} />
+            <Timers lectern={lectern} edit={edit} shared={!!world?.cloud?.enabled} />
+            <ClocksPanel worldId={worldId} entities={entities} />
+            {world && <JourneyPanel world={world} lectern={lectern} edit={edit} entities={entities} partySize={partyOf(entities, session.campaignId, { activeOnly: true }).length} />}
+          </div>
+          <div className="lectern-col">
+            {world?.cloud?.enabled && <CommonRoomPanel world={world} session={session} lectern={lectern} edit={edit} live={live} />}
+            <CallForRoll
+              lectern={lectern}
+              edit={edit}
+              party={partyOf(entities, session.campaignId, { activeOnly: true })}
+              cloudId={world?.cloud?.enabled ? worldId : undefined}
+              live={live}
+            />
+            {world && <ShowPanel world={world} sceneText={lectern.sceneText} />}
+            <Soundboard worldId={worldId} compact />
+            <Dice lectern={lectern} edit={edit} shareTo={shareTo} />
+            <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
+            {world && (
+              <GmScreenPanel
+                world={world}
+                entities={entities}
+                onRoll={(expr, name) => {
+                  try {
+                    return rollOnLectern(edit, expr, shareTo, name)
+                  } catch (err) {
+                    return { error: (err as Error).message }
+                  }
+                }}
+              />
+            )}
+            {world && <QuickGenerators lectern={lectern} edit={edit} world={world} entities={entities} parentId={lectern.sceneId} />}
+          </div>
         </div>
-        <div className="lectern-col">
-          {world?.cloud?.enabled && <CommonRoomPanel world={world} session={session} lectern={lectern} edit={edit} live={live} />}
-          {world && <ShowPanel world={world} sceneText={lectern.sceneText} />}
-          <Soundboard worldId={worldId} compact />
-          <Dice lectern={lectern} edit={edit} shareTo={shareTo} />
-          <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
-          <QuickNote sessionId={session.id} />
-          <QuickGenerators lectern={lectern} edit={edit} worldId={worldId} parentId={lectern.sceneId} />
-        </div>
-      </div>
+        {query.trim() && <p className="muted small lectern-search-note">Showing the panels that match “{query.trim()}”. Clear the search to see them all.</p>}
+      </FoldingProvider>
     </div>
   )
 }
@@ -140,6 +191,70 @@ interface PanelProps {
   edit: Edit
 }
 
+/** Pages matching the Lectern's search: their notes at a glance, and quick ways to bring them into the scene. */
+function FoundPages({ query, entities, worldId, lectern, edit }: PanelProps & { query: string; entities: Entity[]; worldId: string }) {
+  const q = query.trim().toLowerCase()
+  const found = entities
+    .filter((e) => !e.template && [e.name, ...(e.aliases ?? [])].some((n) => n.toLowerCase().includes(q)))
+    .sort((a, b) => Number(!a.name.toLowerCase().startsWith(q)) - Number(!b.name.toLowerCase().startsWith(q)) || a.name.localeCompare(b.name))
+    .slice(0, 6)
+  if (!found.length) return null
+  const isPlace = (e: Entity) => e.type === 'location' || e.type === 'shop'
+  return (
+    <section className="card lectern-found">
+      <h2 className="small muted">Pages</h2>
+      <div className="lectern-found-list">
+        {found.map((e) => (
+          <div key={e.id} className="present">
+            <div className="row spread">
+              <Link to={pagePath(worldId, e.id)}>
+                <strong>
+                  <TypeIcon type={e.type} /> {e.name}
+                </strong>
+              </Link>
+              <StatusBadge entity={e} />
+            </div>
+            {e.summary && <div className="muted small">{e.summary}</div>}
+            {e.fields.length > 0 && (
+              <div className="small">
+                {e.fields.slice(0, 6).map((f, i) => (
+                  <span key={i} className="field-chip">
+                    <b>{f.key}</b> {f.value}
+                  </span>
+                ))}
+              </div>
+            )}
+            {e.gmNotes && (
+              <details className="present-notes small">
+                <summary>GM notes</summary>
+                <div className="secret small">
+                  <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
+                </div>
+              </details>
+            )}
+            <div className="row wrap small">
+              {isPlace(e) ? (
+                <button className="ghost small" disabled={lectern.sceneId === e.id} onClick={() => edit((l) => void (l.sceneId = e.id))}>
+                  {lectern.sceneId === e.id ? '✓ The scene' : 'Set as the scene'}
+                </button>
+              ) : (
+                <button className="ghost small" disabled={lectern.presentIds.includes(e.id)} onClick={() => edit((l) => void l.presentIds.push(e.id))}>
+                  {lectern.presentIds.includes(e.id) ? '✓ Here' : '+ Who’s here'}
+                </button>
+              )}
+              {(e.type === 'npc' || e.type === 'pc') && (
+                <button className="ghost small" title="Add to initiative" onClick={() => edit((l) => addCombatants(l, [fromEntity(e)]))}>
+                  <Ico as={Sword} /> Fight
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function Scene({ lectern, edit, entities, worldId }: PanelProps & { entities: Entity[]; worldId: string }) {
   const place = entities.find((e) => e.id === lectern.sceneId)
   const map = useLiveQuery(
@@ -148,8 +263,7 @@ function Scene({ lectern, edit, entities, worldId }: PanelProps & { entities: En
   )
   const here = place ? entities.filter((e) => e.parentId === place.id && !lectern.presentIds.includes(e.id) && e.type !== 'location') : []
   return (
-    <section className="card lectern-panel">
-      <h2><Ico as={CastleTurret} /> Scene</h2>
+    <LecternPanel id="scene" name="Scene" keywords="where place location read-aloud room" title={<><Ico as={CastleTurret} /> Scene</>}>
       <select
         value={lectern.sceneId ?? ''}
         onChange={(e) => {
@@ -199,15 +313,14 @@ function Scene({ lectern, edit, entities, worldId }: PanelProps & { entities: En
         placeholder="Read-aloud text, what's in the room, what happens next…"
         onCommit={(v) => edit((l) => void (l.sceneText = v))}
       />
-    </section>
+    </LecternPanel>
   )
 }
 
 function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: Entity[]; worldId: string }) {
   const present = lectern.presentIds.map((id) => entities.find((e) => e.id === id)).filter((e): e is Entity => !!e)
   return (
-    <section className="card lectern-panel">
-      <h2><Ico as={User} /> Who's here <Help topic="pagePicker" /></h2>
+    <LecternPanel id="present" name="Who's here" keywords="npcs present people characters" title={<><Ico as={User} /> Who's here <Help topic="pagePicker" /></>}>
       {present.length === 0 && <p className="muted small">Add the NPCs and others in this scene to keep their notes in reach.</p>}
       {present.map((e) => (
         <div key={e.id} className="present">
@@ -253,7 +366,7 @@ function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: 
         suggested={entities.filter((e) => lectern.sceneId && e.parentId === lectern.sceneId).map((e) => e.id)}
         onPick={(id) => id && edit((l) => void l.presentIds.push(id))}
       />
-    </section>
+    </LecternPanel>
   )
 }
 
@@ -270,13 +383,17 @@ function LecternThreads({ lectern, entities, worldId, sessionId }: { lectern: Le
     <ThreadCard key={t.id} thread={t} entities={entities} sessions={sessions} worldId={worldId} currentSessionId={sessionId} highlight={highlight} />
   )
   return (
-    <section className="card lectern-panel">
-      <div className="row spread">
-        <h2><Ico as={Spiral} /> Loose threads</h2>
+    <LecternPanel
+      id="threads"
+      name="Loose threads"
+      keywords="hooks mysteries leads quests"
+      title={<><Ico as={Spiral} /> Loose threads</>}
+      extra={
         <Link className="small" to={`${worldPath(worldId)}/threads`}>
           All threads
         </Link>
-      </div>
+      }
+    >
       <form
         className="row"
         onSubmit={async (e) => {
@@ -299,7 +416,7 @@ function LecternThreads({ lectern, entities, worldId, sessionId }: { lectern: Le
           {rest.map((t) => card(t))}
         </details>
       )}
-    </section>
+    </LecternPanel>
   )
 }
 
@@ -356,18 +473,21 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
     })
 
   return (
-    <section className="card lectern-panel" id="lectern-initiative">
-      <div className="row spread">
-        <h2>
-          <Ico as={Sword} /> Initiative <Help topic="initiative" />
-        </h2>
-        <span className="row">
+    <LecternPanel
+      id="initiative"
+      sectionId="lectern-initiative"
+      name="Initiative"
+      keywords="combat fight turn order hp conditions round"
+      title={<><Ico as={Sword} /> Initiative <Help topic="initiative" /></>}
+      extra={
+        <>
           <span className="muted">{round > 0 ? `Round ${round}` : 'Not started'}</span>
           <button className="ghost small lectern-keys-button" title="Keyboard shortcuts (press ?)" aria-label="Keyboard shortcuts" onClick={() => window.dispatchEvent(new Event(SHOW_KEYS))}>
             <Ico as={Keyboard} />
           </button>
-        </span>
-      </div>
+        </>
+      }
+    >
       <div className="row wrap">
         <button onClick={() => step(-1)} disabled={!activeId}>◀ Back</button>
         <button className="primary" onClick={() => step(1)} disabled={!list.length}>
@@ -507,7 +627,7 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
           <Ico as={Shield} /> Add the party ({pcs.length})
         </button>
       )}
-    </section>
+    </LecternPanel>
   )
 }
 
@@ -593,10 +713,11 @@ const toNumber = (v: string) => {
 const QUICK_DICE = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100']
 
 /** Rolls dice on the Lectern (and for players to see, if the GM chose that). Throws on dice it can't read. */
-function rollOnLectern(edit: Edit, text: string, shareTo?: string) {
+function rollOnLectern(edit: Edit, text: string, shareTo?: string, label?: string) {
   const r = roll(text)
-  edit((l) => void (l.rolls = [{ ...r, id: newId(), at: Date.now() }, ...l.rolls].slice(0, 30)))
-  if (shareTo) void shareRoll(shareTo, { who: 'GM', expr: r.expr, total: r.total, detail: r.detail, crit: r.crit })
+  const expr = label ? `${label}: ${r.expr}` : r.expr
+  edit((l) => void (l.rolls = [{ ...r, expr, id: newId(), at: Date.now() }, ...l.rolls].slice(0, 30)))
+  if (shareTo) void shareRoll(shareTo, { who: 'GM', expr, total: r.total, detail: r.detail, crit: r.crit })
   return r
 }
 
@@ -613,10 +734,7 @@ function Dice({ lectern, edit, shareTo }: PanelProps & { shareTo?: string }) {
   }
   const last = lectern.rolls[0]
   return (
-    <section className="card lectern-panel">
-      <h2>
-        <Ico as={DiceFive} /> Dice <Help topic="dice" />
-      </h2>
+    <LecternPanel id="dice" name="Dice" keywords="roll d20 advantage" title={<><Ico as={DiceFive} /> Dice <Help topic="dice" /></>}>
       <div className="row wrap dice-buttons">
         {QUICK_DICE.map((d) => (
           <button key={d} onClick={() => doRoll(d)}>
@@ -664,18 +782,34 @@ function Dice({ lectern, edit, shareTo }: PanelProps & { shareTo?: string }) {
           </button>
         </details>
       )}
-    </section>
+    </LecternPanel>
   )
 }
 
-function QuickNote({ sessionId }: { sessionId: string }) {
+/**
+ * The session's GM notes, in reach without leaving the Lectern: read them, edit them, or add a
+ * line with the time (it goes to the end of the notes).
+ */
+function SessionNotes({ session, entities, worldId }: { session: Session; entities: Entity[]; worldId: string }) {
   const [text, setText] = useState('')
-  const [saved, setSaved] = useState('')
+  const [editing, setEditing] = useState(false)
+  const setNotes = (fn: (notes: string) => string) =>
+    db.sessions
+      .where('id')
+      .equals(session.id)
+      .modify((s) => void (s.notes = fn(s.notes)))
   return (
-    <section className="card lectern-panel">
-      <h2>
-        ✒️ Quick note <Help topic="quickNote" />
-      </h2>
+    <LecternPanel
+      id="notes"
+      name="GM notes"
+      keywords="session notes quick note jot remember"
+      title={<><Ico as={NotePencil} /> GM notes <Help topic="lecternNotes" /></>}
+      extra={
+        <button className="ghost small" onClick={() => setEditing(!editing)}>
+          {editing ? 'Done' : 'Edit'}
+        </button>
+      }
+    >
       <form
         className="row"
         onSubmit={async (e) => {
@@ -683,25 +817,30 @@ function QuickNote({ sessionId }: { sessionId: string }) {
           const line = text.trim()
           if (!line) return
           const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          await db.sessions
-            .where('id')
-            .equals(sessionId)
-            .modify((s) => void (s.notes = `${s.notes.trimEnd()}${s.notes.trim() ? '\n' : ''}- ${time} ${line}`))
+          await setNotes((n) => `${n.trimEnd()}${n.trim() ? '\n' : ''}- ${time} ${line}`)
           setText('')
-          setSaved(line)
         }}
       >
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Something to remember… (Enter to save)" />
-        <button>Save</button>
+        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Something to remember… (Enter to add, with the time)" aria-label="Quick note" />
+        <button>Add</button>
       </form>
-      <p className="muted small">{saved ? `Added to the session notes: “${saved}”` : 'Notes go to the end of this session’s GM notes, with the time.'}</p>
-    </section>
+      {editing ? (
+        <DraftText multiline rows={10} value={session.notes} onCommit={(v) => void setNotes(() => v)} placeholder="Your notes for this session…" />
+      ) : session.notes.trim() ? (
+        <div className="lectern-notes">
+          <Markdown text={session.notes} entities={entities} worldId={worldId} showSecrets />
+        </div>
+      ) : (
+        <p className="muted small">No notes for this session yet. Lines you add here also show on the session page.</p>
+      )}
+    </LecternPanel>
   )
 }
 
-type GenKind = 'npc' | 'tavern' | 'shop'
+type GenKind = 'npc' | 'tavern' | 'shop' | 'name' | 'loot'
 
-function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: string; parentId?: string }) {
+function QuickGenerators({ edit, world, entities, parentId }: PanelProps & { world: World; entities: Entity[]; parentId?: string }) {
+  const worldId = world.id
   const [kind, setKind] = useState<GenKind>('npc')
   const [shopKind, setShopKind] = useState(SHOP_KIND_NAMES[0])
   const [npc, setNpc] = useState<GeneratedNpc>(() => generateNpc())
@@ -714,7 +853,7 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
       const n = generateNpc()
       setNpc(n)
       setGreeting(npcGreeting(n))
-    } else {
+    } else if (k === 'tavern' || k === 'shop') {
       const p = k === 'tavern' ? generateTavern() : generateShop(sk)
       setPlace(p)
       setGreeting(npcGreeting(p.keeper))
@@ -731,13 +870,10 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
     setSavedName(created[0].name)
   }
   return (
-    <section className="card lectern-panel">
-      <h2>
-        <Ico as={DiceFive} /> Improvise <Help topic="improvise" />
-      </h2>
+    <LecternPanel id="improvise" name="Improvise" keywords="generate npc tavern shop name random" title={<><Ico as={DiceFive} /> Improvise <Help topic="improvise" /></>}>
       <div className="row wrap">
         <div className="segmented">
-          {(['npc', 'tavern', 'shop'] as const).map((k) => (
+          {(['npc', 'tavern', 'shop', 'name', 'loot'] as const).map((k) => (
             <button
               key={k}
               className={kind === k ? 'on' : ''}
@@ -746,7 +882,7 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
                 reroll(k)
               }}
             >
-              {k === 'npc' ? '🧙 NPC' : k === 'tavern' ? '🍺 Tavern' : '⚒️ Shop'}
+              {{ npc: '🧙 NPC', tavern: '🍺 Tavern', shop: '⚒️ Shop', name: '🏷️ Names', loot: '💰 Treasure' }[k]}
             </button>
           ))}
         </div>
@@ -764,29 +900,37 @@ function QuickGenerators({ edit, worldId, parentId }: PanelProps & { worldId: st
           </select>
         )}
       </div>
-      {kind === 'npc' ? (
-        <div className="small">
-          <strong>{npc.name}</strong>, a {npc.manner} {npc.ancestry} {npc.role} with {npc.look}.
-          <div>
-            <b>Wants:</b> {npc.wants}.
-          </div>
-          <div className="secret">
-            <b>Secret:</b> {npc.secret}.
-          </div>
-        </div>
+      {kind === 'name' ? (
+        <NameGenerator world={world} entities={entities} compact />
+      ) : kind === 'loot' ? (
+        <TreasureGenerator world={world} compact />
       ) : (
-        <div className="small">
-          <strong>{place.name}</strong>: {place.summary}. Run by {place.keeper.name}, {place.keeper.manner}.
-        </div>
+        <>
+          {kind === 'npc' ? (
+            <div className="small">
+              <strong>{npc.name}</strong>, a {npc.manner} {npc.ancestry} {npc.role} with {npc.look}.
+              <div>
+                <b>Wants:</b> {npc.wants}.
+              </div>
+              <div className="secret">
+                <b>Secret:</b> {npc.secret}.
+              </div>
+            </div>
+          ) : (
+            <div className="small">
+              <strong>{place.name}</strong>: {place.summary}. Run by {place.keeper.name}, {place.keeper.manner}.
+            </div>
+          )}
+          <blockquote className="small">{greeting}</blockquote>
+          <div className="row wrap">
+            <button onClick={() => reroll(kind)}><Ico as={DiceFive} /> Reroll</button>
+            <button className="primary" onClick={save} disabled={!!savedName}>
+              {savedName ? '✓ Saved' : kind === 'npc' ? 'Save and add to scene' : 'Save and set as scene'}
+            </button>
+          </div>
+        </>
       )}
-      <blockquote className="small">{greeting}</blockquote>
-      <div className="row wrap">
-        <button onClick={() => reroll(kind)}><Ico as={DiceFive} /> Reroll</button>
-        <button className="primary" onClick={save} disabled={!!savedName}>
-          {savedName ? '✓ Saved' : kind === 'npc' ? 'Save and add to scene' : 'Save and set as scene'}
-        </button>
-      </div>
-    </section>
+    </LecternPanel>
   )
 }
 
@@ -798,10 +942,7 @@ function CommonRoomPanel({ world, session, lectern, edit, live }: PanelProps & {
     edit((l) => void (l.share = { ...l.share, [key]: on || undefined }))
   const theirs = rolls.filter((r) => r.who !== 'GM')
   return (
-    <section className="card lectern-panel">
-      <h2>
-        <Ico as={Armchair} /> Players’ Common Room <Help topic="tableLink" />
-      </h2>
+    <LecternPanel id="commonroom" name="Players’ Common Room" keywords="live players go live share rolls" title={<><Ico as={Armchair} /> Players’ Common Room <Help topic="tableLink" /></>}>
       <GoLive world={world} session={session} />
       <p className="muted small">
         {live
@@ -830,41 +971,35 @@ function CommonRoomPanel({ world, session, lectern, edit, live }: PanelProps & {
       ) : (
         <p className="muted small">Players’ rolls show up here as they make them.</p>
       )}
-    </section>
+    </LecternPanel>
   )
 }
 
-/** The party at a glance, with inspiration to hand out. */
-function Party({ entities, campaignId, worldId }: { entities: Entity[]; campaignId: string; worldId: string }) {
+/** The party at a glance (the details the GM picked), with inspiration to hand out. */
+function Party({ world, entities, campaignId }: { world: World; entities: Entity[]; campaignId: string }) {
   const party = partyOf(entities, campaignId)
   if (!party.length) return null
   const give = (e: Entity, n: number) => db.entities.update(e.id, { inspiration: Math.max(0, (e.inspiration ?? 0) + n) || undefined, updatedAt: Date.now() })
   return (
-    <section className="card lectern-panel">
-      <h2>
-        <Ico as={Shield} /> The party <Help topic="inspiration" />
-      </h2>
-      <ul className="lectern-party">
-        {party.map((e) => (
-          <li key={e.id} className="row spread">
-            <span>
-              <Link to={pagePath(worldId, e.id)}>{e.name}</Link> <StatusBadge entity={e} />
+    <LecternPanel id="party" name="The party" keywords="characters pcs inspiration players ac perception glance" title={<><Ico as={Shield} /> The party <Help topic="inspiration" /></>}>
+      <PartyGlance
+        world={world}
+        party={party}
+        extra={(e) => (
+          <span className="row inspiration-control" title="Inspiration (players can see it)">
+            <button className="ghost small" aria-label={`Take inspiration from ${e.name}`} disabled={!e.inspiration} onClick={() => give(e, -1)}>
+              −
+            </button>
+            <span className={e.inspiration ? 'inspired' : 'muted'}>
+              <Ico as={Sparkle} /> {e.inspiration ?? 0}
             </span>
-            <span className="row inspiration-control" title="Inspiration (players can see it)">
-              <button className="ghost small" aria-label={`Take inspiration from ${e.name}`} disabled={!e.inspiration} onClick={() => give(e, -1)}>
-                −
-              </button>
-              <span className={e.inspiration ? 'inspired' : 'muted'}>
-                <Ico as={Sparkle} /> {e.inspiration ?? 0}
-              </span>
-              <button className="ghost small" aria-label={`Give ${e.name} inspiration`} onClick={() => give(e, 1)}>
-                +
-              </button>
-            </span>
-          </li>
-        ))}
-      </ul>
-    </section>
+            <button className="ghost small" aria-label={`Give ${e.name} inspiration`} onClick={() => give(e, 1)}>
+              +
+            </button>
+          </span>
+        )}
+      />
+    </LecternPanel>
   )
 }
 
@@ -919,10 +1054,7 @@ function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {
     setCustom('')
   }
   return (
-    <section className="card lectern-panel">
-      <h2>
-        <Ico as={Timer} /> Timers <Help topic="timers" />
-      </h2>
+    <LecternPanel id="timers" name="Timers" keywords="countdown clock minutes" title={<><Ico as={Timer} /> Timers <Help topic="timers" /></>}>
       <ul className="timer-list">
         {timers.map((t) => {
           const left = timeLeft(t, now)
@@ -996,7 +1128,7 @@ function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {
         </form>
       </div>
       {shared && timers.length > 0 && <p className="muted small">While you’re live, players see timers in their Common Room unless you hide them.</p>}
-    </section>
+    </LecternPanel>
   )
 }
 

@@ -7,7 +7,10 @@ import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel, type E
 import { useCreatePage } from '../NewPage'
 import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { initials } from '../text'
-import { nextSessions, URGENCY, useCampaigns } from '../threads'
+import { nextSessions, URGENCY, useCampaigns, useWorldSessions } from '../threads'
+import { WantedPages } from '../wanted'
+import { questProgress } from '../quests'
+import { useDowntime } from '../players/Downtime'
 import { useViewMode } from '../viewMode'
 import { BackupReminder } from '../BackupReminder'
 import WikiHome from './WikiHome'
@@ -18,7 +21,7 @@ import { ClockFace, useAllClocks } from '../clocks'
 import { useGmQuestions } from '../players/Questions'
 import { useCharacterOwners } from '../players/owners'
 import { Ico, TypeIcon } from '../icons'
-import { ChatCircleDots, ListChecks, Play, Plus, Spiral, UserCirclePlus } from '@phosphor-icons/react'
+import { ChatCircleDots, Hourglass, ListChecks, Play, Plus, Spiral, UserCirclePlus } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
 import { createNextSession, localDate } from '../sessions'
 
@@ -28,6 +31,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const entities = useVisibleEntities(worldId)
   const campaigns = useCampaigns(worldId)
+  const sessions = useWorldSessions(worldId)
   const [newCampaign, setNewCampaign] = useState(false)
 
   const recent = [...entities].filter((e) => e.type !== 'thread').sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 8)
@@ -54,6 +58,7 @@ export default function Dashboard() {
       <div className="home-grid">
         <NextSessions worldId={worldId} onNewCampaign={() => setNewCampaign(true)} />
         <NeedsYou world={world} threads={openThreads.filter((t) => t.threadUrgency === 'high')} />
+        <WantedPages worldId={worldId} entities={entities} sessions={sessions} />
         <section className="card">
           <h3>
             <Link to={`${worldPath(worldId)}/clocks`}>Clocks</Link> <Help topic="clocks" />
@@ -122,7 +127,7 @@ export default function Dashboard() {
               {openQuests.map((e) => (
                 <li key={e.id}>
                   <Link to={`${pagePath(worldId, e.id)}`}>{e.name}</Link>
-                  <span className="muted"> · {e.questStatus}</span>
+                  <span className="muted"> · {e.questStatus}{questProgress(e) && ` · ${questProgress(e)}`}</span>
                 </li>
               ))}
             </ul>
@@ -213,7 +218,8 @@ function NeedsYou({ world, threads }: { world: World; threads: Entity[] }) {
   const waiting = questions.questions.filter((q) => !q.answer)
   const { owners } = useCharacterOwners(world.cloud?.enabled ? world : undefined)
   const claims = [...owners.values()].filter((o) => o.pending).length
-  const count = waiting.length + claims + threads.length
+  const downtime = useDowntime(world.cloud?.enabled ? world : undefined).list.filter((d) => !d.answer).length
+  const count = waiting.length + claims + downtime + threads.length
   return (
     <section className="card needs-you">
       <h3>
@@ -231,6 +237,13 @@ function NeedsYou({ world, threads }: { world: World; threads: Entity[] }) {
         {waiting.length > 4 && (
           <li>
             <Link to={`${worldPath(world.id)}/questions`}>…and {waiting.length - 4} more questions</Link>
+          </li>
+        )}
+        {downtime > 0 && (
+          <li>
+            <Link to={`${worldPath(world.id)}/questions`}>
+              <Ico as={Hourglass} /> {downtime} downtime action{downtime === 1 ? '' : 's'} to answer
+            </Link>
           </li>
         )}
         {claims > 0 && (
