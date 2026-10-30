@@ -291,6 +291,22 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
                   <dd>{f.value}</dd>
                 </div>
               ))}
+              {(e.type === 'pc' || e.type === 'npc') && entities.some((x) => x.type === 'item' && x.heldBy === e.id) && (
+                <div>
+                  <dt>Carries</dt>
+                  <dd>
+                    {entities
+                      .filter((x) => x.type === 'item' && x.heldBy === e.id)
+                      .map((x, i) => (
+                        <span key={x.id}>
+                          {i > 0 && ', '}
+                          <Link to={pagePath(worldId, x.id)}>{x.name}</Link>
+                          {(x.quantity ?? 1) > 1 && ` (${x.quantity})`}
+                        </span>
+                      ))}
+                  </dd>
+                </div>
+              )}
               {(ownMaps.length > 0 || pins.length > 0) && (
                 <div>
                   <dt>Maps</dt>

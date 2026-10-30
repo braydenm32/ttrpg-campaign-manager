@@ -8,7 +8,7 @@ import { db, type Entity } from '../db'
 import { Help } from '../help'
 import { Ico } from '../icons'
 import { pagePath } from '../paths'
-import { applySheet } from './apply'
+import { applySheet, gearLine, gearOf } from './apply'
 import { sheetFromReply, sheetRequest } from './claude'
 import { ddbDataUrl, parseSheetJson, pathbuilderDataUrl, type Sheet } from './parse'
 
@@ -209,6 +209,7 @@ function SheetPreview({
   const chosen = target ?? into?.id ?? same?.id ?? ''
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const gear = gearOf(sheet)
 
   const save = async () => {
     if (onSheet) return (onSheet(sheet), onClose())
@@ -244,9 +245,19 @@ function SheetPreview({
           {sheet.source} leaves {sheet.worked.join(' and ')} to its own app, so the app worked them out. Check them against the sheet.
         </p>
       )}
+      {gear.length > 0 && (
+        <details>
+          <summary className="small">
+            Gear: {gear.length} item{gear.length === 1 ? '' : 's'}
+            {onSheet ? '' : ', each becoming an item page this character carries'}
+          </summary>
+          <p className="small">{gear.map(gearLine).join(', ')}</p>
+          {!onSheet && <p className="muted small">✓ means worn or in hand. Items show in Party loot under the character, as visible as the character is.</p>}
+        </details>
+      )}
       {sheet.body && (
         <details>
-          <summary className="small">The rest of the sheet (features, spells, gear, backstory)</summary>
+          <summary className="small">The rest of the sheet (features, spells, backstory)</summary>
           <pre className="sheet-body">{sheet.body}</pre>
         </details>
       )}
@@ -267,7 +278,8 @@ function SheetPreview({
       )}
       {chosen && !onSheet && (
         <p className="muted small">
-          The sheet’s numbers and its “Character sheet” section are replaced. GM notes, secrets and anything else you wrote stay as they are.
+          The sheet’s numbers and its “Character sheet” section are replaced, and gear they already carry is updated rather than doubled. GM notes, secrets and
+          anything else you wrote stay as they are.
         </p>
       )}
       {error && <p className="error small">{error}</p>}

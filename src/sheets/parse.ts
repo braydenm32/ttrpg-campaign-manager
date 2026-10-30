@@ -20,12 +20,24 @@ export interface Sheet {
   summary: string
   /** The key numbers and facts, in the order a sheet shows them. */
   fields: { key: string; value: string }[]
-  /** Everything else as Markdown: features, spells, gear, backstory. */
+  /** Everything else as Markdown: features, spells, backstory (and gear, when it isn't listed below). */
   body: string
+  /** The things they carry, each to become an item page carried by the character. */
+  gear?: Gear[]
   /** A web address for the portrait, when the sheet has one. */
   portraitUrl?: string
   /** Numbers we worked out ourselves (D&D Beyond leaves AC and HP to its own app), worth checking. */
   worked?: string[]
+}
+
+/** One thing a character carries. */
+export interface Gear {
+  name: string
+  quantity: number
+  /** Worn or in hand. */
+  equipped?: boolean
+  /** What the other tool says about it, as Markdown. */
+  description?: string
 }
 
 type Obj = Record<string, unknown>
@@ -127,7 +139,16 @@ export function fromOurs(json: Obj, source = 'Pasted sheet'): Sheet {
     .filter((f) => f.key)
   const name = str(json.name)
   if (!name) throw new Error('Claude’s reply has no character name in it.')
-  return { source, name, summary: str(json.summary), fields: cleanFields(fields), body: str(json.body) }
+  const gear = arr(json.gear)
+    .filter(isObj)
+    .map((g) => ({
+      name: str(g.name),
+      quantity: num(g.quantity) ?? 1,
+      equipped: g.equipped === true || undefined,
+      description: str(g.description) || undefined,
+    }))
+    .filter((g) => g.name)
+  return { source, name, summary: str(json.summary), fields: cleanFields(fields), body: str(json.body), gear: gear.length ? gear : undefined }
 }
 
 // ---------- Foundry VTT ----------
@@ -181,6 +202,16 @@ const withQty = (i: Obj) => {
   const q = num(get(i, 'system.quantity')) ?? num(get(i, 'data.quantity'))
   return `${str(i.name)}${q && q > 1 ? ` (${q})` : ''}`
 }
+/** Foundry items as gear: how many, whether worn or held, and their description. */
+const foundryGear = (items: Obj[]): Gear[] =>
+  items
+    .map((i) => ({
+      name: str(i.name),
+      quantity: num(get(i, 'system.quantity')) ?? num(get(i, 'data.quantity')) ?? 1,
+      equipped: get(i, 'system.equipped') === true || get(i, 'system.equipped.inSlot') === true || (num(get(i, 'system.equipped.handsHeld')) ?? 0) > 0,
+      description: prose(get(i, 'system.description.value')) || undefined,
+    }))
+    .filter((g) => g.name)
 const coins = (c: unknown, order = ['pp', 'gp', 'ep', 'sp', 'cp']) =>
   isObj(c)
     ? order
@@ -233,7 +264,6 @@ const foundry5e: Read = (_actor, sys, items) => {
     body: sections(
       section('Features', names(itemsOf(items, 'feat'))),
       section('Spells', spellList(spells)),
-      section('Gear', itemsOf(items, 'weapon', 'equipment', 'consumable', 'tool', 'loot', 'container', 'backpack').map(withQty)),
       section('Coins', coins(sys.currency)),
       section('Appearance', prose(get(sys, 'details.appearance'))),
       section(
@@ -244,6 +274,7 @@ const foundry5e: Read = (_actor, sys, items) => {
       ),
       section('Backstory', prose(get(sys, 'details.biography.value'))),
     ),
+    gear: foundryGear(itemsOf(items, 'weapon', 'equipment', 'consumable', 'tool', 'loot', 'container', 'backpack')),
   }
 }
 
@@ -276,10 +307,10 @@ const foundryPf2e: Read = (_actor, sys, items) => {
     body: sections(
       section('Feats', names(itemsOf(items, 'feat'))),
       section('Spells', spellList(spells)),
-      section('Gear', itemsOf(items, 'weapon', 'armor', 'shield', 'equipment', 'consumable', 'backpack', 'book').map(withQty)),
       section('Money', itemsOf(items, 'treasure').map(withQty)),
       section('Backstory', prose(get(sys, 'details.biography.backstory')) || prose(get(sys, 'details.biography.appearance'))),
     ),
+    gear: foundryGear(itemsOf(items, 'weapon', 'armor', 'shield', 'equipment', 'consumable', 'backpack', 'book')),
   }
 }
 
@@ -314,9 +345,9 @@ const foundryCoc: Read = (_actor, sys, items) => {
         'Skills',
         skills.map((s) => `${s.name} ${s.v}%`),
       ),
-      section('Gear', itemsOf(items, 'item', 'weapon', 'armor').map(withQty)),
       section('Backstory', prose(get(sys, 'biography.personalDescription.value')) || prose(get(sys, 'description.keeper'))),
     ),
+    gear: foundryGear(itemsOf(items, 'item', 'weapon', 'armor')),
   }
 }
 
@@ -333,8 +364,10 @@ const foundryGeneral: Read = (_actor, sys, items) => {
       if (value !== undefined && fields.length < 16) fields.push({ key: label, value: max && max !== value ? `${value} / ${max}` : String(value) })
     }
   }
+  // Kinds of item that are things to carry, in whatever words the system uses; the rest (skills, edges, powers) stay lists.
+  const isGear = (i: Obj) => /weapon|armou?r|shield|equipment|gear|^item|consumable|loot|tool|container|backpack|ammo|cyberware|treasure/i.test(str(i.type))
   const byType = new Map<string, string[]>()
-  for (const i of items) {
+  for (const i of items.filter((i) => !isGear(i))) {
     const t = str(i.type) || 'item'
     byType.set(t, [...(byType.get(t) ?? []), withQty(i)])
   }
@@ -349,6 +382,7 @@ const foundryGeneral: Read = (_actor, sys, items) => {
       ),
       section('Biography', bio),
     ),
+    gear: foundryGear(items.filter(isGear)),
   }
 }
 
@@ -516,16 +550,20 @@ export function fromDdb(c: Obj): Sheet {
       section('Features', features),
       section('Feats', feats),
       section('Spells', spellList(spells)),
-      section(
-        'Gear',
-        inventory.map((i) => `${str(get(i, 'definition.name'))}${(num(i.quantity) ?? 1) > 1 ? ` (${num(i.quantity)})` : ''}${i.equipped ? ' ✓' : ''}`),
-      ),
       section('Coins', coins(c.currencies)),
       section('Appearance', [look, prose(traits.appearance)].filter(Boolean).join('\n\n')),
       section('Personality', [traits.personalityTraits, traits.ideals, traits.bonds, traits.flaws].map(prose).filter(Boolean).join('\n\n')),
       section('Backstory', prose(notes.backstory)),
       section('Allies and organisations', [prose(notes.allies), prose(notes.organizations)].filter(Boolean).join('\n\n')),
     ),
+    gear: inventory
+      .map((i) => ({
+        name: str(get(i, 'definition.name')),
+        quantity: num(i.quantity) ?? 1,
+        equipped: !!i.equipped,
+        description: prose(get(i, 'definition.description')) || undefined,
+      }))
+      .filter((g) => g.name),
     portraitUrl: str(get(c, 'decorations.avatarUrl')) || str(c.avatarUrl) || undefined,
     worked: ['HP', 'AC'],
   }
@@ -577,24 +615,17 @@ export function fromPathbuilder(b: Obj): Sheet {
       ),
       section('Class features', arr(b.specials).map(str)),
       section('Spells', spellList(spells)),
-      section(
-        'Weapons',
-        arr(b.weapons)
-          .filter(isObj)
-          .map((w) => str(w.display) || str(w.name)),
-      ),
-      section(
-        'Armour',
-        arr(b.armor)
-          .filter(isObj)
-          .map((a) => `${str(a.display) || str(a.name)}${a.worn ? ' ✓' : ''}`),
-      ),
-      section(
-        'Gear',
-        arr(b.equipment).map((e) => (Array.isArray(e) ? `${str(e[0])}${(num(e[1]) ?? 1) > 1 ? ` (${num(e[1])})` : ''}` : str(e))),
-      ),
       section('Money', coins(b.money)),
     ),
+    gear: [
+      ...arr(b.weapons)
+        .filter(isObj)
+        .map((w) => ({ name: str(w.display) || str(w.name), quantity: num(w.qty) ?? 1, equipped: true })),
+      ...arr(b.armor)
+        .filter(isObj)
+        .map((a) => ({ name: str(a.display) || str(a.name), quantity: num(a.qty) ?? 1, equipped: !!a.worn })),
+      ...arr(b.equipment).map((e) => (Array.isArray(e) ? { name: str(e[0]), quantity: num(e[1]) ?? 1 } : { name: str(e), quantity: 1 })),
+    ].filter((g) => g.name),
     worked: ['HP'],
   }
 }
