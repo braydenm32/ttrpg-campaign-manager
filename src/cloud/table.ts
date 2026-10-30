@@ -95,6 +95,8 @@ interface TableStore {
   answered: Record<string, number>
   /** When the last "table" message arrived (this device's clock). */
   heard: number
+  /** When someone last said downtime changed (a player sent one, or the GM answered), so lists reload at once. */
+  downtime: number
   rolls: TableRoll[]
   /** For the GM: signals players sent that haven't been answered. */
   signals: TableSignal[]
@@ -102,7 +104,7 @@ interface TableStore {
   sent: Record<string, 'sent' | 'seen'>
 }
 
-const empty: TableStore = { table: null, pings: [], heard: 0, rolls: [], signals: [], sent: {}, answers: [], answered: {} }
+const empty: TableStore = { table: null, pings: [], heard: 0, downtime: 0, rolls: [], signals: [], sent: {}, answers: [], answered: {} }
 const stores = new Map<string, TableStore>()
 const listeners = new Map<string, Set<() => void>>()
 const links = new Map<string, { members: LiveRoom; table: LiveRoom; host: boolean }>()
@@ -279,6 +281,8 @@ export function linkAsPlayer(cloudId: string) {
       const ping = readPing(p, fromGM || !gmRoomWorks)
       if (ping) addPing(cloudId, ping)
     })
+    // Only the GM answers downtime, so only the GM's word counts.
+    r.on('downtime', () => (fromGM || !gmRoomWorks) && update(cloudId, (s) => ({ ...s, downtime: Date.now() })))
     r.on<{ id?: unknown }>('signal-seen', (p) => {
       if (!fromGM && gmRoomWorks) return
       const id = text(p.id)
@@ -290,6 +294,11 @@ export function linkAsPlayer(cloudId: string) {
     members.leave()
     table.leave()
   }
+}
+
+/** Says downtime changed, so the other side's list reloads now rather than at its next check. */
+export function tellDowntime(cloudId: string) {
+  return links.get(cloudId)?.host ? sendAsGM(cloudId, 'downtime', {}) : send(cloudId, 'downtime', {})
 }
 
 /** Sends a signal to the GM. Returns its id, or '' if it couldn't be sent. */
@@ -352,6 +361,7 @@ export function linkAsHost(cloudId: string, current: () => TableState | null) {
       const roll = readRoll(p)
       if (roll) addRoll(cloudId, roll)
     })
+  members.on('downtime', () => update(cloudId, (s) => ({ ...s, downtime: Date.now() })))
   members.on('ping', (p) => {
     const ping = readPing(p, false)
     if (ping) addPing(cloudId, ping)

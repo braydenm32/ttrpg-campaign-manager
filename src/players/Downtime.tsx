@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Hourglass } from '@phosphor-icons/react'
 import { useAuthSession } from '../cloud/auth'
 import { cloudErrorMessage, supabase } from '../cloud/client'
 import { tellPlayers } from '../cloud/sync'
+import { tellDowntime, useTable } from '../cloud/table'
 import type { Entity, World } from '../db'
 import { Help } from '../help'
 import { Ico } from '../icons'
+import { worldPath } from '../paths'
 
 /**
  * Downtime: between sessions, a player says what their character spends the time doing (research
@@ -41,6 +44,7 @@ async function listDowntime(cloudId: string) {
 async function sendDowntime(cloudId: string, character: string, body: string) {
   const { error } = await supabase.rpc('send_downtime', { wid: cloudId, who: character, body })
   if (error) throw error
+  void tellDowntime(cloudId)
 }
 
 async function answerDowntime(cloudId: string, id: string, answer: string) {
@@ -51,6 +55,7 @@ async function answerDowntime(cloudId: string, id: string, answer: string) {
     .eq('world_id', cloudId)
     .eq('id', id)
   if (error) throw error
+  void tellDowntime(cloudId)
   await tellPlayers(cloudId)
 }
 
@@ -65,6 +70,8 @@ export function useDowntime(world: World | null | undefined) {
   const cloudId = !world || !user ? undefined : world.shared?.memberOf ?? (!world.shared && world.cloud?.enabled ? world.id : undefined)
   const [list, setList] = useState<DowntimeAction[]>()
   const [error, setError] = useState('')
+  // A player sending one (or the GM answering) says so on the live link: reload straight away.
+  const { downtime: changed } = useTable(cloudId)
   const reload = useCallback(async () => {
     if (!cloudId) return
     try {
@@ -89,7 +96,11 @@ export function useDowntime(world: World | null | undefined) {
       document.removeEventListener('visibilitychange', onVisible)
     }
   }, [cloudId, reload])
-  return { list: cloudId ? (list ?? []) : [], reload, error, cloudId }
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (changed) reload()
+  }, [changed, reload])
+  return { list: cloudId ? (list ?? []) : [], loaded: !!cloudId && list !== undefined, reload, error, cloudId }
 }
 
 /** For a player, on their character tab: what you're doing until next time, and the GM's answers. */
@@ -185,7 +196,10 @@ export function GmDowntime({ world, names }: { world: World; names: (userId: str
   return (
     <section className="gm-downtime">
       <h2>
-        <Ico as={Hourglass} /> Downtime {open.length > 0 && <span className="count alert">{open.length}</span>} <Help topic="downtimeGm" />
+        <Ico as={Hourglass} /> Downtime {open.length > 0 && <span className="count alert">{open.length}</span>} <Help topic="downtimeGm" />{' '}
+        <button className="ghost small" onClick={reload}>
+          ↻ Refresh
+        </button>
       </h2>
       {error && <p className="error small">{error}</p>}
       {list.length === 0 && <p className="muted small">Nothing yet. Between sessions, players tell you here what their characters get up to.</p>}
@@ -244,6 +258,48 @@ function DowntimeItem({ cloudId, d, who, onChange }: { cloudId: string; d: Downt
         </div>
         {error && <p className="error small">{error}</p>}
       </form>
+    </div>
+  )
+}
+
+/**
+ * For the GM, on every screen: a note when a player sends downtime, with a link to answer it. What
+ * was already waiting when the world opened is on Home's "Needs you" instead.
+ */
+export function DowntimeToast({ world }: { world: World }) {
+  const { list, loaded } = useDowntime(world)
+  const seen = useRef<Set<string> | null>(null)
+  const [fresh, setFresh] = useState<DowntimeAction[]>([])
+  const key = list.map((d) => d.id).join(',')
+  useEffect(() => {
+    if (!loaded) return
+    if (!seen.current) {
+      seen.current = new Set(list.map((d) => d.id))
+      return
+    }
+    const added = list.filter((d) => !d.answer && !seen.current!.has(d.id))
+    for (const d of added) seen.current.add(d.id)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (added.length) setFresh((f) => [...f, ...added].slice(-4))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, key])
+  if (!fresh.length) return null
+  const close = (id: string) => setFresh((f) => f.filter((d) => d.id !== id))
+  return (
+    <div className="table-signals downtime-toasts" role="status">
+      {fresh.map((d) => (
+        <div key={d.id} className="table-signal">
+          <span>
+            <Ico as={Hourglass} /> <b>{d.character || 'A player'}</b> sent downtime: <span className="muted">{d.body.length > 90 ? `${d.body.slice(0, 90)}…` : d.body}</span>
+          </span>
+          <Link className="button primary small" to={`${worldPath(world.id)}/questions`} onClick={() => close(d.id)}>
+            Answer
+          </Link>
+          <button className="small" onClick={() => close(d.id)}>
+            Later
+          </button>
+        </div>
+      ))}
     </div>
   )
 }
