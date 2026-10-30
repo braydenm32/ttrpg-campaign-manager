@@ -30,6 +30,7 @@ import { Ico, TypeIcon } from './icons'
 import { nextSessions, useCampaigns, useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
 import { useGmQuestions } from './players/Questions'
+import { useDowntime } from './players/Downtime'
 import { useCharacterOwners } from './players/owners'
 import { pagePath, resolveCustom, resolvePage, SECTION_WORDS, sectionType, typePath, worldPath } from './paths'
 
@@ -117,7 +118,8 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
   const kind = (kindParam && resolveCustom(worldId, kindParam)) ?? at('type/custom/:kind')?.kind ?? (currentEntity?.type === 'custom' ? currentEntity.customType : undefined)
   const hasLoot = entities.some((e) => e.type === 'item' && e.heldBy) || !!world?.partyCoin?.length
   const gmQuestions = useGmQuestions(isGM && mode === 'play' ? world : undefined)
-  const waiting = gmQuestions.questions.filter((q) => !q.answer).length
+  const downtime = useDowntime(isGM && mode === 'play' && world?.cloud?.enabled ? world : undefined)
+  const waiting = gmQuestions.questions.filter((q) => !q.answer).length + downtime.list.filter((d) => !d.answer).length
   const hasLinks = entities.some((e) => e.relations?.length)
   const clockCount = entities.reduce((n, e) => n + (e.clocks ?? []).filter((c) => c.filled < c.segments).length, 0)
   const handouts = world?.handouts?.length ?? 0
@@ -385,7 +387,7 @@ export function WorldNav({ worldId, mode }: { worldId: string; mode: WorldMode }
               )}
               {gmQuestions.available && (
                 <NavLink to={`${worldPath(worldId)}/questions`} title={HELP.questionsGm}>
-                  <Ico as={ChatCircleDots} /> Players’ questions
+                  <Ico as={ChatCircleDots} /> Questions and downtime
                   {waiting ? <span className="count alert">{waiting}</span> : null}
                 </NavLink>
               )}

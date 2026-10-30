@@ -58,6 +58,7 @@ import ClocksPage from './clocks'
 import SafetyPage, { XCardAlert, XCardButton } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
 import { LiveBadge, PlayerTableLink, TableHost, TableSignals } from './atTheTable'
+import { DowntimeToast } from './players/Downtime'
 import { NewCharacterRequestsBanner } from './players/NewCharacters'
 import Handouts from './pages/Handouts'
 import { finishExampleWorld } from './example/load'
@@ -463,6 +464,7 @@ function WorldShell() {
         {!shared && <XCardAlert world={world} />}
         {!shared && world.cloud?.enabled && <TableHost world={world} />}
         {isGM && !shared && world.cloud?.enabled && <TableSignals world={world} />}
+        {isGM && !shared && world.cloud?.enabled && <DowntimeToast world={world} />}
         {memberOf && <PlayerTableLink world={world} />}
         {!isGM && !shared && (
           <div className="player-banner">
