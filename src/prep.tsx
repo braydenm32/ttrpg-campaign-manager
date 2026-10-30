@@ -5,6 +5,7 @@ import { PagePicker } from './PagePicker'
 import { blankLectern, blankPrep, db, newId, type CheckItem, type Encounter, type Entity, type Session, type SessionPrep } from './db'
 import { addCombatants, encounterCombatants, foeCount, foeFromEntity, numberFrom } from './encounters'
 import { Help } from './help'
+import { LecternPanel } from './lecternPanel'
 import { StatusBadge } from './status'
 import { Ico, TypeIcon } from './icons'
 import { ClipboardText, FilmSlate, MagnifyingGlass, Sword } from '@phosphor-icons/react'
@@ -322,15 +323,17 @@ export function LecternPrep({ session, worldId }: { session: Session; worldId: s
   )
   const found = prep.clues.filter((c) => c.done).length
   return (
-    <section className="card lectern-panel">
-      <div className="row spread">
-        <h2>
-          <Ico as={ClipboardText} /> Prep <Help topic="prep" />
-        </h2>
+    <LecternPanel
+      id="prep"
+      name="Prep"
+      keywords="scenes clues secrets encounters strong start plan"
+      title={<><Ico as={ClipboardText} /> Prep <Help topic="prep" /></>}
+      extra={
         <Link className="small" to={`${worldPath(worldId)}/s/${session.id}?tab=prep`}>
           Edit prep
         </Link>
-      </div>
+      }
+    >
       {empty && <p className="muted small">No prep for this session yet. Plan scenes, clues and fights from the session page.</p>}
       {prep.strongStart && (
         <div className="small">
@@ -373,6 +376,6 @@ export function LecternPrep({ session, worldId }: { session: Session; worldId: s
           {loaded.length > 0 && <div className="muted">Added to the Initiative list. Tap again to add another set.</div>}
         </div>
       )}
-    </section>
+    </LecternPanel>
   )
 }

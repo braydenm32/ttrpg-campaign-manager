@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import type { Entity } from './db'
 import { roll, rollDie } from './dice'
 import { Help } from './help'
+import { LecternPanel } from './lecternPanel'
 import { Markdown, stripSecrets } from './Markdown'
 import { Ico } from './icons'
 import { DiceFive } from '@phosphor-icons/react'
@@ -99,10 +100,7 @@ export function TableRoller({ tables, worldId, entities, fixed, showSecrets }: {
 /** The Lectern and Generators panel: roll on any of your tables. */
 export function TablesPanel({ tables, worldId, entities }: { tables: Entity[]; worldId: string; entities: Entity[] }) {
   return (
-    <section className="card lectern-panel">
-      <h2>
-        <Ico as={DiceFive} /> Random tables <Help topic="randomTables" />
-      </h2>
+    <LecternPanel id="tables" name="Random tables" keywords="roll table rumours encounters" title={<><Ico as={DiceFive} /> Random tables <Help topic="randomTables" /></>}>
       {tables.length ? (
         <TableRoller tables={tables} worldId={worldId} entities={entities} showSecrets />
       ) : (
@@ -110,6 +108,6 @@ export function TablesPanel({ tables, worldId, entities }: { tables: Entity[]; w
           No tables yet. <Link to={`${typePath(worldId, 'table')}`}>Make one</Link>, like “What’s in the sewer?” or “Tavern rumours”.
         </p>
       )}
-    </section>
+    </LecternPanel>
   )
 }

@@ -7,7 +7,8 @@ import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel, type E
 import { useCreatePage } from '../NewPage'
 import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { initials } from '../text'
-import { nextSessions, URGENCY, useCampaigns } from '../threads'
+import { nextSessions, URGENCY, useCampaigns, useWorldSessions } from '../threads'
+import { WantedPages } from '../wanted'
 import { useViewMode } from '../viewMode'
 import { BackupReminder } from '../BackupReminder'
 import WikiHome from './WikiHome'
@@ -28,6 +29,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const entities = useVisibleEntities(worldId)
   const campaigns = useCampaigns(worldId)
+  const sessions = useWorldSessions(worldId)
   const [newCampaign, setNewCampaign] = useState(false)
 
   const recent = [...entities].filter((e) => e.type !== 'thread').sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 8)
@@ -54,6 +56,7 @@ export default function Dashboard() {
       <div className="home-grid">
         <NextSessions worldId={worldId} onNewCampaign={() => setNewCampaign(true)} />
         <NeedsYou world={world} threads={openThreads.filter((t) => t.threadUrgency === 'high')} />
+        <WantedPages worldId={worldId} entities={entities} sessions={sessions} />
         <section className="card">
           <h3>
             <Link to={`${worldPath(worldId)}/clocks`}>Clocks</Link> <Help topic="clocks" />

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { db, type Sound } from '../db'
 import { Help } from '../help'
+import { LecternPanel } from '../lecternPanel'
 import { setLiveVolume, stopAll, toggle, usePlaying } from './player'
 import { Ico } from '../icons'
 import { MusicNotes } from '@phosphor-icons/react'
@@ -67,12 +68,13 @@ export function Soundboard({ worldId, compact }: { worldId: string; compact?: bo
   )
   if (!compact) return body
   return (
-    <section className="card lectern-panel">
-      <div className="row spread">
-        <h2>
-          <Ico as={MusicNotes} /> Soundboard <Help topic="soundboard" />
-        </h2>
-        <div className="row">
+    <LecternPanel
+      id="sound"
+      name="Soundboard"
+      keywords="music sounds ambience syrinscape audio"
+      title={<><Ico as={MusicNotes} /> Soundboard <Help topic="soundboard" /></>}
+      extra={
+        <>
           {playing.length > 0 && (
             <button className="ghost small" onClick={() => run(stopAll())}>
               ■ Stop all
@@ -81,9 +83,10 @@ export function Soundboard({ worldId, compact }: { worldId: string; compact?: bo
           <Link className="small" to={`${worldPath(worldId)}/sounds`}>
             Edit
           </Link>
-        </div>
-      </div>
+        </>
+      }
+    >
       {body}
-    </section>
+    </LecternPanel>
   )
 }

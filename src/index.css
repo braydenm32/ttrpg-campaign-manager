@@ -248,6 +248,12 @@ a.card:hover, button.card:hover { border-color: var(--accent); text-decoration: 
 .wikilink { text-decoration-style: solid; }
 .wikilink.missing { color: var(--muted); text-decoration-style: dashed; text-decoration-color: var(--muted); }
 .player-mode .wikilink.missing { text-decoration: none; color: inherit; }
+.markdown .wikilink.missing[data-missing] { cursor: pointer; }
+.player-mode .markdown .wikilink.missing[data-missing] { cursor: auto; }
+.popover-backdrop { position: fixed; inset: 0; z-index: 2999; }
+.link-peek.make-page { pointer-events: auto; display: block; }
+.make-page-buttons { display: flex; flex-wrap: wrap; gap: .2em; }
+.wanted-pages li { margin-bottom: .2em; }
 .editor textarea { font-family: ui-monospace, Menlo, monospace; font-size: .92rem; }
 details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
 
@@ -423,6 +429,21 @@ button.social.facebook .social-icon { background: #1877f2; }
 .lectern { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr); gap: 1em; align-items: start; }
 .lectern-col { display: flex; flex-direction: column; gap: 1em; min-width: 0; }
 .lectern-panel h2 { margin: 0 0 .2em; font-size: 1.15rem; }
+.lectern-panel-head { display: flex; align-items: center; gap: .3em; margin-bottom: .2em; }
+.lectern-panel-head h2 { flex: 1; margin: 0; cursor: pointer; user-select: none; min-width: 0; }
+.lectern-panel-head > .row { flex: none; }
+.lectern-panel .fold-toggle { padding: .15em .3em; flex: none; line-height: 1; }
+.lectern-panel .fold-toggle svg { transition: transform .15s; }
+.lectern-panel.folded { padding-top: .5em; padding-bottom: .5em; }
+.lectern-panel.folded .lectern-panel-head { margin: 0; }
+.lectern-panel.folded .fold-toggle svg { transform: rotate(-90deg); }
+.lectern-tools { margin-bottom: .8em; gap: .5em; }
+.lectern-search { flex: 1 1 260px; max-width: 520px; }
+.lectern-found { margin-bottom: 1em; }
+.lectern-found h2 { margin: 0 0 .4em; }
+.lectern-found-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .8em; }
+.lectern-notes { max-height: 22em; overflow: auto; font-size: .95em; }
+.lectern-search-note { margin-top: 1em; }
 .lectern-panel .secret { margin: .4em 0; }
 .lectern-panel blockquote { margin: .3em 0; padding-left: .8em; border-left: 3px solid var(--border); font-style: italic; }
 .present { border-top: 1px solid var(--border); padding-top: .5em; display: flex; flex-direction: column; gap: .25em; }
