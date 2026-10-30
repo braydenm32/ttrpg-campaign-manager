@@ -10,6 +10,7 @@ import { joinRoom, JOINED, sendOnce, type LiveRoom } from './live'
  *    - "hello" (player → GM): a player just opened the app; the GM's app answers with "table".
  *    - "dice" (players): a roll the whole table sees.
  *    - "signal" (player → GM): "I'd like to do something", "I need a break" or "I'll use inspiration".
+ *    - "call-answer" (player → GM): a player's result for the roll the GM called for.
  *  - "table:<world>", where only a GM can send (public.channel_allowed), so players can trust it:
  *    - "table" (GM → players): the session being played, the scene, whose turn it is, the music.
  *    - "dice" (GM): the GM's own rolls.
@@ -33,6 +34,8 @@ export interface TableState {
   scene?: { name: string; entityId?: string }
   music?: string[]
   combat?: { round: number; turnId?: string; order: TableTurn[] }
+  /** A roll the GM has called for: who should roll (the GM's ids of their characters; empty for everyone) and what. */
+  call?: { id: string; label: string; dice: string; dc?: number; secret?: boolean; to: string[] }
   /** Running or paused countdowns. endsAt is on the sender's clock until it arrives, then on this device's. */
   timers?: { id: string; label: string; endsAt?: number; left?: number }[]
 }
@@ -58,8 +61,24 @@ export interface TableSignal {
   at: number
 }
 
+/** A player's result for a called roll, as the GM hears it. */
+export interface CallAnswer {
+  id: string
+  callId: string
+  entityId?: string
+  who: string
+  expr: string
+  total: number
+  detail: string
+  crit?: 'high' | 'low'
+}
+
 interface TableStore {
   table: TableState | null
+  /** For the GM: players' results for called rolls. */
+  answers: CallAnswer[]
+  /** For a player: the calls answered from here, and the result. */
+  answered: Record<string, number>
   /** When the last "table" message arrived (this device's clock). */
   heard: number
   rolls: TableRoll[]
@@ -69,7 +88,7 @@ interface TableStore {
   sent: Record<string, 'sent' | 'seen'>
 }
 
-const empty: TableStore = { table: null, heard: 0, rolls: [], signals: [], sent: {} }
+const empty: TableStore = { table: null, heard: 0, rolls: [], signals: [], sent: {}, answers: [], answered: {} }
 const stores = new Map<string, TableStore>()
 const listeners = new Map<string, Set<() => void>>()
 const links = new Map<string, { members: LiveRoom; table: LiveRoom; host: boolean }>()
@@ -146,7 +165,19 @@ function readTable(p: Record<string, unknown>): TableState | null {
         left: typeof t?.left === 'number' ? Math.max(0, num(t.left)) : undefined,
       }))
     : undefined
+  const call = p.call as Record<string, unknown> | undefined
   return {
+    call:
+      call && typeof call === 'object' && text(call.id)
+        ? {
+            id: text(call.id),
+            label: text(call.label, 80) || 'Roll',
+            dice: text(call.dice, 30) || 'd20',
+            dc: typeof call.dc === 'number' && Number.isFinite(call.dc) ? call.dc : undefined,
+            secret: call.secret === true || undefined,
+            to: Array.isArray(call.to) ? call.to.slice(0, 20).map((x) => text(x)).filter(Boolean) : [],
+          }
+        : undefined,
     timers: timers?.length ? timers : undefined,
     session: { id: text(s.id), number: num(s.number), title: text(s.title, 200), campaignId: text(s.campaignId) },
     scene: scene && typeof scene === 'object' ? { name: text(scene.name, 200), entityId: text(scene.entityId) || undefined } : undefined,
@@ -239,6 +270,15 @@ export async function sendSignal(cloudId: string, kind: SignalKind, who: string,
   return ok ? sig.id : ''
 }
 
+/** A player's result for the roll the GM called for: to the GM (and, unless it's secret, the table's dice). */
+export async function answerCall(cloudId: string, a: Omit<CallAnswer, 'id'>, secret: boolean) {
+  const answer = { ...a, id: newId() }
+  update(cloudId, (s) => ({ ...s, answered: { ...s.answered, [a.callId]: a.total } }))
+  const ok = await send(cloudId, 'call-answer', answer)
+  if (!secret) await shareRoll(cloudId, { who: a.who, expr: a.expr, total: a.total, detail: a.detail, crit: a.crit })
+  return ok
+}
+
 /** Shows a roll to everyone at the table (and here). */
 export async function shareRoll(cloudId: string, r: Omit<TableRoll, 'id' | 'at'>) {
   const link = links.get(cloudId)
@@ -277,6 +317,15 @@ export function linkAsHost(cloudId: string, current: () => TableState | null) {
       const roll = readRoll(p)
       if (roll) addRoll(cloudId, roll)
     })
+  members.on('call-answer', (p) => {
+    const callId = text(p.callId)
+    const call = current()?.call
+    if (!call || call.id !== callId || !text(p.id)) return
+    const entityId = text(p.entityId) || undefined
+    if (call.to.length && (!entityId || !call.to.includes(entityId))) return
+    const a: CallAnswer = { id: text(p.id), callId, entityId, who: text(p.who) || 'A player', expr: text(p.expr, 60), total: num(p.total), detail: text(p.detail, 300), crit: p.crit === 'high' || p.crit === 'low' ? p.crit : undefined }
+    update(cloudId, (s) => (s.answers.some((x) => x.id === a.id) ? s : { ...s, answers: [...s.answers, a].slice(-60) }))
+  })
   members.on('signal', (p) => {
     const kind = p.kind as SignalKind
     if (!KINDS.includes(kind) || !text(p.id)) return
@@ -341,6 +390,9 @@ export function tableStateFor(session: Session, pages: Map<string, Entity>, soun
       campaignId: hiddenCampaign ? '' : session.campaignId,
     },
     scene: place ? { name: place.name, entityId: place.id } : undefined,
+    call: l.rollCall
+      ? { id: l.rollCall.id, label: l.rollCall.label, dice: l.rollCall.dice, dc: l.rollCall.showDc ? l.rollCall.dc : undefined, secret: l.rollCall.secret, to: l.rollCall.to }
+      : undefined,
     timers: l.timers?.some((t) => !t.hidden) ? l.timers.filter((t) => !t.hidden).map(({ id, label, endsAt, left }) => ({ id, label, endsAt, left })) : undefined,
     music: music.length ? music : undefined,
     // Nothing about a fight until the GM starts it, so setting one up gives nothing away.

@@ -1218,3 +1218,15 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .objective-list li.done > label span, .objective-list li.done > span:first-child { text-decoration: line-through; color: var(--muted); }
 .objective-list li.gm-only { background: var(--secret-bg, rgba(160, 60, 60, .08)); }
 .known-toggle.on { color: var(--accent); }
+
+/* Call for a roll */
+.roll-call-results { list-style: none; padding: 0; margin: .4em 0; display: flex; flex-direction: column; gap: .2em; }
+.roll-call-results li { display: flex; align-items: center; gap: .5em; flex-wrap: wrap; padding: .15em .35em; border-radius: 6px; }
+.roll-call-results li > button { margin-left: auto; }
+.roll-call-who { min-width: 6em; font-weight: 600; }
+.roll-call-results li.pass { background: color-mix(in srgb, var(--good) 14%, transparent); }
+.roll-call-results li.fail { background: color-mix(in srgb, var(--danger) 14%, transparent); }
+.roll-call-results .tag { margin-left: .4em; }
+.roll-call-form { display: flex; flex-direction: column; gap: .4em; margin-top: .4em; }
+.roll-call-prompt { top: calc(var(--topbar-h) + 4.8em); }
+.roll-call-prompt input.hp-input { width: 4.5em; }

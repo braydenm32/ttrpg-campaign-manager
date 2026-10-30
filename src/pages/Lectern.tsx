@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { PartyGlance } from '../partyGlance'
 import { GmScreenPanel } from '../gmScreen'
+import { CallForRoll } from '../rollCallPanel'
 import { NameGenerator, TreasureGenerator } from '../moreGenerators'
 import { FoldingProvider, LECTERN_PANELS, LecternPanel, useFolding } from '../lecternPanel'
 import { useEffect, useRef, useState } from 'react'
@@ -148,6 +149,13 @@ export default function Lectern() {
           </div>
           <div className="lectern-col">
             {world?.cloud?.enabled && <CommonRoomPanel world={world} session={session} lectern={lectern} edit={edit} live={live} />}
+            <CallForRoll
+              lectern={lectern}
+              edit={edit}
+              party={partyOf(entities, session.campaignId, { activeOnly: true })}
+              cloudId={world?.cloud?.enabled ? worldId : undefined}
+              live={live}
+            />
             {world && <ShowPanel world={world} sceneText={lectern.sceneText} />}
             <Soundboard worldId={worldId} compact />
             <Dice lectern={lectern} edit={edit} shareTo={shareTo} />

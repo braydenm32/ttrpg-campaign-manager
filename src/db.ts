@@ -674,8 +674,40 @@ export interface LecternState {
    * that, with names, and the GM's own rolls kept private.
    */
   share?: { off?: boolean; hideNames?: boolean; noMusic?: boolean; rolls?: boolean }
+  /** The roll the GM last called for ("everyone roll Perception, DC 15") and the results so far. */
+  rollCall?: RollCall
   /** Countdowns ("the bridge falls in 3 minutes"): endsAt while running, left (ms) while paused. Hidden ones aren't shown to players. */
   timers?: LecternTimer[]
+}
+
+export interface RollCall {
+  id: string
+  /** What it's for: "Perception", "Dexterity save"… */
+  label: string
+  /** The dice before anyone's bonus, usually d20. */
+  dice: string
+  dc?: number
+  /** Players see the DC too. */
+  showDc?: boolean
+  /** Players don't see each other's results (only the GM does). */
+  secret?: boolean
+  /** Player characters asked (their page ids); empty means the whole party. */
+  to: string[]
+  at: number
+  answers: RollAnswer[]
+}
+
+export interface RollAnswer {
+  id: string
+  /** The character's page id (the GM's). */
+  entityId?: string
+  who: string
+  expr: string
+  total: number
+  detail: string
+  crit?: 'high' | 'low'
+  /** Rolled by the GM for them. */
+  byGM?: boolean
 }
 
 export interface LecternTimer {
