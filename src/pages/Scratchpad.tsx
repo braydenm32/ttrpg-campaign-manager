@@ -1,4 +1,4 @@
-import { Empty } from '../components'
+import { Empty, Skeleton } from '../components'
 import { Help } from '../help'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { PlayerNotesBox } from '../players/Notes'
@@ -9,7 +9,7 @@ import { Notepad } from '@phosphor-icons/react'
 export default function Scratchpad() {
   const { worldId, world } = useWorld()
   const entities = useVisibleEntities(worldId)
-  if (!world) return null
+  if (!world) return <Skeleton />
   const player = !!world.shared?.memberOf
   if (!player && (world.shared || !world.cloud?.enabled))
     return <Empty>The scratchpad is for players who have joined this world. Turn on cloud sync and invite them from World settings.</Empty>

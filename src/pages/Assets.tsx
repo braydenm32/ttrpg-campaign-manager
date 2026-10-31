@@ -2,7 +2,7 @@ import { binFile } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useState } from 'react'
-import { Empty, TagInput, VisibilityToggle } from '../components'
+import { Empty, Skeleton, TagInput, VisibilityToggle } from '../components'
 import { db, type Asset } from '../db'
 import { formatBytes, saveFileAsAsset, useBlobUrl, useWorld } from '../hooks'
 import { ShowButton, unshowableImages } from '../showing'
@@ -12,24 +12,26 @@ import { File, Folder } from '@phosphor-icons/react'
 
 export default function Assets() {
   const { worldId } = useWorld()
-  const assets = useLiveQuery(() => db.assets.where({ worldId }).reverse().sortBy('createdAt'), [worldId]) ?? []
+  const stored = useLiveQuery(() => db.assets.where({ worldId }).reverse().sortBy('createdAt'), [worldId])
+  const assets = stored ?? []
   const unshowable = useLiveQuery(() => unshowableImages(worldId), [worldId])
   const [filter, setFilter] = useState('')
   const q = filter.trim().toLowerCase()
   const shown = assets.filter((a) => !q || a.name.toLowerCase().includes(q) || a.tags.some((t) => t.toLowerCase().includes(q)))
   const total = assets.reduce((n, a) => n + a.size, 0)
   const { isGM } = useViewMode()
-  if (!isGM) return <Empty>Only the GM can see this.</Empty>
+  if (!isGM) return <Empty>Files are a GM tool. Switch back to the GM view to use them.</Empty>
+  if (!stored) return <Skeleton />
 
   return (
     <div className="page">
       <header className="page-header">
         <div>
           <h1>
-            <Ico as={Folder} /> Assets <Help topic="assets" />
+            <Ico as={Folder} /> Files <Help topic="assets" />
           </h1>
           <div className="muted">
-            {assets.length} files · {formatBytes(total)} stored on this device
+            {assets.length ? `${assets.length} file${assets.length === 1 ? '' : 's'} · ${formatBytes(total)} stored on this device` : 'Pictures, maps, sounds and documents for this world.'}
           </div>
         </div>
         <label className="button primary">
@@ -45,9 +47,11 @@ export default function Assets() {
           />
         </label>
       </header>
-      <input className="search" placeholder="Filter by name or tag…" value={filter} onChange={(e) => setFilter(e.target.value)} />
-      {shown.length === 0 ? (
-        <Empty>Handouts, portraits, maps, music, PDFs. Anything you upload is kept here.</Empty>
+      {assets.length > 0 && <input className="search" placeholder="Filter by name or tag…" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter files" />}
+      {assets.length === 0 ? (
+        <Empty>Nothing uploaded yet. Handouts, portraits, maps, music, PDFs: anything you upload, here or on a page, is kept here.</Empty>
+      ) : shown.length === 0 ? (
+        <Empty>No file’s name or tag has “{filter.trim()}” in it.</Empty>
       ) : (
         <div className="card-grid">
           {shown.map((a) => (
@@ -68,7 +72,7 @@ function AssetCard({ asset, unshowable }: { asset: Asset; unshowable?: Map<strin
       {url && kind === 'image' && <img src={url} alt={asset.name} />}
       {url && kind === 'audio' && <audio controls src={url} preload="none" />}
       {kind !== 'image' && kind !== 'audio' && <div className="file-icon"><Ico as={File} /></div>}
-      <input value={asset.name} onChange={(e) => update({ name: e.target.value })} />
+      <input value={asset.name} onChange={(e) => update({ name: e.target.value })} aria-label="File name" />
       <div className="muted small">{formatBytes(asset.size)}</div>
       <TagInput tags={asset.tags} onChange={(tags) => update({ tags })} />
       {/* A map picture players mustn't see shows their copy instead (showToPlayers swaps it). */}
@@ -90,12 +94,14 @@ function AssetCard({ asset, unshowable }: { asset: Asset; unshowable?: Map<strin
         <VisibilityToggle value={asset.visibility} onChange={(visibility) => update({ visibility })} />
         <div className="row">
           {url && (
-            <a className="button" href={url} download={asset.name}>
+            <a className="button" href={url} download={asset.name} aria-label={`Download ${asset.name}`} title="Download">
               ⬇
             </a>
           )}
           <button
             className="danger"
+            aria-label={`Delete ${asset.name}`}
+            title="Delete (it goes to Recently deleted for a month)"
             onClick={async () => {
               const usedBy = await db.maps.filter((m) => m.imageId === asset.id).count()
               if (!confirm(usedBy ? 'This file is used as a map image. Delete anyway?' : `Delete "${asset.name}"?`)) return

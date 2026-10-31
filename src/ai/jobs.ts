@@ -131,6 +131,13 @@ export function clearJob(id: string) {
   if (jobs.delete(id)) changed()
 }
 
+/** Puts a dismissed job back (Undo), unless a new one with its id has started since. */
+export function restoreJob(job: ClaudeJobState) {
+  if (jobs.has(job.id)) return
+  jobs.set(job.id, job)
+  changed()
+}
+
 /** Takes a finished job's answer (or problem) into its panel, then forgets the job. */
 export function takeFinished(job: ClaudeJobState, onResult: ((text: string) => void) | undefined, setError: (e: string) => void, setNote?: (n: string) => void) {
   // Handed over once only, even if the panel asks twice.
