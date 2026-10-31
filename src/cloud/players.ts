@@ -86,6 +86,8 @@ export interface Claim {
   notes: string
   /** False while the GM hasn't approved the claim yet. */
   approved: boolean
+  /** When it was asked for ('' if the server doesn't say). */
+  createdAt: string
 }
 
 /** Who has joined, and who plays which character (for the GM). */
@@ -98,7 +100,7 @@ export async function listPlayers(worldId: string): Promise<{ members: Member[];
   if (c.error) throw c.error
   return {
     members: m.data.map((r) => ({ userId: r.user_id, name: r.display_name || 'Unnamed player', role: r.role, joinedAt: r.created_at })),
-    claims: c.data.map((r) => ({ entityId: r.entity_id, userId: r.user_id, notes: r.player_notes, approved: r.approved !== false })),
+    claims: c.data.map((r) => ({ entityId: r.entity_id, userId: r.user_id, notes: r.player_notes, approved: r.approved !== false, createdAt: r.claimed_at ?? '' })),
   }
 }
 

@@ -4,47 +4,37 @@ import { backupStore, exportWorld, recordingsSize } from './backup'
 import { db, type World } from './db'
 import { formatBytes } from './hooks'
 import { Help } from './help'
-import { Ico } from './icons'
-import { FloppyDisk } from '@phosphor-icons/react'
 
 /**
- * A nudge on the overview to download a backup now and then. A world kept only on this device is
+ * A nudge on the Desk to download a backup now and then. A world kept only on this device is
  * one lost phone or cleared browser away from gone, so it asks every two weeks; with cloud sync on,
  * once a month. "Later" waits a week.
  */
 
 const DAY = 24 * 60 * 60_000
 
-export function BackupReminder({ world }: { world: World }) {
+/**
+ * Whether a backup is due, the words for it, and Later (which waits a week). The Desk shows it as a
+ * line in "Needs you"; nothing is due for a world of fewer than five pages or a player's copy.
+ */
+export function useBackupDue(world: World) {
   const pages = useLiveQuery(() => db.entities.where({ worldId: world.id }).count(), [world.id]) ?? 0
   const [now] = useState(() => Date.now())
   const [hidden, setHidden] = useState(false)
-  if (hidden || world.shared || pages < 5) return null
   const last = backupStore.read(world.id, 'last')
   const every = (world.cloud?.enabled ? 30 : 14) * DAY
   const since = last || world.createdAt
-  if (now - since < every || now < backupStore.read(world.id, 'snooze')) return null
-  return (
-    <div className="backup-reminder">
-      <span>
-        <Ico as={FloppyDisk} /> {last ? `Your last backup of this world was ${Math.round((now - last) / DAY)} days ago.` : 'You haven’t downloaded a backup of this world yet.'}{' '}
-        {world.cloud?.enabled ? 'Sync keeps a copy in the cloud, but a file of your own is the safest.' : 'It only lives on this device, so keep a copy somewhere safe.'}{' '}
-        <Help topic="backupReminder" />
-      </span>
-      <span className="row">
-        <BackupButton worldId={world.id} className="small primary" label="Download backup" onDone={() => setHidden(true)} />
-        <button
-          className="small ghost"
-          onClick={() => {
-            backupStore.write(world.id, 'snooze', Date.now() + 7 * DAY)
-            setHidden(true)
-          }}
-        >
-          Later
-        </button>
-      </span>
-    </div>
-  )
+  const due = !hidden && !world.shared && pages >= 5 && now - since >= every && now >= backupStore.read(world.id, 'snooze')
+  return {
+    due,
+    text: last ? `Your last backup was ${Math.round((now - last) / DAY)} days ago` : 'Nothing backed up from this device yet',
+    why: world.cloud?.enabled ? 'Sync keeps a copy in the cloud, but a file of your own is the safest.' : 'It only lives on this device, so keep a copy somewhere safe.',
+    done: () => setHidden(true),
+    later: () => {
+      backupStore.write(world.id, 'snooze', Date.now() + 7 * DAY)
+      setHidden(true)
+    },
+  }
 }
 
 /**

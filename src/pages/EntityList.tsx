@@ -1,7 +1,8 @@
-import { useState, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { Help } from '../help'
-import { Link, useParams } from 'react-router-dom'
-import { Empty, VisibilityBadge } from '../components'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Empty } from '../components'
+import { SeenMark } from '../reveal'
 import { StatusBadge } from '../status'
 import { ENTITY_TYPES, typeLabel, type Entity, type EntityType } from '../db'
 import { treeRoots, useVisibleEntities, useWorld } from '../hooks'
@@ -20,8 +21,16 @@ export default function EntityList() {
   const kind = params.kind && resolveCustom(worldId, params.kind)
   const { isGM } = useViewMode()
   const all = useVisibleEntities(worldId)
-  const [query, setQuery] = useState('')
-  const [tag, setTag] = useState('')
+  // The filter and tag live in the address, so Back from a page comes back to the same list.
+  const [search, setSearch] = useSearchParams()
+  const query = search.get('q') ?? ''
+  const tag = search.get('tag') ?? ''
+  const setParam = (k: string, v: string) => {
+    const next = new URLSearchParams(search)
+    if (v) next.set(k, v)
+    else next.delete(k)
+    setSearch(next, { replace: true })
+  }
 
   if (!ENTITY_TYPES.includes(type as EntityType))
     return (
@@ -55,6 +64,13 @@ export default function EntityList() {
         </h1>
         {isGM && world && (t !== 'custom' || kind) && <NewPageButton world={world} type={t} customType={kind} />}
       </header>
+      {isGM && ofType.length > 0 && (
+        <p className="muted small list-seen">
+          {ofType.length} {ofType.length === 1 ? 'page' : 'pages'} · <SeenMark entity={{ visibility: 'players' }} /> players can see {ofType.filter((e) => e.visibility === 'players').length}
+          {' · '}
+          <SeenMark entity={{ visibility: 'gm' }} /> GM only {ofType.filter((e) => e.visibility !== 'players').length} <Help topic="seenMarks" />
+        </p>
+      )}
       {(t === 'npc' || t === 'pc') && (
         // People holds both: a switch between the NPCs and the party's own characters.
         <nav className="segmented people-switch" aria-label="Which people">
@@ -72,9 +88,9 @@ export default function EntityList() {
       )}
       {t === 'table' && isGM && world && <StarterTables world={world} tables={ofType} />}
       <div className="row wrap">
-        <input className="search" placeholder="Filter…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input className="search" type="search" placeholder="Filter…" aria-label={`Filter ${label.many.toLowerCase()}`} value={query} onChange={(e) => setParam('q', e.target.value)} />
         {tags.length > 0 && (
-          <select value={tag} onChange={(e) => setTag(e.target.value)}>
+          <select value={tag} onChange={(e) => setParam('tag', e.target.value)} aria-label="Tag">
             <option value="">All tags</option>
             {tags.map((x) => (
               <option key={x}>{x}</option>
@@ -85,7 +101,7 @@ export default function EntityList() {
       {filtered.length === 0 ? (
         <Empty>{ofType.length === 0 ? `No ${/^[A-Z]{2}/.test(label.many) ? label.many : label.many.toLowerCase()} yet.` : 'Nothing matches.'}</Empty>
       ) : showTree ? (
-        <LocationTree worldId={worldId} entities={filtered} />
+        <LocationTree worldId={worldId} entities={filtered} isGM={isGM} />
       ) : (
         <div className="card-grid">
           {filtered.map((e) => (
@@ -101,7 +117,7 @@ function EntityCard({ worldId, entity: e, isGM }: { worldId: string; entity: Ent
   return (
     <Link className="card" to={`${pagePath(worldId, e.id)}`}>
       <h3>
-        {e.name} <VisibilityBadge value={e.visibility} />
+        {e.name} {isGM && <SeenMark entity={e} />}
       </h3>
       {e.summary && <p>{e.summary}</p>}
       <div className="tags">
@@ -118,7 +134,7 @@ function EntityCard({ worldId, entity: e, isGM }: { worldId: string; entity: Ent
   )
 }
 
-function LocationTree({ worldId, entities }: { worldId: string; entities: Entity[] }) {
+function LocationTree({ worldId, entities, isGM }: { worldId: string; entities: Entity[]; isGM: boolean }) {
   const roots = treeRoots(entities)
   const children = (parentId?: string) =>
     entities.filter((e) => (parentId ? e.parentId === parentId && !roots.has(e.id) : roots.has(e.id)))
@@ -129,7 +145,7 @@ function LocationTree({ worldId, entities }: { worldId: string; entities: Entity
       <ul className={depth === 0 ? 'tree' : ''}>
         {kids.map((e) => (
           <li key={e.id}>
-            <Link to={`${pagePath(worldId, e.id)}`}>{e.name}</Link> <VisibilityBadge value={e.visibility} />
+            <Link to={`${pagePath(worldId, e.id)}`}>{e.name}</Link> {isGM && <SeenMark entity={e} />}
             {e.summary && <span className="muted"> · {e.summary}</span>}
             {render(e.id, depth + 1)}
           </li>

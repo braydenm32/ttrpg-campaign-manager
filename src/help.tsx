@@ -7,12 +7,12 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
  */
 export const HELP = {
   // Getting around
-  overview: 'Home: your world’s cover, the next session with a Run button, what needs you (player questions, character claims, urgent threads), running clocks and what changed lately. “New page” makes a page of any type.',
+  overview: 'Your Desk: the session in hand with the one button for what comes next, everything waiting on you before it, ticking clocks, the party, the sessions coming up and what changed lately. “New page” makes a page of any type.',
   areas:
     'The world is split into areas, down the side on a computer and along the bottom on a phone. Desk is what needs you now. Session is the session in hand: prepare it, play it at the Lectern, wrap it up. Atlas is the world itself (maps, places, people), Story is what’s moving (threads, quests, clocks, timeline), and More has the tools you need now and then. The tabs along the top belong to the area you’re in, and each area remembers where you were. Players get the Common Room and The World instead.',
   more: 'Things used now and then, in one place: what you reach for at the table (handouts, sounds, safety tools, the players’ screen), the workshop (generators, random tables, corkboards, files, the Archivist, templates) and keeping the world (settings, backups, importing, the bin). Search (Ctrl+K) finds every one of them by name too.',
   everything: 'Every kind of page in this world with how many there are, your own kinds included. Maps, places, people, factions and lore have tabs of their own; the rest (items, events, your own types…) are here.',
-  needsYou: 'Things waiting on you: questions your players asked, downtime to answer, players asking to claim a character, and urgent loose threads. When it’s empty you’re all caught up.',
+  needsYou: 'Everything waiting on you before the next session, each with one button: what players sent (questions, downtime, claims, new characters, the same as the Inbox), a session with no date or no plan yet, pressing loose threads, a backup that’s due, characters nobody plays yet and pages you’ve linked but not written. When it’s empty you’re all caught up.',
   sampleWorld:
     'A small, simple world for a first look: a coast, a town, a handful of people and two drawn maps with pins. Good for learning the basics in a few minutes. Vael Ardith is the full example with a campaign ready to run.',
   exampleWorld:
@@ -112,10 +112,10 @@ export const HELP = {
     'Click to place a label, or drag a line on the map and the words will follow it, like a river name or a mountain range. Region lettering is spaced capitals, place names are italic, Title is for the map name.',
 
   // Story
-  timeline: 'Events in order: the history before your campaign, and what has happened during it. Filter by place to see one area’s story.',
+  timeline: 'Events in order: the history before your campaign, and what has happened during it. Filter by place to see one area’s story, and jump straight to an age or to the campaign from the row at the top. List or Month, the month you’re on and the place stay in the address, so Back comes back to them.',
   ages: 'Split your history into named ages, like “The Age of Kings” or “The Long Peace”. Each age gets its own section on the timeline, in order, and each event can belong to one. Players see the ages of any events you have revealed.',
   threads:
-    'Every hook, mystery, promise and grudge you’ve left dangling. Move them from dangling to in play to tied off. A thread that hasn’t moved in three sessions gets flagged so nothing is forgotten.',
+    'Every hook, mystery, promise and grudge you’ve left dangling. The columns say where a thread stands with the players (dangling, in play, tied off); pressing, normal and slow burn say how soon it bites and order each column. “Next session” marks threads that touch the plan for the next session (a place, person or page in its scenes, clues or fights), and they come first. Moving a thread offers Undo. A thread that hasn’t moved in three sessions gets flagged so nothing is forgotten. Your search and switches stay in the address, so Back comes back to them.',
   leads:
     'The quests, rumours, hooks and mysteries your GM has shared with the party that are still open, the ones under way first, and the clocks that are ticking. Done and tied-off ones are folded away at the bottom.',
   calendar:
@@ -124,9 +124,9 @@ export const HELP = {
   relations:
     'How this page connects to others: family, friends, enemies, who serves whom. Players only see a link when you tick “Players know”. Every link shows up on both pages.',
   relationWeb:
-    'Everyone and how they’re connected, drawn as a web. Drag people about, click one to focus on them, or switch to the family tree. In a big world it starts with just people, factions and gods; switch to every kind of page to see places and items too. Add links from any page’s Relationships box.',
+    'Everyone and how they’re connected, drawn as a web. It opens on one person and everyone within two links of them: your own character for a player, otherwise the best-connected player character. Click someone to move to them (Back goes back), pick Everyone to see the whole web, or switch to the family tree. In a big world it shows just people, factions and gods; switch to every kind of page to see places and items too. Add links from any page’s Relationships box; removing one offers Undo.',
   clocks:
-    'A progress clock is a circle cut into slices. Fill a slice when a villain’s plan moves on, a rival gets closer or danger grows; when it’s full, it happens. Players only see clocks you mark “Players know”.',
+    'A progress clock is a circle cut into slices. Fill a slice when a villain’s plan moves on, a rival gets closer or danger grows; when it’s full, it happens. Players only see clocks you mark “Players know”, on pages they can see: each clock says which. Start one here or from a page’s Clocks box; removing one offers Undo.',
   safety:
     'Agree what’s off limits before you play. Lines never happen in the game; veils can happen, but off screen. Everyone in the world can read this page.',
   xcard:
@@ -234,13 +234,19 @@ export const HELP = {
     'A co-GM sees and edits everything in this world, secrets included, from their own account. Only you can invite or remove co-GMs, manage players and links, or delete the cloud copy.',
   schedule:
     'Suggest a few dates for the next session. Players who joined mark each one yes, maybe or no, and you book the one that works. Booking makes the session with that date and shows it to players. Times show in each person’s own time zone.',
-  nextSession: 'Each campaign’s session in hand, with its stage (Preparing, Playing, Played), how many scenes and clues are planned, and one button for what comes next: prepare it, play it, or wrap it up.',
+  nextSession: 'The session in hand, with its stage (Planned, Preparing, Playing, Played), its date, how many scenes and clues you’ve written, and one main button for what comes next: prepare it, start playing, wrap it up, or plan the one after.',
   endSession:
     'What’s done and what’s left before you mark the session played: the recording transcribed, the recap written, your pages updated, the session shown to players, the world’s date moved on. “Mark as played” then gets the next session ready, carrying over the clues they didn’t find, the scenes they didn’t reach, and where the party is.',
   partyCampaign: 'When a world has more than one group, pick which campaign this character plays in. The campaign page and the Lectern’s “Add the party” then only show that group.',
   trackAsThread: 'Quests are what the players know they’re doing. A loose thread is your own tracker for it: how pressing it is, and a warning when it goes cold.',
   claimRequests: 'A player asked to play one of your characters. Approve it and they can edit that character’s sheet and read passages written for them.',
-  gettingStarted: 'A few first steps for a new world. It goes away once you’ve made a campaign and a few pages.',
+  gettingStarted: 'A few first steps for a new world. It goes away once you’ve made a campaign and a few pages, or when you hide it.',
+  inbox:
+    'Everything your players sent that waits on you, oldest first: questions, what their characters do between sessions (downtime), asking to play a character, and new characters they wrote up. Answer each one right here. Deleting, approving and turning down wait a few seconds with Undo before they reach the player. The number on Desk and Inbox counts what’s still waiting.',
+  comingUp: 'The next few sessions of each running campaign, with their stage. A campaign is one group’s story in this world; “+ Campaign” starts another.',
+  deskParty: 'The player characters in the session’s campaign, with their armour class and hit points when their pages have them.',
+  worldLoading: 'A world’s pictures and maps arrive after its pages: drawn (the example worlds), downloaded or unpacked from a backup. Look around meanwhile; each one appears as soon as it’s ready.',
+  yourWorlds: 'Worlds you made, kept on this device (and in the cloud if you switch on sync). Worlds you play in and the example worlds have shelves of their own.',
   home: 'Each world is kept on this device. Sign in to sync your worlds across devices, invite players, or open worlds you play in.',
   joining: 'An invite link from your GM lets you join their world as a player. Paste it here if it opened somewhere else, sign in, and you’re in.',
   questions:
@@ -290,6 +296,10 @@ export const HELP = {
   readAloud: 'Reads recaps aloud with your device’s own voices: free, private, and secret passages are never read, not even ones meant only for you (the whole table would hear them). Pick a voice and speed here.',
   newCharacterName:
     'Secret passages written “for” a character reach whoever plays a character with that full name or first name. If the new character shares a name with another, those secrets would reach both players, so give one of them a different name.',
+  pageVisibility:
+    'Says who can read this page now: GM only, players, or a few players you revealed it to. Click it to change that. Before anything is revealed you see what players will get (and what stays hidden: GM notes, GM-only passages and details), and a note at the bottom offers Undo afterwards.',
+  pageJumps: 'A long page gets this row: tap a part to go straight to it. Back from a page you opened comes back to where you were.',
+  seenMarks: 'In your lists, an open eye marks what players can read, a lock what’s GM only, and a half-shut eye a GM-only page revealed to a few players. The filter and tag you pick stay in the address, so Back from a page returns to the same list.',
   revealQuietly:
     'Reveal quietly lets players read the page the next time they look, without putting it on their screens. Reveal and show does both. Hide from players makes it GM only again (and takes it off their screens if it is showing). GM notes and secret passages stay hidden either way.',
   pageDrafts:
@@ -301,7 +311,7 @@ export const HELP = {
   lecternKeys:
     'With a keyboard: N or → for the next turn, B or ← to go back, D to roll a d20, and ? for this list. They don’t work while you’re typing in a box.',
   pinNames:
-    'Keeps the names of pins and regions showing on the map instead of only when you hover. They appear once you zoom in a little, so a zoomed-out map isn’t covered in labels. Each map remembers its own setting on this device. Players only get names for the pins they can see. On a phone, tap a pin once to see its name and again to open it.',
+    'Names shows each pin’s name beside it (regions and drawn places get theirs once you zoom in a little, since the map has its own labels). Each map remembers the setting on this device, and where you were looking, so Back lands on the same spot. When the party is somewhere on the map (the scene at the Lectern), its pin is ringed in blue and a button takes you to it. Players only get names for the pins they can see. On a phone, a pin’s card opens over the foot of the map; Tools holds the rest of the toolbar.',
   fogRoom:
     'Click inside a room to uncover just that room, right up to its walls. It stops at walls drawn across the room and at doors, gates and bars, so click in the next room to open that one too. Secret rooms are left alone until you mark their door as found. With Cover chosen, it covers the room again. Only on maps with rooms drawn in the map builder.',
   keysInAccount:

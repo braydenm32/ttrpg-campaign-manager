@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Hourglass } from '@phosphor-icons/react'
 import { useAuthSession } from '../cloud/auth'
@@ -49,7 +49,7 @@ async function sendDowntime(cloudId: string, character: string, body: string) {
   void tellDowntime(cloudId)
 }
 
-async function answerDowntime(cloudId: string, id: string, answer: string) {
+export async function answerDowntime(cloudId: string, id: string, answer: string) {
   const a = answer.trim()
   const { error } = await supabase
     .from('downtime_actions')
@@ -61,7 +61,7 @@ async function answerDowntime(cloudId: string, id: string, answer: string) {
   await tellPlayers(cloudId)
 }
 
-async function deleteDowntime(cloudId: string, id: string) {
+export async function deleteDowntime(cloudId: string, id: string) {
   const { error } = await supabase.from('downtime_actions').delete().eq('world_id', cloudId).eq('id', id)
   if (error) throw error
 }
@@ -191,35 +191,8 @@ export function PlayerDowntime({ world, mine }: { world: World; mine: Entity[] }
   )
 }
 
-/** For the GM: every player's downtime, waiting ones first, each with a box to answer. */
-export function GmDowntime({ world, names }: { world: World; names: (userId: string) => string }) {
-  const { list, reload, error, cloudId } = useDowntime(world)
-  if (!cloudId) return null
-  const open = list.filter(needsAnswer)
-  const done = list.filter((d) => d.answer)
-  const card = (d: DowntimeAction) => <DowntimeItem key={d.id} cloudId={cloudId} d={d} who={names(d.userId)} onChange={reload} />
-  return (
-    <section className="gm-downtime">
-      <h2>
-        <Ico as={Hourglass} /> Downtime {open.length > 0 && <span className="count alert">{open.length}</span>} <Help topic="downtimeGm" />{' '}
-        <button className="ghost small" onClick={reload}>
-          ↻ Refresh
-        </button>
-      </h2>
-      {error && <p className="error small">{error}</p>}
-      {list.length === 0 && <p className="muted small">Nothing yet. Between sessions, players tell you here what their characters get up to.</p>}
-      {open.map(card)}
-      {done.length > 0 && (
-        <details>
-          <summary>Answered ({done.length})</summary>
-          {done.map(card)}
-        </details>
-      )}
-    </section>
-  )
-}
-
-function DowntimeItem({ cloudId, d, who, onChange }: { cloudId: string; d: DowntimeAction; who: string; onChange: () => void }) {
+/** For the GM, in the Inbox: one player's downtime, with a box to answer it. Delete waits out its Undo (onDelete). */
+export function DowntimeItem({ cloudId, d, who, onChange, onDelete, head }: { cloudId: string; d: DowntimeAction; who: string; onChange: () => void; onDelete: () => void; head?: ReactNode }) {
   const [answer, setAnswer] = useState(d.answer ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -236,14 +209,16 @@ function DowntimeItem({ cloudId, d, who, onChange }: { cloudId: string; d: Downt
     }
   }
   return (
-    <div className="card question">
-      <div className="row spread">
-        <strong>
-          {who}
-          {d.character && <span className="muted"> as {d.character}</span>}
-        </strong>
-        <span className="muted small">{new Date(d.createdAt).toLocaleString()}</span>
-      </div>
+    <div className="card question inbox-item" data-kind="downtime" id={`item-${d.id}`}>
+      {head ?? (
+        <div className="row spread">
+          <strong>
+            {who}
+            {d.character && <span className="muted"> as {d.character}</span>}
+          </strong>
+          <span className="muted small">{new Date(d.createdAt).toLocaleString()}</span>
+        </div>
+      )}
       <p>{d.body}</p>
       <form
         className="form"
@@ -257,7 +232,7 @@ function DowntimeItem({ cloudId, d, who, onChange }: { cloudId: string; d: Downt
           <button className="primary" disabled={busy || answer.trim() === (d.answer ?? '')}>
             {d.answer ? 'Update answer' : 'Send answer'}
           </button>
-          <button type="button" className="ghost danger" disabled={busy} onClick={() => confirm('Delete this?') && act(() => deleteDowntime(cloudId, d.id))}>
+          <button type="button" className="ghost danger" disabled={busy} onClick={onDelete}>
             Delete
           </button>
         </div>
@@ -269,7 +244,7 @@ function DowntimeItem({ cloudId, d, who, onChange }: { cloudId: string; d: Downt
 
 /**
  * For the GM, on every screen: a note when a player sends downtime, with a link to answer it. What
- * was already waiting when the world opened is on Home's "Needs you" instead.
+ * was already waiting when the world opened is in the Inbox and the Desk's "Needs you" instead.
  */
 export function DowntimeToast({ world }: { world: World }) {
   const { list, loaded } = useDowntime(world)
@@ -297,7 +272,7 @@ export function DowntimeToast({ world }: { world: World }) {
           <span>
             <Ico as={Hourglass} /> <b>{d.character || 'A player'}</b> sent downtime: <span className="muted">{d.body.length > 90 ? `${d.body.slice(0, 90)}…` : d.body}</span>
           </span>
-          <Link className="button primary small" to={`${worldPath(world.id)}/questions`} onClick={() => close(d.id)}>
+          <Link className="button primary small" to={`${worldPath(world.id)}/questions?item=${d.id}`} onClick={() => close(d.id)}>
             Answer
           </Link>
           <button className="small" onClick={() => close(d.id)}>

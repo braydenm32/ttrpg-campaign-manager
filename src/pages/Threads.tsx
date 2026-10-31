@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Help } from '../help'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Empty } from '../components'
 import { PagePicker } from '../PagePicker'
-import { db, THREAD_STATUS, type Entity, type ThreadStatus } from '../db'
+import { db, THREAD_STATUS, type Entity, type Session, type ThreadStatus } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { ThreadCard } from '../ThreadCard'
-import { COLD_AFTER, newThread, sessionInHand, sessionsSinceTouched, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
+import { COLD_AFTER, newThread, nextSessions, sessionInHand, sessionsSinceTouched, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
+import { useKeepScroll } from '../jump'
 import { isOpenThread } from '../counts'
 import { LeadsView } from '../players/Leads'
 import { useViewMode } from '../viewMode'
@@ -50,25 +51,44 @@ function ThreadBoard() {
   const [name, setName] = useState('')
   const [involves, setInvolves] = useState('')
   const [urgency, setUrgency] = useState<NonNullable<Entity['threadUrgency']>>('normal')
-  const [filter, setFilter] = useState('')
-  const [search, setSearch] = useState('')
-  const [showClosed, setShowClosed] = useState(false)
+  // The search, the filter and the switches live in the address, so Back from a thread comes back to the same board.
+  const [params, setParams] = useSearchParams()
+  const search = params.get('q') ?? ''
+  const filter = params.get('involves') ?? ''
+  const showClosed = params.get('closed') === '1'
+  const onlyNext = params.get('next') === '1'
+  const setParam = (k: string, v: string) => {
+    const next = new URLSearchParams(params)
+    if (v) next.set(k, v)
+    else next.delete(k)
+    setParams(next, { replace: true })
+  }
+  useKeepScroll(entities.length > 0)
 
   const threads = entities.filter((e) => e.type === 'thread')
   const others = entities.filter((e) => e.type !== 'thread')
+  const latest = sessionInHand(campaigns, sessions)
+  // The next session's plan: threads touching what's in it are the ones that matter now.
+  const coming = nextSessions(campaigns, sessions)[0]?.session
+  const upNext = new Set(coming ? threads.filter((t) => inPlan(t, coming, entities)).map((t) => t.id) : [])
   const q = search.trim().toLowerCase()
   const shown = threads.filter(
     (t) =>
       (!filter || threadLinks(t, entities, true).some((e) => e.id === filter)) &&
-      (!q || t.name.toLowerCase().includes(q) || t.summary.toLowerCase().includes(q)),
+      (!q || t.name.toLowerCase().includes(q) || t.summary.toLowerCase().includes(q)) &&
+      (!onlyNext || upNext.has(t.id)),
   )
-  const latest = sessionInHand(campaigns, sessions)
   const cold = threads.filter((t) => isOpenThread(t) && sessionsSinceTouched(t, sessions) >= COLD_AFTER).length
   const columns = showClosed ? COLUMNS : COLUMNS.slice(0, 2)
   const sorted = (status: ThreadStatus) =>
     shown
       .filter((t) => (t.threadStatus ?? 'open') === status)
-      .sort((a, b) => URGENCY_ORDER[a.threadUrgency ?? 'normal'] - URGENCY_ORDER[b.threadUrgency ?? 'normal'] || b.updatedAt - a.updatedAt)
+      .sort(
+        (a, b) =>
+          Number(upNext.has(b.id)) - Number(upNext.has(a.id)) ||
+          URGENCY_ORDER[a.threadUrgency ?? 'normal'] - URGENCY_ORDER[b.threadUrgency ?? 'normal'] ||
+          b.updatedAt - a.updatedAt,
+      )
 
   const add = async () => {
     if (!name.trim()) return
@@ -101,9 +121,9 @@ function ThreadBoard() {
           add()
         }}
       >
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="What’s left hanging? e.g. Who sent the assassin?" />
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="What’s left hanging? e.g. Who sent the assassin?" aria-label="New thread" />
         <PagePicker entities={others} value={involves} onPick={setInvolves} placeholder="Involves… (optional)" />
-        <select value={urgency} onChange={(e) => setUrgency(e.target.value as typeof urgency)} title="How pressing it is">
+        <select value={urgency} onChange={(e) => setUrgency(e.target.value as typeof urgency)} title="How pressing it is" aria-label="How pressing it is">
           {(['high', 'normal', 'low'] as const).map((u) => (
             <option key={u} value={u}>
               {URGENCY[u].icon} {URGENCY[u].label}
@@ -117,10 +137,15 @@ function ThreadBoard() {
       </form>
 
       <div className="row wrap thread-filters">
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search threads" />
-        <PagePicker entities={others} value={filter} onPick={setFilter} placeholder="Involving anyone or anywhere" />
-        <label className="row small">
-          <input type="checkbox" checked={showClosed} onChange={(e) => setShowClosed(e.target.checked)} /> Show tied off and dropped
+        <input type="search" value={search} onChange={(e) => setParam('q', e.target.value)} placeholder="Search threads" aria-label="Search threads" />
+        <PagePicker entities={others} value={filter} onPick={(id) => setParam('involves', id)} placeholder="Involving anyone or anywhere" />
+        {coming && (
+          <label className="row small thread-switch" title={`Threads that touch a place, person or page in the plan for #${coming.number} ${coming.title}`}>
+            <input type="checkbox" checked={onlyNext} onChange={(e) => setParam('next', e.target.checked ? '1' : '')} /> Only ones for next session ({upNext.size})
+          </label>
+        )}
+        <label className="row small thread-switch">
+          <input type="checkbox" checked={showClosed} onChange={(e) => setParam('closed', e.target.checked ? '1' : '')} /> Show tied off and dropped
         </label>
         {cold > 0 && (
           <span className="thread-cold small">
@@ -128,6 +153,15 @@ function ThreadBoard() {
           </span>
         )}
       </div>
+      <p className="muted small thread-legend">
+        Columns say where a thread stands with the players; <span aria-hidden="true">🔥</span> pressing, normal and <span aria-hidden="true">🕯️</span> slow burn say how soon it bites, and order each column.
+        {coming && (
+          <>
+            {' '}
+            <span className="tag up-next">Next session</span> marks the ones that touch the plan for #{coming.number} {coming.title}.
+          </>
+        )}
+      </p>
 
       {threads.length === 0 ? (
         <Empty>No loose threads yet. Add one above, or from the Lectern during a game.</Empty>
@@ -142,7 +176,7 @@ function ThreadBoard() {
                 </h2>
                 <p className="muted small">{THREAD_STATUS[status].hint}</p>
                 {list.map((t) => (
-                  <ThreadCard key={t.id} thread={t} entities={entities} sessions={sessions} worldId={worldId} currentSessionId={latest?.id} />
+                  <ThreadCard key={t.id} thread={t} entities={entities} sessions={sessions} worldId={worldId} currentSessionId={latest?.id} highlight={upNext.has(t.id) ? 'Next session' : undefined} />
                 ))}
               </section>
             )
@@ -159,4 +193,16 @@ function ThreadBoard() {
       )}
     </div>
   )
+}
+
+/** Whether a thread touches the plan for a session: its own name, or a page it involves, in the plan's text, places, people or fights. */
+function inPlan(thread: Entity, session: Session, entities: Entity[]) {
+  const prep = session.prep
+  if (!prep) return false
+  const ids = new Set(threadLinks(thread, entities, true).map((e) => e.id))
+  const placed = prep.scenes.some((s) => (s.placeId && ids.has(s.placeId)) || s.presentIds?.some((id) => ids.has(id))) || prep.encounters.some((x) => x.foes.some((f) => f.entityId && ids.has(f.entityId)))
+  if (placed) return true
+  const text = [prep.strongStart, ...prep.scenes.map((s) => `${s.text}\n${s.readAloud ?? ''}`), ...prep.clues.map((c) => c.text), ...prep.encounters.map((x) => `${x.name}\n${x.notes}`)].join('\n').toLowerCase()
+  const names = [thread.name, ...threadLinks(thread, entities, true).map((e) => e.name)].map((n) => n.trim().toLowerCase()).filter((n) => n.length > 3)
+  return names.some((n) => text.includes(n))
 }
