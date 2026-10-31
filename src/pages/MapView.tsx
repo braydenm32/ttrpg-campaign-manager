@@ -6,8 +6,11 @@ import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ImageOverlay, MapContainer, Marker, Polygon, Polyline, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { DraftText, Empty, VisibilityBadge, VisibilityToggle } from '../components'
-import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type Pin, type WorldMap } from '../db'
+import { DraftText, Empty, VisibilityBadge } from '../components'
+import { SeenMark, useReview, VisibilityControl } from '../reveal'
+import { sessionInHand } from '../threads'
+import { toast } from '../undo'
+import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type Pin, type World, type WorldMap } from '../db'
 import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { StatusBadge, statusIcon } from '../status'
@@ -16,7 +19,7 @@ import { SecretNamesWarning } from '../SecretNamesWarning'
 import { useViewMode } from '../viewMode'
 import { circleShape, fogOverlay, pinRevealed, playersImageId, rectShape, removeFog, renderPlayerFog } from '../fog'
 import { Ico, TypeIcon } from '../icons'
-import { CloudFog, Crosshair, DoorOpen, DownloadSimple, Eye, HandPalm, MapPin, PencilSimple, Ruler, SlidersHorizontal } from '@phosphor-icons/react'
+import { CloudFog, Crosshair, DoorOpen, DownloadSimple, Eye, HandPalm, MapPin, NavigationArrow, PencilSimple, Ruler, SlidersHorizontal, Tag, Toolbox } from '@phosphor-icons/react'
 import { MeasureBar, ScaleSetting } from '../mapMeasure'
 import { saveRoute } from '../journey'
 import { gmIdOf, sendPing, useTable, type MapPing } from '../cloud/table'
@@ -31,27 +34,51 @@ const COLORS = ['#e0b354', '#d9534f', '#5bc0de', '#5cb85c', '#a678de', '#f0f0f0'
 /** Names show on the map from this far in past "whole map in view" (zoom steps), so a zoomed-out map isn't covered in labels. */
 const NAMES_FROM = 0.5
 
-/** Whether pin names are kept showing on a map, remembered per map on this device. */
+/** Whether pin names show on a map (they do unless turned off), remembered per map on this device. */
 function useShowNames(mapId: string) {
   const key = `atlas.mapNames.${mapId}`
   const [on, set] = useState(() => {
     try {
-      return localStorage.getItem(key) === '1'
+      return localStorage.getItem(key) !== '0'
     } catch {
-      return false
+      return true
     }
   })
   const setOn = (v: boolean) => {
     set(v)
     try {
-      if (v) localStorage.setItem(key, '1')
-      else localStorage.removeItem(key)
+      if (v) localStorage.removeItem(key)
+      else localStorage.setItem(key, '0')
     } catch {
       // private window or blocked storage: it just isn't remembered
     }
   }
   return [on, setOn] as const
 }
+
+/**
+ * Where the party is now: the scene's place, from the live table (a joined world) or, on the GM's
+ * own device, the Lectern of the session in hand. Only a place the viewer can see counts, so the
+ * player view never learns of a GM-only one. Returns the place and everything it sits inside.
+ */
+function useWhereWeAre(world: World | null | undefined, entities: Entity[], sceneFromTable?: string) {
+  const own = !!world && !world.shared
+  const sceneId =
+    useLiveQuery(async () => {
+      if (!own) return ''
+      const [sessions, campaigns] = await Promise.all([db.sessions.where({ worldId: world!.id }).toArray(), db.campaigns.where({ worldId: world!.id }).toArray()])
+      return sessionInHand(campaigns, sessions)?.lectern?.sceneId ?? ''
+    }, [own, world?.id]) ?? ''
+  const byId = new Map(entities.map((e) => [e.id, e]))
+  const id = sceneFromTable ? entities.find((e) => gmIdOf(e.id) === sceneFromTable)?.id : sceneId
+  const place = id ? byId.get(id) : undefined
+  const around: string[] = []
+  for (let p = place; p && around.length < 12; p = p.parentId ? byId.get(p.parentId) : undefined) around.push(p.id)
+  return { place, around }
+}
+
+/** Where the map was looking last time, for this tab: Back to a map comes back to the same spot. */
+const viewKey = (mapId: string) => `atlas.mapView.${mapId}`
 
 export default function MapView() {
   const { worldId } = useWorld()
@@ -87,7 +114,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const [routeNote, setRouteNote] = useState('')
   // Pings travel on the live link: a synced world for the GM, a joined one for a player.
   const cloudId = world?.shared?.memberOf ?? (world && !world.shared && world.cloud?.enabled ? world.id : undefined)
-  const { pings } = useTable(cloudId)
+  const { pings, table } = useTable(cloudId)
   const me = useMe(world ?? ({ id: '' } as never))
   const gmMapId = gmIdOf(map.id)
   const [showSettings, setShowSettings] = useState(false)
@@ -100,10 +127,16 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const [roomNote, setRoomNote] = useState('')
   const [showNames, setShowNames] = useShowNames(map.id)
   const [zoomedIn, setZoomedIn] = useState(false)
-  // on a touch screen the first tap on a pin shows its name and the second opens it
+  const [toolsOpen, setToolsOpen] = useState(false)
+  // on a touch screen with names off, the first tap on a pin shows its name and the second opens it
   const touch = useMemo(() => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches, [])
   const [tapped, setTapped] = useState<string>()
-  const namesOn = showNames && zoomedIn
+  // Pins' names show by the pins; names of regions and drawn pieces wait until you zoom in (the map has its own labels).
+  const namesOn = showNames
+  const areaNamesOn = showNames && zoomedIn
+  const here = useWhereWeAre(world, entities, table?.scene?.entityId)
+  // The pin for where the party is: the place itself, or the nearest place it's inside.
+  const herePin = here.around.map((id) => pins.find((p) => p.entityId === id)).find(Boolean)
   const hasRooms = !!exportDrawing?.rooms?.length && exportDrawing.scene === 'battle'
   const selectedId = params.get('pin')
   const selected = pins.find((p) => p.id === selectedId)
@@ -195,15 +228,26 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
 
   return (
     <div className="map-page">
-      <div className="map-toolbar">
-        <Link to={`${worldPath(worldId)}/maps`}>← Maps</Link>
-        <strong>{map.name}</strong> <VisibilityBadge value={map.visibility} /> <Help topic="mapView" />
-        <div className="row">
-          <label className="inline-check small" title="Keep the pins’ names showing on the map (zoom in to see them)">
-            <input type="checkbox" checked={showNames} onChange={(e) => setShowNames(e.target.checked)} />
-            Show names <Help topic="pinNames" />
-          </label>
-          {showNames && !zoomedIn && <span className="muted small">Zoom in to see them</span>}
+      <div className={`map-toolbar ${toolsOpen ? 'tools-open' : ''}`}>
+        <Link className="map-back" to={`${worldPath(worldId)}/maps`} aria-label="All maps">
+          ← <span>Maps</span>
+        </Link>
+        <strong className="map-title">{map.name}</strong> {isGM && <SeenMark entity={map} />} <Help topic="mapView" />
+        <div className="row map-quick">
+          <button type="button" className={`names-toggle ${showNames ? 'on' : ''}`} aria-pressed={showNames} onClick={() => setShowNames(!showNames)} title="Show the pins’ names on the map">
+            <Ico as={Tag} /> Names
+          </button>
+          {herePin && (
+            <button type="button" className="where-we-are" onClick={() => select(herePin.id)} title="Where the party is now">
+              <Ico as={NavigationArrow} /> {isGM ? 'The party' : 'We’re'} at {here.place!.name}
+            </button>
+          )}
+          <Help topic="pinNames" />
+          <button type="button" className="tools-toggle" aria-expanded={toolsOpen} onClick={() => setToolsOpen(!toolsOpen)}>
+            <Ico as={Toolbox} /> Tools
+          </button>
+        </div>
+        <div className="row map-tools">
           <div className="segmented">
             <button
               className={tool === 'measure' ? 'on' : ''}
@@ -349,11 +393,13 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
             }}
           />
           <ZoomWatcher bounds={bounds} onChange={setZoomedIn} />
+          <KeepView mapId={map.id} bounds={bounds} />
           <FocusPin pin={selected} />
           <ResizeWatcher panelOpen={!!selected || showSettings} />
           {pins.map((p) => {
             const entity = p.entityId ? byId.get(p.entityId) : undefined
-            const label = `${statusIcon(entity)} ${p.label || entity?.name || 'Pin'}`.trim()
+            const isHere = p.id === herePin?.id
+            const label = `${isHere ? (isGM ? 'The party is here · ' : 'You are here · ') : ''}${statusIcon(entity)} ${p.label || entity?.name || 'Pin'}`.trim()
             const handlers = {
               click: (ev: L.LeafletMouseEvent) => {
                 if (tool !== 'select') return
@@ -384,7 +430,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                   }}
                   eventHandlers={handlers}
                 >
-                  <PinName key={namesOn ? 'name' : 'hover'} label={label} on={namesOn} center />
+                  <PinName key={areaNamesOn || isHere ? 'name' : 'hover'} label={label} on={areaNamesOn || isHere} center />
                 </Polygon>
               )
             if (p.kind === 'region' && p.points)
@@ -400,7 +446,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                   }}
                   eventHandlers={handlers}
                 >
-                  <PinName key={namesOn ? 'name' : 'hover'} label={label} on={namesOn} center />
+                  <PinName key={areaNamesOn || isHere ? 'name' : 'hover'} label={label} on={areaNamesOn || isHere} center />
                 </Polygon>
               )
             if (!p.position) return null
@@ -408,7 +454,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
               <Marker
                 key={p.id}
                 position={p.position}
-                icon={pinIcon(p, entity, p.id === selectedId)}
+                icon={pinIcon(p, entity, p.id === selectedId, isHere)}
                 draggable={isGM && tool === 'select'}
                 eventHandlers={{
                   ...handlers,
@@ -418,7 +464,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                   },
                 }}
               >
-                <PinName key={namesOn ? 'name' : 'hover'} label={label} on={namesOn} />
+                <PinName key={namesOn || isHere ? 'name' : 'hover'} label={label} on={namesOn || isHere} here={isHere} />
               </Marker>
             )
           })}
@@ -435,7 +481,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
           {fogCorner && <Marker position={fogCorner} icon={cornerIcon} interactive={false} />}
         </MapContainer>
         {(selected || showSettings) && (
-          <aside className="map-panel">
+          <aside className={`map-panel ${showSettings ? 'settings' : 'sheet'}`}>
             {showSettings && isGM ? (
               <MapSettings map={map} entities={entities} onClose={() => setShowSettings(false)} onDeleted={() => navigate(`${worldPath(worldId)}/maps`)} />
             ) : selected ? (
@@ -481,14 +527,50 @@ function Pings({ pings }: { pings: MapPing[] }) {
 const PING_FOR = 5000
 const pingIcon = (gm?: boolean) => L.divIcon({ className: '', html: `<div class="map-ping${gm ? ' gm' : ''}"><span></span><span></span></div>`, iconSize: [40, 40], iconAnchor: [20, 20] })
 
-/** A pin's name: on hover, or kept showing (when names are on and the map is zoomed in far enough). */
-function PinName({ label, on, center }: { label: string; on: boolean; center?: boolean }) {
-  if (center) return on ? <Tooltip permanent direction="center" className="pin-name">{label}</Tooltip> : <Tooltip sticky>{label}</Tooltip>
+/** A pin's name: kept showing by it (when names are on), or on hover. */
+function PinName({ label, on, center, here }: { label: string; on: boolean; center?: boolean; here?: boolean }) {
+  if (center) return on ? <Tooltip permanent direction="center" className={`pin-name${here ? ' here' : ''}`}>{label}</Tooltip> : <Tooltip sticky>{label}</Tooltip>
   return (
-    <Tooltip direction="top" offset={[0, -14]} permanent={on} className={on ? 'pin-name' : undefined}>
+    <Tooltip direction="top" offset={[0, -34]} permanent={on} className={on ? `pin-name${here ? ' here' : ''}` : undefined}>
       {label}
     </Tooltip>
   )
+}
+
+/**
+ * Where the map looks when it opens: where it was last time in this tab (so Back lands on the same
+ * spot), else the whole map; on a tall phone screen, a wide map fills the height instead of sitting
+ * in a strip with empty space above and below.
+ */
+function KeepView({ mapId, bounds }: { mapId: string; bounds: L.LatLngBounds }) {
+  const map = useMap()
+  useEffect(() => {
+    let saved: { lat: number; lng: number; zoom: number } | undefined
+    try {
+      saved = JSON.parse(sessionStorage.getItem(viewKey(mapId)) ?? 'null') ?? undefined
+    } catch {
+      // Storage blocked: start from the whole map.
+    }
+    if (saved) map.setView([saved.lat, saved.lng], saved.zoom, { animate: false })
+    else {
+      const size = map.getSize()
+      const tall = size.y / Math.max(1, size.x) > 1.25 * ((bounds.getNorth() - bounds.getSouth()) / Math.max(1, bounds.getEast() - bounds.getWest()))
+      if (tall) map.setView(bounds.getCenter(), map.getBoundsZoom(bounds, true), { animate: false })
+    }
+    // Once, as the map opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  useMapEvents({
+    moveend: () => {
+      const c = map.getCenter()
+      try {
+        sessionStorage.setItem(viewKey(mapId), JSON.stringify({ lat: c.lat, lng: c.lng, zoom: map.getZoom() }))
+      } catch {
+        // Not remembered this time.
+      }
+    },
+  })
+  return null
 }
 
 /** Tells the page whether the map is zoomed in far enough to show pin names. */
@@ -565,8 +647,29 @@ function FogBar({
         m.fog = { on: true, shapes: [], ...m.fog, ...patch }
       })
   const all = { id: 'all', mode: 'reveal' as const, points: [[0, 0], [0, map.width], [map.height, map.width], [map.height, 0]] as [number, number][] }
+  const { ask, dialog } = useReview()
+  const uncoverAll = async () => {
+    const ok = await ask({
+      title: 'Uncover the whole map?',
+      see: [map.visibility === 'players' ? `All of “${map.name}”, at once` : `All of “${map.name}”, once you reveal the map (it’s GM only now)`, 'Every pin you’ve revealed on it'],
+      kept: ['Pins and anything marked GM only'],
+      confirm: 'Uncover all',
+    })
+    if (!ok || !fog) return
+    const shape = { ...all, id: newId() }
+    await setFog({ shapes: [...fog.shapes, shape] })
+    toast('The whole map is uncovered.', () =>
+      db.maps
+        .where('id')
+        .equals(map.id)
+        .modify((m) => {
+          if (m.fog) m.fog.shapes = m.fog.shapes.filter((s) => s.id !== shape.id)
+        }),
+    )
+  }
   return (
     <div className="map-toolbar fog-bar">
+      {dialog}
       <strong>
         <Ico as={CloudFog} /> Fog of war <Help topic="fog" />
       </strong>
@@ -623,7 +726,7 @@ function FogBar({
           <button disabled={!fog.shapes.length} onClick={() => setFog({ shapes: fog.shapes.slice(0, -1) })}>
             ↶ Undo
           </button>
-          <button onClick={() => setFog({ shapes: [...fog.shapes, { ...all, id: newId() }] })}>Uncover all</button>
+          <button onClick={uncoverAll}>Uncover all</button>
           <button onClick={() => confirm('Cover the whole map again?') && setFog({ shapes: [] })}>Cover all</button>
           <button
             className="ghost small"
@@ -642,13 +745,13 @@ function FogBar({
   )
 }
 
-function pinIcon(p: Pin, entity: Entity | undefined, active: boolean) {
+function pinIcon(p: Pin, entity: Entity | undefined, active: boolean, here = false) {
   const glyph = entity ? ENTITY_LABELS[entity.type].icon : p.childMapId ? '🗺️' : '📍'
   // The colour goes into HTML, so only a plain colour code is used (a synced or imported pin could hold anything).
   const c = /^#[0-9a-f]{3,8}$/i.test(p.color) ? p.color : COLORS[0]
   return L.divIcon({
     className: '',
-    html: `<div class="map-pin${active ? ' active' : ''}${p.visibility === 'gm' ? ' hidden-pin' : ''}" style="--c:${c}"><span>${glyph}</span></div>`,
+    html: `<div class="map-pin${active ? ' active' : ''}${here ? ' here' : ''}${p.visibility === 'gm' ? ' hidden-pin' : ''}" style="--c:${c}"><span>${glyph}</span></div>`,
     iconSize: [30, 30],
     iconAnchor: [15, 36],
   })
@@ -673,8 +776,13 @@ function FocusPin({ pin }: { pin?: Pin }) {
   const id = pin?.id
   useEffect(() => {
     if (!pin) return
-    if (pin.position) map.panTo(pin.position, { animate: true })
-    else if (pin.points?.length) map.fitBounds(L.latLngBounds(pin.points), { maxZoom: map.getZoom(), animate: true })
+    // On a phone the pin's card comes up over the foot of the map, so the pin goes in the top part.
+    const size = map.getSize()
+    const lift = size.x < 800 ? size.y * 0.22 : 0
+    const at = pin.position ?? (pin.points?.length ? L.latLngBounds(pin.points).getCenter() : undefined)
+    if (pin.position || lift) {
+      if (at) map.panTo(map.unproject(map.project(at).add([0, lift])), { animate: true })
+    } else if (pin.points?.length) map.fitBounds(L.latLngBounds(pin.points), { maxZoom: map.getZoom(), animate: true })
     // Only re-focus when a different pin is selected, not on every edit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, map])
@@ -773,7 +881,18 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
       </label>
       {pin.pieceId && <p className="muted small">A piece drawn on this map. Move, turn or remove it in the map builder.</p>}
       <div className="row">
-        <VisibilityToggle value={pin.visibility} onChange={(v) => update({ visibility: v })} />
+        <VisibilityControl
+          compact
+          value={pin.visibility}
+          onChange={(v) => update({ visibility: v })}
+          name={`the pin “${pin.label || entity?.name || 'Pin'}”`}
+          see={[
+            'The pin and its name, where it sits on the map',
+            ...(pin.note.trim() ? ['Its note (not any GM-only passage in it)'] : []),
+            ...(entity ? [entity.visibility === 'players' ? `A link to “${entity.name}”` : `Not the page “${entity.name}”: that’s still GM only`] : []),
+          ]}
+          kept={fogNote(pin)}
+        />
         <div className="swatches" hidden={!!pin.pieceId}>
           {COLORS.map((c) => (
             <button key={c} className={`swatch ${c === pin.color ? 'on' : ''}`} style={{ background: c }} onClick={() => update({ color: c })} aria-label={`Colour ${c}`} />
@@ -862,9 +981,10 @@ function MapSettings({ map, entities, onClose, onDeleted }: { map: WorldMap; ent
       </header>
       <label>
         Name
-        <DraftText value={map.name} onCommit={(name) => update({ name })} />
+        {/* A blank name is refused: the map keeps the one it had. */}
+        <DraftText value={map.name} onCommit={(name) => name.trim() && update({ name: name.trim() })} required />
       </label>
-      <VisibilityToggle value={map.visibility} onChange={(v) => update({ visibility: v })} />
+      <MapVisibility map={map} />
       <label>
         This map shows
         <select value={map.locationId ?? ''} onChange={(e) => update({ locationId: e.target.value || undefined })}>
@@ -891,5 +1011,26 @@ function MapSettings({ map, entities, onClose, onDeleted }: { map: WorldMap; ent
         Delete map
       </button>
     </div>
+  )
+}
+
+/** Under the fog: a pin only reaches players once its spot is uncovered. */
+const fogNote = (pin: Pin) => (pin.visibility === 'gm' ? ['If the map has fog, the pin shows only once its spot is uncovered'] : [])
+
+/** The map's own visibility control, with what players get: the picture (fogged, or without GM-only pieces) and the revealed pins. */
+function MapVisibility({ map }: { map: WorldMap }) {
+  const pins = useLiveQuery(() => db.pins.where({ mapId: map.id }).toArray(), [map.id]) ?? []
+  const shown = pins.filter((p) => p.visibility === 'players').length
+  return (
+    <VisibilityControl
+      value={map.visibility}
+      onChange={(v) => db.maps.update(map.id, { visibility: v })}
+      name={`the map “${map.name}”`}
+      see={[
+        map.fog?.on ? 'The picture, under the fog: only what you’ve uncovered' : map.playerImageId ? 'The picture, without the pieces you marked GM only' : 'The whole picture',
+        `${shown} revealed ${shown === 1 ? 'pin' : 'pins'}${map.fog?.on ? ' (those you’ve uncovered)' : ''}`,
+      ]}
+      kept={[`${pins.length - shown} GM-only ${pins.length - shown === 1 ? 'pin' : 'pins'}`]}
+    />
   )
 }

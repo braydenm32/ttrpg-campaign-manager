@@ -305,7 +305,7 @@ export const HELP = {
   lecternKeys:
     'With a keyboard: N or → for the next turn, B or ← to go back, D to roll a d20, and ? for this list. They don’t work while you’re typing in a box.',
   pinNames:
-    'Keeps the names of pins and regions showing on the map instead of only when you hover. They appear once you zoom in a little, so a zoomed-out map isn’t covered in labels. Each map remembers its own setting on this device. Players only get names for the pins they can see. On a phone, tap a pin once to see its name and again to open it.',
+    'Names shows each pin’s name beside it (regions and drawn places get theirs once you zoom in a little, since the map has its own labels). Each map remembers the setting on this device, and where you were looking, so Back lands on the same spot. When the party is somewhere on the map (the scene at the Lectern), its pin is ringed in blue and a button takes you to it. Players only get names for the pins they can see. On a phone, a pin’s card opens over the foot of the map; Tools holds the rest of the toolbar.',
   fogRoom:
     'Click inside a room to uncover just that room, right up to its walls. It stops at walls drawn across the room and at doors, gates and bars, so click in the next room to open that one too. Secret rooms are left alone until you mark their door as found. With Cover chosen, it covers the room again. Only on maps with rooms drawn in the map builder.',
   keysInAccount:
