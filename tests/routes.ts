@@ -95,7 +95,7 @@ export const ROUTES: RouteEntry[] = [
     kind: 'screen',
     samples: [
       { url: W },
-      { url: `${W}?tab=scene`, label: 'Common Room: the scene', gm: 'skip' },
+      { url: `${W}?tab=scene`, label: 'Common Room: old address of the scene', gm: 'skip' },
       { url: `${W}?tab=me`, label: 'Common Room: my character', gm: 'skip' },
       { url: `${W}?tab=party`, label: 'Common Room: the party', gm: 'skip' },
       { url: `${W}?tab=leads`, label: 'Common Room: leads', gm: 'skip' },

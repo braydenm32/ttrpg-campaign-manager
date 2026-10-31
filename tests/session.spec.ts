@@ -1,5 +1,6 @@
 import { expect, go, here, open, test, type Page } from './fixtures'
 import { readDatabase } from './lib/world'
+import { getRecord, putBack } from './lib/records'
 
 /**
  * The GM's Session area (Prepare → Play → Wrap up), on a laptop and a phone: a session moves
@@ -10,55 +11,6 @@ import { readDatabase } from './lib/world'
  * Each test puts back what it changed (straight in the database), since tests in one worker share
  * the world.
  */
-
-type Row = Record<string, unknown> & { id: string }
-
-/** One record of the app's database, read in the page. */
-function getRecord(page: Page, table: string, id: string) {
-  return page.evaluate(
-    ({ table, id }) =>
-      new Promise<Row | undefined>((resolve, reject) => {
-        const req = indexedDB.open('ttrpg-campaign-manager')
-        req.onerror = () => reject(req.error)
-        req.onsuccess = () => {
-          const idb = req.result
-          const get = idb.transaction(table, 'readonly').objectStore(table).get(id)
-          get.onsuccess = () => {
-            idb.close()
-            resolve(get.result)
-          }
-          get.onerror = () => reject(get.error)
-        }
-      }),
-    { table, id },
-  )
-}
-
-/** Puts records back as they were, or (for null) deletes them. */
-function putBack(page: Page, table: string, rows: [string, Row | null | undefined][]) {
-  return page.evaluate(
-    ({ table, rows }) =>
-      new Promise<void>((resolve, reject) => {
-        const req = indexedDB.open('ttrpg-campaign-manager')
-        req.onerror = () => reject(req.error)
-        req.onsuccess = () => {
-          const idb = req.result
-          const tx = idb.transaction(table, 'readwrite')
-          const store = tx.objectStore(table)
-          for (const [id, row] of rows) {
-            if (row) store.put(row)
-            else store.delete(id)
-          }
-          tx.oncomplete = () => {
-            idb.close()
-            resolve()
-          }
-          tx.onerror = () => reject(tx.error)
-        }
-      }),
-    { table, rows },
-  )
-}
 
 const toast = (page: Page) => page.locator('.undo-toast')
 

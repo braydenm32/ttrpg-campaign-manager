@@ -149,15 +149,15 @@ interface RoomContext {
 
 const roomLink = (worldId: string, tab: Tab) => (tab === 'now' ? worldPath(worldId) : `${worldPath(worldId)}?tab=${tab}`)
 
-/** "in 3 days", "in 2 hours", "starting now". */
+/** "in 2 hours", "tomorrow", "in 3 days" (counted in days on the calendar, so Saturday evening is "in 3 days" all Wednesday). */
 function until(t: number) {
   const ms = t - Date.now()
   if (ms <= 15 * 60_000) return 'starting now'
   const h = ms / 3_600_000
   if (h < 1) return `in ${Math.round(ms / 60_000)} minutes`
-  if (h < 36) return `in ${Math.round(h)} hour${Math.round(h) === 1 ? '' : 's'}`
-  const d = Math.round(h / 24)
-  return `in ${d} day${d === 1 ? '' : 's'}`
+  const days = Math.round((new Date(t).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86_400_000)
+  if (days < 1) return `in ${Math.round(h)} hour${Math.round(h) === 1 ? '' : 's'}`
+  return days === 1 ? 'tomorrow' : `in ${days} days`
 }
 
 /** "just now", "5 minutes ago"… */
