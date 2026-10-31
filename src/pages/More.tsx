@@ -25,7 +25,7 @@ export default function More() {
   const groups = moreFor(frame.facts)
   if (frame.facts.handouts) counts.handouts = `${frame.facts.handouts}`
   return (
-    <div className="page more-page">
+    <div className="page more-page more-screen">
       <header className="page-header">
         <div>
           <h1>

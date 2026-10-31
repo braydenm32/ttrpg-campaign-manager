@@ -58,7 +58,7 @@ export default function WorldSettings() {
   const update = (patch: Partial<World>) => db.worlds.update(worldId, { ...patch, updatedAt: Date.now() })
 
   return (
-    <div className="page">
+    <div className="page more-screen">
       <header className="page-header">
         <h1>
           World settings <Help topic="settings" />
@@ -118,10 +118,10 @@ export default function WorldSettings() {
         <>
           <p className="muted">These settings stay on this device: they aren’t synced or put in backups (except AI keys you choose to save to your account).</p>
           <section>
-            <h2>Look and help tips</h2>
-            <div className="row wrap">
-              <ThemePicker /> <Help topic="theme" />
-            </div>
+            <h2>
+              Look and help tips <Help topic="theme" />
+            </h2>
+            <ThemePicker />
             <HelpTipsToggle />
           </section>
           <DiscordSettings worldId={worldId} />

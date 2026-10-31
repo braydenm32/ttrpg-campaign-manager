@@ -1,6 +1,7 @@
 import { binFile } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
+import '../more.css'
 import { useState } from 'react'
 import { Empty, Skeleton, TagInput, VisibilityToggle } from '../components'
 import { db, type Asset } from '../db'
@@ -24,7 +25,7 @@ export default function Assets() {
   if (!stored) return <Skeleton />
 
   return (
-    <div className="page">
+    <div className="page more-screen">
       <header className="page-header">
         <div>
           <h1>

@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Books, ChatCircleText, Check, ClipboardText, PaperPlaneRight, PenNib, Scales, Sparkle, X } from '@phosphor-icons/react'
 import { db, type Entity, type Session, type World } from '../db'
 import { Help } from '../help'
+import '../more.css'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { Ico } from '../icons'
 import { Markdown, findBacklinks } from '../Markdown'
@@ -31,7 +32,7 @@ export default function Archivist() {
   if (!world) return <Skeleton />
   if (!isGM) return <Empty>The Archivist is for the GM.</Empty>
   return (
-    <div className="page archivist">
+    <div className="page archivist more-screen">
       <header className="page-header">
         <h1>
           <Ico as={Books} /> The Archivist <Help topic="archivist" />

@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Empty } from '../components'
 import { db, newId } from '../db'
 import { Help } from '../help'
+import '../more.css'
 import { useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
@@ -19,7 +20,7 @@ export default function Boards() {
   const [name, setName] = useState('')
   if (!isGM) return <Empty>Corkboards are a GM tool. Switch back to the GM view to use them.</Empty>
   return (
-    <div className="page">
+    <div className="page more-screen">
       <header className="page-header">
         <h1>
           <Ico as={PushPin} /> Corkboards <Help topic="boards" />

@@ -27,6 +27,24 @@
 .players-review ul { margin: 0; padding-left: 1.2em; }
 .players-review p { margin: 0; }
 
+/* Fingers: every button, box and link on the More area's screens is at least 44px each way. */
+@media (pointer: coarse) {
+  .more-screen :is(button, .button, select, textarea, summary, input:not([type='checkbox'], [type='radio'], [type='color'], [type='file'])):not(.help-button, .swatch, .show-thumb) { min-height: 44px; }
+  .more-screen :is(button, .button):not(.help-button, .swatch, .show-thumb, .link, .more-item) { min-width: 44px; }
+  .more-screen summary { display: flex; align-items: center; gap: .4em; }
+  .more-screen button.link { display: inline-flex; align-items: center; min-height: 44px; }
+  /* The "?" keeps its small look; the tap area around it grows without moving anything. */
+  .more-screen .help-button { width: 44px; height: 44px; margin: -12px -10px; border-color: transparent; background: transparent; }
+  .more-screen .help-button::after { inset: 0; }
+  .more-screen .swatch { width: 44px; height: 44px; }
+  .more-screen .tag-input input { min-height: 44px; }
+  .more-screen .tag button { min-width: 44px; min-height: 44px; margin: -.6em -.65em -.6em -.4em; }
+  .more-screen label:has(> input[type='checkbox']) { display: flex; align-items: center; gap: .5em; min-height: 44px; }
+  .more-screen :is(h2, .row, .table-roller, .handout-list .card) > a, .more-screen h2 a.small { display: inline-flex; align-items: center; min-height: 44px; }
+  .more-screen input[type='range'] { min-height: 44px; }
+  .more-screen .entity-list li > a { display: inline-flex; align-items: center; gap: .3em; min-height: 44px; }
+}
+
 /* Phones: whole rows to tap, nothing wider than the screen. */
 @media (max-width: 700px) {
   .settings-tabs > button { flex: 1 1 45%; min-height: 44px; }

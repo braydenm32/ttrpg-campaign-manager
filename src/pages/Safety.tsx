@@ -46,7 +46,7 @@ export default function SafetyPage() {
   if (world.shared?.token) return <Empty>Table rules are for the players at the table.</Empty>
 
   return (
-    <div className="page">
+    <div className="page more-screen">
       <header className="page-header">
         <h1>
           <Ico as={Shield} /> {isGM ? 'Safety tools' : 'Table rules'} <Help topic={isGM ? 'safety' : 'tableRules'} />

@@ -1,5 +1,6 @@
 import { Empty, Skeleton } from '../components'
 import { Help } from '../help'
+import '../more.css'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { PlayerNotesBox } from '../players/Notes'
 import { Ico } from '../icons'
@@ -14,7 +15,7 @@ export default function Scratchpad() {
   if (!player && (world.shared || !world.cloud?.enabled))
     return <Empty>The scratchpad is for players who have joined this world. Turn on cloud sync and invite them from World settings.</Empty>
   return (
-    <div className="page">
+    <div className="page more-screen">
       <header className="page-header">
         <div>
           <h1>

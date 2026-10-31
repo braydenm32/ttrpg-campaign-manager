@@ -33,7 +33,7 @@ export default function Handouts() {
   // Handouts prepared ahead: GM-only pages tagged "handout", waiting for the moment to show them.
   const ready = isGM ? entities.filter((e) => e.visibility === 'gm' && e.tags.includes('handout')) : []
   return (
-    <div className="page">
+    <div className="page more-screen">
       <header className="page-header">
         <h1>
           <Ico as={Newspaper} /> Handouts <Help topic="handouts" />

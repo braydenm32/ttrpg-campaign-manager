@@ -6,6 +6,7 @@ import { DraftText, Empty } from '../components'
 import { PagePicker } from '../PagePicker'
 import { db, newId, type Board, type BoardCard } from '../db'
 import { Help } from '../help'
+import '../more.css'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { StatusBadge } from '../status'
 import { useViewMode } from '../viewMode'
@@ -113,7 +114,7 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
   const string = board.strings.find((s) => s.id === selected)
 
   return (
-    <div className="page wide board-page">
+    <div className="page wide board-page more-screen">
       <header className="page-header">
         <div>
           <Link to={`${worldPath(worldId)}/boards`}>← Corkboards</Link>

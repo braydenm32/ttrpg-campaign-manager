@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { DraftText, Empty } from '../components'
 import { db, newId, type Sound } from '../db'
 import { Help } from '../help'
+import '../more.css'
 import { saveFileAsAsset, useWorld } from '../hooks'
 import { stop, stopAll, usePlaying } from '../sound/player'
 import { Soundboard, useSounds } from '../sound/Soundboard'
@@ -28,7 +29,7 @@ export default function Sounds() {
   const update = (id: string, patch: Partial<Sound>) => db.sounds.update(id, patch)
 
   return (
-    <div className="page">
+    <div className="page more-screen">
       <header className="page-header">
         <h1>
           <Ico as={MusicNotes} /> Soundboard <Help topic="soundboard" />

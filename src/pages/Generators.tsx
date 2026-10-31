@@ -67,7 +67,7 @@ export default function Generators() {
   if (!isGM) return <Empty>Generators are a GM tool. Switch back to the GM view to use them.</Empty>
   const tables = entities.filter((e) => e.type === 'table')
   return (
-    <div className="page">
+    <div className="page more-screen">
       <header className="page-header">
         <div>
           <h1>
