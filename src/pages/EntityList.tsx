@@ -2,6 +2,7 @@ import { type ReactNode } from 'react'
 import { Help } from '../help'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { Empty } from '../components'
+import { NothingHere } from '../NothingHere'
 import { SeenMark } from '../reveal'
 import { StatusBadge } from '../status'
 import { ENTITY_TYPES, typeLabel, type Entity, type EntityType } from '../db'
@@ -11,7 +12,7 @@ import { listedEntries, TableRoller } from '../tables'
 import { pagesIn } from '../counts'
 import { StarterTables } from '../moreGenerators'
 import { useViewMode } from '../viewMode'
-import { pagePath, resolveCustom, sectionType, typePath, usePathsVersion, worldPath } from '../paths'
+import { pagePath, resolveCustom, sectionType, typePath, usePathsVersion } from '../paths'
 
 export default function EntityList() {
   const { worldId, world } = useWorld()
@@ -33,13 +34,7 @@ export default function EntityList() {
   }
 
   if (!ENTITY_TYPES.includes(type as EntityType))
-    return (
-      <div className="page">
-        <Empty>
-          There’s nothing at this address. <Link to={worldPath(worldId)}>Back to the world’s home</Link>
-        </Empty>
-      </div>
-    )
+    return <NothingHere />
   if (type === 'custom' && kind && world && !world.customTypes?.some((c) => c.id === kind)) return <Empty>This page type has been removed.</Empty>
   const t = type as EntityType
   const label = typeLabel({ type: t, customType: kind }, world)

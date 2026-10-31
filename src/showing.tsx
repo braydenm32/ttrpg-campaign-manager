@@ -1,3 +1,4 @@
+import logo from './assets/logo.svg'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -393,16 +394,17 @@ export function PlayersScreen({ world }: { world: World }) {
     return () => void lock?.release()
   }, [])
   return (
-    <div className="players-screen">
+    <div className="players-screen world-bare">
       {showing ? (
         <>
           {!hiddenPage && <h1>{showing.title}</h1>}
           <ShowingView showing={showing} worldId={world.id} big />
         </>
       ) : (
-        <div className="players-screen-idle">
+        <div className="players-screen-idle" role="status">
+          <img src={logo} alt="" />
           <h1>{world.name}</h1>
-          <p className="muted">Waiting for the GM…</p>
+          <p className="muted">Nothing on screen yet. What your GM shows the table appears here.</p>
         </div>
       )}
     </div>

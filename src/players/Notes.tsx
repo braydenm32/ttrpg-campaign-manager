@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Help } from '../help'
 import { useAuthSession } from '../cloud/auth'
 import { listGroupNotes, replyInGroupNotes, savePlayerNote, type NoteClash } from '../cloud/players'
@@ -144,12 +144,15 @@ function NoteEditor({
   const [clash, setClash] = useState<NoteClash | null>(null)
   const [state, setState] = useState<'' | 'saving' | 'saved' | 'error'>('')
   const text = draft ?? saved
+  // The text last sent to be saved, so leaving while it's on its way doesn't send it twice.
+  const sent = useRef<string | null>(null)
   const save = async (body = draft, expected: string | null = base ?? savedAt ?? null) => {
     if (body === null || (body === saved && !clash)) {
       setDraft(null)
       return
     }
     setState('saving')
+    sent.current = body
     try {
       const theirs = await onSave(body, expected)
       if (theirs) {
@@ -162,9 +165,28 @@ function NoteEditor({
       setClash(null)
       setState('saved')
     } catch {
+      sent.current = null
       setState('error')
     }
   }
+  // Typing, then leaving without clicking away (another screen, another app, closing the tab) still saves.
+  const pending = useRef({ save, waiting: false, draft })
+  const waiting = draft !== null && draft !== saved && !clash
+  useEffect(() => {
+    pending.current = { save, waiting, draft }
+  })
+  useEffect(() => {
+    const unsaved = () => pending.current.waiting && pending.current.draft !== sent.current
+    const onHide = () => document.hidden && unsaved() && void pending.current.save()
+    const warn = (e: BeforeUnloadEvent) => unsaved() && e.preventDefault()
+    document.addEventListener('visibilitychange', onHide)
+    window.addEventListener('beforeunload', warn)
+    return () => {
+      document.removeEventListener('visibilitychange', onHide)
+      window.removeEventListener('beforeunload', warn)
+      if (unsaved()) void pending.current.save()
+    }
+  }, [])
   return (
     <>
       <textarea

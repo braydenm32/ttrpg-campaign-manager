@@ -35,12 +35,12 @@ export default function WikiHome({ world }: { world: World }) {
   const recent = [...entities].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 6)
 
   return (
-    <div className="page wiki-home">
+    <div className="page wiki-home more-screen">
       <WorldCover world={world} help="wiki">
         <span className="world-cover-meta">Public wiki · read only</span>
       </WorldCover>
 
-      <input className="search" placeholder="Search this world…" value={query} onChange={(e) => setQuery(e.target.value)} />
+      <input className="search" type="search" aria-label="Search this world" placeholder="Search this world…" value={query} onChange={(e) => setQuery(e.target.value)} />
       {query.trim() && (
         <ul className="entity-list">
           {results.map((h) => (
@@ -113,6 +113,7 @@ export default function WikiHome({ world }: { world: World }) {
         </section>
         <section>
           <h2>Recently added</h2>
+          {recent.length === 0 && <Empty>Nothing here yet. Pages appear as the GM reveals them.</Empty>}
           <ul className="entity-list">
             {recent.map((e) => (
               <li key={e.id}>

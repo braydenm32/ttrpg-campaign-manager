@@ -10,7 +10,9 @@ import { listedEntries } from './tables'
 import { StatusBadge } from './status'
 import { ForcePlayerView, useViewMode } from './viewMode'
 import { Ico, PageIcon } from './icons'
-import { Eye, Lock, Printer } from '@phosphor-icons/react'
+import { ArrowLeft, Eye, Lock, Printer } from '@phosphor-icons/react'
+import { Skeleton } from './components'
+import { pagePath, worldPath } from './paths'
 
 /** Opens the print page for a page or a session. In the player view it opens the player copy, so a GM previewing as a player never prints secrets by surprise. */
 export function PrintButton({ to }: { to: string }) {
@@ -31,8 +33,23 @@ export default function PrintPage() {
   const { worldId } = useWorld()
   const [params] = useSearchParams()
   const world = useLiveQuery(async () => (await db.worlds.get(worldId)) ?? null, [worldId])
-  if (world === undefined) return null
-  if (world === null) return <div className="print-page">World not found.</div>
+  if (world === undefined)
+    return (
+      <div className="print-page world-bare">
+        <Skeleton />
+      </div>
+    )
+  if (world === null)
+    return (
+      <div className="print-page world-bare">
+        <div className="calm-note card print-missing">
+          <p>World not found. It isn’t on this device.</p>
+          <Link className="button" to="/">
+            Go to your worlds
+          </Link>
+        </div>
+      </div>
+    )
   const playerCopy = !!world.shared || params.get('copy') === 'players'
   return playerCopy ? (
     <ForcePlayerView>
@@ -48,32 +65,45 @@ function PrintBody({ world }: { world: World }) {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
   const { isGM } = useViewMode()
+  // Opened straight from a link or in a new tab, there's nothing to go back to: Back opens the page or session instead.
+  const back = () => {
+    const first = ((window.history.state as { idx?: number } | null)?.idx ?? 0) === 0
+    if (first) navigate(kind === 'e' ? pagePath(world.id, id) : `${worldPath(world.id)}/s/${id}`)
+    else navigate(-1)
+  }
+  const playerCopy = !!world.shared || params.get('copy') === 'players'
   useEffect(() => {
     // Give pictures a moment to load before the print window opens.
     const t = setTimeout(() => window.print(), 600)
     return () => clearTimeout(t)
   }, [])
   return (
-    <div className="print-page">
-      <div className="print-controls row wrap">
-        <button onClick={() => navigate(-1)}>← Back</button>
-        <button className="primary" onClick={() => window.print()}>
-          <Ico as={Printer} /> Print or save as PDF
+    <div className="print-page world-bare">
+      <div className="print-controls">
+        <button className="print-back" onClick={back}>
+          <Ico as={ArrowLeft} /> Back
         </button>
         {!world.shared && (
           <div className="segmented">
-            <button className={isGM ? 'on' : ''} onClick={() => setParams({}, { replace: true })}>
+            <button className={isGM ? 'on' : ''} aria-pressed={isGM} onClick={() => setParams({}, { replace: true })}>
               <Ico as={Lock} /> GM copy
             </button>
-            <button className={!isGM ? 'on' : ''} onClick={() => setParams({ copy: 'players' }, { replace: true })}>
+            <button className={!isGM ? 'on' : ''} aria-pressed={!isGM} onClick={() => setParams({ copy: 'players' }, { replace: true })}>
               <Ico as={Eye} /> Player copy
             </button>
           </div>
         )}
         <Help topic="print" />
-        {params.get('copy') === 'players' && <span className="muted small">Secrets, GM notes and hidden pages are left out.</span>}
+        <button className="primary print-go" onClick={() => window.print()}>
+          <Ico as={Printer} /> Print or save as PDF
+        </button>
+        <p className="muted small print-note">
+          {playerCopy ? 'The player copy: secrets, GM notes and hidden pages are left out.' : 'Your copy, with secrets and GM notes. Choose Player copy for one to hand out.'}
+        </p>
       </div>
-      {kind === 'e' ? <PrintEntity world={world} id={id} /> : <PrintSession world={world} id={id} />}
+      <div className="print-sheet">
+        {kind === 'e' ? <PrintEntity world={world} id={id} /> : <PrintSession world={world} id={id} />}
+      </div>
     </div>
   )
 }
@@ -84,8 +114,8 @@ function PrintEntity({ world, id }: { world: World; id: string }) {
   const entities = useVisibleEntities(world.id)
   const image = useAssetUrl(stored && (isGM || canSeeEntity(stored)) ? stored.imageId : undefined)
   if (stored === undefined) return null
-  if (!stored || stored.worldId !== world.id) return <p>Page not found.</p>
-  if (!isGM && !canSeeEntity(stored)) return <p className="notice">This page is GM only, so a player copy would be empty. Reveal it first, or print the GM copy.</p>
+  if (!stored || stored.worldId !== world.id) return <Missing world={world}>Page not found. It may have been deleted.</Missing>
+  if (!isGM && !canSeeEntity(stored)) return <Missing world={world}>This page is GM only, so a player copy would be empty. Reveal it first, or print the GM copy.</Missing>
   const e: Entity = isGM ? stored : asPlayerSees(stored)
   return (
     <article>
@@ -96,7 +126,7 @@ function PrintEntity({ world, id }: { world: World; id: string }) {
       <StatusBadge entity={e} />
       {e.summary && <p className="lead">{e.summary}</p>}
       {image && <img className="print-image" src={image} alt={e.name} />}
-      <Markdown text={e.body} entities={entities} worldId={world.id} showSecrets={isGM} />
+      <Markdown text={e.body} entities={entities} worldId={world.id} showSecrets={isGM} stillLinks />
       {e.type === 'table' && (
         <ol className="table-entries">
           {listedEntries(e, isGM).map((x, i) => (
@@ -116,7 +146,7 @@ function PrintEntity({ world, id }: { world: World; id: string }) {
       )}
       {isGM && e.gmNotes && (
         <Section title="GM notes">
-          <Markdown text={e.gmNotes} entities={entities} worldId={world.id} showSecrets />
+          <Markdown text={e.gmNotes} entities={entities} worldId={world.id} showSecrets stillLinks />
         </Section>
       )}
     </article>
@@ -128,8 +158,8 @@ function PrintSession({ world, id }: { world: World; id: string }) {
   const s = useLiveQuery(async () => (await db.sessions.get(id)) ?? null, [id])
   const entities = useVisibleEntities(world.id)
   if (s === undefined) return null
-  if (!s || s.worldId !== world.id) return <p>Session not found.</p>
-  if (!canSee(s.visibility)) return <p className="notice">This session is GM only, so a player copy would be empty. Reveal it first, or print the GM copy.</p>
+  if (!s || s.worldId !== world.id) return <Missing world={world}>Session not found. It may have been deleted.</Missing>
+  if (!canSee(s.visibility)) return <Missing world={world}>This session is GM only, so a player copy would be empty. Reveal it first, or print the GM copy.</Missing>
   const featured = entities.filter((e) => s.entityIds.includes(e.id))
   return (
     <article>
@@ -141,10 +171,10 @@ function PrintSession({ world, id }: { world: World; id: string }) {
       {isGM ? <PrintPrep session={s} entities={entities} worldId={world.id} /> : null}
       {isGM && s.notes.trim() && (
         <Section title="GM notes">
-          <Markdown text={s.notes} entities={entities} worldId={world.id} showSecrets />
+          <Markdown text={s.notes} entities={entities} worldId={world.id} showSecrets stillLinks />
         </Section>
       )}
-      {!isGM && (s.recap ? <Markdown text={s.recap} entities={entities} worldId={world.id} showSecrets={false} /> : <p className="muted">No recap yet.</p>)}
+      {!isGM && (s.recap ? <Markdown text={s.recap} entities={entities} worldId={world.id} showSecrets={false} stillLinks /> : <p className="muted">No recap yet.</p>)}
       {featured.length > 0 && (
         <Section title="Featured">
           <ul>
@@ -201,7 +231,7 @@ function PrintPrep({ session, entities, worldId }: { session: Session; entities:
                   ))}
                 </tbody>
               </table>
-              {enc.notes && <Markdown text={enc.notes} entities={entities} worldId={worldId} showSecrets />}
+              {enc.notes && <Markdown text={enc.notes} entities={entities} worldId={worldId} showSecrets stillLinks />}
             </div>
           ))}
         </Section>
@@ -216,5 +246,17 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
       <h2>{title}</h2>
       {children}
     </section>
+  )
+}
+
+/** Nothing to print: says why, with the way back into the world. */
+function Missing({ world, children }: { world: World; children: ReactNode }) {
+  return (
+    <div className="print-missing">
+      <p>{children}</p>
+      <Link className="button" to={worldPath(world.id)}>
+        Back to the world
+      </Link>
+    </div>
   )
 }

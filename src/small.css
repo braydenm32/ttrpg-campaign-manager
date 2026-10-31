@@ -1,0 +1,116 @@
+/*
+ * The last eight screens (step 8 of the redesign): the invite and wiki links, the wiki's front page,
+ * Print, the players' TV screen, the scratchpad, "Not found" and players' Questions. Kept apart from
+ * index.css so the areas can be restyled one at a time. Finger sizes come from .more-screen (more.css).
+ */
+
+/* ——— Invite link and wiki link: one calm card under the name ——— */
+.join-page { padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
+.join-card { padding: 1.3em 1.4em; gap: .8em; }
+.join-card p { margin: 0; }
+.join-card h2 { display: flex; align-items: center; gap: .4em; flex-wrap: wrap; font-size: 1.3rem; }
+.join-actions { display: flex; flex-wrap: wrap; gap: .5em; justify-content: flex-end; margin-top: .3em; }
+.join-error { display: flex; flex-direction: column; gap: .4em; border-top: 1px solid var(--border); padding-top: .8em; }
+.join-wait { display: block; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 35%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  .join-wait { animation: join-breathe 2.4s ease-in-out infinite; }
+  @keyframes join-breathe { 50% { opacity: .35; } }
+}
+@media (max-width: 700px) {
+  .join-page { padding-top: 1.5em; }
+  .join-page .brand-title { font-size: 1.6rem; }
+  .join-card { padding: 1.1em 1em; }
+  /* One-handed: the buttons fill the card's width, the main one nearest the thumb. */
+  .join-actions { flex-direction: column-reverse; }
+  .join-actions > * { justify-content: center; min-height: 48px; }
+}
+
+/* ——— Not found, and screens with nothing in them yet ——— */
+.nothing-here, .questions-page { max-width: 820px; }
+.nothing-here .calm-note { margin-top: 1em; }
+
+/* ——— Players' questions ——— */
+.ask-card { padding: 1em; }
+.ask-card .form { gap: .6em; }
+.ask-card .row.end { margin-top: 0; }
+.questions-page h2 .small { font: 400 .85rem var(--font-body); }
+@media (max-width: 700px) {
+  .ask-card .row.end { flex-wrap: wrap; }
+  .ask-card .row.end > button { flex: 1 1 100%; justify-content: center; min-height: 48px; }
+}
+
+/* The GM's Inbox keeps its look; its "?" just gets a fingertip-sized tap area. */
+@media (pointer: coarse) {
+  .inbox-page .help-button { width: 44px; height: 44px; margin: -12px -10px; border-color: transparent; background: transparent; }
+  .inbox-page .help-button::after { inset: 0; }
+}
+
+/* ——— The wiki's front page ——— */
+.wiki-home .search { min-height: 44px; }
+.wiki-home .entity-list li { overflow-wrap: anywhere; }
+@media (max-width: 800px) {
+  .wiki-home .entity-list li > a { display: inline-flex; align-items: center; gap: .3em; min-height: 44px; }
+  .wiki-home .wiki-recap h3 a { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
+/* ——— Print: the controls on screen, then the sheet of paper as it will print ——— */
+.print-controls { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: .5em .6em; margin: -1.5em -1.5em 1.5em; padding: .8em 1.5em; background: var(--bg); border-bottom: 1px solid var(--border); }
+.print-controls .print-go { margin-left: auto; }
+.print-controls .print-note { flex-basis: 100%; margin: 0; }
+.print-sheet {
+  /* Paper is paper, whatever the theme. */
+  --bg: #fffdf8; --panel: #fffdf8; --panel-2: #f3eee4; --border: #d8cfbf; --text: #231c16; --muted: #62574b; --heading: #2f2218;
+  --link: #231c16; --link-line: transparent; --accent: #8a6418; --secret-bg: #f1f4ef; --secret-border: #9bb3a6; --secret-ink: #2d5a50;
+  color-scheme: light; background: var(--bg); color: var(--text); padding: 2.2em 2.4em; border-radius: 4px; box-shadow: var(--shadow), 0 0 0 1px rgb(0 0 0 / .06);
+}
+.print-sheet h1 { color: var(--heading); }
+.print-missing { display: flex; flex-direction: column; align-items: flex-start; gap: .6em; }
+.print-missing p { margin: 0; }
+@media (max-width: 700px) {
+  .print-page { padding: 1em max(16px, env(safe-area-inset-left)) 2em; }
+  .print-controls { margin: -1em -16px 1em; padding: .6em 16px; }
+  .print-controls > * { min-height: 44px; }
+  .print-controls .print-back { min-width: 44px; justify-content: center; }
+  .print-controls .print-go { flex: 1; justify-content: center; }
+  .print-controls .segmented { flex: 1 1 100%; order: 3; }
+  .print-controls .segmented button { flex: 1; justify-content: center; min-height: 44px; }
+  .print-controls .help-button { width: 44px; height: 44px; margin: 0 -6px; border-color: transparent; background: transparent; }
+  .print-controls .help-button::after { inset: 0; }
+  .print-controls .print-note { order: 4; }
+  .print-sheet { padding: 1.3em 1.1em; }
+  .print-image { max-width: 40%; }
+}
+@media print {
+  body { background: #fff !important; }
+  .print-sheet { padding: 0; box-shadow: none; border-radius: 0; --bg: #fff; --panel: #fff; --text: #000; --muted: #555; --heading: #000; }
+}
+
+/* ——— The players' screen on a TV: big, quiet, readable from across the room ——— */
+.players-screen { font-size: clamp(1.25rem, 1.15rem + .6vw, 2rem); padding: clamp(1em, 3vw, 3em); }
+.players-screen > h1 { font-size: clamp(2rem, 1.4rem + 2.4vw, 4rem); margin: 0; }
+.players-screen .showing-view .markdown { font-size: 1em; line-height: 1.6; max-width: 42em; margin-inline: auto; }
+.players-screen .wikilink { color: inherit; }
+.players-screen-idle { display: flex; flex-direction: column; align-items: center; gap: .6em; }
+.players-screen-idle img { width: clamp(64px, 8vw, 120px); height: auto; opacity: .85; }
+.players-screen-idle h1 { font-size: clamp(2rem, 1.4rem + 2.4vw, 4rem); margin: 0; }
+.players-screen-idle p { margin: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .players-screen-idle img { animation: join-breathe 4s ease-in-out infinite; }
+}
+
+/* A page name with no page yet is plain words on paper and on the TV (no "+" to make it). */
+:is(.print-sheet, .players-screen) .wikilink.missing { font-style: normal; color: inherit; text-decoration: none; }
+:is(.print-sheet, .players-screen) .wikilink.missing::after { content: none; }
+.wikilink.still { text-decoration: none; }
+@media print {
+  .print-missing .button { display: none; }
+}
+/* The "?" by a heading on the invite card sits beside its words, not over them. */
+@media (pointer: coarse) {
+  .join-page.more-screen .join-card h2 .help-button { margin: -12px -10px -12px -6px; }
+}
+@media (max-width: 700px) {
+  .print-missing .button { min-height: 44px; }
+  /* "About <page>" on a question: the page's name is a whole fingertip. */
+  .questions .question > .small:first-child a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; margin: -12px 0; }
+}
