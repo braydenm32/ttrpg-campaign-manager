@@ -600,6 +600,8 @@ function RoomFoot({ ctx }: { ctx: RoomContext }) {
           <Ico as={Scroll} /> Past sessions
         </Link>
       )}
+      {/* Live, the X-card is in the session's own card. */}
+      {ctx.memberOf && world.safety?.xcard && ctx.stage !== 'during' && <XCardButton cloudId={ctx.memberOf} small />}
     </nav>
   )
 }
