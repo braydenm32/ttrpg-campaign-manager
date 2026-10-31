@@ -6,9 +6,9 @@ import { useGmQuestions } from './Questions'
 
 /**
  * What's waiting on the GM: players' questions and downtime to answer, character claims to approve,
- * and pressing loose threads. The sidebar badges and Home's "Needs you" all pick from this, so a
- * claim is never counted twice and the totals can't drift. Pass no world to skip loading (the
- * sidebar does, outside Play).
+ * and pressing loose threads. The Desk and Inbox badges and Home's "Needs you" all pick from this, so
+ * a claim is never counted twice and the totals can't drift. Pass no world to skip loading (the
+ * frame does, in the player view).
  */
 export function useGmInbox(world: World | null | undefined, entities: Entity[]) {
   // Only the GM's own world has an inbox; a joined world's downtime is the player's own.

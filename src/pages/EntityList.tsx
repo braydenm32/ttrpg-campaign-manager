@@ -10,7 +10,7 @@ import { listedEntries, TableRoller } from '../tables'
 import { pagesIn } from '../counts'
 import { StarterTables } from '../moreGenerators'
 import { useViewMode } from '../viewMode'
-import { pagePath, resolveCustom, sectionType, usePathsVersion } from '../paths'
+import { pagePath, resolveCustom, sectionType, typePath, usePathsVersion, worldPath } from '../paths'
 
 export default function EntityList() {
   const { worldId, world } = useWorld()
@@ -23,7 +23,14 @@ export default function EntityList() {
   const [query, setQuery] = useState('')
   const [tag, setTag] = useState('')
 
-  if (!ENTITY_TYPES.includes(type as EntityType)) return <Empty>Unknown category.</Empty>
+  if (!ENTITY_TYPES.includes(type as EntityType))
+    return (
+      <div className="page">
+        <Empty>
+          There’s nothing at this address. <Link to={worldPath(worldId)}>Back to the world’s home</Link>
+        </Empty>
+      </div>
+    )
   if (type === 'custom' && kind && world && !world.customTypes?.some((c) => c.id === kind)) return <Empty>This page type has been removed.</Empty>
   const t = type as EntityType
   const label = typeLabel({ type: t, customType: kind }, world)
@@ -48,6 +55,16 @@ export default function EntityList() {
         </h1>
         {isGM && world && (t !== 'custom' || kind) && <NewPageButton world={world} type={t} customType={kind} />}
       </header>
+      {(t === 'npc' || t === 'pc') && (
+        // People holds both: a switch between the NPCs and the party's own characters.
+        <nav className="segmented people-switch" aria-label="Which people">
+          {(['npc', 'pc'] as const).map((p) => (
+            <Link key={p} to={typePath(worldId, p)} className={p === t ? 'on' : ''} aria-current={p === t ? 'page' : undefined}>
+              {typeLabel({ type: p }, world).many}
+            </Link>
+          ))}
+        </nav>
+      )}
       {t === 'table' && ofType.length > 0 && (
         <div className="card">
           <TableRoller tables={ofType} worldId={worldId} entities={all} showSecrets={isGM} />

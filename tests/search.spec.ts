@@ -8,23 +8,39 @@ import type { World } from './lib/world'
  * the search button.
  */
 
-/** The "Go to" places (src/search.tsx PLACES): title, address inside the world, GM-only. */
-const PLACES: [string, string, boolean][] = [
-  ['Home', '', false],
-  ['Maps', '/maps', false],
-  ['Timeline', '/timeline', false],
-  ['Relationships', '/web', false],
-  ['Loose threads', '/threads', false],
-  ['Clocks', '/clocks', false],
-  ['Party loot', '/loot', false],
-  ['Handouts', '/handouts', false],
-  ['Safety tools', '/safety', false],
-  ['Soundboard', '/sounds', true],
-  ['The Archivist', '/archivist', true],
-  ['Generators and random tables', '/generators', true],
-  ['Corkboards', '/boards', true],
-  ['Files', '/assets', true],
-  ['World settings', '/settings', true],
+/**
+ * The "Go to" places search had before the areas (route map, section 4), now made from src/nav.ts.
+ * Typing the old name still finds the place: [old name, what it's called now (GM), its address
+ * inside the world, and for players what it's called and where it goes, or null if it's GM only].
+ */
+const PLACES: [string, string, string, [string, string] | null][] = [
+  ['Home', 'Today', '', ['Now', '']],
+  ['Maps', 'Maps', '/maps', ['Maps', '/maps']],
+  ['Timeline', 'Timeline', '/timeline', ['Timeline', '/timeline']],
+  ['Relationships', 'Relationships', '/web', ['Relationships', '/web']],
+  ['Loose threads', 'Threads', '/threads', ['Leads', '?tab=leads']],
+  ['Clocks', 'Clocks', '/clocks', ['Clocks', '/clocks']],
+  ['Party loot', 'Party loot', '/loot', ['Party loot', '/loot']],
+  ['Handouts', 'Handouts', '/handouts', ['Handouts', '/handouts']],
+  ['Safety tools', 'Safety tools', '/safety', ['Table rules', '/safety']],
+  ['Soundboard', 'Soundboard', '/sounds', null],
+  ['The Archivist', 'The Archivist', '/archivist', null],
+  ['Generators and random tables', 'Generators', '/generators', null],
+  ['Corkboards', 'Corkboards', '/boards', null],
+  ['Files', 'Files', '/assets', null],
+  ['World settings', 'World settings', '/settings', null],
+]
+
+/** Places search couldn't find before the areas: [what you type, the result, its address inside the world]. GM only. */
+const NEW_PLACES: [string, string, string | RegExp][] = [
+  ['Lectern', 'The Lectern', /^\/s\/[^/]+\/lectern$/],
+  ['Chronicle', 'Chronicle', '/chronicle'],
+  ['Questions', 'Inbox', '/questions'],
+  ['Scratchpad', 'Players’ scratchpad', '/scratchpad'],
+  ['Campaigns', 'All sessions', /^\/c\/[^/]+$/],
+  ['Templates', 'Templates', '/settings'],
+  ['Recently deleted', 'Recently deleted', '/settings?tab=data'],
+  ['Random tables', 'Random tables', '/tables'],
 ]
 
 async function openSearch(page: Page, device: Device) {
@@ -56,12 +72,27 @@ async function find(page: Page, device: Device, world: World, query: string, tit
 }
 
 test.describe('GM view', () => {
-  for (const [title, path] of PLACES)
-    test(`“Go to” ${title}`, async ({ page, world, device }) => {
-      const hit = await find(page, device, world, title, title, 'Go to')
+  for (const [old, title, path] of PLACES)
+    test(`“Go to” ${old}`, async ({ page, world, device }) => {
+      const hit = await find(page, device, world, old, title, 'Go to')
       await hit.click()
       await expect.poll(() => here(page)).toBe(`/w/${world.slug}${path}`)
     })
+
+  for (const [query, title, path] of NEW_PLACES)
+    test(`“Go to” ${title} (new)`, async ({ page, world, device }) => {
+      const hit = await find(page, device, world, query, title, 'Go to')
+      await hit.click()
+      const at = (url: string) => url.replace(`/w/${world.slug}`, '')
+      if (typeof path === 'string') await expect.poll(() => at(here(page))).toBe(path)
+      else await expect.poll(() => at(here(page))).toMatch(path)
+    })
+
+  test('finds a campaign by name', async ({ page, world, device }) => {
+    const c = world.dump.campaigns[0]
+    await (await find(page, device, world, c.name, c.name, 'Go to')).click()
+    await expect.poll(() => here(page)).toBe(`/w/${world.slug}/c/${c.id}`)
+  })
 
   test('finds a page and opens it', async ({ page, world, device }) => {
     await (await find(page, device, world, 'Ford Street', 'Ford Street')).click()
@@ -122,19 +153,29 @@ test.describe('keyboard shortcuts', () => {
 
 test.describe('player view', () => {
   test.use({ view: 'player' })
-  for (const [title, path, gmOnly] of PLACES)
-    test(`“Go to” ${title} ${gmOnly ? 'is not offered' : 'is offered'}`, async ({ page, world, device }) => {
+  for (const [old, gmTitle, , players] of PLACES)
+    test(`“Go to” ${old} ${players ? 'is offered' : 'is not offered'}`, async ({ page, world, device }) => {
       await open(page, `/w/${world.slug}`)
       const box = await openSearch(page, device)
-      await box.fill(title)
-      const hit = result(page, title, 'Go to')
-      if (gmOnly) {
+      await box.fill(old)
+      if (!players) {
         await expect(page.getByRole('dialog', { name: 'Search' }).locator('.search-results')).toBeVisible()
-        await expect(hit).toHaveCount(0)
+        await expect(result(page, gmTitle, 'Go to')).toHaveCount(0)
+        await expect(result(page, old, 'Go to')).toHaveCount(0)
         return
       }
-      await hit.click()
+      await result(page, players[0], 'Go to').click()
+      const path = players[1]
       await expect.poll(() => here(page)).toBe(`/w/${world.slug}${path}`)
+    })
+
+  for (const [query, title] of NEW_PLACES.filter(([q]) => !['Scratchpad', 'Campaigns'].includes(q)))
+    test(`“Go to” ${title} is not offered`, async ({ page, world, device }) => {
+      await open(page, `/w/${world.slug}`)
+      const box = await openSearch(page, device)
+      await box.fill(query)
+      await expect(page.getByRole('dialog', { name: 'Search' }).locator('.search-results')).toBeVisible()
+      await expect(result(page, title, 'Go to')).toHaveCount(0)
     })
 
   test('finds a revealed page, not a GM-only one, and offers no “New …”', async ({ page, world, device }) => {

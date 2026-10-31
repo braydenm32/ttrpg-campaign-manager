@@ -12,12 +12,14 @@ import { listedEntries } from './tables'
 import { plainLinks } from './text'
 import { useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
-import { pagePath, worldPath } from './paths'
+import { hrefFor, pagePath, worldPath } from './paths'
+import { navPlaces, type NavPlace } from './nav'
+import { useFrameContext } from './Sidebar'
 
 /**
  * Search everything: page names, nicknames, summaries, details, tags and the text itself, plus
  * session notes and recaps, and map names. Players search only what they can read (no secret
- * passages, no GM notes). Opened from the sidebar, or with Ctrl+K (⌘K on a Mac) anywhere in a world.
+ * passages, no GM notes). Opened from the top bar, or with Ctrl+K (⌘K on a Mac) anywhere in a world.
  */
 
 export interface Hit {
@@ -34,6 +36,8 @@ export interface Hit {
   gmOnly?: boolean
   /** An action (like making a new page) instead of a page to open. */
   run?: () => void
+  /** Opens in a new tab (the players' screen). */
+  external?: boolean
 }
 
 /** The words around the first match, for showing under a result. */
@@ -89,27 +93,14 @@ export function searchWorld(
   return hits.sort((a, b) => b.score - a.score || a.title.localeCompare(b.title)).slice(0, 40)
 }
 
-/** Places in the world you can jump to by name from the search box. */
-const PLACES: [string, string, string, boolean][] = [
-  ['Home', '', 'overview front page dashboard needs you', false],
-  ['Maps', 'maps', 'map atlas', false],
-  ['Timeline', 'timeline', 'history events', false],
-  ['Relationships', 'web', 'web family tree who knows', false],
-  ['Loose threads', 'threads', 'leads hooks', false],
-  ['Clocks', 'clocks', 'countdown progress', false],
-  ['Party loot', 'loot', 'treasure coin inventory items', false],
-  ['Handouts', 'handouts', 'shown', false],
-  ['Safety tools', 'safety', 'lines veils x-card', false],
-  ['Soundboard', 'sounds', 'music ambience', true],
-  ['The Archivist', 'archivist', 'ai claude ask question answer contradictions continuity check', true],
-  ['Generators and random tables', 'generators', 'roll names tavern npc shop', true],
-  ['Corkboards', 'boards', 'board pins strings', true],
-  ['Files', 'assets', 'assets images uploads pictures', true],
-  ['World settings', 'settings', 'options backup sync players invite', true],
-]
-
 /** Things to do rather than pages to open: "new npc", "clocks", "settings"… */
-function commandHits(query: string, worldId: string, world: World | null | undefined, isGM: boolean, create: (type: Entity['type'], customType?: string) => void): Hit[] {
+function commandHits(
+  query: string,
+  world: World | null | undefined,
+  isGM: boolean,
+  places: NavPlace[],
+  create: (type: Entity['type'], customType?: string) => void,
+): Hit[] {
   const q = query.trim().toLowerCase()
   if (!q) return []
   const hits: Hit[] = []
@@ -128,10 +119,11 @@ function commandHits(query: string, worldId: string, world: World | null | undef
       hits.push({ key: `new:${type}:${custom ?? ''}`, to: '', icon: '+', node: <Ico as={Plus} />, title: `New ${one}`, snippet: 'Make a new page', score: wantsNew ? 120 : 55, run: () => create(type, custom) })
     }
   }
-  for (const [title, path, words, gmOnly] of PLACES) {
-    if (gmOnly && !own) continue
-    if (!title.toLowerCase().includes(q) && !words.includes(q)) continue
-    hits.push({ key: `go:${path}`, to: `${worldPath(worldId)}${path ? `/${path}` : ''}`, icon: '→', node: <Ico as={ArrowRight} />, title, snippet: 'Go to', score: title.toLowerCase().startsWith(q) ? 90 : 35 })
+  // Every area, tab and More item the viewer has (src/nav.ts), found by its name or the names it used to have.
+  for (const p of places) {
+    const title = p.title.toLowerCase()
+    if (!title.includes(q) && !p.words.includes(q)) continue
+    hits.push({ key: `go:${p.title}:${p.to}`, to: p.to, icon: '→', node: <Ico as={ArrowRight} />, title: p.title, snippet: 'Go to', score: title.startsWith(q) ? 90 : 35, external: p.external })
   }
   return hits
 }
@@ -152,12 +144,15 @@ export function QuickSearch({ worldId, world, onClose }: { worldId: string; worl
   const navigate = useGuardedNavigate()
   const data = useSearchable(worldId)
   const create = useCreatePage(world)
+  const frame = useFrameContext()
+  const places = frame ? navPlaces(frame.facts) : []
   const found = useMemo(() => searchWorld(query, { worldId, world, ...data }), [query, worldId, world, data])
-  const hits = [...commandHits(query, worldId, world, data.isGM, create), ...found].sort((a, b) => b.score - a.score).slice(0, 40)
+  const hits = [...commandHits(query, world, data.isGM, places, create), ...found].sort((a, b) => b.score - a.score).slice(0, 40)
   const open = (h: Hit | undefined) => {
     if (!h) return
     onClose()
     if (h.run) h.run()
+    else if (h.external) window.open(hrefFor(h.to), '_blank', 'noopener')
     else navigate(h.to)
   }
   return (
@@ -205,7 +200,7 @@ export function QuickSearch({ worldId, world, onClose }: { worldId: string; worl
   )
 }
 
-/** The sidebar's search button, plus Ctrl+K / ⌘K to open the search from anywhere in the world. */
+/** The top bar's search button, plus Ctrl+K / ⌘K to open the search from anywhere in the world. */
 export function SearchButton({ worldId, world }: { worldId: string; world?: World | null }) {
   const [open, setOpen] = useState(false)
   useEffect(() => {
