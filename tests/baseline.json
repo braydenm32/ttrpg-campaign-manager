@@ -17,7 +17,7 @@
   },
   "phone gm /w/:worldId": {
     "problems": [],
-    "smallTargets": 45
+    "smallTargets": 11
   },
   "phone gm /w/:worldId/:section": {
     "problems": [],
@@ -45,11 +45,11 @@
   },
   "phone gm /w/:worldId/archivist": {
     "problems": [],
-    "smallTargets": 5
+    "smallTargets": 2
   },
   "phone gm /w/:worldId/archivist (check for contradictions)": {
     "problems": [],
-    "smallTargets": 8
+    "smallTargets": 5
   },
   "phone gm /w/:worldId/assets": {
     "problems": [],
@@ -200,6 +200,10 @@
   "phone gm /w/:worldId/print/:kind/:id (session)": {
     "problems": [],
     "smallTargets": 5
+  },
+  "phone gm /w/:worldId/questions": {
+    "problems": [],
+    "smallTargets": 1
   },
   "phone gm /w/:worldId/s/:sessionId": {
     "problems": [],
