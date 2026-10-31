@@ -17,14 +17,14 @@ import { partyOf } from '../sessions'
 import { StatusBadge } from '../status'
 import { WorldToday } from '../calendar'
 import { ClockFace } from '../clocks'
-import { openLeads, partyLoot, quantityLabel, tickingClocks, useVisibleHandouts } from '../counts'
+import { hasSafety, openLeads, partyLoot, quantityLabel, tickingClocks, useVisibleHandouts } from '../counts'
 import { ShowingView } from '../showing'
 import { XCardButton } from './Safety'
 import { SignalButtons, TableDice, TimerInline, TimerList, TurnOrder, useMe } from '../atTheTable'
 import { gmIdOf, localIdOf, sendSignal, useTable, type TableState } from '../cloud/table'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
-import { Backpack, BookOpenText, CastleTurret, ChatCircleDots, MusicNotes, Notepad, Scroll, Shield, Sparkle, Spiral, Sword, Television, UsersThree } from '@phosphor-icons/react'
+import { Backpack, BookOpenText, HandPalm, CastleTurret, ChatCircleDots, MusicNotes, Notepad, Scroll, Shield, Sparkle, Spiral, Sword, Television, UsersThree } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
 import { PlayerDowntime } from '../players/Downtime'
 import { Highlights, StorySoFar } from '../highlights'
@@ -36,15 +36,10 @@ import { Highlights, StorySoFar } from '../highlights'
  * it is, and players can roll dice everyone sees and quietly signal the GM.
  */
 
-const TABS = [
-  { id: 'overview', long: 'Overview', short: 'Overview' },
-  { id: 'scene', long: 'The scene', short: 'Scene' },
-  { id: 'me', long: 'My character', short: 'Me' },
-  { id: 'party', long: 'The party', short: 'Party' },
-  { id: 'leads', long: 'Leads and quests', short: 'Leads' },
-  { id: 'notes', long: 'Notes', short: 'Notes' },
-] as const
-type Tab = (typeof TABS)[number]['id']
+// The tabs themselves are in the world's frame (src/nav.ts: Now, Me, Party, Leads, Notes); the
+// scene opens from the live strip while a session is being played.
+const TABS = ['overview', 'scene', 'me', 'party', 'leads', 'notes'] as const
+type Tab = (typeof TABS)[number]
 
 export default function CommonRoom({ world }: { world: World }) {
   const worldId = world.id
@@ -59,8 +54,9 @@ export default function CommonRoom({ world }: { world: World }) {
   const { owners } = useCharacterOwners(world)
   const me = useMe(world)
   const [params, setParams] = useSearchParams()
-  const tab: Tab = TABS.some((t) => t.id === params.get('tab')) ? (params.get('tab') as Tab) : 'overview'
-  const go = (t: Tab) => setParams(t === 'overview' ? {} : { tab: t }, { replace: true })
+  const tab: Tab = TABS.find((t) => t === params.get('tab')) ?? 'overview'
+  // Each tab is a step in Back (the same tabs are along the top, and on a phone along the bottom).
+  const go = (t: Tab) => setParams(t === 'overview' ? {} : { tab: t })
 
   // Your characters: the ones you play, or (previewing as a player) theirs.
   const mine = memberOf
@@ -83,14 +79,6 @@ export default function CommonRoom({ world }: { world: World }) {
     <div className="page common-room">
       <RoomHeader world={world} table={table} campaign={campaign} memberOf={memberOf} />
       {table && <LiveStrip ctx={ctx} onScene={() => go('scene')} />}
-      <nav className="room-tabs" aria-label="Common Room">
-        {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'on' : ''} aria-current={tab === t.id ? 'page' : undefined} onClick={() => go(t.id)}>
-            <span className="long">{t.long}</span>
-            <span className="short">{t.short}</span>
-          </button>
-        ))}
-      </nav>
       {tab === 'overview' && <Overview ctx={ctx} campaigns={campaigns} sessions={sessions} go={go} />}
       {tab === 'scene' && <SceneTab ctx={ctx} />}
       {tab === 'me' && <MeTab ctx={ctx} />}
@@ -345,6 +333,13 @@ function Overview({ ctx, campaigns, sessions, go }: { ctx: RoomContext; campaign
         <Link className="button block room-ask" to={`${worldPath(worldId)}/questions`}>
           <Ico as={ChatCircleDots} /> Ask the GM privately
         </Link>
+      )}
+      {hasSafety(world) && (
+        <p className="room-rules">
+          <Link to={`${worldPath(worldId)}/safety`}>
+            <Ico as={HandPalm} /> Table rules
+          </Link>
+        </p>
       )}
     </>
   )

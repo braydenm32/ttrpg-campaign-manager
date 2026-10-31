@@ -7,6 +7,7 @@ import { Ico } from './icons'
 import { Markdown, stripSecrets } from './Markdown'
 import { SecretNamesWarning } from './SecretNamesWarning'
 import { ClaudeJob } from './ai/ClaudeJob'
+import { removeWithUndo, toast } from './undo'
 
 /**
  * Session highlights (the moments, best lines and awards of a session) and "the story so far", a
@@ -92,7 +93,12 @@ export function Highlights({ session, entities, worldId, isGM }: { session: Sess
             <li key={h.id}>
               <HighlightLine h={h} entities={entities} worldId={worldId} />
               {isGM && (
-                <button className="ghost small" title="Remove" onClick={() => set(list.filter((x) => x.id !== h.id))}>
+                <button
+                  className="ghost small"
+                  title="Remove"
+                  aria-label="Remove this highlight"
+                  onClick={() => removeWithUndo('Highlight removed.', () => set(list.filter((x) => x.id !== h.id)), () => set(list))}
+                >
                   ×
                 </button>
               )}
@@ -240,7 +246,14 @@ ${recaps.map((s) => `<session number="${s.number}" title="${s.title.replace(/"/g
                 >
                   Use this
                 </button>
-                <button className="ghost" onClick={() => setDraft(undefined)}>
+                <button
+                  className="ghost"
+                  onClick={() => {
+                    const was = draft
+                    setDraft(undefined)
+                    toast('Draft thrown away.', () => setDraft(was))
+                  }}
+                >
                   Throw away
                 </button>
               </div>

@@ -13,7 +13,7 @@ import { db, type Entity, type EntityType, type World } from './db'
  * The desktop app and the old GitHub Pages address keep the "#/" style: neither can answer a deep
  * address like /w/eldoria by itself. On wardedatlas.com (and the dev server) the "#" is gone.
  */
-export const hashRouting = '__TAURI_INTERNALS__' in window || window.location.hostname === 'braydenm32.github.io'
+export const hashRouting = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || window.location.hostname === 'braydenm32.github.io')
 
 /** "The Rusty Tankard!" → "the-rusty-tankard". */
 export function slugify(name: string) {

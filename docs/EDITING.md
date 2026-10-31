@@ -433,7 +433,7 @@ The session notes follow one pattern, so a GM always knows where to look. Keep i
 
 **Quests** (`campaign/quests/`) are pages with `type: quest` and a `questStatus`. **Loose threads** (`campaign/threads/`) are pages with `type: thread`, a `threadStatus`, a `threadUrgency`, and `raisedIn` (the session number). Link them to the NPCs and places involved with `relations`.
 
-**Handouts** (`campaign/handouts/`) are ordinary pages tagged `handout`. They show under Prep → Story → Handouts, ready to show players.
+**Handouts** (`campaign/handouts/`) are ordinary pages tagged `handout`. They show under More › At the table › Handouts, ready to show players.
 
 **The corkboard** (`boards/`) is a list of cards and the strings between them. Each card has its own short `key`, a position (`x` across, `y` down, in pixels) and either a `page` (by key) or a `text` note with a `color`. Strings join two cards by their card keys. It's easiest to move cards around in the app, then copy the numbers back.
 

@@ -6,6 +6,7 @@ import { Help } from '../help'
 import { DiscordButton, getWebhook, postToDiscord } from '../discord'
 import { Ico } from '../icons'
 import { CalendarBlank, PushPin } from '@phosphor-icons/react'
+import { removeWithUndo } from '../undo'
 
 /**
  * Picking the next session date. The GM proposes a few dates on the campaign; players who joined
@@ -38,7 +39,19 @@ export function upcoming(campaign: Campaign) {
 
 type Answers = NonNullable<SharedInfo['availability']>
 
-export function SessionScheduler({ world, campaign, isGM, onBook }: { world: World; campaign: Campaign; isGM: boolean; onBook: (date: string) => Promise<void> }) {
+export function SessionScheduler({
+  world,
+  campaign,
+  isGM,
+  onBook,
+  heading = 'Next session',
+}: {
+  world: World
+  campaign: Campaign
+  isGM: boolean
+  onBook: (date: string) => Promise<void>
+  heading?: string
+}) {
   const options = [...(campaign.schedule ?? [])].sort((a, b) => a.at.localeCompare(b.at))
   const synced = !!world.cloud?.enabled && !world.shared
   const [members, setMembers] = useState<Member[]>([])
@@ -73,7 +86,7 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
     <section className="card scheduler">
       <div className="section-header">
         <h2>
-          <Ico as={CalendarBlank} /> Next session <Help topic="schedule" />
+          <Ico as={CalendarBlank} /> {heading} <Help topic="schedule" />
         </h2>
         {isGM && synced && (
           <button className="ghost small" onClick={load}>
@@ -81,7 +94,6 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
           </button>
         )}
       </div>
-      {isGM && !synced && <p className="muted small">Turn on cloud sync and invite your players (World settings) so they can answer. You can still jot dates down here.</p>}
       {shared && !shared.memberOf && options.length > 0 && <p className="muted small">Ask your GM for an invite link to answer.</p>}
       {upcoming(campaign) && (
         <p>
@@ -125,7 +137,11 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
                     >
                       Book it
                     </button>
-                    <button className="ghost small" aria-label="Remove this date" onClick={() => save(options.filter((x) => x.id !== o.id))}>
+                    <button
+                      className="ghost small"
+                      aria-label="Remove this date"
+                      onClick={() => removeWithUndo(`${showDate(o)} removed.`, () => save(options.filter((x) => x.id !== o.id)), () => save(options))}
+                    >
                       ×
                     </button>
                   </div>
@@ -192,6 +208,7 @@ export function SessionScheduler({ world, campaign, isGM, onBook }: { world: Wor
           <button disabled={!draft}>+ Suggest date</button>
         </form>
       )}
+      {isGM && !synced && <p className="muted small">So players can answer here, turn on cloud sync and invite them (World settings). Until then, jot dates down and ask them yourself.</p>}
       {error && <p className="error small">{error}</p>}
     </section>
   )

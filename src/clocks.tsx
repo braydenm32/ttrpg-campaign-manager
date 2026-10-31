@@ -171,7 +171,7 @@ export function ClocksPanel({ worldId, entities }: { worldId: string; entities: 
   const all = tickingClocks(entities)
   if (!all.length) return null
   return (
-    <LecternPanel id="clocks" name="Clocks" keywords="progress countdown plan faction" title={<><Ico as={Timer} /> <Link to={`${worldPath(worldId)}/clocks`}>Clocks</Link> <Help topic="clocks" /></>}>
+    <LecternPanel id="clocks" sectionId="lectern-clocks" name="Clocks" keywords="progress countdown plan faction" title={<><Ico as={Timer} /> <Link to={`${worldPath(worldId)}/clocks`}>Clocks</Link> <Help topic="clocks" /></>}>
       <div className="clock-list compact">
         {all.map(({ clock, owner }) => (
           <ClockRow key={clock.id} clock={clock} owner={owner} isGM showOwner worldId={worldId} />

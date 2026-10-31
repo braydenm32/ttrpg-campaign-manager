@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type Entity, type PrepScene, type Session, type World } from './db'
+import { blankLectern, db, type Entity, type PrepScene, type Session, type World } from './db'
 import { DraftText } from './components'
 import { Help } from './help'
 import { PagePicker } from './PagePicker'
@@ -7,6 +7,7 @@ import { TypeIcon } from './icons'
 import { addCombatants, encounterCombatants } from './encounters'
 import { play } from './sound/player'
 import { showToPlayers } from './showing'
+import { toast } from './undo'
 
 /**
  * Scene cards: a prep scene can carry what it needs (the place, read-aloud text, who's there, the
@@ -37,9 +38,41 @@ export function cardSummary(s: PrepScene, entities: Entity[], session: Session) 
   return bits.join(' · ')
 }
 
+/** The Lectern's scene as it is now (and which planned scenes are ticked), so a scene change can be undone. */
+export interface SceneSnapshot {
+  sceneId?: string
+  sceneText: string
+  presentIds: string[]
+  planSceneId?: string
+  done: string[]
+}
+
+export function sceneSnapshot(session: Session): SceneSnapshot {
+  const l = session.lectern
+  return {
+    sceneId: l?.sceneId,
+    sceneText: l?.sceneText ?? '',
+    presentIds: [...(l?.presentIds ?? [])],
+    planSceneId: l?.planSceneId,
+    done: (session.prep?.scenes ?? []).filter((x) => x.done).map((x) => x.id),
+  }
+}
+
+/** Puts the scene back as it was (the place, the read-aloud text, who's here, which scenes are ticked). */
+export const restoreScene = (sessionId: string, snap: SceneSnapshot) =>
+  db.sessions
+    .where('id')
+    .equals(sessionId)
+    .modify((s) => {
+      s.lectern = { ...blankLectern(), ...s.lectern, sceneId: snap.sceneId, sceneText: snap.sceneText, presentIds: [...snap.presentIds], planSceneId: snap.planSceneId }
+      for (const x of s.prep?.scenes ?? []) x.done = snap.done.includes(x.id)
+    })
+
 /**
- * Starts a scene: sets the Lectern's scene, text and who's there, loads its fight, plays its
- * sounds, reveals its pages and puts its handout on players' screens. The scene is ticked as played.
+ * Starts a scene: a new scene replaces the last one, so its read-aloud text and who's there take
+ * the place of the old (none, if the card has none; a scene with no place of its own stays where the
+ * party is). It also loads its fight, plays its sounds, reveals its pages and puts its handout on
+ * players' screens. The scene is ticked as played, and becomes the scene "Next scene" goes on from.
  */
 export async function startScene(world: World, session: Session, scene: PrepScene) {
   const enc = scene.encounterId ? session.prep?.encounters.find((e) => e.id === scene.encounterId) : undefined
@@ -51,16 +84,18 @@ export async function startScene(world: World, session: Session, scene: PrepScen
     .where('id')
     .equals(session.id)
     .modify((s) => {
-      s.lectern = { sceneText: '', presentIds: [], combat: { round: 0, combatants: [] }, rolls: [], ...s.lectern }
+      s.lectern = { ...blankLectern(), ...s.lectern }
       const l = s.lectern
       if (scene.placeId) l.sceneId = scene.placeId
-      if (scene.readAloud?.trim()) l.sceneText = scene.readAloud
-      for (const id of scene.presentIds ?? []) if (!l.presentIds.includes(id)) l.presentIds.push(id)
+      l.sceneText = scene.readAloud?.trim() ? scene.readAloud : ''
+      l.presentIds = [...new Set(scene.presentIds ?? [])]
+      l.planSceneId = scene.id
       const fresh = l.presentIds.filter((id) => !s.entityIds.includes(id))
       if (fresh.length) s.entityIds = [...s.entityIds, ...fresh]
       if (enc) addCombatants(l, encounterCombatants(enc))
       const mine = s.prep?.scenes.find((x) => x.id === scene.id)
       if (mine) mine.done = true
+      if (!s.startedAt) s.startedAt = Date.now()
     })
   for (const e of toReveal) await db.entities.update(e.id, { visibility: 'players', updatedAt: Date.now() })
   const sounds = (await db.sounds.bulkGet(scene.soundIds ?? [])).filter((x) => !!x)
@@ -71,6 +106,47 @@ export async function startScene(world: World, session: Session, scene: PrepScen
     if (a) await showToPlayers(world.id, { kind: 'image', title: a.name, assetId: a.id })
   }
   return true
+}
+
+/** The planned scene being played now, and the one "Next scene" goes to: the first unplayed one after it. */
+export function plannedScenes(session: Session) {
+  const scenes = session.prep?.scenes ?? []
+  const at = scenes.findIndex((x) => x.id === session.lectern?.planSceneId)
+  const current = at >= 0 ? scenes[at] : undefined
+  const next = scenes.slice(at + 1).find((x) => !x.done) ?? scenes.find((x) => !x.done && x.id !== current?.id)
+  return { scenes, current, at, next }
+}
+
+/** Starts a scene from the Lectern with Undo (which puts the last scene back). */
+export async function goToScene(world: World, session: Session, scene: PrepScene) {
+  const before = sceneSnapshot(session)
+  if (!(await startScene(world, session, scene))) return
+  const n = (session.prep?.scenes ?? []).findIndex((x) => x.id === scene.id) + 1
+  toast(`Scene ${n}: ${scene.text.length > 48 ? `${scene.text.slice(0, 48).trimEnd()}…` : scene.text}`, () => restoreScene(session.id, before))
+}
+
+/**
+ * The party moves to another place by hand (the Scene picker): a new scene. What was planned for
+ * that place, if anything, comes with it; otherwise the read-aloud text and who's here are cleared,
+ * so last scene's text can't be read out by mistake. Undo puts it back.
+ */
+export async function changePlace(session: Session, placeId: string | undefined, placeName?: string) {
+  const before = sceneSnapshot(session)
+  const planned = placeId ? session.prep?.scenes.find((x) => x.placeId === placeId && !x.done) ?? session.prep?.scenes.find((x) => x.placeId === placeId) : undefined
+  await db.sessions
+    .where('id')
+    .equals(session.id)
+    .modify((s) => {
+      s.lectern = { ...blankLectern(), ...s.lectern }
+      const l = s.lectern
+      l.sceneId = placeId
+      l.sceneText = planned?.readAloud?.trim() ? planned.readAloud : ''
+      l.presentIds = [...new Set(planned?.presentIds ?? [])]
+      l.planSceneId = planned?.id ?? l.planSceneId
+      const fresh = l.presentIds.filter((id) => !s.entityIds.includes(id))
+      if (fresh.length) s.entityIds = [...s.entityIds, ...fresh]
+    })
+  toast(placeId ? `The scene is now ${placeName ?? 'somewhere new'}.` : 'The scene is cleared.', () => restoreScene(session.id, before))
 }
 
 /** The extra parts of a scene, on the session's Prep tab. */
