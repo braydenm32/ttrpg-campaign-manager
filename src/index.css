@@ -1476,3 +1476,62 @@ textarea.read-text:hover { border-color: var(--border); border-left-color: var(-
 .plan-list { gap: .1em; }
 .session-page .highlights, .session-page .recorder { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 1em; margin-top: 1em; }
 .session-page .highlights h2, .session-page .spotlight h2 { margin-top: 0; font-size: 1.1rem; }
+.show-status { min-height: 44px; }
+.show-status .grow-text-line { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.show-status.on { color: var(--secret-ink); }
+.show-thumbs:has(.named) { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: .5em; max-height: 280px; align-items: start; }
+.show-thumb.named { width: auto; height: auto; display: flex; flex-direction: column; align-items: stretch; gap: .2em; padding: .2em; background: none; border: 1px solid transparent; white-space: normal; }
+.show-thumb.named .thumb-img { display: block; aspect-ratio: 1; border-radius: 6px; overflow: hidden; background: var(--panel-2); }
+.show-thumb.named img { width: 100%; height: 100%; object-fit: cover; }
+.show-thumb.named .thumb-name { font-size: .72rem; line-height: 1.2; color: var(--muted); text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.show-thumb.named.on { border-color: var(--accent); }
+.show-thumbs:has(.named) > label { align-self: start; min-height: 44px; justify-content: center; }
+/* The Lectern, calmer: a strip on top, a quick note, then three columns (a stack on a phone, in jump-row order). */
+.lectern-strip .lectern-title { margin: 0; font-size: 1.35rem; min-width: 0; }
+.lectern-extras:empty { display: none; }
+.quick-note { display: flex; align-items: center; gap: .5em; margin: 0 0 .8em; padding: .35em .6em; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); }
+.quick-note input { flex: 1; min-width: 0; border: none; background: none; box-shadow: none; }
+.quick-note:focus-within { border-color: var(--accent); }
+.scene-now { margin: .2em 0 .5em; }
+.next-scene { margin: .3em 0 .6em; align-items: center; }
+.next-scene .small { flex: 1 1 10em; min-width: 0; }
+.scene-where { display: flex; flex-direction: column; gap: .2em; margin: .4em 0; }
+.strong-start { margin: .2em 0 .6em; }
+.strong-start .read-text { border-left: 3px solid var(--accent); padding: .3em .8em; white-space: pre-wrap; }
+textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
+.planned-scenes { margin-top: .6em; }
+.planned-scenes ol { list-style: none; padding: 0; margin: .3em 0 0; display: flex; flex-direction: column; }
+.planned-scenes button { width: 100%; justify-content: flex-start; text-align: left; white-space: normal; min-height: 40px; padding: .3em .4em; font-weight: normal; }
+.planned-scenes li.done button { color: var(--muted); }
+.planned-scenes li.now button { font-weight: 600; background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.planned-scenes .plan-num { width: 1.4em; flex: none; color: var(--accent); }
+.end-fight { justify-content: flex-end; margin: .3em 0 .5em; }
+.combatant-name { white-space: normal; overflow-wrap: anywhere; }
+.combatant > .row { flex-wrap: wrap; }
+.hp { flex-wrap: wrap; max-width: 100%; }
+.loot-coin .hp-input { width: 4.5em; }
+.loot-coin select { width: auto; flex: none; }
+.lectern-page:has(.fight-bar) .lectern-jump { top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px) + 3.6em); }
+@media (max-width: 800px) {
+  .lectern { display: flex; flex-direction: column; gap: 1em; }
+  .lectern-col, .lectern-col:last-child { display: contents; }
+  .lectern-col > * { order: 20; min-width: 0; max-width: 100%; }
+  #lectern-scene { order: 1; }
+  #lectern-prep { order: 2; }
+  #lectern-initiative { order: 3; }
+  #lectern-party { order: 4; }
+  #lectern-present { order: 5; }
+  #lectern-clocks { order: 6; }
+  #lectern-show { order: 7; }
+  #lectern-loot { order: 8; }
+  #lectern-dice { order: 9; }
+  #lectern-notes { order: 10; }
+  .lectern-page [id^='lectern-'] { scroll-margin-top: calc(var(--topbar-h) + 4.5em); }
+  .lectern-page:has(.fight-bar) [id^='lectern-'] { scroll-margin-top: calc(var(--topbar-h) + 8em); }
+  .quick-note button { min-height: 44px; }
+  .lectern-panel .fold-toggle { min-width: 44px; min-height: 44px; }
+  .planned-scenes button { min-height: 44px; }
+  .initiative button.ghost, .hp button.ghost, .tags .tag button { min-width: 44px; min-height: 44px; }
+}
+.world-today-fold > summary { cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; gap: .4em; font-weight: 600; }
+.world-today-fold[open] > summary { margin-bottom: .3em; }

@@ -6,6 +6,7 @@ import { Ico } from './icons'
 import { CalendarBlank, CloudSun, Confetti, DiceFive } from '@phosphor-icons/react'
 import { pagePath, worldPath } from './paths'
 import { DraftText } from './components'
+import { toast } from './undo'
 import { CLIMATES, FEELS, seasonIcon, seasonOn, usualSeasons, weatherFor } from './weather'
 
 /**
@@ -580,12 +581,29 @@ function daysToNextMonth(c: WorldCalendar, d: CalDate) {
   return len ? Math.max(1, toDays(c, { year: y, month: m, day: Math.min(d.day, len) }) - toDays(c, d)) : 30
 }
 
-/** Today's date in the world, its moons, and (for the GM) buttons to move time on. */
-export function WorldToday({ world, isGM }: { world: World; isGM: boolean }) {
+/**
+ * Today's date in the world, its moons, and (for the GM) buttons to move time on, each with Undo.
+ * `folded` shows just the date, opening to the rest: for screens where the date is a side note.
+ */
+export function WorldToday({ world, isGM, folded }: { world: World; isGM: boolean; folded?: boolean }) {
   const c = world.calendar
   if (!c?.today) return null
+  if (folded)
+    return (
+      <details className="world-today-fold">
+        <summary>
+          <Ico as={CalendarBlank} /> {formatDate(c, c.today)}
+        </summary>
+        <WorldToday world={world} isGM={isGM} />
+      </details>
+    )
   const days = toDays(c, c.today)
-  const move = (n: number) => db.worlds.update(world.id, { calendar: { ...c, today: addDays(c, c.today!, n) }, updatedAt: Date.now() })
+  const move = async (n: number) => {
+    const was = c.today!
+    const now = addDays(c, was, n)
+    await db.worlds.update(world.id, { calendar: { ...c, today: now }, updatedAt: Date.now() })
+    toast(`The world’s date is now ${formatDate(c, now)}.`, () => db.worlds.where('id').equals(world.id).modify((w) => void (w.calendar && (w.calendar.today = was))))
+  }
   const week = c.weekdays.length || 10
   const season = seasonOn(c, c.today)
   const weather = world.weather
@@ -607,7 +625,15 @@ export function WorldToday({ world, isGM }: { world: World; isGM: boolean }) {
         </span>
       )}
       {isGM && (
-        <button className="ghost small" onClick={() => db.worlds.update(world.id, { weather: weatherFor(c, c.today, world.climate), updatedAt: Date.now() })} title="Roll today’s weather from the season and climate. Players see it.">
+        <button
+          className="ghost small"
+          onClick={async () => {
+            const was = world.weather
+            await db.worlds.update(world.id, { weather: weatherFor(c, c.today, world.climate), updatedAt: Date.now() })
+            toast('New weather rolled.', () => db.worlds.update(world.id, { weather: was }))
+          }}
+          title="Roll today’s weather from the season and climate. Players see it."
+        >
           <Ico as={CloudSun} /> {weather ? 'Reroll weather' : 'Roll weather'}
         </button>
       )}

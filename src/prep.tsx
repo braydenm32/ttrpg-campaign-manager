@@ -5,11 +5,11 @@ import { PagePicker } from './PagePicker'
 import { blankLectern, blankPrep, db, newId, type CheckItem, type Encounter, type Entity, type Session, type SessionPrep, type World } from './db'
 import { addCombatants, encounterCombatants, foeCount, foeFromEntity, numberFrom } from './encounters'
 import { Help } from './help'
-import { cardSummary, hasCard, SceneCardEditor, startScene } from './sceneCards'
+import { cardSummary, hasCard, SceneCardEditor } from './sceneCards'
 import { LecternPanel } from './lecternPanel'
 import { StatusBadge } from './status'
 import { Ico, TypeIcon } from './icons'
-import { ArrowUp, ClipboardText, FilmSlate, MagnifyingGlass, PencilSimple, Plus, Sword, X } from '@phosphor-icons/react'
+import { ArrowUp, FilmSlate, MagnifyingGlass, PencilSimple, Plus, Sword, X } from '@phosphor-icons/react'
 import { removeWithUndo } from './undo'
 import { pagePath, worldPath } from './paths'
 import { prepCounts } from './counts'
@@ -441,79 +441,60 @@ function FoeTable({ enc, entities, worldId, onChange }: { enc: Encounter; entiti
   )
 }
 
-/** The prep sheet at the Lectern: the opening, scenes and clues to tick off, and fights to start. */
-export function LecternPrep({ session, world, entities }: { session: Session; world: World; entities: Entity[] }) {
+/**
+ * The plan at the Lectern, besides the scenes (which are in the Scene panel, with Next scene): the
+ * secrets and clues to tick off as the players find them, and the planned fights to start.
+ */
+export function LecternPrep({ session, world }: { session: Session; world: World; entities: Entity[] }) {
   const worldId = world.id
   const prep = { ...blankPrep(), ...session.prep }
   // Fights already added to the initiative list from here, so a second tap asks first instead of doubling them.
   const [loaded, setLoaded] = useState<string[]>([])
   const edit = (fn: (p: SessionPrep) => void) => editPrep(session.id, fn)
-  const empty = !prep.strongStart && !prep.scenes.length && !prep.clues.length && !prep.encounters.length
-  const tick = (list: 'scenes' | 'clues', x: CheckItem) => (
-    <label key={x.id} className={`check-item ${x.done ? 'done' : ''}`}>
-      {list === 'scenes' && hasCard(x) && (
-        <button
-          type="button"
-          className="small scene-start"
-          title={`Start this scene: ${cardSummary(x, entities, session)}`}
-          onClick={(e) => {
-            e.preventDefault()
-            void startScene(world, session, x)
-          }}
-        >
-          ▶ Start
-        </button>
-      )}
-      <input
-        type="checkbox"
-        checked={x.done}
-        onChange={(e) => {
-          const v = e.target.checked
-          edit((p) => {
-            const y = p[list].find((i) => i.id === x.id)
-            if (y) y.done = v
-          })
-        }}
-      />{' '}
-      {x.text}
-    </label>
-  )
+  const empty = !prep.clues.length && !prep.encounters.length
   const counts = prepCounts(prep)
   return (
     <LecternPanel
       id="prep"
-      name="Prep"
-      keywords="scenes clues secrets encounters strong start plan"
-      title={<><Ico as={ClipboardText} /> Prep <Help topic="prep" /></>}
+      sectionId="lectern-prep"
+      name="Clues and fights"
+      keywords="prep scenes clues secrets encounters plan fights"
+      title={<><Ico as={MagnifyingGlass} /> Clues and fights <Help topic="clues" /></>}
       extra={
         <Link className="small" to={`${worldPath(worldId)}/s/${session.id}?tab=prep`}>
-          Edit prep
+          Edit the plan
         </Link>
       }
     >
-      {empty && <p className="muted small">No prep for this session yet. Plan scenes, clues and fights from the session page.</p>}
-      {prep.strongStart && (
-        <div className="small">
-          <b>Strong start:</b> {prep.strongStart}
-        </div>
-      )}
-      {prep.scenes.length > 0 && (
-        <details open>
-          <summary className="small"><Ico as={FilmSlate} /> Scenes ({counts.scenes.done}/{counts.scenes.total} played)</summary>
-          <div className="check-list">{prep.scenes.map((x) => tick('scenes', x))}</div>
-        </details>
-      )}
+      {empty && <p className="muted small">No clues or fights planned. Add them on Prepare.</p>}
       {prep.clues.length > 0 && (
         <details open>
           <summary className="small">
-            <Ico as={MagnifyingGlass} /> Secrets and clues ({counts.clues.done}/{counts.clues.total} found)
+            Secrets and clues ({counts.clues.done}/{counts.clues.total} found)
           </summary>
-          <div className="check-list">{prep.clues.map((x) => tick('clues', x))}</div>
+          <div className="check-list lectern-clues">
+            {prep.clues.map((x) => (
+              <label key={x.id} className={`check-item ${x.done ? 'done' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={x.done}
+                  onChange={(e) => {
+                    const v = e.target.checked
+                    edit((p) => {
+                      const y = p.clues.find((i) => i.id === x.id)
+                      if (y) y.done = v
+                    })
+                  }}
+                />{' '}
+                {x.text}
+              </label>
+            ))}
+          </div>
         </details>
       )}
       {prep.encounters.length > 0 && (
         <div className="small">
-          <div className="muted"><Ico as={Sword} /> Encounters</div>
+          <div className="muted"><Ico as={Sword} /> Planned fights</div>
           <div className="row wrap">
             {prep.encounters.map((enc) => (
               <button
@@ -530,7 +511,7 @@ export function LecternPrep({ session, world, entities }: { session: Session; wo
               </button>
             ))}
           </div>
-          {loaded.length > 0 && <div className="muted">Added to the Initiative list. Tap again to add another set.</div>}
+          {loaded.length > 0 && <div className="muted">Added to the fight. Tap again to add another set.</div>}
         </div>
       )}
     </LecternPanel>

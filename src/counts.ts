@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type CheckItem, type Clock, type Entity, type SessionPrep, type Showing, type World, type WorldMap } from './db'
 import { useViewMode } from './viewMode'
+import { tidyPurse } from './purse'
 
 /**
  * One calculation for each thing the app counts, so two screens can never disagree about it. A
@@ -47,12 +48,7 @@ export const quantityLabel = (item: Pick<Entity, 'quantity'>) => (item.quantity 
  * place) aren't the party's: the GM gets them in `elsewhere`, along with items nobody carries.
  */
 export function partyLoot(entities: Entity[], world: Pick<World, 'partyCoin'> | null | undefined) {
-  const coin: { name: string; amount: number }[] = []
-  for (const c of world?.partyCoin ?? []) {
-    const have = coin.find((x) => x.name.trim().toLowerCase() === c.name.trim().toLowerCase())
-    if (have) have.amount += c.amount
-    else coin.push({ ...c })
-  }
+  const coin = tidyPurse(world?.partyCoin)
   const byId = new Map(entities.map((e) => [e.id, e]))
   const items = entities.filter((e) => e.type === 'item')
   const carried = items.filter((e) => e.heldBy)

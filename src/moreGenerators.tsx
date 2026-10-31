@@ -8,6 +8,7 @@ import { generateNames, NAME_KINDS, NAME_STYLES, namesLike, personNamesLike, typ
 import { pagePath, worldPath } from './paths'
 import { STARTER_TABLES, starterTableEntity } from './starterTables'
 import { generateTreasure, TREASURE_SIZES, treasureMarkdown, type Treasure, type TreasureSize } from './treasure'
+import { coinKey, editPurse } from './purse'
 
 /** Names in a style, or names like the world's own (its NPCs, places…). Click one to make a page or copy it. */
 export function NameGenerator({ world, entities, compact }: { world: World; entities: Entity[]; compact?: boolean }) {
@@ -99,19 +100,14 @@ export function NameGenerator({ world, entities, compact }: { world: World; enti
 
 /** Adds coins to the party's purse, merging with what's there. */
 async function addCoins(worldId: string, coins: Treasure['coins']) {
-  await db.worlds
-    .where('id')
-    .equals(worldId)
-    .modify((w) => {
-      const purse = [...(w.partyCoin ?? [])]
-      for (const c of coins) {
-        const have = purse.find((p) => p.name.trim().toLowerCase() === c.name.toLowerCase())
-        if (have) have.amount += c.amount
-        else purse.push({ ...c })
-      }
-      w.partyCoin = purse
-      w.updatedAt = Date.now()
-    })
+  await editPurse(worldId, (purse) => {
+    for (const c of coins) {
+      const have = purse.find((p) => coinKey(p.name) === coinKey(c.name))
+      if (have) have.amount += c.amount
+      else purse.push({ ...c })
+    }
+    return purse
+  })
 }
 
 /** Rolls a pile of treasure, then hands it to the party: coins into the purse, the rest as items in the stash. */
