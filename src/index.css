@@ -1572,3 +1572,13 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 @keyframes sk-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton .sk { animation: none; } }
 .jump-row button.help-button { background: none; padding: 0; min-width: 44px; border-radius: 50%; }
+/* The Lectern on a phone: everything a thumb taps is at least 44px. */
+@media (max-width: 800px) {
+  .lectern-page :is(button:not(.help-button), .button, select, input:not([type=checkbox], [type=radio]), summary) { min-height: 44px; }
+  .lectern-page button.ghost:not(.help-button) { min-width: 44px; justify-content: center; }
+  .lectern-page summary { padding-block: .6em; }
+  .lectern-page label:has(> input[type=checkbox]) { min-height: 44px; display: inline-flex; align-items: center; gap: .5em; }
+  .lectern-page input[type=checkbox] { width: 22px; height: 22px; flex: none; }
+  .lectern-page .lectern-panel a:not(.button) { display: inline-flex; align-items: center; min-height: 44px; }
+  .lectern-page button.small:not(.help-button), .lectern-page .init-input { min-width: 44px; justify-content: center; }
+}

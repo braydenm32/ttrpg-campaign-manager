@@ -460,7 +460,7 @@ function Scene({ session, world, lectern, edit, entities, worldId }: PanelProps 
           <Help topic="nextScene" />
         </div>
       )}
-      {strong && !current && (
+      {strong && !current && strong !== lectern.sceneText.trim() && (
         <div className="strong-start">
           <span className="muted small">Strong start</span>
           <div className="read-text">{strong}</div>
