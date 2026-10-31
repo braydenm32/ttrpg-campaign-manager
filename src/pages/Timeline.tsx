@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Help } from '../help'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Empty, Modal, VisibilityBadge } from '../components'
 import { blankEntity, db, newId, type Entity, type TimelineAge, type World } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
@@ -9,6 +9,7 @@ import { formatDate, MonthGrid, toDays, WorldToday } from '../calendar'
 import { useWorldSessions } from '../threads'
 import { Ico } from '../icons'
 import { Hourglass } from '@phosphor-icons/react'
+import { JumpRow } from '../jump'
 import { pagePath } from '../paths'
 import { openNewPage } from '../pendingPages'
 
@@ -16,10 +17,23 @@ export default function Timeline() {
   const { worldId, world } = useWorld()
   const { isGM } = useViewMode()
   const sessions = useWorldSessions(worldId)
-  const [view, setView] = useState<'list' | 'month'>('list')
+  // The view, the month and the place live in the address: Back steps back to the view you had, and a reload keeps it.
+  const [params, setParams] = useSearchParams()
+  const view: 'list' | 'month' = params.get('view') === 'month' ? 'month' : 'list'
+  const place = params.get('place') ?? ''
+  const monthParam = params.get('month')?.match(/^(-?\d+)-(\d+)$/)
+  const month = monthParam ? { year: Number(monthParam[1]), month: Number(monthParam[2]) - 1 } : undefined
+  const setParam = (k: string, v: string, step = false) => {
+    const next = new URLSearchParams(params)
+    if (v) next.set(k, v)
+    else next.delete(k)
+    if (k === 'view' && !v) next.delete('month')
+    setParams(next, { replace: !step })
+  }
+  const setView = (v: 'list' | 'month') => setParam('view', v === 'month' ? 'month' : '', true)
+  const setPlace = (v: string) => setParam('place', v)
   const navigate = useNavigate()
   const entities = useVisibleEntities(worldId)
-  const [place, setPlace] = useState('')
   const byId = new Map(entities.map((e) => [e.id, e]))
 
   // An event counts as "at" a place if it happened there or anywhere inside it.
@@ -53,6 +67,8 @@ export default function Timeline() {
         { key: 'pre', era: 'pre', title: 'History (before the campaign)', items: history },
         { key: 'campaign', era: 'campaign', title: 'During the campaign', items: events.filter((e) => e.eventEra === 'campaign') },
       ]
+
+  const shownEras = eras.filter((era) => isGM || !era.age || era.items.length > 0)
 
   // Two events on different calendar days keep their date order, so the arrows can't swap them.
   const byDate = (a: Entity, b?: Entity) => {
@@ -99,7 +115,7 @@ export default function Timeline() {
             </button>
           </div>
         )}
-        <select value={place} onChange={(e) => setPlace(e.target.value)}>
+        <select value={place} onChange={(e) => setPlace(e.target.value)} aria-label="Where">
           <option value="">Everywhere</option>
           {entities
             .filter((e) => e.type === 'location')
@@ -117,10 +133,14 @@ export default function Timeline() {
         </div>
       </header>
       {world && <WorldToday world={world} isGM={isGM} />}
+      {view === 'list' && shownEras.length > 1 && (
+        // Long histories: straight to an age, or to the campaign (the part that's still being written).
+        <JumpRow targets={shownEras.map((era) => ({ id: `era-${era.key}`, label: era.era === 'campaign' ? 'The campaign' : era.title }))} label="Parts of the timeline" className="timeline-jumps" />
+      )}
       {view === 'month' && world?.calendar ? (
-        <MonthGrid world={world} events={events} sessions={sessions} />
-      ) : eras.filter((era) => isGM || !era.age || era.items.length > 0).map((era) => (
-        <section key={era.key}>
+        <MonthGrid world={world} events={events} sessions={sessions} month={month} onMonth={(m) => setParam('month', `${m.year}-${m.month + 1}`)} />
+      ) : shownEras.map((era) => (
+        <section key={era.key} id={`era-${era.key}`} className="timeline-era">
           <div className="section-header">
             <div>
               <h2>

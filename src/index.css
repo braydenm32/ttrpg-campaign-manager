@@ -1810,3 +1810,19 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
   .builder .builder-tools > button { flex: 1 0 18%; min-width: 0; min-height: 44px; }
   .builder-bar > a:first-child { min-height: 44px; display: inline-flex; align-items: center; }
 }
+/* Story: threads that matter next session, clocks that say who sees them, a timeline you can jump through. */
+.tag.up-next, .thread-highlight { color: var(--accent); font-weight: 600; }
+.tag.up-next { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.thread-legend { margin: -.3em 0 1em; }
+.clock-seen { display: inline-block; margin-left: .5em; color: var(--muted); }
+.clock-seen.on { color: var(--good); }
+.new-clock { align-items: center; margin-bottom: 1em; }
+.new-clock input { flex: 1 1 14em; }
+.timeline-era { scroll-margin-top: calc(var(--topbar-h) + 4em); }
+@media (max-width: 800px) {
+  .thread-actions button, .thread-switch, .clock-row .row button, .clock-row label.inline-check { min-height: 44px; min-width: 44px; justify-content: center; }
+  .thread-switch, .clock-row label.inline-check { display: inline-flex; align-items: center; }
+  .thread-card .thread-name { display: inline-flex; align-items: center; min-height: 44px; }
+  .relation-tools button, .relation-tools label { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .objective-list button, .objective-list label { min-height: 44px; min-width: 44px; }
+}

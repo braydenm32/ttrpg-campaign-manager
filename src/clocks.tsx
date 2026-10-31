@@ -10,6 +10,8 @@ import { Ico, TypeIcon } from './icons'
 import { Timer } from '@phosphor-icons/react'
 import { pagePath, worldPath } from './paths'
 import { allClocks, clockSize, isTicking, tickingClocks } from './counts'
+import { PagePicker } from './PagePicker'
+import { toast } from './undo'
 
 /**
  * Progress clocks (as in Blades in the Dark): a circle cut into slices that fill as a plan, a threat
@@ -65,6 +67,7 @@ function ClockRow({ clock, owner, isGM, showOwner, worldId }: { clock: Clock; ow
       <ClockFace clock={clock} onSet={onSet} />
       <div className="clock-info">
         <strong>{clock.name}</strong>
+        {isGM && <span className={`clock-seen small ${clock.known && owner.visibility === 'players' ? 'on' : ''}`}>{clockAudience(clock, owner)}</span>}
         <div className="muted small">
           {clock.filled} of {clockSize(clock)}
           {!isTicking(clock) && ' · it happens!'}
@@ -99,7 +102,19 @@ function ClockRow({ clock, owner, isGM, showOwner, worldId }: { clock: Clock; ow
             <button
               className="ghost small"
               title="Remove this clock"
-              onClick={() => confirm(`Remove the clock “${clock.name}”?`) && changeClocks(owner.id, (l) => l.filter((c) => c.id !== clock.id))}
+              aria-label={`Remove the clock “${clock.name}”`}
+              onClick={async () => {
+                const at = (owner.clocks ?? []).findIndex((c) => c.id === clock.id)
+                await changeClocks(owner.id, (l) => l.filter((c) => c.id !== clock.id))
+                toast(`Clock “${clock.name}” removed.`, () =>
+                  changeClocks(owner.id, (l) => {
+                    if (l.some((c) => c.id === clock.id)) return l
+                    const next = [...l]
+                    next.splice(Math.max(0, Math.min(at, next.length)), 0, clock)
+                    return next
+                  }),
+                )
+              }}
             >
               ×
             </button>
@@ -107,6 +122,57 @@ function ClockRow({ clock, owner, isGM, showOwner, worldId }: { clock: Clock; ow
         )}
       </div>
     </div>
+  )
+}
+
+/** Who sees a clock, in a few words, for the GM. */
+function clockAudience(clock: Clock, owner: Entity) {
+  if (!clock.known) return 'GM only'
+  if (owner.visibility !== 'players') return `GM only until “${owner.name}” is revealed`
+  return 'Players see it'
+}
+
+/** On the Clocks page: start a clock on any page (a faction, a villain, a loose thread). */
+function NewClock({ entities }: { entities: Entity[] }) {
+  const [open, setOpen] = useState(false)
+  const [owner, setOwner] = useState('')
+  const [name, setName] = useState('')
+  const [segments, setSegments] = useState(6)
+  if (!open)
+    return (
+      <button className="add-extra" onClick={() => setOpen(true)}>
+        <Ico as={Timer} /> New clock
+      </button>
+    )
+  return (
+    <form
+      className="row wrap card new-clock"
+      onSubmit={async (e) => {
+        e.preventDefault()
+        if (!name.trim() || !owner) return
+        await changeClocks(owner, (l) => [...l, { id: newId(), name: name.trim(), segments, filled: 0 }])
+        setName('')
+        setOwner('')
+        setOpen(false)
+      }}
+    >
+      <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="What happens when it fills?" aria-label="What happens when it fills" />
+      <PagePicker entities={entities} value={owner} onPick={setOwner} placeholder="On which page? (a faction, a villain…)" />
+      <select value={segments} onChange={(e) => setSegments(Number(e.target.value))} aria-label="Slices">
+        {CLOCK_SIZES.map((n) => (
+          <option key={n} value={n}>
+            {n} slices
+          </option>
+        ))}
+      </select>
+      <button className="primary" disabled={!name.trim() || !owner}>
+        Add
+      </button>
+      <button type="button" onClick={() => setOpen(false)}>
+        Cancel
+      </button>
+      <span className="muted small">New clocks are GM only until you tick “Players know”.</span>
+    </form>
   )
 }
 
@@ -196,6 +262,7 @@ export default function ClocksPage() {
           <Ico as={Timer} /> Clocks <Help topic="clocks" />
         </h1>
       </header>
+      {isGM && <NewClock entities={entities} />}
       {all.length === 0 ? (
         <Empty>
           {isGM ? 'No clocks yet. Open a faction, a villain or a loose thread and add one from its Clocks box.' : 'Your GM hasn’t shared any clocks.'}

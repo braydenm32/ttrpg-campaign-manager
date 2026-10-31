@@ -9,6 +9,7 @@ import { useViewMode } from '../viewMode'
 import { Ico, TypeIcon } from '../icons'
 import { Graph } from '@phosphor-icons/react'
 import { pagePath } from '../paths'
+import { useCharacterOwners } from '../players/owners'
 
 interface Edge {
   id: string
@@ -25,16 +26,19 @@ type Pos = Record<string, { x: number; y: number }>
  */
 export default function RelationWeb() {
   const { worldId } = useWorld()
-  const { isGM } = useViewMode()
+  const { isGM, previewAs } = useViewMode()
+  const { world } = useWorld()
   const entities = useVisibleEntities(worldId)
+  const { owners } = useCharacterOwners(world)
   const [params, setParams] = useSearchParams()
-  const focus = params.get('focus') ?? ''
+  const asked = params.get('focus') ?? ''
   const mode = params.get('view') === 'family' ? 'family' : 'web'
+  // Each change of view or of who's in the middle is a step back can return to.
   const setParam = (k: string, v: string) => {
     const next = new URLSearchParams(params)
     if (v) next.set(k, v)
     else next.delete(k)
-    setParams(next, { replace: true })
+    setParams(next)
   }
 
   const byId = useMemo(() => new Map(entities.map((e) => [e.id, e])), [entities])
@@ -50,6 +54,19 @@ export default function RelationWeb() {
     const types = SHOW[show]?.types
     return types ? allEdges.filter((x) => types.includes(byId.get(x.from)!.type) && types.includes(byId.get(x.to)!.type)) : allEdges
   }, [allEdges, byId, show])
+
+  // It opens on one person, not a tangle of everyone: a player's own character, else the most
+  // connected player character, else the most connected page. "Everyone" is a choice (focus=all).
+  const linked = useMemo(() => {
+    const n = new Map<string, number>()
+    for (const x of mode === 'family' ? edges.filter((x) => familyOf(x.kind)) : edges) for (const id of [x.from, x.to]) n.set(id, (n.get(id) ?? 0) + 1)
+    return n
+  }, [edges, mode])
+  const mine = entities.find(
+    (e) => e.type === 'pc' && linked.has(e.id) && (owners.get(e.id)?.mine || previewAs?.characterNames.some((n) => n.toLowerCase() === e.name.toLowerCase())),
+  )
+  const most = (pick: (e: Entity) => boolean) => [...linked.entries()].filter(([id]) => byId.get(id) && pick(byId.get(id)!)).sort((a, b) => b[1] - a[1])[0]?.[0]
+  const focus = asked === 'all' ? '' : asked && byId.has(asked) ? asked : (mine?.id ?? (linked.size > 12 ? (most((e) => e.type === 'pc') ?? most(() => true) ?? '') : ''))
 
   const shownEdges = useMemo(() => {
     const list = mode === 'family' ? edges.filter((x) => familyOf(x.kind)) : edges
@@ -91,8 +108,8 @@ export default function RelationWeb() {
               </option>
             ))}
           </select>
-          <select value={focus} onChange={(e) => setParam('focus', e.target.value)}>
-            <option value="">Everyone</option>
+          <select value={focus || 'all'} onChange={(e) => setParam('focus', e.target.value)} aria-label="Who’s in the middle">
+            <option value="all">Everyone</option>
             {people.map((e) => (
               <option key={e.id} value={e.id}>
                 Around {e.name}
@@ -134,9 +151,10 @@ export default function RelationWeb() {
                   </li>
                 ))}
               </ul>
-              <button className="small" onClick={() => setParam('focus', '')}>
+              <button className="small" onClick={() => setParam('focus', 'all')}>
                 Show everyone
               </button>
+              {!asked && <p className="muted small">{mine?.id === focused.id ? 'Your character, and everyone within two links.' : 'Starting here, with everyone within two links. Pick someone else above, or click a name.'}</p>}
             </aside>
           )}
         </div>

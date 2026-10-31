@@ -112,10 +112,10 @@ export const HELP = {
     'Click to place a label, or drag a line on the map and the words will follow it, like a river name or a mountain range. Region lettering is spaced capitals, place names are italic, Title is for the map name.',
 
   // Story
-  timeline: 'Events in order: the history before your campaign, and what has happened during it. Filter by place to see one area’s story.',
+  timeline: 'Events in order: the history before your campaign, and what has happened during it. Filter by place to see one area’s story, and jump straight to an age or to the campaign from the row at the top. List or Month, the month you’re on and the place stay in the address, so Back comes back to them.',
   ages: 'Split your history into named ages, like “The Age of Kings” or “The Long Peace”. Each age gets its own section on the timeline, in order, and each event can belong to one. Players see the ages of any events you have revealed.',
   threads:
-    'Every hook, mystery, promise and grudge you’ve left dangling. Move them from dangling to in play to tied off. A thread that hasn’t moved in three sessions gets flagged so nothing is forgotten.',
+    'Every hook, mystery, promise and grudge you’ve left dangling. The columns say where a thread stands with the players (dangling, in play, tied off); pressing, normal and slow burn say how soon it bites and order each column. “Next session” marks threads that touch the plan for the next session (a place, person or page in its scenes, clues or fights), and they come first. Moving a thread offers Undo. A thread that hasn’t moved in three sessions gets flagged so nothing is forgotten. Your search and switches stay in the address, so Back comes back to them.',
   leads:
     'The quests, rumours, hooks and mysteries your GM has shared with the party that are still open, the ones under way first, and the clocks that are ticking. Done and tied-off ones are folded away at the bottom.',
   calendar:
@@ -124,9 +124,9 @@ export const HELP = {
   relations:
     'How this page connects to others: family, friends, enemies, who serves whom. Players only see a link when you tick “Players know”. Every link shows up on both pages.',
   relationWeb:
-    'Everyone and how they’re connected, drawn as a web. Drag people about, click one to focus on them, or switch to the family tree. In a big world it starts with just people, factions and gods; switch to every kind of page to see places and items too. Add links from any page’s Relationships box.',
+    'Everyone and how they’re connected, drawn as a web. It opens on one person and everyone within two links of them: your own character for a player, otherwise the best-connected player character. Click someone to move to them (Back goes back), pick Everyone to see the whole web, or switch to the family tree. In a big world it shows just people, factions and gods; switch to every kind of page to see places and items too. Add links from any page’s Relationships box; removing one offers Undo.',
   clocks:
-    'A progress clock is a circle cut into slices. Fill a slice when a villain’s plan moves on, a rival gets closer or danger grows; when it’s full, it happens. Players only see clocks you mark “Players know”.',
+    'A progress clock is a circle cut into slices. Fill a slice when a villain’s plan moves on, a rival gets closer or danger grows; when it’s full, it happens. Players only see clocks you mark “Players know”, on pages they can see: each clock says which. Start one here or from a page’s Clocks box; removing one offers Undo.',
   safety:
     'Agree what’s off limits before you play. Lines never happen in the game; veils can happen, but off screen. Everyone in the world can read this page.',
   xcard:

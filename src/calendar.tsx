@@ -668,9 +668,24 @@ export function WorldToday({ world, isGM, folded }: { world: World; isGM: boolea
 }
 
 /** One month as a grid, with dated events and sessions on their days. */
-export function MonthGrid({ world, events, sessions }: { world: World; events: Entity[]; sessions: Session[] }) {
+export function MonthGrid({
+  world,
+  events,
+  sessions,
+  month: shown,
+  onMonth,
+}: {
+  world: World
+  events: Entity[]
+  sessions: Session[]
+  /** The month to show, when the screen keeps it (in the address, say); otherwise today's, then wherever ‹ › go. */
+  month?: { year: number; month: number }
+  onMonth?: (at: { year: number; month: number }) => void
+}) {
   const c = world.calendar!
-  const [at, setAt] = useState<{ year: number; month: number }>(() => ({ year: c.today?.year ?? 1, month: c.today?.month ?? 0 }))
+  const [own, setOwn] = useState<{ year: number; month: number }>(() => ({ year: c.today?.year ?? 1, month: c.today?.month ?? 0 }))
+  const at = shown && c.months[shown.month] ? shown : own
+  const setAt = onMonth ?? setOwn
   const month = c.months[at.month] ?? c.months[0]
   const days = Math.max(1, monthDays(c, at.month, at.year))
   const cols = c.weekdays.length || 10

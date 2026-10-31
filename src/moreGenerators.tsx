@@ -9,6 +9,8 @@ import { worldPath } from './paths'
 import { STARTER_TABLES, starterTableEntity } from './starterTables'
 import { generateTreasure, TREASURE_SIZES, treasureMarkdown, type Treasure, type TreasureSize } from './treasure'
 import { coinKey, editPurse } from './purse'
+import { useReview } from './reveal'
+import { toast } from './undo'
 import { openNewPage } from './pendingPages'
 
 /** Names in a style, or names like the world's own (its NPCs, places…). Click one to make a page or copy it. */
@@ -120,7 +122,18 @@ export function TreasureGenerator({ world, compact }: { world: World; compact?: 
     setGiven(false)
     setCopied(false)
   }
+  const { ask, dialog } = useReview()
   const give = async () => {
+    const ok = await ask({
+      title: 'Give this treasure to the party?',
+      see: [
+        ...(loot.coins.length ? [`${loot.coins.map((c) => `${c.amount.toLocaleString()} ${c.name}`).join(', ')} added to the party’s purse`] : []),
+        ...(loot.items.length ? [`${loot.items.length === 1 ? 'A new item page' : `${loot.items.length} new item pages`} in the party stash: ${loot.items.map((i) => i.name).join(', ')}`] : []),
+      ],
+      note: 'Players can read the new items and see them on Party loot.',
+      confirm: 'Give to the party',
+    })
+    if (!ok) return
     await addCoins(world.id, loot.coins)
     const items = loot.items.map((i) => {
       const e = blankEntity(world.id, 'item', i.name)
@@ -135,9 +148,18 @@ export function TreasureGenerator({ world, compact }: { world: World; compact?: 
     })
     await db.entities.bulkAdd(items)
     setGiven(true)
+    toast('Treasure given to the party.', async () => {
+      await db.entities.bulkDelete(items.map((e) => e.id))
+      await addCoins(
+        world.id,
+        loot.coins.map((c) => ({ ...c, amount: -c.amount })),
+      )
+      setGiven(false)
+    })
   }
   return (
     <div className="treasure-generator">
+      {dialog}
       <div className="row wrap">
         <select value={size} onChange={(e) => {
           const s = e.target.value as TreasureSize
