@@ -30,7 +30,7 @@ export const canSeeSession = (s: Session, campaign: Pick<Campaign, 'visibility'>
   isGM || (s.visibility === 'players' && !!campaign && campaign.visibility !== 'gm')
 
 /** Sessions in the order they were played: by date (undated ones first), then by number. */
-export const bySessionOrder = (a: Session, b: Session) => (a.date || '').localeCompare(b.date || '') || a.number - b.number
+export const bySessionOrder = (a: Pick<Session, 'date' | 'number'>, b: Pick<Session, 'date' | 'number'>) => (a.date || '').localeCompare(b.date || '') || a.number - b.number
 
 /** All sessions in a world the viewer may see, oldest first (none from a hidden campaign, for players). */
 export function useWorldSessions(worldId: string) {

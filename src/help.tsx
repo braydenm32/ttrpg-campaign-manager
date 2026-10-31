@@ -22,7 +22,7 @@ export const HELP = {
   viewingAs:
     'Switch to Player to preview exactly what your players can see. Anything marked 🔒 GM only, GM notes and secret passages disappear.',
   previewAs:
-    'Pick one player to see the world exactly as they do: what’s revealed to everyone, plus pages revealed just to them and :::for passages for their character.',
+    'Pick one player to see the world exactly as they do: what’s revealed to everyone, plus pages revealed just to them and :::for passages for their character. Without invited players you can still pick a character, to check their passages and their Common Room.',
   codex:
     'The codex holds every page in your world, grouped by type: Places, People, Factions and Lore have tabs of their own in the Atlas, and Everything lists every type with how many pages it has. Pages of no particular type are under Other pages. Pages can sit inside places (a tavern inside a town).',
   quickAdd: 'Make a new page of any type. It starts as GM only, so nothing is revealed until you choose. You can also press Ctrl+K and type “new npc”.',
@@ -116,7 +116,8 @@ export const HELP = {
   ages: 'Split your history into named ages, like “The Age of Kings” or “The Long Peace”. Each age gets its own section on the timeline, in order, and each event can belong to one. Players see the ages of any events you have revealed.',
   threads:
     'Every hook, mystery, promise and grudge you’ve left dangling. Move them from dangling to in play to tied off. A thread that hasn’t moved in three sessions gets flagged so nothing is forgotten.',
-  leads: 'The quests, rumours, hooks and mysteries your GM has shared with the party that are still open.',
+  leads:
+    'The quests, rumours, hooks and mysteries your GM has shared with the party that are still open, the ones under way first, and the clocks that are ticking. Done and tied-off ones are folded away at the bottom.',
   calendar:
     'Your world’s own calendar: month and day names, the year’s name (like DR) moons, leap years, festivals and holidays. Pick a ready-made one (Forgotten Realms, Golarion, Eberron, Greyhawk, Exandria) or make your own. Events can then have real dates.',
   worldToday: 'Today’s date in your world. Move it on as time passes in the game; each session remembers the date it started on.',
@@ -250,7 +251,13 @@ export const HELP = {
     'Keep your character’s details up to date: the one-line summary, stats and anything you want to write about them. Your GM sees your changes and can change them back.',
   character: 'Who plays this character. Players ask to play their character from here, and you approve it (here or in World settings) before it counts, so nobody can take someone else’s character or their secrets. You can release a claim later.',
   commonRoom:
-    'Your seat at the table: what the GM is showing, your character, the party, leads, notes and last time’s recap. While your GM runs the session you also see the scene, whose turn it is and the music, roll dice everyone sees, and can quietly ask for a turn or a break.',
+    'Your seat at the table: Now (when you play next, last time, what you’re doing), Me (your character and private notes), Party (who’s in it and who carries what), Leads and Notes (group notes, questions for your GM, downtime). On a phone they’re along the bottom, with Notes inside Me.',
+  roomNow:
+    'Now changes with the game. Before a session: when you play next, what happened last time and what the party is doing. While your GM runs the session live: the scene, whose turn it is, dice everyone sees, a quiet word to the GM and the X-card. Just after: last time’s recap first, then the loot and the party’s notes.',
+  roomMe: 'Your character at a glance: the numbers that matter, what you carry, passages only you can read, and your own notes. “Edit my character” lets you update the sheet, or fill it in from a character sheet file.',
+  roomParty: 'Everyone in the party, who plays them and what each one carries, plus the party’s purse and the stash you share. The full loot list has every item with its notes.',
+  tableRules:
+    'What your table agreed before playing. Lines never happen in the game; veils can happen, but off screen. The X-card tells your GM, without your name, that something isn’t OK.',
   tableLink:
     'Once you go live with this session, players’ Common Room shows which session is on, the scene (only if its page is revealed), the music, your timers and the turn order once combat starts. HP, conditions and your notes never go, and anyone from a page players haven’t seen shows as “Enemy 1” or “Ally 2”. Their rolls and signals (“I’d like to do something”, “I need a break”) come to you here and pop up wherever you are in the app.',
   inspiration:

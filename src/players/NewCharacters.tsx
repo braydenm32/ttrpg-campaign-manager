@@ -13,6 +13,7 @@ import {
 } from '../cloud/players'
 import { schedule } from '../cloud/sync'
 import { Modal } from '../components'
+import { toast } from '../undo'
 import { blankEntity, db, type World } from '../db'
 import { Help } from '../help'
 import { useVisibleEntities } from '../hooks'
@@ -134,9 +135,16 @@ export function MyNewCharacters({ world, compact }: { world: World; compact?: bo
           <button
             className="link small"
             onClick={async () => {
-              if (r.status === 'pending' && !confirm(`Take back ${r.sheet.name}?`)) return
-              await withdrawCharacterRequest(r.id).catch(() => undefined)
+              const gone = await withdrawCharacterRequest(r.id).then(
+                () => true,
+                () => false,
+              )
               load()
+              // A waiting one can be sent again with Undo; a turned-down one is only being cleared away.
+              if (gone && r.status === 'pending')
+                toast(`${r.sheet.name} taken back.`, () =>
+                  requestCharacter(cloudId, r.sheet).then(load, () => toast('Couldn’t send it again. Check your connection.')),
+                )
             }}
           >
             {r.status === 'pending' ? 'Take it back' : 'Clear'}
