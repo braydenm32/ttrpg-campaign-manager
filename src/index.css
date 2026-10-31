@@ -1834,3 +1834,14 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
   .web-controls > select { flex: 1 1 100%; min-height: 44px; }
 }
 .web-side .relation-list button.link { white-space: normal; text-align: left; overflow-wrap: anywhere; }
+@media (max-width: 800px) {
+  /* The web opens on one person, so their card (a list of links) is on screen: fingertip-sized on a phone. */
+  .web-side .relation-list li { display: flex; flex-wrap: wrap; align-items: center; column-gap: .35em; }
+  .web-side .relation-list button.link, .web-side > button.small, .web-side h2 a { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; }
+}
+@media (max-width: 800px) {
+  .everything-search { min-height: 44px; }
+}
+@media (max-width: 800px) {
+  .web-controls .segmented button, .web-zoom button { min-height: 44px; min-width: 44px; }
+}
