@@ -715,6 +715,9 @@ button.social.facebook .social-icon { background: #1877f2; }
   /* On a phone the picker is a big enough tap, and its tip is on a computer (it says the same as the bar). */
   .preview-as select { min-height: 44px; min-width: 44px; }
   .preview-as .help-button { display: none; }
+  /* The bar's words get their own line, so the picker has room to show the name. */
+  .player-banner { flex-wrap: wrap; }
+  .player-banner .preview-as { flex: 1 1 10em; }
 }
 
 /* Character status */
