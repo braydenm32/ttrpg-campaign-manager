@@ -64,7 +64,7 @@ export function PrepSheet({ session, entities, worldId }: { session: Session; en
         <section className="card plan-card" id="scenes">
           <div className="plan-head">
             <h2>
-              <Ico as={FilmSlate} /> Scenes <Help topic="prep" />
+              <Ico as={FilmSlate} /> Scenes <Help topic="prep" /> <Help topic="undo" />
             </h2>
             {prep.scenes.length > 0 && <span className="muted small">{prepCounts(prep).scenes.total}</span>}
           </div>

@@ -1571,3 +1571,4 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .skeleton .sk-block { height: 9em; }
 @keyframes sk-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton .sk { animation: none; } }
+.jump-row button.help-button { background: none; padding: 0; min-width: 44px; border-radius: 50%; }

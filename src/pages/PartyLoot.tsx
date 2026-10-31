@@ -12,6 +12,7 @@ import { pagePath, worldPath } from '../paths'
 import { partyLoot, quantityLabel } from '../counts'
 import { changeCoin, editPurse, tidyPurse } from '../purse'
 import { removeWithUndo } from '../undo'
+import { useKeepScroll } from '../jump'
 
 /**
  * Party loot: the party's coin, the party stash and what each player character carries. The GM also
@@ -25,6 +26,7 @@ export default function PartyLoot() {
   // Opened from the Lectern's "Party found" panel: a way straight back to the table.
   const from = useSearchParams()[0].get('from')
   const fromSession = useLiveQuery(async () => (from ? ((await db.sessions.get(from)) ?? null) : null), [from])
+  useKeepScroll(!!world)
   if (!world) return null
 
   const loot = partyLoot(entities, world)

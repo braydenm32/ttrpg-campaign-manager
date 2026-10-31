@@ -40,7 +40,7 @@ import { ShowPanel } from '../showing'
 import { WorldToday } from '../calendar'
 import { ClocksPanel } from '../clocks'
 import { Ico, TypeIcon } from '../icons'
-import { Armchair, CastleTurret, CloudFog, Coins, DiceFive, FlagCheckered, Keyboard, MapTrifold, Microphone, NotePencil, Eye, EyeSlash, Play, Prohibit, Shield, SkipForward, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
+import { Armchair, CastleTurret, CloudFog, Coins, Lock, DiceFive, FlagCheckered, Keyboard, MapTrifold, Microphone, NotePencil, Eye, EyeSlash, Play, Prohibit, Shield, SkipForward, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
 import { clockText, GoLive, RollDetail, RollLog, timeLeft, useNow } from '../atTheTable'
 import { setLiveSession, shareRoll, useLiveSession, useTable } from '../cloud/table'
@@ -160,6 +160,7 @@ export default function Lectern() {
         <JumpRow
           label="Parts of the Lectern"
           className="lectern-jump phone-only"
+          help="lecternJump"
           targets={[
             { id: 'lectern-scene', label: 'Scene', open: unfold('scene') },
             { id: 'lectern-initiative', label: 'Fight', open: unfold('initiative') },
@@ -398,7 +399,7 @@ function FoundPages({ query, entities, worldId, lectern, edit }: PanelProps & { 
             )}
             {e.gmNotes && (
               <details className="present-notes small">
-                <summary>GM notes</summary>
+                <summary><Ico as={Lock} /> GM notes</summary>
                 <div className="secret small">
                   <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
                 </div>
@@ -586,7 +587,7 @@ function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: 
           )}
           {e.gmNotes && (
             <details className="present-notes small">
-              <summary>GM notes</summary>
+              <summary><Ico as={Lock} /> GM notes</summary>
               <div className="secret small">
                 <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
               </div>

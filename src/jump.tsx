@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
+import { Help, type HelpTopic } from './help'
 
 /**
  * Keeping your place on long screens: a row of buttons that jumps to each part (sticky under the
@@ -27,7 +28,7 @@ export function jumpTo(id: string) {
  * The jump row. The part you jumped to goes in the address (`?at=fight`, replacing this step, not
  * adding one), so a reload or Back lands on it again. `current` lights the part on screen now.
  */
-export function JumpRow({ targets, label, className = '' }: { targets: JumpTarget[]; label: string; className?: string }) {
+export function JumpRow({ targets, label, className = '', help }: { targets: JumpTarget[]; label: string; className?: string; help?: HelpTopic }) {
   const [params, setParams] = useSearchParams()
   const at = params.get('at')
   return (
@@ -50,6 +51,7 @@ export function JumpRow({ targets, label, className = '' }: { targets: JumpTarge
           {t.label}
         </button>
       ))}
+      {help && <Help topic={help} />}
     </nav>
   )
 }
