@@ -42,6 +42,8 @@
   .more-screen label:has(> input[type='checkbox']) { display: flex; align-items: center; gap: .5em; min-height: 44px; }
   .more-screen :is(h2, .row, .table-roller, .handout-list .card) > a, .more-screen h2 a.small { display: inline-flex; align-items: center; min-height: 44px; }
   .more-screen input[type='range'] { min-height: 44px; }
+  /* No hover on a touch screen: a card's tools (string, colour, take off) always show, in a row along its top. */
+  .more-screen .board-card-tools { position: static; display: flex; justify-content: flex-end; margin: -.3em -.3em .2em; }
   .more-screen .entity-list li > a { display: inline-flex; align-items: center; gap: .3em; min-height: 44px; }
 }
 

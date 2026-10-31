@@ -262,10 +262,11 @@ test.describe('screenshots of the rest', () => {
     ['files', 'assets'],
     ['sounds', 'sounds'],
     ['boards', 'boards'],
+    ['corkboard', 'boards/{board}'],
     ['archivist', 'archivist'],
   ])
     test(name, async ({ page, world, device }) => {
-      await open(page, `/w/${world.slug}/${path}`)
+      await open(page, `/w/${world.slug}/${path.replace('{board}', world.dump.boards[0].id)}`)
       await shot(page, `${name}-${device}`)
     })
 })
