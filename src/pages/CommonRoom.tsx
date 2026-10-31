@@ -48,6 +48,7 @@ import {
   UsersThree,
 } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
+import { useKeepScroll } from '../jump'
 import { PlayerDowntime } from '../players/Downtime'
 import { Highlights, StorySoFar } from '../highlights'
 
@@ -108,6 +109,8 @@ export default function CommonRoom({ world }: { world: World }) {
     if (live) markLiveSeen(worldId)
   }, [live, worldId, table])
   const stage = roomStage({ live, next, last, liveSeenAt: liveSeenAt(worldId) })
+  // Back to a tab comes back to where you'd scrolled.
+  useKeepScroll(entities.length > 0)
 
   const party = partyOf(entities, campaign?.id)
   const ctx: RoomContext = { world, worldId, memberOf, cloudId, table, entities, mine, mineIds, who, party, owners, campaign, campaigns, sessions, next, last, stage, previewNames: memberOf ? [] : (previewAs?.characterNames ?? []) }
@@ -906,7 +909,6 @@ function LeadsTab({ ctx }: { ctx: RoomContext }) {
       <TabHead title="Leads" help="leads" />
       <p className="muted small room-lead-in">What the party knows about and is working on.</p>
       <LeadsView worldId={ctx.worldId} entities={ctx.entities} />
-      {!ctx.world.shared && <p className="muted small">Players see the leads, quests and clocks you’ve revealed.</p>}
     </>
   )
 }
