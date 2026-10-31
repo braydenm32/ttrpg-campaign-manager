@@ -298,6 +298,25 @@ export function CalendarEditor({ world }: { world: World }) {
   const c = world.calendar
   const set = (next: WorldCalendar | undefined) => db.worlds.update(world.id, { calendar: next, updatedAt: Date.now() })
   const change = (patch: Partial<WorldCalendar>) => c && set({ ...c, ...patch })
+  /** Removes a holiday, season or moon at once, with Undo putting it back in its place. */
+  const takeOut = (key: 'holidays' | 'seasons' | 'moons', i: number, what: string) => {
+    const list: { name: string }[] = c?.[key] ?? []
+    const item = list[i]
+    if (!item) return
+    change({ [key]: list.filter((_, j) => j !== i) })
+    toast(`${what} “${item.name}” removed`, () =>
+      db.worlds
+        .where('id')
+        .equals(world.id)
+        .modify((w) => {
+          if (!w.calendar) return
+          const now: { name: string }[] = [...(w.calendar[key] ?? [])]
+          now.splice(Math.min(i, now.length), 0, item)
+          w.calendar = { ...w.calendar, [key]: now }
+          w.updatedAt = Date.now()
+        }),
+    )
+  }
   const [weekdays, setWeekdays] = useState<string | null>(null)
   return (
     <section>
@@ -436,7 +455,7 @@ export function CalendarEditor({ world }: { world: World }) {
                     </option>
                   ))}
                 </select>
-                <button type="button" className="ghost" onClick={() => change({ holidays: c.holidays!.filter((_, j) => j !== i) })}>
+                <button type="button" className="ghost" aria-label={`Remove ${h.name}`} onClick={() => takeOut('holidays', i, 'Holiday')}>
                   ×
                 </button>
               </div>
@@ -486,7 +505,7 @@ export function CalendarEditor({ world }: { world: World }) {
                     </option>
                   ))}
                 </select>
-                <button type="button" className="ghost" onClick={() => change({ seasons: c.seasons!.filter((_, j) => j !== i) })}>
+                <button type="button" className="ghost" aria-label={`Remove ${s.name}`} onClick={() => takeOut('seasons', i, 'Season')}>
                   ×
                 </button>
               </div>
@@ -533,7 +552,7 @@ export function CalendarEditor({ world }: { world: World }) {
                 >
                   Today
                 </button>
-                <button type="button" className="ghost" onClick={() => change({ moons: c.moons.filter((_, j) => j !== i) })}>
+                <button type="button" className="ghost" aria-label={`Remove ${m.name}`} onClick={() => takeOut('moons', i, 'Moon')}>
                   ×
                 </button>
               </div>

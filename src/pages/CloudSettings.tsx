@@ -46,10 +46,26 @@ export default function CloudSettings({ world }: { world: World }) {
       </h2>
       {!user ? (
         <>
-          <p className="muted">Sign in to back this world up to the cloud, use it on several devices, and share a player view with a link.</p>
+          <p className="muted">Everything here works once you sign in and turn on sync for this world. Until then the world lives only on this device.</p>
+          <ol className="how-sharing">
+            <li>
+              <strong>Sign in</strong> (free). Turn on sync, and the world is backed up and kept in step on every device you sign in on.
+            </li>
+            <li>
+              <strong>Invite your players.</strong> You get an invite link to send them. Each player signs in, joins, and claims their character.
+              They see only what you reveal: GM-only pages, GM notes and secret passages never leave your devices.
+            </li>
+            <li>
+              <strong>Or share a read-only wiki link</strong> with anyone, no account needed. It shows only what’s revealed to the whole table.
+            </li>
+            <li>
+              <strong>A co-GM</strong> gets their own link and sees everything, secrets included.
+            </li>
+          </ol>
           <button className="primary" onClick={() => setAccount(true)}>
             Sign in or create an account
           </button>
+          <p className="muted small">Playing in someone else’s world? You don’t need this: open the invite link your GM sent you.</p>
         </>
       ) : !enabled ? (
         <>
@@ -99,7 +115,15 @@ export default function CloudSettings({ world }: { world: World }) {
           )}
           <div className="row wrap">
             <button onClick={() => syncNow()}>Sync now</button>
-            <button onClick={() => run(() => disableCloud(world.id))}>Stop syncing on this device</button>
+            <button
+              onClick={() =>
+                confirm(
+                  'Stop syncing this world on this device?\n\nChanges you make here stop reaching the cloud, your other devices and your players, and changes made elsewhere stop arriving here. The cloud copy, the links and your players stay as they are. You can turn sync back on later.',
+                ) && run(() => disableCloud(world.id))
+              }
+            >
+              Stop syncing on this device
+            </button>
             {!coGM && (
             <button
               className="danger"
@@ -143,7 +167,15 @@ export default function CloudSettings({ world }: { world: World }) {
                 <button disabled={busy} onClick={() => confirm('Make a new link? The old one will stop working.') && run(async () => setToken(await createShareLink(world.id)))}>
                   New link
                 </button>
-                <button className="danger" disabled={busy} onClick={() => run(async () => (await revokeShareLink(world.id), setToken(null)))}>
+                <button
+                  className="danger"
+                  disabled={busy}
+                  onClick={() =>
+                    confirm(
+                      'Turn off the public wiki link?\n\nAnyone opening it, bookmarks included, gets “link not working” from now on. This can’t be undone: if you create a wiki link again it’s a new address, so you’ll have to send it out again.',
+                    ) && run(async () => (await revokeShareLink(world.id), setToken(null)))
+                  }
+                >
                   Turn off link
                 </button>
               </div>

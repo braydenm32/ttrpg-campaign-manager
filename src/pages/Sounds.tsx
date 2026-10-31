@@ -10,6 +10,7 @@ import { parseSyrinscape, syrinscape, useSyrinscapeToken } from '../sound/syrins
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { MusicNotes, SpeakerHigh } from '@phosphor-icons/react'
+import { toast } from '../undo'
 
 const GROUPS = ['Ambience', 'Music', 'Effects']
 
@@ -156,7 +157,14 @@ function SyrinscapeAdd({ worldId, group }: { worldId: string; group: string }) {
       {token ? (
         <p className="small">
           ✓ Your Syrinscape token is saved on this device.{' '}
-          <button className="link" onClick={() => syrinscape.setToken('')}>
+          <button
+            className="link"
+            onClick={() => {
+              const was = token
+              syrinscape.setToken('')
+              toast('Syrinscape token removed from this device: its buttons stop playing until you add it again.', () => syrinscape.setToken(was))
+            }}
+          >
             Remove it
           </button>
         </p>
