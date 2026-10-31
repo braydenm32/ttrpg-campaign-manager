@@ -25,8 +25,22 @@ export const openThreads = (entities: Entity[]) =>
     .filter(isOpenThread)
     .sort((a, b) => URGENCY_RANK[a.threadUrgency ?? 'normal'] - URGENCY_RANK[b.threadUrgency ?? 'normal'] || b.updatedAt - a.updatedAt)
 
-/** A player's leads: the open quests and open threads they can see. The sidebar badge, the Common Room and the Leads page all list these. */
-export const openLeads = (entities: Entity[]) => [...entities.filter(isOpenQuest), ...openThreads(entities)]
+/** A lead the party is working on now: a quest under way or a thread in play. */
+export const isActiveLead = (e: Entity) => isActiveQuest(e) || (e.type === 'thread' && e.threadStatus === 'active')
+
+/**
+ * A player's leads: the open quests and open threads they can see, the ones under way first, then
+ * the pressing ones. The sidebar badge, the Common Room and the Leads page all list these.
+ */
+export const openLeads = (entities: Entity[]) => {
+  const all = [...entities.filter(isOpenQuest), ...openThreads(entities)]
+  const rank = (e: Entity) => (isActiveLead(e) ? 0 : e.threadUrgency === 'high' ? 1 : 2)
+  return all.map((e, i) => ({ e, i })).sort((a, b) => rank(a.e) - rank(b.e) || a.i - b.i).map(({ e }) => e)
+}
+
+/** Leads the party has finished with: quests done or failed, threads tied off. (Dropped threads are left out.) */
+export const closedLeads = (entities: Entity[]) =>
+  entities.filter((e) => (e.type === 'quest' && (e.questStatus === 'done' || e.questStatus === 'failed')) || (e.type === 'thread' && e.threadStatus === 'resolved'))
 
 /** A clock's number of slices (a clock always has at least one). */
 export const clockSize = (c: Clock) => Math.max(1, c.segments)

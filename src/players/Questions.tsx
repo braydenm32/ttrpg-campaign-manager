@@ -7,6 +7,7 @@ import type { PlayerQuestion, World } from '../db'
 import { Help } from '../help'
 import { Ico } from '../icons'
 import { Question } from '@phosphor-icons/react'
+import { removeWithUndo, toast } from '../undo'
 import { pagePath } from '../paths'
 
 /**
@@ -67,10 +68,14 @@ export function AskForm({ memberOf, entityId, placeholder }: { memberOf: string;
 export function QuestionList({ questions, memberOf, pageName }: { questions: PlayerQuestion[]; memberOf: string; pageName?: (q: PlayerQuestion) => ReactNode }) {
   const [error, setError] = useState('')
   if (!questions.length) return null
-  const takeBack = (id: string) => {
-    if (!confirm('Take this question back?')) return
+  // Taken back at once, with Undo (which asks it again).
+  const takeBack = (q: PlayerQuestion) => {
     setError('')
-    withdrawQuestion(memberOf, id).catch((e) => setError(cloudErrorMessage(e)))
+    removeWithUndo(
+      'Question taken back.',
+      () => withdrawQuestion(memberOf, q.id),
+      () => askQuestion(memberOf, q.entityId, q.body).catch(() => toast('Couldn’t ask it again. Check your connection.')),
+    ).catch((e) => setError(cloudErrorMessage(e)))
   }
   return (
     <ul className="questions">
@@ -90,7 +95,7 @@ export function QuestionList({ questions, memberOf, pageName }: { questions: Pla
             ) : (
               <div className="muted small row spread">
                 Waiting for an answer.
-                <button className="link small" onClick={() => takeBack(q.id)}>
+                <button className="link small" onClick={() => takeBack(q)}>
                   Take it back
                 </button>
               </div>

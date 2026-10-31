@@ -98,12 +98,23 @@ export function RevealedToBadge({ entity, world, entities, isGM }: { entity: Ent
   )
 }
 
-/** In the sidebar while previewing the player view: see it as everyone, or as one player who has joined. */
+/**
+ * In the Player view bar: see it as everyone, or as one player who has joined. Without invited
+ * players (no cloud sync, say), as one of the revealed player characters instead: their ":::for"
+ * passages and their Common Room, without any per-player reveals (those need a real player).
+ */
 export function PreviewAsPicker({ world }: { world: World }) {
   const { previewAs, setPreviewAs } = useViewMode()
   const pcs = useLiveQuery(() => db.entities.where({ worldId: world.id }).filter((e) => e.type === 'pc').toArray(), [world.id]) ?? []
   const players = useWorldPlayers(world, pcs)
-  if (!world.cloud?.enabled || !players.length) return null
+  const joined = !!world.cloud?.enabled && players.length > 0
+  const choices = joined
+    ? players.map((p) => ({ id: p.userId, label: playerLabel(p), as: { userId: p.userId, name: p.name, characterNames: p.plays } }))
+    : pcs
+        .filter((e) => e.visibility === 'players' && !e.template)
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((e) => ({ id: `character:${e.id}`, label: e.name, as: { userId: `character:${e.id}`, name: e.name, characterNames: [e.name] } }))
+  if (!choices.length) return null
   return (
     <label className="preview-as small">
       <span>
@@ -111,15 +122,12 @@ export function PreviewAsPicker({ world }: { world: World }) {
       </span>
       <select
         value={previewAs?.userId ?? ''}
-        onChange={(e) => {
-          const p = players.find((x) => x.userId === e.target.value)
-          setPreviewAs(p ? { userId: p.userId, name: p.name, characterNames: p.plays } : undefined)
-        }}
+        onChange={(e) => setPreviewAs(choices.find((x) => x.id === e.target.value)?.as)}
       >
         <option value="">Every player</option>
-        {players.map((p) => (
-          <option key={p.userId} value={p.userId}>
-            {playerLabel(p)}
+        {choices.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.label}
           </option>
         ))}
       </select>
