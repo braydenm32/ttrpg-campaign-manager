@@ -45,7 +45,7 @@ test('Now answers next session, last time and what we’re doing first, and chan
   // The purse is on Party, not here.
   await expect(page.locator('.common-room')).not.toContainText('Purse')
 
-  // A recap revealed ten days ago and a date booked in three days.
+  // A recap revealed ten days ago and a date booked in three days: the recap stays first until the next game.
   const at = new Date(Date.now() + 3 * 86_400_000)
   at.setHours(19, 0, 0, 0)
   const before = {
@@ -54,8 +54,17 @@ test('Now answers next session, last time and what we’re doing first, and chan
   }
   try {
     await open(page, w)
+    await expect(page.getByRole('heading', { level: 1, name: /After the game/ })).toBeVisible()
     await expect(answers(page)).toContainText('in 3 days')
     await expect(answers(page)).toContainText('Bring snacks')
+    await expect(page.locator('.room-recap')).toContainText('The muster bell rang')
+    await expect(page.locator('body')).not.toContainText('ROOM-TEST-GM-SECRET')
+
+    // The next game is later today: getting ready comes first, with last time just under it.
+    const soon = new Date(Date.now() + 12 * 3_600_000)
+    await patchRecord(page, 'campaigns', campaign.id, { booked: { id: 'room-test', at: soon.toISOString().slice(0, 16), utc: soon.toISOString() } })
+    await open(page, w)
+    await expect(page.getByRole('heading', { level: 1, name: /Before next session/ })).toBeVisible()
     await expect(answers(page)).toContainText(`Session 1: ${s1.title}`)
     await expect(answers(page)).toContainText('The muster bell rang')
     await expect(answers(page).getByRole('link', { name: 'Read it all' })).toHaveAttribute('href', new RegExp(`/s/${s1.id}$`))
@@ -108,10 +117,11 @@ test('“Leads” is one list: Now, the Leads tab and the leads page agree, and 
   const w = `/w/${world.slug}`
   await open(page, `${w}?tab=leads`)
   const names = async () => page.locator('.leads-view > .lead-list .lead-name').allTextContents()
+  // The list fills in once the world has loaded, so wait for it rather than reading it at once.
+  await expect.poll(async () => (await names()).length).toBeGreaterThan(3)
   const tab = await names()
-  expect(tab.length).toBeGreaterThan(3)
   await open(page, `${w}/threads`)
-  expect(await names()).toEqual(tab)
+  await expect.poll(names).toEqual(tab)
   // Now's card says how many there are and leads to the same list; Back comes back to Now.
   await open(page, w)
   await expect(doing(page).locator('.lead-name')).toHaveText(tab.slice(0, 3))

@@ -253,7 +253,7 @@ export const HELP = {
   commonRoom:
     'Your seat at the table: Now (when you play next, last time, what you’re doing), Me (your character and private notes), Party (who’s in it and who carries what), Leads and Notes (group notes, questions for your GM, downtime). On a phone they’re along the bottom, with Notes inside Me.',
   roomNow:
-    'Now changes with the game. Before a session: when you play next, what happened last time and what the party is doing. While your GM runs the session live: the scene, whose turn it is, dice everyone sees, a quiet word to the GM and the X-card. Just after: last time’s recap first, then the loot and the party’s notes.',
+    'Now changes with the game. Before a session: when you play next, what happened last time and what the party is doing. While your GM runs the session live: the scene, whose turn it is, dice everyone sees, a quiet word to the GM and the X-card. After a game, until the day of the next one: last time’s recap first, then the loot and the party’s notes.',
   roomMe: 'Your character at a glance: the numbers that matter, what you carry, passages only you can read, and your own notes. “Edit my character” lets you update the sheet, or fill it in from a character sheet file.',
   roomParty: 'Everyone in the party, who plays them and what each one carries, plus the party’s purse and the stash you share. The full loot list has every item with its notes.',
   tableRules:

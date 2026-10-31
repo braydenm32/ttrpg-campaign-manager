@@ -6,9 +6,11 @@ import { localDate } from '../sessions'
  * Where the players are between one game night and the next, for the Common Room's Now tab:
  *
  * - during: the GM is running a session live (the live link is on).
- * - after: a game night has just been: this device saw a live session in the last day and a half,
- *   or the newest recap is for a session dated in the last three days. Then the recap comes first.
- * - before: any other time. The next date, last time's recap and what the party is doing come first.
+ * - before: the next booked or dated game is less than a day away. The next date comes first.
+ * - after: there's a recap to read, or this device saw a live session in the last day and a half
+ *   (the recap may still be coming). Last time's recap comes first and stays first until the next
+ *   game is close.
+ * - before also covers any other time (nothing played yet).
  *
  * Only what players actually receive decides it (public.player_view in supabase/migrations: a
  * session's number, title, date and recap, a campaign's booked date and suggested dates, and the
@@ -71,9 +73,8 @@ export function roomStage({ live, next, last, liveSeenAt = 0, now = Date.now() }
   if (live) return 'during'
   // The next game is close: getting ready matters more than looking back.
   if ((next.kind === 'booked' || next.kind === 'dated') && next.time - now < 24 * HOUR) return 'before'
-  if (liveSeenAt && now - liveSeenAt < 36 * HOUR) return 'after'
-  const threeDaysAgo = localDate(now - 3 * 24 * HOUR)
-  if (last?.date && last.date >= threeDaysAgo && last.date <= localDate(now)) return 'after'
+  // Otherwise last time's recap stays on top until the next game.
+  if (last || (liveSeenAt && now - liveSeenAt < 36 * HOUR)) return 'after'
   return 'before'
 }
 
