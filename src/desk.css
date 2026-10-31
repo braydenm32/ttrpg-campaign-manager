@@ -26,7 +26,7 @@
 .desk-strip .strip-title { flex: none; }
 .desk-strip-name { font: 600 1.15rem/1.2 var(--font-display); color: var(--heading, var(--text)); text-decoration: none; }
 .desk-strip-facts { min-width: 0; }
-.desk-strip .grow { flex: 1; }
+.desk-strip .grow { flex: 1; min-width: 0; }
 .desk-strip-actions { display: flex; gap: .5em; flex-wrap: wrap; }
 
 .desk-cols { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 1em; align-items: start; }
@@ -41,6 +41,7 @@
 .need-text .clip, .clip { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .need-action { flex: none; display: flex; gap: .3em; align-items: center; }
 .need-action input[type=date] { width: auto; }
+.need-action :is(button, .button), .card-head > button { padding: .3em .75em; font-size: .85rem; }
 .need-chip { display: inline-flex; align-items: center; gap: .3em; padding: .25em .55em; border-radius: 6px; border: 0; background: var(--panel-2); color: var(--text); font: 600 .75rem/1 var(--font-body); white-space: nowrap; flex: none; min-width: 7.6em; }
 .need-chip.warn { background: color-mix(in srgb, var(--accent) 18%, transparent); color: color-mix(in srgb, var(--accent) 80%, var(--text)); }
 .need-chip.bad { background: color-mix(in srgb, var(--danger) 18%, transparent); color: color-mix(in srgb, var(--danger) 80%, var(--text)); }
@@ -80,18 +81,21 @@
   .world-cover.compact { padding: .7em .9em; }
   .world-cover.compact h1 { font-size: 1.25rem; }
   .world-cover.compact p { display: none; }
-  .world-cover.compact .world-cover-side { width: auto; justify-content: space-between; flex: 1 1 100%; }
+  .world-cover.compact .world-cover-side { width: auto; flex: 1 1 100%; flex-wrap: nowrap; justify-content: space-between; align-items: center; }
+  .world-cover.compact .world-today-fold > summary { font-size: .88rem; }
+  .world-cover.compact .world-today-fold[open] { flex: 1 1 100%; }
+  .world-cover.compact .world-cover-side:has(.world-today-fold[open]) { flex-wrap: wrap; }
   .desk-cols { grid-template-columns: minmax(0, 1fr); }
   /* The session first, with its main button full width under the thumb. */
   .desk-strip { flex-direction: column; align-items: stretch; gap: .4em; }
   .desk-strip .grow { display: none; }
   .desk-strip-actions { flex-direction: row-reverse; }
   .desk-strip-actions > * { flex: 1; justify-content: center; min-height: 48px; }
-  .need { flex-wrap: wrap; }
-  .need-chip { min-width: 0; }
-  .need-text { flex-basis: calc(100% - 9em); }
+  .need { gap: .5em; }
+  .need-chip { min-width: 0; padding: .25em .45em; }
+  .need-text { font-size: .92rem; }
   .need-action :is(button, .button) { min-height: 44px; min-width: 44px; }
-  .need-action { margin-left: auto; }
+  .need-action { flex-wrap: wrap; justify-content: flex-end; max-width: 45%; }
   .desk-statline a, .coming-campaigns a, .card-head > a, .recent-list li > a { min-height: 44px; }
   .coming-campaigns a, .card-head > a { display: inline-flex; align-items: center; }
   .desk-party-list { display: grid; grid-template-columns: 1fr 1fr; }

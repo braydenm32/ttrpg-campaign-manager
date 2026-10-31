@@ -697,10 +697,13 @@ function ComingUp({
 
 /** The pages changed most lately, one line each. */
 function RecentlyChanged({ world, entities }: { world: World; entities: Entity[] }) {
-  // The example's pages all carry the same time; "lately" then means nothing, so it waits for a real change.
-  const recent = [...entities].filter((e) => e.type !== 'thread').sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 6)
-  const same = recent.length > 1 && recent.every((e) => e.updatedAt === recent[0].updatedAt)
-  if (!recent.length || same) return null
+  // Only what was changed since the world came to this device: a freshly opened example world would
+  // otherwise list pages that all carry the same time, in no real order.
+  const recent = [...entities]
+    .filter((e) => e.type !== 'thread' && !e.template && e.updatedAt > world.createdAt + 5_000)
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, 6)
+  if (!recent.length) return null
   return (
     <section className="card recently-changed">
       <h2>Recently changed</h2>
