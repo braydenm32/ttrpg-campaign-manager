@@ -4,11 +4,13 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Books, ChatCircleText, Check, ClipboardText, PaperPlaneRight, PenNib, Scales, Sparkle, X } from '@phosphor-icons/react'
 import { db, type Entity, type Session, type World } from '../db'
 import { Help } from '../help'
+import '../more.css'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { Ico } from '../icons'
 import { Markdown, findBacklinks } from '../Markdown'
 import { useViewMode } from '../viewMode'
-import { Empty } from '../components'
+import { Empty, Skeleton } from '../components'
+import { toast } from '../undo'
 import { askClaude, dollars, estimateTokens, claudeCost, MODEL, modelName, QUICK_MODEL, usageCost, type ClaudeMessage } from './claude'
 import { ClaudeJob, ModelTag } from './ClaudeJob'
 import { moveJob, startJob, stopJob, takeFinished, useJob } from './jobs'
@@ -27,10 +29,10 @@ export default function Archivist() {
   const sessions = useLiveQuery(() => db.sessions.where({ worldId }).toArray(), [worldId]) ?? []
   const [params, setParams] = useSearchParams()
   const tab = params.get('tab') === 'check' ? 'check' : 'ask'
-  if (!world) return null
+  if (!world) return <Skeleton />
   if (!isGM) return <Empty>The Archivist is for the GM.</Empty>
   return (
-    <div className="page archivist">
+    <div className="page archivist more-screen">
       <header className="page-header">
         <h1>
           <Ico as={Books} /> The Archivist <Help topic="archivist" />
@@ -38,10 +40,10 @@ export default function Archivist() {
       </header>
       <p className="muted">Claude, reading your own world. It answers from your pages and sessions (secrets included), and links what it mentions. Nothing changes in your world unless you change it.</p>
       <div className="segmented tabs">
-        <button className={tab === 'ask' ? 'on' : ''} onClick={() => setParams({}, { replace: true })}>
+        <button className={tab === 'ask' ? 'on' : ''} onClick={() => tab !== 'ask' && setParams({})}>
           <Ico as={ChatCircleText} /> Ask your world
         </button>
-        <button className={tab === 'check' ? 'on' : ''} onClick={() => setParams({ tab: 'check' }, { replace: true })}>
+        <button className={tab === 'check' ? 'on' : ''} onClick={() => tab !== 'check' && setParams({ tab: 'check' })}>
           <Ico as={Scales} /> Check for contradictions
         </button>
       </div>
@@ -231,7 +233,11 @@ export function AskWorld({ world, entities, sessions }: { world: World; entities
             <button
               type="button"
               className="ghost"
-              onClick={() => setTalk(NEW_CONVERSATION)}
+              onClick={() => {
+                const was = getKept<Conversation>(talkKey) ?? NEW_CONVERSATION
+                setTalk(NEW_CONVERSATION)
+                toast(`Conversation of ${was.turns.length} question${was.turns.length === 1 ? '' : 's'} cleared.`, () => setTalk(was))
+              }}
             >
               New conversation
             </button>

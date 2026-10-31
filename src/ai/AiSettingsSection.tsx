@@ -6,6 +6,7 @@ import { Ico } from '../icons'
 import { Sparkle } from '@phosphor-icons/react'
 import { useAuthSession } from '../cloud/auth'
 import { saveKeysToAccount, useAccountKeys } from './accountKeys'
+import { toast } from '../undo'
 
 /** Keys and choices for transcription and recaps. Stored on this device, and the keys in the account if the GM ticks it. */
 export function AiSettingsSection() {
@@ -27,6 +28,7 @@ export function AiSettingsSection() {
           label="Anthropic API key (for one-click recaps, the Archivist and other Claude tools)"
           value={s.anthropicKey}
           onChange={(v) => setAiSettings({ anthropicKey: v })}
+          stops="one-click recaps, the Archivist and the other Claude tools stop until you add it again"
           placeholder="sk-ant-…"
           help={
             <>
@@ -42,6 +44,7 @@ export function AiSettingsSection() {
           label="AssemblyAI API key (for cloud transcription)"
           value={s.assemblyKey}
           onChange={(v) => setAiSettings({ assemblyKey: v })}
+          stops="cloud transcription stops (on-device transcription still works)"
           placeholder="Paste your key"
           help={
             <>
@@ -113,12 +116,15 @@ function KeyField({
   label,
   value,
   onChange,
+  stops,
   placeholder,
   help,
 }: {
   label: string
   value: string
   onChange: (v: string) => void
+  /** What stops working without it, for the note that offers Undo. */
+  stops: string
   placeholder: string
   help: React.ReactNode
 }) {
@@ -139,7 +145,15 @@ function KeyField({
           {show ? 'Hide' : 'Show'}
         </button>
         {value && (
-          <button type="button" className="ghost small" onClick={() => onChange('')}>
+          <button
+            type="button"
+            className="ghost small"
+            onClick={() => {
+              const was = value
+              onChange('')
+              toast(`Key removed from this device: ${stops}.`, () => onChange(was))
+            }}
+          >
             Remove
           </button>
         )}

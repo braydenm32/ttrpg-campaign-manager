@@ -94,7 +94,15 @@ export function PlayersSettings({ world }: { world: World }) {
             >
               New link
             </button>
-            <button className="danger" disabled={busy} onClick={() => run(() => revokeInviteLink(world.id))}>
+            <button
+              className="danger"
+              disabled={busy}
+              onClick={() =>
+                confirm(
+                  'Turn off invites?\n\nNobody new can join with the invite link you sent. Players who already joined stay in. This can’t be undone: creating an invite again makes a new link to send out.',
+                ) && run(() => revokeInviteLink(world.id))
+              }
+            >
               Turn off invites
             </button>
           </div>
@@ -229,7 +237,15 @@ export function CoGmSettings({ world }: { world: World }) {
             </button>
           </div>
           <div className="row wrap">
-            <button className="danger" disabled={busy} onClick={() => run(() => revokeGmInviteLink(world.id))}>
+            <button
+              className="danger"
+              disabled={busy}
+              onClick={() =>
+                confirm(
+                  'Turn off the co-GM link?\n\nNobody new can join as a co-GM with it. Co-GMs who already joined stay (remove them below). This can’t be undone: creating a co-GM link again makes a new one.',
+                ) && run(() => revokeGmInviteLink(world.id))
+              }
+            >
               Turn off co-GM link
             </button>
           </div>

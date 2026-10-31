@@ -4,8 +4,9 @@ import { CheckCircle, PenNib, Warning, X } from '@phosphor-icons/react'
 import { Modal } from '../components'
 import { Ico } from '../icons'
 import { hashRouting } from '../paths'
-import { anyWriting, clearJob, stopJob, useJobs } from './jobs'
+import { anyWriting, clearJob, restoreJob, stopJob, useJobs } from './jobs'
 import { holdUp, setPending, usePending } from './leave'
+import { toast } from '../undo'
 import './jobs.css'
 
 /**
@@ -108,7 +109,13 @@ export function ClaudeJobChips({ worldId }: { worldId: string }) {
               <span className="short">{short}</span>
             </Link>
             {j.status !== 'writing' && (
-              <button className="ghost" onClick={() => clearJob(j.id)} title={j.result ? 'Dismiss (Claude’s answer is thrown away)' : 'Dismiss'} aria-label={`Dismiss: ${j.title}`}>
+              <button
+                className="ghost"
+                onClick={() => {
+                  clearJob(j.id)
+                  if (j.result) toast(`Claude’s answer for “${j.title}” thrown away.`, () => restoreJob(j))
+                }}
+                title={j.result ? 'Dismiss (Claude’s answer is thrown away)' : 'Dismiss'} aria-label={`Dismiss: ${j.title}`}>
                 <Ico as={X} />
               </button>
             )}

@@ -38,8 +38,8 @@ const NEW_PLACES: [string, string, string | RegExp][] = [
   ['Questions', 'Inbox', '/questions'],
   ['Scratchpad', 'Players’ scratchpad', '/scratchpad'],
   ['Campaigns', 'All sessions', /^\/c\/[^/]+$/],
-  ['Templates', 'Templates', '/settings'],
-  ['Recently deleted', 'Recently deleted', '/settings?tab=data'],
+  ['Templates', 'Templates', '/settings?at=templates'],
+  ['Recently deleted', 'Recently deleted', '/settings?tab=data&at=deleted'],
   ['Random tables', 'Random tables', '/tables'],
 ]
 
