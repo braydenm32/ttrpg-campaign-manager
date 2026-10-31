@@ -3,7 +3,7 @@ import { MyNewCharacters } from './NewCharacters'
 import { cloudErrorMessage } from '../cloud/client'
 import { Help } from '../help'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { approveClaim, claimCharacter, editMyCharacter, releaseCharacter, savePlayerNotes } from '../cloud/players'
 import { Modal } from '../components'
 import { db, type Entity, type World } from '../db'
@@ -12,7 +12,7 @@ import { Ico } from '../icons'
 import { FileArrowUp, MaskHappy, PencilSimple } from '@phosphor-icons/react'
 import { ImportSheet } from '../sheets/ImportSheet'
 import { playerSheet } from '../sheets/apply'
-import { pagePath } from '../paths'
+import { pagePath, worldPath } from '../paths'
 
 /** On a player character's page: who plays them, their player's notes, and claim / let go buttons. */
 export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: World }) {
@@ -106,7 +106,7 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
 }
 
 /** The player's own editor for their character: summary, details and a write-up in their words. */
-function EditMyCharacter({ entity, cloudId, system }: { entity: Entity; cloudId: string; system: string }) {
+export function EditMyCharacter({ entity, cloudId, system }: { entity: Entity; cloudId: string; system: string }) {
   const [open, setOpen] = useState(false)
   const [summary, setSummary] = useState(entity.summary)
   const [fields, setFields] = useState(entity.fields)
@@ -225,19 +225,31 @@ function PlayerNotes({ initial, onSave }: { initial: string; onSave: (notes: str
   )
 }
 
-/** In a world you've joined: a nudge to pick your character until you have one. */
+/** In a world you've joined: a nudge along the top to pick your character until you have one. */
 export function ChooseCharacterBanner({ world }: { world: World }) {
+  const [hidden, setHidden] = useState(false)
+  const { search, pathname } = useLocation()
+  // The Common Room's Me tab has the same choice in the page itself.
+  const onMe = pathname === worldPath(world.id) && new URLSearchParams(search).get('tab') === 'me'
+  if (hidden || onMe) return null
+  return <ChooseCharacter world={world} banner onLater={() => setHidden(true)} />
+}
+
+/**
+ * Which character are you playing? The characters nobody has claimed yet, each a button; your GM
+ * approves the claim. Shown along the top until you have one (with "Later"), and on your Me tab.
+ */
+export function ChooseCharacter({ world, banner, onLater }: { world: World; banner?: boolean; onLater?: () => void }) {
   const { owners, memberOf } = useCharacterOwners(world)
   const pcs = useLiveQuery(() => db.entities.where({ worldId: world.id }).filter((e) => e.type === 'pc' && !e.template).toArray(), [world.id])
-  const [hidden, setHidden] = useState(false)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
-  if (!memberOf || hidden || !pcs) return null
+  if (!memberOf || !pcs) return null
   const mine = [...owners.values()].filter((o) => o.mine)
   if (mine.some((o) => !o.pending)) return null
   if (mine.length)
     return (
-      <div className="choose-character">
+      <div className={banner ? 'choose-character' : 'choose-character inline'}>
         <strong><Ico as={MaskHappy} /> Waiting for your GM</strong>
         <p className="muted small">You’ve asked to play {pcs.find((e) => owners.get(e.id)?.mine)?.name ?? 'a character'}. Your GM approves it, and then it’s yours.</p>
       </div>
@@ -245,12 +257,14 @@ export function ChooseCharacterBanner({ world }: { world: World }) {
   const free = pcs.filter((e) => !owners.has(e.id))
 
   return (
-    <div className="choose-character">
+    <div className={banner ? 'choose-character' : 'choose-character inline'}>
       <div className="row spread">
         <strong><Ico as={MaskHappy} /> Which character are you playing?</strong>
-        <button className="ghost small" onClick={() => setHidden(true)}>
-          Later
-        </button>
+        {onLater && (
+          <button className="ghost small" onClick={onLater}>
+            Later
+          </button>
+        )}
       </div>
       {free.length === 0 ? (
         <p className="muted small">
@@ -258,33 +272,37 @@ export function ChooseCharacterBanner({ world }: { world: World }) {
           yours, or make a new one and send it to them.
         </p>
       ) : (
-        <div className="row wrap">
-          {free.map((e) => (
-            <span key={e.id} className="row">
-              <button
-                className="primary"
-                disabled={!!busy}
-                onClick={async () => {
-                  setBusy(e.id)
-                  setError('')
-                  try {
-                    await claimCharacter(memberOf, e.id)
-                  } catch (err) {
-                    setError(cloudErrorMessage(err))
-                  } finally {
-                    setBusy('')
-                  }
-                }}
-              >
-                {busy === e.id ? 'Claiming…' : `🛡️ ${e.name}`}
-              </button>
-              <Link className="small" to={`${pagePath(world.id, e.id)}`}>
-                read
-              </Link>
-            </span>
-          ))}
-        </div>
+        <>
+          {!banner && <p className="muted small">Pick yours. Your GM approves it, then its secrets and its sheet are yours. You can let go of it later.</p>}
+          <div className="row wrap">
+            {free.map((e) => (
+              <span key={e.id} className="row">
+                <button
+                  className="primary"
+                  disabled={!!busy}
+                  onClick={async () => {
+                    setBusy(e.id)
+                    setError('')
+                    try {
+                      await claimCharacter(memberOf, e.id)
+                    } catch (err) {
+                      setError(cloudErrorMessage(err))
+                    } finally {
+                      setBusy('')
+                    }
+                  }}
+                >
+                  {busy === e.id ? 'Claiming…' : `🛡️ ${e.name}`}
+                </button>
+                <Link className="small" to={`${pagePath(world.id, e.id)}`}>
+                  read
+                </Link>
+              </span>
+            ))}
+          </div>
+        </>
       )}
+      {!banner && <MyNewCharacters world={world} compact />}
       {error && <p className="error small">{error}</p>}
     </div>
   )

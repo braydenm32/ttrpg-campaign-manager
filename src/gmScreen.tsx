@@ -12,6 +12,7 @@ import { Markdown } from './Markdown'
 import { PagePicker } from './PagePicker'
 import { pagePath } from './paths'
 import { TableRoller } from './tables'
+import { removeWithUndo } from './undo'
 
 /**
  * The GM screen: a drawer at the Lectern with what the GM wants in reach every session. Pages
@@ -78,7 +79,11 @@ function Pinned({ world, entities, ids }: { world: World; entities: Entity[]; id
               aria-label={`Unpin ${e.name}`}
               onClick={(ev) => {
                 ev.preventDefault()
-                void editScreen(world.id, (g) => void (g.pages = g.pages.filter((x) => x !== e.id)))
+                void removeWithUndo(
+                  `${e.name} unpinned.`,
+                  () => editScreen(world.id, (g) => void (g.pages = g.pages.filter((x) => x !== e.id))),
+                  () => editScreen(world.id, (g) => void (g.pages.includes(e.id) || (g.pages = [...g.pages, e.id]))),
+                )
               }}
             >
               <Ico as={X} />
@@ -141,7 +146,13 @@ function SavedRolls({ world, rolls, onRoll }: { world: World; rolls: GmScreen['r
               <button
                 className="ghost small"
                 aria-label={`Remove ${r.name}`}
-                onClick={() => void editScreen(world.id, (g) => void (g.rolls = g.rolls.filter((x) => x.id !== r.id)))}
+                onClick={() =>
+                  void removeWithUndo(
+                    `${r.name} removed.`,
+                    () => editScreen(world.id, (g) => void (g.rolls = g.rolls.filter((x) => x.id !== r.id))),
+                    () => editScreen(world.id, (g) => void (g.rolls.some((x) => x.id === r.id) || (g.rolls = [...g.rolls, r]))),
+                  )
+                }
               >
                 <Ico as={X} />
               </button>

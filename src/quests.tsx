@@ -6,6 +6,7 @@ import { Help } from './help'
 import { Ico } from './icons'
 import { PagePicker } from './PagePicker'
 import { pagePath } from './paths'
+import { coinKey, editPurse } from './purse'
 
 /**
  * Quest objectives and rewards. Each step can be known to players or kept back until they find it
@@ -127,19 +128,14 @@ function Rewards({ quest, list, isGM, entities, worldId }: { quest: Entity; list
   const give = async (r: QuestReward) => {
     const coins = r.coins ?? coinsIn(r.text)
     if (coins.length)
-      await db.worlds
-        .where('id')
-        .equals(worldId)
-        .modify((w) => {
-          const purse = [...(w.partyCoin ?? [])]
-          for (const c of coins) {
-            const have = purse.find((p) => p.name.trim().toLowerCase() === c.name)
-            if (have) have.amount += c.amount
-            else purse.push({ ...c })
-          }
-          w.partyCoin = purse
-          w.updatedAt = Date.now()
-        })
+      await editPurse(worldId, (purse) => {
+        for (const c of coins) {
+          const have = purse.find((p) => coinKey(p.name) === coinKey(c.name))
+          if (have) have.amount += c.amount
+          else purse.push({ ...c })
+        }
+        return purse
+      })
     if (r.itemId) await db.entities.update(r.itemId, { heldBy: 'party', visibility: 'players', updatedAt: Date.now() })
     await change(r.id, (x) => {
       x.given = true

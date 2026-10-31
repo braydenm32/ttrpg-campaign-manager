@@ -19,7 +19,7 @@ const FoldingContext = createContext<Folding | null>(null)
 
 const KEY = 'lectern.folded'
 /** Folded until the GM opens them: the panels used now and then rather than every scene. */
-const FOLDED_AT_FIRST = ['improvise', 'tables', 'timers', 'gmscreen', 'journey']
+const FOLDED_AT_FIRST = ['improvise', 'tables', 'timers', 'gmscreen', 'journey', 'recording', 'threads']
 
 function loadFolded(): Set<string> {
   try {
@@ -66,7 +66,7 @@ export const FoldingProvider = FoldingContext.Provider
 /** Every panel's id, in the order they're registered, so "Fold all" can fold them all. */
 export const LECTERN_PANELS = [
   'notes', 'scene', 'present', 'party', 'threads', 'prep', 'initiative', 'timers', 'clocks', 'journey',
-  'commonroom', 'callroll', 'show', 'sound', 'dice', 'tables', 'gmscreen', 'improvise',
+  'commonroom', 'callroll', 'show', 'loot', 'sound', 'dice', 'recording', 'tables', 'gmscreen', 'improvise',
 ]
 
 export function LecternPanel({

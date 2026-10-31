@@ -5,11 +5,12 @@ import { PagePicker } from './PagePicker'
 import { blankLectern, blankPrep, db, newId, type CheckItem, type Encounter, type Entity, type Session, type SessionPrep, type World } from './db'
 import { addCombatants, encounterCombatants, foeCount, foeFromEntity, numberFrom } from './encounters'
 import { Help } from './help'
-import { cardSummary, hasCard, SceneCardEditor, startScene } from './sceneCards'
+import { cardSummary, hasCard, SceneCardEditor } from './sceneCards'
 import { LecternPanel } from './lecternPanel'
 import { StatusBadge } from './status'
 import { Ico, TypeIcon } from './icons'
-import { ClipboardText, FilmSlate, MagnifyingGlass, Sword } from '@phosphor-icons/react'
+import { ArrowUp, FilmSlate, MagnifyingGlass, PencilSimple, Plus, Sword, X } from '@phosphor-icons/react'
+import { removeWithUndo } from './undo'
 import { pagePath, worldPath } from './paths'
 import { prepCounts } from './counts'
 
@@ -34,118 +35,173 @@ export const runEncounter = (sessionId: string, enc: Encounter) =>
     })
 
 /**
- * The prep sheet on a session page: a strong start, the scenes you expect, secrets and clues to drop
- * wherever they fit, and fights ready to run. All GM-only.
+ * The plan on Prepare: a strong start, the scenes you expect, secrets and clues to drop wherever
+ * they fit, and fights ready to run, as cards you can read at a glance (and edit in place). All
+ * GM-only. On a computer it's two columns: the opening and the scenes, then clues and fights.
  */
 export function PrepSheet({ session, entities, worldId }: { session: Session; entities: Entity[]; worldId: string }) {
   const prep = { ...blankPrep(), ...session.prep }
   const edit = (fn: (p: SessionPrep) => void) => editPrep(session.id, fn)
   return (
-    <div className="prep">
-      <p className="muted small">
-        Plan the session here, then run it from the Lectern, where you can tick off scenes and clues as they happen. <Help topic="prep" />
-      </p>
-      <label>
-        <span>
-          Strong start <Help topic="strongStart" />
-        </span>
-        <DraftText
-          multiline
-          rows={3}
-          value={prep.strongStart}
-          placeholder="How the session opens: drop the players straight into something happening."
-          onCommit={(v) => edit((p) => void (p.strongStart = v))}
-        />
-      </label>
-      <h3><Ico as={FilmSlate} /> Scenes you expect</h3>
-      <CheckList
-        items={prep.scenes}
-        placeholder="A scene that might happen, e.g. ‘Ambush at the ford’"
-        doneLabel="Played"
-        onEdit={(fn) => edit((p) => fn(p.scenes))}
-        extra={{
-          label: (x) => (hasCard(x) ? '🎬 Card ✓' : '🎬 Card'),
-          title: 'Give this scene its place, read-aloud text, people, sounds, fight, handout and reveals, to start them all at once at the Lectern',
-          render: (x, change) => <SceneCardEditor scene={x} session={session} entities={entities} onChange={change} />,
-        }}
-      />
-      <h3>
-        <Ico as={MagnifyingGlass} /> Secrets and clues <Help topic="clues" />
-      </h3>
-      <CheckList items={prep.clues} placeholder="Something the players could learn, e.g. ‘The mayor paid the bandits’" doneLabel="Found" onEdit={(fn) => edit((p) => fn(p.clues))} />
-      <h3>
-        <Ico as={Sword} /> Encounters <Help topic="encounters" />
-      </h3>
-      <Encounters session={session} prep={prep} entities={entities} worldId={worldId} />
+    <div className="prep-plan">
+      <div className="prep-col">
+        <section className="card plan-card" id="plan">
+          <div className="plan-head">
+            <h2>
+              Strong start <Help topic="strongStart" />
+            </h2>
+          </div>
+          <DraftText
+            multiline
+            grow
+            className="read-text"
+            aria-label="Strong start"
+            value={prep.strongStart}
+            placeholder="How the session opens: drop the players straight into something happening."
+            onCommit={(v) => edit((p) => void (p.strongStart = v))}
+          />
+        </section>
+        <section className="card plan-card" id="scenes">
+          <div className="plan-head">
+            <h2>
+              <Ico as={FilmSlate} /> Scenes <Help topic="prep" /> <Help topic="undo" />
+            </h2>
+            {prep.scenes.length > 0 && <span className="muted small">{prepCounts(prep).scenes.total}</span>}
+          </div>
+          <PlanList
+            kind="scene"
+            items={prep.scenes}
+            placeholder="Add a scene that might happen, e.g. ‘Ambush at the ford’"
+            doneLabel="Played"
+            onEdit={(fn) => edit((p) => fn(p.scenes))}
+            extra={{
+              label: (x) => (hasCard(x) ? 'Scene card ✓' : 'Scene card'),
+              title: 'Give this scene its place, read-aloud text, people, sounds, fight, handout and reveals, to start them all at once at the Lectern',
+              summary: (x) => (hasCard(x) ? cardSummary(x, entities, session) : ''),
+              render: (x, change) => <SceneCardEditor scene={x} session={session} entities={entities} onChange={change} />,
+            }}
+          />
+        </section>
+      </div>
+      <div className="prep-col">
+        <section className="card plan-card" id="clues">
+          <div className="plan-head">
+            <h2>
+              <Ico as={MagnifyingGlass} /> Secrets and clues <Help topic="clues" />
+            </h2>
+            {prep.clues.length > 0 && <span className="muted small">{prepCounts(prep).clues.total}</span>}
+          </div>
+          <PlanList kind="clue" items={prep.clues} placeholder="Add something the players could learn, e.g. ‘The mayor paid the bandits’" doneLabel="Found" onEdit={(fn) => edit((p) => fn(p.clues))} />
+        </section>
+        <section className="card plan-card" id="fights">
+          <div className="plan-head">
+            <h2>
+              <Ico as={Sword} /> Encounters <Help topic="encounters" />
+            </h2>
+          </div>
+          <Encounters session={session} prep={prep} entities={entities} worldId={worldId} />
+        </section>
+      </div>
     </div>
   )
 }
 
-function CheckList<T extends CheckItem>({
+/**
+ * Scenes or clues: each one a line of text you can read in full and edit where it is, ticked off
+ * once played or found. Removing one happens at once, with Undo.
+ */
+function PlanList<T extends CheckItem>({
+  kind,
   items,
   placeholder,
   doneLabel,
   onEdit,
   extra,
 }: {
+  kind: 'scene' | 'clue'
   items: T[]
   placeholder: string
   doneLabel: string
-  onEdit: (fn: (list: T[]) => void) => void
+  onEdit: (fn: (list: T[]) => void) => unknown
   /** More to each item, behind a button (scene cards). */
-  extra?: { label: (x: T) => string; title: string; render: (x: T, change: (fn: (x: T) => void) => void) => ReactNode }
+  extra?: { label: (x: T) => string; title: string; summary: (x: T) => string; render: (x: T, change: (fn: (x: T) => void) => void) => ReactNode }
 }) {
   const [text, setText] = useState('')
   const [open, setOpen] = useState<string>()
+  const word = kind === 'scene' ? 'Scene' : 'Clue'
   const change = (id: string, fn: (x: T) => void) =>
     onEdit((list) => {
       const x = list.find((i) => i.id === id)
       if (x) fn(x)
     })
+  const remove = (x: T) => {
+    let at = -1
+    void removeWithUndo(
+      `${word} “${shorten(x.text)}” removed`,
+      () =>
+        onEdit((list) => {
+          // A second click finds nothing to remove (and must not remove the last one instead).
+          at = list.findIndex((y) => y.id === x.id)
+          if (at >= 0) list.splice(at, 1)
+        }),
+      () => onEdit((list) => void (list.some((y) => y.id === x.id) || list.splice(Math.max(0, at), 0, x))),
+    )
+  }
   return (
-    <div className="check-list">
-      {items.map((x, i) => (
-        <div key={x.id}>
-        <div className={`row check-item ${x.done ? 'done' : ''}`}>
-          <input type="checkbox" checked={x.done} title={doneLabel} onChange={(e) => {
-              // Read it now: the box springs back to the saved value before the change is saved.
-              const v = e.target.checked
-              change(x.id, (y) => void (y.done = v))
-            }} />
-          <DraftText value={x.text} onCommit={(v) => change(x.id, (y) => void (y.text = v))} />
-          <button
-            className="ghost"
-            title="Move up"
-            disabled={i === 0}
-            onClick={() =>
-              onEdit((list) => {
-                const j = list.findIndex((y) => y.id === x.id)
-                if (j > 0) list.splice(j - 1, 0, ...list.splice(j, 1))
-              })
-            }
-          >
-            ↑
-          </button>
-          {extra && (
-            <button className={`ghost small ${open === x.id ? 'on' : ''}`} title={extra.title} aria-expanded={open === x.id} onClick={() => setOpen(open === x.id ? undefined : x.id)}>
-              {extra.label(x)}
-            </button>
-          )}
-          <button className="ghost" title="Remove" onClick={() =>
-              onEdit((list) => {
-                // A second click finds nothing to remove (and must not remove the last one instead).
-                const j = list.findIndex((y) => y.id === x.id)
-                if (j >= 0) list.splice(j, 1)
-              })
-            }>
-            ✕
-          </button>
-        </div>
-        {extra && open === x.id && extra.render(x, (fn) => change(x.id, fn))}
-        </div>
-      ))}
+    <div className="plan-list-wrap">
+      {items.length > 0 && (
+        <ol className={`plan-list ${kind}s`}>
+          {items.map((x, i) => {
+            const summary = extra?.summary(x)
+            return (
+              <li key={x.id} className={`plan-item ${x.done ? 'done' : ''}`}>
+                <button
+                  type="button"
+                  className="plan-tick"
+                  aria-pressed={x.done}
+                  aria-label={`${doneLabel}: ${shorten(x.text)}`}
+                  title={x.done ? `${doneLabel}. Click to untick` : `Tick when ${kind === 'scene' ? 'played' : 'found'}`}
+                  onClick={() => change(x.id, (y) => void (y.done = !y.done))}
+                >
+                  <span>{x.done ? '✓' : kind === 'scene' ? i + 1 : ''}</span>
+                </button>
+                <div className="plan-body">
+                  <DraftText multiline grow className="plan-text" aria-label={`${word} ${i + 1}`} value={x.text} onCommit={(v) => change(x.id, (y) => void (y.text = v))} />
+                  {summary && <div className="muted small plan-summary">{summary}</div>}
+                </div>
+                <div className="plan-actions">
+                  <button
+                    type="button"
+                    className="ghost"
+                    title="Move up"
+                    aria-label={`Move ${word.toLowerCase()} ${i + 1} up`}
+                    disabled={i === 0}
+                    onClick={() =>
+                      onEdit((list) => {
+                        const j = list.findIndex((y) => y.id === x.id)
+                        if (j > 0) list.splice(j - 1, 0, ...list.splice(j, 1))
+                      })
+                    }
+                  >
+                    <Ico as={ArrowUp} />
+                  </button>
+                  {extra && (
+                    <button type="button" className={`ghost ${open === x.id ? 'on' : ''}`} title={extra.title} aria-expanded={open === x.id} onClick={() => setOpen(open === x.id ? undefined : x.id)}>
+                      <Ico as={FilmSlate} /> <span className="not-phone">{extra.label(x)}</span>
+                    </button>
+                  )}
+                  <button type="button" className="ghost" title="Remove" aria-label={`Remove ${word.toLowerCase()} ${i + 1}`} onClick={() => remove(x)}>
+                    <Ico as={X} />
+                  </button>
+                </div>
+                {extra && open === x.id && <div className="plan-card-editor">{extra.render(x, (fn) => change(x.id, fn))}</div>}
+              </li>
+            )
+          })}
+        </ol>
+      )}
       <form
-        className="row"
+        className="row plan-add"
         onSubmit={(e) => {
           e.preventDefault()
           const t = text.trim()
@@ -154,15 +210,25 @@ function CheckList<T extends CheckItem>({
           setText('')
         }}
       >
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder={placeholder} />
-        <button disabled={!text.trim()}>Add</button>
+        <input value={text} onChange={(e) => setText(e.target.value)} placeholder={placeholder} aria-label={`New ${word.toLowerCase()}`} />
+        <button disabled={!text.trim()}>
+          <Ico as={Plus} /> Add
+        </button>
       </form>
     </div>
   )
 }
 
+/** The first few words of a line, for notes like “Scene “Ambush at the…” removed”. */
+const shorten = (text: string, n = 40) => (text.length > n ? `${text.slice(0, n).trimEnd()}…` : text)
+
+/** Who's in a fight, in one line: “Dannic Rook 22 hp · 2 × Ash-drowned 11 hp · Gerda Hollin (ally)”. */
+export const foeLine = (enc: Encounter) =>
+  enc.foes.map((f) => `${f.count > 1 ? `${f.count} × ` : ''}${f.name}${f.hp ? ` ${f.hp} hp` : ''}${f.side !== 'foe' ? ` (${f.side === 'pc' ? 'PC' : 'ally'})` : ''}`).join(' · ')
+
 function Encounters({ session, prep, entities, worldId }: { session: Session; prep: SessionPrep; entities: Entity[]; worldId: string }) {
   const [name, setName] = useState('')
+  const [open, setOpen] = useState<string>()
   const navigate = useNavigate()
   const edit = (fn: (p: SessionPrep) => void) => editPrep(session.id, fn)
   const change = (id: string, fn: (e: Encounter) => void) =>
@@ -172,50 +238,87 @@ function Encounters({ session, prep, entities, worldId }: { session: Session; pr
     })
   return (
     <div className="encounters">
-      {prep.encounters.map((enc) => (
-        <div key={enc.id} className="card encounter">
-          <div className="row">
-            <DraftText className="encounter-name" value={enc.name} title="Name" onCommit={(v) => change(enc.id, (x) => void (x.name = v))} />
-            <span className="muted small">
-              {foeCount(enc)} combatant{foeCount(enc) === 1 ? '' : 's'}
-            </span>
-            <button
-              className="primary"
-              disabled={!enc.foes.length}
-              title="Add everyone in this fight to the Lectern’s initiative tracker"
-              onClick={async () => {
-                await runEncounter(session.id, enc)
-                navigate(`${worldPath(worldId)}/s/${session.id}/lectern`)
-              }}
-            >
-              <Ico as={Sword} /> Run at the Lectern
-            </button>
-            <button className="ghost" title="Delete encounter" onClick={() => confirm(`Delete “${enc.name}”?`) && edit((p) => void (p.encounters = p.encounters.filter((x) => x.id !== enc.id)))}>
-              ✕
-            </button>
+      {prep.encounters.length === 0 && <p className="muted small">No fights planned. Add one to have it ready at the Lectern.</p>}
+      {prep.encounters.map((enc) => {
+        const editing = open === enc.id
+        return (
+          <div key={enc.id} className={`encounter ${editing ? 'open' : ''}`}>
+            <div className="encounter-head">
+              <DraftText className="encounter-name" value={enc.name} aria-label="Encounter name" onCommit={(v) => change(enc.id, (x) => void (x.name = v))} />
+              <span className="muted small">
+                {foeCount(enc)} in the fight
+              </span>
+            </div>
+            {enc.foes.length > 0 && <div className="small encounter-foes">{foeLine(enc)}</div>}
+            {!editing && enc.notes && <p className="muted small encounter-notes">{enc.notes}</p>}
+            <div className="row wrap encounter-actions">
+              <button type="button" className={editing ? 'on' : ''} aria-expanded={editing} onClick={() => setOpen(editing ? undefined : enc.id)}>
+                <Ico as={PencilSimple} /> {editing ? 'Done' : 'Edit'}
+              </button>
+              <button
+                type="button"
+                disabled={!enc.foes.length}
+                title="Add everyone in this fight to the Lectern’s initiative list and open the Lectern"
+                onClick={async () => {
+                  await runEncounter(session.id, enc)
+                  navigate(`${worldPath(worldId)}/s/${session.id}/lectern?at=fight`)
+                }}
+              >
+                <Ico as={Sword} /> Fight it at the Lectern
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                title="Remove this encounter"
+                aria-label={`Remove encounter ${enc.name}`}
+                onClick={() => {
+                  let at = -1
+                  void removeWithUndo(
+                    `Encounter “${shorten(enc.name)}” removed`,
+                    () =>
+                      edit((p) => {
+                        at = p.encounters.findIndex((x) => x.id === enc.id)
+                        if (at >= 0) p.encounters.splice(at, 1)
+                      }),
+                    () => edit((p) => void (p.encounters.some((x) => x.id === enc.id) || p.encounters.splice(Math.max(0, at), 0, enc))),
+                  )
+                }}
+              >
+                <Ico as={X} />
+              </button>
+            </div>
+            {editing && (
+              <>
+                <FoeTable enc={enc} entities={entities} worldId={worldId} onChange={(fn) => change(enc.id, fn)} />
+                <DraftText
+                  multiline
+                  grow
+                  aria-label="Tactics and notes"
+                  value={enc.notes}
+                  placeholder="Tactics, terrain, what they want, when they flee…"
+                  onCommit={(v) => change(enc.id, (x) => void (x.notes = v))}
+                />
+              </>
+            )}
           </div>
-          <FoeTable enc={enc} entities={entities} worldId={worldId} onChange={(fn) => change(enc.id, fn)} />
-          <DraftText
-            multiline
-            rows={2}
-            value={enc.notes}
-            placeholder="Tactics, terrain, what they want, when they flee…"
-            onCommit={(v) => change(enc.id, (x) => void (x.notes = v))}
-          />
-        </div>
-      ))}
+        )
+      })}
       <form
-        className="row"
+        className="row plan-add"
         onSubmit={(e) => {
           e.preventDefault()
           const n = name.trim()
           if (!n) return
-          edit((p) => void p.encounters.push({ id: newId(), name: n, notes: '', foes: [] }))
+          const id = newId()
+          edit((p) => void p.encounters.push({ id, name: n, notes: '', foes: [] }))
+          setOpen(id)
           setName('')
         }}
       >
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="New encounter, e.g. ‘Bandits at the ford’" />
-        <button disabled={!name.trim()}>Add encounter</button>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="New encounter, e.g. ‘Bandits at the ford’" aria-label="New encounter" />
+        <button disabled={!name.trim()}>
+          <Ico as={Plus} /> Add
+        </button>
       </form>
     </div>
   )
@@ -281,8 +384,24 @@ function FoeTable({ enc, entities, worldId, onChange }: { enc: Encounter; entiti
                     </select>
                   </td>
                   <td>
-                    <button className="ghost" title="Remove" onClick={() => onChange((e) => void (e.foes = e.foes.filter((x) => x.id !== f.id)))}>
-                      ✕
+                    <button
+                      className="ghost"
+                      title="Remove"
+                      aria-label={`Remove ${f.name}`}
+                      onClick={() => {
+                        let at = -1
+                        void removeWithUndo(
+                          `“${f.name}” taken out of the fight`,
+                          () =>
+                            onChange((e) => {
+                              at = e.foes.findIndex((x) => x.id === f.id)
+                              if (at >= 0) e.foes.splice(at, 1)
+                            }),
+                          () => onChange((e) => void (e.foes.some((x) => x.id === f.id) || e.foes.splice(Math.max(0, at), 0, f))),
+                        )
+                      }}
+                    >
+                      <Ico as={X} />
                     </button>
                   </td>
                 </tr>
@@ -322,79 +441,60 @@ function FoeTable({ enc, entities, worldId, onChange }: { enc: Encounter; entiti
   )
 }
 
-/** The prep sheet at the Lectern: the opening, scenes and clues to tick off, and fights to start. */
-export function LecternPrep({ session, world, entities }: { session: Session; world: World; entities: Entity[] }) {
+/**
+ * The plan at the Lectern, besides the scenes (which are in the Scene panel, with Next scene): the
+ * secrets and clues to tick off as the players find them, and the planned fights to start.
+ */
+export function LecternPrep({ session, world }: { session: Session; world: World; entities: Entity[] }) {
   const worldId = world.id
   const prep = { ...blankPrep(), ...session.prep }
   // Fights already added to the initiative list from here, so a second tap asks first instead of doubling them.
   const [loaded, setLoaded] = useState<string[]>([])
   const edit = (fn: (p: SessionPrep) => void) => editPrep(session.id, fn)
-  const empty = !prep.strongStart && !prep.scenes.length && !prep.clues.length && !prep.encounters.length
-  const tick = (list: 'scenes' | 'clues', x: CheckItem) => (
-    <label key={x.id} className={`check-item ${x.done ? 'done' : ''}`}>
-      {list === 'scenes' && hasCard(x) && (
-        <button
-          type="button"
-          className="small scene-start"
-          title={`Start this scene: ${cardSummary(x, entities, session)}`}
-          onClick={(e) => {
-            e.preventDefault()
-            void startScene(world, session, x)
-          }}
-        >
-          ▶ Start
-        </button>
-      )}
-      <input
-        type="checkbox"
-        checked={x.done}
-        onChange={(e) => {
-          const v = e.target.checked
-          edit((p) => {
-            const y = p[list].find((i) => i.id === x.id)
-            if (y) y.done = v
-          })
-        }}
-      />{' '}
-      {x.text}
-    </label>
-  )
+  const empty = !prep.clues.length && !prep.encounters.length
   const counts = prepCounts(prep)
   return (
     <LecternPanel
       id="prep"
-      name="Prep"
-      keywords="scenes clues secrets encounters strong start plan"
-      title={<><Ico as={ClipboardText} /> Prep <Help topic="prep" /></>}
+      sectionId="lectern-prep"
+      name="Clues and fights"
+      keywords="prep scenes clues secrets encounters plan fights"
+      title={<><Ico as={MagnifyingGlass} /> Clues and fights <Help topic="clues" /></>}
       extra={
         <Link className="small" to={`${worldPath(worldId)}/s/${session.id}?tab=prep`}>
-          Edit prep
+          Edit the plan
         </Link>
       }
     >
-      {empty && <p className="muted small">No prep for this session yet. Plan scenes, clues and fights from the session page.</p>}
-      {prep.strongStart && (
-        <div className="small">
-          <b>Strong start:</b> {prep.strongStart}
-        </div>
-      )}
-      {prep.scenes.length > 0 && (
-        <details open>
-          <summary className="small"><Ico as={FilmSlate} /> Scenes ({counts.scenes.done}/{counts.scenes.total} played)</summary>
-          <div className="check-list">{prep.scenes.map((x) => tick('scenes', x))}</div>
-        </details>
-      )}
+      {empty && <p className="muted small">No clues or fights planned. Add them on Prepare.</p>}
       {prep.clues.length > 0 && (
         <details open>
           <summary className="small">
-            <Ico as={MagnifyingGlass} /> Secrets and clues ({counts.clues.done}/{counts.clues.total} found)
+            Secrets and clues ({counts.clues.done}/{counts.clues.total} found)
           </summary>
-          <div className="check-list">{prep.clues.map((x) => tick('clues', x))}</div>
+          <div className="check-list lectern-clues">
+            {prep.clues.map((x) => (
+              <label key={x.id} className={`check-item ${x.done ? 'done' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={x.done}
+                  onChange={(e) => {
+                    const v = e.target.checked
+                    edit((p) => {
+                      const y = p.clues.find((i) => i.id === x.id)
+                      if (y) y.done = v
+                    })
+                  }}
+                />{' '}
+                {x.text}
+              </label>
+            ))}
+          </div>
         </details>
       )}
       {prep.encounters.length > 0 && (
         <div className="small">
-          <div className="muted"><Ico as={Sword} /> Encounters</div>
+          <div className="muted"><Ico as={Sword} /> Planned fights</div>
           <div className="row wrap">
             {prep.encounters.map((enc) => (
               <button
@@ -411,7 +511,7 @@ export function LecternPrep({ session, world, entities }: { session: Session; wo
               </button>
             ))}
           </div>
-          {loaded.length > 0 && <div className="muted">Added to the Initiative list. Tap again to add another set.</div>}
+          {loaded.length > 0 && <div className="muted">Added to the fight. Tap again to add another set.</div>}
         </div>
       )}
     </LecternPanel>

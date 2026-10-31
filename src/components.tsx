@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type InputHTMLAttributes, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type InputHTMLAttributes, type ReactNode } from 'react'
 import type { Visibility } from './db'
 import { Ico } from './icons'
 import { Lock } from '@phosphor-icons/react'
+import { saving } from './undo'
 
 export function VisibilityToggle({
   value,
@@ -103,10 +104,25 @@ export function Empty({ children }: { children: ReactNode }) {
   return <div className="empty">{children}</div>
 }
 
+/** While a screen loads: grey shapes where its title and text will be, instead of the word "Loading…" (which screen readers still hear). */
+export function Skeleton() {
+  return (
+    <div className="skeleton" aria-busy="true">
+      <span className="sr-only">Loading…</span>
+      <div className="sk sk-title" />
+      <div className="sk sk-line" />
+      <div className="sk sk-line short" />
+      <div className="sk sk-block" />
+    </div>
+  )
+}
+
 /**
  * A text box that keeps what you type locally and saves every change. Saved values come back a moment later,
  * so reading them straight back while typing would drop keystrokes. With `saveOn="leave"` it saves once,
  * when you press Enter or move on, for boxes whose value reorders a list (so rows don't jump while you type).
+ * Each save lights any <SavedMark /> on screen. A multiline box with `grow` is as tall as its text,
+ * so a long scene or note reads in full instead of scrolling inside a small box.
  */
 export function DraftText({
   value,
@@ -114,25 +130,48 @@ export function DraftText({
   multiline,
   rows,
   saveOn,
+  grow,
   ...rest
-}: { value: string; onCommit: (v: string) => void; multiline?: boolean; rows?: number; saveOn?: 'leave' } & Omit<
+}: { value: string; onCommit: (v: string) => unknown; multiline?: boolean; rows?: number; saveOn?: 'leave'; grow?: boolean } & Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'value' | 'onChange'
 >) {
   const [draft, setDraft] = useState<string | null>(null)
+  const box = useRef<HTMLTextAreaElement>(null)
+  const shown = draft ?? value
+  useLayoutEffect(() => {
+    const el = box.current
+    if (!grow || !el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight + 2}px`
+  }, [grow, shown])
   const props = {
     value: draft ?? value,
     onFocus: () => setDraft(value),
     onBlur: () => {
-      if (saveOn === 'leave' && draft !== null && draft !== value) onCommit(draft)
+      if (saveOn === 'leave' && draft !== null && draft !== value) saving(onCommit(draft))
       setDraft(null)
     },
     onChange: (e: { target: { value: string } }) => {
       setDraft(e.target.value)
-      if (saveOn !== 'leave') onCommit(e.target.value)
+      if (saveOn !== 'leave') saving(onCommit(e.target.value))
     },
     ...(saveOn === 'leave' ? { onKeyDown: (e: { key: string; currentTarget: { blur: () => void } }) => e.key === 'Enter' && e.currentTarget.blur() } : {}),
   }
-  return multiline ? <textarea rows={rows} placeholder={rest.placeholder} {...props} /> : <input {...rest} {...props} />
+  return multiline ? (
+    <textarea
+      ref={box}
+      rows={grow ? 1 : rows}
+      placeholder={rest.placeholder}
+      className={`${rest.className ?? ''} ${grow ? 'grow-text' : ''}`.trim() || undefined}
+      aria-label={rest['aria-label']}
+      title={rest.title}
+      id={rest.id}
+      autoFocus={rest.autoFocus}
+      {...props}
+    />
+  ) : (
+    <input {...rest} {...props} />
+  )
 }
 

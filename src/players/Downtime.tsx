@@ -10,6 +10,7 @@ import { Help } from '../help'
 import { Ico } from '../icons'
 import { worldPath } from '../paths'
 import { needsAnswer } from '../counts'
+import { removeWithUndo, toast } from '../undo'
 
 /**
  * Downtime: between sessions, a player says what their character spends the time doing (research
@@ -170,10 +171,13 @@ export function PlayerDowntime({ world, mine }: { world: World; mine: Entity[] }
                   Waiting for your GM.
                   <button
                     className="link small"
-                    onClick={() => {
-                      if (!confirm('Take this back?')) return
-                      deleteDowntime(cloudId, d.id).then(reload, (err) => setProblem(cloudErrorMessage(err)))
-                    }}
+                    onClick={() =>
+                      removeWithUndo(
+                        'Downtime taken back.',
+                        () => deleteDowntime(cloudId, d.id).then(reload),
+                        () => sendDowntime(cloudId, d.character, d.body).then(reload, () => toast('Couldn’t send it again. Check your connection.')),
+                      ).catch((err) => setProblem(cloudErrorMessage(err)))
+                    }
                   >
                     Take it back
                   </button>

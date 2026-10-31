@@ -11,6 +11,7 @@ import { isOpenQuest, isOpenThread, tickingClocks } from '../counts'
 import { MODEL } from './claude'
 import { ClaudeJob } from './ClaudeJob'
 import { useKept } from './kept'
+import { toast } from '../undo'
 import { describeStep, MARKUP_NOTE, pageByName, pageText, sessionIndex, sessionText, worldHeader, worldIndex, worldTools } from './worldText'
 
 /**
@@ -211,7 +212,14 @@ ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${pl
                 Add to my prep
               </button>
             )}
-            <button className="ghost" onClick={() => setSuggestion(undefined)}>
+            <button
+              className="ghost"
+              onClick={() => {
+                const was = suggestion
+                setSuggestion(undefined)
+                toast('Prep ideas thrown away.', () => setSuggestion(was))
+              }}
+            >
               Throw these away
             </button>
           </div>
