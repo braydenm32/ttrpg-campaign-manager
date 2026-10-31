@@ -88,12 +88,13 @@ function Today({ world }: { world: World }) {
       <WorldCover world={world} compact>
         <NewPageMenu world={world} />
       </WorldCover>
-      {fresh && <GettingStarted world={world} onNewCampaign={() => setNewCampaign(true)} />}
       <SessionStrip world={world} inHand={inHand} stage={stage} campaigns={campaigns} onNewCampaign={() => setNewCampaign(true)} />
       <div className="desk-cols">
         <NeedsYou world={world} entities={entities} sessions={sessions} inHand={inHand} stage={stage} />
         <DeskClocks world={world} entities={entities} />
       </div>
+      {/* After what's waiting: a new world can already have players writing in. */}
+      {fresh && <GettingStarted world={world} onNewCampaign={() => setNewCampaign(true)} />}
       <div className="desk-cols">
         <DeskParty world={world} entities={entities} campaignId={inHand?.campaign.id ?? campaigns[0]?.id} />
         <ComingUp world={world} campaigns={campaigns} sessions={sessions} playing={playing} onNewCampaign={() => setNewCampaign(true)} />
