@@ -2,7 +2,7 @@ import { binBoard } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { DraftText, Empty } from '../components'
+import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { db, newId, type Board, type BoardCard } from '../db'
 import { Help } from '../help'
@@ -31,7 +31,7 @@ export default function BoardView() {
   const { boardId = '' } = useParams()
   const { isGM } = useViewMode()
   const board = useLiveQuery(async () => (await db.boards.get(boardId)) ?? null, [boardId])
-  if (board === undefined) return null
+  if (board === undefined) return <Skeleton />
   if (!isGM) return <Empty>Corkboards are a GM tool. Switch back to the GM view to use them.</Empty>
   if (board === null || board.worldId !== worldId) return <Empty>Board not found.</Empty>
   return <BoardEditor board={board} worldId={worldId} />

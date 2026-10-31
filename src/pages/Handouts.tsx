@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Empty } from '../components'
+import { Empty, Skeleton } from '../components'
 import type { Showing } from '../db'
 import { Help } from '../help'
 import '../more.css'
@@ -29,7 +29,7 @@ export default function Handouts() {
   const entities = useVisibleEntities(worldId)
   // Players (and the GM previewing as one) get only the handouts the server sends them.
   const list = useVisibleHandouts(world, entities)
-  if (!world) return null
+  if (!world) return <Skeleton />
   // Handouts prepared ahead: GM-only pages tagged "handout", waiting for the moment to show them.
   const ready = isGM ? entities.filter((e) => e.visibility === 'gm' && e.tags.includes('handout')) : []
   return (

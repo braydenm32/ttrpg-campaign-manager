@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../cloud/client'
 import { joinRoom, sendOnce } from '../cloud/live'
-import { DraftText, Empty } from '../components'
+import { DraftText, Empty, Skeleton } from '../components'
 import { db, type Safety, type World } from '../db'
 import { Help } from '../help'
 import '../more.css'
@@ -24,7 +24,7 @@ const blank = (): Safety => ({ lines: [], veils: [], notes: '' })
 export default function SafetyPage() {
   const { world } = useWorld()
   const { isGM } = useViewMode()
-  if (!world) return null
+  if (!world) return <Skeleton />
   const safety = { ...blank(), ...world.safety }
   const update = (patch: Partial<Safety>) => db.worlds.update(world.id, { safety: { ...safety, ...patch }, updatedAt: Date.now() })
   // Puts a removed line or veil back where it was, starting from what's saved now.

@@ -36,9 +36,13 @@ export default function Sounds() {
         </h1>
         {playing.length > 0 && <button onClick={() => stopAll()}>■ Stop all</button>}
       </header>
-      <section className="card">
-        <Soundboard worldId={worldId} />
-      </section>
+      {sounds.length ? (
+        <section className="card">
+          <Soundboard worldId={worldId} />
+        </section>
+      ) : (
+        <Empty>No sounds yet. Upload your own music and ambience below, or add Syrinscape moods. Each becomes a button here, and at the Lectern.</Empty>
+      )}
 
       <section>
         <h2>Add sounds</h2>
