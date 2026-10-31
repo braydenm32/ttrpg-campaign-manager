@@ -1782,6 +1782,7 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
   .map-back span { display: none; }
   .map-quick { margin-left: 0; width: 100%; flex-wrap: nowrap; }
   .map-quick .where-we-are { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; justify-content: flex-start; }
+  .map-quick .where-we-are > .where-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tools-toggle { display: inline-flex; margin-left: auto; }
   .map-tools { display: none; width: 100%; }
   .tools-open .map-tools { display: flex; }

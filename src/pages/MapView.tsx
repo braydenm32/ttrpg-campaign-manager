@@ -239,7 +239,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
           </button>
           {herePin && (
             <button type="button" className="where-we-are" onClick={() => select(herePin.id)} title="Where the party is now">
-              <Ico as={NavigationArrow} /> {isGM ? 'The party' : 'We’re'} at {here.place!.name}
+              <Ico as={NavigationArrow} /> <span className="where-text">{isGM ? 'The party' : 'We’re'} at {here.place!.name}</span>
             </button>
           )}
           <Help topic="pinNames" />
@@ -430,7 +430,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                   }}
                   eventHandlers={handlers}
                 >
-                  <PinName key={areaNamesOn || isHere ? 'name' : 'hover'} label={label} on={areaNamesOn || isHere} center />
+                  <PinName key={isHere ? 'here' : areaNamesOn ? 'name' : 'hover'} label={label} on={areaNamesOn || isHere} center here={isHere} />
                 </Polygon>
               )
             if (p.kind === 'region' && p.points)
@@ -446,7 +446,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                   }}
                   eventHandlers={handlers}
                 >
-                  <PinName key={areaNamesOn || isHere ? 'name' : 'hover'} label={label} on={areaNamesOn || isHere} center />
+                  <PinName key={isHere ? 'here' : areaNamesOn ? 'name' : 'hover'} label={label} on={areaNamesOn || isHere} center here={isHere} />
                 </Polygon>
               )
             if (!p.position) return null
@@ -464,7 +464,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                   },
                 }}
               >
-                <PinName key={namesOn || isHere ? 'name' : 'hover'} label={label} on={namesOn || isHere} here={isHere} />
+                <PinName key={isHere ? 'here' : namesOn ? 'name' : 'hover'} label={label} on={namesOn || isHere} here={isHere} />
               </Marker>
             )
           })}

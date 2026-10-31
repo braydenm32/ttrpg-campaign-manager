@@ -92,6 +92,8 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   const ancestors: Entity[] = []
   for (let p = e.parentId && byId.get(e.parentId); p && ancestors.length < 12; p = p.parentId ? byId.get(p.parentId) : undefined)
     ancestors.unshift(p)
+  // A page for the whole world (named like it) is where everything sits; the breadcrumb skips it.
+  if (ancestors.length > 1 && world && ancestors[0].name.trim().toLowerCase() === world.name.trim().toLowerCase()) ancestors.shift()
   const inside = entities.filter((x) => x.parentId === e.id)
   const backlinks = findBacklinks(e, entities, isGM)
   const groups = ENTITY_TYPES.map((t) => [t, inside.filter((x) => x.type === t)] as const).filter(([, xs]) => xs.length)
