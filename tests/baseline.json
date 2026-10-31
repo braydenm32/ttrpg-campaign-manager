@@ -67,7 +67,7 @@
   },
   "phone gm /w/:worldId/c/:campaignId": {
     "problems": [],
-    "smallTargets": 42
+    "smallTargets": 38
   },
   "phone gm /w/:worldId/chronicle": {
     "problems": [],
@@ -95,7 +95,7 @@
   },
   "phone gm /w/:worldId/loot": {
     "problems": [],
-    "smallTargets": 65
+    "smallTargets": 64
   },
   "phone gm /w/:worldId/maps": {
     "problems": [],
@@ -205,27 +205,27 @@
   },
   "phone gm /w/:worldId/s/:sessionId": {
     "problems": [],
-    "smallTargets": 271
+    "smallTargets": 42
   },
   "phone gm /w/:worldId/s/:sessionId (end of session checklist)": {
     "problems": [],
-    "smallTargets": 281
+    "smallTargets": 50
   },
   "phone gm /w/:worldId/s/:sessionId (GM notes tab)": {
     "problems": [],
-    "smallTargets": 271
+    "smallTargets": 50
   },
   "phone gm /w/:worldId/s/:sessionId (prep tab)": {
     "problems": [],
-    "smallTargets": 431
+    "smallTargets": 42
   },
   "phone gm /w/:worldId/s/:sessionId (recap tab)": {
     "problems": [],
-    "smallTargets": 274
+    "smallTargets": 50
   },
   "phone gm /w/:worldId/s/:sessionId/lectern": {
     "problems": [],
-    "smallTargets": 205
+    "smallTargets": 28
   },
   "phone gm /w/:worldId/safety": {
     "problems": [],
@@ -233,7 +233,7 @@
   },
   "phone gm /w/:worldId/session": {
     "problems": [],
-    "smallTargets": 431
+    "smallTargets": 42
   },
   "phone gm /w/:worldId/settings": {
     "problems": [],
