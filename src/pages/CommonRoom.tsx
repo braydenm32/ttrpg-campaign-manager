@@ -164,7 +164,7 @@ function until(t: number) {
 }
 
 /** "just now", "5 minutes ago"… */
-function ago(t: number) {
+export function ago(t: number) {
   const m = Math.round((Date.now() - t) / 60_000)
   if (m < 1) return 'just now'
   if (m < 60) return `${m} minute${m === 1 ? '' : 's'} ago`

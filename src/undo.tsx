@@ -7,7 +7,9 @@ import { Ico } from './icons'
  *
  * - toast(): a small note along the bottom ("Scene removed · Undo"). Quick removes happen at once
  *   and offer Undo for a few seconds instead of asking "are you sure?" first. One at a time: a new
- *   one replaces the last (its Undo is gone once it's off screen).
+ *   one replaces the last (its Undo is gone once it's off screen). Things that can't be taken back
+ *   once done (a player's question deleted on the server, a claim answered) wait instead: see
+ *   afterUndo().
  * - markSaved() and <SavedMark />: a muted "Saved" by a title that autosaves, so you can tell your
  *   typing is kept without a Save button.
  */
@@ -19,6 +21,8 @@ export interface Toast {
   undo?: () => unknown
   /** The Undo button's words, if not "Undo". */
   undoLabel?: string
+  /** Runs once the note goes without Undo being pressed (timed out, closed, replaced or the page left). */
+  onGone?: () => unknown
 }
 
 let current: Toast | undefined
@@ -30,9 +34,19 @@ const subscribe = (l: () => void) => {
   return () => void listeners.delete(l)
 }
 
+/** Lets the note before go: what it was holding back happens now. */
+function letGo(t: Toast | undefined) {
+  if (!t?.onGone) return
+  const gone = t.onGone
+  t.onGone = undefined
+  void gone()
+}
+
 /** Shows a note along the bottom of the screen, with Undo if `undo` is given. */
 export function toast(text: string, undo?: () => unknown, undoLabel?: string) {
+  const before = current
   current = { id: nextId++, text, undo, undoLabel }
+  letGo(before)
   emit()
   return current.id
 }
@@ -40,9 +54,28 @@ export function toast(text: string, undo?: () => unknown, undoLabel?: string) {
 /** Takes a note away (e.g. once what it offered to undo can't be undone any more). */
 export function dismissToast(id?: number) {
   if (!current || (id !== undefined && current.id !== id)) return
+  const t = current
   current = undefined
+  letGo(t)
   emit()
 }
+
+/**
+ * For things that can't be put back once done (they happen on the server, or tell a player): the
+ * screen shows it done at once, with Undo, and `commit` only runs once the note has gone without
+ * Undo being pressed. `undo` puts the screen back. Leaving the page in the meantime commits too.
+ */
+export function afterUndo(text: string, commit: () => unknown, undo: () => unknown) {
+  const id = toast(text, () => {
+    if (current?.id === id) current.onGone = undefined
+    return undo()
+  })
+  current!.onGone = commit
+  return id
+}
+
+// Closing or leaving the page carries out what's waiting, rather than losing it.
+if (typeof window !== 'undefined') window.addEventListener('pagehide', () => letGo(current))
 
 /**
  * Does a quick remove at once and offers Undo: `remove` runs now, `restore` puts it back if Undo
@@ -62,6 +95,8 @@ export function ToastHost() {
   const [busy, setBusy] = useState(false)
   // Hovering or focusing it keeps it up, so Undo doesn't vanish under your finger.
   const [held, setHeld] = useState(false)
+  // Leaving the world's screens carries out what's waiting, as the note's timer would have.
+  useEffect(() => () => letGo(current), [])
   useEffect(() => {
     if (!t || held) return
     const timer = setTimeout(() => dismissToast(t.id), SHOW_FOR)

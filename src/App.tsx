@@ -308,6 +308,7 @@ function WorldShell() {
         <WorldTile world={world} frame={frame} deep={deep} />
         <AreaTabs frame={frame} phoneTabs={phoneTabs} />
         <WorldDate world={world} />
+        <WorldLoadingNote worldId={worldId} />
         <SearchButton worldId={worldId} world={world} />
         {ownWorld && world.cloud?.enabled && <LiveBadge world={world} />}
         {isGM && ownWorld && <ClaudeJobChips worldId={worldId} />}
@@ -317,14 +318,14 @@ function WorldShell() {
         <main className="content">
           {shareError && <div className="player-banner">Couldn’t refresh: {shareError}</div>}
           {isGM && !shared && <RecordingBar />}
-          <WorldLoadingNote worldId={worldId} />
           {memberOf && <ChooseCharacterBanner world={world} />}
           {shared && <NewsBanner world={world} />}
           {/* What the GM shows is for the table; a public wiki link never pops it up. */}
           {memberOf && <ShowingPopup world={world} />}
           {isGM && !shared && <ShowingBanner world={world} />}
-          {isGM && !shared && world.cloud?.enabled && <ClaimRequestsBanner world={world} />}
-          {isGM && !shared && world.cloud?.enabled && <NewCharacterRequestsBanner world={world} />}
+          {/* The Desk lists claims and new characters itself (Needs you, Inbox). */}
+          {isGM && !shared && world.cloud?.enabled && spot?.area.id !== 'desk' && <ClaimRequestsBanner world={world} />}
+          {isGM && !shared && world.cloud?.enabled && spot?.area.id !== 'desk' && <NewCharacterRequestsBanner world={world} />}
           {!shared && <XCardAlert world={world} />}
           {!shared && world.cloud?.enabled && <TableHost world={world} />}
           {isGM && !shared && world.cloud?.enabled && <TableSignals world={world} />}

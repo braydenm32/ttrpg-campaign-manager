@@ -7,12 +7,12 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
  */
 export const HELP = {
   // Getting around
-  overview: 'Home: your world’s cover, the next session with a Run button, what needs you (player questions, character claims, urgent threads), running clocks and what changed lately. “New page” makes a page of any type.',
+  overview: 'Your Desk: the session in hand with the one button for what comes next, everything waiting on you before it, ticking clocks, the party, the sessions coming up and what changed lately. “New page” makes a page of any type.',
   areas:
     'The world is split into areas, down the side on a computer and along the bottom on a phone. Desk is what needs you now. Session is the session in hand: prepare it, play it at the Lectern, wrap it up. Atlas is the world itself (maps, places, people), Story is what’s moving (threads, quests, clocks, timeline), and More has the tools you need now and then. The tabs along the top belong to the area you’re in, and each area remembers where you were. Players get the Common Room and The World instead.',
   more: 'Things used now and then, in one place: what you reach for at the table (handouts, sounds, safety tools, the players’ screen), the workshop (generators, random tables, corkboards, files, the Archivist, templates) and keeping the world (settings, backups, importing, the bin). Search (Ctrl+K) finds every one of them by name too.',
   everything: 'Every kind of page in this world with how many there are, your own kinds included. Maps, places, people, factions and lore have tabs of their own; the rest (items, events, your own types…) are here.',
-  needsYou: 'Things waiting on you: questions your players asked, downtime to answer, players asking to claim a character, and urgent loose threads. When it’s empty you’re all caught up.',
+  needsYou: 'Everything waiting on you before the next session, each with one button: what players sent (questions, downtime, claims, new characters, the same as the Inbox), a session with no date or no plan yet, pressing loose threads, a backup that’s due, characters nobody plays yet and pages you’ve linked but not written. When it’s empty you’re all caught up.',
   sampleWorld:
     'A small, simple world for a first look: a coast, a town, a handful of people and two drawn maps with pins. Good for learning the basics in a few minutes. Vael Ardith is the full example with a campaign ready to run.',
   exampleWorld:
@@ -234,13 +234,19 @@ export const HELP = {
     'A co-GM sees and edits everything in this world, secrets included, from their own account. Only you can invite or remove co-GMs, manage players and links, or delete the cloud copy.',
   schedule:
     'Suggest a few dates for the next session. Players who joined mark each one yes, maybe or no, and you book the one that works. Booking makes the session with that date and shows it to players. Times show in each person’s own time zone.',
-  nextSession: 'Each campaign’s session in hand, with its stage (Preparing, Playing, Played), how many scenes and clues are planned, and one button for what comes next: prepare it, play it, or wrap it up.',
+  nextSession: 'The session in hand, with its stage (Planned, Preparing, Playing, Played), its date, how many scenes and clues you’ve written, and one main button for what comes next: prepare it, start playing, wrap it up, or plan the one after.',
   endSession:
     'What’s done and what’s left before you mark the session played: the recording transcribed, the recap written, your pages updated, the session shown to players, the world’s date moved on. “Mark as played” then gets the next session ready, carrying over the clues they didn’t find, the scenes they didn’t reach, and where the party is.',
   partyCampaign: 'When a world has more than one group, pick which campaign this character plays in. The campaign page and the Lectern’s “Add the party” then only show that group.',
   trackAsThread: 'Quests are what the players know they’re doing. A loose thread is your own tracker for it: how pressing it is, and a warning when it goes cold.',
   claimRequests: 'A player asked to play one of your characters. Approve it and they can edit that character’s sheet and read passages written for them.',
-  gettingStarted: 'A few first steps for a new world. It goes away once you’ve made a campaign and a few pages.',
+  gettingStarted: 'A few first steps for a new world. It goes away once you’ve made a campaign and a few pages, or when you hide it.',
+  inbox:
+    'Everything your players sent that waits on you, oldest first: questions, what their characters do between sessions (downtime), asking to play a character, and new characters they wrote up. Answer each one right here. Deleting, approving and turning down wait a few seconds with Undo before they reach the player. The number on Desk and Inbox counts what’s still waiting.',
+  comingUp: 'The next few sessions of each running campaign, with their stage. A campaign is one group’s story in this world; “+ Campaign” starts another.',
+  deskParty: 'The player characters in the session’s campaign, with their armour class and hit points when their pages have them.',
+  worldLoading: 'A world’s pictures and maps arrive after its pages: drawn (the example worlds), downloaded or unpacked from a backup. Look around meanwhile; each one appears as soon as it’s ready.',
+  yourWorlds: 'Worlds you made, kept on this device (and in the cloud if you switch on sync). Worlds you play in and the example worlds have shelves of their own.',
   home: 'Each world is kept on this device. Sign in to sync your worlds across devices, invite players, or open worlds you play in.',
   joining: 'An invite link from your GM lets you join their world as a player. Paste it here if it opened somewhere else, sign in, and you’re in.',
   questions:
