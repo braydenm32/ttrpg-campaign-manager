@@ -3,6 +3,7 @@ import { Megaphone, X } from '@phosphor-icons/react'
 import { newId, type Entity, type LecternState, type RollAnswer, type RollCall } from './db'
 import { roll } from './dice'
 import { Help } from './help'
+import { removeWithUndo } from './undo'
 import { Ico } from './icons'
 import { LecternPanel } from './lecternPanel'
 import { RollDetail } from './atTheTable'
@@ -83,7 +84,7 @@ export function CallForRoll({ lectern, edit, party, cloudId, live }: { lectern: 
             <strong>
               {call.label} <span className="muted small">{call.dice}{call.dc !== undefined && ` · DC ${call.dc}`}{call.secret && ' · secret'}</span>
             </strong>
-            <button className="ghost small" title="Done: players’ Roll button goes away" onClick={() => edit((l) => void (l.rollCall = undefined))}>
+            <button className="ghost small" title="Done: players’ Roll button goes away" onClick={() => removeWithUndo('Roll call closed.', () => edit((l) => void (l.rollCall = undefined)), () => edit((l) => void (l.rollCall = call)))}>
               <Ico as={X} /> Done
             </button>
           </div>

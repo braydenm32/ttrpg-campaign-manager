@@ -9,6 +9,7 @@ import { saveTranscript, speakerLabels, speakerName } from './transcript'
 import { Ico } from '../icons'
 import { Cloud, Desktop, Scroll } from '@phosphor-icons/react'
 import { worldPath } from '../paths'
+import { removeWithUndo } from '../undo'
 
 type Engine = 'device' | 'cloud'
 
@@ -159,7 +160,16 @@ export function TranscriptPanel({
           </button>
           <Help topic="transcript" />
           {t?.pending && (
-            <button className="ghost small" onClick={() => saveTranscript(sessionId, recording.assetId, undefined)}>
+            <button
+              className="ghost small"
+              onClick={() =>
+                removeWithUndo(
+                  'Transcript started over.',
+                  () => saveTranscript(sessionId, recording.assetId, undefined),
+                  () => saveTranscript(sessionId, recording.assetId, t),
+                )
+              }
+            >
               Start over
             </button>
           )}
