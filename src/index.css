@@ -1140,6 +1140,10 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .claude-job { display: flex; flex-direction: column; gap: .5em; }
 .ask-world { display: flex; flex-direction: column; gap: .75em; margin-top: 1em; max-width: 52em; }
 .ask-starters { display: flex; flex-wrap: wrap; gap: .4em; align-items: center; }
+/* Long suggestions and the two tabs wrap on a phone instead of pushing the page sideways. */
+.ask-starters .chip { white-space: normal; text-align: start; max-width: 100%; }
+.archivist .segmented { max-width: 100%; }
+.archivist .segmented button { min-width: 0; white-space: normal; }
 .ask-turn { display: flex; flex-direction: column; gap: .4em; }
 .ask-q { align-self: flex-end; max-width: 80%; margin: 0; padding: .5em .85em; border-radius: var(--radius) var(--radius) 2px var(--radius); background: var(--panel-2); border: 1px solid var(--border); white-space: pre-wrap; }
 .ask-a { margin: 0; }

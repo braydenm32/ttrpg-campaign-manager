@@ -7,6 +7,7 @@ import { db, type Asset } from '../db'
 import { formatBytes, saveFileAsAsset, useBlobUrl, useWorld } from '../hooks'
 import { ShowButton, unshowableImages } from '../showing'
 import { Ico } from '../icons'
+import { useViewMode } from '../viewMode'
 import { File, Folder } from '@phosphor-icons/react'
 
 export default function Assets() {
@@ -17,6 +18,8 @@ export default function Assets() {
   const q = filter.trim().toLowerCase()
   const shown = assets.filter((a) => !q || a.name.toLowerCase().includes(q) || a.tags.some((t) => t.toLowerCase().includes(q)))
   const total = assets.reduce((n, a) => n + a.size, 0)
+  const { isGM } = useViewMode()
+  if (!isGM) return <Empty>Only the GM can see this.</Empty>
 
   return (
     <div className="page">

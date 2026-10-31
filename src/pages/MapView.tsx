@@ -24,6 +24,7 @@ import { useMe } from '../atTheTable'
 import { pagePath, worldPath } from '../paths'
 import { ExportMap } from '../ExportMap'
 import { toClassic } from '../mapDrawing'
+import { canSeeMap, useVisibleMaps } from '../counts'
 
 type Tool = 'select' | 'pin' | 'region' | 'fog-rect' | 'fog-shape' | 'fog-circle' | 'fog-room' | 'measure' | 'ping'
 const COLORS = ['#e0b354', '#d9534f', '#5bc0de', '#5cb85c', '#a678de', '#f0f0f0']
@@ -55,13 +56,13 @@ function useShowNames(mapId: string) {
 export default function MapView() {
   const { worldId } = useWorld()
   const { mapId = '' } = useParams()
-  const { canSee, isGM } = useViewMode()
+  const { isGM } = useViewMode()
   const map = useLiveQuery(async () => (await db.maps.get(mapId)) ?? null, [mapId])
   // previewing as a player shows their copy of a map with secrets on it
   const url = useAssetUrl(map ? (isGM ? map.imageId : playersImageId(map)) : undefined)
 
   if (map === undefined) return null
-  if (map === null || map.worldId !== worldId || !canSee(map.visibility)) return <Empty>Map not found.</Empty>
+  if (map === null || map.worldId !== worldId || !canSeeMap(map, isGM)) return <Empty>Map not found.</Empty>
   if (!url) return <div className="loading">Loading map…</div>
   return <MapEditor key={map.id} map={map} url={url} />
 }
@@ -79,7 +80,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
       () => db.pins.where({ mapId: map.id }).filter((p) => canSee(p.visibility) && (isGM || pinRevealed(fog, p))).toArray(),
       [map.id, isGM, fog],
     ) ?? []
-  const allMaps = useLiveQuery(() => db.maps.where({ worldId }).filter((m) => canSee(m.visibility)).sortBy('name'), [worldId, isGM]) ?? []
+  const allMaps = useVisibleMaps(worldId)
   const [tool, setTool] = useState<Tool>('select')
   const [draft, setDraft] = useState<[number, number][]>([])
   const [measure, setMeasure] = useState<[number, number][]>([])

@@ -11,6 +11,7 @@ import { StatusBadge } from './status'
 import { Ico, TypeIcon } from './icons'
 import { ClipboardText, FilmSlate, MagnifyingGlass, Sword } from '@phosphor-icons/react'
 import { pagePath, worldPath } from './paths'
+import { prepCounts } from './counts'
 
 /** Changes a session's prep sheet atomically, starting from what's saved. */
 export const editPrep = (sessionId: string, fn: (p: SessionPrep) => void) =>
@@ -358,7 +359,7 @@ export function LecternPrep({ session, world, entities }: { session: Session; wo
       {x.text}
     </label>
   )
-  const found = prep.clues.filter((c) => c.done).length
+  const counts = prepCounts(prep)
   return (
     <LecternPanel
       id="prep"
@@ -379,14 +380,14 @@ export function LecternPrep({ session, world, entities }: { session: Session; wo
       )}
       {prep.scenes.length > 0 && (
         <details open>
-          <summary className="small"><Ico as={FilmSlate} /> Scenes ({prep.scenes.filter((s) => s.done).length}/{prep.scenes.length} played)</summary>
+          <summary className="small"><Ico as={FilmSlate} /> Scenes ({counts.scenes.done}/{counts.scenes.total} played)</summary>
           <div className="check-list">{prep.scenes.map((x) => tick('scenes', x))}</div>
         </details>
       )}
       {prep.clues.length > 0 && (
         <details open>
           <summary className="small">
-            <Ico as={MagnifyingGlass} /> Secrets and clues ({found}/{prep.clues.length} found)
+            <Ico as={MagnifyingGlass} /> Secrets and clues ({counts.clues.done}/{counts.clues.total} found)
           </summary>
           <div className="check-list">{prep.clues.map((x) => tick('clues', x))}</div>
         </details>

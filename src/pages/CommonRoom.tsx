@@ -16,7 +16,8 @@ import { latestSession, useCampaigns, useWorldSessions } from '../threads'
 import { partyOf } from '../sessions'
 import { StatusBadge } from '../status'
 import { WorldToday } from '../calendar'
-import { ClockFace, useAllClocks } from '../clocks'
+import { ClockFace } from '../clocks'
+import { openLeads, partyLoot, quantityLabel, tickingClocks, useVisibleHandouts } from '../counts'
 import { ShowingView } from '../showing'
 import { XCardButton } from './Safety'
 import { SignalButtons, TableDice, TimerInline, TimerList, TurnOrder, useMe } from '../atTheTable'
@@ -243,9 +244,8 @@ function Overview({ ctx, campaigns, sessions, go }: { ctx: RoomContext; campaign
   const story = campaigns.find((c) => c.id === last?.campaignId) ?? (campaigns.length === 1 ? campaigns[0] : undefined)
   const voting = campaigns.filter((c) => c.schedule?.length)
   const leads = openLeads(entities)
-  const clocks = useAllClocks(entities).filter(({ clock }) => clock.filled < clock.segments)
-  const loot = entities.filter((e) => e.type === 'item' && e.heldBy === 'party')
-  const coin = (world.partyCoin ?? []).filter((c) => c.amount)
+  const clocks = tickingClocks(entities)
+  const { items: loot, coin } = partyLoot(entities, world)
 
   return (
     <>
@@ -267,7 +267,7 @@ function Overview({ ctx, campaigns, sessions, go }: { ctx: RoomContext; campaign
         <SessionScheduler key={c.id} world={world} campaign={c} isGM={false} onBook={async () => {}} />
       ))}
       <div className="room-grid">
-        <OnTheTable world={world} className="wide" />
+        <OnTheTable world={world} entities={entities} className="wide" />
         <Card title="You" icon={Shield} onOpen={() => go('me')}>
           {ctx.mine.length ? <CharacterCard ctx={ctx} c={ctx.mine[0]} /> : <NoCharacter ctx={ctx} />}
           {ctx.mine.length > 1 && (
@@ -333,7 +333,7 @@ function Overview({ ctx, campaigns, sessions, go }: { ctx: RoomContext; campaign
               {loot.slice(0, 5).map((i) => (
                 <li key={i.id}>
                   <Link to={pagePath(worldId, i.id)}>{i.name}</Link>
-                  {(i.quantity ?? 1) > 1 && ` ×${i.quantity}`}
+                  {quantityLabel(i) && ` ${quantityLabel(i)}`}
                 </li>
               ))}
               {loot.length > 5 && <li className="muted">and {loot.length - 5} more</li>}
@@ -351,9 +351,9 @@ function Overview({ ctx, campaigns, sessions, go }: { ctx: RoomContext; campaign
 }
 
 /** What the GM is showing now, and the handouts from before. */
-function OnTheTable({ world, className = '', big }: { world: World; className?: string; big?: boolean }) {
+function OnTheTable({ world, entities, className = '', big }: { world: World; entities: Entity[]; className?: string; big?: boolean }) {
   const showing = world.showing
-  const earlier = (world.handouts ?? []).filter((h) => h.id !== showing?.id).slice(0, 3)
+  const earlier = useVisibleHandouts(world, entities).filter((h) => h.id !== showing?.id).slice(0, 3)
   return (
     <section className={`card room-card on-the-table ${className}`}>
       <div className="room-card-head">
@@ -476,7 +476,7 @@ function CharacterCard({ ctx, c, full }: { ctx: RoomContext; c: Entity; full?: b
             <span key={e.id}>
               {i > 0 && ', '}
               <Link to={pagePath(worldId, e.id)}>{e.name}</Link>
-              {(e.quantity ?? 1) > 1 && ` ×${e.quantity}`}
+              {quantityLabel(e) && ` ${quantityLabel(e)}`}
             </span>
           ))}
         </div>
@@ -524,13 +524,6 @@ function PartyList({ ctx, full }: { ctx: RoomContext; full?: boolean }) {
     </ul>
   )
 }
-
-const openLeads = (entities: Entity[]) => [
-  ...entities.filter((e) => e.type === 'quest' && (e.questStatus === 'open' || e.questStatus === 'active')),
-  ...entities
-    .filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active'))
-    .sort((a, b) => Number(b.threadUrgency === 'high') - Number(a.threadUrgency === 'high')),
-]
 
 function LeadList({ leads, worldId, full }: { leads: Entity[]; worldId: string; full?: boolean }) {
   return (
@@ -629,7 +622,7 @@ function SceneTab({ ctx }: { ctx: RoomContext }) {
         <Card title="Dice" icon={Sparkle} help="tableDice">
           <TableDice cloudId={memberOf ? cloudId : undefined} who={ctx.who} />
         </Card>
-        <OnTheTable world={world} className="wide" big />
+        <OnTheTable world={world} entities={ctx.entities} className="wide" big />
       </div>
     </div>
   )
@@ -669,8 +662,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
 
 function PartyTab({ ctx }: { ctx: RoomContext }) {
   const { world, worldId, entities } = ctx
-  const coin = (world.partyCoin ?? []).filter((c) => c.amount)
-  const stash = entities.filter((e) => e.type === 'item' && e.heldBy === 'party')
+  const { items: stash, coin } = partyLoot(entities, world)
   return (
     <div className="room-grid">
       <Card title="The party" icon={UsersThree} className="wide">
@@ -687,7 +679,7 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
             {stash.map((i) => (
               <li key={i.id}>
                 <Link to={pagePath(worldId, i.id)}>{i.name}</Link>
-                {(i.quantity ?? 1) > 1 && ` ×${i.quantity}`}
+                {quantityLabel(i) && ` ${quantityLabel(i)}`}
               </li>
             ))}
           </ul>
@@ -702,7 +694,7 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
 function LeadsTab({ ctx }: { ctx: RoomContext }) {
   const { entities, worldId, world } = ctx
   const leads = openLeads(entities)
-  const clocks = useAllClocks(entities).filter(({ clock }) => clock.filled < clock.segments)
+  const clocks = tickingClocks(entities)
   return (
     <div className="room-grid">
       <Card title="Leads and quests" icon={Spiral} to={`${worldPath(worldId)}/threads`} className="wide">

@@ -1,5 +1,6 @@
 import { ENTITY_LABELS, type Entity, type Session, type World } from '../db'
 import { formatDate } from '../calendar'
+import { isOpenThread } from '../counts'
 import { transcriptText } from './transcript'
 import { readUpdates, UPDATES_HEADING, updatesInstructions } from './worldUpdates'
 import { claudeCost, CUT_OFF, friendly, MODEL } from './claude'
@@ -48,7 +49,7 @@ export function buildRecapPrompt(world: World, session: Session, entities: Entit
       ]
     : []
   const threads = entities
-    .filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active'))
+    .filter(isOpenThread)
     .map((e) => `- ${e.name}`)
 
   return `You are helping the game master of a tabletop roleplaying campaign write up a session.

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { HAS_STATUS, LIFE_STATUS, type Entity, type Session } from './db'
 import { worldPath } from './paths'
+import { bySessionOrder } from './threads'
+import { useViewMode } from './viewMode'
 
 /** A small badge for a character who is dead, missing or captured (alive needs no badge in lists). */
 export function StatusBadge({ entity: e, showAlive }: { entity: Entity; showAlive?: boolean }) {
@@ -18,16 +20,18 @@ export const statusIcon = (e: Entity | undefined) => (e?.status && e.status !== 
 
 /**
  * The latest session a page turned up in: featured in the session, or (for the GM) present at the
- * Lectern. Sessions are the ones the viewer can see, so players only learn of sessions they can read.
+ * Lectern, which players never get. Sessions are the ones the viewer can see, so players only learn
+ * of sessions they can read.
  */
-export function lastSeenIn(e: Entity, sessions: Session[]) {
-  const seen = sessions.filter((s) => s.entityIds.includes(e.id) || s.lectern?.presentIds.includes(e.id))
-  return [...seen].sort((a, b) => (a.date || '').localeCompare(b.date || '') || a.number - b.number).at(-1)
+export function lastSeenIn(e: Entity, sessions: Session[], isGM: boolean) {
+  const seen = sessions.filter((s) => s.entityIds.includes(e.id) || (isGM && s.lectern?.presentIds.includes(e.id)))
+  return [...seen].sort(bySessionOrder).at(-1)
 }
 
 export function LastSeen({ entity, sessions, worldId }: { entity: Entity; sessions: Session[]; worldId: string }) {
+  const { isGM } = useViewMode()
   if (!HAS_STATUS.includes(entity.type)) return null
-  const s = lastSeenIn(entity, sessions)
+  const s = lastSeenIn(entity, sessions, isGM)
   if (!s) return null
   return (
     <>

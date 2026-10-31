@@ -18,7 +18,8 @@ import { Ico, PageIcon } from '../icons'
 import { Ruler } from '@phosphor-icons/react'
 import { pagePath, typePath, worldPath } from '../paths'
 import { EXAMPLE_VERSION, resetExampleWorld } from '../example/load'
-import { DraftText } from '../components'
+import { DraftText, Empty } from '../components'
+import { useViewMode } from '../viewMode'
 
 const TABS = [
   ['world', 'World'],
@@ -32,10 +33,13 @@ export default function WorldSettings() {
   const { worldId, world } = useWorld()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
+  const { isGM } = useViewMode()
   const tab: Tab = TABS.find(([t]) => t === params.get('tab'))?.[0] ?? 'world'
   if (!world) return null
   // A player's copy of someone else's world has no settings to change.
   if (world.shared) return <Navigate to={worldPath(worldId)} replace />
+  // Previewing as a player: settings would show GM-only names, so switch back to change them.
+  if (!isGM) return <Empty>Switch back to the GM view to change the world's settings.</Empty>
   const update = (patch: Partial<World>) => db.worlds.update(worldId, { ...patch, updatedAt: Date.now() })
 
   return (

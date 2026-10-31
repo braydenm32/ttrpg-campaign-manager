@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { Ico } from '../icons'
 import { Newspaper, Television } from '@phosphor-icons/react'
 import { pagePath } from '../paths'
+import { useVisibleHandouts } from '../counts'
 
 /**
  * Handouts: everything the GM has shown at the table, newest first. Players can read a letter or
@@ -21,8 +22,9 @@ export default function Handouts() {
   // A page handout being removed: the page itself can stay revealed or be hidden again.
   const [removing, setRemoving] = useState<string>()
   const entities = useVisibleEntities(worldId)
+  // Players (and the GM previewing as one) get only the handouts the server sends them.
+  const list = useVisibleHandouts(world, entities)
   if (!world) return null
-  const list = world.handouts ?? []
   // Handouts prepared ahead: GM-only pages tagged "handout", waiting for the moment to show them.
   const ready = isGM ? entities.filter((e) => e.visibility === 'gm' && e.tags.includes('handout')) : []
   return (

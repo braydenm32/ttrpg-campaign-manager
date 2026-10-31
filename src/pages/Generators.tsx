@@ -1,6 +1,8 @@
 import { Help } from '../help'
 import { Link, useNavigate } from 'react-router-dom'
 import { db } from '../db'
+import { Empty } from '../components'
+import { useViewMode } from '../viewMode'
 import {
   generateNpc,
   generateShop,
@@ -30,6 +32,7 @@ export default function Generators() {
   const { worldId, world } = useWorld()
   const navigate = useNavigate()
   const entities = useVisibleEntities(worldId)
+  const { isGM } = useViewMode()
   // What's rolled stays while you look at other pages, so Claude's flavour still has its tavern when you come back.
   const kept = `generators:${worldId}`
   const [kind, setKind] = useKept<Kind>(`${kept}:kind`, 'tavern')
@@ -60,6 +63,7 @@ export default function Generators() {
       : `## ${place.name}\n\n${place.body}\n\n> **${place.keeper.name}:** ${npcGreeting(place.keeper)}`
   const preview = flavour ? `${rolled}\n\n${keepSecretsSecret(flavour)}` : rolled
 
+  if (!isGM) return <Empty>Only the GM can see this.</Empty>
   return (
     <div className="page">
       <header className="page-header">

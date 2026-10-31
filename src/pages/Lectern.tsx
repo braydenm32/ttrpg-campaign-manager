@@ -31,6 +31,7 @@ import { Markdown } from '../Markdown'
 import { TablesPanel } from '../tables'
 import { ThreadCard } from '../ThreadCard'
 import { newThread, threadLinks, useWorldSessions } from '../threads'
+import { isOpenThread } from '../counts'
 import { useViewMode } from '../viewMode'
 import { LecternPrep } from '../prep'
 import { Soundboard } from '../sound/Soundboard'
@@ -375,7 +376,7 @@ function LecternThreads({ lectern, entities, worldId, sessionId }: { lectern: Le
   const sessions = useWorldSessions(worldId)
   const [name, setName] = useState('')
   const inScene = new Set([lectern.sceneId, ...lectern.presentIds].filter(Boolean))
-  const open = entities.filter((e) => e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active'))
+  const open = entities.filter(isOpenThread)
   const touching = (t: Entity) => threadLinks(t, entities, true).filter((e) => inScene.has(e.id))
   const here = open.filter((t) => touching(t).length > 0)
   const rest = open.filter((t) => touching(t).length === 0)

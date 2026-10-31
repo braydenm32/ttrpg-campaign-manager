@@ -9,6 +9,7 @@ import { useViewMode } from './viewMode'
 import { Ico, TypeIcon } from './icons'
 import { Timer } from '@phosphor-icons/react'
 import { pagePath, worldPath } from './paths'
+import { allClocks, clockSize, isTicking, tickingClocks } from './counts'
 
 /**
  * Progress clocks (as in Blades in the Dark): a circle cut into slices that fill as a plan, a threat
@@ -34,7 +35,7 @@ export const setFilled = (entityId: string, clockId: string, filled: number) =>
 export function ClockFace({ clock, size = 64, onSet }: { clock: Clock; size?: number; onSet?: (filled: number) => void }) {
   const r = size / 2 - 2
   const c = size / 2
-  const n = Math.max(1, clock.segments)
+  const n = clockSize(clock)
   const slice = (i: number) => {
     const a0 = (i / n) * Math.PI * 2 - Math.PI / 2
     const a1 = ((i + 1) / n) * Math.PI * 2 - Math.PI / 2
@@ -60,13 +61,13 @@ export function ClockFace({ clock, size = 64, onSet }: { clock: Clock; size?: nu
 function ClockRow({ clock, owner, isGM, showOwner, worldId }: { clock: Clock; owner: Entity; isGM: boolean; showOwner?: boolean; worldId: string }) {
   const onSet = isGM ? (f: number) => setFilled(owner.id, clock.id, f) : undefined
   return (
-    <div className={`clock-row ${clock.filled >= clock.segments ? 'done' : ''}`}>
+    <div className={`clock-row ${isTicking(clock) ? '' : 'done'}`}>
       <ClockFace clock={clock} onSet={onSet} />
       <div className="clock-info">
         <strong>{clock.name}</strong>
         <div className="muted small">
-          {clock.filled} of {clock.segments}
-          {clock.filled >= clock.segments && ' · it happens!'}
+          {clock.filled} of {clockSize(clock)}
+          {!isTicking(clock) && ' · it happens!'}
           {showOwner && (
             <>
               {' · '}
@@ -81,7 +82,7 @@ function ClockRow({ clock, owner, isGM, showOwner, worldId }: { clock: Clock; ow
             <button className="small" onClick={() => setFilled(owner.id, clock.id, clock.filled - 1)} disabled={clock.filled <= 0}>
               −
             </button>
-            <button className="small" onClick={() => setFilled(owner.id, clock.id, clock.filled + 1)} disabled={clock.filled >= clock.segments}>
+            <button className="small" onClick={() => setFilled(owner.id, clock.id, clock.filled + 1)} disabled={!isTicking(clock)}>
               +
             </button>
             <label className="inline-check" title="Players can see this clock (on pages they can see)">
@@ -166,13 +167,8 @@ export function ClocksBox({ entity, isGM, worldId }: { entity: Entity; isGM: boo
   )
 }
 
-/** Every clock in the world, for the Clocks page and the Lectern. */
-export function useAllClocks(entities: Entity[]) {
-  return entities.flatMap((e) => (e.clocks ?? []).map((clock) => ({ clock, owner: e })))
-}
-
 export function ClocksPanel({ worldId, entities }: { worldId: string; entities: Entity[] }) {
-  const all = useAllClocks(entities).filter(({ clock }) => clock.filled < clock.segments)
+  const all = tickingClocks(entities)
   if (!all.length) return null
   return (
     <LecternPanel id="clocks" name="Clocks" keywords="progress countdown plan faction" title={<><Ico as={Timer} /> <Link to={`${worldPath(worldId)}/clocks`}>Clocks</Link> <Help topic="clocks" /></>}>
@@ -190,9 +186,9 @@ export default function ClocksPage() {
   const { worldId } = useWorld()
   const { isGM } = useViewMode()
   const entities = useVisibleEntities(worldId)
-  const all = useAllClocks(entities)
-  const ticking = all.filter(({ clock }) => clock.filled < clock.segments)
-  const done = all.filter(({ clock }) => clock.filled >= clock.segments)
+  const all = allClocks(entities)
+  const ticking = tickingClocks(entities)
+  const done = all.filter(({ clock }) => !isTicking(clock))
   return (
     <div className="page">
       <header className="page-header">

@@ -9,6 +9,7 @@ import type { Entity, World } from '../db'
 import { Help } from '../help'
 import { Ico } from '../icons'
 import { worldPath } from '../paths'
+import { needsAnswer } from '../counts'
 
 /**
  * Downtime: between sessions, a player says what their character spends the time doing (research
@@ -190,7 +191,7 @@ export function PlayerDowntime({ world, mine }: { world: World; mine: Entity[] }
 export function GmDowntime({ world, names }: { world: World; names: (userId: string) => string }) {
   const { list, reload, error, cloudId } = useDowntime(world)
   if (!cloudId) return null
-  const open = list.filter((d) => !d.answer)
+  const open = list.filter(needsAnswer)
   const done = list.filter((d) => d.answer)
   const card = (d: DowntimeAction) => <DowntimeItem key={d.id} cloudId={cloudId} d={d} who={names(d.userId)} onChange={reload} />
   return (
@@ -277,7 +278,7 @@ export function DowntimeToast({ world }: { world: World }) {
       seen.current = new Set(list.map((d) => d.id))
       return
     }
-    const added = list.filter((d) => !d.answer && !seen.current!.has(d.id))
+    const added = list.filter((d) => needsAnswer(d) && !seen.current!.has(d.id))
     for (const d of added) seen.current.add(d.id)
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (added.length) setFresh((f) => [...f, ...added].slice(-4))

@@ -31,6 +31,8 @@ import { Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Sparkle, Spiral,
 import { initials } from '../text'
 import { ImportSheetButton } from '../sheets/ImportSheet'
 import { pagePath, resolvePage, typePath, usePathsVersion, worldPath } from '../paths'
+import { canSeeMap, quantityLabel } from '../counts'
+import { pinRevealed } from '../fog'
 
 export default function EntityPage() {
   const { worldId } = useWorld()
@@ -66,12 +68,13 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
       async () => {
         const ps = (await db.pins.where({ entityId: e.id }).toArray()).filter((p) => canSee(p.visibility))
         const maps = await db.maps.bulkGet(ps.map((p) => p.mapId))
-        return ps.flatMap((p, i) => (maps[i] && canSee(maps[i]!.visibility) ? [{ pin: p, map: maps[i]! }] : []))
+        // Like the map itself: players don't get a pin still under the fog.
+        return ps.flatMap((p, i) => (maps[i] && canSeeMap(maps[i]!, isGM) && (isGM || pinRevealed(maps[i]!.fog, p)) ? [{ pin: p, map: maps[i]! }] : []))
       },
       [e.id, isGM],
     ) ?? []
   const ownMaps =
-    useLiveQuery(() => db.maps.where({ locationId: e.id }).filter((m) => canSee(m.visibility)).toArray(), [e.id, isGM]) ??
+    useLiveQuery(() => db.maps.where({ locationId: e.id }).filter((m) => canSeeMap(m, isGM)).toArray(), [e.id, isGM]) ??
     []
 
   const byId = new Map(entities.map((x) => [x.id, x]))
@@ -99,7 +102,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
         <div>
           <div className="kicker">
             <TypeIcon type={e.type} custom={world?.customTypes?.find((c) => c.id === e.customType)} /> {typeLabel(e, world).one}
-            {e.type === 'item' && e.quantity != null && e.quantity !== 1 && ` · ×${e.quantity}`}
+            {e.type === 'item' && quantityLabel(e) && ` · ${quantityLabel(e)}`}
             {e.type === 'item' && e.heldBy && ` · carried by ${e.heldBy === 'party' ? 'the party' : (entities.find((x) => x.id === e.heldBy)?.name ?? 'someone')}`}
             {e.type === 'event' &&
               [formatDate(world?.calendar, e.eventWhen), e.eventDate].filter(Boolean).map((x) => ` · ${x}`)}
@@ -539,7 +542,12 @@ function EntityEditor({ entity, fresh, onDone }: { entity: Entity; fresh: boolea
               value={d.type === 'custom' ? `custom:${d.customType}` : d.type}
               onChange={(ev) => {
                 const v = ev.target.value
-                setD((x) => (v.startsWith('custom:') ? { ...x, type: 'custom', customType: v.slice(7) } : { ...x, type: v as EntityType, customType: undefined }))
+                // A page that becomes a quest or a thread starts open, as a new one does.
+                setD((x) => ({
+                  ...(v.startsWith('custom:') ? { ...x, type: 'custom', customType: v.slice(7) } : { ...x, type: v as EntityType, customType: undefined }),
+                  ...(v === 'quest' && !x.questStatus ? { questStatus: 'open' as const } : {}),
+                  ...(v === 'thread' && !x.threadStatus ? { threadStatus: 'open' as const, threadUrgency: x.threadUrgency ?? ('normal' as const) } : {}),
+                }))
               }}
             >
               {PICKER_TYPES.map((t) => (

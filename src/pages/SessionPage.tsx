@@ -20,7 +20,7 @@ import { formatTime, recordingSupported, systemAudioSupported, type RecordSource
 import { RecordingSaveWarning } from '../RecordingBar'
 import { addBookmark, beginRecording, discardRecording, endRecording, recoverRecording, unsavedRecordings, useLiveRecording } from '../recordingStore'
 import { ThreadCard } from '../ThreadCard'
-import { newThread, useWorldSessions } from '../threads'
+import { canSeeSession, newThread, useWorldSessions } from '../threads'
 import { useViewMode } from '../viewMode'
 import { PrepSheet } from '../prep'
 import { PrintButton } from '../print'
@@ -34,10 +34,10 @@ import { pagePath, worldPath } from '../paths'
 export default function SessionPage() {
   const { worldId, world } = useWorld()
   const { sessionId = '' } = useParams()
-  const { isGM, canSee } = useViewMode()
+  const { isGM } = useViewMode()
   const navigate = useNavigate()
   const session = useLiveQuery(async () => (await db.sessions.get(sessionId)) ?? null, [sessionId])
-  const campaign = useLiveQuery(() => (session ? db.campaigns.get(session.campaignId) : undefined), [session?.campaignId])
+  const campaign = useLiveQuery(async () => (session ? ((await db.campaigns.get(session.campaignId)) ?? null) : undefined), [session?.campaignId])
   const entities = useVisibleEntities(worldId)
   const [params, setParams] = useSearchParams()
   const live = useLiveRecording()
@@ -46,8 +46,9 @@ export default function SessionPage() {
   const tab = (['notes', 'recap', 'prep'] as const).find((t) => t === params.get('tab')) ?? firstTab
   const setTab = (t: 'notes' | 'recap' | 'prep') => setParams(t === firstTab ? {} : { tab: t }, { replace: true })
 
-  if (session === undefined) return null
-  if (session === null || !canSee(session.visibility) || (campaign && campaign.worldId !== worldId))
+  if (session === undefined || (session && campaign === undefined)) return null
+  // Players get a session only once it's revealed, and never from a campaign the GM keeps hidden.
+  if (session === null || !canSeeSession(session, campaign, isGM) || (campaign && campaign.worldId !== worldId))
     return <Empty>Session not found.</Empty>
   const update = (patch: Partial<Session>) => db.sessions.update(session.id, patch)
   const featured = entities.filter((e) => session.entityIds.includes(e.id))

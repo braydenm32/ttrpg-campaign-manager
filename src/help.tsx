@@ -10,7 +10,7 @@ export const HELP = {
   overview: 'Home: your world’s cover, the next session with a Run button, what needs you (player questions, character claims, urgent threads), running clocks and what changed lately. “New page” makes a page of any type.',
   modes:
     'The bar across the top splits the world into modes. Home is what needs you now. World is the atlas itself: maps, timeline and every codex page. Prep is getting sessions ready: campaigns, loose threads, handouts and generators. Play is running the table: the Lectern, clocks, sounds and safety tools. The sidebar lists the pages of the mode you’re in.',
-  needsYou: 'Things waiting on you: questions your players asked, players asking to claim a character, and urgent loose threads. When it’s empty you’re all caught up.',
+  needsYou: 'Things waiting on you: questions your players asked, downtime to answer, players asking to claim a character, and urgent loose threads. When it’s empty you’re all caught up.',
   sampleWorld:
     'A small, simple world for a first look: a coast, a town, a handful of people and two drawn maps with pins. Good for learning the basics in a few minutes. Vael Ardith is the full example with a campaign ready to run.',
   exampleWorld:
@@ -22,7 +22,7 @@ export const HELP = {
   previewAs:
     'Pick one player to see the world exactly as they do: what’s revealed to everyone, plus pages revealed just to them and :::for passages for their character.',
   codex:
-    'The codex holds every page in your world, grouped by type. Pages can sit inside places (a tavern inside a town), and the sidebar opens down to wherever you are.',
+    'The codex holds every page in your world, grouped by type. Pages of no particular type are under Other pages. Pages can sit inside places (a tavern inside a town), and the sidebar opens down to wherever you are.',
   quickAdd: 'Make a new page of any type. It starts as GM only, so nothing is revealed until you choose. You can also press Ctrl+K and type “new npc”.',
   visibility:
     '🔒 GM only means just you. 👁 Revealed means every player can see it. Click to switch. Pins, maps, sessions and files work the same way.',
@@ -115,7 +115,7 @@ export const HELP = {
   ages: 'Split your history into named ages, like “The Age of Kings” or “The Long Peace”. Each age gets its own section on the timeline, in order, and each event can belong to one. Players see the ages of any events you have revealed.',
   threads:
     'Every hook, mystery, promise and grudge you’ve left dangling. Move them from dangling to in play to tied off. A thread that hasn’t moved in three sessions gets flagged so nothing is forgotten.',
-  leads: 'The rumours, hooks and mysteries your GM has shared with the party.',
+  leads: 'The quests, rumours, hooks and mysteries your GM has shared with the party that are still open.',
   calendar:
     'Your world’s own calendar: month and day names, the year’s name (like DR) moons, leap years, festivals and holidays. Pick a ready-made one (Forgotten Realms, Golarion, Eberron, Greyhawk, Exandria) or make your own. Events can then have real dates.',
   worldToday: 'Today’s date in your world. Move it on as time passes in the game; each session remembers the date it started on.',
@@ -180,7 +180,7 @@ export const HELP = {
   prepTools: 'Things for planning between sessions: generators and tables, corkboards, the relationship web and your files.',
   assets: 'Every file in this world: map images, portraits and handouts. Mark a file revealed to let players see it.',
   loot:
-    'Who carries what. Set "Carried by" on any item page to a character or the party stash, and keep the party’s coin here. Players see revealed items and the purse.',
+    'What the party has: the stash, what each player character carries and the party’s coin. Set "Carried by" on any item page. Players see the revealed items and the coins in the purse; things an NPC, shop or place holds are listed only for you.',
   importPages:
     'Bring pages in from Obsidian (or any Markdown notes), a Kanka export or a World Anvil export. Everything arrives as 🔒 GM only, so you can tidy up before revealing anything.',
   importSheet:

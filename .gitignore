@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Browser tests (npm test)
+playwright-report
+test-results
+blob-report

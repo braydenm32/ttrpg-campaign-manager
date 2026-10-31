@@ -8,6 +8,7 @@ import { useLiveRecording } from '../recordingStore'
 import { PartyGlance } from '../partyGlance'
 import { StorySoFar } from '../highlights'
 import { questProgress } from '../quests'
+import { isActiveQuest, isOpenQuest } from '../counts'
 import { bookNextSession, createNextSession, partyOf } from '../sessions'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
@@ -15,23 +16,21 @@ import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { Compass, Microphone, Shield } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
+import { canSeeSession } from '../threads'
 
 export default function CampaignPage() {
   const { worldId, world } = useWorld()
   const { campaignId = '' } = useParams()
-  const { isGM, canSee } = useViewMode()
+  const { isGM } = useViewMode()
   const navigate = useNavigate()
   const campaign = useLiveQuery(async () => (await db.campaigns.get(campaignId)) ?? null, [campaignId])
-  const sessions =
-    useLiveQuery(
-      () => db.sessions.where({ campaignId }).filter((s) => canSee(s.visibility)).sortBy('number'),
-      [campaignId, isGM],
-    ) ?? []
+  const sessions = (useLiveQuery(() => db.sessions.where({ campaignId }).sortBy('number'), [campaignId]) ?? []).filter((s) => canSeeSession(s, campaign, isGM))
   const live = useLiveRecording()
   const recording = !!live && sessions.some((s) => s.id === live.sessionId)
   const entities = useVisibleEntities(worldId)
   const pcs = partyOf(entities, campaignId)
-  const quests = entities.filter((e) => e.type === 'quest' && e.questStatus === 'active')
+  // Quests belong to the world, not to one campaign: the same list as Home's "Open quests".
+  const quests = entities.filter(isOpenQuest)
 
   if (campaign === undefined) return null
   if (campaign === null || campaign.worldId !== worldId || (!isGM && campaign.visibility === 'gm')) return <Empty>Campaign not found.</Empty>
@@ -148,7 +147,7 @@ export default function CampaignPage() {
               ))}
             </ul>
           )}
-          <h2>Active quests</h2>
+          <h2>Open quests in this world</h2>
           {quests.length === 0 ? (
             <Empty>None.</Empty>
           ) : (
@@ -156,6 +155,7 @@ export default function CampaignPage() {
               {quests.map((e) => (
                 <li key={e.id}>
                   <Link to={`${pagePath(worldId, e.id)}`}><Ico as={Compass} /> {e.name}</Link>
+                  {isActiveQuest(e) && <span className="muted"> · active</span>}
                   {questProgress(e) && <span className="muted"> · {questProgress(e)}</span>}
                 </li>
               ))}

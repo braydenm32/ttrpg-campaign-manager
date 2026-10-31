@@ -7,6 +7,7 @@ import { Ico } from '../icons'
 import { Markdown } from '../Markdown'
 import { editPrep } from '../prep'
 import { partyOf } from '../sessions'
+import { isOpenQuest, isOpenThread, tickingClocks } from '../counts'
 import { MODEL } from './claude'
 import { ClaudeJob } from './ClaudeJob'
 import { useKept } from './kept'
@@ -65,8 +66,8 @@ export function PrepHelper({ world, session, entities }: { world: World; session
       .slice(0, 2)
       .reverse()
     const party = partyOf(entities, session.campaignId, { activeOnly: true })
-    const open = entities.filter((e) => (e.type === 'thread' && (e.threadStatus === 'open' || e.threadStatus === 'active')) || e.questStatus === 'open' || e.questStatus === 'active')
-    const clocks = entities.flatMap((e) => (e.clocks ?? []).filter((c) => c.filled < c.segments).map((c) => `- ${c.name} (on [[${e.name}]]): ${c.filled} of ${c.segments}`))
+    const open = entities.filter((e) => isOpenThread(e) || isOpenQuest(e))
+    const clocks = tickingClocks(entities).map(({ clock: c, owner: e }) => `- ${c.name} (on [[${e.name}]]): ${c.filled} of ${c.segments}`)
     const prep = { ...blankPrep(), ...session.prep }
     const planned = [
       prep.strongStart.trim() && `Strong start: ${prep.strongStart.trim()}`,
