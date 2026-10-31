@@ -63,7 +63,9 @@ export default function Handouts() {
                   </div>
                   {reviewing === e.id && (
                     <div className="players-review" role="group" aria-label="What players will see">
-                      <strong>Players will see</strong>
+                      <strong>
+            Players will see <Help topic="playersWillSee" />
+          </strong>
                       <ul className="small">
                         <li>the page “{e.name}”{e.summary ? ', its summary' : ''}{stripSecrets(e.body).trim() ? ' and its text' : ''}{e.imageId ? ', with its picture' : ''}</li>
                         <li>on every player’s screen now, and in their handouts afterwards</li>

@@ -10,7 +10,7 @@ export const HELP = {
   overview: 'Your Desk: the session in hand with the one button for what comes next, everything waiting on you before it, ticking clocks, the party, the sessions coming up and what changed lately. “New page” makes a page of any type.',
   areas:
     'The world is split into areas, down the side on a computer and along the bottom on a phone. Desk is what needs you now. Session is the session in hand: prepare it, play it at the Lectern, wrap it up. Atlas is the world itself (maps, places, people), Story is what’s moving (threads, quests, clocks, timeline), and More has the tools you need now and then. The tabs along the top belong to the area you’re in, and each area remembers where you were. Players get the Common Room and The World instead.',
-  more: 'Things used now and then, in one place: what you reach for at the table (handouts, sounds, safety tools, the players’ screen), the workshop (generators, random tables, corkboards, files, the Archivist, templates) and keeping the world (settings, backups, importing, the bin). Search (Ctrl+K) finds every one of them by name too.',
+  more: 'Things used now and then, in one place: what you reach for at the table (handouts, sounds, safety tools, the players’ screen), the workshop (generators, random tables, corkboards, files, the Archivist, templates) and keeping the world (settings, backups, importing, the bin). The numbers say how many there are (and how much space files take). Search (Ctrl+K) finds every one of them by name too.',
   settings:
     'Everything about this world in four tabs: the world itself (name, cover, calendar, your own page types, templates), players and sharing (sync, invite links, the wiki link, co-GMs), this device (look, help tips, Discord, AI keys) and data (backups, importing, recently deleted). Each tab is a step in Back.',
   everything: 'Every kind of page in this world with how many there are, your own kinds included. Maps, places, people, factions and lore have tabs of their own; the rest (items, events, your own types…) are here.',
@@ -190,7 +190,7 @@ export const HELP = {
   showPlayers:
     'Put a picture, a page or some text on every player’s screen right now, like handing round a letter or showing a monster. It pops up for players who joined; open the Players’ screen on a TV or second monitor for the table. Pick a page that isn’t revealed yet and it’s revealed as you show it. A map’s picture always goes out as the players’ copy, never yours with the secrets or the fog lifted. Everything you show is kept in Handouts.',
   handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove a picture or text to take it back. A page you remove stays revealed unless you choose to hide it again.',
-  handoutsReady: 'Handouts you’ve prepared but not shown yet: any GM-only page tagged “handout”. Players can’t see them. “Reveal and show” reveals the page to everyone and puts it on their screens, and it moves to Shown so far.',
+  handoutsReady: 'Handouts you’ve prepared but not shown yet: any GM-only page tagged “handout”. Players can’t see them. “Reveal and show” first says what players will see, then reveals the page to everyone and puts it on their screens (with Undo), and it moves to Shown so far.',
   playersScreen: 'A clean screen for a TV or second monitor at the table. It shows whatever you’re showing players, and nothing else.',
   initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go. In the ± box, type +5 to heal or -5 to damage; a plain number follows the button you press, and Undo puts HP back. “Something else…” in the condition list lets you type your own. With a keyboard, N moves to the next turn (press ? for all the shortcuts).',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',
@@ -201,7 +201,9 @@ export const HELP = {
   // Tools
   boards:
     'A corkboard for mysteries, plots and politics. Pin pages and note cards, drag them about, and tie string between them with 🧶. Click a string to label or cut it. GM only.',
-  generators: 'Roll up taverns, shops and NPCs without any AI, or roll on your own random tables. Save the ones you like; they start as GM only.',
+  generators: 'Your own random tables come first: pick one and roll. Below, roll up taverns, shops and NPCs without any AI, then names and treasure. Save the ones you like; they start as GM only.',
+  playersWillSee:
+    'Before something reaches your players you see what they’ll get: which page, which coins, which items. Once you go ahead, Undo takes it back for a few seconds, though anyone looking at that moment may already have seen it.',
   assets: 'Every file in this world: map images, portraits and handouts. Mark a file revealed to let players see it.',
   loot:
     'What the party has: the stash, what each player character carries and the party’s coin. Set "Carried by" on any item page. Players see the revealed items and the coins in the purse; things an NPC, shop or place holds are listed only for you.',
@@ -333,7 +335,7 @@ export const HELP = {
   names:
     'Names for people, places, taverns and ships, in eight styles (Common, Elvish, Dwarvish, Orcish, Halfling, Northern, Southern, Infernal). “Like my world’s names” learns from the names already in your world (your NPCs for people, your locations for places) and makes up new ones that sound the same. Press More for another batch.',
   treasure:
-    'Roll a pile of treasure, from pocket change to a dragon’s hoard: coins, gems, art and odd things, sometimes something magical. “Give to the party” puts the coins in the party’s purse and the rest in the party stash, where players can see it. Gem and art values are in gold pieces; change anything afterwards on Party loot.',
+    'Roll a pile of treasure, from pocket change to a dragon’s hoard: coins, gems, art and odd things, sometimes something magical. “Give to the party” says what players will see, then puts the coins in the party’s purse and the rest in the party stash, where players can see it. Gem and art values are in gold pieces; change anything afterwards on Party loot.',
   starterTables:
     'Ready-made random tables (rumours, plot hooks, road and wilderness encounters, dungeon dressing, trinkets, NPC quirks, town events) to get you rolling. They start as GM only, and you can change, add or remove any line.',
   objectives:

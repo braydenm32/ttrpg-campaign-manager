@@ -196,7 +196,9 @@ export function TreasureGenerator({ world, compact }: { world: World; compact?: 
       </ul>
       {review && !given && (
         <div className="players-review" role="group" aria-label="What players will see">
-          <strong>Players will see</strong>
+          <strong>
+            Players will see <Help topic="playersWillSee" />
+          </strong>
           <ul className="small">
             {loot.coins.length > 0 && <li>{loot.coins.map((c) => `${c.amount.toLocaleString()} ${c.name}`).join(', ')} added to the party’s purse</li>}
             {loot.items.length > 0 && (
