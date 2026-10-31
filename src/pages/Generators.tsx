@@ -1,4 +1,5 @@
 import { Help } from '../help'
+import '../more.css'
 import { Link, useNavigate } from 'react-router-dom'
 import { db } from '../db'
 import { Empty } from '../components'
@@ -20,9 +21,9 @@ import { useVisibleEntities, useWorld } from '../hooks'
 import { GeneratorFlavour, keepSecretsSecret } from '../ai/Flavour'
 import { useKept } from '../ai/kept'
 import { Markdown } from '../Markdown'
-import { TablesPanel } from '../tables'
+import { TableRoller } from '../tables'
 import { Ico } from '../icons'
-import { Coins, DiceFive, IdentificationCard } from '@phosphor-icons/react'
+import { Coins, DiceFive, IdentificationCard, Table } from '@phosphor-icons/react'
 import { NameGenerator, StarterTables, TreasureGenerator } from '../moreGenerators'
 import { pagePath, typePath } from '../paths'
 
@@ -63,70 +64,94 @@ export default function Generators() {
       : `## ${place.name}\n\n${place.body}\n\n> **${place.keeper.name}:** ${npcGreeting(place.keeper)}`
   const preview = flavour ? `${rolled}\n\n${keepSecretsSecret(flavour)}` : rolled
 
-  if (!isGM) return <Empty>Only the GM can see this.</Empty>
+  if (!isGM) return <Empty>Generators are a GM tool. Switch back to the GM view to use them.</Empty>
+  const tables = entities.filter((e) => e.type === 'table')
   return (
     <div className="page">
       <header className="page-header">
-        <h1>
-          <Ico as={DiceFive} /> Generators &amp; tables <Help topic="generators" />
-        </h1>
-        <Link className="button" to={`${typePath(worldId, 'table')}`}>
-          <Ico as={DiceFive} /> Edit your random tables <Help topic="randomTables" />
-        </Link>
+        <div>
+          <h1>
+            <Ico as={DiceFive} /> Generators &amp; tables <Help topic="generators" />
+          </h1>
+          <p className="lead">Your own tables first, then a place, a person, names or treasure on the spot.</p>
+        </div>
       </header>
-      <p className="muted">Roll up a place or person on the fly, then save it into your world. Saved results start as GM only.</p>
-      <div className="row wrap">
-        <div className="segmented">
-          {(['tavern', 'shop', 'npc'] as const).map((k) => (
-            <button
-              key={k}
-              className={kind === k ? 'on' : ''}
-              onClick={() => {
-                setKind(k)
-                reroll(k)
+
+      <section className="gen-section">
+        <h2>
+          <Ico as={Table} /> Your tables <Help topic="randomTables" />
+          <Link className="small" to={typePath(worldId, 'table')}>
+            {tables.length ? `All ${tables.length}, to edit` : 'Make a table'}
+          </Link>
+        </h2>
+        {tables.length ? (
+          <TableRoller tables={tables} worldId={worldId} entities={entities} showSecrets />
+        ) : (
+          <Empty>No tables of your own yet. Make one, like “What’s in the sewer?” or “Tavern rumours”, or start from the ready-made ones below.</Empty>
+        )}
+        {world && <StarterTables world={world} tables={tables} />}
+      </section>
+
+      <section className="gen-section">
+        <h2>Roll something new</h2>
+        <p className="muted small">A tavern, a shop or a person, ready to drop into the game. Saving makes a page in your world, GM only until you reveal it.</p>
+        <div className="row wrap">
+          <div className="segmented">
+            {(['tavern', 'shop', 'npc'] as const).map((k) => (
+              <button
+                key={k}
+                className={kind === k ? 'on' : ''}
+                onClick={() => {
+                  setKind(k)
+                  reroll(k)
+                }}
+              >
+                {k === 'tavern' ? '🍺 Tavern' : k === 'shop' ? '⚒️ Shop' : '🧙 NPC'}
+              </button>
+            ))}
+          </div>
+          {kind === 'shop' && (
+            <select
+              value={shopKind}
+              aria-label="Kind of shop"
+              onChange={(e) => {
+                const sk = e.target.value as ShopKind
+                setShopKind(sk)
+                reroll('shop', sk)
               }}
             >
-              {k === 'tavern' ? '🍺 Tavern' : k === 'shop' ? '⚒️ Shop' : '🧙 NPC'}
-            </button>
-          ))}
+              {SHOP_KIND_NAMES.map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+          )}
+          <button onClick={() => reroll()}>
+            <Ico as={DiceFive} /> Reroll
+          </button>
         </div>
-        {kind === 'shop' && (
-          <select
-            value={shopKind}
-            onChange={(e) => {
-              const sk = e.target.value as ShopKind
-              setShopKind(sk)
-              reroll('shop', sk)
-            }}
-          >
-            {SHOP_KIND_NAMES.map((s) => (
-              <option key={s}>{s}</option>
-            ))}
+        <div className="card generated">
+          <Markdown text={preview} entities={entities} worldId={worldId} showSecrets />
+        </div>
+        <div className="row wrap">
+          <select value={parentId} onChange={(e) => setParentId(e.target.value)} aria-label="Place it in">
+            <option value="">Place it in… (optional)</option>
+            {entities
+              .filter((e) => e.type === 'location')
+              .map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name}
+                </option>
+              ))}
           </select>
-        )}
-        <button onClick={() => reroll()}><Ico as={DiceFive} /> Reroll</button>
-      </div>
-      <div className="card generated">
-        <Markdown text={preview} entities={entities} worldId={worldId} showSecrets />
-      </div>
-      <div className="row wrap">
-        <select value={parentId} onChange={(e) => setParentId(e.target.value)}>
-          <option value="">Place it in… (optional)</option>
-          {entities
-            .filter((e) => e.type === 'location')
-            .map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.name}
-              </option>
-            ))}
-        </select>
-        <button className="primary" onClick={save}>
-          Save to world
-        </button>
-      </div>
-      {world && !flavour && <GeneratorFlavour world={world} entities={entities} preview={rolled} parentId={parentId || undefined} onUse={setFlavour} />}
+          <button className="primary" onClick={save}>
+            Save to world (GM only)
+          </button>
+        </div>
+        {world && !flavour && <GeneratorFlavour world={world} entities={entities} preview={rolled} parentId={parentId || undefined} onUse={setFlavour} />}
+      </section>
+
       {world && (
-        <div className="home-grid">
+        <div className="home-grid gen-section">
           <section className="card">
             <h2>
               <Ico as={IdentificationCard} /> Names
@@ -141,8 +166,6 @@ export default function Generators() {
           </section>
         </div>
       )}
-      <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
-      {world && <StarterTables world={world} tables={entities.filter((e) => e.type === 'table')} />}
     </div>
   )
 }

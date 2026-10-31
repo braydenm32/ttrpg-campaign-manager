@@ -69,10 +69,29 @@ export async function showToPlayers(worldId: string, what: Omit<Showing, 'id' | 
   return true
 }
 
-/** Reveals a page to everyone and puts it on their screens, for an NPC who just walked in. */
+/**
+ * Reveals a page to everyone and puts it on their screens, for an NPC who just walked in. Returns
+ * a function that takes it back (for Undo): the page hidden again if it was, and the handouts and
+ * what's on screen as they were.
+ */
 export async function revealAndShow(worldId: string, page: Entity) {
-  if (page.visibility !== 'players') await db.entities.update(page.id, { visibility: 'players', updatedAt: Date.now() })
+  const before = await db.worlds.get(worldId)
+  const wasHidden = page.visibility !== 'players'
+  if (wasHidden) await db.entities.update(page.id, { visibility: 'players', updatedAt: Date.now() })
   await showToPlayers(worldId, { kind: 'page', title: page.name, entityId: page.id })
+  return async () => {
+    if (wasHidden) await db.entities.update(page.id, { visibility: page.visibility, updatedAt: Date.now() })
+    await db.worlds
+      .where('id')
+      .equals(worldId)
+      .modify((w) => {
+        const shown = (w.handouts ?? []).find((h) => h.kind === 'page' && h.entityId === page.id)
+        if (!shown) return
+        w.handouts = before?.handouts ?? (w.handouts ?? []).filter((h) => h.id !== shown.id)
+        if (w.showing?.id === shown.id) w.showing = before?.showing ?? null
+      })
+    schedule(200)
+  }
 }
 
 /** Takes a handout off the list (and off players' screens, if it's up now). With hidePage, its page is made GM only again. */

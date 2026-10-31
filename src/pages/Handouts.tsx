@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Empty } from '../components'
 import type { Showing } from '../db'
 import { Help } from '../help'
+import '../more.css'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { removeHandout, revealAndShow, showToPlayers, ShowingView } from '../showing'
 import { useViewMode } from '../viewMode'
@@ -10,6 +11,8 @@ import { Ico } from '../icons'
 import { Newspaper, Television } from '@phosphor-icons/react'
 import { pagePath } from '../paths'
 import { useVisibleHandouts } from '../counts'
+import { toast } from '../undo'
+import { stripSecrets } from '../Markdown'
 
 /**
  * Handouts: everything the GM has shown at the table, newest first. Players can read a letter or
@@ -21,6 +24,8 @@ export default function Handouts() {
   const [open, setOpen] = useState<string>()
   // A page handout being removed: the page itself can stay revealed or be hidden again.
   const [removing, setRemoving] = useState<string>()
+  // A ready handout whose "players will see" review is open.
+  const [reviewing, setReviewing] = useState<string>()
   const entities = useVisibleEntities(worldId)
   // Players (and the GM previewing as one) get only the handouts the server sends them.
   const list = useVisibleHandouts(world, entities)
@@ -44,14 +49,41 @@ export default function Handouts() {
           ) : (
             <ul className="handout-list">
               {ready.map((e) => (
-                <li key={e.id} className="card row wrap">
-                  <Link to={pagePath(worldId, e.id)}>
-                    <strong>{e.name}</strong>
-                  </Link>
-                  {e.summary && <span className="muted small">{e.summary}</span>}
-                  <button className="small" onClick={() => revealAndShow(worldId, e)} title="Reveal this page to every player and put it on their screens">
-                    <Ico as={Television} /> Reveal and show
-                  </button>
+                <li key={e.id} className="card">
+                  <div className="row wrap">
+                    <Link to={pagePath(worldId, e.id)}>
+                      <strong>{e.name}</strong>
+                    </Link>
+                    {e.summary && <span className="muted small">{e.summary}</span>}
+                    {reviewing !== e.id && (
+                      <button className="small" onClick={() => setReviewing(e.id)} title="Reveal this page to every player and put it on their screens">
+                        <Ico as={Television} /> Reveal and show…
+                      </button>
+                    )}
+                  </div>
+                  {reviewing === e.id && (
+                    <div className="players-review" role="group" aria-label="What players will see">
+                      <strong>Players will see</strong>
+                      <ul className="small">
+                        <li>the page “{e.name}”{e.summary ? ', its summary' : ''}{stripSecrets(e.body).trim() ? ' and its text' : ''}{e.imageId ? ', with its picture' : ''}</li>
+                        <li>on every player’s screen now, and in their handouts afterwards</li>
+                      </ul>
+                      <p className="muted small">Its GM notes and secret passages stay hidden, and so do the pages it links to unless they’re revealed already.</p>
+                      <div className="row wrap">
+                        <button
+                          className="primary"
+                          onClick={async () => {
+                            setReviewing(undefined)
+                            const undo = await revealAndShow(worldId, e)
+                            toast(`“${e.name}” is revealed and on the players’ screens.`, undo, 'Hide it again')
+                          }}
+                        >
+                          <Ico as={Television} /> Reveal and show
+                        </button>
+                        <button onClick={() => setReviewing(undefined)}>Not yet</button>
+                      </div>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

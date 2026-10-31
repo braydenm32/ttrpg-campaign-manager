@@ -10,6 +10,8 @@ import { STARTER_TABLES, starterTableEntity } from './starterTables'
 import { generateTreasure, TREASURE_SIZES, treasureMarkdown, type Treasure, type TreasureSize } from './treasure'
 import { coinKey, editPurse } from './purse'
 import { openNewPage } from './pendingPages'
+import { toast } from './undo'
+import './more.css'
 
 /** Names in a style, or names like the world's own (its NPCs, places…). Click one to make a page or copy it. */
 export function NameGenerator({ world, entities, compact }: { world: World; entities: Entity[]; compact?: boolean }) {
@@ -109,18 +111,33 @@ async function addCoins(worldId: string, coins: Treasure['coins']) {
   })
 }
 
+/** Takes coins back out of the party's purse (Undo of a gift): never below nothing, and a coin left at nothing that wasn't there before goes. */
+async function takeCoins(worldId: string, coins: Treasure['coins'], had: Set<string>) {
+  await editPurse(worldId, (purse) => {
+    for (const c of coins) {
+      const have = purse.find((p) => coinKey(p.name) === coinKey(c.name))
+      if (have) have.amount = Math.max(0, have.amount - c.amount)
+    }
+    return purse.filter((p) => p.amount > 0 || had.has(coinKey(p.name)))
+  })
+}
+
 /** Rolls a pile of treasure, then hands it to the party: coins into the purse, the rest as items in the stash. */
 export function TreasureGenerator({ world, compact }: { world: World; compact?: boolean }) {
   const [size, setSize] = useState<TreasureSize>('stash')
   const [loot, setLoot] = useState<Treasure>(() => generateTreasure('stash'))
   const [given, setGiven] = useState(false)
+  // Players see what's given at once, so it's shown to the GM first: "players will see…".
+  const [review, setReview] = useState(false)
   const [copied, setCopied] = useState(false)
   const reroll = (s = size) => {
     setLoot(generateTreasure(s))
     setGiven(false)
+    setReview(false)
     setCopied(false)
   }
   const give = async () => {
+    const had = new Set((world.partyCoin ?? []).map((c) => coinKey(c.name)))
     await addCoins(world.id, loot.coins)
     const items = loot.items.map((i) => {
       const e = blankEntity(world.id, 'item', i.name)
@@ -135,6 +152,12 @@ export function TreasureGenerator({ world, compact }: { world: World; compact?: 
     })
     await db.entities.bulkAdd(items)
     setGiven(true)
+    setReview(false)
+    toast('Given to the party: players can see it now.', async () => {
+      await db.entities.bulkDelete(items.map((e) => e.id))
+      await takeCoins(world.id, loot.coins, had)
+      setGiven(false)
+    })
   }
   return (
     <div className="treasure-generator">
@@ -171,10 +194,33 @@ export function TreasureGenerator({ world, compact }: { world: World; compact?: 
           </li>
         ))}
       </ul>
+      {review && !given && (
+        <div className="players-review" role="group" aria-label="What players will see">
+          <strong>Players will see</strong>
+          <ul className="small">
+            {loot.coins.length > 0 && <li>{loot.coins.map((c) => `${c.amount.toLocaleString()} ${c.name}`).join(', ')} added to the party’s purse</li>}
+            {loot.items.length > 0 && (
+              <li>
+                {loot.items.length === 1 ? 'a page for ' : `${loot.items.length} pages in the party stash: `}
+                {loot.items.map((i) => i.name).join(', ')}
+                {loot.items.length === 1 && ', in the party stash'}, with what each is worth
+              </li>
+            )}
+          </ul>
+          <div className="row wrap">
+            <button className="primary" onClick={give}>
+              Give it to them
+            </button>
+            <button onClick={() => setReview(false)}>Not yet</button>
+          </div>
+        </div>
+      )}
       <div className="row wrap">
-        <button className="primary" disabled={given} onClick={give} title="Coins go into the party’s purse, everything else into the party stash (players can see them)">
-          {given ? '✓ Given to the party' : 'Give to the party'}
-        </button>
+        {!review && (
+          <button className="primary" disabled={given} onClick={() => setReview(true)} title="Coins go into the party’s purse, everything else into the party stash (players can see them)">
+            {given ? '✓ Given to the party' : 'Give to the party…'}
+          </button>
+        )}
         <button
           className="ghost"
           onClick={() => navigator.clipboard.writeText(treasureMarkdown(loot)).then(() => setCopied(true), () => undefined)}
