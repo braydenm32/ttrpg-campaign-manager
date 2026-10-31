@@ -17,7 +17,7 @@
   },
   "phone gm /w/:worldId": {
     "problems": [],
-    "smallTargets": 45
+    "smallTargets": 11
   },
   "phone gm /w/:worldId/:section": {
     "problems": [],
@@ -44,14 +44,12 @@
     "smallTargets": 8
   },
   "phone gm /w/:worldId/archivist": {
-    "problems": [
-      "sideways scroll"
-    ],
-    "smallTargets": 7
+    "problems": [],
+    "smallTargets": 2
   },
   "phone gm /w/:worldId/archivist (check for contradictions)": {
     "problems": [],
-    "smallTargets": 7
+    "smallTargets": 5
   },
   "phone gm /w/:worldId/assets": {
     "problems": [],
@@ -203,6 +201,10 @@
     "problems": [],
     "smallTargets": 5
   },
+  "phone gm /w/:worldId/questions": {
+    "problems": [],
+    "smallTargets": 1
+  },
   "phone gm /w/:worldId/s/:sessionId": {
     "problems": [],
     "smallTargets": 42
@@ -281,23 +283,27 @@
   },
   "phone player /w/:worldId": {
     "problems": [],
-    "smallTargets": 13
+    "smallTargets": 2
   },
   "phone player /w/:worldId (Common Room: leads)": {
     "problems": [],
-    "smallTargets": 7
+    "smallTargets": 2
   },
   "phone player /w/:worldId (Common Room: my character)": {
     "problems": [],
-    "smallTargets": 3
+    "smallTargets": 2
   },
   "phone player /w/:worldId (Common Room: notes)": {
     "problems": [],
     "smallTargets": 4
   },
+  "phone player /w/:worldId (Common Room: old address of the scene)": {
+    "problems": [],
+    "smallTargets": 2
+  },
   "phone player /w/:worldId (Common Room: the party)": {
     "problems": [],
-    "smallTargets": 4
+    "smallTargets": 2
   },
   "phone player /w/:worldId (Common Room: the scene)": {
     "problems": [],
@@ -471,7 +477,7 @@
   },
   "phone player /w/:worldId/threads": {
     "problems": [],
-    "smallTargets": 16
+    "smallTargets": 2
   },
   "phone player /w/:worldId/timeline": {
     "problems": [],

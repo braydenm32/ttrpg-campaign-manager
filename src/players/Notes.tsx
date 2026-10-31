@@ -18,20 +18,23 @@ export function PlayerNotesBox({
   entityId,
   entities,
   big,
+  start = 'mine',
 }: {
   world: World
   entityId: string
   entities: Entity[]
   big?: boolean
+  /** Which notes open first: your own, or the group's. */
+  start?: 'mine' | 'group'
 }) {
   const memberOf = world.shared?.memberOf
-  if (memberOf) return <MemberNotes world={world} memberOf={memberOf} entityId={entityId} big={big} />
+  if (memberOf) return <MemberNotes world={world} memberOf={memberOf} entityId={entityId} big={big} start={start} />
   if (!world.shared && world.cloud?.enabled) return <GmGroupNotes world={world} entityId={entityId} entities={entities} big={big} />
   return null
 }
 
-function MemberNotes({ world, memberOf, entityId, big }: { world: World; memberOf: string; entityId: string; big?: boolean }) {
-  const [tab, setTab] = useState<'mine' | 'group'>('mine')
+function MemberNotes({ world, memberOf, entityId, big, start }: { world: World; memberOf: string; entityId: string; big?: boolean; start: 'mine' | 'group' }) {
+  const [tab, setTab] = useState<'mine' | 'group'>(start)
   const notes = world.shared?.notes ?? []
   const find = (shared: boolean) => notes.find((n) => n.entityId === entityId && n.shared === shared)
   const names = new Map((world.shared?.members ?? []).map((m) => [m.userId, m.name || 'A player']))
