@@ -56,14 +56,15 @@
 /*
  * Inside a world, the calm look: Candlelit stays the dark default, with its frame a shade off the
  * page; Parchment is warm paper inside a dark leather frame. Flat colours, gold used sparingly.
- * Scoped to the world's frame (.app-shell), so the shelf of worlds and the legal pages are untouched.
+ * Scoped to the world's frame (.app-shell) and the world's screens without one (.world-bare: Print and
+ * the players' TV screen), so the shelf of worlds and the legal pages are untouched.
  */
-body:has(.app-shell) {
+body:has(.app-shell, .world-bare) {
   --chrome: #1a171f; --chrome-side: #19161d; --chrome-ink: #ece6da; --chrome-muted: #a9a092; --chrome-on: #2c2733; --chrome-search: #26222d; --chrome-line: #36303f; --chrome-accent: #d9ad55;
   color: var(--text);
 }
 @media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) body:has(.app-shell) {
+  :root:not([data-theme='dark']) body:has(.app-shell, .world-bare) {
     --bg: #efe2c6; --panel: #f8efdc; --panel-2: #f1e3c7; --border: #dcc69e; --text: #33241a; --muted: #7a634c;
     --accent: #b8611f; --accent-ink: #fff8ee; --danger: #b0442a; --good: #5d8a3a; --link: #8a4515; --link-line: rgb(138 69 21 / .4);
     --heading: #4a2c18; --secret-bg: #e3ead6; --secret-border: #b7c79c; --secret-ink: #4b6630; --ward: #4b6630;
@@ -71,7 +72,7 @@ body:has(.app-shell) {
     --chrome: #3b2619; --chrome-side: #3b2619; --chrome-ink: #f7e8cc; --chrome-muted: #cdb08a; --chrome-on: #573a27; --chrome-search: #4d3324; --chrome-line: #573a27; --chrome-accent: #e7a14a;
   }
 }
-:root[data-theme='light'] body:has(.app-shell) {
+:root[data-theme='light'] body:has(.app-shell, .world-bare) {
   --bg: #efe2c6; --panel: #f8efdc; --panel-2: #f1e3c7; --border: #dcc69e; --text: #33241a; --muted: #7a634c;
     --accent: #b8611f; --accent-ink: #fff8ee; --danger: #b0442a; --good: #5d8a3a; --link: #8a4515; --link-line: rgb(138 69 21 / .4);
     --heading: #4a2c18; --secret-bg: #e3ead6; --secret-border: #b7c79c; --secret-ink: #4b6630; --ward: #4b6630;
@@ -399,6 +400,8 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
   .help-button::after { content: ''; position: absolute; inset: -12px; }
   :where(button.small, button.ghost, button.link.small, .button.small) { min-height: 36px; min-width: 36px; }
   .modal header button { min-width: 44px; min-height: 44px; }
+  /* The GM previewing as a player: the way back is a whole fingertip too. */
+  .player-banner > button { min-height: 44px; }
 }
 .page-header > .row { flex-wrap: wrap; justify-content: flex-end; }
 

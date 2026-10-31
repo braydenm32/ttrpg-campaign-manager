@@ -52,12 +52,14 @@ export default function JoinWorld() {
   }
 
   return (
-    <div className="home join-page">
+    <div className="home join-page more-screen">
       <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />The Warded Atlas</h1>
       <div className="card join-card">
         {asGM ? (
           <>
-            <h2><Ico as={BookOpen} /> You’re invited to co-GM a world</h2>
+            <h2>
+              <Ico as={BookOpen} /> You’re invited to co-GM a world <Help topic="coGM" />
+            </h2>
             <p className="muted">
               You’ll get the whole world on your device, secrets included, and anything you change syncs back to the other GM.
             </p>
@@ -73,12 +75,18 @@ export default function JoinWorld() {
             </p>
           </>
         )}
-        {loading ? null : !user ? (
+        {loading ? (
+          <p className="muted" role="status">
+            Checking whether you’re signed in…
+          </p>
+        ) : !user ? (
           <>
             <p>First, sign in or create a free account so your GM knows it’s you.</p>
-            <button className="primary" onClick={() => setAccount(true)}>
-              Sign in or create an account
-            </button>
+            <div className="join-actions">
+              <button className="primary" onClick={() => setAccount(true)}>
+                Sign in or create an account
+              </button>
+            </div>
           </>
         ) : (
           <form
@@ -94,7 +102,7 @@ export default function JoinWorld() {
             </label>
             <p className="muted small">Others in the world will see you as “{tableName}”.</p>
             <p className="muted small">Signed in as {user.email || user.user_metadata?.full_name}.</p>
-            <div className="row end">
+            <div className="join-actions">
               <button className="primary" disabled={busy}>
                 {busy ? 'Joining…' : asGM ? 'Join as co-GM' : 'Join the world'}
               </button>
@@ -102,12 +110,14 @@ export default function JoinWorld() {
           </form>
         )}
         {error && (
-          <p className="error">
-            {error}{' '}
-            <Link to="/" onClick={() => pendingInvite.set(null)}>
-              Go to your worlds
-            </Link>
-          </p>
+          <div className="join-error" role="alert">
+            <p className="error">{error}</p>
+            <div className="join-actions">
+              <Link className="button" to="/" onClick={() => pendingInvite.set(null)}>
+                Go to your worlds
+              </Link>
+            </div>
+          </div>
         )}
       </div>
       {account && <AccountModal onClose={() => setAccount(false)} />}

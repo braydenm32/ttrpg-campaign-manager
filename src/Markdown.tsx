@@ -145,10 +145,12 @@ export function Markdown({
       const target = byName.get(name.trim().toLowerCase())
       const shown = escapeHtml(label ?? name)
       if (!target) return `<span class="wikilink missing" title="No page yet" data-missing="${escapeHtml(name.trim())}">${shown}</span>`
+      // Where links go nowhere (the TV, a sheet to print), the name is plain words, not something to tap.
+      if (stillLinks) return `<span class="wikilink still">${shown}</span>`
       return `<a class="wikilink" href="${hrefFor(pagePath(worldId, target.id))}" data-internal="1" data-id="${target.id}">${shown}</a>`
     })
     return DOMPurify.sanitize(marked.parse(src, { async: false }) as string)
-  }, [text, entities, worldId, showSecrets, forViewer])
+  }, [text, entities, worldId, showSecrets, forViewer, stillLinks])
 
   // Hovering a link shows a peek at the page it goes to.
   const [peek, setPeek] = useState<{ entity: Entity; left: number; top: number; below: boolean }>()
