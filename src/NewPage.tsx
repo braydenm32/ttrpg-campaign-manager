@@ -1,18 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { blankEntity, db, fromTemplate, typeLabel, type Entity, type EntityType, type World } from './db'
+import { blankEntity, fromTemplate, typeLabel, type Entity, type EntityType, type World } from './db'
 import { useTemplates } from './hooks'
-import { pagePath } from './paths'
+import { openNewPage } from './pendingPages'
 
-/** Makes a new page (blank, or from a template) and opens it for editing. `new=1` lets Cancel take back a page nobody wrote on. */
+/** Opens the editor on a new page (blank, or from a template). It's only added to the world once saved. */
 export function useCreatePage(world: World | null | undefined) {
   const navigate = useNavigate()
   return async (type: EntityType, customType?: string, template?: Entity) => {
     if (!world) return
     const label = typeLabel({ type, customType }, world)
     const e = template ? fromTemplate(template) : { ...blankEntity(world.id, type, `New ${label.one}`), ...(customType ? { customType } : {}) }
-    await db.entities.add(e)
-    navigate(`${pagePath(world.id, e.id)}?edit=1&new=1`)
+    openNewPage(navigate, e)
   }
 }
 

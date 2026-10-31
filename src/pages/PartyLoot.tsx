@@ -1,14 +1,18 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Empty, VisibilityBadge } from '../components'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { Link, useSearchParams } from 'react-router-dom'
+import { DraftText, Empty, VisibilityBadge } from '../components'
 import { db, saveEntity, type Entity, type World } from '../db'
 import { Help } from '../help'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
-import { Backpack } from '@phosphor-icons/react'
-import { pagePath } from '../paths'
+import { ArrowLeft, Backpack, Minus, Plus, X } from '@phosphor-icons/react'
+import { pagePath, worldPath } from '../paths'
 import { partyLoot, quantityLabel } from '../counts'
+import { changeCoin, editPurse, tidyPurse } from '../purse'
+import { removeWithUndo } from '../undo'
+import { useKeepScroll } from '../jump'
 
 /**
  * Party loot: the party's coin, the party stash and what each player character carries. The GM also
@@ -19,6 +23,10 @@ export default function PartyLoot() {
   const { worldId, world } = useWorld()
   const { isGM } = useViewMode()
   const entities = useVisibleEntities(worldId)
+  // Opened from the Lectern's "Party found" panel: a way straight back to the table.
+  const from = useSearchParams()[0].get('from')
+  const fromSession = useLiveQuery(async () => (from ? ((await db.sessions.get(from)) ?? null) : null), [from])
+  useKeepScroll(!!world)
   if (!world) return null
 
   const loot = partyLoot(entities, world)
@@ -27,6 +35,8 @@ export default function PartyLoot() {
     { id: 'party', name: '🎒 Party stash', items: loot.stash },
     ...loot.members.map(({ holder: h, items }) => ({ id: h.id, name: `🛡️ ${h.name}`, link: pagePath(worldId, h.id), items })),
   ]
+  // Characters with empty pockets share one line instead of a block each.
+  const emptyHanded = loot.members.filter((m) => !m.items.length).map((m) => m.holder)
   // Who else can be picked as a carrier: whoever carries something now.
   const others = [...new Set(loot.elsewhere.map((i) => i.heldBy!))].flatMap((id) => entities.filter((e) => e.id === id))
   const holders = [...groups, ...others.map((h) => ({ id: h.id, name: `${h.type === 'npc' ? '🧙' : '📍'} ${h.name}` }))]
@@ -34,21 +44,40 @@ export default function PartyLoot() {
   return (
     <div className="page">
       <header className="page-header">
+        {isGM && fromSession && fromSession.worldId === worldId && (
+          <Link className="button back-to" to={`${worldPath(worldId)}/s/${fromSession.id}/lectern`}>
+            <Ico as={ArrowLeft} /> Back to the Lectern (#{fromSession.number} {fromSession.title})
+          </Link>
+        )}
         <h1>
           <Ico as={Backpack} /> Party loot <Help topic="loot" />
         </h1>
       </header>
-      <CoinPurse world={world} coin={isGM ? (world.partyCoin ?? []) : loot.coin} editable={isGM} />
-      {groups.map((g) => (
-        <section key={g.id}>
-          <h2>{g.link ? <Link to={g.link}>{g.name}</Link> : g.name}</h2>
-          {g.items.length === 0 ? (
-            <p className="muted small">Nothing carried.</p>
-          ) : (
-            <ItemList items={g.items} worldId={worldId} holders={holders} isGM={isGM} />
-          )}
-        </section>
-      ))}
+      <CoinPurse world={world} coin={isGM ? tidyPurse(world.partyCoin) : loot.coin} editable={isGM} />
+      {groups
+        .filter((g) => g.id === 'party' || g.items.length)
+        .map((g) => (
+          <section key={g.id}>
+            <h2>{g.link ? <Link to={g.link}>{g.name}</Link> : g.name}</h2>
+            {g.items.length === 0 ? (
+              <p className="muted small">Nothing in the stash.</p>
+            ) : (
+              <ItemList items={g.items} worldId={worldId} holders={holders} isGM={isGM} />
+            )}
+          </section>
+        ))}
+      {emptyHanded.length > 0 && (
+        <p className="muted small empty-handed">
+          Nothing carried:{' '}
+          {emptyHanded.map((h, i) => (
+            <span key={h.id}>
+              {i > 0 && ', '}
+              <Link to={pagePath(worldId, h.id)}>{h.name}</Link>
+            </span>
+          ))}
+          .
+        </p>
+      )}
       {isGM && loot.elsewhere.length > 0 && (
         <section>
           <h2>Carried by others</h2>
@@ -111,44 +140,87 @@ function ItemList({ items, worldId, holders, isGM }: { items: Entity[]; worldId:
 }
 
 const DEFAULT_COIN = ['pp', 'gp', 'sp', 'cp']
+const STEPS = [1, 5, 10, 100]
 
-/** The purse. The GM edits every line (an empty one too); players see the coins there are. */
+/**
+ * The purse, one line per coin. The GM puts coins in or takes them out with + and − (by the step
+ * picked above the lines), or taps the number to type a new total. Players see the coins there are.
+ */
 function CoinPurse({ world, coin, editable }: { world: World; coin: { name: string; amount: number }[]; editable: boolean }) {
   const [adding, setAdding] = useState('')
-  const save = (next: World['partyCoin']) => db.worlds.update(world.id, { partyCoin: next, updatedAt: Date.now() })
+  const [step, setStep] = useState(1)
+  const save = (fn: (purse: { name: string; amount: number }[]) => { name: string; amount: number }[]) => editPurse(world.id, fn)
   if (!editable && !coin.length) return null
   return (
     <section className="card coin-purse">
-      <h2>💰 The party’s purse</h2>
+      <div className="row spread wrap">
+        <h2>
+          💰 The party’s purse {editable && <Help topic="lootSteps" />}
+        </h2>
+        {editable && coin.length > 0 && (
+          <div className="row coin-steps" role="group" aria-label="How many coins each tap">
+            {STEPS.map((n) => (
+              <button key={n} className={`chip ${step === n ? 'on' : ''}`} aria-pressed={step === n} onClick={() => setStep(n)}>
+                {n}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       {coin.length === 0 ? (
         <div className="row wrap">
           <span className="muted small">No coin tracked yet.</span>
-          <button className="small" onClick={() => save(DEFAULT_COIN.map((name) => ({ name, amount: 0 })))}>
-            Start with pp, gp, sp, cp
-          </button>
+          {editable && (
+            <button className="small" onClick={() => save(() => DEFAULT_COIN.map((name) => ({ name, amount: 0 })))}>
+              Start with pp, gp, sp, cp
+            </button>
+          )}
         </div>
       ) : (
-        <div className="row wrap">
+        <ul className="coin-lines">
           {coin.map((c, i) => (
-            <label key={c.name} className="coin">
-              <span>{c.name}</span>
+            <li key={c.name} className="coin-line">
+              <span className="coin-name">{c.name}</span>
               {editable ? (
-                <input
-                  type="number"
-                  value={c.amount}
-                  onChange={(e) => save(coin.map((x, j) => (j === i ? { ...x, amount: Number(e.target.value) || 0 } : x)))}
-                />
+                <>
+                  <button className="coin-step" aria-label={`Take ${step} ${c.name} out`} onClick={() => changeCoin(world.id, c.name, -step)}>
+                    <Ico as={Minus} />
+                  </button>
+                  <DraftText
+                    className="coin-amount"
+                    inputMode="numeric"
+                    aria-label={`${c.name} in the purse`}
+                    value={String(c.amount)}
+                    saveOn="leave"
+                    onCommit={(v) => {
+                      const n = Math.round(Number(v))
+                      if (Number.isFinite(n)) return save((p) => p.map((x) => (x.name === c.name ? { ...x, amount: n } : x)))
+                    }}
+                  />
+                  <button className="coin-step" aria-label={`Put ${step} ${c.name} in`} onClick={() => changeCoin(world.id, c.name, step)}>
+                    <Ico as={Plus} />
+                  </button>
+                  <button
+                    className="ghost coin-remove"
+                    title={`Stop tracking ${c.name}`}
+                    aria-label={`Stop tracking ${c.name}`}
+                    onClick={() =>
+                      removeWithUndo(
+                        `${c.name} no longer tracked${c.amount ? ` (it had ${c.amount})` : ''}.`,
+                        () => save((p) => p.filter((x) => x.name !== c.name)),
+                        () => save((p) => (p.some((x) => x.name === c.name) ? p : [...p.slice(0, i), c, ...p.slice(i)])),
+                      )
+                    }
+                  >
+                    <Ico as={X} />
+                  </button>
+                </>
               ) : (
-                <b>{c.amount}</b>
+                <b className="coin-amount">{c.amount}</b>
               )}
-              {editable && (
-                <button className="ghost small" title={`Stop tracking ${c.name}`} onClick={() => save(coin.filter((_, j) => j !== i))}>
-                  ×
-                </button>
-              )}
-            </label>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
       {editable && (
         <form
@@ -156,11 +228,11 @@ function CoinPurse({ world, coin, editable }: { world: World; coin: { name: stri
           onSubmit={(e) => {
             e.preventDefault()
             const name = adding.trim()
-            if (name && !coin.some((c) => c.name === name)) save([...coin, { name, amount: 0 }])
+            if (name) void changeCoin(world.id, name, 0)
             setAdding('')
           }}
         >
-          <input value={adding} onChange={(e) => setAdding(e.target.value)} placeholder="Add a currency, gem or resource (e.g. credits, rations)" />
+          <input value={adding} onChange={(e) => setAdding(e.target.value)} placeholder="Add a currency, gem or resource (e.g. credits, rations)" aria-label="New coin or resource" />
           <button disabled={!adding.trim()}>Add</button>
         </form>
       )}

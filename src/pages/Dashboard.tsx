@@ -19,9 +19,10 @@ import { ClockFace } from '../clocks'
 import { useGmInbox } from '../players/inbox'
 import { clockSize, isOpenQuest, openThreads as openThreadsOf, prepCounts, tickingClocks } from '../counts'
 import { Ico, TypeIcon } from '../icons'
-import { ChatCircleDots, Hourglass, ListChecks, Play, Plus, Spiral, UserCirclePlus } from '@phosphor-icons/react'
+import { ChatCircleDots, FlagCheckered, Hourglass, ListChecks, Play, Plus, Spiral, UserCirclePlus } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { createNextSession, localDate } from '../sessions'
+import { createNextSession, sessionStage, startPlaying } from '../sessions'
+import { StageChip, usePlayingNow } from '../stage'
 
 export default function Dashboard() {
   const { worldId, world } = useWorld()
@@ -256,7 +257,7 @@ function NeedsYou({ world, entities }: { world: World; entities: Entity[] }) {
   )
 }
 
-function NewCampaign({
+export function NewCampaign({
   worldId,
   defaultSystem,
   onClose,
@@ -284,6 +285,8 @@ function NewCampaign({
             system,
             description: '',
             status: 'planning',
+            // Like pages, a new campaign starts GM only: players see it once it's revealed.
+            visibility: 'gm',
             createdAt: Date.now(),
           })
           onCreated(id)
@@ -301,6 +304,7 @@ function NewCampaign({
             ))}
           </select>
         </label>
+        <p className="muted small">It starts 🔒 GM only, like a new page. Reveal it to players on its page when you’re ready.</p>
         <div className="row end">
           <button type="button" onClick={onClose}>Cancel</button>
           <button className="primary" disabled={!name.trim()}>Create</button>
@@ -315,7 +319,8 @@ function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampai
   const navigate = useNavigate()
   const campaigns = useCampaigns(worldId)
   const sessions = useWorldSessions(worldId)
-  const cards = nextSessions(campaigns, sessions)
+  const playing = usePlayingNow(worldId)
+  const cards = nextSessions(campaigns, sessions, playing)
   const booked = campaigns.filter((c) => c.status !== 'finished' && upcoming(c) && !cards.some((x) => x.campaign.id === c.id))
   return (
     <section className="card next-sessions">
@@ -332,17 +337,30 @@ function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampai
         const clues = prep.clues.left
         const scenes = prep.scenes.left
         const when = upcoming(c)
+        const stage = sessionStage(next, playing.includes(next.id))
         // The newest session is shown even once it's been played; then the useful next step is planning the one after.
-        const played = !!next.recap.trim() || (!!next.date && next.date < localDate())
-        const details = [when ? showDate(when) : next.date, clues || scenes ? `${scenes} scene${scenes === 1 ? '' : 's'}, ${clues} clue${clues === 1 ? '' : 's'} ready` : ''].filter(Boolean).join(' · ')
+        const played = stage === 'played'
+        const details = [when ? showDate(when) : next.date, clues || scenes ? `${scenes} scene${scenes === 1 ? '' : 's'}, ${clues} clue${clues === 1 ? '' : 's'} planned` : ''].filter(Boolean).join(' · ')
         return (
           <div key={c.id} className="next-session">
             <div className="kicker">{c.name}{played && ' · last played'}</div>
-            <Link className="next-title" to={`${worldPath(worldId)}/s/${next.id}`}>
-              #{next.number} {next.title}
-            </Link>
+            <div className="row wrap">
+              <StageChip stage={stage} />
+              <Link className="next-title" to={`${worldPath(worldId)}/s/${next.id}`}>
+                #{next.number} {next.title}
+              </Link>
+            </div>
             {details && <div className="muted small">{details}</div>}
-            {played ? (
+            {stage === 'playing' ? (
+              <div className="row wrap">
+                <Link className="button primary" to={`${worldPath(worldId)}/s/${next.id}/lectern`} title={HELP.lectern}>
+                  <Ico as={Play} weight="fill" /> Back to the table
+                </Link>
+                <Link className="button" to={`${worldPath(worldId)}/s/${next.id}?tab=notes`}>
+                  <Ico as={FlagCheckered} /> Wrap up
+                </Link>
+              </div>
+            ) : played ? (
               <div className="row wrap">
                 <button
                   className="primary"
@@ -360,11 +378,18 @@ function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampai
               </div>
             ) : (
               <div className="row wrap">
-                <Link className="button primary" to={`${worldPath(worldId)}/s/${next.id}/lectern`} title={HELP.lectern}>
-                  <Ico as={Play} weight="fill" /> Run session
-                </Link>
+                <button
+                  className="primary"
+                  title={HELP.startPlaying}
+                  onClick={async () => {
+                    await startPlaying(next.id)
+                    navigate(`${worldPath(worldId)}/s/${next.id}/lectern`)
+                  }}
+                >
+                  <Ico as={Play} weight="fill" /> Start playing
+                </button>
                 <Link className="button" to={`${worldPath(worldId)}/s/${next.id}?tab=prep`}>
-                  <Ico as={ListChecks} /> Prep
+                  <Ico as={ListChecks} /> Prepare
                 </Link>
               </div>
             )}

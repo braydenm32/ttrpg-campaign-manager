@@ -361,11 +361,11 @@ export function TableDice({ cloudId, who }: { cloudId?: string; who: string }) {
         className="row"
         onSubmit={(e) => {
           e.preventDefault()
-          doRoll(expr)
+          if (expr.trim()) doRoll(expr)
         }}
       >
-        <input value={expr} onChange={(e) => setExpr(e.target.value)} placeholder="e.g. d20+5, 2d6+3" aria-label="Dice to roll" />
-        <button className="primary">
+        <input value={expr} onChange={(e) => setExpr(e.target.value)} placeholder="Or type dice, e.g. d20+5" aria-label="Dice to roll" />
+        <button className="primary" disabled={!expr.trim()}>
           <Ico as={DiceFive} /> Roll
         </button>
       </form>

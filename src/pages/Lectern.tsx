@@ -1,6 +1,6 @@
 import { PreviouslyOn } from '../ai/ReadAloud'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Help } from '../help'
+import { HELP, Help } from '../help'
 import { PartyGlance } from '../partyGlance'
 import { GmScreenPanel } from '../gmScreen'
 import { CallForRoll } from '../rollCallPanel'
@@ -8,11 +8,11 @@ import { JourneyPanel } from '../journey'
 import { NameGenerator, TreasureGenerator } from '../moreGenerators'
 import { FoldingProvider, LECTERN_PANELS, LecternPanel, useFolding } from '../lecternPanel'
 import { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { partyOf } from '../sessions'
-import { DraftText, Empty } from '../components'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { partyOf, startPlaying } from '../sessions'
+import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
-import { ENTITY_LABELS, blankLectern, db, newId, type Combatant, type Entity, type LecternState, type Session, type World } from '../db'
+import { ENTITY_LABELS, blankEntity, blankLectern, db, newId, type Combatant, type Entity, type LecternState, type Session, type World } from '../db'
 import { modifierFrom, roll, rollDie } from '../dice'
 import { addCombatants, fieldOf, fromEntity, initiativeOrder, numberFrom } from '../encounters'
 import {
@@ -40,28 +40,47 @@ import { ShowPanel } from '../showing'
 import { WorldToday } from '../calendar'
 import { ClocksPanel } from '../clocks'
 import { Ico, TypeIcon } from '../icons'
-import { Armchair, BookOpen, CastleTurret, CloudFog, DiceFive, FlagCheckered, Keyboard, MapTrifold, NotePencil, Eye, EyeSlash, Prohibit, Shield, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
+import { Armchair, CastleTurret, CloudFog, Coins, Lock, DiceFive, FlagCheckered, Keyboard, MapTrifold, Microphone, NotePencil, Eye, EyeSlash, Play, Prohibit, Shield, SkipForward, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
 import { clockText, GoLive, RollDetail, RollLog, timeLeft, useNow } from '../atTheTable'
-import { shareRoll, useLiveSession, useTable } from '../cloud/table'
+import { setLiveSession, shareRoll, useLiveSession, useTable } from '../cloud/table'
+import { StageChip, useSessionStage } from '../stage'
+import { JumpRow, useKeepScroll } from '../jump'
+import { changePlace, goToScene, plannedScenes } from '../sceneCards'
+import { markSaved, removeWithUndo, SavedMark, toast } from '../undo'
+import { changeCoin } from '../purse'
+import { Recorder } from './SessionPage'
 
 /**
- * The Lectern: one screen for running a session at the table.
- * Scene and who's present on the left, initiative in the middle, dice, generators and quick notes on the right.
+ * The Lectern (Session › Play): one screen for running a session at the table. A strip across the
+ * top with the stage, the scene and "Wrap up"; a quick note always in reach; then, on a computer,
+ * three columns: the scene and its read-aloud text, the fight and the party, and tools (show players,
+ * loot, dice, sounds…). On a phone the same panels stack, with a row of buttons that jumps to each.
  * Everything here is GM-only and saved on the session as you go.
  */
 export default function Lectern() {
   const { worldId, world } = useWorld()
   const { sessionId = '' } = useParams()
   const { isGM } = useViewMode()
+  const navigate = useNavigate()
   const session = useLiveQuery(async () => (await db.sessions.get(sessionId)) ?? null, [sessionId])
   const entities = useVisibleEntities(worldId)
   // Opening the Lectern sends nothing: players see this session only once the GM goes live with it.
   const live = useLiveSession(worldId) === sessionId
-  const [query, setQuery] = useState('')
+  const stage = useSessionStage(session)
+  // The find box is in the address, so Back from a page you opened finds it as you left it.
+  const [params, setParams] = useSearchParams()
+  const query = params.get('find') ?? ''
+  const setQuery = (q: string) => {
+    const next = new URLSearchParams(params)
+    if (q) next.set('find', q)
+    else next.delete('find')
+    setParams(next, { replace: true })
+  }
   const folding = useFolding(query)
+  useKeepScroll(!!session && !!world)
 
-  if (session === undefined) return null
+  if (session === undefined) return <Skeleton />
   if (!isGM) return <Empty>The Lectern is a GM tool. Switch back to the GM view to use it.</Empty>
   if (session === null || session.worldId !== worldId) return <Empty>Session not found.</Empty>
 
@@ -82,30 +101,52 @@ export default function Lectern() {
       })
 
   const shareTo = live && world?.cloud?.enabled && lectern.share?.rolls && !lectern.share.off ? worldId : undefined
+  const w = worldPath(worldId)
+  const { scenes, at, current } = plannedScenes(session)
+  // Opening a folded panel before jumping to it.
+  const unfold = (id: string) => () => folding.value.folded.has(id) && folding.value.toggle(id)
+  const party = partyOf(entities, session.campaignId, { activeOnly: true })
 
   return (
     <div className="page wide lectern-page">
       <FightBar lectern={lectern} edit={edit} />
       <LecternKeys lectern={lectern} edit={edit} shareTo={shareTo} />
-      <header className="page-header">
-        <div>
-          <div className="row spread">
-            <Link to={`${worldPath(worldId)}/s/${session.id}`}>← Session notes</Link>
-            <div className="row wrap lectern-actions">
-              {world && <GoLive world={world} session={session} />}
-              {world?.cloud?.enabled && <Help topic="goLive" />}
-              <Link className="button" to={`${worldPath(worldId)}/s/${session.id}?end=1`} title="Recap, show players, start the next session">
-                <Ico as={FlagCheckered} /> End session
-              </Link>
-            </div>
-          </div>
-          <h1>
-            <Ico as={BookOpen} /> The Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
+      <section className="session-strip lectern-strip" aria-label="This session">
+        <div className="strip-title">
+          {stage && <StageChip stage={stage} help />}
+          <h1 className="lectern-title">
+            The Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
           </h1>
-          <div className="row wrap">
-            {world && <WorldToday world={world} isGM />}
-            <PreviouslyOn session={session} />
-          </div>
+        </div>
+        <div className="strip-facts">
+          <span className="statline">
+            {scenes.length > 0 && <span>{current ? `Scene ${at + 1} of ${scenes.length}` : `${scenes.length} scenes planned`}</span>}
+            {lectern.sceneId && <span>{entities.find((e) => e.id === lectern.sceneId)?.name}</span>}
+            {lectern.combat.round > 0 && <span>Fight · round {lectern.combat.round}</span>}
+          </span>
+          <span className="grow" />
+          {world && <GoLive world={world} session={session} />}
+          {world?.cloud?.enabled && <Help topic="goLive" />}
+          {stage !== 'playing' && stage !== 'played' ? (
+            <button className="primary" title={HELP.startPlaying} onClick={() => startPlaying(session.id)}>
+              <Ico as={Play} weight="fill" /> Start playing
+            </button>
+          ) : (
+            <button
+              className={stage === 'playing' ? 'primary' : ''}
+              title="End the session at the table: stops showing it live to players, then opens Wrap up"
+              onClick={() => {
+                if (live) setLiveSession(worldId, undefined)
+                navigate(`${w}/s/${session.id}?end=1`)
+              }}
+            >
+              <Ico as={FlagCheckered} /> Wrap up
+            </button>
+          )}
+        </div>
+        <div className="row wrap lectern-extras">
+          {world && <WorldToday world={world} isGM folded />}
+          <PreviouslyOn session={session} />
           {!!(world?.safety?.lines.length || world?.safety?.veils.length) && (
             <details className="small safety-reminder">
               <summary><Ico as={Shield} /> Lines and veils</summary>
@@ -114,8 +155,23 @@ export default function Lectern() {
             </details>
           )}
         </div>
-      </header>
+      </section>
       <FoldingProvider value={folding.value}>
+        <JumpRow
+          label="Parts of the Lectern"
+          className="lectern-jump phone-only"
+          help="lecternJump"
+          targets={[
+            { id: 'lectern-scene', label: 'Scene', open: unfold('scene') },
+            { id: 'lectern-initiative', label: 'Fight', open: unfold('initiative') },
+            { id: 'lectern-present', label: 'People', open: unfold('present') },
+            { id: 'lectern-clocks', label: 'Clocks', open: unfold('clocks') },
+            { id: 'lectern-show', label: 'Show', open: unfold('show') },
+            { id: 'lectern-dice', label: 'Dice', open: unfold('dice') },
+            { id: 'lectern-notes', label: 'Notes', open: unfold('notes') },
+          ]}
+        />
+        <QuickNote session={session} />
         <div className="lectern-tools row wrap">
           <input
             type="search"
@@ -123,7 +179,7 @@ export default function Lectern() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
-            placeholder="Find a panel or a page… (initiative, dice, Mirela)"
+            placeholder="Find a panel or a page… (initiative, loot, Mirela)"
             aria-label="Find a panel or a page"
           />
           <Help topic="lecternSearch" />
@@ -137,31 +193,29 @@ export default function Lectern() {
         {query.trim() && <FoundPages query={query} entities={entities} worldId={worldId} lectern={lectern} edit={edit} />}
         <div className="lectern">
           <div className="lectern-col">
-            <Scene lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
+            {world && <Scene session={session} world={world} lectern={lectern} edit={edit} entities={entities} worldId={worldId} />}
             <Present lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
-            {world && <Party world={world} entities={entities} campaignId={session.campaignId} />}
+            {world && <LecternPrep session={session} world={world} entities={entities} />}
+            <SessionNotes session={session} entities={entities} worldId={worldId} />
             <LecternThreads lectern={lectern} entities={entities} worldId={worldId} sessionId={session.id} />
           </div>
           <div className="lectern-col">
-            {world && <LecternPrep session={session} world={world} entities={entities} />}
-            <SessionNotes session={session} entities={entities} worldId={worldId} />
             <Initiative lectern={lectern} edit={edit} entities={entities} campaignId={session.campaignId} />
-            <Timers lectern={lectern} edit={edit} shared={!!world?.cloud?.enabled} />
+            {world && <Party world={world} entities={entities} campaignId={session.campaignId} />}
+            <CallForRoll lectern={lectern} edit={edit} party={party} cloudId={world?.cloud?.enabled ? worldId : undefined} live={live} />
             <ClocksPanel worldId={worldId} entities={entities} />
-            {world && <JourneyPanel world={world} lectern={lectern} edit={edit} entities={entities} partySize={partyOf(entities, session.campaignId, { activeOnly: true }).length} />}
+            <Timers lectern={lectern} edit={edit} shared={!!world?.cloud?.enabled} />
+            {world && <JourneyPanel world={world} lectern={lectern} edit={edit} entities={entities} partySize={party.length} />}
           </div>
           <div className="lectern-col">
-            {world?.cloud?.enabled && <CommonRoomPanel world={world} session={session} lectern={lectern} edit={edit} live={live} />}
-            <CallForRoll
-              lectern={lectern}
-              edit={edit}
-              party={partyOf(entities, session.campaignId, { activeOnly: true })}
-              cloudId={world?.cloud?.enabled ? worldId : undefined}
-              live={live}
-            />
             {world && <ShowPanel world={world} sceneText={lectern.sceneText} />}
-            <Soundboard worldId={worldId} compact />
+            {world && <LootPanel world={world} sessionId={session.id} />}
             <Dice lectern={lectern} edit={edit} shareTo={shareTo} />
+            <Soundboard worldId={worldId} compact />
+            {world?.cloud?.enabled && <CommonRoomPanel world={world} session={session} lectern={lectern} edit={edit} live={live} />}
+            <LecternPanel id="recording" name="Recording" keywords="record microphone audio transcript" title={<><Ico as={Microphone} /> Recording</>}>
+              <Recorder session={session} />
+            </LecternPanel>
             <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
             {world && (
               <GmScreenPanel
@@ -182,6 +236,124 @@ export default function Lectern() {
         {query.trim() && <p className="muted small lectern-search-note">Showing the panels that match “{query.trim()}”. Clear the search to see them all.</p>}
       </FoldingProvider>
     </div>
+  )
+}
+
+/** A line for the GM notes, always in reach near the top. What's typed is kept if you leave and come back. */
+function QuickNote({ session }: { session: Session }) {
+  const key = `lectern.note.${session.id}`
+  const [text, setTextState] = useState(() => {
+    try {
+      return sessionStorage.getItem(key) ?? ''
+    } catch {
+      return ''
+    }
+  })
+  const setText = (v: string) => {
+    setTextState(v)
+    try {
+      if (v) sessionStorage.setItem(key, v)
+      else sessionStorage.removeItem(key)
+    } catch {
+      // Not kept this time.
+    }
+  }
+  return (
+    <form
+      className="quick-note"
+      onSubmit={async (e) => {
+        e.preventDefault()
+        const line = text.trim()
+        if (!line) return
+        await addNoteLine(session.id, line)
+        setText('')
+        markSaved()
+      }}
+    >
+      <Ico as={NotePencil} />
+      <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Quick note… (Enter adds it to your GM notes, with the time)" aria-label="Quick note" />
+      <SavedMark />
+      <button disabled={!text.trim()}>Add</button>
+      <Help topic="quickNote" />
+    </form>
+  )
+}
+
+/** Adds a line with the time at the end of the session's GM notes. */
+const addNoteLine = (sessionId: string, line: string) => {
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return db.sessions
+    .where('id')
+    .equals(sessionId)
+    .modify((s) => void (s.notes = `${s.notes.trimEnd()}${s.notes.trim() ? '\n' : ''}- ${time} ${line}`))
+}
+
+/**
+ * What the party found, as it happens: coins into the purse, or an item handed to them (a new item
+ * page, GM only until you reveal it, carried by the party). Nothing random; Undo takes it back.
+ */
+function LootPanel({ world, sessionId }: { world: World; sessionId: string }) {
+  const coins = (world.partyCoin ?? []).map((c) => c.name)
+  const names = coins.length ? coins : ['gp']
+  const [amount, setAmount] = useState('')
+  const [coin, setCoin] = useState(names[0])
+  const [item, setItem] = useState('')
+  const w = worldPath(world.id)
+  const addCoin = async () => {
+    const n = Math.round(Number(amount))
+    if (!n) return
+    const name = names.includes(coin) ? coin : names[0]
+    await changeCoin(world.id, name, n)
+    setAmount('')
+    toast(`${n > 0 ? '+' : ''}${n} ${name} ${n > 0 ? 'into' : 'out of'} the party’s purse.`, () => changeCoin(world.id, name, -n))
+  }
+  const giveItem = async () => {
+    const name = item.trim()
+    if (!name) return
+    const e = { ...blankEntity(world.id, 'item', name), heldBy: 'party' }
+    await db.entities.add(e)
+    setItem('')
+    toast(`“${name}” given to the party (GM only until you reveal it).`, () => db.entities.delete(e.id))
+  }
+  return (
+    <LecternPanel
+      id="loot"
+      sectionId="lectern-loot"
+      name="Party found"
+      keywords="loot treasure coin gold money item purse found give"
+      title={<><Ico as={Coins} /> Party found <Help topic="partyFound" /></>}
+      extra={
+        <Link className="small" to={`${w}/loot?from=${sessionId}`}>
+          Party loot
+        </Link>
+      }
+    >
+      <form
+        className="row loot-coin"
+        onSubmit={(e) => {
+          e.preventDefault()
+          void addCoin()
+        }}
+      >
+        <input className="hp-input" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="+5" aria-label="How many coins (a minus takes them out)" />
+        <select value={coin} onChange={(e) => setCoin(e.target.value)} aria-label="Which coin">
+          {names.map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </select>
+        <button disabled={!Math.round(Number(amount))}>Add coins</button>
+      </form>
+      <form
+        className="row"
+        onSubmit={(e) => {
+          e.preventDefault()
+          void giveItem()
+        }}
+      >
+        <input value={item} onChange={(e) => setItem(e.target.value)} placeholder="An item, e.g. Silver locket" aria-label="Item the party found" />
+        <button disabled={!item.trim()}>Give to the party</button>
+      </form>
+    </LecternPanel>
   )
 }
 
@@ -227,7 +399,7 @@ function FoundPages({ query, entities, worldId, lectern, edit }: PanelProps & { 
             )}
             {e.gmNotes && (
               <details className="present-notes small">
-                <summary>GM notes</summary>
+                <summary><Ico as={Lock} /> GM notes</summary>
                 <div className="secret small">
                   <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
                 </div>
@@ -256,31 +428,63 @@ function FoundPages({ query, entities, worldId, lectern, edit }: PanelProps & { 
   )
 }
 
-function Scene({ lectern, edit, entities, worldId }: PanelProps & { entities: Entity[]; worldId: string }) {
+/**
+ * The scene: where the party is, the read-aloud text and the planned scenes in order. "Next scene"
+ * (or tapping a planned one) starts it: its place, text and who's there replace the last scene's.
+ * Picking a place by hand is a new scene too, so the old text never lingers.
+ */
+function Scene({ session, world, lectern, edit, entities, worldId }: PanelProps & { session: Session; world: World; entities: Entity[]; worldId: string }) {
   const place = entities.find((e) => e.id === lectern.sceneId)
   const map = useLiveQuery(
     () => (place ? db.maps.where({ locationId: place.id }).first() : undefined),
     [place?.id],
   )
   const here = place ? entities.filter((e) => e.parentId === place.id && !lectern.presentIds.includes(e.id) && e.type !== 'location') : []
+  const { scenes, current, at, next } = plannedScenes(session)
+  const strong = session.prep?.strongStart?.trim()
   return (
-    <LecternPanel id="scene" name="Scene" keywords="where place location read-aloud room" title={<><Ico as={CastleTurret} /> Scene</>}>
-      <select
-        value={lectern.sceneId ?? ''}
-        onChange={(e) => {
-          const v = e.target.value || undefined
-          edit((l) => void (l.sceneId = v))
-        }}
-      >
-        <option value="">Where is the party?</option>
-        {entities
-          .filter((e) => e.type === 'location' || e.type === 'shop')
-          .map((e) => (
-            <option key={e.id} value={e.id}>
-              {ENTITY_LABELS[e.type].icon} {e.name}
-            </option>
-          ))}
-      </select>
+    <LecternPanel
+      id="scene"
+      sectionId="lectern-scene"
+      name="Scene"
+      keywords="where place location read-aloud room next scene planned strong start"
+      title={<><Ico as={CastleTurret} /> {current ? `Scene ${at + 1} of ${scenes.length}` : 'Scene'} <Help topic="sceneChange" /></>}
+    >
+      {current && <p className="scene-now"><strong>{current.text}</strong></p>}
+      {next && (
+        <div className="row wrap next-scene">
+          <button className="primary" onClick={() => goToScene(world, session, next)}>
+            <Ico as={SkipForward} /> {current ? 'Next scene' : 'First scene'}
+          </button>
+          <span className="small muted">{shorten(next.text, 70)}</span>
+          <Help topic="nextScene" />
+        </div>
+      )}
+      {strong && !current && strong !== lectern.sceneText.trim() && (
+        <div className="strong-start">
+          <span className="muted small">Strong start</span>
+          <div className="read-text">{strong}</div>
+        </div>
+      )}
+      <label className="small muted scene-where">
+        Where is the party?
+        <select
+          value={lectern.sceneId ?? ''}
+          onChange={(e) => {
+            const v = e.target.value || undefined
+            void changePlace(session, v, entities.find((x) => x.id === v)?.name)
+          }}
+        >
+          <option value="">Nowhere set</option>
+          {entities
+            .filter((e) => e.type === 'location' || e.type === 'shop')
+            .map((e) => (
+              <option key={e.id} value={e.id}>
+                {ENTITY_LABELS[e.type].icon} {e.name}
+              </option>
+            ))}
+        </select>
+      </label>
       {place && (
         <>
           <div className="row wrap small">
@@ -291,7 +495,7 @@ function Scene({ lectern, edit, entities, worldId }: PanelProps & { entities: En
           <details>
             <summary>Page text</summary>
             <Markdown text={place.body} entities={entities} worldId={worldId} showSecrets />
-            {place.gmNotes && <div className="secret">{place.gmNotes}</div>}
+            {place.gmNotes && <div className="secret">🔒 {place.gmNotes}</div>}
           </details>
           {here.length > 0 && (
             <div className="small">
@@ -308,20 +512,39 @@ function Scene({ lectern, edit, entities, worldId }: PanelProps & { entities: En
         </>
       )}
       <DraftText
+        key={`${lectern.planSceneId ?? ''}/${lectern.sceneId ?? ''}`}
         multiline
-        rows={5}
+        grow
+        className="read-text scene-text"
+        aria-label="Read-aloud text"
         value={lectern.sceneText}
         placeholder="Read-aloud text, what's in the room, what happens next…"
         onCommit={(v) => edit((l) => void (l.sceneText = v))}
       />
+      {scenes.length > 0 && (
+        <details className="planned-scenes" open={scenes.length <= 10}>
+          <summary className="small">Planned scenes ({scenes.filter((x) => x.done).length} of {scenes.length} played)</summary>
+          <ol>
+            {scenes.map((x) => (
+              <li key={x.id} className={x.id === current?.id ? 'now' : x.done ? 'done' : ''}>
+                <button className="ghost" aria-current={x.id === current?.id ? 'step' : undefined} onClick={() => goToScene(world, session, x)} title="Start this scene">
+                  <span className="plan-num" aria-hidden>{x.id === current?.id ? '▶' : x.done ? '✓' : '○'}</span> {shorten(x.text, 90)}
+                </button>
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
     </LecternPanel>
   )
 }
 
+const shorten = (text: string, n: number) => (text.length > n ? `${text.slice(0, n).trimEnd()}…` : text)
+
 function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: Entity[]; worldId: string }) {
   const present = lectern.presentIds.map((id) => entities.find((e) => e.id === id)).filter((e): e is Entity => !!e)
   return (
-    <LecternPanel id="present" name="Who's here" keywords="npcs present people characters" title={<><Ico as={User} /> Who's here <Help topic="pagePicker" /></>}>
+    <LecternPanel id="present" sectionId="lectern-present" name="Who's here" keywords="npcs present people characters" title={<><Ico as={User} /> Who's here <Help topic="pagePicker" /></>}>
       {present.length === 0 && <p className="muted small">Add the NPCs and others in this scene to keep their notes in reach.</p>}
       {present.map((e) => (
         <div key={e.id} className="present">
@@ -336,7 +559,18 @@ function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: 
               <button className="ghost" title="Add to initiative" onClick={() => edit((l) => addCombatants(l, [fromEntity(e)]))}>
                 <Ico as={Sword} />
               </button>
-              <button className="ghost" title="Remove from scene" onClick={() => edit((l) => void (l.presentIds = l.presentIds.filter((x) => x !== e.id)))}>
+              <button
+                className="ghost"
+                title="Remove from scene"
+                aria-label={`Remove ${e.name} from the scene`}
+                onClick={() =>
+                  removeWithUndo(
+                    `${e.name} left the scene.`,
+                    () => edit((l) => void (l.presentIds = l.presentIds.filter((x) => x !== e.id))),
+                    () => edit((l) => void (l.presentIds.includes(e.id) || l.presentIds.push(e.id))),
+                  )
+                }
+              >
                 ✕
               </button>
             </div>
@@ -353,7 +587,7 @@ function Present({ lectern, edit, entities, worldId }: PanelProps & { entities: 
           )}
           {e.gmNotes && (
             <details className="present-notes small">
-              <summary>GM notes</summary>
+              <summary><Ico as={Lock} /> GM notes</summary>
               <div className="secret small">
                 <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
               </div>
@@ -504,13 +738,6 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
         >
           <Ico as={DiceFive} /> Roll for NPCs
         </button>
-        <button
-          className="danger"
-          disabled={!list.length}
-          onClick={() => confirm('End this combat and clear the list?') && edit((l) => void (l.combat = { round: 0, combatants: [] }))}
-        >
-          End
-        </button>
       </div>
 
       {list.length === 0 && <p className="muted small">Add the party and the opposition, type or roll initiative, then start.</p>}
@@ -545,8 +772,8 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
                 <option value="ally">Ally</option>
                 <option value="foe">Foe</option>
               </select>
-              <button className="ghost" title="Remove" onClick={() =>
-                  edit((l) => {
+              <button className="ghost" title="Remove" aria-label={`Remove ${c.name}`} onClick={() =>
+                  removeWithUndo(`${c.name} is out of the fight.`, () => edit((l) => {
                     // Removing whoever's turn it is passes the turn on to the next one, not back to the top.
                     if (l.combat.activeId === c.id) {
                       const order = ordered(l.combat.combatants)
@@ -556,7 +783,7 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
                       l.combat.activeId = rest.length ? rest[i % rest.length].id : undefined
                     }
                     l.combat.combatants = l.combat.combatants.filter((x) => x.id !== c.id)
-                  })
+                  }), () => edit((l) => void (l.combat.combatants.some((x) => x.id === c.id) || l.combat.combatants.push(c))))
                 }>
                 ✕
               </button>
@@ -567,7 +794,17 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
                 {c.conditions.map((k) => (
                   <span key={k} className="tag">
                     {k}
-                    <button title="Remove" onClick={() => change(c.id, (x) => void (x.conditions = x.conditions.filter((y) => y !== k)))}>
+                    <button
+                      title="Remove"
+                      aria-label={`Remove ${k}`}
+                      onClick={() =>
+                        removeWithUndo(
+                          `${k} taken off ${c.name}.`,
+                          () => change(c.id, (x) => void (x.conditions = x.conditions.filter((y) => y !== k))),
+                          () => change(c.id, (x) => void (x.conditions = [...new Set([...x.conditions, k])])),
+                        )
+                      }
+                    >
                       ✕
                     </button>
                   </span>
@@ -593,6 +830,23 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
         ))}
       </ol>
 
+      {list.length > 0 && (
+        <div className="row end-fight">
+          <button
+            className="danger"
+            onClick={() => {
+              const before = lectern.combat
+              removeWithUndo(
+                `Fight ended (${list.length} cleared).`,
+                () => edit((l) => void (l.combat = { round: 0, combatants: [] })),
+                () => edit((l) => void (l.combat = before)),
+              )
+            }}
+          >
+            End fight
+          </button>
+        </div>
+      )}
       <form
         className="add-combatant"
         onSubmit={(e) => {
@@ -735,7 +989,7 @@ function Dice({ lectern, edit, shareTo }: PanelProps & { shareTo?: string }) {
   }
   const last = lectern.rolls[0]
   return (
-    <LecternPanel id="dice" name="Dice" keywords="roll d20 advantage" title={<><Ico as={DiceFive} /> Dice <Help topic="dice" /></>}>
+    <LecternPanel id="dice" sectionId="lectern-dice" name="Dice" keywords="roll d20 advantage" title={<><Ico as={DiceFive} /> Dice <Help topic="dice" /></>}>
       <div className="row wrap dice-buttons">
         {QUICK_DICE.map((d) => (
           <button key={d} onClick={() => doRoll(d)}>
@@ -778,7 +1032,13 @@ function Dice({ lectern, edit, shareTo }: PanelProps & { shareTo?: string }) {
               </li>
             ))}
           </ul>
-          <button className="ghost small" onClick={() => edit((l) => void (l.rolls = []))}>
+          <button
+            className="ghost small"
+            onClick={() => {
+              const before = lectern.rolls
+              removeWithUndo('Rolls cleared.', () => edit((l) => void (l.rolls = [])), () => edit((l) => void (l.rolls = before)))
+            }}
+          >
             Clear
           </button>
         </details>
@@ -788,12 +1048,16 @@ function Dice({ lectern, edit, shareTo }: PanelProps & { shareTo?: string }) {
 }
 
 /**
- * The session's GM notes, in reach without leaving the Lectern: read them, edit them, or add a
- * line with the time (it goes to the end of the notes).
+ * The session's GM notes, in reach without leaving the Lectern: read them (the newest lines at the
+ * bottom, in view) or edit them. Quick lines are added from the note box at the top.
  */
 function SessionNotes({ session, entities, worldId }: { session: Session; entities: Entity[]; worldId: string }) {
-  const [text, setText] = useState('')
   const [editing, setEditing] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+  // Keep the newest lines in view as they're added.
+  useEffect(() => {
+    if (box.current) box.current.scrollTop = box.current.scrollHeight
+  }, [session.notes, editing])
   const setNotes = (fn: (notes: string) => string) =>
     db.sessions
       .where('id')
@@ -802,6 +1066,7 @@ function SessionNotes({ session, entities, worldId }: { session: Session; entiti
   return (
     <LecternPanel
       id="notes"
+      sectionId="lectern-notes"
       name="GM notes"
       keywords="session notes quick note jot remember"
       title={<><Ico as={NotePencil} /> GM notes <Help topic="lecternNotes" /></>}
@@ -811,28 +1076,14 @@ function SessionNotes({ session, entities, worldId }: { session: Session; entiti
         </button>
       }
     >
-      <form
-        className="row"
-        onSubmit={async (e) => {
-          e.preventDefault()
-          const line = text.trim()
-          if (!line) return
-          const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          await setNotes((n) => `${n.trimEnd()}${n.trim() ? '\n' : ''}- ${time} ${line}`)
-          setText('')
-        }}
-      >
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Something to remember… (Enter to add, with the time)" aria-label="Quick note" />
-        <button>Add</button>
-      </form>
       {editing ? (
-        <DraftText multiline rows={10} value={session.notes} onCommit={(v) => void setNotes(() => v)} placeholder="Your notes for this session…" />
+        <DraftText multiline grow value={session.notes} onCommit={(v) => setNotes(() => v)} placeholder="Your notes for this session…" aria-label="GM notes" />
       ) : session.notes.trim() ? (
-        <div className="lectern-notes">
+        <div className="lectern-notes" ref={box}>
           <Markdown text={session.notes} entities={entities} worldId={worldId} showSecrets />
         </div>
       ) : (
-        <p className="muted small">No notes for this session yet. Lines you add here also show on the session page.</p>
+        <p className="muted small">No notes for this session yet. Lines from the quick note at the top land here, and on Wrap up.</p>
       )}
     </LecternPanel>
   )
@@ -982,7 +1233,7 @@ function Party({ world, entities, campaignId }: { world: World; entities: Entity
   if (!party.length) return null
   const give = (e: Entity, n: number) => db.entities.update(e.id, { inspiration: Math.max(0, (e.inspiration ?? 0) + n) || undefined, updatedAt: Date.now() })
   return (
-    <LecternPanel id="party" name="The party" keywords="characters pcs inspiration players ac perception glance" title={<><Ico as={Shield} /> The party <Help topic="inspiration" /></>}>
+    <LecternPanel id="party" sectionId="lectern-party" name="The party" keywords="characters pcs inspiration players ac perception glance" title={<><Ico as={Shield} /> The party <Help topic="inspiration" /></>}>
       <PartyGlance
         world={world}
         party={party}
@@ -1103,7 +1354,18 @@ function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {
                   <Ico as={t.hidden ? EyeSlash : Eye} />
                 </button>
               )}
-              <button className="ghost small" title="Remove" onClick={() => edit((l) => void (l.timers = l.timers?.filter((x) => x.id !== t.id)))}>
+              <button
+                className="ghost small"
+                title="Remove"
+                aria-label={`Remove the timer ${t.label}`}
+                onClick={() =>
+                  removeWithUndo(
+                    `Timer “${t.label}” removed.`,
+                    () => edit((l) => void (l.timers = l.timers?.filter((x) => x.id !== t.id))),
+                    () => edit((l) => void (l.timers?.some((x) => x.id === t.id) || (l.timers = [...(l.timers ?? []), t]))),
+                  )
+                }
+              >
                 ✕
               </button>
             </li>

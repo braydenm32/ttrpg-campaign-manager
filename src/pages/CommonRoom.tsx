@@ -1,50 +1,70 @@
 import { ReadAloud } from '../ai/ReadAloud'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Empty } from '../components'
 import { type Campaign, type Entity, type World } from '../db'
-import { Help } from '../help'
+import { Help, type HelpTopic } from '../help'
 import { useAssetUrl, useVisibleEntities } from '../hooks'
-import { Markdown, splitSecrets } from '../Markdown'
+import { Markdown, splitSecrets, stripSecrets } from '../Markdown'
 import { useCharacterOwners } from '../players/owners'
 import { addToPartyNotes, MyNote, NotesText, PlayerNotesBox } from '../players/Notes'
 import { MyNewCharacters } from '../players/NewCharacters'
-import { SessionScheduler, showDate, upcoming } from '../players/Schedule'
-import { searchWorld, useSearchable } from '../search'
+import { ChooseCharacter, EditMyCharacter } from '../players/Characters'
+import { SessionScheduler, showDate } from '../players/Schedule'
+import { AskForm, pageLink, QuestionList } from '../players/Questions'
+import { LeadRow, LeadsView } from '../players/Leads'
+import { lastTime, liveSeenAt, markLiveSeen, nextSession, roomStage, type NextSession, type RoomStage } from '../players/roomStage'
 import { plainLinks, initials } from '../text'
-import { latestSession, useCampaigns, useWorldSessions } from '../threads'
+import { useCampaigns, useWorldSessions } from '../threads'
 import { partyOf } from '../sessions'
 import { StatusBadge } from '../status'
-import { WorldToday } from '../calendar'
-import { ClockFace } from '../clocks'
-import { openLeads, partyLoot, quantityLabel, tickingClocks, useVisibleHandouts } from '../counts'
+import { formatDate } from '../calendar'
+import { hasSafety, openLeads, partyLoot, quantityLabel, useVisibleHandouts } from '../counts'
 import { ShowingView } from '../showing'
 import { XCardButton } from './Safety'
-import { SignalButtons, TableDice, TimerInline, TimerList, TurnOrder, useMe } from '../atTheTable'
+import { SignalButtons, TableDice, TimerList, TurnOrder, useMe } from '../atTheTable'
 import { gmIdOf, localIdOf, sendSignal, useTable, type TableState } from '../cloud/table'
-import { useViewMode } from '../viewMode'
+import { characterNames, useViewMode } from '../viewMode'
 import { Ico } from '../icons'
-import { Backpack, BookOpenText, CastleTurret, ChatCircleDots, MusicNotes, Notepad, Scroll, Shield, Sparkle, Spiral, Sword, Television, UsersThree } from '@phosphor-icons/react'
+import {
+  Backpack,
+  BookOpenText,
+  CalendarBlank,
+  CastleTurret,
+  ChatCircleDots,
+  Coins,
+  HandPalm,
+  Hourglass,
+  Lock,
+  MusicNotes,
+  Newspaper,
+  Notepad,
+  Question,
+  Scroll,
+  Shield,
+  Sparkle,
+  Spiral,
+  Sword,
+  Television,
+  UsersThree,
+} from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
+import { useKeepScroll } from '../jump'
 import { PlayerDowntime } from '../players/Downtime'
 import { Highlights, StorySoFar } from '../highlights'
 
 /**
- * The Common Room: the players' front page for a world, and their seat at the table. Tabs keep it
- * short on a phone: an overview of everything, then the scene, your character, the party, leads
- * and notes in full. While the GM runs a session it also shows the scene, the music and whose turn
- * it is, and players can roll dice everyone sees and quietly signal the GM.
+ * The Common Room: the players' home in a world, made for a phone in one hand. Its tabs (Now, Me,
+ * Party, Leads, Notes) are in the world's frame (src/nav.ts); on a phone they're the bottom bar,
+ * with Notes inside Me.
+ *
+ * Now answers what every player asks first, in this order: when do we play next, what happened last
+ * time, what are we doing. It changes with the stage (src/players/roomStage.ts): while the GM runs
+ * a session live, the scene, whose turn it is, dice and the X-card come first; just after a game
+ * night, the recap does.
  */
 
-const TABS = [
-  { id: 'overview', long: 'Overview', short: 'Overview' },
-  { id: 'scene', long: 'The scene', short: 'Scene' },
-  { id: 'me', long: 'My character', short: 'Me' },
-  { id: 'party', long: 'The party', short: 'Party' },
-  { id: 'leads', long: 'Leads and quests', short: 'Leads' },
-  { id: 'notes', long: 'Notes', short: 'Notes' },
-] as const
-type Tab = (typeof TABS)[number]['id']
+const TABS = ['now', 'me', 'party', 'leads', 'notes'] as const
+type Tab = (typeof TABS)[number]
 
 export default function CommonRoom({ world }: { world: World }) {
   const worldId = world.id
@@ -55,59 +75,53 @@ export default function CommonRoom({ world }: { world: World }) {
   const { table: anyTable } = useTable(cloudId)
   const entities = useVisibleEntities(worldId)
   const sessions = useWorldSessions(worldId)
-  const campaigns = useCampaigns(worldId)
+  const allCampaigns = useCampaigns(worldId)
   const { owners } = useCharacterOwners(world)
   const me = useMe(world)
-  const [params, setParams] = useSearchParams()
-  const tab: Tab = TABS.some((t) => t.id === params.get('tab')) ? (params.get('tab') as Tab) : 'overview'
-  const go = (t: Tab) => setParams(t === 'overview' ? {} : { tab: t }, { replace: true })
+  const [params] = useSearchParams()
+  // Old addresses: the overview and the scene are both Now.
+  const tab: Tab = TABS.find((t) => t === params.get('tab')) ?? 'now'
 
   // Your characters: the ones you play, or (previewing as a player) theirs.
   const mine = memberOf
     ? me.characters.map((c) => entities.find((e) => e.id === c.id) ?? c)
     : entities.filter((e) => e.type === 'pc' && previewAs?.characterNames.some((n) => n.toLowerCase() === e.name.toLowerCase()))
   const mineIds = new Set(mine.map((c) => gmIdOf(c.id)))
-  const who = memberOf ? me.who : 'GM'
+  const who = memberOf ? me.who : mine.length ? mine.map((c) => c.name.split(' ')[0]).join(' & ') : 'You'
   // A world with several groups: another campaign's session isn't yours to see as "playing now".
   // (One in a campaign the GM keeps hidden comes with no campaign: it's for players whose campaign they can't see.)
   const ours = (campaignId?: string) =>
-    !campaignId || (anyTable!.session.campaignId ? gmIdOf(campaignId) === anyTable!.session.campaignId : !campaigns.some((k) => k.id === campaignId))
+    !campaignId || (anyTable!.session.campaignId ? gmIdOf(campaignId) === anyTable!.session.campaignId : !allCampaigns.some((k) => k.id === campaignId))
   const table = anyTable && (!mine.length || mine.some((c) => ours(c.campaignId))) ? anyTable : null
 
-  const liveCampaign = table && campaigns.find((c) => gmIdOf(c.id) === table.session.campaignId)
-  const campaign = liveCampaign ?? campaigns.find((c) => upcoming(c)) ?? (campaigns.length === 1 ? campaigns[0] : undefined)
+  // The campaigns that matter to this player: the one being played, else their characters', else all they can see.
+  const liveCampaign = table ? allCampaigns.find((c) => gmIdOf(c.id) === table.session.campaignId) : undefined
+  const theirs = allCampaigns.filter((c) => mine.some((m) => m.campaignId === c.id))
+  const campaigns = liveCampaign ? [liveCampaign] : theirs.length ? theirs : allCampaigns
+  const next = nextSession(campaigns, sessions)
+  const ids = new Set(campaigns.map((c) => c.id))
+  const last = lastTime(sessions.filter((s) => !ids.size || ids.has(s.campaignId)))
+  const campaign = liveCampaign ?? (next.kind === 'booked' || next.kind === 'poll' ? next.campaign : undefined) ?? campaigns.find((c) => c.id === last?.campaignId) ?? campaigns[0]
+
+  // "Just played": remembered on this device from the live link, for the day and a half after.
+  const live = !!table
+  useEffect(() => {
+    if (live) markLiveSeen(worldId)
+  }, [live, worldId, table])
+  const stage = roomStage({ live, next, last, liveSeenAt: liveSeenAt(worldId) })
+  // Back to a tab comes back to where you'd scrolled.
+  useKeepScroll(entities.length > 0)
+
   const party = partyOf(entities, campaign?.id)
-  const ctx: RoomContext = { world, worldId, memberOf, cloudId, table, entities, mine, mineIds, who, party, owners }
+  const ctx: RoomContext = { world, worldId, memberOf, cloudId, table, entities, mine, mineIds, who, party, owners, campaign, campaigns, sessions, next, last, stage, previewNames: memberOf ? [] : (previewAs?.characterNames ?? []) }
 
   return (
-    <div className="page common-room">
-      <RoomHeader world={world} table={table} campaign={campaign} memberOf={memberOf} />
-      {table && <LiveStrip ctx={ctx} onScene={() => go('scene')} />}
-      <nav className="room-tabs" aria-label="Common Room">
-        {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'on' : ''} aria-current={tab === t.id ? 'page' : undefined} onClick={() => go(t.id)}>
-            <span className="long">{t.long}</span>
-            <span className="short">{t.short}</span>
-          </button>
-        ))}
-      </nav>
-      {tab === 'overview' && <Overview ctx={ctx} campaigns={campaigns} sessions={sessions} go={go} />}
-      {tab === 'scene' && <SceneTab ctx={ctx} />}
+    <div className={`page common-room stage-${stage}`}>
+      {tab === 'now' && <NowTab ctx={ctx} />}
       {tab === 'me' && <MeTab ctx={ctx} />}
       {tab === 'party' && <PartyTab ctx={ctx} />}
       {tab === 'leads' && <LeadsTab ctx={ctx} />}
-      {tab === 'notes' && (
-        <section>
-          <h2>
-            <Ico as={Notepad} /> Notes <Help topic="scratchpad" />
-          </h2>
-          {memberOf || world.cloud?.enabled ? (
-            <PlayerNotesBox world={world} entityId="" entities={entities} big />
-          ) : (
-            <Empty>Notes are for players who have joined this world.</Empty>
-          )}
-        </section>
-      )}
+      {tab === 'notes' && <NotesTab ctx={ctx} />}
     </div>
   )
 }
@@ -122,20 +136,31 @@ interface RoomContext {
   mine: Entity[]
   /** The GM's ids of your characters. */
   mineIds: Set<string>
+  /** The name your rolls and notes are signed with. */
   who: string
   party: Entity[]
-  owners: Map<string, { name: string; mine: boolean }>
+  owners: Map<string, { name: string; mine: boolean; pending?: boolean }>
+  campaign?: Campaign
+  campaigns: Campaign[]
+  sessions: ReturnType<typeof useWorldSessions>
+  next: NextSession
+  last?: ReturnType<typeof useWorldSessions>[number]
+  stage: RoomStage
+  /** Previewing as one player: their characters' names. */
+  previewNames: string[]
 }
 
-/** "in 3 days", "in 2 hours", "starting now". */
+const roomLink = (worldId: string, tab: Tab) => (tab === 'now' ? worldPath(worldId) : `${worldPath(worldId)}?tab=${tab}`)
+
+/** "in 2 hours", "tomorrow", "in 3 days" (counted in days on the calendar, so Saturday evening is "in 3 days" all Wednesday). */
 function until(t: number) {
   const ms = t - Date.now()
   if (ms <= 15 * 60_000) return 'starting now'
   const h = ms / 3_600_000
   if (h < 1) return `in ${Math.round(ms / 60_000)} minutes`
-  if (h < 36) return `in ${Math.round(h)} hour${Math.round(h) === 1 ? '' : 's'}`
-  const d = Math.round(h / 24)
-  return `in ${d} day${d === 1 ? '' : 's'}`
+  const days = Math.round((new Date(t).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86_400_000)
+  if (days < 1) return `in ${Math.round(h)} hour${Math.round(h) === 1 ? '' : 's'}`
+  return days === 1 ? 'tomorrow' : `in ${days} days`
 }
 
 /** "just now", "5 minutes ago"… */
@@ -148,240 +173,439 @@ function ago(t: number) {
   return new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 }
 
-function RoomHeader({ world, table, campaign, memberOf }: { world: World; table: TableState | null; campaign?: Campaign; memberOf?: string }) {
-  const booked = campaign && upcoming(campaign)
-  const s = table?.session
-  const title = s ? (/^session \d+$/i.test(s.title) ? s.title : `Session ${s.number}: ${s.title}`) : world.name
+/** A session's name as players know it: "Session 3: The Ford", without saying "Session 3" twice. */
+const sessionName = (s: { number: number; title: string }) => (/^session \d+$/i.test(s.title.trim()) ? s.title : `Session ${s.number}: ${s.title}`)
+
+/** A tab's heading, with its help tip and anything that goes on the right. */
+function TabHead({ title, help, children }: { title: ReactNode; help: HelpTopic; children?: ReactNode }) {
   return (
-    <header className="room-header">
-      <div>
-        <div className="eyebrow">
-          {s ? world.name : 'The Common Room'}
-          {campaign && ` · ${campaign.name}`}
-        </div>
-        <h1>
-          {title} <Help topic="commonRoom" />
-        </h1>
-        <div className="room-status">
-          {s ? (
-            <span className="playing-now">Playing now</span>
-          ) : booked ? (
-            <span>
-              Next session {showDate(booked)} · <b>{until(new Date(booked.utc ?? booked.at).getTime())}</b>
-            </span>
-          ) : null}
-          <WorldToday world={world} isGM={false} />
-        </div>
-      </div>
-      {memberOf && (
-        <div className="row wrap room-actions">
-          <Link className="button" to={`${worldPath(world.id)}/questions`}>
-            <Ico as={ChatCircleDots} /> Ask the GM
-          </Link>
-          {world.safety?.xcard && <XCardButton cloudId={memberOf} small />}
-        </div>
-      )}
+    <header className="room-head">
+      <h1>
+        {title} <Help topic={help} />
+      </h1>
+      {children}
     </header>
   )
 }
 
-/** One line on what's happening at the table right now. */
-function LiveStrip({ ctx, onScene }: { ctx: RoomContext; onScene: () => void }) {
-  const t = ctx.table!
-  const turn = t.combat?.order.find((x) => x.id === t.combat?.turnId)
-  const yours = !!turn?.entityId && ctx.mineIds.has(turn.entityId)
-  return (
-    <button className={`live-strip ${yours ? 'yours' : ''}`} onClick={onScene} title="Open the scene">
-      {t.scene && (
-        <span>
-          <Ico as={CastleTurret} /> {t.scene.name}
-        </span>
-      )}
-      {t.music && (
-        <span>
-          <Ico as={MusicNotes} /> {t.music.join(', ')}
-        </span>
-      )}
-      {turn && (
-        <span>
-          <Ico as={Sword} /> Round {t.combat!.round}: {yours ? <b>your turn</b> : `${turn.name}’s turn`}
-        </span>
-      )}
-      {t.timers && <TimerInline timers={t.timers} />}
-      {!t.scene && !t.music && !turn && !t.timers && <span>Your GM is running the session.</span>}
-    </button>
-  )
-}
-
-function Card({ title, icon, to, onOpen, className = '', children, help }: { title: string; icon?: Parameters<typeof Ico>[0]['as']; to?: string; onOpen?: () => void; className?: string; children: ReactNode; help?: Parameters<typeof Help>[0]['topic'] }) {
+function Card({ title, icon, to, more, className = '', children, help }: { title: string; icon?: Parameters<typeof Ico>[0]['as']; to?: string; more?: string; className?: string; children: ReactNode; help?: HelpTopic }) {
   return (
     <section className={`card room-card ${className}`}>
       <div className="room-card-head">
         <h2>
           {icon && <Ico as={icon} />} {title} {help && <Help topic={help} />}
         </h2>
-        {to ? (
-          <Link className="small" to={to}>
-            Open
+        {to && (
+          <Link className="room-more" to={to}>
+            {more ?? 'Open'}
           </Link>
-        ) : onOpen ? (
-          <button className="link small" onClick={onOpen}>
-            Open
-          </button>
-        ) : null}
+        )}
       </div>
       {children}
     </section>
   )
 }
 
-function Overview({ ctx, campaigns, sessions, go }: { ctx: RoomContext; campaigns: Campaign[]; sessions: ReturnType<typeof useWorldSessions>; go: (t: Tab) => void }) {
-  const { world, worldId, entities, memberOf } = ctx
-  const [query, setQuery] = useState('')
-  const searchable = useSearchable(worldId)
-  const results = searchWorld(query, { worldId, world, ...searchable })
-  const last = latestSession(sessions.filter((s) => s.recap.trim()))
-  const story = campaigns.find((c) => c.id === last?.campaignId) ?? (campaigns.length === 1 ? campaigns[0] : undefined)
-  const voting = campaigns.filter((c) => c.schedule?.length)
-  const leads = openLeads(entities)
-  const clocks = tickingClocks(entities)
-  const { items: loot, coin } = partyLoot(entities, world)
+// ——— Now ———
+
+function NowTab({ ctx }: { ctx: RoomContext }) {
+  const { world, worldId, stage, campaign, memberOf } = ctx
+  const voting = ctx.campaigns.filter((c) => c.schedule?.length)
+  const today = world.calendar?.today ? formatDate(world.calendar, world.calendar.today) : ''
+  const scheduler = voting.length > 0 && (
+    <div id="when" className="room-when">
+      {voting.map((c) => (
+        <SessionScheduler key={c.id} world={world} campaign={c} isGM={false} onBook={async () => {}} heading={voting.length > 1 ? `Next session: ${c.name}` : 'When can you play?'} />
+      ))}
+    </div>
+  )
+  const showing = world.showing ? <OnTheTable world={world} entities={ctx.entities} big={stage === 'during'} /> : null
 
   return (
     <>
-      <input className="search" placeholder="Search what you know…" value={query} onChange={(e) => setQuery(e.target.value)} />
-      {query.trim() && (
-        <ul className="entity-list">
-          {results.map((h) => (
-            <li key={h.key}>
-              <Link to={h.to}>
-                {h.icon} {h.title}
-              </Link>
-              {h.snippet && <span className="muted"> · {h.snippet}</span>}
-            </li>
-          ))}
-          {results.length === 0 && <li className="muted">Nothing matches.</li>}
-        </ul>
+      <TabHead title={stage === 'during' ? 'Playing now' : stage === 'after' ? 'After the game' : 'Before next session'} help="roomNow">
+        <span className="room-sub muted small">
+          {campaign?.name}
+          {today && <span className="phone-only">{`${campaign ? ' · ' : ''}${today}`}</span>}
+        </span>
+      </TabHead>
+      {stage === 'during' && (
+        <>
+          <LiveTable ctx={ctx} />
+          {showing}
+        </>
       )}
-      {voting.map((c) => (
-        <SessionScheduler key={c.id} world={world} campaign={c} isGM={false} onBook={async () => {}} />
-      ))}
-      <div className="room-grid">
-        <OnTheTable world={world} entities={entities} className="wide" />
-        <Card title="You" icon={Shield} onOpen={() => go('me')}>
-          {ctx.mine.length ? <CharacterCard ctx={ctx} c={ctx.mine[0]} /> : <NoCharacter ctx={ctx} />}
-          {ctx.mine.length > 1 && (
-            <p className="small muted">
-              Also playing: {ctx.mine.slice(1).map((c) => c.name).join(', ')}
-            </p>
+      <div className="room-now">
+        <div className="room-main">
+          {stage === 'after' && <LastTimeFull ctx={ctx} />}
+          {stage !== 'during' && showing}
+          <Answers ctx={ctx} />
+          {stage !== 'during' && scheduler}
+          <DoingCard ctx={ctx} />
+          {stage === 'after' && <AfterLoot ctx={ctx} />}
+          {stage === 'after' && memberOf && (
+            <Card title="Party notes" icon={Notepad} to={roomLink(worldId, 'notes')} more="All notes">
+              <PartyNotesPeek ctx={ctx} />
+            </Card>
           )}
-          {memberOf && <MyNote world={world} entityId="" placeholder="Jot something only you will see…" />}
-        </Card>
-        <Card title="The party" icon={UsersThree} onOpen={() => go('party')}>
-          {ctx.party.length ? <PartyList ctx={ctx} /> : <p className="muted small">No player characters revealed yet.</p>}
-        </Card>
-        <Card title="Leads and quests" icon={Spiral} onOpen={() => go('leads')}>
-          {leads.length ? <LeadList leads={leads.slice(0, 4)} worldId={worldId} /> : <p className="muted small">No open leads yet.</p>}
-          {clocks.length > 0 && (
-            <div className="room-clocks">
-              <div className="muted small">Clocks the party knows about</div>
-              {clocks.slice(0, 3).map(({ clock, owner }) => (
-                <Link key={clock.id} className="room-clock" to={pagePath(worldId, owner.id)}>
-                  <span>{clock.name}</span>
-                  <ClockFace clock={clock} size={28} />
-                </Link>
-              ))}
-            </div>
-          )}
-        </Card>
-        {memberOf && (
-          <Card title="Party notes" icon={Notepad} onOpen={() => go('notes')}>
-            <PartyNotesPeek ctx={ctx} />
-          </Card>
-        )}
-        <Card title="Previously on…" icon={Scroll} className="wide" to={last ? `${worldPath(worldId)}/s/${last.id}` : undefined}>
-          {last ? (
-            <>
-              <div className="row spread muted small">
-                <span>
-                  #{last.number} {last.title}
-                </span>
-                <ReadAloud text={last.recap} id={`room-${last.id}`} />
-              </div>
-              <div className="recap-peek">
-                <Markdown text={last.recap} entities={entities} worldId={worldId} showSecrets={false} />
-              </div>
-              <Highlights session={last} entities={entities} worldId={worldId} isGM={false} />
-            </>
-          ) : (
-            <p className="muted small">No recaps yet. Your GM’s write-up of each session lands here.</p>
-          )}
-        </Card>
-        {story && (story.storySoFar?.trim() || sessions.filter((s) => s.campaignId === story.id && s.recap.trim()).length > 1) && (
-          <Card title="The story so far" icon={BookOpenText} className="wide" help="storySoFar">
-            <StorySoFar world={world} campaign={story} sessions={sessions} entities={entities} isGM={false} compact />
-          </Card>
-        )}
-        {(loot.length > 0 || coin.length > 0) && (
-          <Card title="Party loot" icon={Backpack} to={`${worldPath(worldId)}/loot`}>
-            {coin.length > 0 && (
-              <div className="small">
-                Purse: <b>{coin.map((c) => `${c.amount} ${c.name}`).join(', ')}</b>
-              </div>
-            )}
-            <ul className="small room-list">
-              {loot.slice(0, 5).map((i) => (
-                <li key={i.id}>
-                  <Link to={pagePath(worldId, i.id)}>{i.name}</Link>
-                  {quantityLabel(i) && ` ${quantityLabel(i)}`}
-                </li>
-              ))}
-              {loot.length > 5 && <li className="muted">and {loot.length - 5} more</li>}
-            </ul>
-          </Card>
-        )}
+        </div>
+        <aside className="room-side">
+          <YouCard ctx={ctx} />
+          {stage !== 'during' && memberOf && <TellYourGm ctx={ctx} />}
+        </aside>
       </div>
-      {memberOf && (
-        <Link className="button block room-ask" to={`${worldPath(worldId)}/questions`}>
-          <Ico as={ChatCircleDots} /> Ask the GM privately
-        </Link>
-      )}
+      {stage === 'during' && scheduler}
+      {ctx.party.length > 0 && <PartyStrip ctx={ctx} />}
+      {campaign && stage === 'before' && <StoryCard ctx={ctx} campaign={campaign} />}
+      <RoomFoot ctx={ctx} />
     </>
   )
 }
 
-/** What the GM is showing now, and the handouts from before. */
-function OnTheTable({ world, entities, className = '', big }: { world: World; entities: Entity[]; className?: string; big?: boolean }) {
-  const showing = world.showing
-  const earlier = useVisibleHandouts(world, entities).filter((h) => h.id !== showing?.id).slice(0, 3)
+/** The three answers: when we play next, what happened last time (and, with no recap yet, saying so). */
+function Answers({ ctx }: { ctx: RoomContext }) {
+  const { next, last, worldId, stage, memberOf } = ctx
+  const scrollToWhen = () => document.getElementById('when')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   return (
-    <section className={`card room-card on-the-table ${className}`}>
+    <section className="card room-answers" aria-label="Next session and last time">
+      <div className="answer-row">
+        <span className={`stage-chip ${next.kind === 'unset' ? 'warn' : ''}`}>
+          <Ico as={CalendarBlank} /> Next session
+        </span>
+        <div className="answer-text">
+          {next.kind === 'booked' ? (
+            <>
+              <b>{showDate(next.at)}</b> <span className="muted small">· {until(next.time)}</span>
+              {next.at.note && <div className="muted small">{next.at.note}</div>}
+            </>
+          ) : next.kind === 'dated' ? (
+            <>
+              <b>{new Date(next.time).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</b>{' '}
+              <span className="muted small">· {sessionName(next.session)}</span>
+            </>
+          ) : next.kind === 'poll' ? (
+            <>
+              <b>Not booked yet</b>{' '}
+              <span className="muted small">
+                · your GM suggested {next.count === 1 ? 'a date' : `${next.count} dates`}
+              </span>
+            </>
+          ) : (
+            <>
+              <b>Not set yet</b> <span className="muted small">· your GM hasn’t picked a date</span>
+            </>
+          )}
+        </div>
+        {next.kind === 'poll' && (
+          <button className="small answer-action" onClick={scrollToWhen}>
+            {memberOf ? 'Say when you’re free' : 'See the dates'}
+          </button>
+        )}
+      </div>
+      {stage !== 'after' && (
+        <div className="answer-row">
+          <span className="stage-chip">
+            <Ico as={Scroll} /> Last time
+          </span>
+          <div className="answer-text">
+            {last ? (
+              <>
+                <b>{sessionName(last)}</b>
+                <div className="recap-short">
+                  <Markdown text={last.recap} entities={ctx.entities} worldId={worldId} showSecrets={false} />
+                </div>
+                <Link className="answer-link" to={`${worldPath(worldId)}/s/${last.id}`}>
+                  Read it all
+                </Link>
+              </>
+            ) : (
+              <span className="muted">Nothing yet. Your GM’s write-up of each session lands here.</span>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
+/** Just after a game night: the recap, in full, first. */
+function LastTimeFull({ ctx }: { ctx: RoomContext }) {
+  const { last, worldId, entities, sessions, table } = ctx
+  // A session played after the newest recap: the write-up isn't in yet.
+  const newer = !last || (!!table && table.session.number > last.number)
+  return (
+    <section className="card room-card room-recap">
+      <div className="room-card-head">
+        <h2>
+          <Ico as={Scroll} /> Last time
+        </h2>
+        {last && <ReadAloud text={last.recap} id={`room-${last.id}`} />}
+      </div>
+      {last && !newer ? (
+        <>
+          <div className="muted small">{sessionName(last)}</div>
+          <div className="recap-peek">
+            <Markdown text={last.recap} entities={entities} worldId={worldId} showSecrets={false} />
+          </div>
+          <Link className="answer-link" to={`${worldPath(worldId)}/s/${last.id}`}>
+            Read it all
+          </Link>
+          <Highlights session={sessions.find((s) => s.id === last.id)!} entities={entities} worldId={worldId} isGM={false} />
+        </>
+      ) : (
+        <p className="muted">Your GM hasn’t written up the last session yet. Their recap lands here.</p>
+      )}
+    </section>
+  )
+}
+
+/** What we're doing: the leads under way first, three of them, and how many more there are. */
+function DoingCard({ ctx }: { ctx: RoomContext }) {
+  const { entities, worldId } = ctx
+  const leads = openLeads(entities)
+  return (
+    <Card title="What we’re doing" icon={Spiral} to={leads.length ? roomLink(worldId, 'leads') : undefined} more={leads.length > 3 ? `All ${leads.length} leads` : 'Leads'} className="room-doing">
+      {leads.length ? (
+        <ul className="lead-list">
+          {leads.slice(0, 3).map((e) => (
+            <LeadRow key={e.id} e={e} worldId={worldId} />
+          ))}
+        </ul>
+      ) : (
+        <p className="muted small">No open leads yet. When your GM shares a quest or a rumour, it shows here.</p>
+      )}
+    </Card>
+  )
+}
+
+/** After a game night: what the party carries now (the purse is on the Party tab). */
+function AfterLoot({ ctx }: { ctx: RoomContext }) {
+  const { items } = partyLoot(ctx.entities, ctx.world)
+  if (!items.length) return null
+  const newest = [...items].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 3)
+  return (
+    <Card title="Loot" icon={Backpack} to={roomLink(ctx.worldId, 'party')} more="Who carries what">
+      <p className="small">
+        The party carries {items.length} thing{items.length === 1 ? '' : 's'}. Lately:{' '}
+        {newest.map((i, n) => (
+          <span key={i.id}>
+            {n > 0 && ', '}
+            <Link to={pagePath(ctx.worldId, i.id)}>{i.name}</Link>
+          </span>
+        ))}
+        .
+      </p>
+    </Card>
+  )
+}
+
+/** While the GM runs a session live: where we are, the music, timers, whose turn, then dice and a word to the GM. */
+function LiveTable({ ctx }: { ctx: RoomContext }) {
+  const { table, world, memberOf, cloudId, entities } = ctx
+  const t = table!
+  const sceneId = t.scene?.entityId && localIdOf(memberOf, t.scene.entityId)
+  const scenePage = sceneId ? entities.find((e) => e.id === sceneId) : undefined
+  const turn = t.combat?.order.find((x) => x.id === t.combat?.turnId)
+  const yours = !!turn?.entityId && ctx.mineIds.has(turn.entityId)
+  return (
+    <>
+      <section className={`card room-card room-live ${yours ? 'yours' : ''}`}>
+        <div className="room-card-head">
+          <span className="stage-chip good">
+            <span className="live-dot" /> Playing now
+          </span>
+          <span className="muted small">{sessionName(t.session)}</span>
+        </div>
+        <h2 className="room-scene">
+          <Ico as={CastleTurret} /> {scenePage ? <Link to={pagePath(world.id, scenePage.id)}>{scenePage.name}</Link> : (t.scene?.name ?? 'Your GM is setting the scene')}
+        </h2>
+        {scenePage?.summary && <p>{plainLinks(scenePage.summary)}</p>}
+        {t.music && (
+          <p className="small">
+            <Ico as={MusicNotes} /> {t.music.join(', ')}
+          </p>
+        )}
+        {t.timers && <TimerList timers={t.timers} />}
+        {turn && (
+          <p className={`room-turn ${yours ? 'yours' : ''}`}>
+            <Ico as={Sword} /> {yours ? <b>Your turn!</b> : <>{turn.name}’s turn</>} <span className="muted small">· round {t.combat!.round}</span>
+          </p>
+        )}
+        {t.combat ? <TurnOrder combat={t.combat} mine={ctx.mineIds} /> : <p className="muted small">No fight on right now.</p>}
+      </section>
+      <div className="room-live-tools">
+        <Card title="Dice" icon={Sparkle} help="tableDice">
+          <TableDice cloudId={memberOf ? cloudId : undefined} who={ctx.who} />
+        </Card>
+        <Card title="Tell your GM" icon={ChatCircleDots} help="tableSignals">
+          <SignalButtons cloudId={memberOf ? cloudId : undefined} who={ctx.who} />
+          {memberOf && world.safety?.xcard && <XCardButton cloudId={memberOf} />}
+          {memberOf && (
+            <Link className="room-more" to={`${worldPath(world.id)}/questions`}>
+              Ask your GM something privately
+            </Link>
+          )}
+        </Card>
+      </div>
+    </>
+  )
+}
+
+/** What the GM is showing now, and a way to the handouts from before. Only there when something is shown. */
+function OnTheTable({ world, entities, big }: { world: World; entities: Entity[]; big?: boolean }) {
+  const showing = world.showing!
+  const earlier = useVisibleHandouts(world, entities).filter((h) => h.id !== showing.id).length
+  return (
+    <section className="card room-card on-the-table">
       <div className="room-card-head">
         <h2>
           <Ico as={Television} /> On the table now
         </h2>
-        {showing && <span className="muted small">Shown by the GM {ago(showing.at)}</span>}
+        <span className="muted small">Shown {ago(showing.at)}</span>
       </div>
-      {showing ? (
-        <div className="handout-paper">
-          <div className="handout-title">{showing.title}</div>
-          <ShowingView showing={showing} worldId={world.id} big={big} />
-        </div>
-      ) : (
-        <p className="muted small">Nothing right now. When your GM shows a picture, a page or a note, it appears here.</p>
-      )}
-      {earlier.length > 0 && (
-        <div className="row wrap small earlier">
-          <span className="muted">Earlier:</span>
-          {earlier.map((h) => (
-            <Link key={h.id} className="tag" to={`${worldPath(world.id)}/handouts`}>
-              {h.title}
-            </Link>
-          ))}
-          <Link to={`${worldPath(world.id)}/handouts`}>All handouts</Link>
-        </div>
+      <div className="handout-paper">
+        <div className="handout-title">{showing.title}</div>
+        <ShowingView showing={showing} worldId={world.id} big={big} />
+      </div>
+      {earlier > 0 && (
+        <Link className="small" to={`${worldPath(world.id)}/handouts`}>
+          Earlier handouts ({earlier})
+        </Link>
       )}
     </section>
+  )
+}
+
+/** Up to three numbers worth seeing at a glance: armour, hit points, level or class first. */
+function keyNumbers(c: Entity) {
+  const facts = c.fields.filter((f) => !f.gm && f.key.trim() && f.value.trim())
+  const want = [/^(ac|armou?r)/i, /^(hp|hit points|health)/i, /^(level|lvl)/i, /^class/i]
+  const picked = want.flatMap((re) => facts.filter((f) => re.test(f.key.trim())).slice(0, 1))
+  for (const f of facts) if (picked.length < 3 && !picked.includes(f)) picked.push(f)
+  return picked.slice(0, 3)
+}
+
+/** You: your character at a glance, or how to get one. */
+function YouCard({ ctx }: { ctx: RoomContext }) {
+  const { mine, worldId, entities } = ctx
+  const c = mine[0]
+  if (!c)
+    return (
+      <Card title="You" icon={Shield} to={roomLink(worldId, 'me')} more="Me">
+        <NoCharacter ctx={ctx} />
+      </Card>
+    )
+  const secrets = onlyYouKnow(entities, ctx.previewNames).length + entities.filter((e) => e.secretForYou).length
+  return (
+    <Card title="You" icon={Shield} to={roomLink(worldId, 'me')} more="Your character">
+      <CharacterHead ctx={ctx} c={c} />
+      <NumberTiles c={c} />
+      {secrets > 0 && (
+        <Link className="secret-chip small" to={roomLink(worldId, 'me')}>
+          <Ico as={Lock} /> {secrets === 1 ? '1 secret just for you' : `${secrets} secrets just for you`}
+        </Link>
+      )}
+      {mine.length > 1 && <p className="small muted">Also playing: {mine.slice(1).map((x) => x.name).join(', ')}</p>}
+    </Card>
+  )
+}
+
+function NumberTiles({ c }: { c: Entity }) {
+  const tiles = keyNumbers(c)
+  if (!tiles.length) return null
+  return (
+    <dl className="number-tiles">
+      {tiles.map((f, i) => (
+        <div key={i}>
+          <dt>{f.key}</dt>
+          <dd>{plainLinks(f.value)}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+/** Ask a question or say what you do between sessions: both just between you and your GM. */
+function TellYourGm({ ctx }: { ctx: RoomContext }) {
+  return (
+    <Card title="Tell your GM" icon={ChatCircleDots}>
+      <div className="row two-buttons">
+        <Link className="button" to={`${worldPath(ctx.worldId)}/questions`}>
+          <Ico as={Question} /> Ask a question
+        </Link>
+        {ctx.mine.length > 0 && (
+          <Link className="button" to={`${roomLink(ctx.worldId, 'notes')}#downtime`}>
+            <Ico as={Hourglass} /> Downtime
+          </Link>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+/** The party in one line: faces and first names, to the Party tab. */
+function PartyStrip({ ctx }: { ctx: RoomContext }) {
+  return (
+    <section className="card room-card party-strip">
+      <div className="room-card-head">
+        <h2>
+          <Ico as={UsersThree} /> The party
+        </h2>
+        <Link className="room-more" to={roomLink(ctx.worldId, 'party')}>
+          Who carries what
+        </Link>
+      </div>
+      <ul className="party-faces">
+        {ctx.party.map((e) => (
+          <li key={e.id}>
+            <Link to={pagePath(ctx.worldId, e.id)}>
+              <Avatar e={e} size={36} />
+              <span>
+                {e.name.split(' ')[0]}
+                {ctx.mineIds.has(gmIdOf(e.id)) && <small className="muted"> (you)</small>}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+function StoryCard({ ctx, campaign }: { ctx: RoomContext; campaign: Campaign }) {
+  const { world, sessions, entities } = ctx
+  if (!campaign.storySoFar?.trim() && sessions.filter((s) => s.campaignId === campaign.id && s.recap.trim()).length < 2) return null
+  return (
+    <Card title="The story so far" icon={BookOpenText} help="storySoFar" className="room-story">
+      <StorySoFar world={world} campaign={campaign} sessions={sessions} entities={entities} isGM={false} compact />
+    </Card>
+  )
+}
+
+/** The foot of Now: table rules, handouts, past sessions. */
+function RoomFoot({ ctx }: { ctx: RoomContext }) {
+  const { world, worldId, campaign } = ctx
+  const handouts = useVisibleHandouts(world, ctx.entities).length
+  return (
+    <nav className="room-foot" aria-label="More in the Common Room">
+      {hasSafety(world) && !world.shared?.token && (
+        <Link to={`${worldPath(worldId)}/safety`}>
+          <Ico as={HandPalm} /> Table rules
+        </Link>
+      )}
+      {handouts > 0 && (
+        <Link to={`${worldPath(worldId)}/handouts`}>
+          <Ico as={Newspaper} /> Handouts ({handouts})
+        </Link>
+      )}
+      {campaign && (
+        <Link to={`${worldPath(worldId)}/c/${campaign.id}`}>
+          <Ico as={Scroll} /> Past sessions
+        </Link>
+      )}
+      {/* Live, the X-card is in the session's own card. */}
+      {ctx.memberOf && world.safety?.xcard && ctx.stage !== 'during' && <XCardButton cloudId={ctx.memberOf} small />}
+    </nav>
   )
 }
 
@@ -396,27 +620,29 @@ function Avatar({ e, size = 40 }: { e: Entity; size?: number }) {
   )
 }
 
-/** Passages written just for this player (":::for" their character), wherever they are. */
-function onlyYouKnow(entities: Entity[]) {
+/**
+ * Passages written just for this player (":::for" their character), wherever they are. A player's
+ * copy has them already picked out by the server; the GM previewing as a player matches them here.
+ */
+function onlyYouKnow(entities: Entity[], previewNames: string[] = []) {
+  const names = new Set(characterNames(previewNames))
   return entities.flatMap((e) =>
     [e.body, e.playerBody ?? '']
       .flatMap((t) => splitSecrets(t))
-      .filter((seg) => seg.kind === 'foryou' && seg.body.trim())
-      .map((seg) => ({ page: e, text: seg.body.trim() })),
+      .filter((seg) => (seg.kind === 'foryou' || (seg.kind === 'for' && seg.names.some((n) => names.has(n.toLowerCase())))) && seg.body.trim())
+      .map((seg) => ({ page: e, text: stripSecrets(seg.body).trim() }))
+      .filter((x) => x.text),
   )
 }
 
-function CharacterCard({ ctx, c, full }: { ctx: RoomContext; c: Entity; full?: boolean }) {
-  const { worldId, entities, memberOf, cloudId } = ctx
+/** A character's picture, name, one-line summary and inspiration. */
+function CharacterHead({ ctx, c, big }: { ctx: RoomContext; c: Entity; big?: boolean }) {
+  const { worldId, memberOf, cloudId } = ctx
   const [asked, setAsked] = useState('')
-  const facts = c.fields.filter((f) => !f.gm && f.value.trim())
-  const secrets = onlyYouKnow(full ? entities : entities.filter((e) => e.id === c.id || e.secretForYou)).slice(0, full ? 50 : 1)
-  const revealed = entities.filter((e) => e.secretForYou)
-  const items = entities.filter((e) => e.type === 'item' && e.heldBy === c.id)
   return (
     <div className="room-character">
       <div className="row">
-        <Avatar e={c} size={full ? 88 : 64} />
+        <Avatar e={c} size={big ? 88 : 56} />
         <div>
           <Link className="room-name" to={pagePath(worldId, c.id)}>
             {c.name}
@@ -426,59 +652,22 @@ function CharacterCard({ ctx, c, full }: { ctx: RoomContext; c: Entity; full?: b
           </div>
         </div>
       </div>
-      <div className="row wrap inspiration-row">
-        <span className={c.inspiration ? 'inspired' : 'muted'} title="Inspiration from your GM">
-          <Ico as={Sparkle} /> {c.inspiration ? `Inspiration: ${c.inspiration}` : 'No inspiration'}
-        </span>
-        {memberOf && cloudId && !!c.inspiration && (
-          <button
-            className="small"
-            disabled={!!asked}
-            onClick={async () => setAsked((await sendSignal(cloudId, 'inspiration', c.name.split(' ')[0], gmIdOf(c.id))) ? 'Asked your GM.' : 'Couldn’t reach your GM.')}
-          >
-            Use one
-          </button>
-        )}
-        {asked && <span className="small">{asked}</span>}
-        <Help topic="inspiration" />
-      </div>
-      {facts.length > 0 && (
-        <dl className="room-facts">
-          {facts.slice(0, full ? undefined : 4).map((f, i) => (
-            <div key={i}>
-              <dt>{f.key}</dt>
-              <dd>{plainLinks(f.value)}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      {secrets.map((s, i) => (
-        <div key={i} className="secret for-you small">
-          <b>Only you know{s.page.id === c.id ? '' : ` (${s.page.name})`}:</b> {plainLinks(s.text)}{' '}
-          <Link to={pagePath(worldId, s.page.id)}>Read</Link>
-        </div>
-      ))}
-      {full && revealed.length > 0 && (
-        <div className="small">
-          <span className="muted">Revealed just to you: </span>
-          {revealed.map((e, i) => (
-            <span key={e.id}>
-              {i > 0 && ', '}
-              <Link to={pagePath(worldId, e.id)}>{e.name}</Link>
-            </span>
-          ))}
-        </div>
-      )}
-      {full && items.length > 0 && (
-        <div className="small">
-          <span className="muted">Carrying: </span>
-          {items.map((e, i) => (
-            <span key={e.id}>
-              {i > 0 && ', '}
-              <Link to={pagePath(worldId, e.id)}>{e.name}</Link>
-              {quantityLabel(e) && ` ${quantityLabel(e)}`}
-            </span>
-          ))}
+      {(!!c.inspiration || big) && (
+        <div className="row wrap inspiration-row">
+          <span className={c.inspiration ? 'inspired' : 'muted'} title="Inspiration from your GM">
+            <Ico as={Sparkle} /> {c.inspiration ? `Inspiration: ${c.inspiration}` : 'No inspiration'}
+          </span>
+          {memberOf && cloudId && !!c.inspiration && (
+            <button
+              className="small"
+              disabled={!!asked}
+              onClick={async () => setAsked((await sendSignal(cloudId, 'inspiration', c.name.split(' ')[0], gmIdOf(c.id))) ? 'Asked your GM.' : 'Couldn’t reach your GM.')}
+            >
+              Use one
+            </button>
+          )}
+          {asked && <span className="small">{asked}</span>}
+          <Help topic="inspiration" />
         </div>
       )}
     </div>
@@ -486,57 +675,285 @@ function CharacterCard({ ctx, c, full }: { ctx: RoomContext; c: Entity; full?: b
 }
 
 function NoCharacter({ ctx }: { ctx: RoomContext }) {
-  return (
-    <p className="muted small">
-      {ctx.memberOf
-        ? 'Once your GM approves the character you play, it shows here. Pick yours from the banner at the top.'
-        : ctx.world.cloud?.enabled
-          ? 'Previewing as a player? Choose one in the yellow banner at the top of the page to see their character here.'
-          : 'Invite players in World settings to preview the world as one of them.'}
-    </p>
-  )
+  const { memberOf, owners, worldId } = ctx
+  const pending = [...owners.values()].some((o) => o.mine && o.pending)
+  if (memberOf)
+    return pending ? (
+      <p className="muted small">You’ve asked to play a character. Once your GM approves it, it shows here.</p>
+    ) : (
+      <>
+        <p className="muted small">Which character are you playing? Pick yours and your GM approves it.</p>
+        <Link className="button" to={roomLink(worldId, 'me')}>
+          <Ico as={Shield} /> Choose your character
+        </Link>
+      </>
+    )
+  return <p className="muted small">Previewing as every player, so there’s no “you” here. Choose a character in the Player view bar above to see the Common Room as them.</p>
 }
 
-function PartyList({ ctx, full }: { ctx: RoomContext; full?: boolean }) {
+// ——— Me ———
+
+function MeTab({ ctx }: { ctx: RoomContext }) {
+  const { world, worldId, memberOf, mine, entities } = ctx
+  if (!mine.length)
+    return (
+      <>
+        <TabHead title="Me" help="roomMe" />
+        {memberOf ? (
+          <section className="card room-card">
+            <ChooseCharacter world={world} />
+          </section>
+        ) : (
+          <section className="card room-card">
+            <NoCharacter ctx={ctx} />
+          </section>
+        )}
+        {memberOf && (
+          <section className="card room-card">
+            <h2 className="room-card-title">My private notes</h2>
+            <MyNote world={world} entityId="" placeholder="Anything you want to remember. Only you can see this." />
+          </section>
+        )}
+      </>
+    )
+  const revealed = entities.filter((e) => e.secretForYou)
+  const secrets = onlyYouKnow(entities, ctx.previewNames)
   return (
-    <ul className={`room-party ${full ? 'full' : ''}`}>
-      {ctx.party.map((e) => {
-        const owner = ctx.owners.get(e.id)
+    <>
+      <TabHead title="Me" help="roomMe" />
+      {mine.map((c) => {
+        // The rest of the sheet, without the numbers already in the tiles.
+        const tiles = keyNumbers(c)
+        const facts = c.fields.filter((f) => !f.gm && f.value.trim() && !tiles.includes(f))
+        const items = entities.filter((e) => e.type === 'item' && e.heldBy === c.id)
+        const owned = ctx.owners.get(c.id)
         return (
-          <li key={e.id}>
-            <Avatar e={e} size={full ? 56 : 36} />
-            <div>
-              <Link to={pagePath(ctx.worldId, e.id)}>{e.name}</Link> <StatusBadge entity={e} />
-              {!!e.inspiration && (
-                <span className="inspired small" title="Inspiration">
-                  {' '}
-                  <Ico as={Sparkle} /> {e.inspiration}
-                </span>
-              )}
-              <div className="muted small">
-                {e.summary ? plainLinks(e.summary) : ''}
-                {owner && `${e.summary ? ' · ' : ''}${owner.mine ? 'you' : `played by ${owner.name}`}`}
-              </div>
+          <section key={c.id} className="card room-card room-me">
+            <CharacterHead ctx={ctx} c={c} big />
+            <NumberTiles c={c} />
+            <div className="row wrap me-actions">
+              {memberOf && owned?.mine && !owned.pending && <EditMyCharacter entity={c} cloudId={memberOf} system={world.system} />}
+              <Link className="button" to={pagePath(worldId, c.id)}>
+                <Ico as={BookOpenText} /> {memberOf ? 'My character’s page' : 'Their page'}
+              </Link>
             </div>
-          </li>
+            {facts.length > 0 && (
+              <dl className="room-facts">
+                {facts.map((f, i) => (
+                  <div key={i}>
+                    <dt>{f.key}</dt>
+                    <dd>{plainLinks(f.value)}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            {items.length > 0 && (
+              <div className="small">
+                <span className="muted">Carrying: </span>
+                {items.map((e, i) => (
+                  <span key={e.id}>
+                    {i > 0 && ', '}
+                    <Link to={pagePath(worldId, e.id)}>{e.name}</Link>
+                    {quantityLabel(e) && ` ${quantityLabel(e)}`}
+                  </span>
+                ))}
+              </div>
+            )}
+            {memberOf && (
+              <>
+                <h3 className="small">My notes on {c.name.split(' ')[0]}</h3>
+                <MyNote world={world} entityId={c.id} placeholder="Plans, goals, things to bring up…" />
+              </>
+            )}
+          </section>
         )
       })}
-    </ul>
+      {secrets.length > 0 && (
+        <section className="card room-card">
+          <h2 className="room-card-title">
+            <Ico as={Lock} /> Only you know
+          </h2>
+          {secrets.map((s, i) => (
+            <div key={i} className="secret for-you small">
+              <Link to={pagePath(worldId, s.page.id)}>{s.page.name}</Link>
+              <Markdown text={s.text} entities={entities} worldId={worldId} showSecrets={false} />
+            </div>
+          ))}
+        </section>
+      )}
+      {revealed.length > 0 && (
+        <section className="card room-card">
+          <h2 className="room-card-title">Revealed just to you</h2>
+          <ul className="room-list">
+            {revealed.map((e) => (
+              <li key={e.id}>
+                <Link to={pagePath(worldId, e.id)}>{e.name}</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {memberOf && (
+        <section className="card room-card">
+          <h2 className="room-card-title">My private notes</h2>
+          <MyNote world={world} entityId="" placeholder="Anything you want to remember. Only you can see this." />
+        </section>
+      )}
+      {memberOf && (
+        <section className="card room-card">
+          <p className="muted small">Your character died, retired or left? Write up the next one for your GM.</p>
+          <MyNewCharacters world={world} />
+        </section>
+      )}
+      <p className="room-foot-note muted small">
+        Group notes, questions for your GM and downtime are under <Link to={roomLink(worldId, 'notes')}>Notes</Link>.
+      </p>
+    </>
   )
 }
 
-function LeadList({ leads, worldId, full }: { leads: Entity[]; worldId: string; full?: boolean }) {
+// ——— Party ———
+
+function PartyTab({ ctx }: { ctx: RoomContext }) {
+  const { world, worldId, entities } = ctx
+  const loot = partyLoot(entities, world)
+  const carried = new Map(loot.members.map((m) => [m.holder.id, m.items]))
   return (
-    <ul className="room-list">
-      {leads.map((e) => (
-        <li key={e.id}>
+    <>
+      <TabHead title="The party" help="roomParty">
+        {loot.any && (
+          <Link className="room-more" to={`${worldPath(worldId)}/loot`}>
+            The full loot list
+          </Link>
+        )}
+      </TabHead>
+      {(loot.coin.length > 0 || loot.stash.length > 0) && (
+        <section className="card room-card party-shared">
+          {loot.coin.length > 0 && (
+            <div className="purse">
+              <Ico as={Coins} /> <span className="muted">Purse</span> <b>{loot.coin.map((c) => `${c.amount} ${c.name}`).join(' · ')}</b>
+            </div>
+          )}
+          {loot.stash.length > 0 && (
+            <div className="small">
+              <span className="muted">Party stash: </span>
+              <ItemLinks items={loot.stash} worldId={worldId} />
+            </div>
+          )}
+          {!loot.items.length && <span className="muted small">Nobody carries anything yet.</span>}
+        </section>
+      )}
+      {ctx.party.length ? (
+        <ul className="party-list">
+          {ctx.party.map((e) => {
+            const owner = ctx.owners.get(e.id)
+            const items = carried.get(e.id) ?? []
+            const you = ctx.mineIds.has(gmIdOf(e.id))
+            return (
+              <li key={e.id} className={`card room-card ${you ? 'you' : ''}`}>
+                <div className="row">
+                  <Avatar e={e} size={52} />
+                  <div className="grow">
+                    <Link className="room-name" to={pagePath(worldId, e.id)}>
+                      {e.name}
+                    </Link>{' '}
+                    <StatusBadge entity={e} />
+                    {!!e.inspiration && (
+                      <span className="inspired small" title="Inspiration">
+                        {' '}
+                        <Ico as={Sparkle} /> {e.inspiration}
+                      </span>
+                    )}
+                    <div className="muted small clamp-2">
+                      {you ? 'You' : owner && !owner.pending ? `Played by ${owner.name}` : ''}
+                      {(you || (owner && !owner.pending)) && e.summary ? ' · ' : ''}
+                      {plainLinks(e.summary)}
+                    </div>
+                  </div>
+                </div>
+                {items.length > 0 && (
+                  <div className="small carries">
+                    <Ico as={Backpack} /> <ItemLinks items={items} worldId={worldId} />
+                  </div>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      ) : (
+        <p className="muted">No player characters revealed yet.</p>
+      )}
+    </>
+  )
+}
+
+function ItemLinks({ items, worldId }: { items: Entity[]; worldId: string }) {
+  return (
+    <>
+      {items.map((e, i) => (
+        <span key={e.id}>
+          {i > 0 && ', '}
           <Link to={pagePath(worldId, e.id)}>{e.name}</Link>
-          {e.threadUrgency === 'high' && <span className="pressing small"> · pressing</span>}
-          {e.type === 'quest' && <span className="muted small"> · quest{e.questStatus === 'active' ? ', active' : ''}</span>}
-          {full && e.summary && <div className="muted small">{plainLinks(e.summary)}</div>}
-        </li>
+          {quantityLabel(e) && ` ${quantityLabel(e)}`}
+        </span>
       ))}
-    </ul>
+    </>
+  )
+}
+
+// ——— Leads ———
+
+function LeadsTab({ ctx }: { ctx: RoomContext }) {
+  return (
+    <>
+      <TabHead title="Leads" help="leads" />
+      <p className="muted small room-lead-in">What the party knows about and is working on.</p>
+      <LeadsView worldId={ctx.worldId} entities={ctx.entities} />
+    </>
+  )
+}
+
+// ——— Notes ———
+
+function NotesTab({ ctx }: { ctx: RoomContext }) {
+  const { world, worldId, memberOf, entities, mine } = ctx
+  const questions = world.shared?.questions ?? []
+  return (
+    <>
+      <TabHead title="Notes" help="scratchpad" />
+      <section className="card room-card">
+        {memberOf || world.cloud?.enabled ? (
+          <PlayerNotesBox world={world} entityId="" entities={entities} big start="group" />
+        ) : (
+          <p className="muted">Group notes are for players who have joined this world: every player can read and add to them.</p>
+        )}
+      </section>
+      <section className="card room-card" id="questions">
+        <h2 className="room-card-title">
+          <Ico as={Question} /> Questions for your GM <Help topic="questions" />
+        </h2>
+        {memberOf ? (
+          <>
+            <AskForm memberOf={memberOf} entityId="" placeholder="Ask your GM anything, just between the two of you…" />
+            <QuestionList questions={questions} memberOf={memberOf} pageName={(q) => pageLink(worldId, q.entityId, entities.find((e) => e.id === q.entityId)?.name)} />
+          </>
+        ) : (
+          <p className="muted small">Players ask their GM questions here, just between the two of them.</p>
+        )}
+      </section>
+      <div id="downtime">
+        {memberOf && mine.length > 0 ? (
+          <PlayerDowntime world={world} mine={mine} />
+        ) : (
+          <section className="card room-card">
+            <h2 className="room-card-title">
+              <Ico as={Hourglass} /> Between sessions <Help topic="downtime" />
+            </h2>
+            <p className="muted small">{memberOf ? 'Once you have a character, tell your GM here what they do between sessions.' : 'Players tell their GM here what their character does between sessions.'}</p>
+          </section>
+        )}
+      </div>
+    </>
   )
 }
 
@@ -579,144 +996,3 @@ function PartyNotesPeek({ ctx }: { ctx: RoomContext }) {
     </>
   )
 }
-
-function SceneTab({ ctx }: { ctx: RoomContext }) {
-  const { table, world, memberOf, cloudId, entities } = ctx
-  const sceneId = table?.scene?.entityId && localIdOf(memberOf, table.scene.entityId)
-  const scenePage = sceneId ? entities.find((e) => e.id === sceneId) : undefined
-  return (
-    <div className="room-scene">
-      <div className="room-grid">
-        <section className="card room-card wide">
-          {table ? (
-            <>
-              <div className="room-card-head">
-                <h2>
-                  <Ico as={CastleTurret} /> {scenePage ? <Link to={pagePath(world.id, scenePage.id)}>{scenePage.name}</Link> : (table.scene?.name ?? 'Somewhere')}
-                </h2>
-                <span className="playing-now small">Playing now</span>
-              </div>
-              {scenePage?.summary && <p>{plainLinks(scenePage.summary)}</p>}
-              {table.music && (
-                <p className="small">
-                  <Ico as={MusicNotes} /> {table.music.join(', ')}
-                </p>
-              )}
-              {table.timers && <TimerList timers={table.timers} />}
-              {table.combat ? <TurnOrder combat={table.combat} mine={ctx.mineIds} /> : <p className="muted small">No fight on right now.</p>}
-            </>
-          ) : (
-            <>
-              <h2>
-                <Ico as={CastleTurret} /> The scene
-              </h2>
-              <p className="muted">
-                Your GM isn’t running a session right now. When they go live, where you are, the music and whose turn it is show up here.
-              </p>
-            </>
-          )}
-        </section>
-        <Card title="Tell your GM" icon={ChatCircleDots} help="tableSignals">
-          <SignalButtons cloudId={memberOf ? cloudId : undefined} who={ctx.who} />
-        </Card>
-        <Card title="Dice" icon={Sparkle} help="tableDice">
-          <TableDice cloudId={memberOf ? cloudId : undefined} who={ctx.who} />
-        </Card>
-        <OnTheTable world={world} entities={ctx.entities} className="wide" big />
-      </div>
-    </div>
-  )
-}
-
-function MeTab({ ctx }: { ctx: RoomContext }) {
-  if (!ctx.mine.length)
-    return (
-      <>
-        <Empty>{ctx.memberOf ? 'Once your GM approves the character you play, it shows here.' : 'Preview as a player to see their character here.'}</Empty>
-        <MyNewCharacters world={ctx.world} />
-      </>
-    )
-  return (
-    <div className="room-grid">
-      {ctx.mine.map((c) => (
-        <Card key={c.id} title={c.name} icon={Shield} to={pagePath(ctx.worldId, c.id)} className="wide">
-          <CharacterCard ctx={ctx} c={c} full />
-          {ctx.memberOf && (
-            <>
-              <h3 className="small">My notes on {c.name.split(' ')[0]}</h3>
-              <MyNote world={ctx.world} entityId={c.id} placeholder="Plans, goals, things to bring up…" />
-            </>
-          )}
-        </Card>
-      ))}
-      {ctx.memberOf && <PlayerDowntime world={ctx.world} mine={ctx.mine} />}
-      {ctx.memberOf && (
-        <section className="card room-card">
-          <p className="muted small">Your character died, retired or left? Write up the next one for your GM.</p>
-          <MyNewCharacters world={ctx.world} />
-        </section>
-      )}
-    </div>
-  )
-}
-
-function PartyTab({ ctx }: { ctx: RoomContext }) {
-  const { world, worldId, entities } = ctx
-  const { items: stash, coin } = partyLoot(entities, world)
-  return (
-    <div className="room-grid">
-      <Card title="The party" icon={UsersThree} className="wide">
-        {ctx.party.length ? <PartyList ctx={ctx} full /> : <p className="muted small">No player characters revealed yet.</p>}
-      </Card>
-      <Card title="Party loot" icon={Backpack} to={`${worldPath(worldId)}/loot`}>
-        {coin.length > 0 && (
-          <div className="small">
-            Purse: <b>{coin.map((c) => `${c.amount} ${c.name}`).join(', ')}</b>
-          </div>
-        )}
-        {stash.length ? (
-          <ul className="small room-list">
-            {stash.map((i) => (
-              <li key={i.id}>
-                <Link to={pagePath(worldId, i.id)}>{i.name}</Link>
-                {quantityLabel(i) && ` ${quantityLabel(i)}`}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          !coin.length && <p className="muted small">Nothing in the party’s stash yet.</p>
-        )}
-      </Card>
-    </div>
-  )
-}
-
-function LeadsTab({ ctx }: { ctx: RoomContext }) {
-  const { entities, worldId, world } = ctx
-  const leads = openLeads(entities)
-  const clocks = tickingClocks(entities)
-  return (
-    <div className="room-grid">
-      <Card title="Leads and quests" icon={Spiral} to={`${worldPath(worldId)}/threads`} className="wide">
-        {leads.length ? <LeadList leads={leads} worldId={worldId} full /> : <p className="muted small">No open leads yet.</p>}
-      </Card>
-      {clocks.length > 0 && (
-        <Card title="Clocks" icon={Sword} to={`${worldPath(worldId)}/clocks`}>
-          <div className="room-clocks">
-            {clocks.map(({ clock, owner }) => (
-              <Link key={clock.id} className="room-clock" to={pagePath(worldId, owner.id)}>
-                <span>
-                  {clock.name}
-                  <small className="muted"> · {owner.name}</small>
-                </span>
-                <ClockFace clock={clock} size={36} />
-              </Link>
-            ))}
-          </div>
-        </Card>
-      )}
-      {!world.shared && <p className="muted small">Players see the leads, quests and clocks you’ve revealed.</p>}
-    </div>
-  )
-}
-

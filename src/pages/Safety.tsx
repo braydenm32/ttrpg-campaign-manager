@@ -27,15 +27,19 @@ export default function SafetyPage() {
   const update = (patch: Partial<Safety>) => db.worlds.update(world.id, { safety: { ...safety, ...patch }, updatedAt: Date.now() })
   const memberOf = world.shared?.memberOf
   const empty = !safety.lines.length && !safety.veils.length && !safety.notes.trim()
+  // Lines and veils are for the people at the table, never for a public wiki link.
+  if (world.shared?.token) return <Empty>Table rules are for the players at the table.</Empty>
 
   return (
     <div className="page">
       <header className="page-header">
         <h1>
-          <Ico as={Shield} /> Safety tools <Help topic="safety" />
+          <Ico as={Shield} /> {isGM ? 'Safety tools' : 'Table rules'} <Help topic={isGM ? 'safety' : 'tableRules'} />
         </h1>
+        {!isGM && <p className="muted">What your table agreed before playing, so the game stays fun for everyone.</p>}
       </header>
       {memberOf && safety.xcard && <XCardButton cloudId={memberOf} />}
+      {!isGM && !memberOf && safety.xcard && <p className="muted small">Players who joined have an X-card button here.</p>}
       {!isGM && empty ? (
         <Empty>Your GM hasn’t written down any lines or veils yet. You can always tell them privately.</Empty>
       ) : (

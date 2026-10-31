@@ -27,7 +27,11 @@ a step-by-step replay. On GitHub, the same report is attached to the failed chec
 | `screens.spec.ts` | Every screen in `routes.ts`, on a laptop (1366 px wide) and a phone (390 px), in the GM view and, where players can go, the player view. Each must open without an error, without "Something went wrong", without "not found" (unless that's the point), and without the page scrolling sideways. On the phone, buttons and links must be at least 44×44 px, the size of a fingertip. |
 | `leaks.spec.ts` | In the player view, no GM secret shows anywhere on any screen, not even hidden: names and text of GM-only pages, GM notes, `:::gm` and `:::for` passages, GM-only fields and nicknames, clocks players don't know about, GM-only maps, sessions and corkboards. It visits every screen, every page players can see, and every GM-only page and map by its address, and searches (Ctrl K) for the secrets too. The list of secrets is made from the example world's own data each run (`lib/secrets.ts`). |
 | `old-addresses.spec.ts` | Old links and bookmarks still land on the right screen: `#/…` links, long ids instead of names, `/e/` page addresses, `/type/npc` lists. |
-| `search.spec.ts` | Search (Ctrl K, Cmd K, or the search button on a phone) still finds every "Go to" place and lands on the same address, finds pages, sessions ("#1"), maps and "New npc", and in the player view offers none of the GM-only ones. |
+| `search.spec.ts` | Search (Ctrl K, Cmd K, or the search button on a phone) still finds every "Go to" place it found before the areas, by its old name ("Home" finds Today, "Loose threads" finds Threads), plus the new ones (the Lectern, Chronicle, Inbox, the scratchpad, campaigns, templates, the bin); finds pages, sessions ("#1"), maps and "New npc"; and in the player view offers none of the GM-only ones. |
+| `nav.spec.ts` | The menus in `src/nav.ts`, without a browser. **No orphans**: every `<Route>` in `src/App.tsx` must be an area's tab, a More item, or a "contextual" address (one reached from somewhere else on purpose, like Print or an invite link). Add a screen and forget its menu, and this fails. It also checks which area and tab each address lights (for the GM, players and wiki readers), and that nothing in a player's menus or search leads to a GM tool. |
+| `frame.spec.ts` | The world's frame, on a laptop and a phone: the sidebar (laptop) or bottom bar (phone) goes to each area for the GM and for players, Back after a tab click returns to the tab before, each area remembers the page you were last on in it, Notes sits inside Me on a phone, and the More page lists its groups (players' More has no GM tools). |
+| `session.spec.ts` | The GM's Session area, on a laptop and a phone: a session moves Prepare → Play (the Lectern) → Wrap up → played, and the next one then comes up on the Desk; changing the scene at the Lectern replaces the read-aloud text and who's here (and Undo puts it back); "Next scene" follows the plan; Undo brings back a scene removed on Prepare; text typed in the page editor is saved when you leave without pressing Save (with Undo), and a new page you leave untouched, or cancel, leaves nothing behind. Each test puts back what it changed. |
+| `room.spec.ts` | The players' Common Room, on a laptop and a phone, in the player view: Now answers when the party plays next, what happened last time and what it's doing, in that order and (on a phone) on the first screen, with a revealed recap's GM secret never showing; just after a game night the recap comes first, and while the GM runs a session live the scene, dice and a word to the GM do; Now's leads, the Leads tab and the players' leads page (`/threads`) list the same leads; Table rules opens from the foot of Now and from the frame; previewing as one character shows them on Me and nothing GM-only; Party lists everyone and the purse. Each test puts back what it changed. |
 
 Not covered yet: the public wiki link and joined players. Both get a copy of the world the server
 has already filtered, which needs the real cloud.
@@ -58,3 +62,10 @@ are listed under `laptop player-leaks …`; fixing them should remove those line
 1. Add its `<Route>` to `src/App.tsx` as usual.
 2. Add it to `routes.ts`: its path exactly as in `App.tsx`, a sample address in the example world,
    and who can see it. `npm test` then opens it on both screen sizes and checks the player view.
+3. Give it a home in `src/nav.ts`: a tab of an area, an item on the More page, or (if it's reached
+   only from somewhere else on purpose) a line in `CONTEXTUAL` saying from where. `nav.spec.ts`
+   fails until you do.
+
+## Running two copies side by side
+
+The tests use port 4175. If another copy is already using it, pick another: `TEST_PORT=4191 npm test`.

@@ -230,17 +230,20 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
   const revealed = entities.filter((e) => e.visibility === 'players')
   const hidden = entities.filter((e) => e.visibility !== 'players' && !e.template)
   return (
-    <LecternPanel id="show" name="Show players" keywords="handout picture screen tv reveal" title={<><Ico as={Television} /> Show players <Help topic="showPlayers" /></>}>
-      {world.showing ? (
-        <div className="row wrap small">
-          <span>
-            Showing <strong>{world.showing.title}</strong>
-          </span>
-          <button onClick={() => stopShowing(world.id)}>Stop</button>
-        </div>
-      ) : (
-        <p className="muted small">Nothing on players’ screens.</p>
-      )}
+    <LecternPanel id="show" sectionId="lectern-show" name="Show players" keywords="handout picture screen tv reveal" title={<><Ico as={Television} /> Show players <Help topic="showPlayers" /></>}>
+      {/* Always the same height, so the pictures below don't jump when something is shown. */}
+      <div className={`row small show-status ${world.showing ? 'on' : ''}`} role="status">
+        {world.showing ? (
+          <>
+            <span className="grow-text-line">
+              Showing <strong>{world.showing.title}</strong>
+            </span>
+            <button onClick={() => stopShowing(world.id)}>Stop</button>
+          </>
+        ) : (
+          <span className="muted">Nothing on players’ screens.</span>
+        )}
+      </div>
       <div className="segmented">
         {(['image', 'page', 'text'] as const).map((k) => (
           <button key={k} className={kind === k ? 'on' : ''} onClick={() => setKind(k)}>
@@ -266,7 +269,12 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
             />
           </label>
           {(images ?? []).slice(0, 30).map((a) => (
-            <Thumb key={a.id} asset={a} onClick={() => showToPlayers(world.id, { kind: 'image', title: a.name.replace(/\.[^.]+$/, ''), assetId: a.id })} />
+            <Thumb
+              key={a.id}
+              asset={a}
+              on={world.showing?.kind === 'image' && world.showing.assetId === a.id}
+              onClick={() => showToPlayers(world.id, { kind: 'image', title: a.name.replace(/\.[^.]+$/, ''), assetId: a.id })}
+            />
           ))}
         </div>
       )}
@@ -340,11 +348,14 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
   )
 }
 
-function Thumb({ asset, onClick }: { asset: Parameters<typeof useBlobUrl>[0]; onClick: () => void }) {
+/** A picture to show, with its name under it (and marked while it's on players' screens). */
+function Thumb({ asset, onClick, on }: { asset: Parameters<typeof useBlobUrl>[0]; onClick: () => void; on?: boolean }) {
   const url = useBlobUrl(asset)
+  const name = asset?.name.replace(/\.[^.]+$/, '') ?? ''
   return (
-    <button className="show-thumb" title={`Show ${asset?.name}`} onClick={onClick}>
-      {url && <img src={url} alt={asset?.name} />}
+    <button className={`show-thumb named ${on ? 'on' : ''}`} title={`Show ${name}`} aria-pressed={on} onClick={onClick}>
+      <span className="thumb-img">{url && <img src={url} alt="" />}</span>
+      <span className="thumb-name">{name}</span>
     </button>
   )
 }

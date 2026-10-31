@@ -95,7 +95,7 @@ export const ROUTES: RouteEntry[] = [
     kind: 'screen',
     samples: [
       { url: W },
-      { url: `${W}?tab=scene`, label: 'Common Room: the scene', gm: 'skip' },
+      { url: `${W}?tab=scene`, label: 'Common Room: old address of the scene', gm: 'skip' },
       { url: `${W}?tab=me`, label: 'Common Room: my character', gm: 'skip' },
       { url: `${W}?tab=party`, label: 'Common Room: the party', gm: 'skip' },
       { url: `${W}?tab=leads`, label: 'Common Room: leads', gm: 'skip' },
@@ -172,6 +172,7 @@ export const ROUTES: RouteEntry[] = [
     // The example's sessions are all still GM-only, so players get "not found".
     samples: [
       { url: `${W}/s/{session:1}`, player: 'not-found' },
+      { url: `${W}/s/{session:1}?tab=prep`, label: 'prep tab', player: 'skip' },
       { url: `${W}/s/{session:1}?tab=notes`, label: 'GM notes tab', player: 'skip' },
       { url: `${W}/s/{session:1}?tab=recap`, label: 'recap tab', player: 'skip' },
       { url: `${W}/s/{session:1}?end=1`, label: 'end of session checklist', player: 'skip' },
@@ -207,6 +208,16 @@ export const ROUTES: RouteEntry[] = [
   { path: '/w/:worldId/clocks', screen: 'Clocks', who: 'both', kind: 'screen', samples: [{ url: `${W}/clocks` }] },
   { path: '/w/:worldId/safety', screen: 'Safety tools', who: 'both', kind: 'screen', samples: [{ url: `${W}/safety` }] },
   { path: '/w/:worldId/handouts', screen: 'Handouts', who: 'both', kind: 'screen', samples: [{ url: `${W}/handouts` }] },
+  { path: '/w/:worldId/more', screen: 'More (things used now and then)', who: 'both', kind: 'screen', samples: [{ url: `${W}/more` }] },
+  { path: '/w/:worldId/everything', screen: 'Everything (every kind of page)', who: 'both', kind: 'screen', samples: [{ url: `${W}/everything` }] },
+  {
+    path: '/w/:worldId/session',
+    screen: 'Session (the session in hand)',
+    who: 'gm',
+    kind: 'screen',
+    samples: [{ url: `${W}/session` }],
+    note: 'Opens the session being played or the next one; with none, a page to plan the next.',
+  },
   { path: '/w/:worldId/*', screen: 'Nothing here (inside a world)', who: 'both', kind: 'fallback', samples: [{ url: `${W}/no/such/place`, gm: 'not-found', player: 'not-found' }] },
   { path: '*', screen: 'Unknown address (shows the shelf)', who: 'special', kind: 'fallback', samples: [{ url: '/no/such/place' }] },
 ]

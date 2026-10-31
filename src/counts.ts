@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type CheckItem, type Clock, type Entity, type SessionPrep, type Showing, type World, type WorldMap } from './db'
 import { useViewMode } from './viewMode'
+import { tidyPurse } from './purse'
 
 /**
  * One calculation for each thing the app counts, so two screens can never disagree about it. A
@@ -24,8 +25,22 @@ export const openThreads = (entities: Entity[]) =>
     .filter(isOpenThread)
     .sort((a, b) => URGENCY_RANK[a.threadUrgency ?? 'normal'] - URGENCY_RANK[b.threadUrgency ?? 'normal'] || b.updatedAt - a.updatedAt)
 
-/** A player's leads: the open quests and open threads they can see. The sidebar badge, the Common Room and the Leads page all list these. */
-export const openLeads = (entities: Entity[]) => [...entities.filter(isOpenQuest), ...openThreads(entities)]
+/** A lead the party is working on now: a quest under way or a thread in play. */
+export const isActiveLead = (e: Entity) => isActiveQuest(e) || (e.type === 'thread' && e.threadStatus === 'active')
+
+/**
+ * A player's leads: the open quests and open threads they can see, the ones under way first, then
+ * the pressing ones. The sidebar badge, the Common Room and the Leads page all list these.
+ */
+export const openLeads = (entities: Entity[]) => {
+  const all = [...entities.filter(isOpenQuest), ...openThreads(entities)]
+  const rank = (e: Entity) => (isActiveLead(e) ? 0 : e.threadUrgency === 'high' ? 1 : 2)
+  return all.map((e, i) => ({ e, i })).sort((a, b) => rank(a.e) - rank(b.e) || a.i - b.i).map(({ e }) => e)
+}
+
+/** Leads the party has finished with: quests done or failed, threads tied off. (Dropped threads are left out.) */
+export const closedLeads = (entities: Entity[]) =>
+  entities.filter((e) => (e.type === 'quest' && (e.questStatus === 'done' || e.questStatus === 'failed')) || (e.type === 'thread' && e.threadStatus === 'resolved'))
 
 /** A clock's number of slices (a clock always has at least one). */
 export const clockSize = (c: Clock) => Math.max(1, c.segments)
@@ -47,12 +62,7 @@ export const quantityLabel = (item: Pick<Entity, 'quantity'>) => (item.quantity 
  * place) aren't the party's: the GM gets them in `elsewhere`, along with items nobody carries.
  */
 export function partyLoot(entities: Entity[], world: Pick<World, 'partyCoin'> | null | undefined) {
-  const coin: { name: string; amount: number }[] = []
-  for (const c of world?.partyCoin ?? []) {
-    const have = coin.find((x) => x.name.trim().toLowerCase() === c.name.trim().toLowerCase())
-    if (have) have.amount += c.amount
-    else coin.push({ ...c })
-  }
+  const coin = tidyPurse(world?.partyCoin)
   const byId = new Map(entities.map((e) => [e.id, e]))
   const items = entities.filter((e) => e.type === 'item')
   const carried = items.filter((e) => e.heldBy)
@@ -143,3 +153,7 @@ export function prepCounts(prep: Partial<SessionPrep> | undefined) {
 
 /** A player's question or downtime action still waiting on the GM's answer. */
 export const needsAnswer = (x: { answer?: string | null }) => !x.answer
+
+/** Whether the table has any safety tools set up (lines, veils, notes or the X-card): players see Table rules only then. */
+export const hasSafety = (world: Pick<World, 'safety'> | null | undefined) =>
+  !!world?.safety && (!!world.safety.lines.length || !!world.safety.veils.length || !!world.safety.notes.trim() || !!world.safety.xcard)

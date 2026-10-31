@@ -8,8 +8,10 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
 export const HELP = {
   // Getting around
   overview: 'Home: your world’s cover, the next session with a Run button, what needs you (player questions, character claims, urgent threads), running clocks and what changed lately. “New page” makes a page of any type.',
-  modes:
-    'The bar across the top splits the world into modes. Home is what needs you now. World is the atlas itself: maps, timeline and every codex page. Prep is getting sessions ready: campaigns, loose threads, handouts and generators. Play is running the table: the Lectern, clocks, sounds and safety tools. The sidebar lists the pages of the mode you’re in.',
+  areas:
+    'The world is split into areas, down the side on a computer and along the bottom on a phone. Desk is what needs you now. Session is the session in hand: prepare it, play it at the Lectern, wrap it up. Atlas is the world itself (maps, places, people), Story is what’s moving (threads, quests, clocks, timeline), and More has the tools you need now and then. The tabs along the top belong to the area you’re in, and each area remembers where you were. Players get the Common Room and The World instead.',
+  more: 'Things used now and then, in one place: what you reach for at the table (handouts, sounds, safety tools, the players’ screen), the workshop (generators, random tables, corkboards, files, the Archivist, templates) and keeping the world (settings, backups, importing, the bin). Search (Ctrl+K) finds every one of them by name too.',
+  everything: 'Every kind of page in this world with how many there are, your own kinds included. Maps, places, people, factions and lore have tabs of their own; the rest (items, events, your own types…) are here.',
   needsYou: 'Things waiting on you: questions your players asked, downtime to answer, players asking to claim a character, and urgent loose threads. When it’s empty you’re all caught up.',
   sampleWorld:
     'A small, simple world for a first look: a coast, a town, a handful of people and two drawn maps with pins. Good for learning the basics in a few minutes. Vael Ardith is the full example with a campaign ready to run.',
@@ -20,9 +22,9 @@ export const HELP = {
   viewingAs:
     'Switch to Player to preview exactly what your players can see. Anything marked 🔒 GM only, GM notes and secret passages disappear.',
   previewAs:
-    'Pick one player to see the world exactly as they do: what’s revealed to everyone, plus pages revealed just to them and :::for passages for their character.',
+    'Pick one player to see the world exactly as they do: what’s revealed to everyone, plus pages revealed just to them and :::for passages for their character. Without invited players you can still pick a character, to check their passages and their Common Room.',
   codex:
-    'The codex holds every page in your world, grouped by type. Pages of no particular type are under Other pages. Pages can sit inside places (a tavern inside a town), and the sidebar opens down to wherever you are.',
+    'The codex holds every page in your world, grouped by type: Places, People, Factions and Lore have tabs of their own in the Atlas, and Everything lists every type with how many pages it has. Pages of no particular type are under Other pages. Pages can sit inside places (a tavern inside a town).',
   quickAdd: 'Make a new page of any type. It starts as GM only, so nothing is revealed until you choose. You can also press Ctrl+K and type “new npc”.',
   visibility:
     '🔒 GM only means just you. 👁 Revealed means every player can see it. Click to switch. Pins, maps, sessions and files work the same way.',
@@ -41,7 +43,6 @@ export const HELP = {
   pictures:
     'Type @ or [[ and the start of a page’s name to link to it: pick it from the list (arrow keys and Enter work too). Put pictures in the text: paste one, drop one in, or use 🖼️ Picture. Players see a picture once the text around it is revealed to them (not inside a secret passage).',
   search: 'Finds pages by name, nickname, summary, details, tags and the words in them, plus sessions and maps. It also does things: type “new npc” to make a page, or “clocks” to go there. Press Ctrl+K (⌘K on a Mac) anywhere to open it. In the player view it only searches what players can read.',
-  phoneMenu: 'Open the menu. Its tabs (Home, World, Prep, Play) match the bar at the top on a computer; pick one to see its pages. It closes when you pick a page.',
   news: 'What’s happened since you last looked: new pages, handouts and session recaps, answers to your questions, and what changed on pages you already had (new writing, someone’s fate, a clock that moved). Tap one to read it, and “Got it” when you’re done.',
   backupReminder: 'A reminder to download a backup of this world every two weeks (monthly with cloud sync on). Save the file somewhere safe, like Google Drive or a USB stick. “Later” asks again in a week.',
   aliases:
@@ -115,7 +116,8 @@ export const HELP = {
   ages: 'Split your history into named ages, like “The Age of Kings” or “The Long Peace”. Each age gets its own section on the timeline, in order, and each event can belong to one. Players see the ages of any events you have revealed.',
   threads:
     'Every hook, mystery, promise and grudge you’ve left dangling. Move them from dangling to in play to tied off. A thread that hasn’t moved in three sessions gets flagged so nothing is forgotten.',
-  leads: 'The quests, rumours, hooks and mysteries your GM has shared with the party that are still open.',
+  leads:
+    'The quests, rumours, hooks and mysteries your GM has shared with the party that are still open, the ones under way first, and the clocks that are ticking. Done and tied-off ones are folded away at the bottom.',
   calendar:
     'Your world’s own calendar: month and day names, the year’s name (like DR) moons, leap years, festivals and holidays. Pick a ready-made one (Forgotten Realms, Golarion, Eberron, Greyhawk, Exandria) or make your own. Events can then have real dates.',
   worldToday: 'Today’s date in your world. Move it on as time passes in the game; each session remembers the date it started on.',
@@ -133,7 +135,22 @@ export const HELP = {
 
   // Sessions
   session:
-    'One game night. Keep 🔒 GM notes for yourself and a 👁 player recap for the table. Record the session, then turn the recording into a transcript and a recap.',
+    'One game night, in three stages along the top: Prepare (the plan), Play (the Lectern, at the table) and Wrap up (notes, the players’ recap, the recording, then “Mark as played”). Everything saves as you type.',
+  stages:
+    'Where a session is: Planned (nothing written yet), Preparing (it has a plan), Playing (you pressed “Start playing”, or it’s live or recording) and Played (you marked it played in Wrap up, it has a recap, or its date has gone by). Once a session is played, the next one becomes the one the Desk and the Session area open.',
+  startPlaying:
+    'Marks the session as being played and opens the Lectern. Nothing is shown to players until you choose to (Go live, Show players).',
+  sessionTitle: 'Click the number or the title to change it. It saves as you type.',
+  sessionDetails:
+    'The real date you play (leave it empty until it’s set; booking a date on the campaign page fills it in), the date in your world, and whether players can read this session’s recap. Print and Delete are here too.',
+  featured: 'The pages this session is about. People you put in a scene at the Lectern are added by themselves.',
+  wrapUp:
+    'After play, in order: your notes, the recording and its transcript, the write-up from Claude, the players’ recap, highlights, and changes to your pages. Then “Mark as played”, and the next session is ready to prepare.',
+  markPlayed:
+    'Marks this session played and moves on: the next session (made now if there isn’t one, with the clues and scenes you didn’t reach) becomes the one the Desk and the Session area open. Undo puts it back.',
+  revealRecap:
+    'Players can read the recap and the highlights, and see who featured, once the session is shown to them. GM notes, the prep, the recording and the transcript stay yours.',
+  undo: 'Removed something by mistake? The note at the bottom of the screen has Undo for a few seconds.',
   recording:
     'Record from one microphone for games at the table, or the microphone plus your Discord or Zoom audio for online games. Add bookmarks while you play to jump back to big moments. Recording carries on while you use the rest of the app (the Lectern, maps, pages), and is saved every few seconds, so if the app closes by accident you can recover it here. Always get everyone’s OK before recording. Recordings are big, so they stay on the device that made them; their transcripts sync to your other devices.',
   transcript:
@@ -148,7 +165,15 @@ export const HELP = {
     'Where this page’s name (or a nickname) was said out loud in a session’s transcript. Click a time to open the session and play that moment, if the recording is on this device.',
   sessionMentions: 'Sessions whose notes or recap link to this page.',
   lectern:
-    'The Lectern is your screen while you run the session: the current scene, who is there, loose threads, initiative, dice, quick notes and improvised names, all on one page.',
+    'The Lectern is your screen while you run the session: the scene and its read-aloud text, who is there, the fight, the party, and tools (show players, dice, loot, sounds). On a computer it’s three columns; on a phone the row of buttons at the top jumps to each part. “Wrap up” ends the session.',
+  nextScene:
+    'Goes on to the next scene you planned: ticks off this one, and puts the next one’s place, read-aloud text and people on screen (and its fight, sounds and handout, if its card has them). Undo puts the last scene back.',
+  sceneChange:
+    'Choosing another place starts a new scene: the read-aloud text and who’s here are replaced with what you planned for that place (or cleared). Undo puts the last scene back.',
+  quickNote: 'Jot something down without stopping the game. It goes at the end of this session’s GM notes, with the time. What you’ve typed is kept if you leave the Lectern and come back.',
+  lecternJump: 'Jumps to that part of the Lectern. Back brings you to the same place again.',
+  partyFound:
+    'What the party actually found: add coins to the purse, or give them an item (a new item page, GM only until you reveal it, carried by the party). Nothing random.',
   prep:
     'Plan the session: a strong start, the scenes you expect, secrets and clues, and fights ready to run. At the Lectern you tick scenes and clues off as they happen.',
   strongStart: 'How the session opens. Starting in the middle of something happening gets the table going fast.',
@@ -167,7 +192,6 @@ export const HELP = {
   playersScreen: 'A clean screen for a TV or second monitor at the table. It shows whatever you’re showing players, and nothing else.',
   initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go. In the ± box, type +5 to heal or -5 to damage; a plain number follows the button you press, and Undo puts HP back. “Something else…” in the condition list lets you type your own. With a keyboard, N moves to the next turn (press ? for all the shortcuts).',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',
-  quickNote: 'Jot something down mid-session. It is added to this session’s GM notes with the time.',
   randomTables:
     'Your own tables to roll on: one entry per line. "3x Goblins" makes an entry three times as likely, {2d6} rolls dice inside an entry, and {Weather} rolls on your table called Weather.',
   improvise: 'Need a name or a tavern right now? Roll one here and save it into your world if it sticks.',
@@ -176,11 +200,10 @@ export const HELP = {
   boards:
     'A corkboard for mysteries, plots and politics. Pin pages and note cards, drag them about, and tie string between them with 🧶. Click a string to label or cut it. GM only.',
   generators: 'Roll up taverns, shops and NPCs without any AI, or roll on your own random tables. Save the ones you like; they start as GM only.',
-  atTheTable: 'Things you reach for while you play: threads, clocks, loot, handouts, sounds, safety tools and your players.',
-  prepTools: 'Things for planning between sessions: generators and tables, corkboards, the relationship web and your files.',
   assets: 'Every file in this world: map images, portraits and handouts. Mark a file revealed to let players see it.',
   loot:
     'What the party has: the stash, what each player character carries and the party’s coin. Set "Carried by" on any item page. Players see the revealed items and the coins in the purse; things an NPC, shop or place holds are listed only for you.',
+  lootSteps: 'Use − and + to take coins out of the purse or put them in, by the amount in the box (1 to start with). Click the number to type a new total instead.',
   importPages:
     'Bring pages in from Obsidian (or any Markdown notes), a Kanka export or a World Anvil export. Everything arrives as 🔒 GM only, so you can tidy up before revealing anything.',
   importSheet:
@@ -211,9 +234,9 @@ export const HELP = {
     'A co-GM sees and edits everything in this world, secrets included, from their own account. Only you can invite or remove co-GMs, manage players and links, or delete the cloud copy.',
   schedule:
     'Suggest a few dates for the next session. Players who joined mark each one yes, maybe or no, and you book the one that works. Booking makes the session with that date and shows it to players. Times show in each person’s own time zone.',
-  nextSession: 'Each campaign’s coming session, with its prep and the Lectern one click away, and how many scenes and clues are ready.',
+  nextSession: 'Each campaign’s session in hand, with its stage (Preparing, Playing, Played), how many scenes and clues are planned, and one button for what comes next: prepare it, play it, or wrap it up.',
   endSession:
-    'Wrap up after play: transcribe the recording, write the recap with Claude, show the session to players and move the world’s date on. “Start next session” carries over the clues they didn’t find, the scenes they didn’t reach, and where the party is.',
+    'What’s done and what’s left before you mark the session played: the recording transcribed, the recap written, your pages updated, the session shown to players, the world’s date moved on. “Mark as played” then gets the next session ready, carrying over the clues they didn’t find, the scenes they didn’t reach, and where the party is.',
   partyCampaign: 'When a world has more than one group, pick which campaign this character plays in. The campaign page and the Lectern’s “Add the party” then only show that group.',
   trackAsThread: 'Quests are what the players know they’re doing. A loose thread is your own tracker for it: how pressing it is, and a warning when it goes cold.',
   claimRequests: 'A player asked to play one of your characters. Approve it and they can edit that character’s sheet and read passages written for them.',
@@ -228,7 +251,13 @@ export const HELP = {
     'Keep your character’s details up to date: the one-line summary, stats and anything you want to write about them. Your GM sees your changes and can change them back.',
   character: 'Who plays this character. Players ask to play their character from here, and you approve it (here or in World settings) before it counts, so nobody can take someone else’s character or their secrets. You can release a claim later.',
   commonRoom:
-    'Your seat at the table: what the GM is showing, your character, the party, leads, notes and last time’s recap. While your GM runs the session you also see the scene, whose turn it is and the music, roll dice everyone sees, and can quietly ask for a turn or a break.',
+    'Your seat at the table: Now (when you play next, last time, what you’re doing), Me (your character and private notes), Party (who’s in it and who carries what), Leads and Notes (group notes, questions for your GM, downtime). On a phone they’re along the bottom, with Notes inside Me.',
+  roomNow:
+    'Now changes with the game. Before a session: when you play next, what happened last time and what the party is doing. While your GM runs the session live: the scene, whose turn it is, dice everyone sees, a quiet word to the GM and the X-card. Just after: last time’s recap first, then the loot and the party’s notes.',
+  roomMe: 'Your character at a glance: the numbers that matter, what you carry, passages only you can read, and your own notes. “Edit my character” lets you update the sheet, or fill it in from a character sheet file.',
+  roomParty: 'Everyone in the party, who plays them and what each one carries, plus the party’s purse and the stash you share. The full loot list has every item with its notes.',
+  tableRules:
+    'What your table agreed before playing. Lines never happen in the game; veils can happen, but off screen. The X-card tells your GM, without your name, that something isn’t OK.',
   tableLink:
     'Once you go live with this session, players’ Common Room shows which session is on, the scene (only if its page is revealed), the music, your timers and the turn order once combat starts. HP, conditions and your notes never go, and anyone from a page players haven’t seen shows as “Enemy 1” or “Ally 2”. Their rolls and signals (“I’d like to do something”, “I need a break”) come to you here and pop up wherever you are in the app.',
   inspiration:
@@ -264,7 +293,7 @@ export const HELP = {
   revealQuietly:
     'Reveal quietly lets players read the page the next time they look, without putting it on their screens. Reveal and show does both. Hide from players makes it GM only again (and takes it off their screens if it is showing). GM notes and secret passages stay hidden either way.',
   pageDrafts:
-    'While you edit a page, what you type is also kept on this device. If you leave by mistake, the next time you edit the page it offers to bring your changes back. Saving only writes what you changed, so edits made meanwhile by a co-GM or a player are kept.',
+    'Nothing you type here is lost. Save writes it; if you leave another way (a link, Back, another screen) your changes are saved for you, with Undo in the note at the bottom. Closing the tab asks first, and what you typed is also kept on this device. A new page is only added to the world once you write something and save or leave; Cancel, or leaving it untouched, leaves nothing behind. Saving only writes what you changed, so edits made meanwhile by a co-GM or a player are kept.',
   pagePicker: 'Start typing a name to find a page, then click it or press Enter. The ones in the current scene are listed first.',
   goLive:
     'Opening the Lectern doesn’t show players anything. Press “Go live to players” when you start playing: their Common Room then shows this session as being played, with the scene, music, timers and turn order. A “Live” badge stays at the top of every screen until you press Stop or end the session.',
@@ -306,7 +335,7 @@ export const HELP = {
   downtime:
     'Tell your GM what your character does between sessions: training, research, crafting, visiting someone, working a job. Only your GM sees it, and their answer appears here, for you alone.',
   downtimeGm:
-    'What your players’ characters are doing between sessions. Answer each one (only that player sees your answer) and it moves to Answered. Players send these from their character tab in the Common Room. When one arrives a note pops up on whatever screen you’re on, and “Questions and downtime” in the sidebar counts the ones waiting.',
+    'What your players’ characters are doing between sessions. Answer each one (only that player sees your answer) and it moves to Answered. Players send these from their character tab in the Common Room. When one arrives a note pops up on whatever screen you’re on, and the Desk and its Inbox count the ones waiting.',
   callForRoll:
     'Ask the table for a roll. Type a line like “@all roll perception 15” (everyone rolls Perception, DC 15), “@Wren @Silas stealth dc 12 secret” or “@all d20+2 strength”, or fill in the boxes. While you’re live, the players asked get a Roll button with their bonus filled in from their character’s details, and their results land here, marked pass or fail. Roll for anyone who isn’t online. “Secret” keeps results from the other players; “Tell them the DC” shows it. Press Done to clear it.',
   sceneCards:
