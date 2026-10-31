@@ -2,7 +2,7 @@ import { binCampaign } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { DraftText, Empty, VisibilityBadge, VisibilityToggle } from '../components'
+import { DraftText, Empty, Skeleton, VisibilityBadge, VisibilityToggle } from '../components'
 import { db, GAME_SYSTEMS, type Campaign, type Session } from '../db'
 import { useLiveRecording } from '../recordingStore'
 import { PartyGlance } from '../partyGlance'
@@ -38,7 +38,7 @@ export default function CampaignPage() {
   const playing = usePlayingNow(worldId)
   useKeepScroll(campaign !== undefined)
 
-  if (campaign === undefined) return null
+  if (campaign === undefined) return <Skeleton />
   if (campaign === null || campaign.worldId !== worldId || (!isGM && campaign.visibility === 'gm')) return <Empty>Campaign not found.</Empty>
   const update = (patch: Partial<Campaign>) => db.campaigns.update(campaign.id, patch)
   const w = worldPath(worldId)

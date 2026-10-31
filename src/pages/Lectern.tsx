@@ -10,7 +10,7 @@ import { FoldingProvider, LECTERN_PANELS, LecternPanel, useFolding } from '../le
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { partyOf, startPlaying } from '../sessions'
-import { DraftText, Empty } from '../components'
+import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { ENTITY_LABELS, blankEntity, blankLectern, db, newId, type Combatant, type Entity, type LecternState, type Session, type World } from '../db'
 import { modifierFrom, roll, rollDie } from '../dice'
@@ -80,7 +80,7 @@ export default function Lectern() {
   const folding = useFolding(query)
   useKeepScroll(!!session && !!world)
 
-  if (session === undefined) return null
+  if (session === undefined) return <Skeleton />
   if (!isGM) return <Empty>The Lectern is a GM tool. Switch back to the GM view to use it.</Empty>
   if (session === null || session.worldId !== worldId) return <Empty>Session not found.</Empty>
 

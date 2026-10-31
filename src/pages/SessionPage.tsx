@@ -9,7 +9,7 @@ import { RecapPanel } from '../ai/RecapPanel'
 import { Highlights } from '../highlights'
 import { SpotlightPanel } from '../ai/Spotlight'
 import { TranscriptPanel } from '../ai/TranscriptPanel'
-import { DraftText, Empty } from '../components'
+import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { db, ENTITY_LABELS, THREAD_STATUS, type Campaign, type Entity, type Recording, type Session, type World } from '../db'
 import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
@@ -53,7 +53,7 @@ export default function SessionPage() {
   const stage = useSessionStage(session)
   useKeepScroll(!!session && !!world)
 
-  if (session === undefined || (session && campaign === undefined)) return null
+  if (session === undefined || (session && campaign === undefined)) return <Skeleton />
   // Players get a session only once it's revealed, and never from a campaign the GM keeps hidden.
   if (session === null || !canSeeSession(session, campaign, isGM) || (campaign && campaign.worldId !== worldId))
     return <Empty>Session not found.</Empty>

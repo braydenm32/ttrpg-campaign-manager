@@ -104,6 +104,19 @@ export function Empty({ children }: { children: ReactNode }) {
   return <div className="empty">{children}</div>
 }
 
+/** While a screen loads: grey shapes where its title and text will be, instead of the word "Loading…" (which screen readers still hear). */
+export function Skeleton() {
+  return (
+    <div className="skeleton" aria-busy="true">
+      <span className="sr-only">Loading…</span>
+      <div className="sk sk-title" />
+      <div className="sk sk-line" />
+      <div className="sk sk-line short" />
+      <div className="sk sk-block" />
+    </div>
+  )
+}
+
 /**
  * A text box that keeps what you type locally and saves every change. Saved values come back a moment later,
  * so reading them straight back while typing would drop keystrokes. With `saveOn="leave"` it saves once,

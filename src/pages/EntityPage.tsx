@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Empty, TagInput, VisibilityBadge, VisibilityToggle } from '../components'
+import { Empty, Skeleton, TagInput, VisibilityBadge, VisibilityToggle } from '../components'
 import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, PICKER_TYPES, saveEntity, templateOf, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus, type World } from '../db'
 import { HistoryButton } from '../History'
 import { listedEntries, TableRoller } from '../tables'
@@ -49,7 +49,7 @@ export default function EntityPage() {
   // A new page that isn't saved yet (see pendingPages.ts) opens straight in the editor.
   const held = editing && stored === null ? heldPage(entityId) : undefined
 
-  if (stored === undefined) return null
+  if (stored === undefined) return <Skeleton />
   if (held && held.worldId === worldId) return <EntityEditor key={held.id} entity={held} fresh held onDone={() => setParams({})} />
   if (stored === null || stored.worldId !== worldId || stored.template && !isGM || !canSeeEntity(stored))
     return <Empty>This page doesn't exist or hasn't been revealed.</Empty>

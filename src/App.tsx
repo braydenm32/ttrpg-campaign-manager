@@ -12,7 +12,7 @@ import { startAccountKeys, stopAccountKeys } from './ai/accountKeys'
 import { cloudErrorMessage, supabase } from './cloud/client'
 import { watchPlayerCopy } from './cloud/share'
 import { startSync, stopSync } from './cloud/sync'
-import { Empty, Modal } from './components'
+import { Empty, Modal, Skeleton } from './components'
 import { UpdateBanner } from './appUpdate'
 import { MoveBanner } from './move'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -83,7 +83,7 @@ export default function App() {
           <Route
             path="/w/:worldId/print/:kind/:id"
             element={
-              <Suspense fallback={<div className="loading">Loading…</div>}>
+              <Suspense fallback={<Skeleton />}>
                 <PrintPage />
               </Suspense>
             }
@@ -216,7 +216,7 @@ function WorldLayout() {
     const tidy = named && tidyPath(pathname)
     if (tidy) navigate(tidy + search, { replace: true })
   }, [named, version, pathname, search, navigate])
-  if (!named) return <div className="loading">Loading…</div>
+  if (!named) return <Skeleton />
   if (world?.shared) return (
     <ForcePlayerView>
       <WorldShell />
@@ -245,7 +245,7 @@ function NotFound() {
 /** The players' screen for a TV: always the player view, whoever opens it. */
 function ScreenRoute() {
   const { world } = useWorld()
-  if (!world) return <div className="loading">{world === null ? 'World not found.' : 'Loading…'}</div>
+  if (!world) return world === null ? <div className="loading">World not found.</div> : <Skeleton />
   return (
     <ForcePlayerView>
       <PlayersScreen world={world} />
@@ -283,7 +283,7 @@ function WorldShell() {
     if (sample) void finishSampleWorld(worldId)
   }, [example, sample, worldId])
 
-  if (world === undefined) return <div className="loading">Loading…</div>
+  if (world === undefined) return <Skeleton />
   if (world === null)
     return (
       <div className="loading">
@@ -341,7 +341,7 @@ function WorldShell() {
           )}
           {/* Bigger screens (maps, the Lectern, settings…) load the first time they're opened. */}
           <ErrorBoundary resetKey={pathname}>
-            <Suspense fallback={<div className="loading">Loading…</div>}>
+            <Suspense fallback={<Skeleton />}>
               <Outlet />
             </Suspense>
           </ErrorBoundary>
