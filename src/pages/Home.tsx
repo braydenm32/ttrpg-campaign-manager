@@ -3,7 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { importWorld } from '../backup'
-import { Empty, Modal } from '../components'
+import { Modal } from '../components'
+import '../desk.css'
 import { Help, HELP } from '../help'
 import { db, GAME_SYSTEMS, newId, worldColor, type World } from '../db'
 import { useAssetUrl } from '../hooks'
@@ -24,6 +25,10 @@ export default function Home() {
   const [downloading, setDownloading] = useState('')
   const navigate = useNavigate()
   const localIds = new Set(worlds.map((w) => w.id))
+  // Your own worlds, worlds you play in (or read from a wiki link), and the ready-made ones, each on a shelf of its own.
+  const examples = worlds.filter((w) => !w.shared && (w.example || isSample(w)))
+  const joined = worlds.filter((w) => w.shared)
+  const mine = worlds.filter((w) => !w.shared && !examples.includes(w))
   const notHere = user ? cloudWorlds.filter((c) => !localIds.has(c.id)) : []
   const joinedNotHere = user ? memberships.filter((m) => !localIds.has(memberWorldId(m.cloudId))) : []
 
@@ -50,7 +55,11 @@ export default function Home() {
           Your worlds, maps, NPCs and sessions, all in one place. Everything is saved on this device. <Help topic="home" />
         </p>
       </header>
-      <div className="row">
+      <div className="shelf-head">
+        <h2>
+          Your worlds <Help topic="yourWorlds" />
+        </h2>
+        <span className="grow" />
         <button className="primary" onClick={() => setCreating(true)}>+ New world</button>
         <label className="button">
           Import backup…
@@ -70,23 +79,40 @@ export default function Home() {
           />
         </label>
       </div>
-      <InviteBox />
-      {worlds.length === 0 && (
-        <Empty>No worlds of your own yet. Create one, or open one of the example worlds to look around. A player? Paste the invite link your GM sent you above.</Empty>
+      {mine.length === 0 ? (
+        <p className="muted shelf-note">No worlds of your own yet. Make one, or open one of the examples below to look around.</p>
+      ) : (
+        <div className="shelf">
+          {mine.map((w) => (
+            <WorldBook key={w.id} world={w} onOpen={() => navigate(`${worldPath(w.id)}`)} />
+          ))}
+        </div>
       )}
-      <div className="shelf">
+      {joined.length > 0 && (
+        <>
+          <div className="shelf-head">
+            <h2>Worlds you play in</h2>
+          </div>
+          <div className="shelf">
+            {joined.map((w) => (
+              <WorldBook key={w.id} world={w} onOpen={() => navigate(`${worldPath(w.id)}`)} />
+            ))}
+          </div>
+        </>
+      )}
+      <div className="shelf-head">
+        <h2>Examples to explore</h2>
+      </div>
+      <div className="shelf examples">
         {!worlds.some(isSample) && (
           <ExampleBook name="The Shattered Coast" blurb="Sample world · a quick, simple first look" help={HELP.sampleWorld} load={loadSampleWorld} onOpen={(id) => navigate(`${worldPath(id)}`)} />
         )}
         {!worlds.some((w) => w.example) && (
           <ExampleBook name="Vael Ardith" blurb="Example world · a ready-to-run campaign to explore" help={HELP.exampleWorld} load={loadExampleWorld} onOpen={(id) => navigate(`${worldPath(id)}`)} />
         )}
-        {worlds.map((w) => (
+        {examples.map((w) => (
           <WorldBook key={w.id} world={w} onOpen={() => navigate(`${worldPath(w.id)}`)} />
         ))}
-        <button className="book book-new" onClick={() => setCreating(true)}>
-          + New world
-        </button>
       </div>
       {notHere.length > 0 && (
         <section>
@@ -145,6 +171,7 @@ export default function Home() {
           </div>
         </section>
       )}
+      <InviteBox />
       <About />
       <footer className="legal-links muted small">
         <a href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noreferrer">

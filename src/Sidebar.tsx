@@ -8,7 +8,7 @@ import { useVisibleEntities } from './hooks'
 import { Ico } from './icons'
 import { areaHome, areasFor, locate, PHONE_BAR, showsTab, topTabs, type AreaId, type BarItem, type LocateHelp, type NavArea, type NavFacts, type NavSpot, type NavTab, type Viewer } from './nav'
 import { hasSafety, isOpenThread, openLeads, partyLoot, tickingClocks, useVisibleHandouts } from './counts'
-import { useGmInbox } from './players/inbox'
+import { EMPTY_INBOX, useGmInbox, type GmInbox } from './players/inbox'
 import { useCharacterOwners } from './players/owners'
 import { nextSessions, useCampaigns, useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
@@ -33,6 +33,8 @@ export interface Frame {
   help: LocateHelp
   /** The session in hand: being played now, else the next one. */
   inHandId?: string
+  /** What's waiting on the GM from players (empty for anyone else). Screens read this copy, so counts agree. */
+  inbox: GmInbox
 }
 
 /** Works out the frame for the current address and viewer. */
@@ -46,7 +48,7 @@ export function useFrame(world: World | null | undefined): Frame {
   const sessions = useWorldSessions(worldId)
   const campaigns = useCampaigns(worldId)
   const handouts = useVisibleHandouts(world, entities).length
-  const inbox = useGmInbox(viewer === 'gm' ? world : undefined, entities)
+  const inbox = useGmInbox(viewer === 'gm' ? world : undefined)
   const playingNow = usePlayingNow(worldId)
 
   // The session in hand: the one being played (started, live or recording), else the next one to play.
@@ -71,7 +73,7 @@ export function useFrame(world: World | null | undefined): Frame {
     clocks: tickingClocks(entities).length,
     links: entities.some((e) => e.relations?.some((r) => visibleIds.has(r.to))),
     safety: viewer !== 'wiki' && (viewer === 'gm' || hasSafety(world)),
-    inbox: inbox.questions.length + inbox.downtime + inbox.claims,
+    inbox: inbox.total,
     questions: inbox.available,
     threads: entities.filter(isOpenThread).length,
     leads: openLeads(entities).length,
@@ -85,13 +87,15 @@ export function useFrame(world: World | null | undefined): Frame {
       return s ? sessionFirstTab(s) : 'prep'
     },
   }
-  return { facts, help, spot: locate(pathname, search, help), inHandId: inHand?.id }
+  return { facts, help, spot: locate(pathname, search, help), inHandId: inHand?.id, inbox }
 }
 
 const FrameContext = createContext<Frame | undefined>(undefined)
 export const FrameProvider = FrameContext.Provider
 /** The frame the world's shell worked out (for the More page and search). */
 export const useFrameContext = () => useContext(FrameContext)
+/** What's waiting on the GM, as the frame loaded it (the Desk, the Inbox and the banners all read this one copy). */
+export const useInbox = () => useContext(FrameContext)?.inbox ?? EMPTY_INBOX
 
 const pathOf = (to: string) => to.split('?')[0]
 

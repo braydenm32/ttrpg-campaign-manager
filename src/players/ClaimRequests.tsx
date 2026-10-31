@@ -1,52 +1,35 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { approveClaim, releaseCharacter } from '../cloud/players'
 import type { World } from '../db'
 import { useVisibleEntities } from '../hooks'
 import { Help } from '../help'
-import { useCharacterOwners } from './owners'
 import { Ico } from '../icons'
 import { MaskHappy } from '@phosphor-icons/react'
 import { pagePath } from '../paths'
+import { useInbox } from '../Sidebar'
+import { approveClaimLater, declineClaimLater } from './inboxActions'
 
 /**
  * For the GM: a banner when a player asks to play a character, with Approve and Decline right
- * there. It checks again every couple of minutes while the app is open.
+ * there (each with Undo for a few seconds). It reads the same inbox as the Desk and the Inbox,
+ * where the same requests are listed, so it isn't shown on the Desk.
  */
 export function ClaimRequestsBanner({ world }: { world: World }) {
-  const { owners, reload } = useCharacterOwners(world)
+  const { claims, reload } = useInbox()
   const entities = useVisibleEntities(world.id)
-  const [busy, setBusy] = useState(false)
-  useEffect(() => {
-    const t = setInterval(() => !document.hidden && reload(), 120_000)
-    return () => clearInterval(t)
-  }, [reload])
-  const pending = [...owners.entries()].filter(([, o]) => o.pending)
-  if (!pending.length) return null
-  const run = async (fn: () => Promise<unknown>) => {
-    setBusy(true)
-    try {
-      await fn()
-    } catch (e) {
-      alert((e as Error).message)
-    } finally {
-      await reload()
-      setBusy(false)
-    }
-  }
+  if (!claims.length) return null
   return (
     <div className="player-banner claim-requests">
-      {pending.map(([entityId, o]) => {
-        const name = entities.find((e) => e.id === entityId)?.name ?? 'a character'
+      {claims.map((c) => {
+        const name = entities.find((e) => e.id === c.entityId)?.name ?? 'a character'
         return (
-          <div key={entityId} className="row wrap">
+          <div key={c.entityId} className="row wrap">
             <span>
-              <Ico as={MaskHappy} /> <strong>{o.name}</strong> asked to play <Link to={`${pagePath(world.id, entityId)}`}>{name}</Link>.
+              <Ico as={MaskHappy} /> <strong>{c.who}</strong> asked to play <Link to={`${pagePath(world.id, c.entityId)}`}>{name}</Link>.
             </span>
-            <button className="primary small" disabled={busy} onClick={() => run(() => approveClaim(world.id, entityId))}>
+            <button className="primary small" onClick={() => approveClaimLater(world.id, c, name, reload)}>
               ✓ Approve
             </button>
-            <button className="small" disabled={busy} onClick={() => confirm(`Turn down ${o.name}’s request to play ${name}?`) && run(() => releaseCharacter(world.id, entityId, false))}>
+            <button className="small" onClick={() => declineClaimLater(world.id, c, name, reload)}>
               Decline
             </button>
           </div>
