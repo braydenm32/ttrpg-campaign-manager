@@ -147,6 +147,9 @@ test.describe('invite and wiki links', () => {
 })
 
 test.describe('a joined player and a wiki reader (pretend player copies)', () => {
+  // Screenshots of the long wiki page (SHOTS_DIR) can take a while to save.
+  test.describe.configure({ timeout: 120_000 })
+
   test('a joined player’s Questions: ask, then what they asked with the answers', async ({ page, world, device }) => {
     await offline(page)
     await page.goto('/')
