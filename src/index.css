@@ -1550,3 +1550,14 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .empty-handed { margin-top: 1em; }
 @media (max-width: 800px) { .coin-steps .chip { min-height: 44px; } }
 .coin-purse h2 { margin: 0; }
+/* All sessions: the next one first, then each session on one line with its stage. */
+.next-up { margin: 1em 0; }
+.next-up h2 { margin-top: 0; }
+.next-up .next-title { font-family: var(--font-display); font-size: 1.25rem; }
+.session-rows { list-style: none; padding: 0; margin: .4em 0; display: flex; flex-direction: column; }
+.session-rows li { display: flex; align-items: center; gap: .5em; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding: .2em 0; }
+.session-rows li > a { flex: 1 1 14em; min-width: 0; min-height: 44px; display: flex; align-items: baseline; gap: .5em; padding: .55em 0; flex-wrap: wrap; }
+.session-rows .session-num { font-weight: 700; color: var(--muted); min-width: 2em; }
+.session-rows .session-name { font-weight: 600; }
+.session-rows .session-date { margin-left: auto; }
+.session-rows li.is-next .session-num { color: var(--accent); }
