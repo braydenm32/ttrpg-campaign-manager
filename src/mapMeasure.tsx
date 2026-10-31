@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { db, type MapScale, type WorldMap } from './db'
 import { Help } from './help'
+import { toast } from './undo'
 
 /**
  * Map scale, the ruler and travel time. The GM tells a map how far it is across (or measures a
@@ -212,7 +213,15 @@ export function ScaleSetting({ map }: { map: WorldMap }) {
         <span className="small">across</span>
       </span>
       {map.scale && (
-        <button type="button" className="link small" onClick={() => db.maps.update(map.id, { scale: undefined })}>
+        <button
+          type="button"
+          className="link small"
+          onClick={async () => {
+            const was = map.scale
+            await db.maps.update(map.id, { scale: undefined })
+            toast('Scale removed.', () => db.maps.update(map.id, { scale: was }))
+          }}
+        >
           Remove the scale
         </button>
       )}

@@ -1,165 +1,108 @@
 import { Help, HELP } from '../help'
 import { WorldCover } from '../WorldCover'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { Modal } from '../components'
-import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel, type Entity, type World } from '../db'
+import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel, type Campaign, type Entity, type Session, type World } from '../db'
 import { useCreatePage } from '../NewPage'
 import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { initials } from '../text'
-import { nextSessions, URGENCY, useCampaigns, useWorldSessions } from '../threads'
-import { WantedPages } from '../wanted'
-import { questProgress } from '../quests'
+import { nextSessions, useCampaigns, useWorldSessions } from '../threads'
+import { WantedPages, wantedPages } from '../wanted'
 import { useViewMode } from '../viewMode'
-import { BackupReminder } from '../BackupReminder'
+import { BackupButton, useBackupDue } from '../BackupReminder'
 import WikiHome from './WikiHome'
-import CommonRoom from './CommonRoom'
+import CommonRoom, { ago } from './CommonRoom'
 import { showDate, upcoming } from '../players/Schedule'
 import { ClockFace } from '../clocks'
-import { useGmInbox } from '../players/inbox'
-import { clockSize, isOpenQuest, openThreads as openThreadsOf, prepCounts, tickingClocks } from '../counts'
+import { approveClaimLater } from '../players/inboxActions'
+import { ReviewCharacter } from '../players/NewCharacters'
+import type { CharacterRequest } from '../cloud/players'
+import { useInbox } from '../Sidebar'
+import { clockSize, isOpenQuest, isOpenThread, prepCounts, tickingClocks } from '../counts'
 import { Ico, TypeIcon } from '../icons'
-import { ChatCircleDots, FlagCheckered, Hourglass, ListChecks, Play, Plus, Spiral, UserCirclePlus } from '@phosphor-icons/react'
+import {
+  CalendarBlank,
+  ChatCircleDots,
+  CheckCircle,
+  Eye,
+  FloppyDisk,
+  Flame,
+  Hourglass,
+  ListChecks,
+  LockSimple,
+  MaskHappy,
+  NotePencil,
+  Play,
+  Plus,
+  UserCirclePlus,
+  UsersThree,
+  FlagCheckered,
+  ArrowCounterClockwise,
+  type Icon,
+} from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { createNextSession, sessionStage, startPlaying } from '../sessions'
+import { createNextSession, isPlayed, localDate, partyOf, sessionStage, startPlaying, type SessionStage } from '../sessions'
 import { StageChip, usePlayingNow } from '../stage'
+import { detailOf } from '../partyGlance'
+import { toast } from '../undo'
+import '../desk.css'
 
+/**
+ * The GM's Desk, Today tab (`/w/<world>`): what's next and what needs you, laptop first. One strip
+ * with the session in hand and the one button for its stage; "Needs you before #N" with everything
+ * waiting (the Inbox's items first, the same count as its badge); then clocks, the party, the
+ * sessions coming up and what changed lately, each kept short. Players get the Common Room here,
+ * and a public wiki link its front page.
+ */
 export default function Dashboard() {
-  const { worldId, world } = useWorld()
+  const { world } = useWorld()
   const { isGM } = useViewMode()
-  const navigate = useNavigate()
-  const entities = useVisibleEntities(worldId)
-  const campaigns = useCampaigns(worldId)
-  const sessions = useWorldSessions(worldId)
-  const [newCampaign, setNewCampaign] = useState(false)
-
-  const recent = [...entities].filter((e) => e.type !== 'thread').sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 8)
-  const openThreads = openThreadsOf(entities)
-  const openQuests = entities.filter(isOpenQuest)
-  const clocks = tickingClocks(entities)
-
   if (!world) return null
   // Opened from a public wiki link: a tidy front page for readers instead of the GM's overview.
   if (world.shared?.token) return <WikiHome world={world} />
   // Players (and the GM previewing as one) get the Common Room.
   if (!isGM) return <CommonRoom world={world} />
+  return <Today world={world} />
+}
+
+/** The session in hand and its campaign, as the Desk and the Session area pick it (see nextSessions). */
+type InHand = ReturnType<typeof nextSessions>[number]
+
+function Today({ world }: { world: World }) {
+  const worldId = world.id
+  const navigate = useNavigate()
+  const entities = useVisibleEntities(worldId)
+  const campaigns = useCampaigns(worldId)
+  const sessions = useWorldSessions(worldId)
+  const playing = usePlayingNow(worldId)
+  const [newCampaign, setNewCampaign] = useState(false)
+  const cards = nextSessions(campaigns, sessions, playing)
+  const inHand = cards[0]
+  const stage = inHand && sessionStage(inHand.session, playing.includes(inHand.session.id))
+  const fresh = entities.length < 3 && campaigns.length === 0
+
   return (
-    <div className="page home-page">
-      <WorldCover world={world}>
+    <div className="page home-page desk-today">
+      <WorldCover world={world} compact>
         <NewPageMenu world={world} />
       </WorldCover>
-      <BackupReminder world={world} />
-      {entities.length < 3 && campaigns.length === 0 && <GettingStarted worldId={worldId} />}
-
-      <div className="home-grid">
-        <NextSessions worldId={worldId} onNewCampaign={() => setNewCampaign(true)} />
-        <NeedsYou world={world} entities={entities} />
-        <WantedPages worldId={worldId} entities={entities} sessions={sessions} />
-        <section className="card">
-          <h3>
-            <Link to={`${worldPath(worldId)}/clocks`}>Clocks</Link> <Help topic="clocks" />
-          </h3>
-          {clocks.length === 0 ? (
-            <p className="muted small">No clocks ticking. Add one to a faction or loose thread to track a plan or a threat.</p>
-          ) : (
-            <div className="home-clocks">
-              {clocks.slice(0, 4).map(({ clock, owner }) => (
-                <Link key={clock.id} className="home-clock" to={`${pagePath(worldId, owner.id)}`}>
-                  <ClockFace clock={clock} size={34} />
-                  <span>
-                    {clock.name}
-                    <small className="muted">
-                      {clock.filled} of {clockSize(clock)} · {owner.name}
-                    </small>
-                  </span>
-                </Link>
-              ))}
-              {clocks.length > 4 && <Link to={`${worldPath(worldId)}/clocks`}>All {clocks.length} clocks…</Link>}
-            </div>
-          )}
-        </section>
+      <SessionStrip world={world} inHand={inHand} stage={stage} campaigns={campaigns} onNewCampaign={() => setNewCampaign(true)} />
+      <div className="desk-cols">
+        <NeedsYou world={world} entities={entities} sessions={sessions} inHand={inHand} stage={stage} />
+        <DeskClocks world={world} entities={entities} />
       </div>
-
-      <section className="card">
-        <h3>Recently changed</h3>
-        {recent.length === 0 ? (
-          <p className="muted small">Nothing here yet. Use New page to start your world.</p>
-        ) : (
-          <div className="tiles">
-            {recent.map((e) => (
-              <PageTile key={e.id} entity={e} world={world} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <div className="home-grid">
-        <section className="card">
-          <div className="section-header">
-            <h3>
-              Campaigns <Help topic="campaign" />
-            </h3>
-            <button className="small" onClick={() => setNewCampaign(true)}>+ Campaign</button>
-          </div>
-          {campaigns.length === 0 ? (
-            <p className="muted small">A campaign is one group's story in this world. You can run several in the same world.</p>
-          ) : (
-            <ul className="entity-list">
-              {campaigns.map((c) => (
-                <li key={c.id}>
-                  <Link to={`${worldPath(worldId)}/c/${c.id}`}>{c.name}</Link>
-                  <span className="muted"> · {c.status}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-        <section className="card">
-          <h3>Open quests</h3>
-          {openQuests.length === 0 ? (
-            <p className="muted small">No open quests.</p>
-          ) : (
-            <ul className="entity-list">
-              {openQuests.map((e) => (
-                <li key={e.id}>
-                  <Link to={`${pagePath(worldId, e.id)}`}>{e.name}</Link>
-                  <span className="muted"> · {e.questStatus ?? 'open'}{questProgress(e) && ` · ${questProgress(e)}`}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-        <section className="card">
-          <h3>
-            <Link to={`${worldPath(worldId)}/threads`}>Loose threads</Link>
-          </h3>
-          {openThreads.length === 0 ? (
-            <p className="muted small">No loose threads.</p>
-          ) : (
-            <ul className="entity-list">
-              {openThreads.slice(0, 5).map((e) => (
-                <li key={e.id}>
-                  <Link to={`${pagePath(worldId, e.id)}`}>
-                    {e.threadUrgency && URGENCY[e.threadUrgency].icon} {e.name}
-                  </Link>
-                </li>
-              ))}
-              {openThreads.length > 5 && (
-                <li>
-                  <Link to={`${worldPath(worldId)}/threads`}>…and {openThreads.length - 5} more</Link>
-                </li>
-              )}
-            </ul>
-          )}
-        </section>
+      {/* After what's waiting: a new world can already have players writing in. */}
+      {fresh && <GettingStarted world={world} onNewCampaign={() => setNewCampaign(true)} />}
+      <div className="desk-cols">
+        <DeskParty world={world} entities={entities} campaignId={inHand?.campaign.id ?? campaigns[0]?.id} />
+        <ComingUp world={world} campaigns={campaigns} sessions={sessions} playing={playing} onNewCampaign={() => setNewCampaign(true)} />
       </div>
+      <RecentlyChanged world={world} entities={entities} />
+      <StatLine world={world} entities={entities} sessions={sessions} />
       {newCampaign && (
-        <NewCampaign
-          worldId={worldId}
-          defaultSystem={world.system}
-          onClose={() => setNewCampaign(false)}
-          onCreated={(id) => navigate(`${worldPath(worldId)}/c/${id}`)}
-        />
+        <NewCampaign worldId={worldId} defaultSystem={world.system} onClose={() => setNewCampaign(false)} onCreated={(id) => navigate(`${worldPath(worldId)}/c/${id}`)} />
       )}
     </div>
   )
@@ -192,68 +135,621 @@ function NewPageMenu({ world }: { world: World }) {
   )
 }
 
-/** A page as a little card with its picture, or its initials when it has none. */
-function PageTile({ entity: e, world }: { entity: Entity; world: World }) {
-  const image = useAssetUrl(e.imageId)
+/** A session's date in words: the booked time if there is one, else its day, else nothing. */
+function whenOf(campaign: Campaign, session: Session) {
+  const booked = upcoming(campaign)
+  if (booked) return showDate(booked)
+  if (!session.date) return ''
+  const d = new Date(`${session.date}T12:00`)
+  return isNaN(d.getTime()) ? session.date : d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
+/** The one thing to do next for a session at each stage: what the strip's main button does. */
+const NEXT: Record<SessionStage, { id: string; label: string }> = {
+  planned: { id: 'prep', label: 'Start prep' },
+  preparing: { id: 'play', label: 'Start playing' },
+  playing: { id: 'wrap', label: 'Wrap up' },
+  played: { id: 'plan', label: 'Plan the next session' },
+}
+
+/**
+ * The summary strip: the session in hand with its stage, title and date, and one main button for
+ * what comes next (prep it, start playing, wrap it up, or plan the one after). The quieter button
+ * beside it is the step before.
+ */
+function SessionStrip({
+  world,
+  inHand,
+  stage,
+  campaigns,
+  onNewCampaign,
+}: {
+  world: World
+  inHand?: InHand
+  stage?: SessionStage
+  campaigns: Campaign[]
+  onNewCampaign: () => void
+}) {
+  const navigate = useNavigate()
+  const w = worldPath(world.id)
+  if (!inHand || !stage) {
+    // No session yet: a campaign to make, or a first session to plan.
+    const first = campaigns.find((c) => c.status !== 'finished')
+    return (
+      <section className="desk-strip next-sessions" aria-label="Next session">
+        <div className="strip-title">
+          <span className="desk-strip-name">{first ? 'No session planned yet' : 'No campaign yet'}</span>
+          <Help topic="nextSession" />
+        </div>
+        <span className="muted small">{first ? `${first.name} has no sessions.` : 'A campaign is one group’s story in this world. Make one, then plan its first session.'}</span>
+        <span className="grow" />
+        {first ? (
+          <button
+            className="primary"
+            data-next="plan"
+            onClick={async () => {
+              const n = await createNextSession(world.id, first.id)
+              navigate(`${w}/s/${n.id}?tab=prep`)
+            }}
+          >
+            <Ico as={ListChecks} /> Plan the first session
+          </button>
+        ) : (
+          <button className="primary" data-next="campaign" onClick={onNewCampaign}>
+            <Ico as={Plus} /> Make a campaign
+          </button>
+        )}
+      </section>
+    )
+  }
+  const { campaign: c, session: s } = inHand
+  const prep = prepCounts(s.prep)
+  const when = whenOf(c, s)
+  const planned = prep.scenes.total || prep.clues.total ? `${prep.scenes.total} scene${prep.scenes.total === 1 ? '' : 's'} and ${prep.clues.total} clue${prep.clues.total === 1 ? '' : 's'} written` : ''
+  const facts = [c.name, stage === 'played' ? 'last played' : when || 'no date set', stage === 'played' ? '' : planned].filter(Boolean)
+  const next = NEXT[stage]
+  const main: Record<SessionStage, ReactNode> = {
+    planned: (
+      <Link className="button primary" data-next={next.id} to={`${w}/s/${s.id}?tab=prep`}>
+        <Ico as={ListChecks} /> {next.label}
+      </Link>
+    ),
+    preparing: (
+      <button
+        className="primary"
+        data-next={next.id}
+        title={HELP.startPlaying}
+        onClick={async () => {
+          await startPlaying(s.id)
+          navigate(`${w}/s/${s.id}/lectern`)
+        }}
+      >
+        <Ico as={Play} weight="fill" /> {next.label}
+      </button>
+    ),
+    playing: (
+      <Link className="button primary" data-next={next.id} to={`${w}/s/${s.id}?end=1`}>
+        <Ico as={FlagCheckered} /> {next.label}
+      </Link>
+    ),
+    played: (
+      <button
+        className="primary"
+        data-next={next.id}
+        title="Start the next session, carrying over the clues and scenes you didn’t reach"
+        onClick={async () => {
+          const n = await createNextSession(world.id, c.id, '')
+          navigate(`${w}/s/${n.id}?tab=prep`)
+        }}
+      >
+        <Ico as={ListChecks} /> Plan session #{s.number + 1}
+      </button>
+    ),
+  }
+  const quiet: Record<SessionStage, ReactNode> = {
+    planned: null,
+    preparing: (
+      <Link className="button" to={`${w}/s/${s.id}?tab=prep`}>
+        <Ico as={NotePencil} /> Continue prep
+      </Link>
+    ),
+    playing: (
+      <Link className="button" to={`${w}/s/${s.id}/lectern`} title={HELP.lectern}>
+        <Ico as={Play} /> Back to the table
+      </Link>
+    ),
+    played: (
+      <Link className="button" to={`${w}/s/${s.id}/lectern`} title={HELP.lectern}>
+        <Ico as={ArrowCounterClockwise} /> Re-open #{s.number}
+      </Link>
+    ),
+  }
   return (
-    <Link className="tile" to={`${pagePath(world.id, e.id)}`}>
-      <span className="tile-picture">{image ? <img src={image} alt="" /> : <span aria-hidden="true">{initials(e.name)}</span>}</span>
-      <span className="tile-text">
-        {e.name}
-        <small>
-          <TypeIcon type={e.type} custom={world.customTypes?.find((c) => c.id === e.customType)} size="1em" /> {typeLabel(e, world).one}
-        </small>
+    <section className="desk-strip next-sessions" aria-label="Next session" data-session={s.id}>
+      <div className="strip-title">
+        <StageChip stage={stage} />
+        <Link className="desk-strip-name" to={`${w}/s/${s.id}`}>
+          #{s.number} {s.title}
+        </Link>
+        <Help topic="nextSession" />
+      </div>
+      <span className="muted small desk-strip-facts">{facts.join(' · ')}</span>
+      <span className="grow" />
+      <span className="desk-strip-actions">
+        {quiet[stage]}
+        {main[stage]}
       </span>
-    </Link>
+    </section>
   )
 }
 
-/** What's waiting on the GM: questions, character claims and urgent threads. */
-function NeedsYou({ world, entities }: { world: World; entities: Entity[] }) {
-  const { questions: waiting, claims, downtime, urgentThreads: threads, total: count } = useGmInbox(world, entities)
+/** One line of "Needs you": a chip saying what kind of thing, the thing itself, and its one action. */
+interface Need {
+  key: string
+  chip: string
+  icon: Icon
+  tone?: 'warn' | 'bad' | 'quiet'
+  text: ReactNode
+  action?: ReactNode
+  /** One of the Inbox's items (what the badge counts). */
+  inbox?: boolean
+}
+
+/** How many of the Inbox's items "Needs you" lists before "…and N more in the Inbox". */
+const INBOX_ROWS = 5
+
+const clip = (text: string, n = 90) => (text.length > n ? `${text.slice(0, n)}…` : text)
+
+/**
+ * Everything waiting on the GM before the next session, each with one action: what players sent
+ * (the Inbox's items, oldest first), a session with no date or no plan, pressing threads, a backup
+ * that's due, characters nobody plays, players not invited yet, and pages linked but not written.
+ */
+function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; entities: Entity[]; sessions: Session[]; inHand?: InHand; stage?: SessionStage }) {
+  const inbox = useInbox()
+  const backup = useBackupDue(world)
+  const [reading, setReading] = useState<CharacterRequest>()
+  const [wantedOpen, setWantedOpen] = useState(false)
+  const w = worldPath(world.id)
+  const nameOf = (id: string) => entities.find((e) => e.id === id)?.name ?? 'a character'
+  const ask = (id: string) => `${w}/questions?item=${id}`
+  const s = inHand?.session
+  const upcomingStage = stage === 'planned' || stage === 'preparing'
+
+  const fromPlayers: (Need & { at: string })[] = [
+    ...inbox.questions.map((q) => ({
+      key: q.id,
+      at: q.createdAt,
+      chip: 'Question',
+      icon: ChatCircleDots,
+      text: (
+        <>
+          <b>{inbox.nameOf(q.userId)}:</b> {clip(q.body)}
+        </>
+      ),
+      action: (
+        <Link className="button small" to={ask(q.id)}>
+          Answer
+        </Link>
+      ),
+    })),
+    ...inbox.downtime.map((d) => ({
+      key: d.id,
+      at: d.createdAt,
+      chip: 'Downtime',
+      icon: Hourglass,
+      text: (
+        <>
+          <b>{d.character || inbox.nameOf(d.userId)}:</b> {clip(d.body)}
+        </>
+      ),
+      action: (
+        <Link className="button small" to={ask(d.id)}>
+          Answer
+        </Link>
+      ),
+    })),
+    ...inbox.claims.map((c) => ({
+      key: `claim:${c.entityId}`,
+      at: c.createdAt,
+      chip: 'Claim',
+      icon: MaskHappy,
+      text: (
+        <>
+          <b>{c.who}</b> asked to play <Link to={pagePath(world.id, c.entityId)}>{nameOf(c.entityId)}</Link>
+        </>
+      ),
+      action: (
+        <button className="small" onClick={() => approveClaimLater(world.id, c, nameOf(c.entityId), inbox.reload)}>
+          Approve
+        </button>
+      ),
+    })),
+    ...inbox.requests.map((r) => ({
+      key: r.id,
+      at: r.createdAt,
+      chip: 'New character',
+      icon: UserCirclePlus,
+      text: (
+        <>
+          <b>{inbox.nameOf(r.userId)}</b> sent you {r.sheet.name}
+        </>
+      ),
+      action: (
+        <button className="small" onClick={() => setReading(r)}>
+          Read it
+        </button>
+      ),
+    })),
+  ]
+    .sort((a, b) => (a.at || '0').localeCompare(b.at || '0'))
+    .map((n) => ({ ...n, inbox: true }))
+
+  const needs: Need[] = fromPlayers.slice(0, INBOX_ROWS)
+  if (s && upcomingStage && !s.date && inHand && !upcoming(inHand.campaign))
+    needs.push({ key: 'date', chip: 'No date', icon: CalendarBlank, tone: 'warn', text: <>#{s.number} {s.title} has no date yet</>, action: <SetDate session={s} /> })
+  if (s && stage === 'planned')
+    needs.push({
+      key: 'prep',
+      chip: 'Prep',
+      icon: NotePencil,
+      tone: 'warn',
+      text: <>Nothing planned for #{s.number} yet</>,
+      action: (
+        <Link className="button small" to={`${w}/s/${s.id}?tab=prep`}>
+          Prepare
+        </Link>
+      ),
+    })
+  for (const t of entities.filter((e) => isOpenThread(e) && e.threadUrgency === 'high'))
+    needs.push({
+      key: t.id,
+      chip: 'Pressing',
+      icon: Flame,
+      tone: 'bad',
+      text: <span className="clip">{t.name}</span>,
+      action: (
+        <Link className="button small" to={pagePath(world.id, t.id)}>
+          Open
+        </Link>
+      ),
+    })
+  if (backup.due)
+    needs.push({
+      key: 'backup',
+      chip: 'Backup',
+      icon: FloppyDisk,
+      text: (
+        <>
+          {backup.text}. <span className="muted">{backup.why}</span> <Help topic="backupReminder" />
+        </>
+      ),
+      action: (
+        <span className="row">
+          <BackupButton worldId={world.id} className="small" label="Back up now" onDone={backup.done} />
+          <button className="small ghost" onClick={backup.later}>
+            Later
+          </button>
+        </span>
+      ),
+    })
+  const party = partyOf(entities, inHand?.campaign.id, { activeOnly: true })
+  const players = `${w}/settings?tab=players`
+  if (inbox.available && inbox.loaded && inbox.members.length) {
+    const nobody = party.filter((pc) => !inbox.claimed.has(pc.id))
+    if (nobody.length)
+      needs.push({
+        key: 'unclaimed',
+        chip: 'Players',
+        icon: UsersThree,
+        text: <>Nobody plays {nobody.map((e) => e.name.split(' ')[0]).join(', ')} yet</>,
+        action: (
+          <Link className="button small" to={players}>
+            Invite
+          </Link>
+        ),
+      })
+  } else if (!world.cloud?.enabled || (inbox.loaded && !inbox.members.length))
+    needs.push({
+      key: 'invite',
+      chip: 'Players',
+      icon: UsersThree,
+      tone: 'quiet',
+      text: <span className="muted">Nobody invited yet, so nobody’s waiting on you</span>,
+      action: (
+        <Link className="button small ghost" to={players}>
+          Invite
+        </Link>
+      ),
+    })
+  const wanted = wantedPages(entities, sessions).length
+  if (wanted)
+    needs.push({
+      key: 'wanted',
+      chip: 'Pages',
+      icon: NotePencil,
+      tone: 'quiet',
+      text: (
+        <>
+          {wanted} name{wanted === 1 ? '' : 's'} linked with [[ ]] but no page yet
+        </>
+      ),
+      action: (
+        <button className="small ghost" aria-expanded={wantedOpen} onClick={() => setWantedOpen(!wantedOpen)}>
+          {wantedOpen ? 'Hide' : 'See them'}
+        </button>
+      ),
+    })
+  const more = fromPlayers.length - INBOX_ROWS
+  const waiting = needs.filter((n) => n.tone !== 'quiet').length + Math.max(0, more)
+
   return (
-    <section className="card needs-you">
-      <h3>
-        Needs you {count > 0 && <span className="count alert">{count}</span>} <Help topic="needsYou" />
-      </h3>
-      {count === 0 && <p className="muted small">All caught up.</p>}
-      <ul className="entity-list">
-        {waiting.slice(0, 4).map((q) => (
-          <li key={q.id}>
-            <Link to={`${worldPath(world.id)}/questions`}>
-              <Ico as={ChatCircleDots} /> {q.body.length > 70 ? `${q.body.slice(0, 70)}…` : q.body}
-            </Link>
+    <section className="card needs-you" data-inbox-total={inbox.total}>
+      <div className="card-head">
+        <h2>
+          Needs you{s && stage !== 'played' ? ` before #${s.number}` : ''} {waiting > 0 && <span className="count alert">{waiting}</span>} <Help topic="needsYou" />
+        </h2>
+        <Link className="small" to={`${w}/questions`}>
+          Inbox{inbox.total ? ` · ${inbox.total}` : ''}
+        </Link>
+      </div>
+      {waiting === 0 && (
+        <p className="muted small all-caught-up">
+          <Ico as={CheckCircle} /> All caught up.
+        </p>
+      )}
+      <ul className="needs">
+        {needs.map((n) => (
+          <li key={n.key} className={`need ${n.tone ?? ''}`} {...(n.inbox ? { 'data-inbox-item': '' } : {})}>
+            <span className={`chip need-chip ${n.tone ?? ''}`}>
+              <Ico as={n.icon} /> {n.chip}
+            </span>
+            <span className="need-text">{n.text}</span>
+            {n.action && <span className="need-action">{n.action}</span>}
           </li>
         ))}
-        {waiting.length > 4 && (
-          <li>
-            <Link to={`${worldPath(world.id)}/questions`}>…and {waiting.length - 4} more questions</Link>
+        {more > 0 && (
+          <li className="need" data-inbox-more={more}>
+            <Link to={`${w}/questions`}>…and {more} more in the Inbox</Link>
           </li>
         )}
-        {downtime > 0 && (
-          <li>
-            <Link to={`${worldPath(world.id)}/questions`}>
-              <Ico as={Hourglass} /> {downtime} downtime action{downtime === 1 ? '' : 's'} to answer
+      </ul>
+      {wantedOpen && <WantedPages worldId={world.id} entities={entities} sessions={sessions} />}
+      {reading && <ReviewCharacter world={world} request={reading} player={inbox.nameOf(reading.userId)} onClose={() => setReading(undefined)} onDone={inbox.reload} />}
+    </section>
+  )
+}
+
+/** "Set a date": a date box in place; the session takes the day you pick (today or later). */
+function SetDate({ session }: { session: Session }) {
+  const [open, setOpen] = useState(false)
+  const [min] = useState(() => localDate())
+  if (!open)
+    return (
+      <button className="small" onClick={() => setOpen(true)}>
+        Set a date
+      </button>
+    )
+  return (
+    <input
+      type="date"
+      autoFocus
+      min={min}
+      aria-label={`Date of #${session.number}`}
+      onChange={async (e) => {
+        const date = e.target.value
+        if (!date || date < min) return
+        await db.sessions.update(session.id, { date })
+        toast(`#${session.number} is on ${new Date(`${date}T12:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}.`, () => db.sessions.update(session.id, { date: '' }))
+      }}
+    />
+  )
+}
+
+/** The clocks still ticking, most of them at a glance; the Clocks tab has them all. */
+function DeskClocks({ world, entities }: { world: World; entities: Entity[] }) {
+  const clocks = tickingClocks(entities)
+  if (!clocks.length) return null
+  return (
+    <section className="card desk-clocks">
+      <div className="card-head">
+        <h2>
+          Clocks <Help topic="clocks" />
+        </h2>
+        <Link className="small" to={`${worldPath(world.id)}/clocks`}>
+          All {clocks.length}
+        </Link>
+      </div>
+      <ul className="desk-clock-list">
+        {clocks.slice(0, 4).map(({ clock, owner }) => (
+          <li key={clock.id}>
+            <Link className="desk-clock" to={pagePath(world.id, owner.id)} title={owner.name}>
+              <ClockFace clock={clock} size={28} />
+              <span className="desk-clock-name">{clock.name}</span>
+              <span className="muted small">
+                {clock.filled} of {clockSize(clock)}
+              </span>
+              {clock.known ? (
+                <span className="chip need-chip good">
+                  <Ico as={Eye} /> Players know
+                </span>
+              ) : (
+                <span className="chip need-chip">
+                  <Ico as={LockSimple} /> Secret
+                </span>
+              )}
             </Link>
-          </li>
-        )}
-        {claims > 0 && (
-          <li>
-            <Link to={`${worldPath(world.id)}/settings?tab=players`}>
-              <Ico as={UserCirclePlus} /> {claims} character claim{claims === 1 ? '' : 's'} to approve
-            </Link>
-          </li>
-        )}
-        {threads.map((t) => (
-          <li key={t.id}>
-            <Link to={`${pagePath(world.id, t.id)}`}>
-              <Ico as={Spiral} /> {t.name}
-            </Link>
-            <span className="muted small"> · urgent thread</span>
           </li>
         ))}
       </ul>
     </section>
+  )
+}
+
+/** The party at a glance: portraits, armour and hit points. */
+function DeskParty({ world, entities, campaignId }: { world: World; entities: Entity[]; campaignId?: string }) {
+  const party = partyOf(entities, campaignId, { activeOnly: true })
+  if (!party.length) return null
+  return (
+    <section className="card desk-party">
+      <div className="card-head">
+        <h2>
+          The party <Help topic="deskParty" />
+        </h2>
+        {campaignId && (
+          <Link className="small" to={`${worldPath(world.id)}/c/${campaignId}`}>
+            Campaign
+          </Link>
+        )}
+      </div>
+      <ul className="desk-party-list">
+        {party.map((pc) => (
+          <PartyMember key={pc.id} world={world} pc={pc} />
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+function PartyMember({ world, pc }: { world: World; pc: Entity }) {
+  const image = useAssetUrl(pc.imageId)
+  const ac = detailOf(pc, 'AC')
+  const hp = detailOf(pc, 'HP')
+  return (
+    <li>
+      <Link className="desk-pc" to={pagePath(world.id, pc.id)}>
+        <span className="desk-pc-picture">{image ? <img src={image} alt="" /> : <span aria-hidden="true">{initials(pc.name)}</span>}</span>
+        <span className="desk-pc-text">
+          <b>{pc.name.split(' ')[0]}</b>
+          <small className="muted">{[ac && `AC ${ac}`, hp && `HP ${hp}`].filter(Boolean).join(' · ') || typeLabel(pc, world).one}</small>
+        </span>
+      </Link>
+    </li>
+  )
+}
+
+/** The next few sessions of each running campaign, with their stage, and the campaigns themselves. */
+function ComingUp({
+  world,
+  campaigns,
+  sessions,
+  playing,
+  onNewCampaign,
+}: {
+  world: World
+  campaigns: Campaign[]
+  sessions: Session[]
+  playing: string[]
+  onNewCampaign: () => void
+}) {
+  const w = worldPath(world.id)
+  const running = campaigns.filter((c) => c.status !== 'finished')
+  const next = sessions
+    .filter((s) => running.some((c) => c.id === s.campaignId) && (!isPlayed(s) || playing.includes(s.id)))
+    .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || a.number - b.number)
+    .slice(0, 4)
+  const booked = running.filter((c) => upcoming(c) && !next.some((s) => s.campaignId === c.id))
+  return (
+    <section className="card coming-up">
+      <div className="card-head">
+        <h2>
+          Coming up <Help topic="comingUp" />
+        </h2>
+        <button className="small" onClick={onNewCampaign}>
+          <Ico as={Plus} /> Campaign
+        </button>
+      </div>
+      {!next.length && !booked.length && <p className="muted small">{campaigns.length ? 'No sessions planned.' : 'A campaign is one group’s story in this world. You can run several in the same world.'}</p>}
+      <ul className="coming-list">
+        {next.map((s) => (
+          <li key={s.id}>
+            <Link to={`${w}/s/${s.id}`}>
+              <span className="coming-name">
+                #{s.number} {s.title}
+              </span>
+              {running.length > 1 && <small className="muted">{running.find((c) => c.id === s.campaignId)?.name}</small>}
+            </Link>
+            <StageChip stage={sessionStage(s, playing.includes(s.id))} />
+          </li>
+        ))}
+        {booked.map((c) => (
+          <li key={c.id}>
+            <Link to={`${w}/c/${c.id}`}>
+              <span className="coming-name">{c.name}</span>
+              <small className="muted">{showDate(upcoming(c)!)}</small>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {campaigns.length > 0 && (
+        <p className="small coming-campaigns">
+          {campaigns.map((c, i) => (
+            <span key={c.id}>
+              {i > 0 && ' · '}
+              <Link to={`${w}/c/${c.id}`}>{c.name}</Link>
+              {c.status !== 'active' && <span className="muted"> ({c.status})</span>}
+            </span>
+          ))}
+        </p>
+      )}
+    </section>
+  )
+}
+
+/** The pages changed most lately, one line each. */
+function RecentlyChanged({ world, entities }: { world: World; entities: Entity[] }) {
+  // Only what was changed since the world came to this device: a freshly opened example world would
+  // otherwise list pages that all carry the same time, in no real order.
+  const recent = [...entities]
+    .filter((e) => e.type !== 'thread' && !e.template && e.updatedAt > world.createdAt + 5_000)
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, 6)
+  if (!recent.length) return null
+  return (
+    <section className="card recently-changed">
+      <h2>Recently changed</h2>
+      <ul className="recent-list">
+        {recent.map((e) => (
+          <li key={e.id}>
+            <Link to={pagePath(world.id, e.id)}>
+              <TypeIcon type={e.type} custom={world.customTypes?.find((c) => c.id === e.customType)} size="1em" /> {e.name}
+            </Link>
+            <span className="muted small">
+              {typeLabel(e, world).one} · {ago(e.updatedAt)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/** The world in numbers, each one a way into its list. */
+function StatLine({ world, entities, sessions }: { world: World; entities: Entity[]; sessions: Session[] }) {
+  const w = worldPath(world.id)
+  const maps = useLiveQuery(() => db.maps.where({ worldId: world.id }).count(), [world.id]) ?? 0
+  const threads = entities.filter(isOpenThread).length
+  const quests = entities.filter(isOpenQuest).length
+  const planned = sessions.filter((s) => !isPlayed(s)).length
+  const pages = entities.filter((e) => !e.template).length
+  return (
+    <p className="statline desk-statline">
+      <Link to={`${w}/everything`}>
+        <b>{pages}</b> page{pages === 1 ? '' : 's'}
+      </Link>
+      <Link to={`${w}/maps`}>
+        <b>{maps}</b> map{maps === 1 ? '' : 's'}
+      </Link>
+      <Link to={`${w}/threads`}>
+        <b>{threads}</b> open thread{threads === 1 ? '' : 's'}
+      </Link>
+      <Link to={`${w}/quests`}>
+        <b>{quests}</b> open quest{quests === 1 ? '' : 's'}
+      </Link>
+      <Link to={`${w}/session`}>
+        <b>{planned}</b> session{planned === 1 ? '' : 's'} to play
+      </Link>
+    </p>
   )
 }
 
@@ -314,122 +810,67 @@ export function NewCampaign({
   )
 }
 
-/** The GM's "what's next" card: each campaign's coming session, with its prep and the Lectern a click away. */
-function NextSessions({ worldId, onNewCampaign }: { worldId: string; onNewCampaign: () => void }) {
-  const navigate = useNavigate()
-  const campaigns = useCampaigns(worldId)
-  const sessions = useWorldSessions(worldId)
-  const playing = usePlayingNow(worldId)
-  const cards = nextSessions(campaigns, sessions, playing)
-  const booked = campaigns.filter((c) => c.status !== 'finished' && upcoming(c) && !cards.some((x) => x.campaign.id === c.id))
-  return (
-    <section className="card next-sessions">
-      <h3>
-        Next session <Help topic="nextSession" />
-      </h3>
-      {!cards.length && !booked.length && (
-        <p className="muted small">
-          No sessions yet. <button className="link" onClick={onNewCampaign}>Make a campaign</button>, then add its first session.
-        </p>
-      )}
-      {cards.map(({ campaign: c, session: next }) => {
-        const prep = prepCounts(next.prep)
-        const clues = prep.clues.left
-        const scenes = prep.scenes.left
-        const when = upcoming(c)
-        const stage = sessionStage(next, playing.includes(next.id))
-        // The newest session is shown even once it's been played; then the useful next step is planning the one after.
-        const played = stage === 'played'
-        const details = [when ? showDate(when) : next.date, clues || scenes ? `${scenes} scene${scenes === 1 ? '' : 's'}, ${clues} clue${clues === 1 ? '' : 's'} planned` : ''].filter(Boolean).join(' · ')
-        return (
-          <div key={c.id} className="next-session">
-            <div className="kicker">{c.name}{played && ' · last played'}</div>
-            <div className="row wrap">
-              <StageChip stage={stage} />
-              <Link className="next-title" to={`${worldPath(worldId)}/s/${next.id}`}>
-                #{next.number} {next.title}
-              </Link>
-            </div>
-            {details && <div className="muted small">{details}</div>}
-            {stage === 'playing' ? (
-              <div className="row wrap">
-                <Link className="button primary" to={`${worldPath(worldId)}/s/${next.id}/lectern`} title={HELP.lectern}>
-                  <Ico as={Play} weight="fill" /> Back to the table
-                </Link>
-                <Link className="button" to={`${worldPath(worldId)}/s/${next.id}?tab=notes`}>
-                  <Ico as={FlagCheckered} /> Wrap up
-                </Link>
-              </div>
-            ) : played ? (
-              <div className="row wrap">
-                <button
-                  className="primary"
-                  title="Start the next session, carrying over the clues and scenes you didn’t reach"
-                  onClick={async () => {
-                    const n = await createNextSession(worldId, c.id, '')
-                    navigate(`${worldPath(worldId)}/s/${n.id}?tab=prep`)
-                  }}
-                >
-                  <Ico as={ListChecks} /> Plan session #{next.number + 1}
-                </button>
-                <Link className="button" to={`${worldPath(worldId)}/s/${next.id}/lectern`} title={HELP.lectern}>
-                  Re-open #{next.number}
-                </Link>
-              </div>
-            ) : (
-              <div className="row wrap">
-                <button
-                  className="primary"
-                  title={HELP.startPlaying}
-                  onClick={async () => {
-                    await startPlaying(next.id)
-                    navigate(`${worldPath(worldId)}/s/${next.id}/lectern`)
-                  }}
-                >
-                  <Ico as={Play} weight="fill" /> Start playing
-                </button>
-                <Link className="button" to={`${worldPath(worldId)}/s/${next.id}?tab=prep`}>
-                  <Ico as={ListChecks} /> Prepare
-                </Link>
-              </div>
-            )}
-          </div>
-        )
-      })}
-      {booked.map((c) => (
-        <div key={c.id} className="next-session">
-          <div className="kicker">{c.name}</div>
-          <Link to={`${worldPath(worldId)}/c/${c.id}`}>No session yet</Link>
-          <div className="muted small">{showDate(upcoming(c)!)}</div>
-        </div>
-      ))}
-    </section>
-  )
-}
+const hideKey = (worldId: string) => `gettingStarted.hidden.${worldId}`
 
-/** A short first-steps list for a new, nearly empty world. */
-function GettingStarted({ worldId }: { worldId: string }) {
-  const steps: [string, string, string][] = [
-    ['🎲', 'Make a campaign', 'One group’s story in this world. Use “+ Campaign” below.'],
-    ['🧑', 'Add a few people and places', 'Use New page (top right), or press Ctrl/Cmd K and type “new npc”. Link pages to each other by writing [[Name]].'],
-    ['🗺️', 'Add a map', 'Upload one or draw it, then pin your places on it.'],
-    ['🔒', 'Keep secrets', 'Pages start GM only. Reveal them when the players find out, and hide passages with the 🔒 buttons.'],
-    ['☁️', 'Invite your players (optional)', 'Turn on cloud sync in World settings, then send invite links.'],
+/** First steps for a new, nearly empty world, each with its button. Hide puts it away for good on this device. */
+function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign: () => void }) {
+  const create = useCreatePage(world)
+  const w = worldPath(world.id)
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem(hideKey(world.id)) === '1'
+    } catch {
+      return false
+    }
+  })
+  if (hidden) return null
+  const steps: [string, string, string, ReactNode][] = [
+    ['🎲', 'Make a campaign', 'One group’s story in this world.', <button key="campaign" className="small" onClick={onNewCampaign}>Make a campaign</button>],
+    [
+      '🧑',
+      'Add a few people and places',
+      'Link pages to each other by writing [[Name]].',
+      <span key="pages" className="row">
+        <button className="small" onClick={() => create('npc')}>New NPC</button>
+        <button className="small" onClick={() => create('location')}>New place</button>
+      </span>,
+    ],
+    ['🗺️', 'Add a map', 'Upload one or draw it, then pin your places on it.', <Link key="maps" className="button small" to={`${w}/maps`}>Maps</Link>],
+    ['🔒', 'Keep secrets', 'Pages start GM only. Reveal them when the players find out.', null],
+    ['☁️', 'Invite your players (optional)', 'Turn on cloud sync, then send invite links.', <Link key="players" className="button small" to={`${w}/settings?tab=players`}>Players</Link>],
   ]
   return (
     <section className="card getting-started">
-      <h2>
-        Getting started <Help topic="gettingStarted" />
-      </h2>
+      <div className="card-head">
+        <h2>
+          Getting started <Help topic="gettingStarted" />
+        </h2>
+        <button
+          className="small ghost"
+          onClick={() => {
+            try {
+              localStorage.setItem(hideKey(world.id), '1')
+            } catch {
+              // Private window: it hides for now.
+            }
+            setHidden(true)
+          }}
+        >
+          Hide
+        </button>
+      </div>
       <ol>
-        {steps.map(([icon, title, text]) => (
+        {steps.map(([icon, title, text, action]) => (
           <li key={title}>
-            {icon} <strong>{title}.</strong> <span className="muted">{text}</span>
+            <span>
+              {icon} <strong>{title}.</strong> <span className="muted">{text}</span>
+            </span>
+            {action}
           </li>
         ))}
       </ol>
       <p className="small muted">
-        Every ? button explains the thing next to it. <Link to={`${worldPath(worldId)}/settings`}>World settings</Link> can turn them off.
+        Every ? button explains the thing next to it. <Link to={`${w}/settings`}>World settings</Link> can turn them off.
       </p>
     </section>
   )

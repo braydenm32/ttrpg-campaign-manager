@@ -1,7 +1,8 @@
 import { Help } from '../help'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Empty, Modal, VisibilityBadge } from '../components'
+import { Empty, Modal } from '../components'
+import { SeenMark } from '../reveal'
 import { db, newId, type WorldMap } from '../db'
 import { imageSize, saveFileAsAsset, useAssetUrl, useWorld } from '../hooks'
 import { emptyDrawing, GROUNDS, toClassic, type Background, type GroundId, type Scene } from '../mapDrawing'
@@ -139,7 +140,7 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
         className="form"
         onSubmit={async (e) => {
           e.preventDefault()
-          if (busy) return
+          if (busy || !name.trim()) return
           setBusy(true)
           setError('')
           // let the button show it's working before the drawing ties the page up
@@ -167,7 +168,7 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
       >
         <label>
           Name
-          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={kind === 'battle' ? 'e.g. The Sunken Crypt' : 'e.g. The Sword Coast'} />
+          <input autoFocus required value={name} onChange={(e) => setName(e.target.value)} placeholder={kind === 'battle' ? 'e.g. The Sunken Crypt' : 'e.g. The Sword Coast'} />
         </label>
         <div className="label">
           <span>
@@ -234,7 +235,8 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
           <button type="button" onClick={onClose}>
             Cancel
           </button>
-          <button className="primary" disabled={busy}>
+          {!name.trim() && <span className="muted small">Give it a name first.</span>}
+          <button className="primary" disabled={busy || !name.trim()}>
             {busy ? 'Making your map…' : 'Start drawing'}
           </button>
         </div>
@@ -251,7 +253,7 @@ function MapCard({ map, worldId }: { map: WorldMap; worldId: string }) {
     <Link className="card map-card" to={`${worldPath(worldId)}/maps/${map.id}`}>
       {url && <img src={url} alt="" />}
       <h3>
-        {map.name} <VisibilityBadge value={map.visibility} />
+        {map.name} {isGM && <SeenMark entity={map} />}
       </h3>
     </Link>
   )

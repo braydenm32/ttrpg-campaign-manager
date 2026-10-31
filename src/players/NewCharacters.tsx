@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom'
 import { cloudErrorMessage } from '../cloud/client'
 import {
   answerCharacterRequest,
-  listCharacterRequests,
   listMyCharacterRequests,
-  listPlayers,
   requestCharacter,
   withdrawCharacterRequest,
   type CharacterRequest,
@@ -14,6 +12,8 @@ import {
 import { schedule } from '../cloud/sync'
 import { Modal } from '../components'
 import { toast } from '../undo'
+import { useInbox } from '../Sidebar'
+import { turnDownCharacterLater } from './inboxActions'
 import { blankEntity, db, type World } from '../db'
 import { Help } from '../help'
 import { useVisibleEntities } from '../hooks'
@@ -159,45 +159,30 @@ export function MyNewCharacters({ world, compact }: { world: World; compact?: bo
   )
 }
 
-/** For the GM: new characters players have sent, with a look at each and Approve or Turn down. */
+/** For the GM: new characters players have sent, with a look at each and Approve or Turn down. (On the Desk and in the Inbox they're listed already.) */
 export function NewCharacterRequestsBanner({ world }: { world: World }) {
-  const [requests, setRequests] = useState<CharacterRequest[]>([])
-  const [names, setNames] = useState<Map<string, string>>(new Map())
+  const inbox = useInbox()
   const [open, setOpen] = useState<CharacterRequest>()
-  const load = useCallback(async () => {
-    try {
-      const [r, p] = await Promise.all([listCharacterRequests(world.id), listPlayers(world.id)])
-      setRequests(r)
-      setNames(new Map(p.members.map((m) => [m.userId, m.name])))
-    } catch {
-      // Offline, or the server hasn't been updated yet: nothing to show.
-    }
-  }, [world.id])
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    load()
-    const t = setInterval(() => !document.hidden && load(), 120_000)
-    return () => clearInterval(t)
-  }, [load])
-  if (!requests.length) return null
+  if (!inbox.requests.length && !open) return null
   return (
     <div className="player-banner claim-requests">
-      {requests.map((r, i) => (
+      {inbox.requests.map((r, i) => (
         <div key={r.id} className="row wrap">
           <span>
-            <Ico as={UserCirclePlus} /> <strong>{names.get(r.userId) ?? 'A player'}</strong> sent you a new character: <b>{r.sheet.name}</b>. {i === 0 && <Help topic="newCharacterGm" />}
+            <Ico as={UserCirclePlus} /> <strong>{inbox.nameOf(r.userId)}</strong> sent you a new character: <b>{r.sheet.name}</b>. {i === 0 && <Help topic="newCharacterGm" />}
           </span>
           <button className="primary small" onClick={() => setOpen(r)}>
             Read it
           </button>
         </div>
       ))}
-      {open && <ReviewCharacter world={world} request={open} player={names.get(open.userId) ?? 'A player'} onClose={() => setOpen(undefined)} onDone={load} />}
+      {open && <ReviewCharacter world={world} request={open} player={inbox.nameOf(open.userId)} onClose={() => setOpen(undefined)} onDone={inbox.reload} />}
     </div>
   )
 }
 
-function ReviewCharacter({ world, request, player, onClose, onDone }: { world: World; request: CharacterRequest; player: string; onClose: () => void; onDone: () => void }) {
+/** A player's new character, to read and then approve (the app makes the page) or turn down with a note. */
+export function ReviewCharacter({ world, request, player, onClose, onDone }: { world: World; request: CharacterRequest; player: string; onClose: () => void; onDone: () => Promise<unknown> | void }) {
   const campaigns = useCampaigns(world.id)
   const [campaignId, setCampaignId] = useState('')
   const [note, setNote] = useState('')
@@ -220,11 +205,12 @@ function ReviewCharacter({ world, request, player, onClose, onDone }: { world: W
         await db.entities.add(page)
         schedule(200)
         setMade(page.id)
+        onDone()
       } else {
-        await answerCharacterRequest(world.id, request.id, false, note)
+        // Turning down tells the player, so it waits out its Undo.
+        turnDownCharacterLater(world.id, request, note, async () => void (await onDone()))
         onClose()
       }
-      onDone()
     } catch (e) {
       setError(cloudErrorMessage(e))
     } finally {
