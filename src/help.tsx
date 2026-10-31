@@ -293,6 +293,7 @@ export const HELP = {
   pageVisibility:
     'Says who can read this page now: GM only, players, or a few players you revealed it to. Click it to change that. Before anything is revealed you see what players will get (and what stays hidden: GM notes, GM-only passages and details), and a note at the bottom offers Undo afterwards.',
   pageJumps: 'A long page gets this row: tap a part to go straight to it. Back from a page you opened comes back to where you were.',
+  seenMarks: 'In your lists, an open eye marks what players can read, a lock what’s GM only, and a half-shut eye a GM-only page revealed to a few players. The filter and tag you pick stay in the address, so Back from a page returns to the same list.',
   revealQuietly:
     'Reveal quietly lets players read the page the next time they look, without putting it on their screens. Reveal and show does both. Hide from players makes it GM only again (and takes it off their screens if it is showing). GM notes and secret passages stay hidden either way.',
   pageDrafts:

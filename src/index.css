@@ -1754,3 +1754,12 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
   .vis-choice button { min-height: 44px; }
   .field-row > button { min-width: 44px; min-height: 44px; justify-content: center; }
 }
+.list-seen { display: flex; flex-wrap: wrap; align-items: center; gap: .3em; margin: -.4em 0 .8em; }
+.everything-search { width: 100%; max-width: 30em; margin-bottom: 1em; }
+.everything-card { flex-wrap: wrap; }
+.everything-card .everything-seen { flex-basis: 100%; margin: -.6em 0 0 2.1em; display: inline-flex; align-items: center; gap: .3em; font-size: .78rem; }
+.everything-found li { display: flex; flex-wrap: wrap; align-items: center; gap: .3em; }
+@media (max-width: 800px) {
+  .everything-found li > a { min-height: 44px; display: inline-flex; align-items: center; gap: .35em; }
+  .tree li > a { display: inline-flex; align-items: center; min-height: 44px; }
+}
