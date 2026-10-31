@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Empty, Skeleton, TagInput, VisibilityBadge, VisibilityToggle } from '../components'
+import { Empty, Skeleton, TagInput } from '../components'
 import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, PICKER_TYPES, saveEntity, templateOf, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus, type World } from '../db'
 import { HistoryButton } from '../History'
 import { listedEntries, TableRoller } from '../tables'
@@ -17,10 +17,10 @@ import { CharacterOwnerBox } from '../players/Characters'
 import { PlayerNotesBox } from '../players/Notes'
 import { RevealedToBadge, RevealToPicker } from '../players/Secrets'
 import { useViewMode } from '../viewMode'
-import { LastSeen, StatusBadge } from '../status'
+import { lastSeenIn, StatusBadge } from '../status'
 import { PrintButton } from '../print'
 import { AskGmBox } from '../players/Questions'
-import { revealAndShow, ShowButton, stopShowing } from '../showing'
+import { ShowButton } from '../showing'
 import { CalDateInput, formatDate, toDays } from '../calendar'
 import { RelationsBox } from '../relations'
 import { SessionMentions } from '../sessionMentions'
@@ -29,12 +29,17 @@ import { QuestBox, questProgress } from '../quests'
 import { Ico, TypeIcon } from '../icons'
 import { dropHeldPage, heldPage } from '../pendingPages'
 import { markSaved, toast } from '../undo'
-import { Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Sparkle, Spiral, Television } from '@phosphor-icons/react'
+import { DotsThreeOutline, Eye, Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Sparkle, Spiral, UserCircle } from '@phosphor-icons/react'
 import { initials } from '../text'
 import { ImportSheetButton } from '../sheets/ImportSheet'
 import { pagePath, resolvePage, typePath, usePathsVersion, worldPath } from '../paths'
 import { canSeeMap, quantityLabel } from '../counts'
 import { pinRevealed } from '../fog'
+import { JumpRow, useKeepScroll } from '../jump'
+import { NewPageButton } from '../NewPage'
+import { PageVisibility, SeenMark } from '../reveal'
+import { useCharacterOwners } from '../players/owners'
+import { keyNumbers, NumberTiles } from '../players/sheetGlance'
 
 export default function EntityPage() {
   const { worldId } = useWorld()
@@ -64,10 +69,11 @@ export default function EntityPage() {
 
 function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void }) {
   const { worldId, world } = useWorld()
-  const { isGM, canSee } = useViewMode()
+  const { isGM, canSee, previewAs } = useViewMode()
   const entities = useVisibleEntities(worldId)
   const sessions = useWorldSessions(worldId)
   const image = useAssetUrl(e.imageId)
+  const { owners } = useCharacterOwners(e.type === 'pc' ? world : undefined)
   const pins =
     useLiveQuery(
       async () => {
@@ -86,24 +92,53 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   const ancestors: Entity[] = []
   for (let p = e.parentId && byId.get(e.parentId); p && ancestors.length < 12; p = p.parentId ? byId.get(p.parentId) : undefined)
     ancestors.unshift(p)
+  // A page for the whole world (named like it) is where everything sits; the breadcrumb skips it.
+  if (ancestors.length > 1 && world && ancestors[0].name.trim().toLowerCase() === world.name.trim().toLowerCase()) ancestors.shift()
   const inside = entities.filter((x) => x.parentId === e.id)
   const backlinks = findBacklinks(e, entities, isGM)
   const groups = ENTITY_TYPES.map((t) => [t, inside.filter((x) => x.type === t)] as const).filter(([, xs]) => xs.length)
+  const seen = HAS_STATUS.includes(e.type) ? lastSeenIn(e, sessions, isGM) : undefined
+  // A player's own character: their numbers first, and a word that it's them.
+  const owner = e.type === 'pc' ? owners.get(e.id) : undefined
+  const isYou = !isGM && e.type === 'pc' && (!!owner?.mine || !!previewAs?.characterNames.some((n) => n.toLowerCase() === e.name.toLowerCase()))
+  // Where it is on a map: its own map (a town's map), else the first pin.
+  const onMap = ownMaps[0] ? `${worldPath(worldId)}/maps/${ownMaps[0].id}` : pins[0] ? `${worldPath(worldId)}/maps/${pins[0].map.id}?pin=${pins[0].pin.id}` : undefined
+  const gmNotes = isGM && !!e.gmNotes.trim()
+  // A long page gets a row to jump to its parts.
+  const long = (e.body?.length ?? 0) + (e.gmNotes?.length ?? 0) > 1400 || backlinks.length > 8
+  const jumps = [
+    { id: 'page-top', label: 'Summary' },
+    { id: 'page-details', label: 'Details' },
+    ...(gmNotes ? [{ id: 'page-gm-notes', label: 'GM notes' }] : []),
+    ...(backlinks.length ? [{ id: 'page-mentioned', label: 'Mentioned in' }] : []),
+  ]
+  const [allMentions, setAllMentions] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const MENTIONS = 10
+  const mentions = allMentions ? backlinks : backlinks.slice(0, MENTIONS)
+  // Back from a page you opened from here lands where you were.
+  useKeepScroll(entities.length > 0)
 
   return (
-    <div className="page entity-page">
-      <nav className="runhead" aria-label="Where this page sits">
-        <Link to={`${worldPath(worldId)}`}>{world?.name}</Link>
-        {ancestors.map((a) => (
-          <span key={a.id}>
-            {' › '}
+    <div className="page entity-page" id="page-top">
+      <nav className={`runhead crumbs ${ancestors.length > 1 ? 'deep' : ''}`} aria-label="Where this page sits">
+        <Link to={typePath(worldId, e.type, e.customType)}>{typeLabel(e, world).many}</Link>
+        {ancestors.map((a, i) => (
+          <span key={a.id} className={i < ancestors.length - 1 ? 'crumb-mid' : 'crumb-last'}>
+            {/* On a phone the places in between fold into "…". */}
+            {i === ancestors.length - 1 && ancestors.length > 1 && (
+              <span aria-hidden="true" className="crumb-dots">
+                {' › …'}
+              </span>
+            )}
+            <span aria-hidden="true" className="crumb-sep">
+              {' › '}
+            </span>
             <Link to={`${pagePath(worldId, a.id)}`}>{a.name}</Link>
           </span>
         ))}
-        {' › '}
-        <Link to={typePath(worldId, e.type, e.customType)}>{typeLabel(e, world).many}</Link>
       </nav>
-      <header className="page-header">
+      <header className="page-header entity-head">
         <div>
           <div className="kicker">
             <TypeIcon type={e.type} custom={world?.customTypes?.find((c) => c.id === e.customType)} /> {typeLabel(e, world).one}
@@ -117,61 +152,63 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             {e.type === 'quest' && questProgress(e) && ` · ${questProgress(e)}`}
             {e.type === 'thread' && ` · ${THREAD_STATUS[e.threadStatus ?? 'open'].label}`}
             {e.type === 'thread' && e.threadUrgency && e.threadUrgency !== 'normal' && ` · ${URGENCY[e.threadUrgency].icon} ${URGENCY[e.threadUrgency].label}`}
-            <LastSeen entity={e} sessions={sessions} worldId={worldId} />
           </div>
           <h1>
-            {e.name} <VisibilityBadge value={e.visibility} /> <RevealedToBadge entity={e} world={world} entities={entities} isGM={isGM} />
+            {e.name} {!isGM && <RevealedToBadge entity={e} world={world} entities={entities} isGM={isGM} />}
           </h1>
           {e.summary && <p className="lead">{e.summary}</p>}
         </div>
-        {isGM ? (
-          <div className="row entity-actions">
-            <PrintButton to={`${worldPath(worldId)}/print/e/${e.id}`} />
-            {!e.template &&
-              (e.visibility === 'players' ? (
-                <ShowButton worldId={worldId} what={{ kind: 'page', title: e.name, entityId: e.id }} />
-              ) : (
-                <>
-                  <button
-                    title="Let every player read this page, without putting it on their screens"
-                    onClick={() => confirm(`Reveal “${e.name}” to every player? GM notes and secret passages stay hidden.`) && saveEntity({ ...e, visibility: 'players', updatedAt: Date.now() })}
-                  >
-                    Reveal quietly
-                  </button>
-                  <button
-                    title="Reveal this page to every player and put it on their screens"
-                    onClick={() => confirm(`Reveal “${e.name}” to every player and show it? GM notes and secret passages stay hidden.`) && revealAndShow(worldId, e)}
-                  >
-                    <Ico as={Television} /> Reveal and show
-                  </button>
-                </>
-              ))}
-            {!e.template && e.visibility === 'players' && (
-              <button
-                title="Make this page GM only again. Players stop seeing it."
-                onClick={async () => {
-                  const onScreen = world?.showing?.kind === 'page' && world.showing.entityId === e.id
-                  if (!confirm(`Hide “${e.name}” from players again?${onScreen ? ' It is on their screens right now, and will come off.' : ''}`)) return
-                  if (onScreen) await stopShowing(worldId)
-                  await saveEntity({ ...e, visibility: 'gm', updatedAt: Date.now() })
-                }}
-              >
-                Hide from players
-              </button>
-            )}
-            {!e.template && <Help topic="revealQuietly" />}
-            {e.type === 'pc' && !e.template && world && <ImportSheetButton worldId={worldId} system={world.system} into={e} label="Update from sheet" />}
-            <HistoryButton entity={e} />
+      </header>
+
+      {e.type === 'pc' && !e.template && (keyNumbers(e).length > 0 || isYou) && (
+        <section className={`pc-glance ${isYou ? 'you' : ''}`} aria-label="At a glance">
+          {isYou && (
+            <p className="pc-you">
+              <Ico as={UserCircle} /> This is you{owner?.mine ? '' : previewAs ? ` (as ${previewAs.name})` : ''}
+            </p>
+          )}
+          <NumberTiles c={e} />
+        </section>
+      )}
+
+      <div className="page-strip">
+        <div className="page-facts">
+          <StatusBadge entity={e} showAlive />
+          {isGM && !e.template && <PageVisibility entity={e} world={world} entities={entities} />}
+          {seen && (
+            <Link className="tag strip-chip" to={`${worldPath(worldId)}/s/${seen.id}`} title="The latest session it turned up in">
+              In #{seen.number} {seen.title}
+            </Link>
+          )}
+          {isGM && <span className="muted small strip-edited">Edited {editedAgo(e.updatedAt)}</span>}
+        </div>
+        <div className="page-actions">
+          {isGM && (
             <button className="primary" onClick={onEdit}>
               <Ico as={PencilSimple} /> Edit
             </button>
-          </div>
-        ) : (
-          <div className="row entity-actions">
+          )}
+          {onMap && (
+            <Link className="button" to={onMap}>
+              <Ico as={MapPin} /> On the map
+            </Link>
+          )}
+          {/* On a phone the rarer ones fold behind "More". */}
+          <button type="button" className="page-more-toggle" aria-expanded={moreOpen} onClick={() => setMoreOpen(!moreOpen)}>
+            <Ico as={DotsThreeOutline} /> More
+          </button>
+          <span className={`page-more ${moreOpen ? 'open' : ''}`}>
+            {isGM && !e.template && e.visibility === 'players' && <ShowButton worldId={worldId} what={{ kind: 'page', title: e.name, entityId: e.id }} />}
+            {isGM && e.type === 'pc' && !e.template && world && <ImportSheetButton worldId={worldId} system={world.system} into={e} label="Update from sheet" />}
+            {isGM && <HistoryButton entity={e} />}
             <PrintButton to={`${worldPath(worldId)}/print/e/${e.id}`} />
-          </div>
-        )}
-      </header>
+            {isGM && world && !e.template && e.type !== 'custom' && <NewPageButton world={world} type={e.type} className="ghost new-from-page" />}
+          </span>
+        </div>
+      </div>
+      {long && (
+        <JumpRow targets={jumps} label="Parts of this page" className="page-jumps" help="pageJumps" />
+      )}
       {e.template && (
         <p className="notice">
           <Ico as={Ruler} /> This is a template <Help topic="templates" />: a starting point for new {typeLabel(e, world).many.toLowerCase()}. It’s
@@ -206,14 +243,16 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               <Markdown text={e.playerBody} entities={entities} worldId={worldId} showSecrets={false} />
             </section>
           )}
-          {isGM && e.gmNotes && (
-            <div className="secret">
-              <strong>GM notes</strong>
+          {gmNotes && (
+            <div className="secret" id="page-gm-notes">
+              <strong>
+                <Ico as={Lock} /> GM notes
+              </strong>
               <Markdown text={e.gmNotes} entities={entities} worldId={worldId} showSecrets />
             </div>
           )}
           {isGM && world && !e.template && e.type === 'npc' && <NpcLines world={world} entity={e} entities={entities} />}
-          {(e.body || (isGM && e.gmNotes)) && <div className="fleuron" aria-hidden="true">❦</div>}
+          {(e.body || gmNotes) && <div className="fleuron" aria-hidden="true">❦</div>}
           {!e.template && e.type === 'quest' && <QuestBox quest={e} entities={entities} isGM={isGM} worldId={worldId} />}
           {!e.template && <ClocksBox entity={e} isGM={isGM} worldId={worldId} />}
           {!e.template && <RelationsBox entity={e} entities={entities} isGM={isGM} worldId={worldId} />}
@@ -228,7 +267,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               <ul className="entity-list">
                 {xs.map((x) => (
                   <li key={x.id}>
-                    <Link to={`${pagePath(worldId, x.id)}`}>{x.name}</Link> <VisibilityBadge value={x.visibility} />
+                    <Link to={`${pagePath(worldId, x.id)}`}>{x.name}</Link> {isGM && <SeenMark entity={x} />}
                     {x.summary && <span className="muted"> · {x.summary}</span>}
                   </li>
                 ))}
@@ -236,10 +275,12 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             </section>
           ))}
           {backlinks.length > 0 && (
-            <section>
-              <h2>Mentioned in</h2>
-              <ul className="entity-list">
-                {backlinks.map((x) => (
+            <section id="page-mentioned">
+              <h2>
+                Mentioned in <span className="count">{backlinks.length}</span>
+              </h2>
+              <ul className={`entity-list mentioned ${backlinks.length > 6 ? 'many' : ''}`}>
+                {mentions.map((x) => (
                   <li key={x.id}>
                     <Link to={`${pagePath(worldId, x.id)}`}>
                       <TypeIcon type={x.type} /> {x.name}
@@ -247,11 +288,16 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
                   </li>
                 ))}
               </ul>
+              {backlinks.length > MENTIONS && (
+                <button type="button" className="ghost show-all" aria-expanded={allMentions} onClick={() => setAllMentions(!allMentions)}>
+                  {allMentions ? 'Show fewer' : `Show all ${backlinks.length}`}
+                </button>
+              )}
             </section>
           )}
           {!e.template && <SessionMentions entity={e} sessions={sessions} worldId={worldId} isGM={isGM} />}
         </div>
-        <aside className="entity-side">
+        <aside className="entity-side" id="page-details">
           <div className="infobox">
             {image ? (
               <img className="portrait" src={image} alt={e.name} />
@@ -271,14 +317,6 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
                   <dt>Inspiration</dt>
                   <dd className="inspired">
                     <Ico as={Sparkle} /> {e.inspiration}
-                  </dd>
-                </div>
-              )}
-              {e.status && (
-                <div>
-                  <dt>Status</dt>
-                  <dd>
-                    <StatusBadge entity={e} showAlive />
                   </dd>
                 </div>
               )}
@@ -355,6 +393,16 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
       </div>
     </div>
   )
+}
+
+/** "today", "yesterday", "3 days ago", else the date: when a page last changed. */
+function editedAgo(at: number) {
+  const day = (t: number) => Math.floor((t - new Date(t).getTimezoneOffset() * 60000) / 86400000)
+  const days = day(Date.now()) - day(at)
+  if (days <= 0) return 'today'
+  if (days === 1) return 'yesterday'
+  if (days < 14) return `${days} days ago`
+  return `on ${new Date(at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: days > 300 ? 'numeric' : undefined })}`
 }
 
 /** Enter in a single-line box shouldn't save the whole page and close the editor. */
@@ -524,6 +572,21 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
           save()
         }}
       >
+        <div className="editor-top">
+          {d.template ? (
+            <span className="muted small"><Ico as={Ruler} /> Template <Help topic="templates" /></span>
+          ) : (
+            <div className="segmented vis-choice" role="group" aria-label="Who can read this page">
+              <button type="button" className={d.visibility === 'gm' ? 'on' : ''} aria-pressed={d.visibility === 'gm'} onClick={() => set('visibility', 'gm')}>
+                <Ico as={Lock} /> GM only
+              </button>
+              <button type="button" className={d.visibility === 'players' ? 'on' : ''} aria-pressed={d.visibility === 'players'} onClick={() => set('visibility', 'players')}>
+                <Ico as={Eye} /> Players can see it
+              </button>
+            </div>
+          )}
+          {!d.template && <Help topic="visibility" />}
+        </div>
         <header className="page-header">
           <div className="title-block">
             <input
@@ -540,21 +603,6 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
               </span>
               <TagInput tags={d.aliases ?? []} onChange={(t) => set('aliases', t.length ? t : undefined)} placeholder="Add a nickname…" />
             </div>
-          </div>
-          <div className="row">
-            {d.template ? (
-              <span className="muted small"><Ico as={Ruler} /> Template <Help topic="templates" /></span>
-            ) : (
-              <>
-                <VisibilityToggle value={d.visibility} onChange={(v) => set('visibility', v)} />
-                <Help topic="visibility" />
-              </>
-            )}
-            <Help topic="pageDrafts" />
-            <button type="button" onClick={cancel}>
-              Cancel
-            </button>
-            <button className="primary">Save</button>
           </div>
         </header>
         {kept && !dirty && (
@@ -588,6 +636,36 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
         )}
         {d.visibility === 'gm' && !d.template && world && (
           <RevealToPicker world={world} entities={entities} value={d.revealedTo ?? []} onChange={(ids) => set('revealedTo', ids.length ? ids : undefined)} />
+        )}
+        {!d.template && (
+          <details className="secrets-explained">
+            <summary>
+              <Ico as={Lock} /> What players see of this page {d.visibility === 'gm' ? '(nothing yet: it’s GM only)' : ''}
+            </summary>
+            <div className="grid-2 small">
+              <div>
+                <strong>
+                  <Ico as={Eye} /> Once it’s revealed
+                </strong>
+                <ul>
+                  <li>The name, summary and description</li>
+                  <li>Details and tags, except the ones marked GM only</li>
+                  <li>A “Secret for…” passage: only the characters it names</li>
+                </ul>
+              </div>
+              <div>
+                <strong>
+                  <Ico as={Lock} /> Never
+                </strong>
+                <ul>
+                  <li>GM notes (below the description)</li>
+                  <li>GM-only passages in the description (the <Ico as={Lock} /> GM-only passage button)</li>
+                  <li>Details with the <Ico as={Lock} /> lock, and GM-only tags</li>
+                </ul>
+              </div>
+            </div>
+            <Help topic="secrets" />
+          </details>
         )}
         <div className="grid-2">
           <label>
@@ -768,19 +846,21 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
         <label>
           Summary
           <input value={d.summary} onChange={(ev) => set('summary', ev.target.value)} placeholder="One line shown in lists and on map pins" />
-          <small className="muted">Players see the summary, details and tags once the page is revealed (except 🔒 details and GM-only tags). Secrets go in GM notes or a :::gm block.</small>
         </label>
         <label>
           <span>
             Description <Help topic="secrets" />
           </span>
-          <SecretTextarea worldId={worldId} rows={12} value={d.body} onChange={(v) => set('body', v)} />
-          <small className="muted">
-            Markdown. Link pages with [[Name]]. Use the buttons to hide a passage from every player, or to keep it for
-            some characters only (:::for Wren and Silas). Names are suggested as you type.
-          </small>
+          <SecretTextarea worldId={worldId} rows={10} value={d.body} onChange={(v) => set('body', v)} />
+          <small className="muted">Link pages by typing @ or [[ and a name. The buttons hide a passage from every player, or keep it for some characters only.</small>
         </label>
         <SecretNamesWarning worldId={worldId} texts={[d.summary, d.body, d.playerBody]} show={d.visibility === 'players' && !d.template} />
+        <label className="gm-notes-field">
+          <span>
+            <Ico as={Lock} /> GM notes: never shown to players <Help topic="gmNotes" />
+          </span>
+          <textarea rows={4} value={d.gmNotes} onChange={(ev) => set('gmNotes', ev.target.value)} placeholder="Secrets, plans, stat lines, what they really want…" />
+        </label>
         {d.type === 'pc' && (
           <label>
             <span>
@@ -790,12 +870,6 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
             <small className="muted">The player who claimed this character can write here themselves. Players can read it, so keep secrets out.</small>
           </label>
         )}
-        <label>
-          <span>
-            GM notes (never shown to players) <Help topic="gmNotes" />
-          </span>
-          <textarea rows={5} value={d.gmNotes} onChange={(ev) => set('gmNotes', ev.target.value)} />
-        </label>
         <div className="grid-2">
           <div>
             <div className="label">
@@ -806,25 +880,28 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
                 <input
                   value={f.key}
                   placeholder="Field"
+                  aria-label="Detail"
                   onKeyDown={noEnter}
                   onChange={(ev) => set('fields', d.fields.map((x, j) => (j === i ? { ...x, key: ev.target.value } : x)))}
                 />
                 <input
                   value={f.value}
                   placeholder="Value"
+                  aria-label={`${f.key || 'Detail'}: value`}
                   onKeyDown={noEnter}
                   onChange={(ev) => set('fields', d.fields.map((x, j) => (j === i ? { ...x, value: ev.target.value } : x)))}
                 />
                 <button
                   type="button"
-                  className={`ghost ${f.gm ? 'on' : ''}`}
+                  className={`ghost field-lock ${f.gm ? 'on' : ''}`}
                   title={f.gm ? 'GM only: players never see this. Click to show it to players.' : 'Players see this once the page is revealed. Click to keep it GM only.'}
+                  aria-label={f.gm ? 'GM only' : 'Players see it'}
                   aria-pressed={!!f.gm}
                   onClick={() => set('fields', d.fields.map((x, j) => (j === i ? { ...x, gm: !x.gm || undefined } : x)))}
                 >
-                  {f.gm ? '🔒' : '👁'}
+                  <Ico as={f.gm ? Lock : Eye} />
                 </button>
-                <button type="button" className="ghost" onClick={() => set('fields', d.fields.filter((_, j) => j !== i))}>
+                <button type="button" className="ghost" aria-label="Remove this detail" onClick={() => set('fields', d.fields.filter((_, j) => j !== i))}>
                   ×
                 </button>
               </div>
@@ -857,15 +934,17 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
             </div>
           </div>
         </div>
-        <div>
-          <div className="label">Tags</div>
-          <TagInput tags={d.tags} onChange={(t) => set('tags', t)} />
-        </div>
-        <div>
-          <div className="label">
-            <Ico as={Lock} /> GM-only tags <Help topic="gmTags" />
+        <div className="grid-2">
+          <div>
+            <div className="label">Tags</div>
+            <TagInput tags={d.tags} onChange={(t) => set('tags', t)} />
           </div>
-          <TagInput tags={d.gmTags ?? []} onChange={(t) => set('gmTags', t.length ? t : undefined)} />
+          <div>
+            <div className="label">
+              <Ico as={Lock} /> GM-only tags <Help topic="gmTags" />
+            </div>
+            <TagInput tags={d.gmTags ?? []} onChange={(t) => set('gmTags', t.length ? t : undefined)} />
+          </div>
         </div>
         <div className="row spread">
           <div className="row">
@@ -887,6 +966,13 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
               </button>
             )}
           </div>
+        </div>
+        {/* Save stays in reach at the foot of the screen, however long the page. */}
+        <div className="editor-bar">
+          <Help topic="pageDrafts" />
+          <button type="button" onClick={cancel}>
+            Cancel
+          </button>
           <button className="primary">Save</button>
         </div>
       </form>

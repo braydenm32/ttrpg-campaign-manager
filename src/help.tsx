@@ -112,10 +112,10 @@ export const HELP = {
     'Click to place a label, or drag a line on the map and the words will follow it, like a river name or a mountain range. Region lettering is spaced capitals, place names are italic, Title is for the map name.',
 
   // Story
-  timeline: 'Events in order: the history before your campaign, and what has happened during it. Filter by place to see one area’s story.',
+  timeline: 'Events in order: the history before your campaign, and what has happened during it. Filter by place to see one area’s story, and jump straight to an age or to the campaign from the row at the top. List or Month, the month you’re on and the place stay in the address, so Back comes back to them.',
   ages: 'Split your history into named ages, like “The Age of Kings” or “The Long Peace”. Each age gets its own section on the timeline, in order, and each event can belong to one. Players see the ages of any events you have revealed.',
   threads:
-    'Every hook, mystery, promise and grudge you’ve left dangling. Move them from dangling to in play to tied off. A thread that hasn’t moved in three sessions gets flagged so nothing is forgotten.',
+    'Every hook, mystery, promise and grudge you’ve left dangling. The columns say where a thread stands with the players (dangling, in play, tied off); pressing, normal and slow burn say how soon it bites and order each column. “Next session” marks threads that touch the plan for the next session (a place, person or page in its scenes, clues or fights), and they come first. Moving a thread offers Undo. A thread that hasn’t moved in three sessions gets flagged so nothing is forgotten. Your search and switches stay in the address, so Back comes back to them.',
   leads:
     'The quests, rumours, hooks and mysteries your GM has shared with the party that are still open, the ones under way first, and the clocks that are ticking. Done and tied-off ones are folded away at the bottom.',
   calendar:
@@ -124,9 +124,9 @@ export const HELP = {
   relations:
     'How this page connects to others: family, friends, enemies, who serves whom. Players only see a link when you tick “Players know”. Every link shows up on both pages.',
   relationWeb:
-    'Everyone and how they’re connected, drawn as a web. Drag people about, click one to focus on them, or switch to the family tree. In a big world it starts with just people, factions and gods; switch to every kind of page to see places and items too. Add links from any page’s Relationships box.',
+    'Everyone and how they’re connected, drawn as a web. It opens on one person and everyone within two links of them: your own character for a player, otherwise the best-connected player character. Click someone to move to them (Back goes back), pick Everyone to see the whole web, or switch to the family tree. In a big world it shows just people, factions and gods; switch to every kind of page to see places and items too. Add links from any page’s Relationships box; removing one offers Undo.',
   clocks:
-    'A progress clock is a circle cut into slices. Fill a slice when a villain’s plan moves on, a rival gets closer or danger grows; when it’s full, it happens. Players only see clocks you mark “Players know”.',
+    'A progress clock is a circle cut into slices. Fill a slice when a villain’s plan moves on, a rival gets closer or danger grows; when it’s full, it happens. Players only see clocks you mark “Players know”, on pages they can see: each clock says which. Start one here or from a page’s Clocks box; removing one offers Undo.',
   safety:
     'Agree what’s off limits before you play. Lines never happen in the game; veils can happen, but off screen. Everyone in the world can read this page.',
   xcard:
@@ -296,6 +296,10 @@ export const HELP = {
   readAloud: 'Reads recaps aloud with your device’s own voices: free, private, and secret passages are never read, not even ones meant only for you (the whole table would hear them). Pick a voice and speed here.',
   newCharacterName:
     'Secret passages written “for” a character reach whoever plays a character with that full name or first name. If the new character shares a name with another, those secrets would reach both players, so give one of them a different name.',
+  pageVisibility:
+    'Says who can read this page now: GM only, players, or a few players you revealed it to. Click it to change that. Before anything is revealed you see what players will get (and what stays hidden: GM notes, GM-only passages and details), and a note at the bottom offers Undo afterwards.',
+  pageJumps: 'A long page gets this row: tap a part to go straight to it. Back from a page you opened comes back to where you were.',
+  seenMarks: 'In your lists, an open eye marks what players can read, a lock what’s GM only, and a half-shut eye a GM-only page revealed to a few players. The filter and tag you pick stay in the address, so Back from a page returns to the same list.',
   revealQuietly:
     'Reveal quietly lets players read the page the next time they look, without putting it on their screens. Reveal and show does both. Hide from players makes it GM only again (and takes it off their screens if it is showing). GM notes and secret passages stay hidden either way.',
   pageDrafts:
@@ -307,7 +311,7 @@ export const HELP = {
   lecternKeys:
     'With a keyboard: N or → for the next turn, B or ← to go back, D to roll a d20, and ? for this list. They don’t work while you’re typing in a box.',
   pinNames:
-    'Keeps the names of pins and regions showing on the map instead of only when you hover. They appear once you zoom in a little, so a zoomed-out map isn’t covered in labels. Each map remembers its own setting on this device. Players only get names for the pins they can see. On a phone, tap a pin once to see its name and again to open it.',
+    'Names shows each pin’s name beside it (regions and drawn places get theirs once you zoom in a little, since the map has its own labels). Each map remembers the setting on this device, and where you were looking, so Back lands on the same spot. When the party is somewhere on the map (the scene at the Lectern), its pin is ringed in blue and a button takes you to it. Players only get names for the pins they can see. On a phone, a pin’s card opens over the foot of the map; Tools holds the rest of the toolbar.',
   fogRoom:
     'Click inside a room to uncover just that room, right up to its walls. It stops at walls drawn across the room and at doors, gates and bars, so click in the next room to open that one too. Secret rooms are left alone until you mark their door as found. With Cover chosen, it covers the room again. Only on maps with rooms drawn in the map builder.',
   keysInAccount:

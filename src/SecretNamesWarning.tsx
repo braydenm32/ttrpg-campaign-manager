@@ -11,7 +11,7 @@ import { Warning } from '@phosphor-icons/react'
  * secret passages counts, since that is all they receive. A link with its own label ([[Name|label]])
  * shows only the label, so it gives nothing away. Pages are matched by any of their names.
  */
-function secretNames(texts: (string | undefined)[], pages: Entity[]) {
+export function secretNames(texts: (string | undefined)[], pages: Entity[]) {
   const byName = nameIndex(pages)
   const found = new Map<string, string>()
   for (const t of texts) {

@@ -4,6 +4,7 @@ import { Help } from './help'
 import { db, ENTITY_LABELS, newId, type Entity, type Relation } from './db'
 import { Ico, TypeIcon } from './icons'
 import { Graph } from '@phosphor-icons/react'
+import { toast } from './undo'
 import { pagePath, worldPath } from './paths'
 
 /**
@@ -110,7 +111,15 @@ export function RelationsBox({ entity, entities, isGM, worldId }: { entity: Enti
                     />{' '}
                     Players know
                   </label>
-                  <button className="ghost small" title="Remove this link" onClick={() => changeRelations(owner.id, (l) => l.filter((r) => r.id !== rel.id))}>
+                  <button
+                    className="ghost small"
+                    title="Remove this link"
+                    aria-label={`Remove “${label} ${other.name}”`}
+                    onClick={async () => {
+                      await changeRelations(owner.id, (l) => l.filter((r) => r.id !== rel.id))
+                      toast(`Removed “${label} ${other.name}”.`, () => changeRelations(owner.id, (l) => (l.some((r) => r.id === rel.id) ? l : [...l, rel])))
+                    }}
+                  >
                     ×
                   </button>
                 </span>

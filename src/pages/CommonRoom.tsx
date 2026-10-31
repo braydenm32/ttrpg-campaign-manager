@@ -14,6 +14,7 @@ import { AskForm, pageLink, QuestionList } from '../players/Questions'
 import { LeadRow, LeadsView } from '../players/Leads'
 import { lastTime, liveSeenAt, markLiveSeen, nextSession, roomStage, type NextSession, type RoomStage } from '../players/roomStage'
 import { plainLinks, initials } from '../text'
+import { keyNumbers, NumberTiles } from '../players/sheetGlance'
 import { useCampaigns, useWorldSessions } from '../threads'
 import { partyOf } from '../sessions'
 import { StatusBadge } from '../status'
@@ -476,15 +477,6 @@ function OnTheTable({ world, entities, big }: { world: World; entities: Entity[]
   )
 }
 
-/** Up to three numbers worth seeing at a glance: armour, hit points, level or class first. */
-function keyNumbers(c: Entity) {
-  const facts = c.fields.filter((f) => !f.gm && f.key.trim() && f.value.trim())
-  const want = [/^(ac|armou?r)/i, /^(hp|hit points|health)/i, /^(level|lvl)/i, /^class/i]
-  const picked = want.flatMap((re) => facts.filter((f) => re.test(f.key.trim())).slice(0, 1))
-  for (const f of facts) if (picked.length < 3 && !picked.includes(f)) picked.push(f)
-  return picked.slice(0, 3)
-}
-
 /** You: your character at a glance, or how to get one. */
 function YouCard({ ctx }: { ctx: RoomContext }) {
   const { mine, worldId, entities } = ctx
@@ -507,21 +499,6 @@ function YouCard({ ctx }: { ctx: RoomContext }) {
       )}
       {mine.length > 1 && <p className="small muted">Also playing: {mine.slice(1).map((x) => x.name).join(', ')}</p>}
     </Card>
-  )
-}
-
-function NumberTiles({ c }: { c: Entity }) {
-  const tiles = keyNumbers(c)
-  if (!tiles.length) return null
-  return (
-    <dl className="number-tiles">
-      {tiles.map((f, i) => (
-        <div key={i}>
-          <dt>{f.key}</dt>
-          <dd>{plainLinks(f.value)}</dd>
-        </div>
-      ))}
-    </dl>
   )
 }
 

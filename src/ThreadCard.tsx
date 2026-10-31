@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { VisibilityBadge } from './components'
-import { db, THREAD_STATUS, type Entity, type Session } from './db'
+import { db, THREAD_STATUS, type Entity, type Session, type ThreadStatus } from './db'
 import { COLD_AFTER, sessionsSinceTouched, setThreadStatus, threadLinks, URGENCY } from './threads'
 import { isOpenThread } from './counts'
 import { plainLinks } from './text'
@@ -8,6 +8,7 @@ import { useViewMode } from './viewMode'
 import { Ico, TypeIcon } from './icons'
 import { Graph } from '@phosphor-icons/react'
 import { pagePath } from './paths'
+import { toast } from './undo'
 
 const sessionName = (sessions: Session[], id?: string) => {
   const s = id && sessions.find((x) => x.id === id)
@@ -40,6 +41,12 @@ export function ThreadCard({
   const urgency = URGENCY[t.threadUrgency ?? 'normal']
   const raised = sessionName(sessions, t.raisedIn)
   const tied = sessionName(sessions, t.tiedOffIn)
+  // One tap moves it; the note at the bottom offers Undo, since the buttons sit side by side.
+  const move = async (to: ThreadStatus, sessionId?: string) => {
+    const was = { threadStatus: t.threadStatus, tiedOffIn: t.tiedOffIn, updatedAt: t.updatedAt }
+    await setThreadStatus(t, to, sessionId)
+    toast(`“${t.name}”: ${THREAD_STATUS[to].label.toLowerCase()}.`, () => db.entities.update(t.id, was))
+  }
 
   return (
     <div className={`thread-card status-${status} urgency-${t.threadUrgency ?? 'normal'}`}>
@@ -73,22 +80,22 @@ export function ThreadCard({
       {isGM && (
         <div className="row wrap thread-actions">
           {status !== 'active' && unresolved && (
-            <button className="ghost small" onClick={() => setThreadStatus(t, 'active')} title={THREAD_STATUS.active.hint}>
+            <button className="ghost small" onClick={() => move('active')} title={THREAD_STATUS.active.hint}>
               ▶ In play
             </button>
           )}
           {unresolved && (
-            <button className="ghost small" onClick={() => setThreadStatus(t, 'resolved', currentSessionId)} title={THREAD_STATUS.resolved.hint}>
+            <button className="ghost small" onClick={() => move('resolved', currentSessionId)} title={THREAD_STATUS.resolved.hint}>
               ✓ Tie off
             </button>
           )}
           {unresolved && (
-            <button className="ghost small" onClick={() => setThreadStatus(t, 'dropped')} title={THREAD_STATUS.dropped.hint}>
+            <button className="ghost small" onClick={() => move('dropped')} title={THREAD_STATUS.dropped.hint}>
               ✕ Drop
             </button>
           )}
           {!unresolved && (
-            <button className="ghost small" onClick={() => setThreadStatus(t, 'open')}>
+            <button className="ghost small" onClick={() => move('open')}>
               ↺ Reopen
             </button>
           )}

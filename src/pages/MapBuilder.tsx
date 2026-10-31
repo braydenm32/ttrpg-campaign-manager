@@ -2,7 +2,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { DraftText, Empty, VisibilityToggle } from '../components'
+import { DraftText, Empty } from '../components'
+import { VisibilityControl } from '../reveal'
+import { toast } from '../undo'
 import { ExportMap } from '../ExportMap'
 import { blankEntity, db, ENTITY_LABELS, newId, type Entity, type Pin, type WorldMap } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
@@ -1088,7 +1090,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
 
   return (
     <div className="map-page builder">
-      <div className="map-toolbar">
+      <div className="map-toolbar builder-bar">
         <Link to={`${worldPath(worldId)}/maps/${map.id}`}>← Done</Link>
         <strong>{map.name}</strong>
         {saveError && !saved ? (
@@ -1446,7 +1448,10 @@ function ToolOptions(p: {
         {p.tool === 'stamp' && <Help topic="mapPieces" />}
         {p.tool === 'label' && <Help topic="curvedLabels" />}
       </h2>
-      <p className="muted small">{def?.hint}. Hold Space and drag to pan from any tool.</p>
+      <p className="muted small">
+        {def?.hint}. <span className="pan-tip">Hold Space and drag to pan from any tool.</span>
+        <span className="pan-tip-touch">Drag with two fingers to move the map, or pinch to zoom.</span>
+      </p>
       {p.tool === 'land' && top && (
         <>
           <div className="swatch-grid">
@@ -2023,8 +2028,28 @@ function PieceLink({ shape, pin, onLink }: { shape: Extract<Shape, { kind: 'asse
             <DraftText value={pin.label} onCommit={(label) => db.pins.update(pin.id, { label })} />
           </label>
           <div className="row spread">
-            {gmOnly(shape) ? <span className="muted small">GM only, like the piece</span> : <VisibilityToggle value={pin.visibility} onChange={(v) => db.pins.update(pin.id, { visibility: v })} />}
-            <button type="button" onClick={() => db.pins.delete(pin.id)}>
+            {gmOnly(shape) ? (
+              <span className="muted small">GM only, like the piece</span>
+            ) : (
+              <VisibilityControl
+                compact
+                value={pin.visibility}
+                onChange={(v) => db.pins.update(pin.id, { visibility: v })}
+                name={`“${pin.label || linked?.name || 'this place'}” on the map`}
+                see={[
+                  `Its name on the map${pin.label ? `, “${pin.label}”` : ''}, and that they can click it`,
+                  linked ? (linked.visibility === 'players' ? `The page “${linked.name}” when they click` : `Not the page “${linked.name}”: that’s still GM only`) : 'No page: none is linked yet',
+                ]}
+              />
+            )}
+            <button
+              type="button"
+              onClick={async () => {
+                const was = pin
+                await db.pins.delete(pin.id)
+                toast(`Unlinked “${was.label || linked?.name || 'the piece'}”.`, () => db.pins.put(was))
+              }}
+            >
               Unlink
             </button>
           </div>
