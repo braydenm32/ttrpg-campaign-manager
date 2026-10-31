@@ -93,17 +93,17 @@ export function SecretTextarea({
   }
 
   // Where to put the caret once an inserted value has rendered (before the next key press lands).
-  const pendingCaret = useRef<number | null>(null)
+  const pendingCaret = useRef<[number, number] | null>(null)
   useLayoutEffect(() => {
     const t = ref.current
     const at = pendingCaret.current
     if (!t || at === null || t.value !== value) return
     pendingCaret.current = null
     t.focus()
-    t.setSelectionRange(at, at)
+    t.setSelectionRange(at[0], at[1])
   }, [value])
-  const edit = (start: number, end: number, text: string, caretAt = start + text.length) => {
-    pendingCaret.current = caretAt
+  const edit = (start: number, end: number, text: string, caretAt = start + text.length, selectTo = caretAt) => {
+    pendingCaret.current = [caretAt, selectTo]
     setCaret(caretAt)
     onChange(value.slice(0, start) + text + value.slice(end))
   }
@@ -114,9 +114,11 @@ export function SecretTextarea({
     const picked = value.slice(at, end)
     const lead = at > 0 && value[at - 1] !== '\n' ? '\n' : ''
     const head = kind === 'gm' ? ':::gm' : ':::for '
+    // With nothing chosen, a GM-only passage starts with a line saying what it is, chosen so typing replaces it.
+    const body = picked || (kind === 'gm' ? GM_PLACEHOLDER : '')
     // Leave the caret where the next thing to type goes: the names for ":::for", the secret for ":::gm".
-    const caretAt = at + lead.length + head.length + (kind === 'gm' ? 1 + picked.length : 0)
-    edit(at, end, `${lead}${head}\n${picked}\n:::\n`, caretAt)
+    const caretAt = at + lead.length + head.length + (kind === 'gm' ? 1 : 0)
+    edit(at, end, `${lead}${head}\n${body}\n:::\n`, caretAt, kind === 'gm' && !picked ? caretAt + body.length : caretAt)
   }
   const pick = (name: string) => {
     const spec = forLine![1]
@@ -141,6 +143,8 @@ export function SecretTextarea({
     edit(at, end, `${lead}${parts.join('\n')}\n`)
     return true
   }
+
+  const where = passageAt(value, pos)
 
   return (
     <div className="secret-textarea">
@@ -222,6 +226,19 @@ export function SecretTextarea({
           <span className="small muted">Add your players’ characters as Player Character pages to pick them here.</span>
         </div>
       ) : null}
+      {where && (
+        <p className={`passage-where small ${where.kind}`} role="status">
+          {where.kind === 'gm' ? (
+            <>
+              <Ico as={Lock} /> You’re writing inside a GM-only passage: players never see this part.
+            </>
+          ) : (
+            <>
+              <Ico as={EyeClosed} /> You’re writing inside a secret passage: only {where.names.length ? where.names.join(', ') : 'the characters named on its first line'} will see this part.
+            </>
+          )}
+        </p>
+      )}
       <div className="row wrap secret-buttons">
         <button type="button" className="ghost small" title="Hide a passage from every player" onClick={() => insertBlock('gm')}>
           <Ico as={Lock} /> GM-only passage
@@ -251,4 +268,23 @@ export function SecretTextarea({
       </div>
     </div>
   )
+}
+
+const GM_PLACEHOLDER = 'Only you can read this. Players never see it.'
+
+/** Whether the caret sits inside a ":::gm" or ":::for" passage, so the box can say who will read what's typed there. */
+function passageAt(text: string, pos: number): { kind: 'gm' | 'for'; names: string[] } | null {
+  if (pos < 0) return null
+  const stack: { kind: 'gm' | 'for'; names: string[] }[] = []
+  const lines = text.slice(0, pos).split(/\r?\n/)
+  // Only the lines above the caret's own line count, so the opening line itself isn't "inside" yet.
+  for (const line of lines.slice(0, -1)) {
+    const open = line.match(/^:::(gm|for)\b(.*)$/i)
+    if (open) {
+      // A one-line passage (":::gm secret :::") opens and closes on the same line.
+      if (/\S.*:::\s*$/.test(open[2]) && (open[1].toLowerCase() === 'gm' || (open[2].match(/:::/g) ?? []).length > 1)) continue
+      stack.push({ kind: open[1].toLowerCase() as 'gm' | 'for', names: open[1].toLowerCase() === 'for' ? forNames(open[2]) : [] })
+    } else if (/^:::\s*$/.test(line)) stack.pop()
+  }
+  return stack.at(-1) ?? null
 }
