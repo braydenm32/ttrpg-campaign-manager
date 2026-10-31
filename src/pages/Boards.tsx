@@ -1,9 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Empty } from '../components'
+import { Empty, Skeleton } from '../components'
 import { db, newId } from '../db'
 import { Help } from '../help'
+import '../more.css'
 import { useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
@@ -15,11 +16,13 @@ export default function Boards() {
   const { worldId } = useWorld()
   const { isGM } = useViewMode()
   const navigate = useNavigate()
-  const boards = useLiveQuery(() => db.boards.where({ worldId }).sortBy('name'), [worldId]) ?? []
+  const stored = useLiveQuery(() => db.boards.where({ worldId }).sortBy('name'), [worldId])
+  const boards = stored ?? []
   const [name, setName] = useState('')
   if (!isGM) return <Empty>Corkboards are a GM tool. Switch back to the GM view to use them.</Empty>
+  if (!stored) return <Skeleton />
   return (
-    <div className="page">
+    <div className="page more-screen">
       <header className="page-header">
         <h1>
           <Ico as={PushPin} /> Corkboards <Help topic="boards" />

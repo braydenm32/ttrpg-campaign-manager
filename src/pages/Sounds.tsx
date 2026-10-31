@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { DraftText, Empty } from '../components'
 import { db, newId, type Sound } from '../db'
 import { Help } from '../help'
+import '../more.css'
 import { saveFileAsAsset, useWorld } from '../hooks'
 import { stop, stopAll, usePlaying } from '../sound/player'
 import { Soundboard, useSounds } from '../sound/Soundboard'
@@ -10,6 +11,7 @@ import { parseSyrinscape, syrinscape, useSyrinscapeToken } from '../sound/syrins
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { MusicNotes, SpeakerHigh } from '@phosphor-icons/react'
+import { toast } from '../undo'
 
 const GROUPS = ['Ambience', 'Music', 'Effects']
 
@@ -27,16 +29,20 @@ export default function Sounds() {
   const update = (id: string, patch: Partial<Sound>) => db.sounds.update(id, patch)
 
   return (
-    <div className="page">
+    <div className="page more-screen">
       <header className="page-header">
         <h1>
           <Ico as={MusicNotes} /> Soundboard <Help topic="soundboard" />
         </h1>
         {playing.length > 0 && <button onClick={() => stopAll()}>■ Stop all</button>}
       </header>
-      <section className="card">
-        <Soundboard worldId={worldId} />
-      </section>
+      {sounds.length ? (
+        <section className="card">
+          <Soundboard worldId={worldId} />
+        </section>
+      ) : (
+        <Empty>No sounds yet. Upload your own music and ambience below, or add Syrinscape moods. Each becomes a button here, and at the Lectern.</Empty>
+      )}
 
       <section>
         <h2>Add sounds</h2>
@@ -156,7 +162,14 @@ function SyrinscapeAdd({ worldId, group }: { worldId: string; group: string }) {
       {token ? (
         <p className="small">
           ✓ Your Syrinscape token is saved on this device.{' '}
-          <button className="link" onClick={() => syrinscape.setToken('')}>
+          <button
+            className="link"
+            onClick={() => {
+              const was = token
+              syrinscape.setToken('')
+              toast('Syrinscape token removed from this device: its buttons stop playing until you add it again.', () => syrinscape.setToken(was))
+            }}
+          >
             Remove it
           </button>
         </p>

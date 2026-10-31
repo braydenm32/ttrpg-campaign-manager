@@ -61,7 +61,7 @@
   },
   "phone gm /w/:worldId/boards/:boardId": {
     "problems": [],
-    "smallTargets": 18
+    "smallTargets": 2
   },
   "phone gm /w/:worldId/c/:campaignId": {
     "problems": [],
@@ -359,7 +359,7 @@
   },
   "phone player /w/:worldId/handouts": {
     "problems": [],
-    "smallTargets": 2
+    "smallTargets": 1
   },
   "phone player /w/:worldId/loot": {
     "problems": [],
@@ -383,7 +383,7 @@
   },
   "phone player /w/:worldId/more": {
     "problems": [],
-    "smallTargets": 3
+    "smallTargets": 1
   },
   "phone player /w/:worldId/other/:kind": {
     "problems": [],
@@ -469,7 +469,7 @@
   },
   "phone player /w/:worldId/safety": {
     "problems": [],
-    "smallTargets": 2
+    "smallTargets": 1
   },
   "phone player /w/:worldId/scratchpad": {
     "problems": [],

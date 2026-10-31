@@ -40,8 +40,8 @@ export default defineConfig<{ device: Device }>({
     },
     {
       name: 'phone',
-      // The phone runs the screens, search, frame, session, Common Room, Desk and Atlas tests; the rest don't depend on the screen size.
-      testMatch: /(screens|search|frame|session|room|desk|atlas)\.spec\.ts/,
+      // The phone runs the screens, search, frame, session, Common Room, Desk, Atlas and More tests; the rest don't depend on the screen size.
+      testMatch: /(screens|search|frame|session|room|desk|atlas|more)\.spec\.ts/,
       use: {
         device: 'phone',
         viewport: { width: 390, height: 844 },

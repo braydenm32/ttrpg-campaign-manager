@@ -61,6 +61,9 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
       // Its maps and pictures are drawn in the background; wait until they're all there.
       await page.waitForTimeout(500)
       await page.getByText(/this world’s (maps and pictures|pictures and maps)/).waitFor({ state: 'detached', timeout: 240_000 })
+      // The note can come and go before this looks, so also wait for the list of what's left to draw
+      // (src/example/load.ts keeps it on the device until the last map is in) to be gone.
+      await page.waitForFunction(() => !Object.keys(localStorage).some((k) => k.startsWith('example.toDraw.')), undefined, { timeout: 240_000, polling: 500 })
       const first = new World(await readDatabase(page))
       await page.goto('/')
       await addCustomType(page, first.id)

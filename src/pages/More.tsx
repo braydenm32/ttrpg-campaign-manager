@@ -1,10 +1,14 @@
+import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
+import { useBin } from '../bin'
+import { db } from '../db'
 import { Help } from '../help'
-import { useWorld } from '../hooks'
+import { formatBytes, useTemplates, useWorld } from '../hooks'
 import { Ico } from '../icons'
 import { moreFor, type NavTab } from '../nav'
 import { hrefFor } from '../paths'
 import { ShellFoot, useFrameContext } from '../Sidebar'
+import '../more.css'
 
 /**
  * The More page: everything used now and then, in a few groups, each a tap away. The GM's groups
@@ -13,13 +17,15 @@ import { ShellFoot, useFrameContext } from '../Sidebar'
  * sidebar's foot has on a computer: World settings, sync and the GM / Player switch.
  */
 export default function More() {
-  const { world } = useWorld()
+  const { worldId, world } = useWorld()
   const frame = useFrameContext()
+  const gm = frame?.facts.viewer === 'gm'
+  const counts = useCounts(worldId, gm)
   if (!world || !frame) return null
   const groups = moreFor(frame.facts)
-  const gm = frame.facts.viewer === 'gm'
+  if (frame.facts.handouts) counts.handouts = `${frame.facts.handouts}`
   return (
-    <div className="page more-page">
+    <div className="page more-page more-screen">
       <header className="page-header">
         <div>
           <h1>
@@ -34,8 +40,8 @@ export default function More() {
           <p className="muted small">{g.blurb}</p>
           <ul className="more-list">
             {g.items.map((t) => (
-              <li key={t.id}>
-                <MoreItem item={t} to={t.to(frame.facts)} />
+              <li key={t.id} className={t.to(frame.facts) ? undefined : 'more-wide'}>
+                <MoreItem item={t} to={t.to(frame.facts)} count={counts[t.id]} />
               </li>
             ))}
           </ul>
@@ -46,26 +52,61 @@ export default function More() {
   )
 }
 
-function MoreItem({ item, to }: { item: NavTab; to?: string }) {
+/** The GM's counts beside More items: boards, files and their size, sounds, tables, templates and the bin. */
+function useCounts(worldId: string, gm: boolean): Record<string, string | undefined> {
+  const facts = useLiveQuery(async () => {
+    if (!gm) return
+    const [boards, assets, sounds, tables] = await Promise.all([
+      db.boards.where({ worldId }).count(),
+      db.assets.where({ worldId }).toArray(),
+      db.sounds.where({ worldId }).count(),
+      db.entities
+        .where({ worldId })
+        .filter((e) => e.type === 'table' && !e.template)
+        .count(),
+    ])
+    return { boards, files: assets.length, bytes: assets.reduce((n, a) => n + (a.size ?? 0), 0), sounds, tables }
+  }, [worldId, gm])
+  const templates = useTemplates(worldId).length
+  const bin = useBin(worldId).length
+  if (!gm || !facts) return {}
+  const n = (x: number) => (x ? `${x}` : undefined)
+  return {
+    sounds: n(facts.sounds),
+    tables: n(facts.tables),
+    boards: n(facts.boards),
+    assets: facts.files ? `${facts.files} · ${formatBytes(facts.bytes)}` : undefined,
+    templates: n(templates),
+    deleted: n(bin),
+  }
+}
+
+function MoreItem({ item, to, count }: { item: NavTab; to?: string; count?: string }) {
+  // Print has no address of its own: it's a button on every page and session, so this is a note, not a button.
+  if (!to)
+    return (
+      <p className="more-note">
+        <Ico as={item.icon} /> <span>{item.blurb}</span>
+      </p>
+    )
   const body = (
     <>
       <Ico as={item.icon} size="1.3em" />
-      <span>
+      <span className="more-text">
         <b>{item.label}</b>
         {item.blurb && <small className="muted">{item.blurb}</small>}
       </span>
+      {count && <span className="more-count">{count}</span>}
     </>
   )
-  // Print has no address of its own: it's on every page and session.
-  if (!to) return <div className="more-item static">{body}</div>
   if (item.external)
     return (
-      <a className="more-item" href={hrefFor(to)} target="_blank" rel="noopener">
+      <a className="more-item" data-id={item.id} href={hrefFor(to)} target="_blank" rel="noopener">
         {body}
       </a>
     )
   return (
-    <Link className="more-item" to={to}>
+    <Link className="more-item" data-id={item.id} to={to}>
       {body}
     </Link>
   )
