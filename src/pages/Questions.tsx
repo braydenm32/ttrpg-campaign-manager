@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Empty, Skeleton } from '../components'
+import { Skeleton } from '../components'
 import { answerQuestion, type CharacterRequest } from '../cloud/players'
 import { db, saveEntity, type PlayerQuestion, type World } from '../db'
 import { Help } from '../help'
@@ -23,20 +23,45 @@ export default function Questions() {
   const { isGM } = useViewMode()
   if (!world) return null
   if (world.shared?.memberOf) return <PlayerQuestions world={world} memberOf={world.shared.memberOf} />
-  if (!isGM) return <Empty>Players write to you from their own copy of the world. Switch back to the GM view to read your Inbox.</Empty>
+  if (!isGM)
+    return (
+      <div className="page questions-page more-screen">
+        <div className="calm-note card">
+          <Ico as={Question} size="2em" />
+          <h1>Questions for your GM</h1>
+          <p>Players ask you things here from their own copy of the world, and read your answers. Switch back to the GM view to read your Inbox.</p>
+        </div>
+      </div>
+    )
   return <GmInbox world={world} />
 }
 
+/** A joined player's questions: ask something new, then what they asked, with the GM's answers. */
 function PlayerQuestions({ world, memberOf }: { world: World; memberOf: string }) {
   const names = useLiveQuery(async () => new Map((await db.entities.where({ worldId: world.id }).toArray()).map((e) => [e.id, e.name])), [world.id])
+  const asked = world.shared?.questions ?? []
+  const waiting = asked.filter((q) => !q.answer).length
   return (
-    <div className="page">
-      <h1>
-        <Ico as={Question} /> Questions for your GM <Help topic="questions" />
-      </h1>
-      <AskForm memberOf={memberOf} entityId="" placeholder="Ask your GM anything, just between the two of you…" />
-      <QuestionList questions={world.shared?.questions ?? []} memberOf={memberOf} pageName={(q) => pageLink(world.id, q.entityId, names?.get(q.entityId))} />
-      {!world.shared?.questions?.length && <p className="muted">You can also ask about a particular page from the bottom of that page.</p>}
+    <div className="page questions-page more-screen">
+      <header className="page-header">
+        <div>
+          <h1>
+            <Ico as={Question} /> Questions for your GM <Help topic="questions" />
+          </h1>
+          <p className="lead">Ask anything, just between you and your GM. Only you see the answer.</p>
+        </div>
+      </header>
+      <div className="card ask-card">
+        <AskForm memberOf={memberOf} entityId="" placeholder="What do you want to ask your GM?" />
+      </div>
+      <h2>
+        Your questions{asked.length > 0 && <span className="muted small"> · {waiting ? `${waiting} waiting for an answer` : 'all answered'}</span>}
+      </h2>
+      {asked.length ? (
+        <QuestionList questions={asked} memberOf={memberOf} pageName={(q) => pageLink(world.id, q.entityId, names?.get(q.entityId))} />
+      ) : (
+        <p className="muted">Nothing asked yet. You can also ask about one page from the foot of that page.</p>
+      )}
     </div>
   )
 }

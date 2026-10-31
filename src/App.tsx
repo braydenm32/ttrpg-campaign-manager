@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { BrowserRouter, HashRouter, Link, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, HashRouter, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useWorld } from './hooks'
 import { AreaSidebar, AreaTabs, BottomBar, FrameProvider, frameLinks, isDeep, phoneTabIds, useFrame, WorldDate, WorldTile } from './Sidebar'
 import { ToastHost } from './undo'
@@ -12,7 +12,7 @@ import { startAccountKeys, stopAccountKeys } from './ai/accountKeys'
 import { cloudErrorMessage, supabase } from './cloud/client'
 import { watchPlayerCopy } from './cloud/share'
 import { startSync, stopSync } from './cloud/sync'
-import { Empty, Modal, Skeleton } from './components'
+import { Modal, Skeleton } from './components'
 import { UpdateBanner } from './appUpdate'
 import { MoveBanner } from './move'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -62,7 +62,9 @@ import SessionLanding from './pages/SessionLanding'
 import { finishExampleWorld } from './example/load'
 import { finishSampleWorld } from './sample'
 import { WorldLoadingNote } from './WorldLoadingNote'
-import { hashRouting, setPages, tidyPath, usePathsVersion, worldPath } from './paths'
+import { NothingHere } from './NothingHere'
+import './small.css'
+import { hashRouting, setPages, tidyPath, usePathsVersion } from './paths'
 import { ClaudeJobChips, LeaveGuard } from './ai/LeaveGuard'
 import { useGuardedNavigate } from './ai/leave'
 
@@ -123,7 +125,7 @@ export default function App() {
             <Route path="more" element={<More />} />
             <Route path="everything" element={<Everything />} />
             <Route path="session" element={<SessionLanding />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<NothingHere />} />
           </Route>
           <Route path="*" element={<Home />} />
         </Routes>
@@ -230,22 +232,20 @@ function WorldLayout() {
   )
 }
 
-/** An address inside a world that goes nowhere. */
-function NotFound() {
-  const { worldId } = useWorld()
-  return (
-    <div className="page">
-      <Empty>
-        There’s nothing at this address. <Link to={worldPath(worldId)}>Back to the world’s home</Link>
-      </Empty>
-    </div>
-  )
-}
-
 /** The players' screen for a TV: always the player view, whoever opens it. */
 function ScreenRoute() {
   const { world } = useWorld()
-  if (!world) return world === null ? <div className="loading">World not found.</div> : <Skeleton />
+  if (!world)
+    return world === null ? (
+      <div className="players-screen world-bare">
+        <div className="players-screen-idle" role="status">
+          <h1>World not found.</h1>
+          <p className="muted">This world isn’t on this device. Open the players’ screen from the GM’s own copy of the world.</p>
+        </div>
+      </div>
+    ) : (
+      <Skeleton />
+    )
   return (
     <ForcePlayerView>
       <PlayersScreen world={world} />

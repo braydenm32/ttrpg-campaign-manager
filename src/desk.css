@@ -111,14 +111,16 @@
 .inbox-head { display: flex; align-items: center; gap: .3em .6em; flex-wrap: wrap; }
 .inbox-kind { display: inline-flex; align-items: center; gap: .3em; padding: .25em .55em; border: 0; border-radius: 6px; background: var(--panel-2); font: 600 .75rem/1 var(--font-body); }
 .inbox-when { margin-left: auto; }
-.inbox-empty { display: flex; flex-direction: column; align-items: flex-start; gap: .6em; padding: 1.4em; color: var(--text); }
-.inbox-empty > svg { color: var(--accent); }
-.inbox-empty p { margin: 0; max-width: 60ch; }
+/* A calm note in place of a list or screen with nothing in it yet (also .calm-note, on the screens of step 8). */
+:is(.inbox-empty, .calm-note) { display: flex; flex-direction: column; align-items: flex-start; gap: .6em; padding: 1.4em; color: var(--text); }
+:is(.inbox-empty, .calm-note) > svg { color: var(--accent); }
+:is(.inbox-empty, .calm-note) p { margin: 0; max-width: 60ch; }
+.calm-note h1, .calm-note h2 { margin: 0; font-size: 1.35rem; }
 .inbox-answered { margin-top: 1.2em; }
 .inbox-answered > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; }
 .inbox-answered .inbox-item { margin-top: .8em; }
 @media (max-width: 800px) {
-  .inbox-item :is(button, .button), .inbox-empty .button { min-height: 44px; }
+  .inbox-item :is(button, .button), :is(.inbox-empty, .calm-note) .button { min-height: 44px; }
   .inbox-when { margin-left: 0; flex-basis: 100%; }
 }
 
