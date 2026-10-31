@@ -621,8 +621,17 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
               type="button"
               className="ghost"
               onClick={() => {
+                const was = kept
                 clearDraft(entity.id)
                 setKept(null)
+                toast('Unsaved changes thrown away.', () => {
+                  try {
+                    localStorage.setItem(draftKey(entity.id), JSON.stringify(was))
+                  } catch {
+                    // Storage blocked: they come back on screen only.
+                  }
+                  setKept(was)
+                })
               }}
             >
               Throw them away

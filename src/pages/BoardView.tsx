@@ -2,16 +2,18 @@ import { binBoard } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { DraftText, Empty } from '../components'
+import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { db, newId, type Board, type BoardCard } from '../db'
 import { Help } from '../help'
+import '../more.css'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { StatusBadge } from '../status'
 import { useViewMode } from '../viewMode'
 import { Ico, TypeIcon } from '../icons'
 import { PushPin, Spiral } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
+import { toast } from '../undo'
 
 const W = 2400
 const H = 1600
@@ -29,7 +31,7 @@ export default function BoardView() {
   const { boardId = '' } = useParams()
   const { isGM } = useViewMode()
   const board = useLiveQuery(async () => (await db.boards.get(boardId)) ?? null, [boardId])
-  if (board === undefined) return null
+  if (board === undefined) return <Skeleton />
   if (!isGM) return <Empty>Corkboards are a GM tool. Switch back to the GM view to use them.</Empty>
   if (board === null || board.worldId !== worldId) return <Empty>Board not found.</Empty>
   return <BoardEditor board={board} worldId={worldId} />
@@ -112,7 +114,7 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
   const string = board.strings.find((s) => s.id === selected)
 
   return (
-    <div className="page wide board-page">
+    <div className="page wide board-page more-screen">
       <header className="page-header">
         <div>
           <Link to={`${worldPath(worldId)}/boards`}>← Corkboards</Link>
@@ -158,7 +160,21 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
           <span className="row small string-edit">
             <Ico as={Spiral} /> String:
             <DraftText value={string.label ?? ''} placeholder="Label, e.g. ‘owes money to’" onCommit={(v) => edit((b) => void (b.strings.find((s) => s.id === string.id)!.label = v || undefined))} />
-            <button className="danger" onClick={() => (edit((b) => void (b.strings = b.strings.filter((s) => s.id !== string.id))), setSelected(undefined))}>
+            <button
+              className="danger"
+              onClick={async () => {
+                const cut = string
+                setSelected(undefined)
+                await edit((b) => void (b.strings = b.strings.filter((s) => s.id !== cut.id)))
+                toast(cut.label ? `String “${cut.label}” cut` : 'String cut', () =>
+                  edit((b) => {
+                    // Only if both its cards are still there.
+                    const ids = new Set(b.cards.map((c) => c.id))
+                    if (ids.has(cut.from) && ids.has(cut.to) && !b.strings.some((s) => s.id === cut.id)) b.strings.push(cut)
+                  }),
+                )
+              }}
+            >
               Cut string
             </button>
           </span>
@@ -225,12 +241,25 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
                   <button
                     className="ghost"
                     title="Take off the board"
-                    onClick={() =>
-                      edit((b) => {
+                    aria-label="Take off the board"
+                    onClick={async () => {
+                      const card = board.cards.find((x) => x.id === c.id)
+                      const tied = board.strings.filter((s) => s.from === c.id || s.to === c.id)
+                      if (!card) return
+                      await edit((b) => {
                         b.cards = b.cards.filter((x) => x.id !== c.id)
                         b.strings = b.strings.filter((s) => s.from !== c.id && s.to !== c.id)
                       })
-                    }
+                      const what = page ? `“${page.name}”` : 'The note'
+                      toast(`${what} taken off the board${tied.length ? ` (and ${tied.length === 1 ? 'its string' : `${tied.length} strings`})` : ''}`, () =>
+                        edit((b) => {
+                          if (b.cards.some((x) => x.id === card.id)) return
+                          b.cards.push(card)
+                          const ids = new Set(b.cards.map((x) => x.id))
+                          for (const s of tied) if (ids.has(s.from) && ids.has(s.to) && !b.strings.some((x) => x.id === s.id)) b.strings.push(s)
+                        }),
+                      )
+                    }}
                   >
                     ✕
                   </button>

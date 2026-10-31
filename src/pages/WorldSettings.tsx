@@ -1,11 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { Help, HelpTipsToggle } from '../help'
+import '../more.css'
 import { ThemePicker } from '../theme'
 import { RecentlyDeleted } from '../History'
 import { AiSettingsSection } from '../ai/AiSettingsSection'
 import { BackupButton } from '../BackupReminder'
+import { backupStore } from '../backup'
+import { toast } from '../undo'
 import { deleteCloudCopy } from '../cloud/sync'
 import { myRole } from '../cloud/players'
 import { db, deleteWorld, GAME_SYSTEMS, newId, typeLabel, WORLD_COLORS, worldColor, type Asset, type CustomType, type World } from '../db'
@@ -18,16 +21,22 @@ import { Ico, PageIcon } from '../icons'
 import { Ruler } from '@phosphor-icons/react'
 import { pagePath, typePath, worldPath } from '../paths'
 import { EXAMPLE_VERSION, resetExampleWorld } from '../example/load'
-import { DraftText, Empty } from '../components'
+import { DraftText, Empty, Skeleton } from '../components'
 import { useViewMode } from '../viewMode'
 
 const TABS = [
   ['world', 'World'],
   ['players', 'Players and sharing'],
   ['device', 'This device'],
-  ['data', 'Data and backup'],
+  ['data', 'Data and backups'],
 ] as const
 type Tab = (typeof TABS)[number][0]
+
+/** How long ago, in plain words. */
+const ago = (t: number) => {
+  const days = Math.floor((Date.now() - t) / 86_400_000)
+  return days < 1 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`
+}
 
 export default function WorldSettings() {
   const { worldId, world } = useWorld()
@@ -35,7 +44,13 @@ export default function WorldSettings() {
   const [params, setParams] = useSearchParams()
   const { isGM } = useViewMode()
   const tab: Tab = TABS.find(([t]) => t === params.get('tab'))?.[0] ?? 'world'
-  if (!world) return null
+  // ?at=templates (or import, deleted, backup) from the More page: scroll to that part.
+  const at = params.get('at')
+  const ready = !!world
+  useEffect(() => {
+    if (at && ready) document.getElementById(`settings-${at}`)?.scrollIntoView({ block: 'start' })
+  }, [at, tab, ready])
+  if (!world) return <Skeleton />
   // A player's copy of someone else's world has no settings to change.
   if (world.shared) return <Navigate to={worldPath(worldId)} replace />
   // Previewing as a player: settings would show GM-only names, so switch back to change them.
@@ -43,9 +58,11 @@ export default function WorldSettings() {
   const update = (patch: Partial<World>) => db.worlds.update(worldId, { ...patch, updatedAt: Date.now() })
 
   return (
-    <div className="page">
+    <div className="page more-screen">
       <header className="page-header">
-        <h1>World settings</h1>
+        <h1>
+          World settings <Help topic="settings" />
+        </h1>
       </header>
       <div className="segmented tabs settings-tabs" role="tablist">
         {TABS.map(([t, label]) => (
@@ -54,7 +71,8 @@ export default function WorldSettings() {
             role="tab"
             aria-selected={tab === t}
             className={tab === t ? 'on' : ''}
-            onClick={() => setParams(t === 'world' ? {} : { tab: t }, { replace: true })}
+            // Each tab is a step in history, so Back goes to the tab before.
+            onClick={() => tab !== t && setParams(t === 'world' ? {} : { tab: t })}
           >
             {label}
           </button>
@@ -88,7 +106,9 @@ export default function WorldSettings() {
 
           <CustomTypes world={world} update={update} />
 
-          <Templates world={world} />
+          <div id="settings-templates">
+            <Templates world={world} />
+          </div>
         </>
       )}
 
@@ -97,8 +117,13 @@ export default function WorldSettings() {
       {tab === 'device' && (
         <>
           <p className="muted">These settings stay on this device: they aren’t synced or put in backups (except AI keys you choose to save to your account).</p>
-          <ThemePicker /> <Help topic="theme" />
-          <HelpTipsToggle />
+          <section>
+            <h2>
+              Look and help tips <Help topic="theme" />
+            </h2>
+            <ThemePicker />
+            <HelpTipsToggle />
+          </section>
           <DiscordSettings worldId={worldId} />
           <AiSettingsSection />
         </>
@@ -106,10 +131,15 @@ export default function WorldSettings() {
 
       {tab === 'data' && (
         <>
-          <section>
+          <section id="settings-backup">
             <h2>
               Backup <Help topic="backup" />
             </h2>
+            <p>
+              {backupStore.read(worldId, 'last')
+                ? `Last backup from this device: ${ago(backupStore.read(worldId, 'last'))}.`
+                : 'No backup downloaded from this device yet.'}
+            </p>
             <p className="muted">
               A backup is a single file with the whole world in it, including uploaded files. Keep one even if sync is on; you can import it from the
               home screen on any device.
@@ -117,9 +147,13 @@ export default function WorldSettings() {
             <BackupButton worldId={worldId} />
           </section>
 
-          <ImportPages worldId={worldId} system={world.system} />
+          <div id="settings-import">
+            <ImportPages worldId={worldId} system={world.system} />
+          </div>
 
-          <RecentlyDeleted />
+          <div id="settings-deleted">
+            <RecentlyDeleted />
+          </div>
 
           {world.example && (
             <section>
@@ -132,7 +166,11 @@ export default function WorldSettings() {
                   : 'Changed things while exploring? Reset puts the example world back the way it came.'}{' '}
                 Your changes to it are lost, so make a backup first if you want to keep them.
               </p>
+              <div className="row wrap">
+                <BackupButton worldId={worldId} label="⬇ Back it up first" />
+              </div>
               <button
+                className="danger"
                 onClick={async () => {
                   const cloud = world.cloud?.enabled ? ' Its cloud copy is deleted too, so players who joined it lose it.' : ''
                   if (!confirm(`Reset the example world? Everything you changed in it is lost.${cloud}`)) return
@@ -214,8 +252,22 @@ function CustomTypes({ world, update }: { world: World; update: (patch: Partial<
                 <button
                   className="ghost small"
                   title={n ? 'Move or delete its pages first' : 'Remove this type'}
+                  aria-label={`Remove the type ${c.many}`}
                   disabled={n > 0}
-                  onClick={() => set(types.filter((x) => x.id !== c.id))}
+                  onClick={async () => {
+                    await set(types.filter((x) => x.id !== c.id))
+                    toast(`Page type “${c.many}” removed`, () =>
+                      db.worlds
+                        .where('id')
+                        .equals(world.id)
+                        .modify((w) => {
+                          const now = w.customTypes ?? []
+                          if (now.some((x) => x.id === c.id)) return
+                          w.customTypes = [...now.slice(0, i), c, ...now.slice(i)]
+                          w.updatedAt = Date.now()
+                        }),
+                    )
+                  }}
                 >
                   ×
                 </button>

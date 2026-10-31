@@ -23,6 +23,10 @@ export interface CloudState {
   character_requests: Row[]
   /** Every change the app asked for, as "METHOD table", in order. */
   writes: string[]
+  /** The world's links, if it has any: share_token (wiki) and invite_token (players). */
+  links?: Row
+  /** The co-GM link, if any. */
+  gm_invites?: Row[]
 }
 
 const fakeJwt = () => {
@@ -76,8 +80,12 @@ async function answer(route: Route, state: CloudState, session: object) {
   const table = path.slice('/rest/v1/'.length)
   const one = (req.headers()['accept'] ?? '').includes('vnd.pgrst.object')
   if (table === 'cloud_worlds') {
-    const rows = [{ id: state.worldId, name: 'Inbox world', share_token: null, updated_at: '2026-01-01T00:00:00Z', owner: GM.id }]
-    if (method !== 'GET') return route.fulfill({ status: 204, body: '' })
+    const rows = [{ id: state.worldId, name: 'Inbox world', share_token: null, updated_at: '2026-01-01T00:00:00Z', owner: GM.id, ...state.links }]
+    if (method !== 'GET') {
+      state.writes.push(`${method} cloud_worlds`)
+      if (method === 'PATCH' && state.links) Object.assign(state.links, req.postDataJSON())
+      return route.fulfill({ status: 204, body: '' })
+    }
     return json(route, one ? rows[0] : rows)
   }
   const list = (state as unknown as Record<string, Row[]>)[table]

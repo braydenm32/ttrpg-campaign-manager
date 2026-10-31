@@ -2,14 +2,16 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../cloud/client'
 import { joinRoom, sendOnce } from '../cloud/live'
-import { DraftText, Empty } from '../components'
+import { DraftText, Empty, Skeleton } from '../components'
 import { db, type Safety, type World } from '../db'
 import { Help } from '../help'
+import '../more.css'
 import { useWorld } from '../hooks'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { HandPalm, Shield } from '@phosphor-icons/react'
 import { worldPath } from '../paths'
+import { toast } from '../undo'
 
 /**
  * Safety tools: the table's lines (never in the game) and veils (off screen only), notes on other
@@ -22,16 +24,29 @@ const blank = (): Safety => ({ lines: [], veils: [], notes: '' })
 export default function SafetyPage() {
   const { world } = useWorld()
   const { isGM } = useViewMode()
-  if (!world) return null
+  if (!world) return <Skeleton />
   const safety = { ...blank(), ...world.safety }
   const update = (patch: Partial<Safety>) => db.worlds.update(world.id, { safety: { ...safety, ...patch }, updatedAt: Date.now() })
+  // Puts a removed line or veil back where it was, starting from what's saved now.
+  const putBack = (list: 'lines' | 'veils', item: string, at: number) =>
+    db.worlds
+      .where('id')
+      .equals(world.id)
+      .modify((w) => {
+        const now = { ...blank(), ...w.safety }
+        if (now[list].includes(item)) return
+        const next = [...now[list]]
+        next.splice(Math.min(at, next.length), 0, item)
+        w.safety = { ...now, [list]: next }
+        w.updatedAt = Date.now()
+      })
   const memberOf = world.shared?.memberOf
   const empty = !safety.lines.length && !safety.veils.length && !safety.notes.trim()
   // Lines and veils are for the people at the table, never for a public wiki link.
   if (world.shared?.token) return <Empty>Table rules are for the players at the table.</Empty>
 
   return (
-    <div className="page">
+    <div className="page more-screen">
       <header className="page-header">
         <h1>
           <Ico as={Shield} /> {isGM ? 'Safety tools' : 'Table rules'} <Help topic={isGM ? 'safety' : 'tableRules'} />
@@ -50,6 +65,7 @@ export default function SafetyPage() {
             items={safety.lines}
             isGM={isGM}
             onChange={(lines) => update({ lines })}
+            onRemoved={(x, i) => toast(`Line “${x}” removed`, () => putBack('lines', x, i))}
             placeholder="e.g. Harm to children"
           />
           <SafetyList
@@ -58,6 +74,7 @@ export default function SafetyPage() {
             items={safety.veils}
             isGM={isGM}
             onChange={(veils) => update({ veils })}
+            onRemoved={(x, i) => toast(`Veil “${x}” removed`, () => putBack('veils', x, i))}
             placeholder="e.g. Torture"
           />
         </div>
@@ -109,13 +126,15 @@ function SafetyList({
   items,
   isGM,
   onChange,
+  onRemoved,
   placeholder,
 }: {
   title: string
   hint: string
   items: string[]
   isGM: boolean
-  onChange: (items: string[]) => void
+  onChange: (items: string[]) => unknown
+  onRemoved: (item: string, at: number) => void
   placeholder: string
 }) {
   const [draft, setDraft] = useState('')
@@ -129,7 +148,7 @@ function SafetyList({
           <li key={i}>
             {x}
             {isGM && (
-              <button className="ghost small" aria-label={`Remove ${x}`} onClick={() => onChange(items.filter((_, j) => j !== i))}>
+              <button className="ghost small" aria-label={`Remove ${x}`} onClick={async () => (await onChange(items.filter((_, j) => j !== i)), onRemoved(x, i))}>
                 ×
               </button>
             )}

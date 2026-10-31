@@ -6,6 +6,7 @@ import { Markdown } from '../Markdown'
 import { QUICK_MODEL } from './claude'
 import { ClaudeJob } from './ClaudeJob'
 import { useKept } from './kept'
+import { toast } from '../undo'
 import { MARKUP_NOTE, indexLine, pageText, worldHeader } from './worldText'
 
 /**
@@ -64,7 +65,14 @@ ${nearby(world, entities, parentId)}`,
             >
               Keep it
             </button>
-            <button className="ghost" onClick={() => setFlavour('')}>
+            <button
+              className="ghost"
+              onClick={() => {
+                const was = flavour
+                setFlavour('')
+                toast('Flavour thrown away.', () => setFlavour(was))
+              }}
+            >
               Throw it away
             </button>
           </div>
@@ -150,7 +158,14 @@ ${pageText(entity, world, entities)}`,
             >
               Keep in GM notes
             </button>
-            <button className="ghost" onClick={() => setLines([])}>
+            <button
+              className="ghost"
+              onClick={() => {
+                const was = lines
+                setLines([])
+                toast(`Lines for ${entity.name} cleared.`, () => setLines(was))
+              }}
+            >
               Clear
             </button>
           </div>
