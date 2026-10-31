@@ -68,18 +68,29 @@ export default function RelationWeb() {
   const most = (pick: (e: Entity) => boolean) => [...linked.entries()].filter(([id]) => byId.get(id) && pick(byId.get(id)!)).sort((a, b) => b[1] - a[1])[0]?.[0]
   const focus = asked === 'all' ? '' : asked && byId.has(asked) ? asked : (mine?.id ?? (linked.size > 12 ? (most((e) => e.type === 'pc') ?? most(() => true) ?? '') : ''))
 
-  const shownEdges = useMemo(() => {
+  const [shownEdges, reach] = useMemo((): [Edge[], number] => {
     const list = mode === 'family' ? edges.filter((x) => familyOf(x.kind)) : edges
-    if (!focus) return list
-    // Around one person: everyone within two steps (the whole family, for the tree).
-    const near = new Set([focus])
-    for (let step = 0; step < (mode === 'family' ? 50 : 2); step++)
-      for (const x of list)
-        if (near.has(x.from) || near.has(x.to)) {
-          near.add(x.from)
-          near.add(x.to)
-        }
-    return list.filter((x) => near.has(x.from) && near.has(x.to))
+    if (!focus) return [list, 0]
+    // Around one person: everyone within two steps (the whole family, for the tree). When two steps
+    // is most of the world, one step: a web you can read beats one with everybody in it.
+    const around = (steps: number) => {
+      const near = new Set([focus])
+      for (let step = 0; step < steps; step++)
+        for (const x of list)
+          if (near.has(x.from) || near.has(x.to)) {
+            near.add(x.from)
+            near.add(x.to)
+          }
+      return near
+    }
+    let steps = mode === 'family' ? 50 : 2
+    const near = around(steps)
+    if (mode !== 'family' && near.size > 24) {
+      // One step: just their own links, drawn as a star.
+      steps = 1
+      return [list.filter((x) => x.from === focus || x.to === focus), steps]
+    }
+    return [list.filter((x) => near.has(x.from) && near.has(x.to)), steps]
   }, [edges, focus, mode])
   const nodeIds = useMemo(() => [...new Set(shownEdges.flatMap((x) => [x.from, x.to]))], [shownEdges])
 
@@ -92,7 +103,7 @@ export default function RelationWeb() {
         <h1>
           <Ico as={Graph} /> Relationship web <Help topic="relationWeb" />
         </h1>
-        <div className="row wrap">
+        <div className="row wrap web-controls">
           <div className="segmented">
             <button className={mode === 'web' ? 'on' : ''} onClick={() => setParam('view', '')}>
               Web
@@ -154,7 +165,12 @@ export default function RelationWeb() {
               <button className="small" onClick={() => setParam('focus', 'all')}>
                 Show everyone
               </button>
-              {!asked && <p className="muted small">{mine?.id === focused.id ? 'Your character, and everyone within two links.' : 'Starting here, with everyone within two links. Pick someone else above, or click a name.'}</p>}
+              {mode === 'web' && (
+                <p className="muted small">
+                  {!asked && (mine?.id === focused.id ? 'Your character, and ' : 'Starting here, with ')}
+                  {!asked ? 'everyone' : 'Everyone'} {reach === 1 ? 'linked to them directly' : 'within two links'}.{!asked && ' Pick someone else above, or click a name.'}
+                </p>
+              )}
             </aside>
           )}
         </div>

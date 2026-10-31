@@ -128,7 +128,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             {/* On a phone the places in between fold into "…". */}
             {i === ancestors.length - 1 && ancestors.length > 1 && (
               <span aria-hidden="true" className="crumb-dots">
-                {' › … '}
+                {' › …'}
               </span>
             )}
             <span aria-hidden="true" className="crumb-sep">

@@ -152,7 +152,8 @@ export default function Timeline() {
             {isGM && <button onClick={() => add(era.era, era.age)}>+ Event</button>}
           </div>
           {era.items.length === 0 ? (
-            <Empty>No events.</Empty>
+            // An empty age is one quiet line, so a long history doesn't turn into a column of boxes.
+            <p className="muted small timeline-none">No events{place ? ' here' : ''} yet.</p>
           ) : (
             <ol className="timeline">
               {era.items.map((e, i) => (

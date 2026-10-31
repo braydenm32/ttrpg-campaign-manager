@@ -1761,7 +1761,8 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .everything-found li { display: flex; flex-wrap: wrap; align-items: center; gap: .3em; }
 @media (max-width: 800px) {
   .everything-found li > a { min-height: 44px; display: inline-flex; align-items: center; gap: .35em; }
-  .tree li > a { display: inline-flex; align-items: center; min-height: 44px; }
+  .tree li > a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+  .list-seen .help-button { min-width: 44px; min-height: 44px; }
 }
 
 /* Maps: named pins, where the party is, and on a phone a map that fills the screen with the pin's card over its foot. */
@@ -1775,7 +1776,7 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .leaflet-tooltip.pin-name::before { display: none; }
 .leaflet-tooltip.pin-name.here { background: #4fc3f7; color: #06202c; }
 @media (max-width: 800px) {
-  .map-toolbar { flex-wrap: wrap; overflow: visible; mask-image: none; padding: .3em .6em; gap: .3em .5em; }
+  .map-toolbar { flex-wrap: wrap; overflow: visible; overflow-x: clip; mask-image: none; padding: .3em .6em; gap: .3em .5em; }
   .map-toolbar > .row { flex-wrap: wrap; }
   .map-title { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .map-back { min-width: 44px; min-height: 44px; justify-content: center; }
@@ -1815,7 +1816,7 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .tag.up-next, .thread-highlight { color: var(--accent); font-weight: 600; }
 .tag.up-next { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
 .thread-legend { margin: -.3em 0 1em; }
-.clock-seen { display: inline-block; margin-left: .5em; color: var(--muted); }
+.clock-seen { display: block; color: var(--muted); }
 .clock-seen.on { color: var(--good); }
 .new-clock { align-items: center; margin-bottom: 1em; }
 .new-clock input { flex: 1 1 14em; }
@@ -1827,3 +1828,9 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
   .relation-tools button, .relation-tools label { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
   .objective-list button, .objective-list label { min-height: 44px; min-width: 44px; }
 }
+
+/* Relationship web on a phone: the two pickers each get a full row, so their words show. */
+@media (max-width: 600px) {
+  .web-controls > select { flex: 1 1 100%; min-height: 44px; }
+}
+.web-side .relation-list button.link { white-space: normal; text-align: left; overflow-wrap: anywhere; }
