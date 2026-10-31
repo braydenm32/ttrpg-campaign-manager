@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { blankEntity, db, ENTITY_LABELS, type Entity, type EntityType, type Session } from './db'
+import { blankEntity, ENTITY_LABELS, type Entity, type EntityType, type Session } from './db'
 import { Help } from './help'
 import { nameIndex } from './links'
 import { pagePath, worldPath } from './paths'
+import { openNewPage } from './pendingPages'
 
 /**
  * Wanted pages: names written as [[links]] that no page answers to yet. Clicking one of these
@@ -13,12 +14,6 @@ import { pagePath, worldPath } from './paths'
 /** Page types offered when making a page from a missing link, most likely first. */
 export const MAKE_TYPES: EntityType[] = ['npc', 'location', 'faction', 'item', 'quest', 'shop', 'event', 'deity', 'lore']
 
-/** Makes a GM-only page with this name and opens it for writing. */
-export async function makeWantedPage(worldId: string, name: string, type: EntityType) {
-  const e = blankEntity(worldId, type, name.trim())
-  await db.entities.add(e)
-  return e
-}
 
 export interface Wanted {
   name: string
@@ -65,9 +60,8 @@ export function MakePageButtons({ worldId, name, onMade }: { worldId: string; na
           className="ghost small"
           title={`Make “${name}” a new ${ENTITY_LABELS[t].one} page`}
           onClick={async () => {
-            const e = await makeWantedPage(worldId, name, t)
             onMade?.()
-            navigate(`${pagePath(worldId, e.id)}?edit=1&new=1`)
+            openNewPage(navigate, blankEntity(worldId, t, name.trim()))
           }}
         >
           {ENTITY_LABELS[t].icon} {ENTITY_LABELS[t].one}

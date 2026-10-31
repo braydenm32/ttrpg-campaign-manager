@@ -286,7 +286,7 @@ export const HELP = {
   revealQuietly:
     'Reveal quietly lets players read the page the next time they look, without putting it on their screens. Reveal and show does both. Hide from players makes it GM only again (and takes it off their screens if it is showing). GM notes and secret passages stay hidden either way.',
   pageDrafts:
-    'While you edit a page, what you type is also kept on this device. If you leave by mistake, the next time you edit the page it offers to bring your changes back. Saving only writes what you changed, so edits made meanwhile by a co-GM or a player are kept.',
+    'Nothing you type here is lost. Save writes it; if you leave another way (a link, Back, another screen) your changes are saved for you, with Undo in the note at the bottom. Closing the tab asks first, and what you typed is also kept on this device. A new page is only added to the world once you write something and save or leave; Cancel, or leaving it untouched, leaves nothing behind. Saving only writes what you changed, so edits made meanwhile by a co-GM or a player are kept.',
   pagePicker: 'Start typing a name to find a page, then click it or press Enter. The ones in the current scene are listed first.',
   goLive:
     'Opening the Lectern doesn’t show players anything. Press “Go live to players” when you start playing: their Common Room then shows this session as being played, with the scene, music, timers and turn order. A “Live” badge stays at the top of every screen until you press Stop or end the session.',

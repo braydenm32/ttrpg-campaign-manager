@@ -2,10 +2,10 @@ import { NpcLines } from '../ai/Flavour'
 import { renameLinks } from '../links'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, TagInput, VisibilityBadge, VisibilityToggle } from '../components'
-import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, PICKER_TYPES, saveEntity, templateOf, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus } from '../db'
+import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, PICKER_TYPES, saveEntity, templateOf, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus, type World } from '../db'
 import { HistoryButton } from '../History'
 import { listedEntries, TableRoller } from '../tables'
 import { newThread, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
@@ -27,6 +27,8 @@ import { SessionMentions } from '../sessionMentions'
 import { ClocksBox } from '../clocks'
 import { QuestBox, questProgress } from '../quests'
 import { Ico, TypeIcon } from '../icons'
+import { dropHeldPage, heldPage } from '../pendingPages'
+import { markSaved, toast } from '../undo'
 import { Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Sparkle, Spiral, Television } from '@phosphor-icons/react'
 import { initials } from '../text'
 import { ImportSheetButton } from '../sheets/ImportSheet'
@@ -44,8 +46,11 @@ export default function EntityPage() {
   // null once we know the page isn't there (undefined means still loading).
   const stored = useLiveQuery(async () => (await db.entities.get(entityId)) ?? null, [entityId])
   const editing = isGM && params.get('edit') === '1'
+  // A new page that isn't saved yet (see pendingPages.ts) opens straight in the editor.
+  const held = editing && stored === null ? heldPage(entityId) : undefined
 
   if (stored === undefined) return null
+  if (held && held.worldId === worldId) return <EntityEditor key={held.id} entity={held} fresh held onDone={() => setParams({})} />
   if (stored === null || stored.worldId !== worldId || stored.template && !isGM || !canSeeEntity(stored))
     return <Empty>This page doesn't exist or hasn't been revealed.</Empty>
   const entity = isGM ? stored : asPlayerSees(stored)
@@ -383,7 +388,32 @@ function clearDraft(id: string) {
   }
 }
 
-function EntityEditor({ entity, fresh, onDone }: { entity: Entity; fresh: boolean; onDone: () => void }) {
+/**
+ * Writes what changed in the editor (from `opened` to `d`) on top of the page as it is now, so
+ * edits made meanwhile elsewhere survive. Returns the page as it was before, for Undo (null if it's new).
+ */
+async function writeChanges(opened: Entity, d: Entity, world: World | null | undefined) {
+  const before = (await db.entities.get(opened.id)) ?? null
+  const current = before ?? opened
+  const mine = changes(opened, d)
+  const merged = { ...current, ...mine, updatedAt: Date.now() }
+  if ('name' in mine) merged.name = d.name.trim() || 'Untitled'
+  // A new calendar date puts the event in its place on the timeline; an unchanged one keeps its order among same-day events.
+  if ('eventWhen' in mine && merged.type === 'event' && merged.eventWhen && world?.calendar) merged.eventOrder = toDays(world.calendar, merged.eventWhen)
+  await saveEntity(merged)
+  clearDraft(opened.id)
+  dropHeldPage(opened.id)
+  // Renamed: links to the old name (and :::for passages, for a player character) follow it.
+  const renamed = merged.template ? '' : await renameLinks(opened.worldId, current, merged)
+  return { before, merged, renamed }
+}
+
+/**
+ * The page editor. Nothing typed here is lost: Save writes it; leaving any other way (a link, Back,
+ * another screen) saves it too, with Undo; closing the tab asks first, and the draft is also kept on
+ * this device. A new page (`held`) is only added to the world once there's something to keep.
+ */
+function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity; fresh: boolean; held?: boolean; onDone: () => void }) {
   const { worldId, world } = useWorld()
   const navigate = useNavigate()
   // The page as it was when the editor opened. Saving writes only what you changed from this, on top of
@@ -419,26 +449,50 @@ function EntityEditor({ entity, fresh, onDone }: { entity: Entity; fresh: boolea
     return () => clearTimeout(t)
   }, [dirty, d, entity.id, opened])
 
+  // What leaving saves: kept up to date for the moment the editor closes.
+  const leaving = useRef({ d, dirty, closed: false })
+  useEffect(() => {
+    leaving.current.d = d
+    leaving.current.dirty = dirty
+  }, [d, dirty])
+  useEffect(() => {
+    const keep = () => {
+      if (!leaving.current.dirty) return
+      try {
+        localStorage.setItem(draftKey(entity.id), JSON.stringify({ base: opened, d: leaving.current.d, at: Date.now() }))
+      } catch {
+        // As below.
+      }
+    }
+    window.addEventListener('pagehide', keep)
+    return () => {
+      window.removeEventListener('pagehide', keep)
+      const { d: last, dirty: changed, closed } = leaving.current
+      if (closed || !changed) return
+      // Left without Save or Cancel (a link, Back, another screen): keep what was typed, with Undo.
+      void writeChanges(opened, last, world).then(({ before, merged }) =>
+        toast(`Saved your changes to “${merged.name}”.`, () => (before ? db.entities.put(before) : db.entities.delete(merged.id))),
+      )
+    }
+    // Once per editor: `opened` and `world` are what it opened with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const save = async () => {
-    const current = (await db.entities.get(entity.id)) ?? opened
-    const mine = changes(opened, d)
-    const merged = { ...current, ...mine, updatedAt: Date.now() }
-    if ('name' in mine) merged.name = d.name.trim() || 'Untitled'
-    // A new calendar date puts the event in its place on the timeline; an unchanged one keeps its order among same-day events.
-    if ('eventWhen' in mine && merged.type === 'event' && merged.eventWhen && world?.calendar) merged.eventOrder = toDays(world.calendar, merged.eventWhen)
-    await saveEntity(merged)
-    clearDraft(entity.id)
-    // Renamed: links to the old name (and :::for passages, for a player character) follow it.
-    const renamed = merged.template ? '' : await renameLinks(worldId, current, merged)
+    leaving.current.closed = true
+    const { renamed } = await writeChanges(opened, d, world)
     if (renamed) alert(renamed)
+    markSaved()
     onDone()
   }
   const cancel = async () => {
     if (dirty && !confirm('Throw away what you changed on this page?')) return
+    leaving.current.closed = true
     clearDraft(entity.id)
-    // A brand-new page nobody wrote on goes away again, so Cancel doesn't leave clutter behind.
+    // A brand-new page goes away again, so Cancel doesn't leave clutter behind.
+    if (held) dropHeldPage(entity.id)
     if (fresh) {
-      await db.entities.delete(entity.id)
+      if (!held) await db.entities.delete(entity.id)
       navigate(typePath(worldId, entity.type, entity.customType), { replace: true })
       return
     }

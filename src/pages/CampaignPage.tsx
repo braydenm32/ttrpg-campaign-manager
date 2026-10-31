@@ -19,7 +19,7 @@ import { pagePath, worldPath } from '../paths'
 import { canSeeSession, nextSessions } from '../threads'
 import { StageChip, usePlayingNow } from '../stage'
 import { useKeepScroll } from '../jump'
-import { toast } from '../undo'
+import { SavedMark, toast } from '../undo'
 import { prepCounts } from '../counts'
 
 export default function CampaignPage() {
@@ -83,6 +83,7 @@ export default function CampaignPage() {
                 }}
               />
               <Help topic="hiddenCampaign" />
+              <SavedMark />
             </div>
           ) : (
             <div className="muted">

@@ -5,10 +5,11 @@ import { blankEntity, db, type Entity, type EntityType, type World } from './db'
 import { Help } from './help'
 import { Ico } from './icons'
 import { generateNames, NAME_KINDS, NAME_STYLES, namesLike, personNamesLike, type NameKind, type NameStyle } from './names'
-import { pagePath, worldPath } from './paths'
+import { worldPath } from './paths'
 import { STARTER_TABLES, starterTableEntity } from './starterTables'
 import { generateTreasure, TREASURE_SIZES, treasureMarkdown, type Treasure, type TreasureSize } from './treasure'
 import { coinKey, editPurse } from './purse'
+import { openNewPage } from './pendingPages'
 
 /** Names in a style, or names like the world's own (its NPCs, places…). Click one to make a page or copy it. */
 export function NameGenerator({ world, entities, compact }: { world: World; entities: Entity[]; compact?: boolean }) {
@@ -83,9 +84,7 @@ export function NameGenerator({ world, entities, compact }: { world: World; enti
                 className="ghost small"
                 title={`Make a page called ${n}`}
                 onClick={async () => {
-                  const e = blankEntity(world.id, pageType, n)
-                  await db.entities.add(e)
-                  navigate(`${pagePath(world.id, e.id)}?edit=1&new=1`)
+                  openNewPage(navigate, blankEntity(world.id, pageType, n))
                 }}
               >
                 <Ico as={Plus} /> Page

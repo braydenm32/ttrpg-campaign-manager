@@ -10,6 +10,7 @@ import { useWorldSessions } from '../threads'
 import { Ico } from '../icons'
 import { Hourglass } from '@phosphor-icons/react'
 import { pagePath } from '../paths'
+import { openNewPage } from '../pendingPages'
 
 export default function Timeline() {
   const { worldId, world } = useWorld()
@@ -78,8 +79,7 @@ export default function Timeline() {
     if (age) e.eventAge = age.id
     e.eventOrder = Date.now()
     if (place) e.parentId = place
-    await db.entities.add(e)
-    navigate(`${pagePath(worldId, e.id)}?edit=1&new=1`)
+    openNewPage(navigate, e)
   }
 
   return (
