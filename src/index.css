@@ -1535,3 +1535,18 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 }
 .world-today-fold > summary { cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; gap: .4em; font-weight: 600; }
 .world-today-fold[open] > summary { margin-bottom: .3em; }
+/* The party's purse: one line per coin, with − and + by the step picked above. */
+.coin-lines { list-style: none; padding: 0; margin: .4em 0 .8em; display: flex; flex-direction: column; gap: .3em; }
+.coin-line { display: grid; grid-template-columns: minmax(3.5em, 1fr) 44px minmax(4.5em, 6em) 44px 44px; align-items: center; gap: .35em; max-width: 26em; }
+.coin-line .coin-name { font-weight: 600; overflow-wrap: anywhere; }
+.coin-line .coin-step { min-width: 44px; min-height: 44px; padding: 0; justify-content: center; }
+.coin-line .coin-remove { min-width: 44px; min-height: 44px; justify-content: center; color: var(--muted); }
+.coin-line input.coin-amount { width: 100%; text-align: center; font-weight: 700; font-size: 1.05rem; }
+.coin-line b.coin-amount { grid-column: 2 / span 3; }
+.coin-steps { gap: .3em; }
+.coin-steps .chip { min-width: 44px; min-height: 36px; justify-content: center; }
+.coin-steps .chip.on { background: var(--accent); color: var(--accent-ink, #1a1a1a); border-color: var(--accent); }
+.back-to { margin-bottom: .6em; }
+.empty-handed { margin-top: 1em; }
+@media (max-width: 800px) { .coin-steps .chip { min-height: 44px; } }
+.coin-purse h2 { margin: 0; }
