@@ -437,6 +437,11 @@ function LiveTable({ ctx }: { ctx: RoomContext }) {
         <Card title="Tell your GM" icon={ChatCircleDots} help="tableSignals">
           <SignalButtons cloudId={memberOf ? cloudId : undefined} who={ctx.who} />
           {memberOf && world.safety?.xcard && <XCardButton cloudId={memberOf} />}
+          {memberOf && (
+            <Link className="room-more" to={`${worldPath(world.id)}/questions`}>
+              Ask your GM something privately
+            </Link>
+          )}
         </Card>
       </div>
     </>
@@ -712,7 +717,9 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
     <>
       <TabHead title="Me" help="roomMe" />
       {mine.map((c) => {
-        const facts = c.fields.filter((f) => !f.gm && f.value.trim())
+        // The rest of the sheet, without the numbers already in the tiles.
+        const tiles = keyNumbers(c)
+        const facts = c.fields.filter((f) => !f.gm && f.value.trim() && !tiles.includes(f))
         const items = entities.filter((e) => e.type === 'item' && e.heldBy === c.id)
         const owned = ctx.owners.get(c.id)
         return (
@@ -725,7 +732,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
                 <Ico as={BookOpenText} /> {memberOf ? 'My character’s page' : 'Their page'}
               </Link>
             </div>
-            {facts.length > 3 && (
+            {facts.length > 0 && (
               <dl className="room-facts">
                 {facts.map((f, i) => (
                   <div key={i}>
@@ -763,7 +770,8 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
           </h2>
           {secrets.map((s, i) => (
             <div key={i} className="secret for-you small">
-              <b>{s.page.name}:</b> {plainLinks(s.text)} <Link to={pagePath(worldId, s.page.id)}>Read</Link>
+              <Link to={pagePath(worldId, s.page.id)}>{s.page.name}</Link>
+              <Markdown text={s.text} entities={entities} worldId={worldId} showSecrets={false} />
             </div>
           ))}
         </section>
@@ -827,6 +835,7 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
               <ItemLinks items={loot.stash} worldId={worldId} />
             </div>
           )}
+          {!loot.items.length && <span className="muted small">Nobody carries anything yet.</span>}
         </section>
       )}
       {ctx.party.length ? (
@@ -857,9 +866,11 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
                     </div>
                   </div>
                 </div>
-                <div className="small carries">
-                  <Ico as={Backpack} /> {items.length ? <ItemLinks items={items} worldId={worldId} /> : <span className="muted">Nothing carried</span>}
-                </div>
+                {items.length > 0 && (
+                  <div className="small carries">
+                    <Ico as={Backpack} /> <ItemLinks items={items} worldId={worldId} />
+                  </div>
+                )}
               </li>
             )
           })}
@@ -891,7 +902,7 @@ function LeadsTab({ ctx }: { ctx: RoomContext }) {
   return (
     <>
       <TabHead title="Leads" help="leads" />
-      <p className="muted room-lead-in">Quests, rumours and mysteries the party knows about, the ones under way first, and the clocks that are ticking.</p>
+      <p className="muted small room-lead-in">What the party knows about and is working on.</p>
       <LeadsView worldId={ctx.worldId} entities={ctx.entities} />
       {!ctx.world.shared && <p className="muted small">Players see the leads, quests and clocks you’ve revealed.</p>}
     </>
