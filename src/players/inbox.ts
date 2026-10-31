@@ -41,8 +41,10 @@ export interface GmInbox {
   nameOf: (userId: string | undefined) => string
   /** Whether anything can arrive at all (cloud sync on and signed in). */
   available: boolean
-  /** Whether the first look at the server has come back. */
+  /** Whether the first look at the server came back with an answer. */
   loaded: boolean
+  /** Whether the first look has finished, answered or not (offline). */
+  settled: boolean
   error: string
   /** Everything waiting, each thing once: the one number on the Desk and the Inbox. */
   total: number
@@ -77,6 +79,7 @@ export const EMPTY_INBOX: GmInbox = {
   nameOf: () => 'A player',
   available: false,
   loaded: false,
+  settled: false,
   error: '',
   total: 0,
   reload: async () => {},
@@ -91,6 +94,7 @@ export function useGmInbox(world: World | null | undefined): GmInbox {
   const cloudId = own?.cloud?.enabled && user ? own.id : undefined
   const q = useGmQuestions(own)
   const d = useDowntime(cloudId ? own : undefined)
+  const [tried, setTried] = useState<string>()
   const [players, setPlayers] = useState<{ members: Member[]; claims: Claim[]; requests: CharacterRequest[] }>()
   useSyncExternalStore(
     (l) => {
@@ -112,6 +116,7 @@ export function useGmInbox(world: World | null | undefined): GmInbox {
     } catch {
       // Offline: keep what we had.
     }
+    setTried(cloudId)
   }, [cloudId])
   useEffect(() => {
     if (!cloudId) return
@@ -155,6 +160,7 @@ export function useGmInbox(world: World | null | undefined): GmInbox {
     nameOf,
     available: q.available,
     loaded: !!p,
+    settled: !!cloudId && tried === cloudId,
     error: q.error || d.error,
     total: waiting.length + waitingDowntime.length + claims.length + requests.length,
     reload,

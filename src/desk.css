@@ -94,6 +94,7 @@
   .need { gap: .5em; }
   .need-chip { min-width: 0; padding: .25em .45em; }
   .need-text { font-size: .92rem; }
+  .need-text .clip { white-space: normal; }
   .need-action :is(button, .button) { min-height: 44px; min-width: 44px; }
   .need-action { flex-wrap: wrap; justify-content: flex-end; max-width: 45%; }
   .desk-statline a, .coming-campaigns a, .card-head > a, .recent-list li > a { min-height: 44px; }
@@ -117,7 +118,7 @@
 .inbox-answered > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; }
 .inbox-answered .inbox-item { margin-top: .8em; }
 @media (max-width: 800px) {
-  .inbox-item :is(button, .button) { min-height: 44px; }
+  .inbox-item :is(button, .button), .inbox-empty .button { min-height: 44px; }
   .inbox-when { margin-left: 0; flex-basis: 100%; }
 }
 

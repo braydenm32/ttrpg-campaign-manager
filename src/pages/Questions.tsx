@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Empty } from '../components'
+import { Empty, Skeleton } from '../components'
 import { answerQuestion, type CharacterRequest } from '../cloud/players'
 import { db, saveEntity, type PlayerQuestion, type World } from '../db'
 import { Help } from '../help'
@@ -83,6 +83,7 @@ function GmInbox({ world }: { world: World }) {
     el?.querySelector<HTMLElement>('textarea, button')?.focus({ preventScroll: true })
   }, [focus, inbox.loaded])
   if (!inbox.available) return <InboxEmpty world={world} />
+  if (!inbox.settled) return <Skeleton />
   const name = (id: string) => pages.find((p) => p.id === id)?.name ?? 'a character'
   const downtimeItem = (d: (typeof inbox.downtime)[number]) => (
     <DowntimeItem
