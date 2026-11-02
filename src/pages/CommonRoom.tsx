@@ -266,7 +266,7 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
       {campaign && stage === 'before' && <StoryCard ctx={ctx} campaign={campaign} />}
       {/* While the GM is live the big dice are at the top; the rest of the time a small card keeps them in reach. */}
       {stage !== 'during' && (
-        <Card title="Dice" icon={Sparkle} help="tableDice" className="room-dice-foot">
+        <Card title="Dice" icon={Sparkle} className="room-dice-foot">
           <TableDice cloudId={undefined} who={ctx.who} />
         </Card>
       )}

@@ -250,6 +250,11 @@ export function Fighter({
       )}
       {open && (
         <div className="fighter-details">
+          {c.ac && (
+            <span className="small muted">
+              <Ico as={Shield} /> Armour class {c.ac}
+            </span>
+          )}
           <div className="row wrap">
             <label className="row small muted">
               Initiative
@@ -285,7 +290,7 @@ export function Fighter({
               <option value="ally">Ally</option>
               <option value="foe">Foe</option>
             </select>
-            <span className="grow" />
+            <span className="fighter-actions">
             <button
               className="small"
               title="Out of the fight: moves to the Down list below, and the turn passes on"
@@ -317,6 +322,7 @@ export function Fighter({
             >
               ✕
             </button>
+            </span>
           </div>
           <div className="row wrap">
             <HpControl c={c} onChange={(fn) => change(c.id, fn)} />

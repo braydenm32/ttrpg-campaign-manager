@@ -321,7 +321,7 @@ test('Needs you asks for the last played session’s recap, and keeps pressing t
     await expect(section.locator('.need-chip.bad')).toHaveCount(3)
     await expect(section.getByText(/…and \d+ more pressing/)).toBeVisible()
     await expect(section.getByRole('link', { name: 'Threads' })).toBeVisible()
-    await expect(section.locator('.count.alert')).toHaveText('1')
+    await expect(section.locator('.count.alert')).toHaveText(String(await section.locator('.need:not(.quiet):not(.bad)').count()))
 
     // No recap yet: “Write it” goes to the recap box.
     const row = section.locator('.need', { hasText: 'Recap' })

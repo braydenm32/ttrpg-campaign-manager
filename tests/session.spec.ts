@@ -284,6 +284,8 @@ test('a fight runs from one-line fighters: quick HP, Defeated folds into Down, c
     await expect(toast(page)).toContainText('Burning')
     await expect(panel.locator('.tag', { hasText: 'Burning' })).toHaveCount(0)
 
+    if (process.env.SHOTS_DIR) await panel.screenshot({ path: `${process.env.SHOTS_DIR}/fighters.png` })
+
     // Defeated: the fighter leaves the order for a folded Down list, and can come back.
     await first.getByRole('button', { name: 'Defeated' }).click()
     await expect(toast(page)).toContainText('is down')
@@ -317,6 +319,8 @@ test('on the Lectern: Wrap up sits at the foot on a phone, Record opens the cons
       await expect(top).toBeVisible()
       await expect(foot).toBeHidden()
     }
+
+    if (process.env.SHOTS_DIR) await page.screenshot({ path: `${process.env.SHOTS_DIR}/lectern-${device}.png` })
 
     // The Record chip opens the Recording panel with its reminder to ask everyone first.
     await page.locator('.record-chip').click()

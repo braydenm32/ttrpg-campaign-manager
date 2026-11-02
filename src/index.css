@@ -1911,3 +1911,21 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 @media (max-width: 800px) { .number-tiles .tile-value, .tile-edit :is(input, button) { min-height: 44px; } }
 .choose-character.one-line { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: .5em .9em; }
 @media (max-width: 800px) { .choose-character.one-line :is(.button, button) { min-height: 44px; min-width: 44px; justify-content: center; } }
+
+/* A fighter stays on one line on a phone too; the details below tidy into rows that fit. */
+.fighter-details .hp { flex-wrap: nowrap; max-width: 100%; }
+.fighter-actions { display: inline-flex; align-items: center; gap: .3em; margin-left: auto; }
+@media (max-width: 800px) {
+  .fighter-line { flex-wrap: nowrap; gap: .2em .35em; }
+  .fighter-name { flex: 1 1 0; min-width: 0; padding: .2em 0; }
+  .fighter-name svg:last-child { display: none; }
+  .fighter-line > .field-chip, .hp-compact .hp-bar { display: none; }
+  .fighter-name { gap: .35em; }
+  .init-chip { min-width: 1.6em; padding: .1em .2em; }
+  .hp-compact { gap: .25em; }
+  .hp-quick { gap: 0; }
+  .hp-quick button.ghost { padding: .2em 0; }
+  .fighter-details .hp-bar { width: 1.6em; }
+  .fighter-details .hp-input { width: 2.9em; }
+}
+@media (max-width: 800px) { .room-dice-foot .dice-buttons button, .room-dice-foot .table-dice :is(input, button) { min-height: 44px; min-width: 44px; } }
