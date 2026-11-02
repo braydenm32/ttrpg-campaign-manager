@@ -4,8 +4,9 @@ import { useGuardedNavigate } from './ai/leave'
 import { db, ENTITY_LABELS, PICKER_TYPES, typeLabel, type Entity, type Session, type World, type WorldMap } from './db'
 import { Help, HELP } from './help'
 import { Ico, TypeIcon } from './icons'
-import { BookOpen, Lock, MagnifyingGlass, MapTrifold, Plus, ArrowRight } from '@phosphor-icons/react'
+import { BookOpen, Lock, MagnifyingGlass, MapTrifold, Plus, ArrowRight, Eye, Timer } from '@phosphor-icons/react'
 import { useCreatePage } from './NewPage'
+import { useDialog } from './components'
 import { useVisibleEntities } from './hooks'
 import { stripSecrets } from './Markdown'
 import { listedEntries } from './tables'
@@ -91,6 +92,13 @@ export function searchWorld(
   }
   for (const m of maps)
     if (m.name.toLowerCase().includes(q)) hits.push({ key: m.id, to: `${worldPath(worldId)}/maps/${m.id}`, icon: '🗺️', node: <Ico as={MapTrifold} />, title: m.name, snippet: 'Map', score: 45 })
+  // Clocks live on pages; finding one by its name opens the Clocks screen.
+  for (const e of entities)
+    for (const c of e.clocks ?? []) {
+      if (!isGM && !c.known) continue
+      if (c.name.toLowerCase().includes(q))
+        hits.push({ key: `clock:${c.id}`, to: `${worldPath(worldId)}/clocks`, icon: '⏳', node: <Ico as={Timer} />, title: c.name, snippet: `Clock, ${c.filled} of ${c.segments} · on ${e.name}`, score: 47 })
+    }
   return hits.sort((a, b) => b.score - a.score || a.title.localeCompare(b.title)).slice(0, 40)
 }
 
@@ -101,6 +109,7 @@ function commandHits(
   isGM: boolean,
   places: NavPlace[],
   create: (type: Entity['type'], customType?: string) => void,
+  playerView?: () => void,
 ): Hit[] {
   const q = query.trim().toLowerCase()
   if (!q) return []
@@ -120,6 +129,9 @@ function commandHits(
       hits.push({ key: `new:${type}:${custom ?? ''}`, to: '', icon: '+', node: <Ico as={Plus} />, title: `New ${one}`, snippet: 'Make a new page', score: wantsNew ? 120 : 55, run: () => create(type, custom) })
     }
   }
+  // The GM's Player view switch lives in the sidebar, so search says where it is and does it.
+  if (own && playerView && q.length >= 3 && ['player view', 'players view', 'preview as players', 'see as players'].some((w) => w.includes(q)))
+    hits.push({ key: 'cmd:player-view', to: '', icon: '👁', node: <Ico as={Eye} />, title: 'Player view', snippet: 'See the world as your players do', score: 85, run: playerView })
   // Every area, tab and More item the viewer has (src/nav.ts), found by its name or the names it used to have.
   for (const p of places) {
     const title = p.title.toLowerCase()
@@ -147,12 +159,13 @@ export function QuickSearch({ worldId, world, onClose }: { worldId: string; worl
   const create = useCreatePage(world)
   const frame = useFrameContext()
   const places = frame ? navPlaces(frame.facts) : []
+  const { setMode } = useViewMode()
   const found = useMemo(() => searchWorld(query, { worldId, world, ...data }), [query, worldId, world, data])
   // Before anything is typed: the pages opened lately on this device, to flip back to.
   const recent = useRecentPages(worldId, data.entities, 8)
   const recentHits: Hit[] = recent.map((e) => ({ key: e.id, to: pagePath(worldId, e.id), icon: typeLabel(e, world).icon, node: <TypeIcon type={e.type} custom={world?.customTypes?.find((c) => c.id === e.customType)} />, title: e.name, snippet: e.summary, score: 0, gmOnly: data.isGM && e.visibility === 'gm' }))
   const typed = !!query.trim()
-  const hits = typed ? [...commandHits(query, world, data.isGM, places, create), ...found].sort((a, b) => b.score - a.score).slice(0, 40) : recentHits
+  const hits = typed ? [...commandHits(query, world, data.isGM, places, create, () => setMode('player')), ...found].sort((a, b) => b.score - a.score).slice(0, 40) : recentHits
   const open = (h: Hit | undefined) => {
     if (!h) return
     onClose()
@@ -160,13 +173,19 @@ export function QuickSearch({ worldId, world, onClose }: { worldId: string; worl
     else if (h.external) window.open(hrefFor(h.to), '_blank', 'noopener')
     else navigate(h.to)
   }
+  const dialog = useDialog(onClose)
+  const listed = hits.length > 0
   return (
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal quick-search" role="dialog" aria-label="Search">
+      <div className="modal quick-search" role="dialog" aria-modal="true" aria-label="Search" ref={dialog} tabIndex={-1}>
         <div className="row">
           <input
             autoFocus
             className="search"
+            aria-label="Search"
+            aria-controls="search-results"
+            aria-autocomplete="list"
+            aria-activedescendant={listed && hits[active] ? `search-hit-${active}` : undefined}
             placeholder="Search, or type “new npc”, “clocks”…"
             value={query}
             onChange={(e) => {
@@ -174,8 +193,7 @@ export function QuickSearch({ worldId, world, onClose }: { worldId: string; worl
               setActive(0)
             }}
             onKeyDown={(e) => {
-              if (e.key === 'Escape') onClose()
-              else if (e.key === 'ArrowDown') setActive((a) => Math.min(a + 1, hits.length - 1))
+              if (e.key === 'ArrowDown') setActive((a) => Math.min(a + 1, hits.length - 1))
               else if (e.key === 'ArrowUp') setActive((a) => Math.max(a - 1, 0))
               else if (e.key === 'Enter') open(hits[active])
               else return
@@ -186,10 +204,10 @@ export function QuickSearch({ worldId, world, onClose }: { worldId: string; worl
         </div>
         {!typed && hits.length > 0 && <h3 className="search-recent-head small muted">Recently opened</h3>}
         {(typed || hits.length > 0) && (
-          <ul className="search-results" aria-label={typed ? undefined : 'Recently opened'}>
+          <ul className="search-results" id="search-results" role="listbox" aria-label={typed ? 'Results' : 'Recently opened'}>
             {hits.map((h, i) => (
-              <li key={h.key} className={i === active ? 'active' : ''}>
-                <button className="link" onMouseEnter={() => setActive(i)} onClick={() => open(h)}>
+              <li key={h.key} id={`search-hit-${i}`} role="option" aria-selected={i === active} className={i === active ? 'active' : ''}>
+                <button className="link" tabIndex={-1} onMouseEnter={() => setActive(i)} onClick={() => open(h)}>
                   <strong className="row">
                     {h.node ?? h.icon} {h.title}
                     {h.gmOnly && <span title="GM only" aria-label="GM only"><Ico as={Lock} /></span>}
@@ -198,7 +216,7 @@ export function QuickSearch({ worldId, world, onClose }: { worldId: string; worl
                 </button>
               </li>
             ))}
-            {hits.length === 0 && <li className="muted">Nothing matches.</li>}
+            {hits.length === 0 && <li className="muted" role="option" aria-selected="false" aria-disabled="true">Nothing matches.</li>}
           </ul>
         )}
       </div>

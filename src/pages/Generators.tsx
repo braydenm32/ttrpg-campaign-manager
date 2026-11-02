@@ -72,7 +72,7 @@ export default function Generators() {
       <header className="page-header">
         <div>
           <h1>
-            <Ico as={DiceFive} /> Generators &amp; tables <Help topic="generators" />
+            <Ico as={DiceFive} /> Generators and tables <Help topic="generators" />
           </h1>
           <p className="lead">Your own tables first, then a place, a person, names or treasure on the spot.</p>
         </div>

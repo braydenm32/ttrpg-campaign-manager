@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Modal } from '../components'
 import { Help } from '../help'
 import { currentPath, goToPath } from '../paths'
-import { appLink, appUrl, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
+import { appLink, appUrl, cloudErrorMessage, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
 import { pendingInvite } from './players'
 import { deleteMyAccount } from './sync'
 
@@ -127,7 +127,7 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
                     await deleteMyAccount()
                     onClose()
                   } catch (err) {
-                    setError((err as Error).message)
+                    setError(cloudErrorMessage(err))
                   } finally {
                     setBusy(false)
                   }
@@ -172,7 +172,7 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
         setMessage('If that email has an account, a reset link is on its way.')
       }
     } catch (err) {
-      setError((err as Error).message)
+      setError(cloudErrorMessage(err))
     } finally {
       setBusy(false)
     }
@@ -206,7 +206,7 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
                     try {
                       await signInWith(p.id)
                     } catch (err) {
-                      setError((err as Error).message)
+                      setError(cloudErrorMessage(err))
                       setBusy(false)
                     }
                   }}

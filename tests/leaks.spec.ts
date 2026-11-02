@@ -115,7 +115,7 @@ test('GM-only pages and maps opened by address show nothing', async ({ page, wor
   expect(fresh, 'GM secrets showing in the player view').toEqual([])
   // And they say so, rather than showing an empty page.
   await go(page, `/w/${world.slug}/p/${world.pageSlugs.get(pages[0].id)}`)
-  await expect(page.getByText("This page doesn't exist or hasn't been revealed.")).toBeVisible()
+  await expect(page.getByText('This page isn’t here, or your GM hasn’t shared it with you yet.')).toBeVisible()
 })
 
 test('search (Ctrl K) finds no secrets in the player view', async ({ page, world }, info) => {

@@ -245,7 +245,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
         <Link className="map-back" to={`${worldPath(worldId)}/maps`} aria-label="All maps">
           ← <span>Maps</span>
         </Link>
-        <strong className="map-title">{map.name}</strong> {isGM && <SeenMark entity={map} />} <Help topic="mapView" />
+        <strong className="map-title" role="heading" aria-level={1}>{map.name}</strong> {isGM && <SeenMark entity={map} />} <Help topic="mapView" />
         <div className="row map-quick">
           <button type="button" className={`names-toggle ${showNames ? 'on' : ''}`} aria-pressed={showNames} onClick={() => setShowNames(!showNames)} title="Show the pins’ names on the map">
             <Ico as={Tag} /> Names
@@ -469,6 +469,8 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                 key={p.id}
                 position={p.position}
                 icon={pinIcon(p, entity, p.id === selectedId, isHere)}
+                title={label}
+                alt={label}
                 draggable={isGM && tool === 'select'}
                 eventHandlers={{
                   ...handlers,
@@ -1060,7 +1062,7 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
       </label>
       <label>
         Note
-        <SecretTextarea worldId={pin.worldId} rows={4} value={pin.note} onChange={(v) => update({ note: v })} placeholder="Shown when the pin is clicked. Markdown and [[links]] work." />
+        <SecretTextarea worldId={pin.worldId} rows={4} value={pin.note} onChange={(v) => update({ note: v })} placeholder="Shown when the pin is clicked. Links like [[Page name]] work." />
       </label>
       <SecretNamesWarning worldId={pin.worldId} texts={[pin.note]} show={pin.visibility === 'players'} />
       <div className="row spread">

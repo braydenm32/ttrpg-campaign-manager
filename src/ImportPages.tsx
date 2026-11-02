@@ -121,14 +121,14 @@ export function ImportPages({ worldId, system, compact }: { worldId: string; sys
       {error && <p className="error small">{error}</p>}
       {!compact && (
         <>
-      <h3>
+      <h3 className="data-heading">
         🛡️ Character sheets <Help topic="importSheet" />
       </h3>
       <div className="row wrap">
         <ImportSheetButton worldId={worldId} system={system} />
         <span className="muted small">From D&D Beyond, Foundry VTT, Pathbuilder, a fillable PDF, or any sheet’s text.</span>
       </div>
-      <h3>
+      <h3 className="data-heading">
         📤 Export as Markdown <Help topic="exportMarkdown" />
       </h3>
       <button onClick={() => exportMarkdown(worldId)}>⬇ Download pages as Markdown (.zip)</button>

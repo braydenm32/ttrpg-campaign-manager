@@ -70,7 +70,7 @@ export function TableRoller({ tables, worldId, entities, fixed, showSecrets }: {
     <div className="table-roller">
       <div className="row wrap">
         {!fixed && (
-          <select value={table.id} onChange={(e) => setChosen(e.target.value)}>
+          <select value={table.id} onChange={(e) => setChosen(e.target.value)} aria-label="Which table">
             {tables.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}

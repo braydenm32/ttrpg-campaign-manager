@@ -62,7 +62,7 @@ export function ShowToPlayers({ session, campaign, entities }: { session: Sessio
     return (
       <div className="row wrap show-players">
         <span className="chip shown-chip">
-          <Ico as={Eye} /> Players can read it
+          <Ico as={Eye} /> Players can see this
         </span>
         <button
           type="button"

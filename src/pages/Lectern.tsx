@@ -624,9 +624,9 @@ function LecternThreads({ lectern, entities, worldId, sessionId }: { lectern: Le
   return (
     <LecternPanel
       id="threads"
-      name="Loose threads"
-      keywords="hooks mysteries leads quests"
-      title={<><Ico as={Spiral} /> Loose threads</>}
+      name="Threads"
+      keywords="loose threads hooks mysteries leads quests"
+      title={<><Ico as={Spiral} /> Threads</>}
       extra={
         <Link className="small" to={`${worldPath(worldId)}/threads`}>
           All threads
@@ -755,6 +755,7 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
                 value={c.init?.toString() ?? ''}
                 placeholder="–"
                 title="Initiative"
+                aria-label={`Initiative for ${c.name}`}
                 saveOn="leave"
                 onCommit={(v) => change(c.id, (x) => void (x.init = toNumber(v)))}
               />
@@ -767,6 +768,7 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
                 className="side-select"
                 value={c.side}
                 title="Side"
+                aria-label={`Side for ${c.name}`}
                 onChange={(e) => {
                   const v = e.target.value as Combatant['side']
                   change(c.id, (x) => void (x.side = v))

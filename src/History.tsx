@@ -6,7 +6,8 @@ import { renameLinks } from './links'
 import { Help } from './help'
 import { binSize, deleteFromBin, emptyBin, restoreFromBin, useBin } from './bin'
 import { formatBytes, useWorld } from './hooks'
-import { PageIcon } from './icons'
+import { Ico, PageIcon } from './icons'
+import { ClockCounterClockwise } from '@phosphor-icons/react'
 
 /**
  * Page history: every save keeps the version it replaced, on this device. Changes that arrive from
@@ -46,7 +47,7 @@ export function HistoryButton({ entity }: { entity: Entity }) {
   return (
     <>
       <button className="ghost" title="Earlier versions of this page" onClick={() => setOpen(true)}>
-        🕘 History
+        <Ico as={ClockCounterClockwise} /> History
       </button>
       {open && <HistoryModal entity={entity} onClose={() => setOpen(false)} />}
     </>
@@ -189,9 +190,9 @@ export function RecentlyDeleted() {
             </span>
             <button
               className="small ghost"
-              onClick={() => confirm('Empty the bin? Nothing in it can be brought back afterwards. (Deleted pages below are kept.)') && emptyBin(worldId)}
+              onClick={() => confirm('Delete everything listed here for good? Nothing in it can be brought back afterwards. (Deleted pages below are kept.)') && emptyBin(worldId)}
             >
-              Empty the bin
+              Delete all for good
             </button>
           </p>
         </>

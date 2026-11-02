@@ -21,6 +21,7 @@ import { StageChip, usePlayingNow } from '../stage'
 import { useKeepScroll } from '../jump'
 import { SavedMark, toast } from '../undo'
 import { prepCounts } from '../counts'
+import { capital, showDay } from '../text'
 
 export default function CampaignPage() {
   const { worldId, world } = useWorld()
@@ -55,14 +56,17 @@ export default function CampaignPage() {
       <header className="page-header">
         <div>
           {isGM ? (
-            <DraftText className="title-input" value={campaign.name} onCommit={(name) => update({ name })} />
+            <>
+              <h1 className="sr-only">{campaign.name}</h1>
+              <DraftText className="title-input" value={campaign.name} aria-label="Campaign name" onCommit={(name) => update({ name })} />
+            </>
           ) : (
             <h1>
               {campaign.name} <Help topic="campaign" />
             </h1>
           )}
           <div className="muted">
-            {campaign.system} · {campaign.status}
+            {campaign.system} · {capital(campaign.status)}
             {isGM && campaign.visibility === 'gm' && (
               <>
                 {' · '}
@@ -84,7 +88,7 @@ export default function CampaignPage() {
           All sessions <Help topic="session" />
         </h2>
         {sessions.length === 0 ? (
-          <Empty>{isGM ? 'No sessions yet.' : 'No sessions shown to players yet.'}</Empty>
+          <Empty>{isGM ? 'No sessions yet.' : 'No sessions to read yet. Your GM’s write-ups will land here.'}</Empty>
         ) : (
           <ul className="session-rows">
             {[...sessions].reverse().map((s) => {
@@ -94,7 +98,7 @@ export default function CampaignPage() {
                   <Link to={`${w}/s/${s.id}${isGM ? `?tab=${sessionFirstTab(s)}` : ''}`}>
                     <span className="session-num">#{s.number}</span>
                     <span className="session-name">{s.title}</span>
-                    <span className="muted small session-date">{s.date || (isGM ? 'no date' : '')}</span>
+                    <span className="muted small session-date">{s.date ? (isGM ? s.date : showDay(s.date)) : isGM ? 'no date' : ''}</span>
                   </Link>
                   {isGM && <StageChip stage={stage} />}
                   {isGM && s.visibility === 'gm' && <VisibilityBadge value={s.visibility} />}
@@ -110,9 +114,9 @@ export default function CampaignPage() {
 
       <div className="two-col">
         <section>
-          <h2>The party</h2>
+          <h2>The party <Help topic="partyCampaign" /></h2>
           {pcs.length === 0 ? (
-            <Empty>Add Player Characters in the codex.</Empty>
+            <Empty>{isGM ? 'Add Player Characters in the Atlas (People).' : 'Nobody’s in the party yet. Once your GM adds your characters, they show here.'}</Empty>
           ) : isGM && world ? (
             <PartyGlance world={world} party={pcs} />
           ) : (
@@ -125,7 +129,7 @@ export default function CampaignPage() {
               ))}
             </ul>
           )}
-          <h2>Open quests in this world</h2>
+          <h2>Open quests in this world <Help topic="openQuests" /></h2>
           {quests.length === 0 ? (
             <Empty>None.</Empty>
           ) : (
@@ -189,7 +193,7 @@ export default function CampaignPage() {
             value={campaign.description}
             onCommit={(description) => update({ description })}
           />
-          <small className="muted">{campaign.visibility === 'gm' ? 'This campaign is hidden from players.' : 'Players can read this. Keep secrets out of it.'}</small>
+          <small className="muted">{campaign.visibility === 'gm' ? 'This campaign is hidden from players.' : 'Players can see this. Keep secrets out of it.'}</small>
           <div className="row end">
             <button
               className="danger"

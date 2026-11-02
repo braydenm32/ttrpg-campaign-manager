@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { blankEntity, fromTemplate, newId, typeLabel, type Entity, type EntityType, type World } from './db'
+import { useMenu } from './components'
 import { Ico } from './icons'
 import { HELP } from './help'
 import { Copy } from '@phosphor-icons/react'
@@ -25,7 +25,7 @@ export function useCreatePage(world: World | null | undefined) {
 export function NewPageButton({ world, type, customType, className = 'primary' }: { world: World; type: EntityType; customType?: string; className?: string }) {
   const create = useCreatePage(world)
   const templates = useTemplates(world.id).filter((t) => t.type === type && (type !== 'custom' || t.customType === customType))
-  const [open, setOpen] = useState(false)
+  const menu = useMenu()
   const label = typeLabel({ type, customType }, world)
   if (!templates.length)
     return (
@@ -34,15 +34,15 @@ export function NewPageButton({ world, type, customType, className = 'primary' }
       </button>
     )
   return (
-    <span className="menu-wrap">
-      <button className={className} aria-expanded={open} onClick={() => setOpen(!open)}>
+    <span className="menu-wrap" {...menu.wrapProps}>
+      <button className={className} {...menu.buttonProps}>
         + New {label.one} ▾
       </button>
-      {open && (
-        <span className="menu" onMouseLeave={() => setOpen(false)}>
-          <button onClick={() => create(type, customType)}>Blank page</button>
+      {menu.open && (
+        <span className="menu" {...menu.menuProps}>
+          <button role="menuitem" onClick={() => create(type, customType)}>Blank page</button>
           {templates.map((t) => (
-            <button key={t.id} onClick={() => create(type, customType, t)}>
+            <button key={t.id} role="menuitem" onClick={() => create(type, customType, t)}>
               From template: {t.name}
             </button>
           ))}

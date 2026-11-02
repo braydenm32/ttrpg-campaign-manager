@@ -54,7 +54,25 @@ export function ThemePicker() {
       <span className="label">Look</span>
       <div className="segmented" role="radiogroup" aria-label="Look">
         {options.map(([v, label]) => (
-          <button key={v} type="button" role="radio" aria-checked={choice === v} className={choice === v ? 'on' : ''} onClick={() => setTheme(v)}>
+          <button
+            key={v}
+            type="button"
+            role="radio"
+            aria-checked={choice === v}
+            tabIndex={choice === v ? 0 : -1}
+            className={choice === v ? 'on' : ''}
+            onClick={() => setTheme(v)}
+            onKeyDown={(e) => {
+              // A radio group is one Tab stop; the arrow keys move the choice.
+              const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0
+              if (!step) return
+              e.preventDefault()
+              const at = options.findIndex(([x]) => x === v)
+              const next = options[(at + step + options.length) % options.length][0]
+              setTheme(next)
+              ;(e.currentTarget.parentElement?.querySelectorAll('button')[options.findIndex(([x]) => x === next)] as HTMLElement | undefined)?.focus()
+            }}
+          >
             {label}
           </button>
         ))}

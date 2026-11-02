@@ -101,7 +101,7 @@ export default function RelationWeb() {
     <div className="page wide">
       <header className="page-header">
         <h1>
-          <Ico as={Graph} /> Relationship web <Help topic="relationWeb" />
+          <Ico as={Graph} /> Relationships <Help topic="relationWeb" />
         </h1>
         <div className="row wrap web-controls">
           <div className="segmented">

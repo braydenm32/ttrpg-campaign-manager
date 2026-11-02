@@ -227,6 +227,11 @@ export function ExportMap({
                 : 'No walls yet: draw rooms with the Rooms tool, or walls with Line, and they’ll go in the file.'}
           </p>
         )}
+        {format === 'vtt' && (
+          <p className="muted small">
+            In Foundry, open the file with the Universal Battlemap Importer module. In Roll20 (Pro), use the UniversalVTTImporter script, and download the picture at the same size. Fantasy Grounds and others read it as well.
+          </p>
+        )}
         {error && <p className="error">{error}</p>}
         <div className="row end">
           <button type="button" onClick={onClose}>

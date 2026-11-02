@@ -1254,7 +1254,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     <div className="map-page builder">
       <div className="map-toolbar builder-bar">
         <Link to={`${worldPath(worldId)}/maps/${map.id}`}>← Done</Link>
-        <strong>{map.name}</strong>
+        <strong role="heading" aria-level={1}>{map.name}</strong>
         {saveError && !saved ? (
           <span className="error small">
             Couldn’t save: {saveError} Your drawing is still here.{' '}
@@ -1483,9 +1483,9 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                     setPiece(choose(firstPiece({ ...drawing, scene }), W, H, { scene, gridSize: scene === 'battle' ? 70 : scene === 'city' ? CITY_GRID : drawing.gridSize }))
                   }}
                 >
-                  <option value="world">World or region (seen from the side)</option>
-                  <option value="city">Town or city (seen from above)</option>
-                  <option value="battle">Battle map, dungeon or building (5 ft squares)</option>
+                  <option value="world">World or region (side view)</option>
+                  <option value="city">Town or city (from above)</option>
+                  <option value="battle">Battle map or dungeon (5 ft squares)</option>
                 </select>
               </label>
               <label>
