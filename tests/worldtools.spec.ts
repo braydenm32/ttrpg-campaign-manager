@@ -239,3 +239,31 @@ test('saved map versions: name one, and restore it', async ({ page, world }) => 
     )
   }
 })
+
+test('a shop’s Stock lists its items with prices, and “Sold to the party” moves one and takes the coin (Undo puts both back)', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const shop = world.page("Harrow's Simples")
+  const item = world.page('The Cut Oil Tin')
+  await open(page, w)
+  const itemBefore = await getRecord(page, 'entities', item.id)
+  const worldBefore = await getRecord(page, 'worlds', world.id)
+  try {
+    await putBack(page, 'entities', [[item.id, { ...itemBefore!, heldBy: shop.id, fields: [...(itemBefore!.fields as unknown[]), { key: 'Price', value: '5 copper' }] }]])
+    await open(page, `${w}/p/${world.pageSlug(shop.name)}`)
+    const stock = page.locator('.stock')
+    await expect(stock.getByRole('heading', { name: /Stock/ })).toBeVisible()
+    await expect(stock.getByRole('link', { name: 'The Cut Oil Tin' })).toBeVisible()
+    await expect(stock.getByLabel('Price of The Cut Oil Tin')).toHaveValue('5 copper')
+    await stock.getByRole('button', { name: 'Sold to the party' }).click()
+    await expect(toast(page)).toContainText('sold to the party for 5 copper')
+    await expect.poll(async () => (await getRecord(page, 'entities', item.id))?.heldBy).toBe('party')
+    const purse = async () => ((await getRecord(page, 'worlds', world.id))?.partyCoin as { name: string; amount: number }[]).find((c) => /copper/i.test(c.name))?.amount
+    await expect.poll(purse).toBe(9)
+    await toast(page).locator('.undo-button').click()
+    await expect.poll(async () => (await getRecord(page, 'entities', item.id))?.heldBy).toBe(shop.id)
+    await expect.poll(purse).toBe(14)
+  } finally {
+    await putBack(page, 'entities', [[item.id, itemBefore]])
+    await putBack(page, 'worlds', [[world.id, worldBefore]])
+  }
+})

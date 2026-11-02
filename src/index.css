@@ -1921,3 +1921,8 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .print-map-no { position: absolute; transform: translate(-50%, -50%); min-width: 1.5em; height: 1.5em; padding: 0 .25em; border-radius: 999px; border: 2px solid #2b2420; background: #fbf7ee; color: #2b2420; font: 700 .8rem/1.3 Georgia, serif; text-align: center; }
 .print-map-key li { margin: .25em 0; break-inside: avoid; }
 @media (max-width: 800px) { .map-legend { padding: .3em .6em; } .map-legend .chip { min-height: 44px; } }
+
+/* Stock on a shop's page */
+.stock-table { width: 100%; border-collapse: collapse; }
+.stock-table th, .stock-table td { text-align: left; padding: .35em .5em; border-bottom: 1px solid var(--border); vertical-align: top; }
+.stock-table td input { width: 7em; }

@@ -1,5 +1,6 @@
 import { PagePicker } from '../PagePicker'
 import { PinOnMapButton } from '../pinOnMap'
+import { StockTable } from '../shopStock'
 import { NpcLines } from '../ai/Flavour'
 import { renameLinks } from '../links'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -263,6 +264,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           {(e.body || gmNotes) && <div className="fleuron" aria-hidden="true">❦</div>}
           {!e.template && e.type === 'quest' && <QuestBox quest={e} entities={entities} isGM={isGM} worldId={worldId} />}
           {!e.template && <ClocksBox entity={e} isGM={isGM} worldId={worldId} />}
+          {e.type !== 'item' && e.type !== 'pc' && e.type !== 'npc' && !e.template && <StockTable holder={e} entities={entities} world={world} isGM={isGM} />}
           {!e.template && <RelationsBox entity={e} entities={entities} isGM={isGM} worldId={worldId} />}
           {world && <PlayerNotesBox world={world} entityId={e.id} entities={entities} />}
           {world && <AskGmBox world={world} entityId={e.id} />}
@@ -479,6 +481,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
   const entities = useVisibleEntities(worldId)
   const image = useAssetUrl(d.imageId)
   const set = <K extends keyof Entity>(k: K, v: Entity[K]) => setD((x) => ({ ...x, [k]: v }))
+  const [holderPick, setHolderPick] = useState(false)
   const campaigns = useCampaigns(worldId)
   const dirty = JSON.stringify(d) !== JSON.stringify(opened)
   const changedElsewhere = entity.updatedAt !== opened.updatedAt
@@ -784,20 +787,31 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
             <>
               <label>
                 <span>
-                  Carried by <Help topic="loot" />
+                  Carried by, or sold at <Help topic="loot" />
                 </span>
-                <select value={d.heldBy ?? ''} onChange={(ev) => set('heldBy', ev.target.value || undefined)}>
+                <select
+                  value={d.heldBy === 'party' ? 'party' : d.heldBy || holderPick ? 'page' : ''}
+                  onChange={(ev) => {
+                    const v = ev.target.value
+                    setHolderPick(v === 'page')
+                    if (v !== 'page') set('heldBy', v || undefined)
+                  }}
+                >
                   <option value="">(nobody: not in the party’s hands)</option>
                   <option value="party">🎒 The party stash</option>
-                  {entities
-                    .filter((x) => x.type === 'pc' || x.type === 'npc')
-                    .map((x) => (
-                      <option key={x.id} value={x.id}>
-                        {ENTITY_LABELS[x.type].icon} {x.name}
-                      </option>
-                    ))}
+                  <option value="page">A character, shop or place…</option>
                 </select>
               </label>
+              {(holderPick || (d.heldBy && d.heldBy !== 'party')) && (
+                <PagePicker
+                  entities={entities.filter((x) => x.id !== d.id && x.type !== 'item' && !x.template)}
+                  value={d.heldBy && d.heldBy !== 'party' ? d.heldBy : ''}
+                  onPick={(id) => set('heldBy', id || undefined)}
+                  placeholder="Who has it, or which shop sells it…"
+                  label="Carried by or sold at"
+                  recent
+                />
+              )}
               <label>
                 How many
                 <input type="number" min={0} value={d.quantity ?? 1} onChange={(ev) => set('quantity', ev.target.value === '' ? undefined : Math.max(0, Number(ev.target.value)))} />
