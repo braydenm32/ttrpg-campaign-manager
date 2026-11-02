@@ -7,6 +7,7 @@ import { ThemePicker } from '../theme'
 import { RecentlyDeleted } from '../History'
 import { AiSettingsSection } from '../ai/AiSettingsSection'
 import { BackupButton } from '../BackupReminder'
+import { DeviceStorage } from '../deviceStorage'
 import { backupStore } from '../backup'
 import { toast } from '../undo'
 import { deleteCloudCopy } from '../cloud/sync'
@@ -137,6 +138,7 @@ export default function WorldSettings() {
       {tab === 'device' && (
         <>
           <p className="muted">These settings stay on this device: they aren’t synced or put in backups (except AI keys you choose to save to your account).</p>
+          <DeviceStorage worldId={worldId} />
           <section>
             <h2>
               Look and help tips <Help topic="theme" />
@@ -165,6 +167,7 @@ export default function WorldSettings() {
               home screen on any device.
             </p>
             <BackupButton worldId={worldId} />
+            <DeviceStorage worldId={worldId} backupHere />
           </section>
 
           <div id="settings-import">

@@ -1929,3 +1929,8 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 
 /* Timeline: the place filter keeps its whole name on a phone ("Everywhere", not "Every") */
 .timeline-controls select { flex: 1 1 10em; min-width: 10em; max-width: 100%; }
+
+/* World settings: how much room the app takes on this device */
+.device-storage { margin: .6em 0; }
+.device-storage.notice { padding: .4em .7em; }
+.device-storage p { margin: .2em 0; }
