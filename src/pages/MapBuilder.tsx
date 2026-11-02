@@ -1463,6 +1463,14 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
                   value={drawing.scene ?? 'world'}
                   onChange={(e) => {
                     const scene = e.target.value as Scene
+                    // some things only show on some kinds of map: say so before they seem to vanish
+                    const lost = [
+                      scene === 'battle' && drawing.land?.length ? (city ? 'coast' : 'land and coast') : '',
+                      scene === 'world' && drawing.ground?.length ? 'painted ground' : '',
+                      scene !== 'battle' && drawing.rooms?.length ? 'rooms and passages' : '',
+                    ].filter(Boolean)
+                    const kind = scene === 'battle' ? 'battle map' : scene === 'city' ? 'town map' : 'world map'
+                    if (lost.length && !confirm(`Your ${lost.join(' and ')} won’t show on a ${kind}. They stay in the drawing, so switching back (or Undo) brings them back. Change the kind of map?`)) return
                     commit(
                       scene === 'battle'
                         ? { groundBase: 'grass', ...drawing, scene, grid: 'square', gridSize: 70, frame: false }
