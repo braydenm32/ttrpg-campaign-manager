@@ -267,3 +267,44 @@ test('a shop’s Stock lists its items with prices, and “Sold to the party” 
     await putBack(page, 'worlds', [[world.id, worldBefore]])
   }
 })
+
+test('Files: the example’s pictures have real names, each file says what uses it, and “Not used anywhere” filters', async ({ page, world }) => {
+  await open(page, `/w/${world.slug}/assets`)
+  const names = await page.getByLabel('File name').evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value))
+  expect(names.length).toBeGreaterThan(0)
+  expect(names.filter((n) => /^[a-z]+:[a-z0-9-]+$/.test(n))).toEqual([])
+  await expect(page.locator('.asset-card').first()).toContainText(/Used by|Not used anywhere/)
+  const all = await page.locator('.asset-card').count()
+  await page.getByLabel(/Not used anywhere/).check()
+  expect(await page.locator('.asset-card').count()).toBeLessThan(all)
+})
+
+test('the relationship web opens showing all of it, and Fit changes nothing', async ({ page, world }) => {
+  await open(page, `/w/${world.slug}/web`)
+  const graph = page.locator('svg.web-graph').first()
+  await expect(graph).toBeVisible()
+  const opened = await graph.getAttribute('viewBox')
+  await page.getByRole('button', { name: 'Fit' }).click()
+  expect(await graph.getAttribute('viewBox')).toBe(opened)
+  // Names stay at least about 11 px tall on screen.
+  const tall = await graph.locator('.web-node text').first().evaluate((el) => el.getBoundingClientRect().height)
+  expect(tall).toBeGreaterThan(10)
+})
+
+test('on a phone, the timeline’s place filter shows “Everywhere” in full', async ({ page, world }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await open(page, `/w/${world.slug}/timeline`)
+  const where = page.getByLabel('Where')
+  await expect(where).toBeVisible()
+  const fits = await where.evaluate((el) => {
+    const s = el as HTMLSelectElement
+    const probe = document.createElement('span')
+    probe.style.font = getComputedStyle(s).font
+    probe.textContent = 'Everywhere'
+    document.body.append(probe)
+    const need = probe.getBoundingClientRect().width
+    probe.remove()
+    return s.clientWidth >= need
+  })
+  expect(fits).toBe(true)
+})

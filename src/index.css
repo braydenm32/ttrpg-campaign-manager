@@ -1926,3 +1926,6 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .stock-table { width: 100%; border-collapse: collapse; }
 .stock-table th, .stock-table td { text-align: left; padding: .35em .5em; border-bottom: 1px solid var(--border); vertical-align: top; }
 .stock-table td input { width: 7em; }
+
+/* Timeline: the place filter keeps its whole name on a phone ("Everywhere", not "Every") */
+.timeline-controls select { flex: 1 1 10em; min-width: 10em; max-width: 100%; }
