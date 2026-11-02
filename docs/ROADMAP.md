@@ -35,11 +35,36 @@ The order of these items is a starting point and will change as we see what matt
 
 Ideas we looked at and chose to leave for later:
 
-- **Lectern and sessions:** stat blocks in the combat list (with the game-system packs), a "party is here" marker on maps, player notes on sessions.
+- **Lectern and sessions:** stat blocks in the combat list (with the game-system packs), a "party is here" marker on maps.
 - **Players:** a portrait on a player's new character, one writing box on a player's own character instead of three, hiding empty sections from players' menus, page links you can copy for players.
 - **Secrets (low risk):** a warning when a `:::for` first name matches two characters, and "recently updated" not hinting at secret edits.
 - **Bigger choices:** pages that belong to a campaign (we filter the party instead), merging quests and loose threads, desktop polish (saving files on a Mac, auto-updates) and the phone apps.
 - **Behind the scenes:** transcripts in their own table, smarter sync that only looks at changed rows, and storage limits per user before anyone pays.
+
+## Retiring the old address
+
+- **January 2027: retire the old github.io copy.** The move to wardedatlas.com is done. In January the old braydenm32.github.io copy becomes a plain page that sends people to wardedatlas.com, and the "move your worlds" banner (src/move.tsx) and the second build with `--base ./` go. The `#/` addresses stay only for the desktop app.
+
+## Looked at, still parked (November 2026)
+
+Checked in the November review and still unbuilt. None of them should jump the queue; they are listed so the next review doesn't look them up again.
+
+- **An open shop for players** with a Buy button (needs rules on the server for coin). Medium to large.
+- **Face-down card reveals and omens** for the players' screen. Small to medium.
+- **Scene art behind the players' screen** and "who's speaking". Medium, mostly for online groups.
+- **One-click dungeon and village generators.** Large.
+- **Hexcrawl mode** on maps. Large.
+- **Picking several things at once, and saved groups of pieces,** in the map builder. Medium.
+- **Layers on uploaded maps.** Medium.
+- **Typed details** (a number, a date, a link to a page) instead of free text. Medium.
+- **A campaign keepsake** when a campaign ends. Medium, only matters at the end.
+- **Shareable session cards** (a picture of the session for the group chat). Medium.
+- **A table view of pages** with sortable columns, ticking several pages to reveal, tag, move or delete together, and a tag manager.
+- **Wants and hooks** on player characters, read by the prep helper and Spotlight.
+- **Players suggest pages** (what they learned), approved by the GM in the Inbox.
+- **Events that last** (a war, a reign) drawn as bars on named tracks of the timeline.
+- **Copying pages between worlds** (and a shareable "pack").
+- **Faster drawing on huge maps.**
 
 ## Game systems (later)
 
