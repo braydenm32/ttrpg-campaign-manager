@@ -508,7 +508,25 @@ export interface WorldMap {
   fog?: MapFog
   /** How far things are: this many image pixels are this distance. Players get it too, for the ruler. */
   scale?: MapScale
+  /** Dungeon and town maps: numbers on the pins and linked pieces, with a key beside the map. */
+  numbers?: boolean
   createdAt: number
+}
+
+/**
+ * A saved version of a drawn map, kept on this device only (never synced): the drawing as it was,
+ * and the pins of its linked pieces, so Restore puts both back. The last few are kept per map, plus
+ * any the GM has named.
+ */
+export interface MapVersion {
+  id: string
+  mapId: string
+  worldId: string
+  at: number
+  /** Named by the GM ("Before the flood"); named versions are never dropped to make room. */
+  name?: string
+  drawing: Drawing
+  piecePins: Pin[]
 }
 
 export interface MapScale {
@@ -552,6 +570,10 @@ export interface Pin {
   note: string
   /** Set when the pin is a piece on a drawn map that was linked to a page: the piece's id in the drawing. */
   pieceId?: string
+  /** A kind of pin the GM names ("quest sites", "danger", "shops"), for the map's legend that filters. Players see it. */
+  category?: string
+  /** Its number in the map's key ("Room 4"), once the GM has switched numbers on for the map. Players see it on pins they can see. */
+  number?: number
 }
 
 export interface Bookmark {
@@ -700,6 +722,8 @@ export interface PrepScene extends CheckItem {
   soundIds?: string[]
   /** One of this session's planned encounters. */
   encounterId?: string
+  /** Where it happens on a map: a pin, whose popup then offers to start this scene. */
+  pinId?: string
   /** Put on players' screens when it starts: a page (revealed first) or a picture from the world's files. */
   show?: { kind: 'page'; entityId: string } | { kind: 'image'; assetId: string }
   /** GM-only pages revealed to everyone when it starts. */
@@ -961,6 +985,7 @@ export const db = new Dexie('ttrpg-campaign-manager') as Dexie & {
   sounds: EntityTable<Sound, 'id'>
   bin: EntityTable<BinItem, 'id'>
   recordingChunks: EntityTable<RecordingChunk, 'id'>
+  mapVersions: EntityTable<MapVersion, 'id'>
 }
 
 db.version(1).stores({
@@ -1015,6 +1040,11 @@ db.version(6).stores({
 // v7: deleted pages are found without reading every saved version of every page.
 db.version(7).stores({
   history: 'id, entityId, worldId, at, [worldId+reason]',
+})
+
+// v8: saved versions of drawn maps (device-only, never synced).
+db.version(8).stores({
+  mapVersions: 'id, mapId, worldId, at',
 })
 
 // The bin is cleared of anything over a month old soon after the app opens, not only when it's
@@ -1087,8 +1117,9 @@ export function fromTemplate(t: Entity, name = `New ${t.name}`): Entity {
 }
 
 export async function deleteWorld(worldId: string) {
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds, db.bin, db.recordingChunks], async () => {
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds, db.bin, db.recordingChunks, db.mapVersions], async () => {
     await db.history.where({ worldId }).delete()
+    await db.mapVersions.where({ worldId }).delete()
     await db.bin.where({ worldId }).delete()
     await db.recordingChunks.filter((c) => c.worldId === worldId).delete()
     await db.boards.where({ worldId }).delete()
