@@ -14,6 +14,7 @@ import { useDialog } from './components'
 import { worldPath } from './paths'
 import { askToReveal, useReview } from './reveal'
 import { toast } from './undo'
+import { offerGroupPost } from './groupPost'
 
 /**
  * "Show to players": the GM puts a picture, a page or some text on every player's screen.
@@ -69,6 +70,8 @@ export async function showToPlayers(worldId: string, what: Omit<Showing, 'id' | 
     })
   // Don't wait for the usual pause after an edit: the table is waiting.
   schedule(200)
+  // Players away from the table find it later; offer to tell the group chat.
+  offerGroupPost(await db.worlds.get(worldId), shown.title.trim() ? `New handout: “${shown.title.trim()}”. It’s in the Common Room.` : 'A new handout is in the Common Room.')
   return true
 }
 

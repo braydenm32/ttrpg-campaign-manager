@@ -25,9 +25,9 @@ import { PrepSheet } from '../prep'
 import { PrintButton } from '../print'
 import { CalDateInput, formatDate } from '../calendar'
 import { DiscordButton, forDiscord } from '../discord'
-import { ShowToPlayers, useFinish, useNextSession, WrapUpChecklist } from '../EndSession'
+import { ShowToPlayers, useFinish, useNextSession, WrapProgress, WrapUpChecklist } from '../EndSession'
 import { Ico, TypeIcon } from '../icons'
-import { BookmarkSimple, CheckCircle, Eye, FlagCheckered, ListChecks, Lock, Microphone, PencilSimple, Play, Spiral, UsersThree, Warning, X } from '@phosphor-icons/react'
+import { BookBookmark, BookmarkSimple, CheckCircle, Eye, FlagCheckered, ListChecks, Lock, Microphone, PencilSimple, Play, Spiral, UsersThree, Warning, X } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
 import { sessionFirstTab, startPlaying, type SessionStage } from '../sessions'
 import { prepCounts } from '../counts'
@@ -35,6 +35,8 @@ import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, jumpTo, useKeepScroll } from '../jump'
 import { removeWithUndo, SavedMark, saving } from '../undo'
 import { showDay } from '../text'
+import { PresentLine } from '../attendance'
+import { MySessionNote } from '../players/SessionNote'
 
 /**
  * A session. For the GM it's two of the Session area's three stages (the third, Play, is the
@@ -77,11 +79,13 @@ export default function SessionPage() {
             <PrintButton to={`${worldPath(worldId)}/print/s/${session.id}`} />
           </div>
         </div>
+        <PresentLine session={session} entities={entities} />
         {session.recap ? (
           <Markdown text={session.recap} entities={entities} worldId={worldId} showSecrets={false} />
         ) : (
           <Empty>No recap yet.</Empty>
         )}
+        {world && <MySessionNote world={world} sessionId={session.id} />}
         <Highlights session={session} entities={entities} worldId={worldId} isGM={false} />
         <FeaturedList worldId={worldId} entities={featured} />
       </div>
@@ -244,6 +248,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus }: ViewPr
           { id: 'notes', label: 'Notes' },
           { id: 'recording', label: 'Recording' },
           { id: 'writeup', label: 'Write-up' },
+          ...(session.ledger?.length ? [{ id: 'changed', label: 'What changed' }] : []),
           { id: 'recap', label: 'Recap' },
           { id: 'highlights', label: 'Highlights' },
           { id: 'finish', label: 'Finish' },
@@ -252,6 +257,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus }: ViewPr
       <p className="muted small wrap-intro">
         After the game, top to bottom: your notes, the recording, the write-up, the players’ recap, then mark it played. <Help topic="wrapUp" />
       </p>
+      {stage !== 'preparing' && stage !== 'planned' && <WrapProgress world={world} session={session} campaign={campaign} entities={entities} />}
       <NotesCard session={session} entities={entities} worldId={worldId} id="notes" />
       <div id="recording">
         <Recorder session={session} />
@@ -259,6 +265,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus }: ViewPr
       <div id="writeup">
         <RecapPanel world={world} session={session} entities={entities} />
       </div>
+      <WhatChanged session={session} entities={entities} worldId={worldId} />
       <section className="card wrap-card" id="recap">
         <div className="plan-head">
           <h2>
@@ -274,6 +281,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus }: ViewPr
           onChange={(v) => update({ recap: v })}
         />
         <SecretNamesWarning worldId={worldId} texts={[session.recap]} />
+        <PresentLine session={session} entities={entities} />
         {session.recap.trim() && (
           <div className="row wrap">
             <ReadAloud text={session.recap} id={`recap-${session.id}`} className="small" />
@@ -303,6 +311,35 @@ function WrapUpView({ session, campaign, world, entities, stage, focus }: ViewPr
       <FeaturedSection session={session} entities={entities} worldId={worldId} />
       <WrapUpChecklist world={world} session={session} campaign={campaign} entities={entities} played={stage === 'played'} />
     </>
+  )
+}
+
+/**
+ * What changed: every change this session's write-up made to the world (pages made, lines added,
+ * quests and fates moved), each linking to its page. It used to be the Chronicle, a screen of its
+ * own; it lives here now, on the session it belongs to. Only shown once there's something in it.
+ */
+function WhatChanged({ session, entities, worldId }: { session: Session; entities: Entity[]; worldId: string }) {
+  if (!session.ledger?.length) return null
+  const byId = new Map(entities.map((e) => [e.id, e]))
+  return (
+    <section className="card wrap-card" id="changed">
+      <h2>
+        <Ico as={BookBookmark} /> What changed <Help topic="whatChanged" />
+      </h2>
+      <p className="muted small">What this session’s write-up changed in your world. Each page keeps its old version in its history.</p>
+      <ul className="entity-list chronicle">
+        {session.ledger.map((l) => {
+          const page = l.entityId ? byId.get(l.entityId) : undefined
+          return (
+            <li key={l.id}>
+              {l.made && <span className="badge new">new</span>} {page ? <Link to={pagePath(worldId, page.id)}>{l.text}</Link> : <span>{l.text}</span>}
+              {l.entityId && !page && <span className="muted small"> (page since deleted)</span>}
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }
 

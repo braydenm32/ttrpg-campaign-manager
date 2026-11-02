@@ -456,7 +456,7 @@ export function tableStateFor(session: Session, pages: Map<string, Entity>, soun
   }
   const hiddenCampaign = campaign?.visibility === 'gm'
   const place = visible(l.sceneId)
-  const order = initiativeOrder(l.combat.combatants)
+  const order = initiativeOrder(l.combat.combatants.filter((c) => !c.defeated))
   const counts = { pc: 0, ally: 0, foe: 0 }
   const music = share.noMusic
     ? []

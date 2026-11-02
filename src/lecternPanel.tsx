@@ -28,7 +28,9 @@ function loadFolded(): Set<string> {
   } catch {
     // Nothing saved, or storage is off: start with the usual.
   }
-  return new Set(FOLDED_AT_FIRST)
+  // A phone starts with the scene, the fight and the tools; who's here and the clocks are a tap away.
+  const phone = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 800px)').matches
+  return new Set(phone ? [...FOLDED_AT_FIRST, 'present', 'clocks'] : FOLDED_AT_FIRST)
 }
 
 /** Holds which Lectern panels are folded, and the search, for the panels inside it. */

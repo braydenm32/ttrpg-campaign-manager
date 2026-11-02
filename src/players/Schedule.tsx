@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { cloudErrorMessage } from '../cloud/client'
+import { appLink, cloudErrorMessage } from '../cloud/client'
 import { listAvailability, listPlayers, setAvailability, type Member } from '../cloud/players'
 import { db, newId, type Availability, type Campaign, type DateOption, type SharedInfo, type World } from '../db'
 import { Help } from '../help'
@@ -7,6 +7,8 @@ import { DiscordButton, getWebhook, postToDiscord } from '../discord'
 import { Ico } from '../icons'
 import { CalendarBlank, PushPin } from '@phosphor-icons/react'
 import { removeWithUndo } from '../undo'
+import { AddToCalendar } from '../addToCalendar'
+import { worldPath } from '../paths'
 
 /**
  * Picking the next session date. The GM proposes a few dates on the campaign; players who joined
@@ -23,6 +25,9 @@ const ANSWERS: { value: Availability; icon: string; label: string }[] = [
  * A suggested date in the viewer's own time. Dates saved with a full timestamp show in each
  * person's time zone (with the zone named), so an online group spread across zones agrees on the hour.
  */
+/** The Common Room's address, for the calendar entry (the GM's own world or a joined copy). */
+const calendarLinkFor = (worldId: string) => appLink(worldPath(worldId))
+
 export const showDate = (o: DateOption) => {
   const d = new Date(o.utc ?? o.at)
   if (isNaN(d.getTime())) return o.at
@@ -98,7 +103,8 @@ export function SessionScheduler({
       {upcoming(campaign) && (
         <p>
           <Ico as={PushPin} /> Booked: <strong>{showDate(upcoming(campaign)!)}</strong>
-          {upcoming(campaign)!.note && <span className="muted small"> · {upcoming(campaign)!.note}</span>}
+          {upcoming(campaign)!.note && <span className="muted small"> · {upcoming(campaign)!.note}</span>}{' '}
+          <AddToCalendar title={campaign.name} at={upcoming(campaign)!} details={upcoming(campaign)!.note} link={calendarLinkFor(campaign.worldId)} />
         </p>
       )}
       {options.length === 0 && <p className="muted small">{isGM ? 'No dates suggested yet. Suggest a few and your players answer which they can make.' : 'No other dates suggested.'}</p>}

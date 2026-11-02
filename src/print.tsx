@@ -13,6 +13,9 @@ import { Ico, PageIcon } from './icons'
 import { ArrowLeft, Eye, Lock, Printer } from '@phosphor-icons/react'
 import { Skeleton } from './components'
 import { pagePath, worldPath } from './paths'
+import { canSeeMap } from './counts'
+import { pinRevealed, playersImageId } from './fog'
+import { mapKey } from './mapKey'
 
 /** Opens the print page for a page or a session. In the player view it opens the player copy, so a GM previewing as a player never prints secrets by surprise. */
 export function PrintButton({ to }: { to: string }) {
@@ -68,7 +71,7 @@ function PrintBody({ world }: { world: World }) {
   // Opened straight from a link or in a new tab, there's nothing to go back to: Back opens the page or session instead.
   const back = () => {
     const first = ((window.history.state as { idx?: number } | null)?.idx ?? 0) === 0
-    if (first) navigate(kind === 'e' ? pagePath(world.id, id) : `${worldPath(world.id)}/s/${id}`)
+    if (first) navigate(kind === 'e' ? pagePath(world.id, id) : kind === 'm' ? `${worldPath(world.id)}/maps/${id}` : `${worldPath(world.id)}/s/${id}`)
     else navigate(-1)
   }
   const playerCopy = !!world.shared || params.get('copy') === 'players'
@@ -102,7 +105,7 @@ function PrintBody({ world }: { world: World }) {
         </p>
       </div>
       <div className="print-sheet">
-        {kind === 'e' ? <PrintEntity world={world} id={id} /> : <PrintSession world={world} id={id} />}
+        {kind === 'e' ? <PrintEntity world={world} id={id} /> : kind === 'm' ? <PrintMap world={world} id={id} /> : <PrintSession world={world} id={id} />}
       </div>
     </div>
   )
@@ -250,6 +253,56 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 /** Nothing to print: says why, with the way back into the world. */
+/**
+ * A map with its numbered key, for running a dungeon or town from paper. The player copy prints the
+ * players' picture (fog and secrets left out) with only the numbers and key entries they can see.
+ */
+function PrintMap({ world, id }: { world: World; id: string }) {
+  const { isGM } = useViewMode()
+  const map = useLiveQuery(async () => (await db.maps.get(id)) ?? null, [id])
+  const pins = useLiveQuery(() => db.pins.where({ mapId: id }).toArray(), [id])
+  const entities = useVisibleEntities(world.id)
+  const fog = map?.fog?.on ? map.fog : undefined
+  const imageId = !map ? undefined : isGM ? map.imageId : fog?.imageId ?? playersImageId(map)
+  const image = useAssetUrl(map && (isGM || canSeeMap(map, false)) ? imageId : undefined)
+  if (map === undefined || !pins) return null
+  if (!map || map.worldId !== world.id) return <Missing world={world}>Map not found. It may have been deleted.</Missing>
+  if (!isGM && !canSeeMap(map, false)) return <Missing world={world}>This map is GM only, so a player copy would be empty. Reveal it first, or print the GM copy.</Missing>
+  const seen = isGM ? pins : pins.filter((p) => p.visibility === 'players' && pinRevealed(fog, p))
+  const key = map.numbers ? mapKey(seen, entities, map.height, isGM) : []
+  return (
+    <article className="print-map">
+      <div className="muted">Map · {world.name}</div>
+      <h1>{map.name}</h1>
+      <div className="print-map-picture">
+        {image && <img src={image} alt={map.name} />}
+        {key.map((k) =>
+          k.at ? (
+            <span key={k.pin.id} className="print-map-no" style={{ left: `${(k.at[0] / map.width) * 100}%`, top: `${(k.at[1] / map.height) * 100}%` }}>
+              {k.n}
+            </span>
+          ) : null,
+        )}
+      </div>
+      {key.length > 0 ? (
+        <>
+          <h2>Key</h2>
+          <ol className="print-map-key">
+            {key.map((k) => (
+              <li key={k.pin.id} value={k.n}>
+                <b>{k.title}</b>
+                {k.line && ` — ${k.line}`}
+              </li>
+            ))}
+          </ol>
+        </>
+      ) : (
+        <p className="muted small">No numbered key: switch on “Show numbers” in the map’s settings to add one.</p>
+      )}
+    </article>
+  )
+}
+
 function Missing({ world, children }: { world: World; children: ReactNode }) {
   return (
     <div className="print-missing">

@@ -19,6 +19,6 @@ const { content, problems } = parseExampleFiles(files, maps.MAPS)
 const errors = problems.filter((p) => p.level === 'error').length
 const warnings = problems.length - errors
 if (problems.length) console.log(describeProblems(problems, `${EXAMPLE_FOLDER}/`) + '\n')
-console.log(`${content.pages.length} pages, ${content.sessions.length} sessions, ${content.boards.length} boards.`)
+console.log(`${content.pages.length} pages, ${content.sessions.length} sessions.`)
 console.log(errors ? `✗ ${errors} mistake${errors === 1 ? '' : 's'} to fix${warnings ? `, and ${warnings} warning${warnings === 1 ? '' : 's'}` : ''}.` : warnings ? `✓ No mistakes. ${warnings} warning${warnings === 1 ? '' : 's'} worth a look.` : '✓ All good.')
 process.exit(errors ? 1 : 0)

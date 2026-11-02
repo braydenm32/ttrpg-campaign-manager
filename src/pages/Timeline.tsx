@@ -104,7 +104,7 @@ export default function Timeline() {
         <h1>
           <Ico as={Hourglass} /> Timeline <Help topic="timeline" />
         </h1>
-        <div className="row">
+        <div className="row wrap timeline-controls">
         {world?.calendar && (
           <div className="segmented">
             <button className={view === 'list' ? 'on' : ''} onClick={() => setView('list')}>

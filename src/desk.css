@@ -150,3 +150,34 @@
   .loading-ring { animation: loading-breathe 2.4s ease-in-out infinite; }
   @keyframes loading-breathe { 50% { opacity: .65; } }
 }
+
+/* Recently opened pages (this device), one short row under the session strip. */
+.recently-opened { display: flex; flex-wrap: wrap; align-items: center; gap: .2em 1em; margin: -.2em 0 1em; }
+.recently-opened a { display: inline-flex; align-items: center; gap: .3em; max-width: 16em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 700px) {
+  .recently-opened a { min-height: 44px; }
+}
+
+/* Getting started: the importer opens inside its own step. The example's Desk points at its guide. */
+.getting-started-import { flex-basis: 100%; padding: .4em 0 .6em; }
+.getting-started-import .import-sources { display: flex; flex-direction: column; gap: .4em; }
+.example-start-here { margin: 0 0 1em; padding: .6em .9em; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); border-radius: 0 var(--radius) var(--radius) 0; }
+
+/* The welcome on an empty shelf: a sentence, two buttons and the picture of the app at a table. */
+.welcome { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 1.6em; align-items: center; margin: 1.6em 0 .6em; }
+.welcome h2 { margin: 0 0 .4em; font-size: 1.5rem; line-height: 1.3; }
+.welcome-text p { margin: 0 0 1em; }
+.welcome-actions { display: flex; flex-wrap: wrap; gap: .6em; }
+.welcome-actions button { min-height: 44px; }
+.welcome-picture { width: 100%; height: auto; display: block; border-radius: 10px; }
+@media (max-width: 760px) {
+  .welcome { grid-template-columns: 1fr; gap: 1em; }
+}
+
+/* "Keep this on your phone" (players' Common Room). */
+.install-card { position: relative; margin-top: 1em; }
+.install-card h2 { display: flex; align-items: center; gap: .4em; margin: 0 2.4em .3em 0; font-size: 1.1rem; }
+.install-card p { margin: 0 0 .6em; }
+.install-close { position: absolute; top: .4em; right: .4em; min-width: 44px; min-height: 44px; }
+.install-steps { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: .3em; }
+.install-steps li.here { font-weight: 500; }

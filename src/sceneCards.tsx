@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { stampStart } from './sessions'
 import { blankLectern, db, saveEntity, type Entity, type PrepScene, type Session, type World } from './db'
 import { DraftText } from './components'
 import { Help } from './help'
@@ -9,7 +10,7 @@ import { play } from './sound/player'
 import { schedule } from './cloud/sync'
 import { askToReveal, type Review } from './reveal'
 import { showToPlayers } from './showing'
-import { toast } from './undo'
+import { dismissToast, toast } from './undo'
 
 /**
  * Scene cards: a prep scene can carry what it needs (the place, read-aloud text, who's there, the
@@ -90,7 +91,10 @@ export const restoreScene = (sessionId: string, snap: SceneSnapshot) =>
         s.lectern.combat = { ...combat, combatants: kept, activeId: kept.some((c) => c.id === combat.activeId) ? combat.activeId : snap.activeId }
       }
       if (snap.startedAt) s.startedAt = snap.startedAt
-      else delete s.startedAt
+      else {
+        delete s.startedAt
+        delete s.playStart
+      }
     })
 
 /**
@@ -129,7 +133,7 @@ export async function startScene(world: World, session: Session, scene: PrepScen
       if (enc) addCombatants(l, encounterCombatants(enc))
       const mine = s.prep?.scenes.find((x) => x.id === scene.id)
       if (mine) mine.done = true
-      if (!s.startedAt) s.startedAt = Date.now()
+      stampStart(s)
     })
   // Through saveEntity, so the page's History keeps the version before the reveal.
   for (const e of toReveal) {
@@ -173,6 +177,10 @@ export function plannedScenes(session: Session) {
   return { scenes, current, at, next }
 }
 
+/** The note shown for the last scene change, so leaving the Lectern can take it away (it would mean nothing on another screen). */
+let sceneToast: number | undefined
+export const clearSceneToast = () => dismissToast(sceneToast)
+
 /**
  * Starts a scene from the Lectern with Undo, which takes it all back: the last scene, the fighters
  * and pages it added, the pages it revealed and what was on players' screens.
@@ -182,7 +190,7 @@ export async function goToScene(world: World, session: Session, scene: PrepScene
   const undoShown = await startScene(world, session, scene, ask)
   if (!undoShown) return
   const n = (session.prep?.scenes ?? []).findIndex((x) => x.id === scene.id) + 1
-  toast(`Scene ${n}: ${scene.text.length > 48 ? `${scene.text.slice(0, 48).trimEnd()}…` : scene.text}`, async () => {
+  sceneToast = toast(`Scene ${n}: ${scene.text.length > 48 ? `${scene.text.slice(0, 48).trimEnd()}…` : scene.text}`, async () => {
     await restoreScene(session.id, before)
     await undoShown()
   })
@@ -209,13 +217,20 @@ export async function changePlace(session: Session, placeId: string | undefined,
       const fresh = l.presentIds.filter((id) => !s.entityIds.includes(id))
       if (fresh.length) s.entityIds = [...s.entityIds, ...fresh]
     })
-  toast(placeId ? `The scene is now ${placeName ?? 'somewhere new'}.` : 'The scene is cleared.', () => restoreScene(session.id, before))
+  sceneToast = toast(placeId ? `The scene is now ${placeName ?? 'somewhere new'}.` : 'The scene is cleared.', () => restoreScene(session.id, before))
 }
 
 /** The extra parts of a scene, on the session's Prep tab. */
 export function SceneCardEditor({ scene, session, entities, onChange }: { scene: PrepScene; session: Session; entities: Entity[]; onChange: (fn: (s: PrepScene) => void) => void }) {
   const sounds = useLiveQuery(() => db.sounds.where({ worldId: session.worldId }).toArray(), [session.worldId]) ?? []
   const pictures = useLiveQuery(() => db.assets.where({ worldId: session.worldId }).filter((a) => a.mime.startsWith('image/')).toArray(), [session.worldId]) ?? []
+  // Pins, by map, for "On the map": the pin's popup then offers to start this scene.
+  const mapPins =
+    useLiveQuery(async () => {
+      const maps = await db.maps.where({ worldId: session.worldId }).sortBy('name')
+      const pins = await db.pins.where({ worldId: session.worldId }).toArray()
+      return maps.map((m) => ({ map: m, pins: pins.filter((p) => p.mapId === m.id).sort((a, b) => (a.number ?? 0) - (b.number ?? 0) || a.label.localeCompare(b.label)) })).filter((g) => g.pins.length)
+    }, [session.worldId]) ?? []
   const byId = new Map(entities.map((e) => [e.id, e]))
   const places = entities.filter((e) => e.type === 'location' || e.type === 'shop')
   const people = entities.filter((e) => ['npc', 'pc', 'faction', 'deity'].includes(e.type))
@@ -267,6 +282,32 @@ export function SceneCardEditor({ scene, session, entities, onChange }: { scene:
             ))}
           </div>
         </div>
+      )}
+      {mapPins.length > 0 && (
+        <label>
+          <span>
+            On the map <Help topic="scenePin" />
+          </span>
+          <select
+            value={scene.pinId ?? ''}
+            onChange={(e) => {
+              const v = e.target.value || undefined
+              onChange((s) => void (s.pinId = v))
+            }}
+          >
+            <option value="">No pin</option>
+            {mapPins.map((g) => (
+              <optgroup key={g.map.id} label={g.map.name}>
+                {g.pins.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.number ? `${p.number}. ` : ''}
+                    {p.label || byId.get(p.entityId ?? '')?.name || 'Pin'}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
       )}
       {(session.prep?.encounters.length ?? 0) > 0 && (
         <label>

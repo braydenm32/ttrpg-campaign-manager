@@ -73,7 +73,7 @@ function useCounts(worldId: string, gm: boolean): Record<string, string | undefi
   const n = (x: number) => (x ? `${x}` : undefined)
   return {
     sounds: n(facts.sounds),
-    tables: n(facts.tables),
+    generators: n(facts.tables),
     boards: n(facts.boards),
     assets: facts.files ? `${facts.files} · ${formatBytes(facts.bytes)}` : undefined,
     templates: n(templates),

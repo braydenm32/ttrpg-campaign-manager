@@ -9,6 +9,9 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { DraftText, Empty, VisibilityBadge } from '../components'
 import { SeenMark, useReview, VisibilityControl } from '../reveal'
 import { sessionInHand } from '../threads'
+import { goToScene } from '../sceneCards'
+import { useFrameContext } from '../Sidebar'
+import { mapKey, numberPins, type KeyEntry } from '../mapKey'
 import { toast } from '../undo'
 import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type FogShape, type Pin, type World, type WorldMap } from '../db'
 import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
@@ -19,7 +22,7 @@ import { SecretNamesWarning } from '../SecretNamesWarning'
 import { useViewMode } from '../viewMode'
 import { circleShape, fogOverlay, pinRevealed, playersImageId, rectShape, removeFog, renderPlayerFog } from '../fog'
 import { Ico, TypeIcon } from '../icons'
-import { CloudFog, Crosshair, DoorOpen, DownloadSimple, Eye, HandPalm, MapPin, NavigationArrow, PencilSimple, Ruler, SlidersHorizontal, Tag, Toolbox } from '@phosphor-icons/react'
+import { CloudFog, Crosshair, DoorOpen, DownloadSimple, Eye, HandPalm, ListNumbers, MapPin, NavigationArrow, PencilSimple, Play, Ruler, SlidersHorizontal, Tag, Toolbox } from '@phosphor-icons/react'
 import { MeasureBar, ScaleSetting } from '../mapMeasure'
 import { saveRoute } from '../journey'
 import { gmIdOf, sendPing, useTable, type MapPing } from '../cloud/table'
@@ -102,11 +105,11 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const entities = useVisibleEntities(worldId)
   const fog = map.fog?.on ? map.fog : undefined
   // Players never see pins under the fog (the server holds them back too).
-  const pins =
-    useLiveQuery(
-      () => db.pins.where({ mapId: map.id }).filter((p) => canSee(p.visibility) && (isGM || pinRevealed(fog, p))).toArray(),
-      [map.id, isGM, fog],
-    ) ?? []
+  const stored = useLiveQuery(
+    () => db.pins.where({ mapId: map.id }).filter((p) => canSee(p.visibility) && (isGM || pinRevealed(fog, p))).toArray(),
+    [map.id, isGM, fog],
+  )
+  const allPins = useMemo(() => stored ?? [], [stored])
   const allMaps = useVisibleMaps(worldId)
   const [tool, setTool] = useState<Tool>('select')
   const [draft, setDraft] = useState<[number, number][]>([])
@@ -136,17 +139,60 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const areaNamesOn = showNames && zoomedIn
   const here = useWhereWeAre(world, entities, table?.scene?.entityId)
   // The pin for where the party is: the place itself, or the nearest place it's inside.
-  const herePin = here.around.map((id) => pins.find((p) => p.entityId === id)).find(Boolean)
+  const herePin = here.around.map((id) => allPins.find((p) => p.entityId === id)).find(Boolean)
   const hasRooms = !!exportDrawing?.rooms?.length && exportDrawing.scene === 'battle'
   const selectedId = params.get('pin')
+  // The legend's choice of categories lives in the address, so Back keeps it; picking a pin keeps it too.
+  const select = (id?: string) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (id) next.set('pin', id)
+        else next.delete('pin')
+        next.delete('place')
+        return next
+      },
+      { replace: true },
+    )
+  const categories = useMemo(() => [...new Set(allPins.map((p) => p.category?.trim()).filter((c): c is string => !!c))].sort((a, b) => a.localeCompare(b)), [allPins])
+  const onlyParam = params.get('only')
+  const only = onlyParam === null ? undefined : new Set(onlyParam.split('|').filter(Boolean))
+  const setOnly = (next?: Set<string>) =>
+    setParams(
+      (prev) => {
+        const q = new URLSearchParams(prev)
+        if (next) q.set('only', [...next].join('|'))
+        else q.delete('only')
+        return q
+      },
+      { replace: true },
+    )
+  const pins = only ? allPins.filter((p) => only.has(p.category?.trim() || OTHER_PINS) || p.id === selectedId) : allPins
   const selected = pins.find((p) => p.id === selectedId)
-  const select = (id?: string) => setParams(id ? { pin: id } : {}, { replace: true })
+  // GM: a pin opens on its page peek first; the editor is a tap further ("Edit pin"), except for a pin just made.
+  const [editingPin, setEditingPin] = useState<string>()
+  // "Pin on a map…" from a page: the next click on the map places a pin for that page.
+  const placing = isGM ? entities.find((e) => e.id === params.get('place')) : undefined
+  const [showKey, setShowKey] = useState(false)
+  const numbered = !!map.numbers
+  const keyEntries = useMemo(() => (numbered ? mapKey(allPins, entities, map.height, isGM) : []), [numbered, allPins, entities, map.height, isGM])
+  // Numbers on: pins added since (here or as linked pieces in the builder) get the next numbers.
+  useEffect(() => {
+    if (isGM && numbered && allPins.some((p) => !p.number)) void numberPins(map.id, map.height)
+  }, [isGM, numbered, allPins, map.id, map.height])
+  const frame = useFrameContext()
+  const inHand = useLiveQuery(async () => (isGM && frame?.inHandId ? ((await db.sessions.get(frame.inHandId)) ?? null) : null), [isGM, frame?.inHandId])
+  const { ask, dialog: sceneDialog } = useReview()
   const bounds = useMemo(() => L.latLngBounds([0, 0], [map.height, map.width]), [map.height, map.width])
   const byId = useMemo(() => new Map(entities.map((e) => [e.id, e])), [entities])
 
   useEffect(() => {
     if (!isGM) setTool((t) => (t === 'measure' || t === 'ping' ? t : 'select'))
   }, [isGM])
+  const placingId = placing?.id
+  useEffect(() => {
+    if (placingId) setTool('pin')
+  }, [placingId])
 
   // Keep the players' fogged picture up to date, a moment after the GM stops changing the fog.
   // Leaving the map (or switching to the player view) before then still updates it.
@@ -226,8 +272,10 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
 
   const addPin = async (pos: [number, number]) => {
     const id = newId()
-    await db.pins.add({ id, worldId, mapId: map.id, label: 'New pin', kind: 'point', position: pos, color: COLORS[0], visibility: 'gm', note: '' })
+    await db.pins.add({ id, worldId, mapId: map.id, label: placing?.name ?? 'New pin', kind: 'point', position: pos, color: COLORS[0], visibility: 'gm', note: '', ...(placing ? { entityId: placing.id } : {}) })
     setTool('select')
+    if (placing) toast(`“${placing.name}” is on the map (GM only for now).`, () => db.pins.delete(id))
+    else setEditingPin(id)
     select(id)
   }
   const finishRegion = async () => {
@@ -236,6 +284,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
     await db.pins.add({ id, worldId, mapId: map.id, label: 'New region', kind: 'region', points: draft, color: COLORS[2], visibility: 'gm', note: '' })
     setDraft([])
     setTool('select')
+    setEditingPin(id)
     select(id)
   }
 
@@ -256,6 +305,11 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
             </button>
           )}
           <Help topic="pinNames" />
+          {numbered && keyEntries.length > 0 && (
+            <button type="button" className={`key-toggle ${showKey ? 'on' : ''}`} aria-pressed={showKey} onClick={() => setShowKey(!showKey)} title="The numbered key: what each number on the map is">
+              <Ico as={ListNumbers} /> Key
+            </button>
+          )}
           <button type="button" className="tools-toggle" aria-expanded={toolsOpen} onClick={() => setToolsOpen(!toolsOpen)}>
             <Ico as={Toolbox} /> Tools
           </button>
@@ -354,7 +408,16 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
         </div>
       )}
       {isGM && exporting && exportDrawing && (
-        <ExportMap mapId={map.id} name={map.name} drawing={exportDrawing} fog={fog} width={map.width} height={map.height} onClose={() => setExporting(false)} />
+        <ExportMap
+          mapId={map.id}
+          name={map.name}
+          drawing={exportDrawing}
+          fog={fog}
+          width={map.width}
+          height={map.height}
+          mapKey={numbered ? keyEntries : undefined}
+          onClose={() => setExporting(false)}
+        />
       )}
       {isGM && fogBar && (
         <FogBar
@@ -377,6 +440,54 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
           onFinish={finishFogShape}
           onUndoPoint={() => setDraft((d) => d.slice(0, -1))}
         />
+      )}
+      {placing && (
+        <div className="map-toolbar measure-bar place-bar">
+          <span className="small">
+            <Ico as={MapPin} /> Click the map where “{placing.name}” is.
+          </span>
+          <button
+            className="small"
+            onClick={() => {
+              setTool('select')
+              setParams((prev) => {
+                const q = new URLSearchParams(prev)
+                q.delete('place')
+                return q
+              })
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+      {categories.length > 0 && (
+        <nav className="map-legend" aria-label="Show pins of these kinds">
+          <button type="button" className={`chip ${!only ? 'on' : ''}`} aria-pressed={!only} onClick={() => setOnly(undefined)}>
+            All
+          </button>
+          {[...categories, ...(allPins.some((p) => !p.category?.trim()) ? [OTHER_PINS] : [])].map((c) => {
+            const on = !!only?.has(c)
+            const n = allPins.filter((p) => (p.category?.trim() || OTHER_PINS) === c).length
+            return (
+              <button
+                key={c}
+                type="button"
+                className={`chip ${on ? 'on' : ''}`}
+                aria-pressed={on}
+                onClick={() => {
+                  const next = new Set(only ?? [])
+                  if (on) next.delete(c)
+                  else next.add(c)
+                  setOnly(next.size ? next : undefined)
+                }}
+              >
+                {c === OTHER_PINS ? 'Other pins' : c} <span className="muted">{n}</span>
+              </button>
+            )
+          })}
+          <Help topic="pinCategories" />
+        </nav>
       )}
       <div className="map-body">
         <MapContainer
@@ -445,6 +556,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                   eventHandlers={handlers}
                 >
                   <PinName key={isHere ? 'here' : areaNamesOn ? 'name' : 'hover'} label={label} on={areaNamesOn || isHere} center here={isHere} />
+                  {numbered && p.number ? <PinNumber n={p.number} /> : null}
                 </Polygon>
               )
             if (p.kind === 'region' && p.points)
@@ -461,6 +573,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                   eventHandlers={handlers}
                 >
                   <PinName key={isHere ? 'here' : areaNamesOn ? 'name' : 'hover'} label={label} on={areaNamesOn || isHere} center here={isHere} />
+                  {numbered && p.number ? <PinNumber n={p.number} /> : null}
                 </Polygon>
               )
             if (!p.position) return null
@@ -468,7 +581,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
               <Marker
                 key={p.id}
                 position={p.position}
-                icon={pinIcon(p, entity, p.id === selectedId, isHere)}
+                icon={pinIcon(p, entity, p.id === selectedId, isHere, numbered ? p.number : undefined)}
                 title={label}
                 alt={label}
                 draggable={isGM && tool === 'select'}
@@ -496,19 +609,45 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
           <Pings pings={pings.filter((p) => p.mapId === gmMapId)} />
           {fogCorner && <Marker position={fogCorner} icon={cornerIcon} interactive={false} />}
         </MapContainer>
-        {(selected || showSettings) && (
+        {(selected || showSettings || (showKey && numbered)) && (
           <aside className={`map-panel ${showSettings ? 'settings' : 'sheet'}`}>
             {showSettings && isGM ? (
               <MapSettings map={map} entities={entities} onClose={() => setShowSettings(false)} onDeleted={() => navigate(`${worldPath(worldId)}/maps`)} />
             ) : selected ? (
-              isGM ? (
-                <PinEditor key={selected.id} pin={selected} entities={entities} maps={allMaps.filter((m) => m.id !== map.id)} onClose={() => select()} />
+              isGM && editingPin === selected.id ? (
+                <PinEditor
+                  key={selected.id}
+                  pin={selected}
+                  entities={entities}
+                  maps={allMaps.filter((m) => m.id !== map.id)}
+                  categories={categories}
+                  onClose={() => select()}
+                  onDone={() => setEditingPin(undefined)}
+                />
               ) : (
-                <PinDetails pin={selected} entity={selected.entityId ? byId.get(selected.entityId) : undefined} entities={entities} maps={allMaps.filter((m) => m.id !== map.id)} onClose={() => select()} />
+                <PinDetails
+                  pin={selected}
+                  entity={selected.entityId ? byId.get(selected.entityId) : undefined}
+                  entities={entities}
+                  maps={allMaps.filter((m) => m.id !== map.id)}
+                  onClose={() => select()}
+                  onEdit={isGM ? () => setEditingPin(selected.id) : undefined}
+                  scenes={
+                    isGM && inHand && world
+                      ? (inHand.prep?.scenes ?? [])
+                          .filter((x) => x.pinId === selected.id)
+                          .map((x) => ({ id: x.id, text: x.text, start: () => goToScene(world, inHand, x, ask) }))
+                      : []
+                  }
+                  sessionName={inHand ? `#${inHand.number} ${inHand.title}` : undefined}
+                />
               )
-            ) : null}
+            ) : (
+              <MapKeyPanel entries={keyEntries} onPick={(id) => select(id)} onClose={() => setShowKey(false)} isGM={isGM} mapId={map.id} H={map.height} />
+            )}
           </aside>
         )}
+        {sceneDialog}
       </div>
     </div>
   )
@@ -550,6 +689,61 @@ function PinName({ label, on, center, here }: { label: string; on: boolean; cent
     <Tooltip direction="top" offset={[0, -34]} permanent={on} className={on ? `pin-name${here ? ' here' : ''}` : undefined}>
       {label}
     </Tooltip>
+  )
+}
+
+/** A key number on a region or a linked piece, in its middle. */
+function PinNumber({ n }: { n: number }) {
+  return (
+    <Tooltip permanent direction="center" className="pin-number" interactive={false}>
+      {n}
+    </Tooltip>
+  )
+}
+
+/** Pins with no category are listed in the legend as "Other pins". */
+const OTHER_PINS = '—'
+
+/** The map's numbered key: number, name and one line; tap one to open it. GM-only entries never reach players. */
+function MapKeyPanel({ entries, onPick, onClose, isGM, mapId, H }: { entries: KeyEntry[]; onPick: (pinId: string) => void; onClose: () => void; isGM: boolean; mapId: string; H: number }) {
+  const { worldId } = useWorld()
+  return (
+    <div className="map-key">
+      <header>
+        <h2>
+          Key <Help topic="mapNumbers" />
+        </h2>
+        <button className="ghost" onClick={onClose} aria-label="Close">
+          ×
+        </button>
+      </header>
+      <ol className="map-key-list">
+        {entries.map((k) => (
+          <li key={k.pin.id}>
+            <button type="button" className="link" onClick={() => onPick(k.pin.id)}>
+              <b className="key-no">{k.n}</b> {k.title}
+            </button>
+            {isGM && k.pin.visibility === 'gm' && <span className="muted small"> (GM only)</span>}
+            {k.line && <div className="muted small">{k.line}</div>}
+          </li>
+        ))}
+      </ol>
+      {isGM && (
+        <div className="row wrap">
+          <Link className="button" to={`${worldPath(worldId)}/print/m/${mapId}`}>
+            Print the map and key
+          </Link>
+          <button
+            onClick={async () => {
+              if (!confirm('Number every pin again, top to bottom and left to right (what players can see first)? Numbers you’ve used at the table will change.')) return
+              await numberPins(mapId, H, true)
+            }}
+          >
+            Number again
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -801,8 +995,8 @@ function FogBar({
   )
 }
 
-function pinIcon(p: Pin, entity: Entity | undefined, active: boolean, here = false) {
-  const glyph = entity ? ENTITY_LABELS[entity.type].icon : p.childMapId ? '🗺️' : '📍'
+function pinIcon(p: Pin, entity: Entity | undefined, active: boolean, here = false, n?: number) {
+  const glyph = n ? `<b class="pin-no">${Math.round(n)}</b>` : entity ? ENTITY_LABELS[entity.type].icon : p.childMapId ? '🗺️' : '📍'
   // The colour goes into HTML, so only a plain colour code is used (a synced or imported pin could hold anything).
   const c = /^#[0-9a-f]{3,8}$/i.test(p.color) ? p.color : COLORS[0]
   return L.divIcon({
@@ -909,12 +1103,20 @@ function PinDetails({
   entities,
   maps,
   onClose,
+  onEdit,
+  scenes = [],
+  sessionName,
 }: {
   pin: Pin
   entity?: Entity
   entities: Entity[]
   maps: WorldMap[]
   onClose: () => void
+  /** The GM's way to the pin's own settings. */
+  onEdit?: () => void
+  /** Scenes of the session in hand that happen here (GM only). */
+  scenes?: { id: string; text: string; start: () => void }[]
+  sessionName?: string
 }) {
   const { worldId } = useWorld()
   const { isGM } = useViewMode()
@@ -924,17 +1126,31 @@ function PinDetails({
   return (
     <div className="pin-details">
       <header>
-        <h2>{pin.label || entity?.name}</h2>
+        <h2>
+          {pin.number ? <b className="key-no">{pin.number}</b> : null} {pin.label || entity?.name}
+        </h2>
         <button className="ghost" onClick={onClose} aria-label="Close">
           ×
         </button>
       </header>
+      {pin.category && <span className="tag">{pin.category}</span>}
       {entity?.status && <StatusBadge entity={entity} />}
       {entity?.summary && <p className="lead">{entity.summary}</p>}
       {pin.note && <Markdown text={pin.note} entities={entities} worldId={worldId} showSecrets={isGM} />}
+      {scenes.map((x) => (
+        <p key={x.id} className="pin-scene row wrap">
+          <span>
+            <b>Scene:</b> {x.text}
+            {sessionName && <span className="muted small"> · {sessionName}</span>}
+          </span>
+          <button className="small" onClick={x.start} title="Start this scene at the Lectern: place, read-aloud text, who's here, the fight">
+            <Ico as={Play} /> Start
+          </button>
+        </p>
+      ))}
       <div className="row wrap">
         {entity && (
-          <Link className="button" to={`${pagePath(worldId, entity.id)}`}>
+          <Link className={`button ${childMap ? '' : 'primary'}`} to={`${pagePath(worldId, entity.id)}`}>
             Open page
           </Link>
         )}
@@ -942,6 +1158,11 @@ function PinDetails({
           <Link className="button primary" to={`${worldPath(worldId)}/maps/${childMap.id}`}>
             Enter {childMap.name} →
           </Link>
+        )}
+        {onEdit && (
+          <button onClick={onEdit}>
+            <Ico as={PencilSimple} /> Edit pin
+          </button>
         )}
       </div>
       {groups.map(([t, xs]) => (
@@ -963,22 +1184,14 @@ function PinDetails({
   )
 }
 
-function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entity[]; maps: WorldMap[]; onClose: () => void }) {
+/** Kinds of pin offered before the GM has named any of their own. */
+const CATEGORY_IDEAS = ['Quest sites', 'Danger', 'Shops', 'Taverns', 'Rumours', 'Treasure']
+
+function PinEditor({ pin, entities, maps, categories, onClose, onDone }: { pin: Pin; entities: Entity[]; maps: WorldMap[]; categories: string[]; onClose: () => void; onDone: () => void }) {
   const { worldId } = useWorld()
-  const [preview, setPreview] = useState(false)
   const update = (patch: Partial<Pin>) => db.pins.update(pin.id, patch)
   const entity = entities.find((e) => e.id === pin.entityId)
   const [newType, setNewType] = useState<EntityType>('location')
-
-  if (preview)
-    return (
-      <>
-        <button className="block" onClick={() => setPreview(false)}>
-          <Ico as={PencilSimple} /> Back to editing
-        </button>
-        <PinDetails pin={pin} entity={entity} entities={entities} maps={maps} onClose={onClose} />
-      </>
-    )
 
   return (
     <div className="form pin-editor">
@@ -1045,10 +1258,21 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
         </div>
       )}
       {entity && (
-        <Link className="small" to={`${pagePath(worldId, entity.id)}?edit=1`}>
-          Edit "{entity.name}" page →
+        <Link className="small" to={pagePath(worldId, entity.id)}>
+          Open “{entity.name}”
         </Link>
       )}
+      <label>
+        <span>
+          Category <Help topic="pinCategories" />
+        </span>
+        <DraftText value={pin.category ?? ''} list={`pin-categories-${pin.id}`} placeholder="e.g. Quest sites, Danger, Shops" onCommit={(v) => update({ category: v.trim() || undefined })} saveOn="leave" />
+        <datalist id={`pin-categories-${pin.id}`}>
+          {[...new Set([...categories, ...CATEGORY_IDEAS])].map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
+      </label>
       <label>
         Opens map
         <select value={pin.childMapId ?? ''} onChange={(e) => update({ childMapId: e.target.value || undefined })}>
@@ -1076,7 +1300,9 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
         >
           Delete
         </button>
-        <button onClick={() => setPreview(true)}><Ico as={Eye} /> Preview</button>
+        <button className="primary" onClick={onDone}>
+          <Ico as={Eye} /> Done
+        </button>
       </div>
     </div>
   )
@@ -1113,6 +1339,19 @@ function MapSettings({ map, entities, onClose, onDeleted }: { map: WorldMap; ent
         <small className="muted">Pins linked to that location will offer "Enter map".</small>
       </label>
       <ScaleSetting map={map} />
+      <label className="inline-check">
+        <input
+          type="checkbox"
+          checked={!!map.numbers}
+          onChange={async (e) => {
+            const on = e.target.checked
+            await update({ numbers: on || undefined })
+            if (on) await numberPins(map.id, map.height)
+          }}
+        />{' '}
+        Show numbers, with a key <Help topic="mapNumbers" />
+      </label>
+      <small className="muted">For dungeons and towns: each pin and linked piece gets a number on the map, and Key lists them. Players see only the ones they can see.</small>
       <button
         className="danger"
         onClick={async () => {

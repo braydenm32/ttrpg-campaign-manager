@@ -1,3 +1,6 @@
+import { PagePicker } from '../PagePicker'
+import { PinOnMapButton } from '../pinOnMap'
+import { StockTable } from '../shopStock'
 import { NpcLines } from '../ai/Flavour'
 import { renameLinks } from '../links'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -25,6 +28,7 @@ import { CalDateInput, formatDate, toDays } from '../calendar'
 import { RelationsBox } from '../relations'
 import { SessionMentions } from '../sessionMentions'
 import { ClocksBox } from '../clocks'
+import { CharacterFame } from '../reputation'
 import { QuestBox, questProgress } from '../quests'
 import { Ico, PageIcon, TypeIcon } from '../icons'
 import { dropHeldPage, heldPage } from '../pendingPages'
@@ -37,8 +41,11 @@ import { pagePath, resolvePage, typePath, usePathsVersion, worldPath } from '../
 import { canSeeMap, quantityLabel } from '../counts'
 import { pinRevealed } from '../fog'
 import { JumpRow, useKeepScroll } from '../jump'
-import { NewPageButton } from '../NewPage'
+import { DuplicateButton, NewPageButton } from '../NewPage'
+import { useNoteOpened } from '../recent'
+import { PagePrompts } from '../prompts'
 import { PageVisibility, SeenMark } from '../reveal'
+import { RevealOnChip, RevealOnField } from '../timedReveal'
 import { useCharacterOwners } from '../players/owners'
 import { keyNumbers, NumberTiles } from '../players/sheetGlance'
 
@@ -74,6 +81,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   const entities = useVisibleEntities(worldId)
   const sessions = useWorldSessions(worldId)
   const image = useAssetUrl(e.imageId)
+  useNoteOpened(worldId, e.id)
   // People, places and groups wear their initials where a picture would be; quests, threads, events, lore and tables a type icon ("The Drowned Man" would read as "DM").
   const lettered = ['npc', 'pc', 'faction', 'location', 'shop', 'deity', 'item', 'custom'].includes(e.type)
   const { owners } = useCharacterOwners(e.type === 'pc' ? world : undefined)
@@ -179,6 +187,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
         <div className="page-facts">
           <StatusBadge entity={e} showAlive />
           {isGM && !e.template && <PageVisibility entity={e} world={world} entities={entities} />}
+          {isGM && !e.template && <RevealOnChip entity={e} />}
           {seen && (
             <Link className="tag strip-chip" to={`${worldPath(worldId)}/s/${seen.id}`} title="The latest session it turned up in">
               In #{seen.number} {seen.title}
@@ -205,8 +214,10 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             {isGM && !e.template && e.visibility === 'players' && <ShowButton worldId={worldId} what={{ kind: 'page', title: e.name, entityId: e.id }} />}
             {isGM && e.type === 'pc' && !e.template && world && <ImportSheetButton worldId={worldId} system={world.system} into={e} label="Update from sheet" />}
             {isGM && <HistoryButton entity={e} />}
+            {isGM && !e.template && <PinOnMapButton entity={e} className="ghost" />}
             <PrintButton to={`${worldPath(worldId)}/print/e/${e.id}`} />
             {isGM && world && !e.template && e.type !== 'custom' && <NewPageButton world={world} type={e.type} className="ghost new-from-page" />}
+            {isGM && !e.template && <DuplicateButton entity={e} />}
             {isGM && <DeletePageButton entity={e} className="ghost danger" />}
           </span>
         </div>
@@ -259,7 +270,9 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           {isGM && world && !e.template && e.type === 'npc' && <NpcLines world={world} entity={e} entities={entities} />}
           {(e.body || gmNotes) && <div className="fleuron" aria-hidden="true">❦</div>}
           {!e.template && e.type === 'quest' && <QuestBox quest={e} entities={entities} isGM={isGM} worldId={worldId} />}
+          {e.type === 'pc' && <CharacterFame entity={e} worldId={worldId} />}
           {!e.template && <ClocksBox entity={e} isGM={isGM} worldId={worldId} />}
+          {e.type !== 'item' && e.type !== 'pc' && e.type !== 'npc' && !e.template && <StockTable holder={e} entities={entities} world={world} isGM={isGM} />}
           {!e.template && <RelationsBox entity={e} entities={entities} isGM={isGM} worldId={worldId} />}
           {world && <PlayerNotesBox world={world} entityId={e.id} entities={entities} />}
           {world && <AskGmBox world={world} entityId={e.id} />}
@@ -476,6 +489,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
   const entities = useVisibleEntities(worldId)
   const image = useAssetUrl(d.imageId)
   const set = <K extends keyof Entity>(k: K, v: Entity[K]) => setD((x) => ({ ...x, [k]: v }))
+  const [holderPick, setHolderPick] = useState(false)
   const campaigns = useCampaigns(worldId)
   const dirty = JSON.stringify(d) !== JSON.stringify(opened)
   const changedElsewhere = entity.updatedAt !== opened.updatedAt
@@ -672,6 +686,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
         {d.visibility === 'gm' && !d.template && world && (
           <RevealToPicker world={world} entities={entities} value={d.revealedTo ?? []} onChange={(ids) => set('revealedTo', ids.length ? ids : undefined)} />
         )}
+        {d.visibility === 'gm' && !d.template && <RevealOnField value={d.revealAt} onChange={(t) => set('revealAt', t)} />}
         {!d.template && (
           <details className="secrets-explained">
             <summary>
@@ -732,14 +747,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
           </label>
           <label>
             {d.type === 'event' ? 'Where it happened' : d.type === 'location' ? 'Inside' : 'Located in'}
-            <select value={d.parentId ?? ''} onChange={(ev) => set('parentId', ev.target.value || undefined)}>
-              <option value="">(none)</option>
-              {parents.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+            <PagePicker entities={parents} value={d.parentId ?? ''} onPick={(id) => set('parentId', id || undefined)} placeholder="(none): type a place…" label={d.type === 'event' ? 'Where it happened' : d.type === 'location' ? 'Inside' : 'Located in'} recent />
           </label>
           {d.type === 'event' && (
             <>
@@ -788,20 +796,31 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
             <>
               <label>
                 <span>
-                  Carried by <Help topic="loot" />
+                  Carried by, or sold at <Help topic="loot" />
                 </span>
-                <select value={d.heldBy ?? ''} onChange={(ev) => set('heldBy', ev.target.value || undefined)}>
+                <select
+                  value={d.heldBy === 'party' ? 'party' : d.heldBy || holderPick ? 'page' : ''}
+                  onChange={(ev) => {
+                    const v = ev.target.value
+                    setHolderPick(v === 'page')
+                    if (v !== 'page') set('heldBy', v || undefined)
+                  }}
+                >
                   <option value="">(nobody: not in the party’s hands)</option>
                   <option value="party">🎒 The party stash</option>
-                  {entities
-                    .filter((x) => x.type === 'pc' || x.type === 'npc')
-                    .map((x) => (
-                      <option key={x.id} value={x.id}>
-                        {ENTITY_LABELS[x.type].icon} {x.name}
-                      </option>
-                    ))}
+                  <option value="page">A character, shop or place…</option>
                 </select>
               </label>
+              {(holderPick || (d.heldBy && d.heldBy !== 'party')) && (
+                <PagePicker
+                  entities={entities.filter((x) => x.id !== d.id && x.type !== 'item' && !x.template)}
+                  value={d.heldBy && d.heldBy !== 'party' ? d.heldBy : ''}
+                  onPick={(id) => set('heldBy', id || undefined)}
+                  placeholder="Who has it, or which shop sells it…"
+                  label="Carried by or sold at"
+                  recent
+                />
+              )}
               <label>
                 How many
                 <input type="number" min={0} value={d.quantity ?? 1} onChange={(ev) => set('quantity', ev.target.value === '' ? undefined : Math.max(0, Number(ev.target.value)))} />
@@ -887,8 +906,11 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
             Description <Help topic="secrets" />
           </span>
           <SecretTextarea worldId={worldId} rows={10} value={d.body} onChange={(v) => set('body', v)} />
-          <small className="muted">Link pages by typing @ or [[ and a name. The buttons hide a passage from every player, or keep it for some characters only.</small>
+          <small className="muted">
+            Link pages by typing @ or [[ and a name. The buttons hide a passage from every player, or keep it for some characters only. Write roll:1d8+3 for a dice button, or {'{{Table name}}'} to roll on one of your tables. <Help topic="inlineRolls" />
+          </small>
         </label>
+        <PagePrompts type={d.type} body={d.body} onChange={(v) => set('body', v)} />
         <SecretNamesWarning worldId={worldId} texts={[d.summary, d.body, d.playerBody]} show={d.visibility === 'players' && !d.template} />
         <label className="gm-notes-field">
           <span>

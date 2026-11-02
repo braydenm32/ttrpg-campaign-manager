@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { WorldToday } from './calendar'
 import { db, type Campaign, type Entity, type Session, type World } from './db'
 import { Help } from './help'
-import { markPlayed, unmarkPlayed } from './sessions'
+import { featuredInPlay, markPlayed, notesFromPlay, unmarkPlayed } from './sessions'
 import { Ico } from './icons'
 import { CheckCircle, Eye, EyeSlash, FlagCheckered, ListChecks } from '@phosphor-icons/react'
 import { worldPath } from './paths'
@@ -14,6 +14,8 @@ import { prepCounts } from './counts'
 import { stripSecrets } from './Markdown'
 import { toast } from './undo'
 import { jumpTo } from './jump'
+import { WhoWasThere } from './attendance'
+import { offerGroupPost } from './groupPost'
 
 /**
  * Finishing a session: "Mark as played" ends the live link to players, marks it played and gets the
@@ -112,6 +114,7 @@ export function ShowToPlayers({ session, campaign, entities }: { session: Sessio
             await set('players')
             setReview(false)
             toast(`Players can read #${session.number} now.`, () => set('gm'))
+            offerGroupPost(await db.worlds.get(session.worldId), `The recap of #${session.number} ${session.title} is up in the Common Room.`)
           }}
         >
           <Ico as={Eye} /> Show it to players
@@ -124,31 +127,30 @@ export function ShowToPlayers({ session, campaign, entities }: { session: Sessio
   )
 }
 
-/**
- * The end of Wrap up: what's done and what's left (each with a jump to its part of the page), then
- * "Mark as played", after which it shows the next session.
- */
-export function WrapUpChecklist({ world, session, campaign, entities, played }: { world: World; session: Session; campaign: Campaign | null | undefined; entities: Entity[]; played: boolean }) {
-  const { finish, busy, blocked } = useFinish(session)
-  const next = useNextSession(session)
+type WrapStep = { done: boolean; label: ReactNode; detail?: ReactNode; optional?: boolean }
+type WrapProps = { world: World; session: Session; campaign: Campaign | null | undefined; entities: Entity[] }
+
+/** What's done and what's left at the end of a session, and what carries over to the next. */
+function wrapSteps({ world, session, campaign, entities }: WrapProps) {
   const recorded = session.recordings.length
   const transcribed = session.recordings.filter((r) => r.transcript && !r.transcript.pending).length
   const transcribing = session.recordings.some((r) => r.transcript?.pending)
   const { clues: { left: leftClues }, scenes: { left: leftScenes } } = prepCounts(session.prep)
-  // Only pages that are still there: a page deleted since keeps its id in the session.
-  const featured = entities.filter((e) => session.entityIds.includes(e.id)).length
+  // Pages that came up in play (not just the ones linked while planning), and only ones still there: a page deleted since keeps its id in the session.
+  const inPlay = new Set(featuredInPlay(session))
+  const featured = entities.filter((e) => inPlay.has(e.id)).length
+  // What was written once play began: the prep script in the notes doesn't count.
+  const notes = notesFromPlay(session).trim()
   const jump = (id: string, text: ReactNode) => (
     <button type="button" className="link" onClick={() => jumpTo(id)}>
       {text}
     </button>
   )
-  const w = worldPath(world.id)
-
-  const steps: { done: boolean; label: ReactNode; detail?: ReactNode }[] = [
+  const steps: WrapStep[] = [
     {
-      done: !!session.notes.trim(),
-      label: session.notes.trim() ? 'GM notes written' : 'Jot down what happened',
-      detail: !session.notes.trim() && jump('notes', 'Your notes, at the top'),
+      done: !!notes,
+      label: notes ? 'GM notes written' : 'Jot down what happened',
+      detail: !notes && jump('notes', 'Your notes, at the top'),
     },
     {
       done: !recorded || transcribed === recorded,
@@ -170,6 +172,11 @@ export function WrapUpChecklist({ world, session, campaign, entities, played }: 
       detail: !session.ledger?.length && jump('writeup', session.recapDraft?.updates?.length ? 'Tick the ones you want' : 'Claude suggests them along with the write-up'),
     },
     {
+      done: true,
+      label: 'Who was there',
+      detail: <WhoWasThere session={session} entities={entities} />,
+    },
+    {
       done: featured > 0,
       label: featured ? `${featured} featured in this session` : 'Nobody featured yet',
       detail: !featured && 'People you put in a scene at the Lectern are added by themselves. Add others under “Featured in this session”.',
@@ -180,7 +187,7 @@ export function WrapUpChecklist({ world, session, campaign, entities, played }: 
       detail: <ShowToPlayers session={session} campaign={campaign} entities={entities} />,
     },
   ]
-  if (world.calendar?.today) steps.push({ done: false, label: 'Move the world’s date on, if time passed', detail: <WorldToday world={world} isGM /> })
+  if (world.calendar?.today) steps.push({ done: false, optional: true, label: 'Move the world’s date on, if time passed', detail: <WorldToday world={world} isGM /> })
   const carry =
     [
       leftClues && `${leftClues} unfound clue${leftClues > 1 ? 's' : ''}`,
@@ -190,6 +197,36 @@ export function WrapUpChecklist({ world, session, campaign, entities, played }: 
       .filter(Boolean)
       .join(', ')
       .replace(/, ([^,]*)$/, ' and $1')
+
+  return { steps, carry }
+}
+
+/** “3 of 7 done” and what's next, as a slim line beside the title; the checklist itself is at the end. */
+export function WrapProgress(props: WrapProps) {
+  const steps = wrapSteps(props).steps.filter((s) => !s.optional)
+  const done = steps.filter((s) => s.done).length
+  const left = steps.find((s) => !s.done)
+  return (
+    <p className="wrap-progress small" role="status">
+      <Ico as={ListChecks} /> <strong>Before you finish:</strong> {done} of {steps.length} done
+      {left ? <> · next: {left.label}</> : ' · ready to mark it played'}{' '}
+      <button type="button" className="link" onClick={() => jumpTo('finish')}>
+        See the list
+      </button>
+    </p>
+  )
+}
+
+/**
+ * The end of Wrap up: what's done and what's left (each with a jump to its part of the page), then
+ * "Mark as played", after which it shows the next session.
+ */
+export function WrapUpChecklist(props: WrapProps & { played: boolean }) {
+  const { world, session, played } = props
+  const { finish, busy, blocked } = useFinish(session)
+  const next = useNextSession(session)
+  const w = worldPath(world.id)
+  const { steps, carry } = wrapSteps(props)
 
   return (
     <section className="card end-session" id="finish">

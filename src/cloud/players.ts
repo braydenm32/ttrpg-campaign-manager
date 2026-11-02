@@ -1,4 +1,4 @@
-import { db, type Availability, type PlayerNote, type PlayerQuestion, type SharedInfo } from '../db'
+import { db, type Entity, type Availability, type PlayerNote, type PlayerQuestion, type SharedInfo } from '../db'
 import { tellPlayers } from './sync'
 import { appLink, supabase } from './client'
 import { downloadFiles, storePlayerCopy, tellOtherPlayers, type SharedPayload } from './share'
@@ -199,6 +199,17 @@ export async function editMyCharacter(cloudId: string, localEntityId: string, sh
   tellOtherPlayers(cloudId)
 }
 
+/** A player changes one number on their sheet (their HP, say) without opening the whole editor. Goes through the same path as the editor. */
+export function setMyField(cloudId: string, entity: Entity, key: RegExp, value: string) {
+  let done = false
+  const fields = entity.fields.map((f) => {
+    if (done || f.gm || !key.test(f.key.trim())) return f
+    done = true
+    return { ...f, value }
+  })
+  return editMyCharacter(cloudId, entity.id, { summary: entity.summary, fields, playerBody: entity.playerBody ?? '' })
+}
+
 /** A group note someone else saved while this player was typing. */
 export interface NoteClash {
   body: string
@@ -318,6 +329,17 @@ export async function leaveWorld(cloudId: string) {
   const { data: auth } = await supabase.auth.getUser()
   if (auth.user) await supabase.from('world_members').delete().eq('world_id', cloudId).eq('user_id', auth.user.id)
   await deleteLocalCopy(memberWorldId(cloudId))
+}
+
+/** Worlds joined with an invite that are saved on this device (read-only player copies). */
+export const joinedHere = () => db.worlds.filter((w) => !!w.shared?.memberOf).toArray()
+
+/**
+ * Removes this device's copies of joined worlds (when signing out on a shared computer, say).
+ * Only the copies here: you stay a member, and Home lists them to open again once you sign back in.
+ */
+export async function removeJoinedCopies() {
+  for (const w of await joinedHere()) await deleteLocalCopy(w.id)
 }
 
 async function deleteLocalCopy(worldId: string) {

@@ -4,6 +4,7 @@ import { isOpenThread } from '../counts'
 import { transcriptText } from './transcript'
 import { readUpdates, UPDATES_HEADING, updatesInstructions } from './worldUpdates'
 import { claudeCost, CUT_OFF, friendly, MODEL } from './claude'
+import { presentLine } from '../attendance'
 import { HIGHLIGHTS_HEADING, highlightsInstructions, parseHighlights } from '../highlights'
 
 export const GM_HEADING = '## GM summary'
@@ -55,7 +56,7 @@ export function buildRecapPrompt(world: World, session: Session, entities: Entit
   return `You are helping the game master of a tabletop roleplaying campaign write up a session.
 
 World: ${world.name}${world.system ? ` (${world.system})` : ''}
-Session ${session.number}: ${session.title}${session.date ? `, played ${session.date}` : ''}${session.worldDate && world.calendar ? `\nIn-world date at the start of the session: ${formatDate(world.calendar, session.worldDate, false)}` : ''}
+Session ${session.number}: ${session.title}${session.date ? `, played ${session.date}` : ''}${session.worldDate && world.calendar ? `\nIn-world date at the start of the session: ${formatDate(world.calendar, session.worldDate, false)}` : ''}${presentLine(session, entities) ? `\n${presentLine(session, entities)} Characters who weren't there didn't take part; don't give them moments, lines or awards.` : ''}
 
 Below is a transcript of the session recorded at the table. It was made automatically, so expect misheard words, cross-talk and out-of-character chatter. Speaker names may be generic labels. Read it for what actually happened in the story.
 

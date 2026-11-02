@@ -27,7 +27,8 @@ const PLACES: [string, string, string, [string, string] | null][] = [
   ['Soundboard', 'Soundboard', '/sounds', null],
   ['The Archivist', 'The Archivist', '/archivist', null],
   ['Generators and random tables', 'Generators and tables', '/generators', null],
-  ['Corkboards', 'Corkboards', '/boards', null],
+  // Corkboards are retired; a world that still has some (the tests add one) finds them as Old corkboards.
+  ['Corkboards', 'Old corkboards', '/boards', null],
   ['Files', 'Files', '/assets', null],
   ['World settings', 'World settings', '/settings', null],
 ]
@@ -35,13 +36,14 @@ const PLACES: [string, string, string, [string, string] | null][] = [
 /** Places search couldn't find before the areas: [what you type, the result, its address inside the world]. GM only. */
 const NEW_PLACES: [string, string, string | RegExp][] = [
   ['Lectern', 'The Lectern', /^\/s\/[^/]+\/lectern$/],
-  ['Chronicle', 'Chronicle', '/chronicle'],
+  // The Chronicle is now “What changed” in each session's Wrap up.
+  ['Chronicle', 'Wrap up the session', /^\/s\/[^/]+\?tab=notes$/],
   ['Questions', 'Inbox', '/questions'],
   // (The players' scratchpad is offered only with cloud sync on, like the More page: search follows each item's `when`.)
   ['Campaigns', 'All sessions', /^\/c\/[^/]+$/],
   ['Templates', 'Templates', '/settings?at=templates'],
   ['Recently deleted', 'Recently deleted', '/settings?tab=data&at=deleted'],
-  ['Random tables', 'Random tables', '/tables'],
+  ['Random tables', 'Generators and tables', '/generators'],
 ]
 
 async function openSearch(page: Page, device: Device) {

@@ -105,6 +105,47 @@ export async function addCustomType(page: Page, worldId: string) {
   )
 }
 
+/**
+ * An old corkboard the tests add to the example. Corkboards are retired and the example has none
+ * any more, but a world made before keeps its boards, so the screens for them are still tested.
+ */
+export const TEST_BOARD = { id: 'test-old-corkboard', name: 'An old corkboard from before' }
+
+/** Adds the test's old corkboard to the world (a page card, a note card and a string), straight into the database. Runs in the page. */
+export async function addOldBoard(page: Page, worldId: string, pageId: string) {
+  await page.evaluate(
+    ({ worldId, pageId, board }) =>
+      new Promise<void>((resolve, reject) => {
+        const req = indexedDB.open('ttrpg-campaign-manager')
+        req.onerror = () => reject(req.error)
+        req.onsuccess = () => {
+          const idb = req.result
+          const now = Date.now()
+          const put = idb
+            .transaction('boards', 'readwrite')
+            .objectStore('boards')
+            .put({
+              ...board,
+              worldId,
+              cards: [
+                { id: 'card-page', x: 40, y: 40, entityId: pageId },
+                { id: 'card-note', x: 300, y: 40, text: 'Who paid for the round?', color: '#f6e27a' },
+              ],
+              strings: [{ id: 'string-1', from: 'card-note', to: 'card-page', label: 'paid by?' }],
+              createdAt: now,
+              updatedAt: now,
+            })
+          put.onsuccess = () => {
+            idb.close()
+            resolve()
+          }
+          put.onerror = () => reject(put.error)
+        }
+      }),
+    { worldId, pageId, board: TEST_BOARD },
+  )
+}
+
 /** The app's own address names (src/paths.ts slugify), so tests can build the same short addresses. */
 export function slugify(name: string) {
   const s = name

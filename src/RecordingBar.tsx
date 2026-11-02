@@ -12,6 +12,8 @@ export function RecordingBar() {
   const { pathname } = useLocation()
   const [now, setNow] = useState(() => Date.now())
   const [error, setError] = useState('')
+  // The bookmark box, open right in the bar (not a pop-up).
+  const [marking, setMarking] = useState<string>()
   useEffect(() => {
     if (!live) return
     const t = setInterval(() => setNow(Date.now()), 1000)
@@ -31,12 +33,26 @@ export function RecordingBar() {
   return (
     <div className="recording-bar" role="status">
       <span className="rec-dot" /> Recording <Link to={sessionPath!}>session #{live.sessionNumber}</Link> · {formatTime((now - live.rec.startedAt) / 1000)}
-      <button className="small" onClick={() => {
-          const text = prompt('Bookmark this moment:')
-          if (text !== null) addBookmark(text)
-        }}>
-        <Ico as={BookmarkSimple} /> Bookmark
-      </button>
+      {marking === undefined ? (
+        <button className="small" onClick={() => setMarking('')}>
+          <Ico as={BookmarkSimple} /> Bookmark
+        </button>
+      ) : (
+        <form
+          className="row"
+          onSubmit={(e) => {
+            e.preventDefault()
+            addBookmark(marking)
+            setMarking(undefined)
+          }}
+        >
+          <input autoFocus value={marking} onChange={(e) => setMarking(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && setMarking(undefined)} placeholder="Bookmark this moment" aria-label="Bookmark this moment" />
+          <button className="small">Save</button>
+          <button type="button" className="small ghost" onClick={() => setMarking(undefined)}>
+            Cancel
+          </button>
+        </form>
+      )}
       <button className="small danger" onClick={() => endRecording().catch((e) => setError((e as Error).message))}>
         ■ Stop & save
       </button>

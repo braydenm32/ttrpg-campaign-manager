@@ -5,7 +5,7 @@ The order of these items is a starting point and will change as we see what matt
 ## Recently built
 
 - Random tables, page history and recently deleted pages, page templates and custom page types, party loot and coin purse, co-GMs, and session scheduling.
-- Preview as one player, session prep sheets (strong start, scenes, secrets and clues), encounters that load into the Lectern, character status (alive, dead, missing, captured) with "last seen", printing and PDFs, a soundboard (your own files and Syrinscape), corkboards, and private questions from players to the GM.
+- Preview as one player, session prep sheets (strong start, scenes, secrets and clues), encounters that load into the Lectern, character status (alive, dead, missing, captured) with "last seen", printing and PDFs, a soundboard (your own files and Syrinscape), corkboards (retired in November 2026: old boards can be copied into a page), and private questions from players to the GM.
 - Fog of war on maps, "show to players" with a players' screen for a TV, custom calendars (Harptos, Golarion, Eberron, Greyhawk, Exandria or your own) with today's date in the world, a relationship web and family trees, progress clocks, players editing their own character, link previews on hover, Discord posts, safety tools (lines, veils, anonymous X-card), and importing from Obsidian, Kanka and World Anvil (plus Markdown export).
 
 - From the October review: a recently deleted bin, `.codex.zip` backups, search everywhere (Ctrl/⌘K), a folding phone menu, pictures inside text, GM-only details and tags, nicknames and rename-safe links, hidden campaigns, "what's new" for players, backup reminders and a tidy public wiki.
@@ -35,11 +35,36 @@ The order of these items is a starting point and will change as we see what matt
 
 Ideas we looked at and chose to leave for later:
 
-- **Lectern and sessions:** stat blocks in the combat list (with the game-system packs), a "party is here" marker on maps, player notes on sessions.
+- **Lectern and sessions:** stat blocks in the combat list (with the game-system packs), a "party is here" marker on maps.
 - **Players:** a portrait on a player's new character, one writing box on a player's own character instead of three, hiding empty sections from players' menus, page links you can copy for players.
 - **Secrets (low risk):** a warning when a `:::for` first name matches two characters, and "recently updated" not hinting at secret edits.
 - **Bigger choices:** pages that belong to a campaign (we filter the party instead), merging quests and loose threads, desktop polish (saving files on a Mac, auto-updates) and the phone apps.
 - **Behind the scenes:** transcripts in their own table, smarter sync that only looks at changed rows, and storage limits per user before anyone pays.
+
+## Retiring the old address
+
+- **January 2027: retire the old github.io copy.** The move to wardedatlas.com is done. In January the old braydenm32.github.io copy becomes a plain page that sends people to wardedatlas.com, and the "move your worlds" banner (src/move.tsx) and the second build with `--base ./` go. The `#/` addresses stay only for the desktop app.
+
+## Looked at, still parked (November 2026)
+
+Checked in the November review and still unbuilt. None of them should jump the queue; they are listed so the next review doesn't look them up again.
+
+- **An open shop for players** with a Buy button (needs rules on the server for coin). Medium to large.
+- **Face-down card reveals and omens** for the players' screen. Small to medium.
+- **Scene art behind the players' screen** and "who's speaking". Medium, mostly for online groups.
+- **One-click dungeon and village generators.** Large.
+- **Hexcrawl mode** on maps. Large.
+- **Picking several things at once, and saved groups of pieces,** in the map builder. Medium.
+- **Layers on uploaded maps.** Medium.
+- **Typed details** (a number, a date, a link to a page) instead of free text. Medium.
+- **A campaign keepsake** when a campaign ends. Medium, only matters at the end.
+- **Shareable session cards** (a picture of the session for the group chat). Medium.
+- **A table view of pages** with sortable columns, ticking several pages to reveal, tag, move or delete together, and a tag manager.
+- **Wants and hooks** on player characters, read by the prep helper and Spotlight.
+- **Players suggest pages** (what they learned), approved by the GM in the Inbox.
+- **Events that last** (a war, a reign) drawn as bars on named tracks of the timeline.
+- **Copying pages between worlds** (and a shareable "pack").
+- **Faster drawing on huge maps.**
 
 ## Game systems (later)
 
@@ -49,7 +74,7 @@ The core stays system-agnostic: stats are free-form "Details" fields. Later we'l
 
 Built: session transcripts (on-device with Whisper, or AssemblyAI in the cloud with speaker labels) and recaps (GM summary plus player recap, via "Copy for Claude" or the GM's own Anthropic API key, always reviewed before saving).
 
-Built: world updates from a session. In the same Claude run as the recap, Claude compares the transcript with every page (names, nicknames, one-line summaries, quest states and timeline dates) and suggests new pages for anything improvised, lines for existing pages, quest progress, relationships, timeline events, deaths and captures, loot changing hands, loose threads and things that contradict the notes. The GM ticks and edits them, then applies them in one go; each change is listed in the Chronicle (per session, GM-only) and kept in page history. Pages also show the sessions that link them and, for the GM, where their name was heard in a transcript (click to play that moment). Speaker names are remembered from the last session.
+Built: world updates from a session. In the same Claude run as the recap, Claude compares the transcript with every page (names, nicknames, one-line summaries, quest states and timeline dates) and suggests new pages for anything improvised, lines for existing pages, quest progress, relationships, timeline events, deaths and captures, loot changing hands, loose threads and things that contradict the notes. The GM ticks and edits them, then applies them in one go; each change is listed under "What changed" in the session's Wrap up (it was the Chronicle tab until November 2026; GM-only) and kept in page history. Pages also show the sessions that link them and, for the GM, where their name was heard in a transcript (click to play that moment). Speaker names are remembered from the last session.
 
 Built: the Archivist (More › Workshop). "Ask your world" is a chat with Claude that reads the pages and sessions it needs (with tools that run on the GM's device) and answers only from the GM's notes, with links. "Check for contradictions" reads the whole world, or one page and its neighbours, and lists where the notes disagree, with fixes to tick off.
 

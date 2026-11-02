@@ -7,6 +7,7 @@ import { ThemePicker } from '../theme'
 import { RecentlyDeleted } from '../History'
 import { AiSettingsSection } from '../ai/AiSettingsSection'
 import { BackupButton } from '../BackupReminder'
+import { DeviceStorage } from '../deviceStorage'
 import { backupStore } from '../backup'
 import { toast } from '../undo'
 import { deleteCloudCopy } from '../cloud/sync'
@@ -23,6 +24,7 @@ import { pagePath, typePath, worldPath } from '../paths'
 import { EXAMPLE_VERSION, resetExampleWorld } from '../example/load'
 import { DraftText, Empty, Skeleton } from '../components'
 import { useViewMode } from '../viewMode'
+import { starterTemplates } from '../prompts'
 
 const TABS = [
   ['world', 'World'],
@@ -137,6 +139,7 @@ export default function WorldSettings() {
       {tab === 'device' && (
         <>
           <p className="muted">These settings stay on this device: they aren’t synced or put in backups (except AI keys you choose to save to your account).</p>
+          <DeviceStorage worldId={worldId} />
           <section>
             <h2>
               Look and help tips <Help topic="theme" />
@@ -165,6 +168,7 @@ export default function WorldSettings() {
               home screen on any device.
             </p>
             <BackupButton worldId={worldId} />
+            <DeviceStorage worldId={worldId} backupHere />
           </section>
 
           <div id="settings-import">
@@ -327,7 +331,13 @@ function Templates({ world }: { world: World }) {
         <Ico as={Ruler} /> Templates <Help topic="templates" />
       </h2>
       {templates.length === 0 ? (
-        <p className="muted">No templates yet. Open any page, edit it, and choose “Save as template”.</p>
+        <>
+          <p className="muted">No templates yet. Open any page, edit it, and choose “Save as template”. Or start from three ready-made ones:</p>
+          <p className="row wrap">
+            <button onClick={() => db.entities.bulkAdd(starterTemplates(world.id))}>Add a person, a town and a quest</button>
+            <Help topic="starterTemplates" />
+          </p>
+        </>
       ) : (
         <ul className="entity-list">
           {templates.map((t) => (

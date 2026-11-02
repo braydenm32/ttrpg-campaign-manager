@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 import { Help } from '../help'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty } from '../components'
 import { NothingHere } from '../NothingHere'
 import { SeenMark } from '../reveal'
@@ -10,7 +10,6 @@ import { treeRoots, useVisibleEntities, useWorld } from '../hooks'
 import { NewPageButton } from '../NewPage'
 import { listedEntries, TableRoller } from '../tables'
 import { pagesIn } from '../counts'
-import { StarterTables } from '../moreGenerators'
 import { useViewMode } from '../viewMode'
 import { pagePath, resolveCustom, sectionType, typePath, usePathsVersion, worldPath } from '../paths'
 
@@ -44,6 +43,8 @@ export default function EntityList() {
     return <NothingHere />
   if (type === 'custom' && kind && world && !world.customTypes?.some((c) => c.id === kind)) return <Empty>This page type has been removed.</Empty>
   const t = type as EntityType
+  // The GM's tables live on Generators and tables (one place, not two); players keep this list.
+  if (t === 'table' && isGM) return <Navigate to={`${worldPath(worldId)}/generators${search.size ? `?${search}` : ''}#tables`} replace />
   const label = typeLabel({ type: t, customType: kind }, world)
   // With no custom type named, the custom section is "Other pages": custom pages with no type of their own.
   const ofType = pagesIn(all, world, t !== 'custom' ? t : kind ? `custom:${kind}` : 'other')
@@ -68,7 +69,7 @@ export default function EntityList() {
         <div>
           {group && <div className="kicker">{label.many}</div>}
           <h1>
-            {label.icon} {group ? group.title : label.many} <Help topic={t === 'table' ? 'randomTables' : t === 'custom' && kind ? 'customTypes' : 'codex'} />
+            {label.icon} {group ? group.title : label.many} <Help topic={t === 'table' ? 'randomTables' : t === 'quest' ? 'questList' : t === 'custom' && kind ? 'customTypes' : 'codex'} />
           </h1>
         </div>
         {isGM && world && (t !== 'custom' || kind) && <NewPageButton world={world} type={t} customType={kind} />}
@@ -100,7 +101,6 @@ export default function EntityList() {
           <TableRoller tables={ofType} worldId={worldId} entities={all} showSecrets={isGM} />
         </div>
       )}
-      {t === 'table' && isGM && world && <StarterTables world={world} tables={ofType} />}
       <div className="row wrap list-tools">
         <input className="search" type="search" placeholder="Filter…" aria-label={`Filter ${label.many.toLowerCase()}`} value={query} onChange={(e) => setParam('q', e.target.value)} />
         {tags.length > 0 && (
@@ -116,6 +116,8 @@ export default function EntityList() {
         <Empty>{ofType.length === 0 ? `No ${/^[A-Z]{2}/.test(label.many) ? label.many : label.many.toLowerCase()} yet.` : 'Nothing matches.'}</Empty>
       ) : showTree ? (
         <LocationTree worldId={worldId} entities={filtered} isGM={isGM} />
+      ) : t === 'quest' ? (
+        <QuestGroups worldId={worldId} entities={filtered} isGM={isGM} />
       ) : (
         <div className="card-grid">
           {filtered.map((e) => (
@@ -145,6 +147,36 @@ function EntityCard({ worldId, entity: e, isGM }: { worldId: string; entity: Ent
         ))}
       </div>
     </Link>
+  )
+}
+
+/** Quests by where they stand: what the party is on now, then what's open to take up, then what's over. */
+const QUEST_GROUPS: { title: string; blurb: string; has: (e: Entity) => boolean }[] = [
+  { title: 'Active', blurb: 'The party is on these now.', has: (e) => e.questStatus === 'active' },
+  { title: 'Open', blurb: 'Waiting to be taken up.', has: (e) => !e.questStatus || e.questStatus === 'open' },
+  { title: 'Done', blurb: 'Finished or failed.', has: (e) => e.questStatus === 'done' || e.questStatus === 'failed' },
+]
+
+function QuestGroups({ worldId, entities, isGM }: { worldId: string; entities: Entity[]; isGM: boolean }) {
+  return (
+    <>
+      {QUEST_GROUPS.map((g) => {
+        const list = entities.filter(g.has)
+        if (!list.length) return null
+        return (
+          <section key={g.title} className="quest-group" aria-label={`${g.title} quests`}>
+            <h2>
+              {g.title} <span className="muted small">· {list.length} · {g.blurb}</span>
+            </h2>
+            <div className="card-grid">
+              {list.map((e) => (
+                <EntityCard key={e.id} worldId={worldId} entity={e} isGM={isGM} />
+              ))}
+            </div>
+          </section>
+        )
+      })}
+    </>
   )
 }
 
