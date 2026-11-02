@@ -139,7 +139,20 @@ export function ImportNotes({ worldId, onClose }: { worldId: string; onClose: ()
           )}
         </div>
       ) : (
-        entities && <NotesReview worldId={worldId} plan={plan} entities={entities} onBack={() => setPlan(undefined)} onClose={onClose} />
+        entities && (
+          <NotesReview
+            worldId={worldId}
+            plan={plan}
+            entities={entities}
+            onBack={() => setPlan(undefined)}
+            onAnswers={(answers) => {
+              // Back to the first step with the answers added, so the next read uses them.
+              setHints((h) => [h.trim(), answers].filter(Boolean).join('\n\n'))
+              setPlan(undefined)
+            }}
+            onClose={onClose}
+          />
+        )
       )}
       {busy && <p className="muted small">{busy}</p>}
       {error && <p className="error small">{error}</p>}
@@ -152,18 +165,45 @@ interface Row {
   pick: boolean
   /** The world's page to add to, or '' for a new one. */
   into: string
+  /** Players may see it (Claude's guess to start with). */
+  show: boolean
 }
 
+/** Whether players (all, or some by name) can see a page. */
+const seen = (e?: Entity) => !!e && (e.visibility !== 'gm' || !!e.revealedTo?.length)
+
 /** Every page Claude found, to tick, rename, retype or point at a page the world already has. */
-function NotesReview({ worldId, plan, entities, onBack, onClose }: { worldId: string; plan: NotesPlan; entities: Entity[]; onBack: () => void; onClose: () => void }) {
+function NotesReview({
+  worldId,
+  plan,
+  entities,
+  onBack,
+  onAnswers,
+  onClose,
+}: {
+  worldId: string
+  plan: NotesPlan
+  entities: Entity[]
+  onBack: () => void
+  /** The GM's answers to Claude's questions, as text for another read. */
+  onAnswers: (text: string) => void
+  onClose: () => void
+}) {
   const navigate = useNavigate()
   const world = useLiveQuery(() => db.worlds.get(worldId), [worldId])
   const campaigns = useLiveQuery(() => db.campaigns.where({ worldId }).sortBy('createdAt'), [worldId]) ?? []
   const pages = useMemo(() => entities.filter((e) => !e.template), [entities])
   const names = useMemo(() => nameIndex(pages), [pages])
+  const byId = useMemo(() => new Map(pages.map((e) => [e.id, e])), [pages])
   const [rows, setRows] = useState<Row[]>(() =>
-    plan.pages.map((page) => ({ page, pick: true, into: (page.existing && names.get(page.existing.toLowerCase())?.id) || names.get(page.name.toLowerCase())?.id || '' })),
+    plan.pages.map((page) => {
+      const into = (page.existing && names.get(page.existing.toLowerCase())?.id) || names.get(page.name.toLowerCase())?.id || ''
+      // A page already in the world keeps its own visibility: only notes for one players can see may be shown.
+      return { page, pick: true, into, show: page.known && (!into || seen(byId.get(into))) }
+    }),
   )
+  const [answers, setAnswers] = useState(() => plan.unsure.map(() => ''))
+  const answered = plan.unsure.flatMap((q, i) => (answers[i].trim() ? [`About “${q}”: ${answers[i].trim()}`] : []))
   const [sessions, setSessions] = useState(() => plan.sessions.map(() => true))
   const [campaign, setCampaign] = useState('')
   const [busy, setBusy] = useState(false)
@@ -190,16 +230,16 @@ function NotesReview({ worldId, plan, entities, onBack, onClose }: { worldId: st
       }
       const res = await applyNotes(
         worldId,
-        picked.map((r) => ({ page: { ...r.page, name: r.page.name.trim() }, into: r.into })),
+        picked.map((r) => ({ page: { ...r.page, name: r.page.name.trim() }, into: r.into, show: r.show && (!r.into || seen(byId.get(r.into))) })),
         pickedSessions,
         campaignId || undefined,
       )
       const said = [
-        res.made && `${res.made} new page${res.made === 1 ? '' : 's'}`,
+        res.made && `${res.made} new page${res.made === 1 ? '' : 's'}${res.shown ? ` (${res.shown} that players can see)` : ''}`,
         res.updated && `${res.updated} page${res.updated === 1 ? '' : 's'} updated`,
         res.sessions && `${res.sessions} session${res.sessions === 1 ? '' : 's'}`,
       ].filter(Boolean)
-      toast(`From your notes: ${said.join(', ')}. All 🔒 GM only until you reveal them.`)
+      toast(`From your notes: ${said.join(', ')}.${res.shown ? '' : ' All 🔒 GM only until you reveal them.'}`)
       onClose()
       if (res.first) navigate(pagePath(worldId, res.first))
     } catch (e) {
@@ -211,14 +251,26 @@ function NotesReview({ worldId, plan, entities, onBack, onClose }: { worldId: st
   return (
     <div className="form notes-review">
       {plan.unsure.length > 0 && (
-        <div className="notice small">
-          <strong>Check these: Claude wasn’t sure it read them right.</strong>
-          <ul>
+        <div className="notice small notes-check">
+          <strong>Check these: words Claude wasn’t sure it read right, and questions about what your notes mean.</strong>
+          <ol>
             {plan.unsure.map((u, i) => (
-              <li key={i}>{u}</li>
+              <li key={i}>
+                <span>{u}</span>
+                <input
+                  value={answers[i]}
+                  onChange={(e) => setAnswers((all) => all.map((x, j) => (j === i ? e.target.value : x)))}
+                  placeholder="Your answer (optional)"
+                  aria-label={`Answer ${i + 1}`}
+                />
+              </li>
             ))}
-          </ul>
-          <span className="muted">Fix a name below before importing, or on the page afterwards.</span>
+          </ol>
+          {answered.length > 0 ? (
+            <button onClick={() => onAnswers(answered.join('\n'))}>Read again with my answers</button>
+          ) : (
+            <span className="muted">Fix a name below, answer and read again, or fix things on the pages afterwards.</span>
+          )}
         </div>
       )}
 
@@ -259,6 +311,15 @@ function NotesReview({ worldId, plan, entities, onBack, onClose }: { worldId: st
                   ))}
                 </select>
               </div>
+              {r.into && !seen(byId.get(r.into)) ? (
+                <p className="muted small">🔒 That page is GM only, so the notes added to it are too.</p>
+              ) : (
+                <label className="inline-check small">
+                  <input type="checkbox" checked={r.show} onChange={(e) => set(i, { show: e.target.checked })} />
+                  👁 {r.into ? 'Players can see the added notes' : 'Players can see this page'}
+                  {r.page.known && <span className="muted"> (Claude thinks they know it)</span>}
+                </label>
+              )}
               {r.page.summary && <p className="muted small">{r.page.summary}</p>}
               <details>
                 <summary className="small">What it says</summary>
@@ -272,7 +333,12 @@ function NotesReview({ worldId, plan, entities, onBack, onClose }: { worldId: st
                     ))}
                   </dl>
                 )}
-                {r.page.body && <pre className="sheet-body">{r.page.body}</pre>}
+                {r.page.body && (
+                  <>
+                    {r.show && <p className="small">👁 Players see:</p>}
+                    <pre className="sheet-body">{r.page.body}</pre>
+                  </>
+                )}
                 {r.page.secrets && (
                   <>
                     <p className="small">🔒 Into GM notes:</p>
@@ -327,8 +393,8 @@ function NotesReview({ worldId, plan, entities, onBack, onClose }: { worldId: st
       )}
 
       <p className="muted small">
-        New pages are 🔒 GM only and tagged “from my notes”. Notes for a page you already have are added under “From my notes”, kept GM only if players can see
-        that page, and its old version stays in its history. Secrets go into GM notes.
+        Pages ticked 👁 are shown to your players; the rest are 🔒 GM only. Secrets always go into GM notes, which players never see. Notes for a page you
+        already have are added under “From my notes” (GM only unless ticked), and its old version stays in its history. Sessions are kept as your GM notes.
       </p>
       {error && <p className="error small">{error}</p>}
       <div className="row end">

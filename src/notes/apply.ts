@@ -7,16 +7,22 @@ export interface NotePick {
   page: NotePage
   /** The id of the world's page to add to; empty for a new page. */
   into: string
+  /**
+   * Players may see it: a new page is made visible to them, and notes added to a page they can
+   * already see go in as plain text. Otherwise everything stays GM only.
+   */
+  show: boolean
 }
 
+/** Whether players (all, or some by name) can see a page. */
+const seen = (page: Entity) => page.visibility !== 'gm' || !!page.revealedTo?.length
+
 /**
- * Text from the notes added to a page players can already see goes inside a GM-only block, so
- * nothing from the notebook reaches players until the GM moves it out.
+ * Text from the notes added to a page players can already see goes inside a GM-only block, unless
+ * the GM left it ticked for players, so nothing else from the notebook reaches them.
  */
-const addedText = (page: Entity, text: string) => {
-  const shown = page.visibility !== 'gm' || !!page.revealedTo?.length
-  return shown ? `### From my notes\n\n:::gm\n${text}\n:::` : `### From my notes\n\n${text}`
-}
+const addedText = (page: Entity, text: string, show: boolean) =>
+  seen(page) && !show ? `### From my notes\n\n:::gm\n${text}\n:::` : `### From my notes\n\n${text}`
 
 const joinText = (a: string, b: string) => (a.trim() ? `${a.trimEnd()}\n\n${b}` : b)
 
@@ -35,14 +41,14 @@ export async function applyNotes(worldId: string, picks: NotePick[], sessions: N
   /** Each pick's page: the new one, or the id of the one it adds to. */
   const forPick: (Entity | string)[] = []
 
-  for (const [i, { page: p, into }] of picks.entries()) {
+  for (const [i, { page: p, into, show }] of picks.entries()) {
     const old = into ? (changed.get(into) ?? byId.get(into)) : undefined
     if (old) {
       const e: Entity = { ...old, fields: [...old.fields], aliases: [...(old.aliases ?? [])], updatedAt: now }
-      if (p.body) e.body = joinText(e.body, addedText(e, p.body))
+      if (p.body) e.body = joinText(e.body, addedText(e, p.body, show))
       if (p.secrets) e.gmNotes = joinText(e.gmNotes, `From my notes:\n\n${p.secrets}`)
       if (!e.summary.trim() && p.summary) e.summary = p.summary
-      const shown = e.visibility !== 'gm' || !!e.revealedTo?.length
+      const shown = seen(e) && !show
       const keys = new Set(e.fields.map((f) => f.key.trim().toLowerCase()))
       for (const f of p.fields) if (!keys.has(f.key.toLowerCase())) e.fields.push({ ...f, ...(shown ? { gm: true } : {}) })
       const names = new Set([e.name, ...e.aliases!].map((n) => n.trim().toLowerCase()))
@@ -58,7 +64,9 @@ export async function applyNotes(worldId: string, picks: NotePick[], sessions: N
       e.body = p.body
       e.gmNotes = p.secrets
       e.fields = p.fields
-      e.tags = ['from my notes']
+      // Only the GM sees where a page came from.
+      e.gmTags = ['from my notes']
+      if (show) e.visibility = 'players'
       if (p.aliases.length) e.aliases = [...new Set(p.aliases)]
       if (p.status) e.status = p.status
       if (p.type === 'event') e.eventOrder = now + i
@@ -111,5 +119,11 @@ export async function applyNotes(worldId: string, picks: NotePick[], sessions: N
     await db.sessions.bulkAdd(rows)
     added = rows.length
   }
-  return { made: made.length, updated: changed.size, sessions: added, first: made[0]?.id ?? [...changed.keys()][0] }
+  return {
+    made: made.length,
+    shown: made.filter((e) => e.visibility === 'players').length,
+    updated: changed.size,
+    sessions: added,
+    first: made[0]?.id ?? [...changed.keys()][0],
+  }
 }

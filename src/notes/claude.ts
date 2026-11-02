@@ -26,6 +26,11 @@ export interface NotePage {
   status?: LifeStatus
   /** The name of a page already in the world that this is about, so the notes are added to it. */
   existing?: string
+  /**
+   * Claude's guess that the players already know this (they met, visited or were told about it at
+   * the table), so the page can be shown to them. Its body then holds only what they know.
+   */
+  known: boolean
 }
 
 export interface NoteSession {
@@ -38,7 +43,10 @@ export interface NoteSession {
 export interface NotesPlan {
   pages: NotePage[]
   sessions: NoteSession[]
-  /** Words Claude couldn't read for certain, and what it guessed: for the GM to check. */
+  /**
+   * For the GM to check: words Claude couldn't read for certain (and what it went with), and
+   * questions about what a note means (a joke or world detail? who is "the big guy"?).
+   */
   unsure: string[]
 }
 
@@ -77,18 +85,20 @@ export function notesRequest({
     system: `You turn a game master's own notes for a tabletop RPG world into pages for their campaign manager. The world is called “${worldName}”${system.trim() ? ` and the game is ${system.trim()}` : ''}. The notes may be hand-written (photos or scans, often messy, with arrows, crossings-out, margin notes and abbreviations) or typed.
 
 Read everything carefully. Then reply with only a JSON object, no other text, in this shape:
-{"pages": [{"name": "Mira Thornwood", "type": "npc", "summary": "Innkeeper of the Gilded Goose", "fields": [{"key": "Role", "value": "Innkeeper"}], "body": "Markdown", "secrets": "Markdown", "aliases": ["Old Mira"], "in": "Millbrook", "status": "alive", "existing": ""}],
+{"pages": [{"name": "Mira Thornwood", "type": "npc", "summary": "Innkeeper of the Gilded Goose", "fields": [{"key": "Role", "value": "Innkeeper"}], "body": "Markdown", "secrets": "Markdown", "aliases": ["Old Mira"], "in": "Millbrook", "status": "alive", "existing": "", "known": true}],
  "sessions": [{"title": "The bridge at Millbrook", "date": "12 March", "notes": "Markdown"}],
- "unsure": ["Photo 2, the tavern's name: “Gilded Goose” or “Gilded Gorse”?"]}
+ "unsure": ["Photo 2, the tavern's name: “Gilded Goose” or “Gilded Gorse”?", "Photo 3: is “the big guy” Gorrak, or someone new?", "Photo 1: the frog in a crown in the margin: a table joke, or a real character?"]}
 
 - pages: one for each person, place, group, item, quest, god, event or piece of lore the notes say something about. type is one of: ${TYPES.join(', ')} (npc for anyone who isn't a player's character, pc for the players' characters, shop for shops, inns and taverns, thread for a loose end or mystery still to resolve, lore for anything else). Skip things only mentioned in passing with nothing said about them.
 - name: the full name as the notes give it. summary: one short line. fields: a few short facts a GM glances at (role, race, age, ruler, population, price), at most 8.
 - body: everything the notes say about it, in tidy Markdown: short paragraphs and lists, ### headings if it's long. Keep the GM's own words and details. Don't invent anything or fill gaps, and don't pad. Link other pages by name in double square brackets, like [[Millbrook]], using the exact name of a page in your reply or in the world already.
 - secrets: anything the notes mark as secret, hidden, a twist, “players don't know” or for the GM only. Leave it out of body. Empty if none.
 - aliases: other names, titles or nicknames the notes use. in: the name of the place it's in, if the notes say. status (people only): alive, dead, missing or captured, only if the notes say.
+- known: true when the notes show the players already know about it: the party met, visited, fought, found or was told about it at the table (in a session log, “party met…”, “PCs learned…”). Otherwise false, and if you can't tell, false. A known page is shown to the players, so its summary, fields and body hold only what the players saw or learned; everything they haven't found out yet goes in secrets.
 - existing: when the page is about something already in the world (listed below), its exact name there, so these notes are added to that page. Otherwise empty. Use the world's spelling for names it already has.
 - sessions: if the notes log what happened at the table (a session, a game night, a dated entry of what the party did), one for each, with what happened as Markdown. Use the date and title as written; leave date empty if there isn't one. The people and places in a session log get pages too.
-- unsure: every word, name or number you couldn't read for certain, saying which photo and what you went with. Use your best reading in the pages.
+- unsure: every word, name or number you couldn't read for certain, saying which photo and what you went with; and a short question for each note that needs interpretation: an abbreviation, an arrow or line joining two things, a name that could be two people, a “?” the GM left, or anything you can't tell is world content or a joke. Use your best reading in the pages, and say in the question what you went with.
+- GMs' notes are full of memes, jokes, doodles, things players said at the table, shopping lists and random tidbits. Leave out what's clearly not about the world. A funny moment from play can go in the session's notes. When you can't tell, leave it out and ask in unsure.
 - Leave out anything crossed out, unless the notes say it still matters.
 ${hints.trim() ? `\nWhat the GM says about these notes:\n${hints.trim()}\n` : ''}
 Pages already in the world (name (type)):
@@ -135,6 +145,7 @@ export function notesFromReply(reply: string): NotesPlan {
         in: str(p.in) || undefined,
         status: type === 'npc' || type === 'pc' ? (STATUSES.includes(status) ? (status as LifeStatus) : undefined) : undefined,
         existing: str(p.existing) || undefined,
+        known: p.known === true || p.known === 'true',
       }
     })
     .filter((p) => p.name)

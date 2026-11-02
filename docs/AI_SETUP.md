@@ -167,7 +167,9 @@ On each session page: how long each person talked (needs a transcript with speak
 
 Press **Import hand-written notes**, add photos or scans of your notebook (one page per photo, flat, in good light; a PDF from a scanner app works too; up to 20 at a time) and/or paste notes you typed. If it helps, say who's who in **Anything Claude should know?** ("Bram and Kit are the players' characters; red ink means secret"). Then **Read my notes**, or **Copy for Claude**: paste it into claude.ai, add the same photos with the + button, send, and paste the answer back.
 
-You get a list to look over before anything changes: untick pages you don't want, fix a name, change a type, or point a page at one you already have (its notes are added under "From my notes", kept GM only if players can see that page). Words Claude couldn't read for sure are listed at the top. New pages arrive GM only and tagged "from my notes"; secrets go into GM notes; nights of play become played sessions at the end of your campaign.
+Claude leaves out memes, doodles and table jokes. At the top it lists words it couldn't read for sure and questions about what a note means ("Is 'the big guy' Gorrak?"); type answers and press **Read again with my answers** if you want it to have another go.
+
+Then you get a list to look over before anything changes: untick pages you don't want, fix a name, change a type, or point a page at one you already have (its notes are added under "From my notes"). Claude guesses which pages your players already know (they met or visited it at the table); those are ticked 👁 and shown to players, with anything they haven't found out kept in GM notes. Untick 👁 to keep a page GM only. Pages you already have keep their own visibility. Nights of play become played sessions at the end of your campaign, kept as your GM notes.
 
 ---
 
