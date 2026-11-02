@@ -156,3 +156,24 @@ test('Timeline keeps List or Month in the address, and Back steps between them',
   await expect.poll(() => here(page)).toBe(`${w}/timeline`)
   await expect(page.locator('.timeline-era').first()).toBeVisible()
 })
+
+test('Places, People and Lore each switch between their two kinds, and headings follow the tabs', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  for (const [path, heading, kinds] of [
+    ['locations', 'Places', ['Locations', 'Shops & Taverns']],
+    ['npcs', 'People', ['NPCs', 'Player Characters']],
+    ['lore', 'Lore', ['Lore', 'Deities']],
+  ] as const) {
+    await open(page, `${w}/${path}`)
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(heading)
+    for (const k of kinds) await expect(page.locator('.people-switch').getByRole('link', { name: k })).toBeVisible()
+  }
+  // The second kind opens its own list.
+  await open(page, `${w}/locations`)
+  await page.locator('.people-switch').getByRole('link', { name: 'Shops & Taverns' }).click()
+  await expect(page.locator('.kicker').first()).toContainText('Shops & Taverns')
+  // Threads has one name everywhere.
+  await open(page, `${w}/threads`)
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Threads')
+  await expect(page.getByRole('heading', { level: 1 })).not.toContainText('Loose')
+})

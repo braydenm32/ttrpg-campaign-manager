@@ -12,7 +12,7 @@ const GROUPS: { title: string; kinds: WorldUpdate['kind'][] }[] = [
   { title: 'Changes to pages', kinds: ['note', 'quest', 'status', 'item'] },
   { title: 'Relationships', kinds: ['relation'] },
   { title: 'Timeline', kinds: ['event'] },
-  { title: 'Loose threads', kinds: ['thread'] },
+  { title: 'Threads', kinds: ['thread'] },
   { title: 'Doesn’t match your notes', kinds: ['conflict'] },
 ]
 
@@ -223,7 +223,7 @@ function UpdateEditor({ update: u, onChange }: { update: WorldUpdate; onChange: 
       )}
       {u.kind === 'thread' && (
         <>
-          {u.action === 'raised' ? field('name', 'Loose thread', u.name) : field('page', 'Loose thread', u.page)}
+          {u.action === 'raised' ? field('name', 'Thread', u.name) : field('page', 'Thread', u.page)}
           {field('note', 'Note', u.note, 2)}
         </>
       )}

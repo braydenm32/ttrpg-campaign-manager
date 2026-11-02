@@ -123,7 +123,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
       {!settings.anthropicKey.trim() && !writing && (
         <p className="muted small">
           “Copy for Claude” is free with your Claude subscription. For one click, add an Anthropic API key in{' '}
-          <Link to={`${worldPath(world.id)}/settings?tab=device`}>World settings → AI tools</Link>.
+          <Link to={`${worldPath(world.id)}/settings?tab=device`}>World settings → This device</Link>.
         </p>
       )}
 

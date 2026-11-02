@@ -15,10 +15,10 @@ export function VisibilityToggle({
     <button
       type="button"
       className={`vis-toggle ${value}`}
-      title={value === 'gm' ? 'Only the GM can see this. Click to reveal to players.' : 'Players can see this. Click to hide.'}
+      title={value === 'gm' ? 'Only the GM can see this. Click to let players see it.' : 'Players can see this. Click to make it GM only.'}
       onClick={() => onChange(value === 'gm' ? 'players' : 'gm')}
     >
-      {value === 'gm' ? '🔒 GM only' : '👁 Revealed'}
+      {value === 'gm' ? '🔒 GM only' : '👁 Players can see this'}
     </button>
   )
 }

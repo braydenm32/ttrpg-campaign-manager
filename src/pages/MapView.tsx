@@ -949,7 +949,7 @@ function PinEditor({ pin, entities, maps, onClose }: { pin: Pin; entities: Entit
       </label>
       <label>
         Note
-        <SecretTextarea worldId={pin.worldId} rows={4} value={pin.note} onChange={(v) => update({ note: v })} placeholder="Shown when the pin is clicked. Markdown and [[links]] work." />
+        <SecretTextarea worldId={pin.worldId} rows={4} value={pin.note} onChange={(v) => update({ note: v })} placeholder="Shown when the pin is clicked. Links like [[Page name]] work." />
       </label>
       <SecretNamesWarning worldId={pin.worldId} texts={[pin.note]} show={pin.visibility === 'players'} />
       <div className="row spread">

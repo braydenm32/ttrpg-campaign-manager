@@ -12,7 +12,14 @@ import { listedEntries, TableRoller } from '../tables'
 import { pagesIn } from '../counts'
 import { StarterTables } from '../moreGenerators'
 import { useViewMode } from '../viewMode'
-import { pagePath, resolveCustom, sectionType, typePath, usePathsVersion } from '../paths'
+import { pagePath, resolveCustom, sectionType, typePath, usePathsVersion, worldPath } from '../paths'
+
+/** Kinds that share one tab, with the switch between them. The heading is the tab's name; the kind sits above it in small type. */
+const GROUPS: { title: string; types: readonly EntityType[]; always: boolean }[] = [
+  { title: 'People', types: ['npc', 'pc'], always: true },
+  { title: 'Places', types: ['location', 'shop'], always: false },
+  { title: 'Lore', types: ['lore', 'deity'], always: false },
+]
 
 export default function EntityList() {
   const { worldId, world } = useWorld()
@@ -48,15 +55,22 @@ export default function EntityList() {
       (!tag || e.tags.includes(tag)),
   )
 
+  const group = GROUPS.find((g) => g.types.includes(t))
+  // The GM always gets the switch; players only when the other kind has something they can read.
+  const switchTypes = group?.types.filter((x) => group.always || isGM || x === t || all.some((e) => e.type === x)) ?? []
+
   // Locations read best as a tree (region > city > district > building).
   const showTree = t === 'location' && !q && !tag
 
   return (
     <div className="page">
       <header className="page-header">
-        <h1>
-          {label.icon} {label.many} <Help topic={t === 'table' ? 'randomTables' : t === 'custom' && kind ? 'customTypes' : 'codex'} />
-        </h1>
+        <div>
+          {group && <div className="kicker">{label.many}</div>}
+          <h1>
+            {label.icon} {group ? group.title : label.many} <Help topic={t === 'table' ? 'randomTables' : t === 'custom' && kind ? 'customTypes' : 'codex'} />
+          </h1>
+        </div>
         {isGM && world && (t !== 'custom' || kind) && <NewPageButton world={world} type={t} customType={kind} />}
       </header>
       {isGM && ofType.length > 0 && (
@@ -66,15 +80,20 @@ export default function EntityList() {
           <SeenMark entity={{ visibility: 'gm' }} /> GM only {ofType.filter((e) => e.visibility !== 'players').length} <Help topic="seenMarks" />
         </p>
       )}
-      {(t === 'npc' || t === 'pc') && (
-        // People holds both: a switch between the NPCs and the party's own characters.
-        <nav className="segmented people-switch" aria-label="Which people">
-          {(['npc', 'pc'] as const).map((p) => (
+      {group && switchTypes.length > 1 && (
+        // People, Places and Lore each hold two kinds: a switch between them.
+        <nav className="segmented people-switch" aria-label={`Which ${group.title.toLowerCase()}`}>
+          {switchTypes.map((p) => (
             <Link key={p} to={typePath(worldId, p)} className={p === t ? 'on' : ''} aria-current={p === t ? 'page' : undefined}>
               {typeLabel({ type: p }, world).many}
             </Link>
           ))}
         </nav>
+      )}
+      {(group?.title === 'Places' || group?.title === 'Lore') && (
+        <p className="muted small">
+          Also: <Link to={typePath(worldId, 'item')}>Items</Link> · <Link to={typePath(worldId, 'event')}>Events</Link> · <Link to={`${worldPath(worldId)}/everything`}>Everything</Link>
+        </p>
       )}
       {t === 'table' && ofType.length > 0 && (
         <div className="card">

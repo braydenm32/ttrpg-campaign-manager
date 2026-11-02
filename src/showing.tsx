@@ -339,7 +339,7 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
           }}
         >
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title, e.g. A letter sealed in red wax" />
-          <textarea rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="What the players read. Markdown works." />
+          <textarea rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="What the players read. Links like [[Page name]] work." />
           <div className="row wrap">
             <button className="primary" disabled={!text.trim()}>
               Show

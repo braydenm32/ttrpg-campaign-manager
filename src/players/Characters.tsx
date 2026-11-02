@@ -169,7 +169,7 @@ export function EditMyCharacter({ entity, cloudId, system }: { entity: Entity; c
             </button>
             <label>
               In your own words
-              <textarea rows={8} value={playerBody} onChange={(e) => setPlayerBody(e.target.value)} placeholder="Appearance, personality, backstory. Markdown and [[links]] work." />
+              <textarea rows={8} value={playerBody} onChange={(e) => setPlayerBody(e.target.value)} placeholder="Appearance, personality, backstory. Links like [[Page name]] work." />
             </label>
             {error && <p className="error small">{error}</p>}
             <div className="row end">

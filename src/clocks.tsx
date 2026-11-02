@@ -265,7 +265,7 @@ export default function ClocksPage() {
       {isGM && <NewClock entities={entities} />}
       {all.length === 0 ? (
         <Empty>
-          {isGM ? 'No clocks yet. Open a faction, a villain or a loose thread and add one from its Clocks box.' : 'Your GM hasn’t shared any clocks.'}
+          {isGM ? 'No clocks yet. Open a faction, a villain or a thread and add one from its Clocks box.' : 'Your GM hasn’t shared any clocks.'}
         </Empty>
       ) : (
         <>

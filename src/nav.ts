@@ -307,7 +307,7 @@ export const AREAS: NavArea[] = [
     tabs: [
       { id: 'now', label: 'Now', icon: Armchair, to: (f) => w(f), paths: ['?tab=overview', '?tab=scene'], who: players, keywords: 'home common room overview next session the scene' },
       { id: 'me', label: 'Me', searchTitle: 'My character', icon: UserCircle, to: (f) => `${w(f)}?tab=me`, paths: ['?tab=me'], who: players, keywords: 'my character sheet' },
-      { id: 'party', label: 'Party', icon: UsersThree, to: (f) => `${w(f)}?tab=party`, paths: ['?tab=party', 'loot'], who: players, keywords: 'the party loot' },
+      { id: 'party', label: 'Party', icon: UsersThree, to: (f) => `${w(f)}?tab=party`, paths: ['?tab=party', 'loot'], who: players, keywords: 'the party loot treasure coin inventory items' },
       {
         id: 'leads',
         label: 'Leads',
@@ -319,7 +319,7 @@ export const AREAS: NavArea[] = [
         count: (f) => f.leads || undefined,
         keywords: 'loose threads leads quests rumours clocks',
       },
-      { id: 'notes', label: 'Notes', icon: Notepad, to: (f) => `${w(f)}?tab=notes`, paths: ['?tab=notes', 'questions', 'scratchpad'], who: players, keywords: 'scratchpad questions for the gm group notes' },
+      { id: 'notes', label: 'Notes', icon: Notepad, to: (f) => `${w(f)}?tab=notes`, paths: ['?tab=notes', 'questions', 'scratchpad'], who: players, keywords: 'scratchpad questions for the gm group notes my notes downtime' },
     ],
   },
   { id: 'world', label: 'The World', short: 'World', icon: GlobeHemisphereWest, who: readers, tabs: worldTabs, keywords: 'atlas codex' },
@@ -372,14 +372,14 @@ export const MORE_GROUPS: MoreGroup[] = [
       },
       {
         id: 'scratchpad',
-        label: 'Players’ scratchpad',
+        label: 'Group notes',
         icon: Notepad,
         to: (f) => w(f, 'scratchpad'),
         paths: ['scratchpad'],
         who: own,
         when: (f) => !!f.cloud,
         blurb: 'The notes your players keep together.',
-        keywords: 'scratchpad group notes',
+        keywords: 'scratchpad players notes party notebook',
       },
     ],
   },
@@ -388,7 +388,7 @@ export const MORE_GROUPS: MoreGroup[] = [
     label: 'Workshop',
     blurb: 'Making things between sessions.',
     items: [
-      { id: 'generators', label: 'Generators', icon: DiceFive, to: (f) => w(f, 'generators'), paths: ['generators'], who: own, blurb: 'Names, taverns, shops, people and treasure on the spot.', keywords: 'generators and random tables roll names tavern npc shop treasure' },
+      { id: 'generators', label: 'Generators and tables', icon: DiceFive, to: (f) => w(f, 'generators'), paths: ['generators'], who: own, blurb: 'Names, taverns, shops, people and treasure on the spot.', keywords: 'generators and random tables roll names tavern npc shop treasure' },
       { id: 'tables', label: 'Random tables', icon: Table, to: (f) => w(f, 'tables'), types: ['table'], who: own, blurb: 'Your own tables to roll on.', keywords: 'roll d20 d100' },
       { id: 'boards', label: 'Corkboards', icon: PushPin, to: (f) => w(f, 'boards'), paths: ['boards', 'boards/:boardId'], who: own, blurb: 'Pin pages up and tie them together with string.', keywords: 'board pins strings' },
       { id: 'assets', label: 'Files', icon: Folder, to: (f) => w(f, 'assets'), paths: ['assets'], who: own, blurb: 'Pictures, maps and sounds you’ve uploaded.', keywords: 'assets images uploads pictures' },
@@ -399,7 +399,7 @@ export const MORE_GROUPS: MoreGroup[] = [
   {
     id: 'keeping',
     label: 'Keeping the world',
-    blurb: 'Settings, backups and the bin.',
+    blurb: 'Settings, backups and Recently deleted.',
     items: [
       { id: 'settings', label: 'World settings', icon: SlidersHorizontal, to: (f) => w(f, 'settings'), paths: ['settings'], who: own, blurb: 'The world, players and sharing, this device, data.', keywords: 'options sync calendar theme look' },
       {
@@ -425,14 +425,10 @@ export const PLAYER_MORE_GROUPS: MoreGroup[] = [
   {
     id: 'table',
     label: 'At the table',
-    blurb: 'For game night.',
+    blurb: 'For game night. Loot, clocks, Group notes and questions are on the Common Room tabs.',
     items: [
       { id: 'rules', label: 'Table rules', icon: HandPalm, to: (f) => w(f, 'safety'), who: players, when: (f) => !!f.safety, blurb: 'Lines, veils and the X-card your table agreed on.' },
       { id: 'handouts', label: 'Handouts', icon: Newspaper, to: (f) => w(f, 'handouts'), who: readers, when: (f) => !!f.handouts, blurb: 'What your GM has shown you.', keywords: 'shown' },
-      { id: 'loot', label: 'Party loot', icon: Backpack, to: (f) => w(f, 'loot'), who: players, when: (f) => !!f.loot, blurb: 'Who carries what, and the party’s coin.', keywords: 'treasure coin inventory items' },
-      { id: 'clocks', label: 'Clocks', icon: Timer, to: (f) => w(f, 'clocks'), who: players, when: (f) => !!f.clocks, blurb: 'Things that are ticking.', keywords: 'countdown progress' },
-      { id: 'scratchpad', label: 'Scratchpad', icon: Notepad, to: (f) => w(f, 'scratchpad'), who: players, when: (f) => !!f.invited, blurb: 'Notes the party keeps together.' },
-      { id: 'questions', label: 'Questions for the GM', icon: Tray, to: (f) => w(f, 'questions'), who: players, when: (f) => !!f.invited, blurb: 'Ask your GM something between sessions.' },
     ],
   },
   {

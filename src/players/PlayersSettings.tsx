@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { cloudErrorMessage } from '../cloud/client'
 import {
   approveClaim,
   createGmInviteLink,
@@ -41,7 +42,7 @@ export function PlayersSettings({ world }: { world: World }) {
       setMembers(p.members.filter((m) => m.role === 'player'))
       setClaims(p.claims)
     } catch (e) {
-      setError((e as Error).message)
+      setError(cloudErrorMessage(e))
     }
   }, [world.id])
   useEffect(() => {
@@ -56,7 +57,7 @@ export function PlayersSettings({ world }: { world: World }) {
       await fn()
       await load()
     } catch (e) {
-      setError((e as Error).message)
+      setError(cloudErrorMessage(e))
     } finally {
       setBusy(false)
     }
@@ -192,7 +193,7 @@ export function CoGmSettings({ world }: { world: World }) {
       setToken(t)
       setGms(p.members.filter((m) => m.role === 'gm'))
     } catch (e) {
-      setError((e as Error).message)
+      setError(cloudErrorMessage(e))
     }
   }, [world.id])
   useEffect(() => {
@@ -207,7 +208,7 @@ export function CoGmSettings({ world }: { world: World }) {
       await fn()
       await load()
     } catch (e) {
-      setError((e as Error).message)
+      setError(cloudErrorMessage(e))
     } finally {
       setBusy(false)
     }

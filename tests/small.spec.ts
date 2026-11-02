@@ -104,7 +104,7 @@ test('the players’ TV screen: a calm waiting screen, then what the GM shows, w
 
 test('the scratchpad without players says what it is for, and the GM’s way to invite them', async ({ page, world, device }) => {
   await open(page, `/w/${world.slug}/scratchpad`)
-  await expect(page.getByRole('heading', { name: 'Scratchpad' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Group notes' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Players and sharing' })).toHaveAttribute('href', /settings\?tab=players/)
   await tidy(page, device)
   await shot(page, `scratchpad-gm-${device}`)
@@ -181,7 +181,7 @@ test.describe('a joined player and a wiki reader (pretend player copies)', () =>
     const copy = await makePlayerCopy(page, world, 'member')
     try {
       await open(page, `/w/${copy.id}/scratchpad`)
-      await expect(page.getByRole('heading', { name: /Scratchpad/ })).toBeVisible()
+      await expect(page.getByRole('heading', { name: /Group notes/ })).toBeVisible()
       await tidy(page, device)
       await shot(page, `scratchpad-player-${device}`)
       await page.getByPlaceholder('Anything you want to remember…').fill('Ask the fence about the red wax.')

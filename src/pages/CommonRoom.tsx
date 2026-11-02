@@ -581,7 +581,12 @@ function RoomFoot({ ctx }: { ctx: RoomContext }) {
         </Link>
       )}
       {/* Live, the X-card is in the session's own card. */}
-      {ctx.memberOf && world.safety?.xcard && ctx.stage !== 'during' && <XCardButton cloudId={ctx.memberOf} small />}
+      {/* On a laptop the sidebar already has one. */}
+      {ctx.memberOf && world.safety?.xcard && ctx.stage !== 'during' && (
+        <span className="room-foot-xcard">
+          <XCardButton cloudId={ctx.memberOf} small />
+        </span>
+      )}
     </nav>
   )
 }

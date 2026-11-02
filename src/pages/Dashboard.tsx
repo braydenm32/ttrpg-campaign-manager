@@ -391,7 +391,7 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
   if (s && stage === 'planned')
     needs.push({
       key: 'prep',
-      chip: 'Prep',
+      chip: 'Prepare',
       icon: NotePencil,
       tone: 'warn',
       text: <>Nothing planned for #{s.number} yet</>,
@@ -707,7 +707,7 @@ function RecentlyChanged({ world, entities }: { world: World; entities: Entity[]
   if (!recent.length) return null
   return (
     <section className="card recently-changed">
-      <h2>Recently changed</h2>
+      <h2>Recently changed <Help topic="recentChanges" /></h2>
       <ul className="recent-list">
         {recent.map((e) => (
           <li key={e.id}>

@@ -620,9 +620,9 @@ function LecternThreads({ lectern, entities, worldId, sessionId }: { lectern: Le
   return (
     <LecternPanel
       id="threads"
-      name="Loose threads"
-      keywords="hooks mysteries leads quests"
-      title={<><Ico as={Spiral} /> Loose threads</>}
+      name="Threads"
+      keywords="loose threads hooks mysteries leads quests"
+      title={<><Ico as={Spiral} /> Threads</>}
       extra={
         <Link className="small" to={`${worldPath(worldId)}/threads`}>
           All threads

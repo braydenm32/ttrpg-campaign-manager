@@ -176,6 +176,7 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
           <DraftText className="session-num" inputMode="numeric" aria-label="Session number" title={HELP.sessionTitle} saveOn="leave" value={String(session.number)} onCommit={(v) => update({ number: Number(v) || 0 })} />
           <DraftText className="session-name" aria-label="Session title" title={HELP.sessionTitle} value={session.title} onCommit={(title) => update({ title })} />
         </h1>
+        <Help topic="session" />
         <SavedMark />
       </div>
       <div className="strip-facts">
@@ -183,7 +184,7 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
           {stats.map((s) => (
             <span key={s}>{s}</span>
           ))}
-          <span>{session.visibility === 'players' ? <><Ico as={Eye} /> players can read it</> : <><Ico as={Lock} /> GM only</>}</span>
+          <span>{session.visibility === 'players' ? <><Ico as={Eye} /> players can see this</> : <><Ico as={Lock} /> GM only</>}</span>
         </span>
         <span className="grow" />
         {action}
@@ -335,7 +336,7 @@ function NotesCard({ session, entities, worldId, id }: { session: Session; entit
           className="notes-text"
           aria-label="GM notes"
           value={session.notes}
-          placeholder="What happened, who they met, what’s left hanging… Use [[Name]] to link pages. Only you see these."
+          placeholder="What happened, who they met, what’s left hanging… Links like [[Page name]] work. Only you see these."
           onCommit={(notes) => saving(db.sessions.update(session.id, { notes }))}
         />
       ) : (
@@ -694,7 +695,7 @@ function SessionThreads({ session, entities, worldId }: { session: Session; enti
     <section className="card wrap-card" id="threads">
       <div className="plan-head">
         <h2>
-          <Ico as={Spiral} /> Loose threads from this session
+          <Ico as={Spiral} /> Threads from this session
         </h2>
         <Link className="small" to={`${worldPath(worldId)}/threads`}>
           All threads
@@ -723,7 +724,7 @@ function SessionThreads({ session, entities, worldId }: { session: Session; enti
           setName('')
         }}
       >
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Add a thread this session left hanging" aria-label="New loose thread" />
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Add a thread this session left hanging" aria-label="New thread" />
         <button disabled={!name.trim()}>Add</button>
       </form>
     </section>

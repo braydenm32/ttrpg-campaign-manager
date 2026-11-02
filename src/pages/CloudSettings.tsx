@@ -6,6 +6,7 @@ import { createShareLink, getShareToken, revokeShareLink, shareUrl } from '../cl
 import { deleteCloudCopy, disableCloud, enableCloud, syncNow, syncStore } from '../cloud/sync'
 import type { World } from '../db'
 import { myRole } from '../cloud/players'
+import { cloudErrorMessage } from '../cloud/client'
 import { CoGmSettings, PlayersSettings } from '../players/PlayersSettings'
 import { Ico } from '../icons'
 import { BookOpen, Cloud, Scroll } from '@phosphor-icons/react'
@@ -34,7 +35,7 @@ export default function CloudSettings({ world }: { world: World }) {
     try {
       await fn()
     } catch (e) {
-      setError((e as Error).message)
+      setError(cloudErrorMessage(e))
     } finally {
       setBusy(false)
     }

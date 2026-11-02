@@ -106,7 +106,7 @@ export default function CampaignPage() {
             value={campaign.description}
             onCommit={(description) => update({ description })}
           />
-          <small className="muted">{campaign.visibility === 'gm' ? 'This campaign is hidden from players.' : 'Players can read this. Keep secrets out of it.'}</small>
+          <small className="muted">{campaign.visibility === 'gm' ? 'This campaign is hidden from players.' : 'Players can see this. Keep secrets out of it.'}</small>
         </>
       ) : (
         campaign.description && <p className="lead">{campaign.description}</p>
@@ -143,9 +143,9 @@ export default function CampaignPage() {
           )}
         </section>
         <section>
-          <h2>The party</h2>
+          <h2>The party <Help topic="partyCampaign" /></h2>
           {pcs.length === 0 ? (
-            <Empty>Add Player Characters in the codex.</Empty>
+            <Empty>Add Player Characters in the Atlas (People).</Empty>
           ) : isGM && world ? (
             <PartyGlance world={world} party={pcs} />
           ) : (
@@ -158,7 +158,7 @@ export default function CampaignPage() {
               ))}
             </ul>
           )}
-          <h2>Open quests in this world</h2>
+          <h2>Open quests in this world <Help topic="openQuests" /></h2>
           {quests.length === 0 ? (
             <Empty>None.</Empty>
           ) : (

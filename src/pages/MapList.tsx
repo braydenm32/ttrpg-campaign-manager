@@ -177,35 +177,38 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
           <div className="map-kinds" role="radiogroup" aria-label="Kind of map">
             {(
               [
-                ['world', 'World, region or city', 'Coasts, mountains, forests and towns, or a town seen from above'],
-                ['battle', 'Dungeon, building or battle map', 'On 5 ft squares, for fights and exploring'],
+                ['world', 'World or region (side view)', 'Coasts, mountains, forests and towns drawn as little pictures'],
+                ['town', 'Town or city (from above)', 'Streets, walls and houses seen from above, like a bird flying over'],
+                ['battle', 'Battle map or dungeon (5 ft squares)', 'On a grid, for fights and exploring dungeons and buildings'],
               ] as const
-            ).map(([k, title, note]) => (
-              <button
-                key={k}
-                type="button"
-                role="radio"
-                aria-checked={kind === k}
-                className={kind === k ? 'on' : ''}
-                onClick={() => {
-                  setKind(k)
-                  setStart(k === 'battle' ? 'rock' : 'sea')
-                }}
-              >
-                <strong>{title}</strong>
-                <small>{note}</small>
-              </button>
-            ))}
+            ).map(([k, title, note]) => {
+              const on = k === 'battle' ? kind === 'battle' : kind === 'world' && (k === 'town') === (start === 'town')
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  className={on ? 'on' : ''}
+                  onClick={() => {
+                    setKind(k === 'battle' ? 'battle' : 'world')
+                    setStart(k === 'battle' ? 'rock' : k === 'town' ? 'town' : 'sea')
+                  }}
+                >
+                  <strong>{title}</strong>
+                  <small>{note}</small>
+                </button>
+              )
+            })}
           </div>
         </div>
-        <label>
+        {start !== 'town' && <label>
           Start with
           <select value={start} onChange={(e) => setStart(e.target.value as Start)}>
             {kind === 'world' ? (
               <>
                 <option value="sea">Open sea (paint the land)</option>
                 <option value="land">All land (carve out the water)</option>
-                <option value="town">A town or city seen from above</option>
               </>
             ) : (
               <>
@@ -218,7 +221,7 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
               </>
             )}
           </select>
-        </label>
+        </label>}
         <div className="label">
           Size
           <div className="segmented">

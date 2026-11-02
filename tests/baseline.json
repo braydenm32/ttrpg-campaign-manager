@@ -1,11 +1,11 @@
 {
   "phone gm *": {
     "problems": [],
-    "smallTargets": 8
+    "smallTargets": 9
   },
   "phone gm /": {
     "problems": [],
-    "smallTargets": 8
+    "smallTargets": 9
   },
   "phone gm /w/:worldId": {
     "problems": [],
@@ -29,7 +29,7 @@
   },
   "phone gm /w/:worldId/:section (old type word)": {
     "problems": [],
-    "smallTargets": 4
+    "smallTargets": 3
   },
   "phone gm /w/:worldId/:section (random tables)": {
     "problems": [],
@@ -41,7 +41,7 @@
   },
   "phone gm /w/:worldId/c/:campaignId": {
     "problems": [],
-    "smallTargets": 38
+    "smallTargets": 40
   },
   "phone gm /w/:worldId/chronicle": {
     "problems": [],
@@ -53,7 +53,7 @@
   },
   "phone gm /w/:worldId/e/:entityId": {
     "problems": [],
-    "smallTargets": 14
+    "smallTargets": 15
   },
   "phone gm /w/:worldId/everything": {
     "problems": [],
@@ -89,11 +89,11 @@
   },
   "phone gm /w/:worldId/p/:entityId (custom page)": {
     "problems": [],
-    "smallTargets": 4
+    "smallTargets": 5
   },
   "phone gm /w/:worldId/p/:entityId (deity)": {
     "problems": [],
-    "smallTargets": 12
+    "smallTargets": 13
   },
   "phone gm /w/:worldId/p/:entityId (editor)": {
     "problems": [],
@@ -101,73 +101,73 @@
   },
   "phone gm /w/:worldId/p/:entityId (event)": {
     "problems": [],
-    "smallTargets": 4
+    "smallTargets": 5
   },
   "phone gm /w/:worldId/p/:entityId (faction with clocks)": {
     "problems": [],
-    "smallTargets": 33
+    "smallTargets": 34
   },
   "phone gm /w/:worldId/p/:entityId (GM-only page)": {
     "problems": [],
-    "smallTargets": 31
+    "smallTargets": 32
   },
   "phone gm /w/:worldId/p/:entityId (item)": {
     "problems": [],
-    "smallTargets": 5
+    "smallTargets": 6
   },
   "phone gm /w/:worldId/p/:entityId (location)": {
     "problems": [],
-    "smallTargets": 14
+    "smallTargets": 6
   },
   "phone gm /w/:worldId/p/:entityId (loose thread (GM only))": {
     "problems": [],
-    "smallTargets": 7
+    "smallTargets": 8
   },
   "phone gm /w/:worldId/p/:entityId (lore)": {
     "problems": [],
-    "smallTargets": 4
+    "smallTargets": 5
   },
   "phone gm /w/:worldId/p/:entityId (NPC)": {
     "problems": [],
-    "smallTargets": 13
+    "smallTargets": 6
   },
   "phone gm /w/:worldId/p/:entityId (player character)": {
     "problems": [],
-    "smallTargets": 23
+    "smallTargets": 24
   },
   "phone gm /w/:worldId/p/:entityId (quest)": {
     "problems": [],
-    "smallTargets": 17
+    "smallTargets": 18
   },
   "phone gm /w/:worldId/p/:entityId (random table)": {
     "problems": [
       "sideways scroll"
     ],
-    "smallTargets": 4
+    "smallTargets": 5
   },
   "phone gm /w/:worldId/p/:entityId (shop)": {
     "problems": [],
-    "smallTargets": 7
+    "smallTargets": 8
   },
   "phone gm /w/:worldId/s/:sessionId": {
     "problems": [],
-    "smallTargets": 40
+    "smallTargets": 41
   },
   "phone gm /w/:worldId/s/:sessionId (end of session checklist)": {
     "problems": [],
-    "smallTargets": 48
+    "smallTargets": 49
   },
   "phone gm /w/:worldId/s/:sessionId (GM notes tab)": {
     "problems": [],
-    "smallTargets": 48
+    "smallTargets": 49
   },
   "phone gm /w/:worldId/s/:sessionId (prep tab)": {
     "problems": [],
-    "smallTargets": 40
+    "smallTargets": 41
   },
   "phone gm /w/:worldId/s/:sessionId (recap tab)": {
     "problems": [],
-    "smallTargets": 48
+    "smallTargets": 49
   },
   "phone gm /w/:worldId/s/:sessionId/lectern": {
     "problems": [],
@@ -175,7 +175,7 @@
   },
   "phone gm /w/:worldId/session": {
     "problems": [],
-    "smallTargets": 40
+    "smallTargets": 41
   },
   "phone gm /w/:worldId/threads": {
     "problems": [],
@@ -255,7 +255,7 @@
   },
   "phone player /w/:worldId/c/:campaignId": {
     "problems": [],
-    "smallTargets": 14
+    "smallTargets": 16
   },
   "phone player /w/:worldId/clocks": {
     "problems": [],
@@ -315,15 +315,11 @@
   },
   "phone player /w/:worldId/p/:entityId (NPC)": {
     "problems": [],
-    "smallTargets": 8
+    "smallTargets": 1
   },
   "phone player /w/:worldId/p/:entityId (player character)": {
     "problems": [],
     "smallTargets": 13
-  },
-  "phone player /w/:worldId/p/:entityId (quest)": {
-    "problems": [],
-    "smallTargets": 4
   },
   "phone player /w/:worldId/p/:entityId (random table)": {
     "problems": [

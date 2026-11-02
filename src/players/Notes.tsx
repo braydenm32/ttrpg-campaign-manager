@@ -257,7 +257,7 @@ function GmGroupNotes({ world, entityId, entities, big }: { world: World; entity
     <section className="player-notes">
       {!big && (
         <h2>
-          <Ico as={Notepad} /> Your players’ notes <Help topic="gmPlayerNotes" />
+          <Ico as={Notepad} /> Group notes <Help topic="gmPlayerNotes" />
         </h2>
       )}
       <span className="note-meta">

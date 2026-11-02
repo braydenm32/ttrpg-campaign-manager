@@ -141,7 +141,7 @@ export function ClaudeJob({
           <button onClick={copy} disabled={disabled} title="Copies everything Claude needs. Paste it into claude.ai, then paste the answer back here.">
             <Ico as={ClipboardText} /> Copy for Claude
           </button>
-          <button className="primary" onClick={run} disabled={disabled || !key} title={key ? 'Uses your Anthropic API key' : 'Add an Anthropic API key in World settings first'}>
+          <button className="primary" onClick={run} disabled={disabled || !key} title={key ? 'Uses your Anthropic API key' : 'Add an Anthropic API key in World settings → This device first'}>
             <Ico as={Sparkle} /> {label}
             {price ? ` (about ${dollars(price.usd)})` : ''}
           </button>
@@ -155,7 +155,7 @@ export function ClaudeJob({
       )}
       {!key && !writing && (
         <p className="muted small">
-          “Copy for Claude” is free with your Claude subscription. For one click, add an Anthropic API key in <Link to={`${worldPath(worldId)}/settings?tab=device`}>World settings → AI tools</Link>.
+          “Copy for Claude” is free with your Claude subscription. For one click, add an Anthropic API key in <Link to={`${worldPath(worldId)}/settings?tab=device`}>World settings → This device</Link>.
         </p>
       )}
       {paste !== 'closed' && !writing && (
