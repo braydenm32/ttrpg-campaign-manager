@@ -61,35 +61,15 @@ export default function CampaignPage() {
               {campaign.name} <Help topic="campaign" />
             </h1>
           )}
-          {isGM ? (
-            <div className="row">
-              <select value={campaign.system} onChange={(e) => update({ system: e.target.value })}>
-                {GAME_SYSTEMS.map((s) => (
-                  <option key={s}>{s}</option>
-                ))}
-              </select>
-              <select value={campaign.status} onChange={(e) => update({ status: e.target.value as Campaign['status'] })}>
-                <option value="planning">Planning</option>
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-                <option value="finished">Finished</option>
-              </select>
-              <VisibilityToggle
-                value={campaign.visibility ?? 'players'}
-                onChange={async (v) => {
-                  const was = campaign.visibility
-                  await update({ visibility: v === 'players' ? undefined : v })
-                  toast(v === 'players' ? `Players can see “${campaign.name}” and the sessions you’ve shown them.` : `“${campaign.name}” is hidden from players.`, () => update({ visibility: was }))
-                }}
-              />
-              <Help topic="hiddenCampaign" />
-              <SavedMark />
-            </div>
-          ) : (
-            <div className="muted">
-              {campaign.system} · {campaign.status}
-            </div>
-          )}
+          <div className="muted">
+            {campaign.system} · {campaign.status}
+            {isGM && campaign.visibility === 'gm' && (
+              <>
+                {' · '}
+                <VisibilityBadge value="gm" />
+              </>
+            )}
+          </div>
         </div>
         {isGM && (
           <button onClick={() => newSession()}>
@@ -97,51 +77,38 @@ export default function CampaignPage() {
           </button>
         )}
       </header>
-      {isGM ? (
-        <>
-          <DraftText
-            multiline
-            rows={3}
-            placeholder="Campaign pitch, themes, what the players should know…"
-            value={campaign.description}
-            onCommit={(description) => update({ description })}
-          />
-          <small className="muted">{campaign.visibility === 'gm' ? 'This campaign is hidden from players.' : 'Players can read this. Keep secrets out of it.'}</small>
-        </>
-      ) : (
-        campaign.description && <p className="lead">{campaign.description}</p>
-      )}
+      {!isGM && campaign.description && <p className="lead">{campaign.description}</p>}
+
+      <section>
+        <h2>
+          All sessions <Help topic="session" />
+        </h2>
+        {sessions.length === 0 ? (
+          <Empty>{isGM ? 'No sessions yet.' : 'No sessions shown to players yet.'}</Empty>
+        ) : (
+          <ul className="session-rows">
+            {[...sessions].reverse().map((s) => {
+              const stage = sessionStage(s, playing.includes(s.id))
+              return (
+                <li key={s.id} className={s.id === next?.id ? 'is-next' : ''}>
+                  <Link to={`${w}/s/${s.id}${isGM ? `?tab=${sessionFirstTab(s)}` : ''}`}>
+                    <span className="session-num">#{s.number}</span>
+                    <span className="session-name">{s.title}</span>
+                    <span className="muted small session-date">{s.date || (isGM ? 'no date' : '')}</span>
+                  </Link>
+                  {isGM && <StageChip stage={stage} />}
+                  {isGM && s.visibility === 'gm' && <VisibilityBadge value={s.visibility} />}
+                  {s.recordings.length > 0 && <span title="Has recordings"> <Ico as={Microphone} /></span>}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
 
       {isGM && <NextUp worldId={worldId} next={next} stage={next && sessionStage(next, playing.includes(next.id))} onNew={() => newSession()} />}
 
-
       <div className="two-col">
-        <section>
-          <h2>
-            Sessions <Help topic="session" />
-          </h2>
-          {sessions.length === 0 ? (
-            <Empty>{isGM ? 'No sessions yet.' : 'No sessions shown to players yet.'}</Empty>
-          ) : (
-            <ul className="session-rows">
-              {[...sessions].reverse().map((s) => {
-                const stage = sessionStage(s, playing.includes(s.id))
-                return (
-                  <li key={s.id} className={s.id === next?.id ? 'is-next' : ''}>
-                    <Link to={`${w}/s/${s.id}${isGM ? `?tab=${sessionFirstTab(s)}` : ''}`}>
-                      <span className="session-num">#{s.number}</span>
-                      <span className="session-name">{s.title}</span>
-                      <span className="muted small session-date">{s.date || (isGM ? 'no date' : '')}</span>
-                    </Link>
-                    {isGM && <StageChip stage={stage} />}
-                    {isGM && s.visibility === 'gm' && <VisibilityBadge value={s.visibility} />}
-                    {s.recordings.length > 0 && <span title="Has recordings"> <Ico as={Microphone} /></span>}
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </section>
         <section>
           <h2>The party</h2>
           {pcs.length === 0 ? (
@@ -190,22 +157,56 @@ export default function CampaignPage() {
       )}
 
       {isGM && (
-        <div className="row end">
-          <button
-            className="danger"
-            disabled={recording}
-            title={recording ? 'Stop the recording first' : undefined}
-            onClick={async () => {
-              if (!confirm(`Delete campaign "${campaign.name}" and its sessions? World content is kept.`)) return
-              // Characters who played only in this campaign go back to "any campaign", so they don't vanish from every party.
-              await db.entities.where({ worldId }).filter((e) => e.campaignId === campaignId).modify({ campaignId: undefined })
-              await binCampaign(campaignId)
-              navigate(`${worldPath(worldId)}`)
-            }}
-          >
-            Delete campaign
-          </button>
-        </div>
+        <details className="card campaign-settings">
+          <summary>Campaign settings</summary>
+          <div className="row">
+            <select aria-label="Game system" value={campaign.system} onChange={(e) => update({ system: e.target.value })}>
+              {GAME_SYSTEMS.map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+            <select aria-label="Status" value={campaign.status} onChange={(e) => update({ status: e.target.value as Campaign['status'] })}>
+              <option value="planning">Planning</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+              <option value="finished">Finished</option>
+            </select>
+            <VisibilityToggle
+              value={campaign.visibility ?? 'players'}
+              onChange={async (v) => {
+                const was = campaign.visibility
+                await update({ visibility: v === 'players' ? undefined : v })
+                toast(v === 'players' ? `Players can see “${campaign.name}” and the sessions you’ve shown them.` : `“${campaign.name}” is hidden from players.`, () => update({ visibility: was }))
+              }}
+            />
+            <Help topic="hiddenCampaign" />
+            <SavedMark />
+          </div>
+          <DraftText
+            multiline
+            rows={3}
+            placeholder="Campaign pitch, themes, what the players should know…"
+            value={campaign.description}
+            onCommit={(description) => update({ description })}
+          />
+          <small className="muted">{campaign.visibility === 'gm' ? 'This campaign is hidden from players.' : 'Players can read this. Keep secrets out of it.'}</small>
+          <div className="row end">
+            <button
+              className="danger"
+              disabled={recording}
+              title={recording ? 'Stop the recording first' : undefined}
+              onClick={async () => {
+                if (!confirm(`Delete campaign "${campaign.name}" and its sessions? World content is kept.`)) return
+                // Characters who played only in this campaign go back to "any campaign", so they don't vanish from every party.
+                await db.entities.where({ worldId }).filter((e) => e.campaignId === campaignId).modify({ campaignId: undefined })
+                await binCampaign(campaignId)
+                navigate(`${worldPath(worldId)}`)
+              }}
+            >
+              Delete campaign
+            </button>
+          </div>
+        </details>
       )}
     </div>
   )
