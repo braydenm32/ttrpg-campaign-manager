@@ -205,8 +205,13 @@ test('rooms can be picked, changed and erased, Ctrl+Z works after a slider, and 
     await dragMap(page, [700, 140], [1050, 490])
     await expect.poll(async () => (await mapNamed(page, name))?.drawing.rooms?.length).toBe(2)
 
+    // Each tool has a key, and Esc goes back to Select.
+    await page.keyboard.press('e')
+    await expect(page.locator('.builder-tools button.on')).toContainText('Erase')
+    await page.keyboard.press('Escape')
+    await expect(page.locator('.builder-tools button.on')).toContainText('Select')
+
     // Select a room by its edge: it can be made secret, filled in, or deleted.
-    await tool(page, 'Select').click()
     await clickMap(page, [140, 315])
     await expect(panel(page).locator('h2')).toHaveText('Room')
     await shot(page, 'maps-room-selected')

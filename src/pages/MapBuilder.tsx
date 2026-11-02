@@ -55,6 +55,8 @@ interface ToolDef {
   label: string
   hint: string
 }
+/** One key for each tool, as in other map and drawing programs (R is taken: it turns the selected piece). */
+const TOOL_KEYS: Record<Tool, string> = { select: 'V', hand: 'H', land: 'B', coast: 'C', room: 'D', line: 'L', stamp: 'P', label: 'T', erase: 'E' }
 
 const WORLD_TOOLS: ToolDef[] = [
   { id: 'select', icon: Cursor, label: 'Select', hint: 'Click a piece, line, label or painted stroke to edit it, drag to move it' },
@@ -658,10 +660,15 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
           commit({ ...drawing, shapes: drawing.shapes.map((x) => (x.id === s.id ? { ...s, turn } : x)) })
         }
       } else if (e.key === 'Escape') {
+        // Esc lets go of what's selected or under way first, then goes back to Select
+        if (!selectedId && !gesture.current) setTool('select')
         setSelectedId(undefined)
         setDraft([])
         setRoomDraft(undefined)
         gesture.current = undefined
+      } else if (!e.ctrlKey && !e.metaKey && !e.altKey && !gesture.current) {
+        const next = TOOLS.find((t) => TOOL_KEYS[t.id] === e.key.toUpperCase())
+        if (next) setTool(next.id)
       }
     }
     const up = (e: KeyboardEvent) => {
@@ -673,7 +680,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       window.removeEventListener('keydown', down)
       window.removeEventListener('keyup', up)
     }
-  }, [undo, redo, removeShape, selectedId, drawing, commit])
+  }, [undo, redo, removeShape, selectedId, drawing, commit, TOOLS])
 
   const toMap = (e: { clientX: number; clientY: number }): Point => {
     const svg = svgRef.current!
@@ -1282,7 +1289,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       <div className="map-body">
         <div className="builder-tools">
           {TOOLS.map((t) => (
-            <button key={t.id} className={tool === t.id ? 'on' : ''} title={t.hint} onClick={() => setTool(t.id)}>
+            <button key={t.id} className={tool === t.id ? 'on' : ''} title={`${t.hint} (key: ${TOOL_KEYS[t.id]})`} aria-keyshortcuts={TOOL_KEYS[t.id]} onClick={() => setTool(t.id)}>
               <span className="tool-icon">
                 <Ico as={t.icon} />
               </span>
@@ -1621,7 +1628,7 @@ function ToolOptions(p: {
         {p.tool === 'label' && <Help topic="curvedLabels" />}
       </h2>
       <p className="muted small">
-        {def?.hint}. <span className="pan-tip">Hold Space and drag to pan from any tool.</span>
+        {def?.hint}. <span className="pan-tip">Key: {TOOL_KEYS[p.tool]}. Hold Space and drag to pan from any tool.</span>
         <span className="pan-tip-touch">Drag with two fingers to move the map, or pinch to zoom.</span>
       </p>
       {p.tool === 'land' && top && (
