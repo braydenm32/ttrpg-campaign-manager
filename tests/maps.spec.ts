@@ -78,7 +78,7 @@ async function newDungeon(page: Page, world: World, name: string) {
   await page.getByRole('button', { name: /Draw a new map/ }).click()
   const dialog = page.getByRole('dialog')
   await dialog.getByLabel('Name').fill(name)
-  await dialog.getByRole('radio', { name: /Dungeon, building or battle map/ }).click()
+  await dialog.getByRole('radio', { name: /Battle map or dungeon/ }).click()
   await dialog.getByRole('button', { name: 'Small', exact: true }).click()
   await dialog.getByRole('button', { name: 'Start drawing' }).click()
   await page.waitForURL(/\/draw$/)

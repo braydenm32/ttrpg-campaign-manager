@@ -117,7 +117,7 @@ test('a new page that was never saved, typed in and deleted, leaves nothing behi
   let made: string | undefined
   try {
     await page.getByRole('button', { name: /^\+ New NPC/ }).first().click()
-    const blank = page.getByRole('button', { name: 'Blank page' })
+    const blank = page.getByRole('menuitem', { name: 'Blank page' })
     if (await blank.isVisible()) await blank.click()
     await expect.poll(() => here(page)).toMatch(/\?edit=1&new=1$/)
     made = here(page).match(/\/p\/([^?]+)/)?.[1]

@@ -250,6 +250,8 @@ a.card:hover, button.card:hover { border-color: var(--accent); text-decoration: 
 .world-card { align-items: stretch; }
 .map-card img, .asset-card img { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: 6px; background: var(--panel-2); }
 .asset-card audio { width: 100%; }
+.asset-card .row.spread { flex-wrap: wrap; }
+.card-grid > .card { min-width: 0; }
 .file-icon { font-size: 3rem; text-align: center; padding: .5em; background: var(--panel-2); border-radius: 6px; }
 .generated { margin: 1em 0; }
 .entity-list { list-style: none; padding: 0; margin: 0 0 1em; }
@@ -418,7 +420,8 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
   :where(button, .button):not(.help-button, .nav-caret, .swatch, .link, .ghost, .chip, .show-thumb) { min-height: 40px; }
   .nav-caret { width: 2em; min-height: 2em; }
   .help-button { position: relative; }
-  .help-button::after { content: ''; position: absolute; inset: -12px; }
+  /* The little "?" is 20px; its invisible tap area is a full 44px square (tests count it, see smallTargets). */
+  .help-button::after { content: ''; position: absolute; inset: -14px; }
   :where(button.small, button.ghost, button.link.small, .button.small) { min-height: 36px; min-width: 36px; }
   .modal header button { min-width: 44px; min-height: 44px; }
   /* The GM previewing as a player: the way back is a whole fingertip too. */
@@ -1779,8 +1782,11 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
   /* Where a page sits: the list it's in and the place just above it. */
   .crumbs.deep .crumb-mid { display: none; }
   .crumbs.deep .crumb-dots { display: inline; }
-  .crumbs a { display: inline-flex; align-items: center; min-height: 44px; }
+  .crumbs a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
   .crumbs { padding-bottom: 0; margin-bottom: .4em; }
+  /* Links in a page's side box and its Relationships list: a whole fingertip tall (their rows grow a little, nothing else moves). */
+  .facts dd a { display: inline-flex; align-items: center; min-height: 44px; }
+  .relation-list li > a, .relations .section-header a { display: inline-flex; align-items: center; min-height: 44px; }
   .page-strip { flex-direction: column; align-items: stretch; }
   .page-actions { gap: .4em; }
   .page-actions > :is(.button, button, .menu-wrap) { flex: 1 1 auto; justify-content: center; min-height: 44px; }
