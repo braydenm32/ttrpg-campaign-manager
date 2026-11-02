@@ -13,6 +13,8 @@ import { pagePath } from '../paths'
 import { useVisibleHandouts } from '../counts'
 import { toast } from '../undo'
 import { stripSecrets } from '../Markdown'
+import { whoByName } from '../reveal'
+import { useWorldPlayers } from '../players/Secrets'
 
 /**
  * Handouts: everything the GM has shown at the table, newest first. Players can read a letter or
@@ -29,7 +31,14 @@ export default function Handouts() {
   const entities = useVisibleEntities(worldId)
   // Players (and the GM previewing as one) get only the handouts the server sends them.
   const list = useVisibleHandouts(world, entities)
+  // Players a page was revealed to by name keep it when it's hidden, so say who.
+  const players = useWorldPlayers(isGM ? world : undefined, entities)
   if (!world) return <Skeleton />
+  const hidePage = async (handoutId: string, page: (typeof entities)[number], keepers: string, alsoNamed: boolean) => {
+    setRemoving(undefined)
+    const undo = await removeHandout(worldId, handoutId, page.id, alsoNamed)
+    toast(keepers && !alsoNamed ? `“${page.name}” is off the handouts and hidden from players. ${keepers} can still see it.` : `“${page.name}” is off the handouts and GM only again.`, undo)
+  }
   // Handouts prepared ahead: GM-only pages tagged "handout", waiting for the moment to show them.
   const ready = isGM ? entities.filter((e) => e.visibility === 'gm' && e.tags.includes('handout')) : []
   return (
@@ -105,6 +114,7 @@ export default function Handouts() {
           {list.map((h: Showing) => {
             const page = h.kind === 'page' ? entities.find((e) => e.id === h.entityId) : undefined
             const revealed = page?.visibility === 'players'
+            const keepers = page ? whoByName(page, players.filter((p) => page.revealedTo?.includes(p.userId)).map((p) => p.name)) : ''
             return (
               <li key={h.id} className="card">
                 <div className="row wrap">
@@ -135,14 +145,22 @@ export default function Handouts() {
                 </div>
                 {isGM && removing === h.id && page && (
                   <div className="notice small" role="alert">
-                    <p>Taking “{h.title}” off the handouts doesn’t hide the page: players can still read it in the world unless you hide it again.</p>
+                    <p>
+                      Taking “{h.title}” off the handouts doesn’t hide the page: players can still read it in the world unless you hide it again.
+                      {keepers && <> If you hide it, <strong>{keepers} can still see it</strong>: it was revealed to them by name.</>}
+                    </p>
                     <div className="row wrap">
                       <button className="small" onClick={() => removeHandout(worldId, h.id)}>
                         Remove, keep the page revealed
                       </button>
-                      <button className="small primary" onClick={() => removeHandout(worldId, h.id, page.id)}>
-                        Remove and hide the page
+                      <button className="small primary" onClick={() => hidePage(h.id, page, keepers, false)}>
+                        {keepers ? 'Remove and hide the page from everyone else' : 'Remove and hide the page'}
                       </button>
+                      {keepers && (
+                        <button className="small" onClick={() => hidePage(h.id, page, keepers, true)}>
+                          Remove and hide from {keepers} too
+                        </button>
+                      )}
                       <button className="small ghost" onClick={() => setRemoving(undefined)}>
                         Cancel
                       </button>

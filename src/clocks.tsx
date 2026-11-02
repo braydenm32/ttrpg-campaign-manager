@@ -249,12 +249,14 @@ export function ClocksPanel({ worldId, entities }: { worldId: string; entities: 
 
 /** The Clocks page: every ticking clock, by page. */
 export default function ClocksPage() {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const { isGM } = useViewMode()
   const entities = useVisibleEntities(worldId)
   const all = allClocks(entities)
   const ticking = tickingClocks(entities)
   const done = all.filter(({ clock }) => !isTicking(clock))
+  // The party's clocks are the table's business, not a public wiki link's.
+  if (world?.shared?.token) return <Empty>Clocks are for the players at the table.</Empty>
   return (
     <div className="page">
       <header className="page-header">

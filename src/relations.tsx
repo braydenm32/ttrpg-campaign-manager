@@ -100,7 +100,7 @@ export function RelationsBox({ entity, entities, isGM, worldId }: { entity: Enti
               {rel.note && <span className="muted small"> · {rel.note}</span>}
               {isGM && (
                 <span className="row relation-tools">
-                  <label className="small inline-check" title="Players can see this link (when they can see both pages)">
+                  <label className="small inline-check" title="Players can see this link and its note (when they can see both pages)">
                     <input
                       type="checkbox"
                       checked={!!rel.known}
@@ -180,7 +180,7 @@ function AddRelation({ entity, entities, onDone }: { entity: Entity; entities: E
         ))}
       </select>
       <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (optional)" />
-      <label className="small inline-check">
+      <label className="small inline-check" title="Players can see this link and its note (when they can see both pages)">
         <input type="checkbox" checked={known} onChange={(e) => setKnown(e.target.checked)} /> Players know
       </label>
       <button className="primary" disabled={!to || !kind.trim()}>

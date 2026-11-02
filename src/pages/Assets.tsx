@@ -3,7 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import '../more.css'
 import { useState } from 'react'
-import { Empty, Skeleton, TagInput, VisibilityToggle } from '../components'
+import { Empty, Skeleton, TagInput } from '../components'
+import { VisibilityControl } from '../reveal'
 import { db, type Asset } from '../db'
 import { formatBytes, saveFileAsAsset, useBlobUrl, useWorld } from '../hooks'
 import { ShowButton, unshowableImages } from '../showing'
@@ -68,6 +69,7 @@ function AssetCard({ asset, unshowable }: { asset: Asset; unshowable?: Map<strin
   const url = useBlobUrl(asset)
   const update = (patch: Partial<Asset>) => db.assets.update(asset.id, patch)
   const kind = asset.mime.split('/')[0]
+  const recording = asset.tags.includes('recording')
   return (
     <div className="card asset-card">
       {url && kind === 'image' && <img src={url} alt={asset.name} />}
@@ -92,7 +94,14 @@ function AssetCard({ asset, unshowable }: { asset: Asset; unshowable?: Map<strin
         </>
       )}
       <div className="row spread">
-        <VisibilityToggle value={asset.visibility} onChange={(visibility) => update({ visibility })} />
+        <VisibilityControl
+          value={asset.visibility}
+          onChange={(visibility) => update({ visibility })}
+          name={`“${asset.name}”`}
+          compact
+          see={[recording ? 'the whole recording, to listen to or download' : kind === 'image' ? 'the picture' : kind === 'audio' ? 'the sound' : 'the file']}
+          warn={recording ? 'This is a recording of your session: every player gets the whole audio, everything said at the table included (asides, rules talk and GM secrets).' : undefined}
+        />
         <div className="row">
           {url && (
             <a className="button" href={url} download={asset.name} aria-label={`Download ${asset.name}`} title="Download">

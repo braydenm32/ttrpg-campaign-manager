@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { blankLectern, newId, type Campaign, type Entity, type Session, type Sound } from '../db'
 import { initiativeOrder } from '../encounters'
-import { joinRoom, JOINED, sendOnce, type LiveRoom } from './live'
+import { joinRoom, JOINED, postOnce, sendOnce, type LiveRoom } from './live'
 
 /**
  * The live link between the GM's Lectern and the players' Common Room. Nothing here is saved
@@ -9,13 +9,17 @@ import { joinRoom, JOINED, sendOnce, type LiveRoom } from './live'
  *  - "members:<world>", where anyone in the world can send:
  *    - "hello" (player → GM): a player just opened the app; the GM's app answers with "table".
  *    - "dice" (players): a roll the whole table sees.
- *    - "signal" (player → GM): "I'd like to do something", "I need a break" or "I'll use inspiration".
- *    - "call-answer" (player → GM): a player's result for the roll the GM called for.
+ *    - "signal" and "call-answer", but only from a server without the GM's inbox yet (see below).
  *    - "ping" (anyone): "look here", a spot on a map everyone looking at that map sees for a moment.
  *  - "table:<world>", where only a GM can send (public.channel_allowed), so players can trust it:
  *    - "table" (GM → players): the session being played, the scene, whose turn it is, the music.
  *    - "dice" (GM): the GM's own rolls.
  *    - "signal-seen" (GM → players): the GM saw a signal.
+ *  - "gm:<world>", the GM's inbox: anyone in the world can post, only a GM can listen, so a secret
+ *    roll's result isn't in a room every player's app hears:
+ *    - "signal" (player → GM): "I'd like to do something", "I need a break" or "I'll use inspiration".
+ *    - "call-answer" (player → GM): a player's result for the roll the GM called for.
+ *    A server without this room refuses the post, and the player's app sends to the members' room instead.
  * The GM's messages go to the members' room too, for a server that doesn't have the GM's room yet.
  * Once a player's app gets into the GM's room it stops believing GM messages from the members' room.
  * Only what the GM's own filters let through is ever sent: never HP, conditions, scene notes or
@@ -142,6 +146,24 @@ const STALE_AFTER = 3 * HEARTBEAT
 
 const room = (cloudId: string) => `members:${cloudId}`
 const gmRoom = (cloudId: string) => `table:${cloudId}`
+const inbox = (cloudId: string) => `gm:${cloudId}`
+
+/** When the server last refused the GM's inbox (one without the room yet), so players don't ask every time. */
+const inboxRefused = new Map<string, number>()
+const ASK_AGAIN = 10 * 60_000
+
+/** A player's message for the GM's eyes only: to the GM's inbox, or the members' room on a server without one. */
+async function sendToGM(cloudId: string, event: string, payload: object) {
+  const refused = inboxRefused.get(cloudId)
+  if (!refused || Date.now() - refused > ASK_AGAIN) {
+    if (await postOnce(inbox(cloudId), event, payload)) {
+      inboxRefused.delete(cloudId)
+      return true
+    }
+    inboxRefused.set(cloudId, Date.now())
+  }
+  return send(cloudId, event, payload)
+}
 
 /** A player's message: to the members' room, where everyone listens. */
 const send = (cloudId: string, event: string, payload: object) => {
@@ -305,7 +327,7 @@ export function tellDowntime(cloudId: string) {
 export async function sendSignal(cloudId: string, kind: SignalKind, who: string, entityId?: string) {
   const sig: TableSignal = { id: newId(), kind, who, entityId, at: Date.now() }
   update(cloudId, (s) => ({ ...s, sent: { ...s.sent, [sig.id]: 'sent' } }))
-  const ok = await send(cloudId, 'signal', sig)
+  const ok = await sendToGM(cloudId, 'signal', sig)
   if (!ok)
     update(cloudId, (s) => {
       const { [sig.id]: _gone, ...sent } = s.sent
@@ -318,7 +340,7 @@ export async function sendSignal(cloudId: string, kind: SignalKind, who: string,
 export async function answerCall(cloudId: string, a: Omit<CallAnswer, 'id'>, secret: boolean) {
   const answer = { ...a, id: newId() }
   update(cloudId, (s) => ({ ...s, answered: { ...s.answered, [a.callId]: a.total } }))
-  const ok = await send(cloudId, 'call-answer', answer)
+  const ok = await sendToGM(cloudId, 'call-answer', answer)
   if (!secret) await shareRoll(cloudId, { who: a.who, expr: a.expr, total: a.total, detail: a.detail, crit: a.crit })
   return ok
 }
@@ -339,6 +361,8 @@ export async function shareRoll(cloudId: string, r: Omit<TableRoll, 'id' | 'at'>
 export function linkAsHost(cloudId: string, current: () => TableState | null) {
   const members = joinRoom(room(cloudId))
   const table = joinRoom(gmRoom(cloudId))
+  // Only GMs may listen here (a server without the room yet just doesn't let anyone in).
+  const gmInbox = joinRoom(inbox(cloudId))
   const link = { members, table, host: true }
   links.set(cloudId, link)
   let gmRoomWorks = table.connected()
@@ -366,7 +390,7 @@ export function linkAsHost(cloudId: string, current: () => TableState | null) {
     const ping = readPing(p, false)
     if (ping) addPing(cloudId, ping)
   })
-  members.on('call-answer', (p) => {
+  const onAnswer = (p: Record<string, unknown>) => {
     const callId = text(p.callId)
     const call = current()?.call
     if (!call || call.id !== callId || !text(p.id)) return
@@ -374,13 +398,18 @@ export function linkAsHost(cloudId: string, current: () => TableState | null) {
     if (call.to.length && (!entityId || !call.to.includes(entityId))) return
     const a: CallAnswer = { id: text(p.id), callId, entityId, who: text(p.who) || 'A player', expr: text(p.expr, 60), total: num(p.total), detail: text(p.detail, 300), crit: p.crit === 'high' || p.crit === 'low' ? p.crit : undefined }
     update(cloudId, (s) => (s.answers.some((x) => x.id === a.id) ? s : { ...s, answers: [...s.answers, a].slice(-60) }))
-  })
-  members.on('signal', (p) => {
+  }
+  const onSignal = (p: Record<string, unknown>) => {
     const kind = p.kind as SignalKind
     if (!KINDS.includes(kind) || !text(p.id)) return
     const sig: TableSignal = { id: text(p.id), kind, who: text(p.who) || 'A player', entityId: text(p.entityId) || undefined, at: Date.now() }
     update(cloudId, (s) => (s.signals.some((x) => x.id === sig.id) ? s : { ...s, signals: [...s.signals, sig].slice(-20) }))
-  })
+  }
+  // From the GM's inbox, and from the members' room (older player apps, or a server without the inbox).
+  for (const r of [gmInbox, members]) {
+    r.on('call-answer', onAnswer)
+    r.on('signal', onSignal)
+  }
   // Players stop showing "playing now" if they hear nothing for a few minutes, so say it again now and then (only while live).
   const beat = setInterval(remind, HEARTBEAT)
   return () => {
@@ -388,6 +417,7 @@ export function linkAsHost(cloudId: string, current: () => TableState | null) {
     if (links.get(cloudId) === link) links.delete(cloudId)
     members.leave()
     table.leave()
+    gmInbox.leave()
   }
 }
 

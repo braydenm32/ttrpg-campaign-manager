@@ -1,11 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { blankLectern, db, type Entity, type PrepScene, type Session, type World } from './db'
+import { blankLectern, db, saveEntity, type Entity, type PrepScene, type Session, type World } from './db'
 import { DraftText } from './components'
 import { Help } from './help'
 import { PagePicker } from './PagePicker'
 import { TypeIcon } from './icons'
 import { addCombatants, encounterCombatants } from './encounters'
 import { play } from './sound/player'
+import { schedule } from './cloud/sync'
+import { askToReveal, type Review } from './reveal'
 import { showToPlayers } from './showing'
 import { toast } from './undo'
 
@@ -38,13 +40,20 @@ export function cardSummary(s: PrepScene, entities: Entity[], session: Session) 
   return bits.join(' · ')
 }
 
-/** The Lectern's scene as it is now (and which planned scenes are ticked), so a scene change can be undone. */
+/**
+ * The Lectern's scene as it is now (and which planned scenes are ticked, who's featured in the
+ * session, who's in the fight and whether play has started), so a scene change can be undone.
+ */
 export interface SceneSnapshot {
   sceneId?: string
   sceneText: string
   presentIds: string[]
   planSceneId?: string
   done: string[]
+  entityIds: string[]
+  combatantIds: string[]
+  activeId?: string
+  startedAt?: number
 }
 
 export function sceneSnapshot(session: Session): SceneSnapshot {
@@ -55,10 +64,18 @@ export function sceneSnapshot(session: Session): SceneSnapshot {
     presentIds: [...(l?.presentIds ?? [])],
     planSceneId: l?.planSceneId,
     done: (session.prep?.scenes ?? []).filter((x) => x.done).map((x) => x.id),
+    entityIds: [...session.entityIds],
+    combatantIds: (l?.combat.combatants ?? []).map((c) => c.id),
+    activeId: l?.combat.activeId,
+    startedAt: session.startedAt,
   }
 }
 
-/** Puts the scene back as it was (the place, the read-aloud text, who's here, which scenes are ticked). */
+/**
+ * Puts the scene back as it was: the place, the read-aloud text, who's here, which scenes are
+ * ticked, and takes away the pages it added to the session, the fighters it added and the start time
+ * it set.
+ */
 export const restoreScene = (sessionId: string, snap: SceneSnapshot) =>
   db.sessions
     .where('id')
@@ -66,6 +83,14 @@ export const restoreScene = (sessionId: string, snap: SceneSnapshot) =>
     .modify((s) => {
       s.lectern = { ...blankLectern(), ...s.lectern, sceneId: snap.sceneId, sceneText: snap.sceneText, presentIds: [...snap.presentIds], planSceneId: snap.planSceneId }
       for (const x of s.prep?.scenes ?? []) x.done = snap.done.includes(x.id)
+      s.entityIds = s.entityIds.filter((id) => snap.entityIds.includes(id))
+      const combat = s.lectern.combat
+      const kept = combat.combatants.filter((c) => snap.combatantIds.includes(c.id))
+      if (kept.length !== combat.combatants.length) {
+        s.lectern.combat = { ...combat, combatants: kept, activeId: kept.some((c) => c.id === combat.activeId) ? combat.activeId : snap.activeId }
+      }
+      if (snap.startedAt) s.startedAt = snap.startedAt
+      else delete s.startedAt
     })
 
 /**
@@ -73,13 +98,22 @@ export const restoreScene = (sessionId: string, snap: SceneSnapshot) =>
  * the place of the old (none, if the card has none; a scene with no place of its own stays where the
  * party is). It also loads its fight, plays its sounds, reveals its pages and puts its handout on
  * players' screens. The scene is ticked as played, and becomes the scene "Next scene" goes on from.
+ * Pages it would reveal get the same review as on the page itself (one review for all of them).
+ * Gives back a function that hides those pages again and puts back what was on players' screens
+ * (for Undo), or false if the GM cancelled.
  */
-export async function startScene(world: World, session: Session, scene: PrepScene) {
+export async function startScene(world: World, session: Session, scene: PrepScene, ask: (r: Review) => Promise<string | null>) {
   const enc = scene.encounterId ? session.prep?.encounters.find((e) => e.id === scene.encounterId) : undefined
   const reveal = (await db.entities.bulkGet(scene.revealIds ?? [])).filter((e): e is Entity => !!e && e.visibility !== 'players')
   const shownPage = scene.show?.kind === 'page' ? await db.entities.get(scene.show.entityId) : undefined
   const toReveal = [...reveal, ...(shownPage && shownPage.visibility !== 'players' && !reveal.some((r) => r.id === shownPage.id) ? [shownPage] : [])]
-  if (toReveal.length && !confirm(`Starting this scene reveals ${toReveal.map((e) => `“${e.name}”`).join(', ')} to everyone. Go ahead?`)) return false
+  const ok = await askToReveal(ask, toReveal, {
+    title: toReveal.length === 1 ? `Starting this scene reveals “${toReveal[0].name}” to players` : `Starting this scene reveals ${toReveal.length} pages to players`,
+    note: 'Every player can read them from now on. Undo straight after hides them again.',
+    confirm: 'Start the scene',
+  })
+  if (!ok) return false
+  const worldBefore = await db.worlds.get(world.id)
   await db.sessions
     .where('id')
     .equals(session.id)
@@ -97,15 +131,33 @@ export async function startScene(world: World, session: Session, scene: PrepScen
       if (mine) mine.done = true
       if (!s.startedAt) s.startedAt = Date.now()
     })
-  for (const e of toReveal) await db.entities.update(e.id, { visibility: 'players', updatedAt: Date.now() })
+  for (const e of toReveal) await saveEntity({ ...e, visibility: 'players', updatedAt: Date.now() })
   const sounds = (await db.sounds.bulkGet(scene.soundIds ?? [])).filter((x) => !!x)
   for (const s of sounds) await play(s).catch(() => undefined)
-  if (scene.show?.kind === 'page' && shownPage) await showToPlayers(world.id, { kind: 'page', title: shownPage.name, entityId: shownPage.id })
+  let shown = false
+  if (scene.show?.kind === 'page' && shownPage) shown = await showToPlayers(world.id, { kind: 'page', title: shownPage.name, entityId: shownPage.id })
   else if (scene.show?.kind === 'image') {
     const a = await db.assets.get(scene.show.assetId)
-    if (a) await showToPlayers(world.id, { kind: 'image', title: a.name, assetId: a.id })
+    if (a) shown = await showToPlayers(world.id, { kind: 'image', title: a.name, assetId: a.id })
   }
-  return true
+  const shownId = shown ? (await db.worlds.get(world.id))?.showing?.id : undefined
+  return async () => {
+    for (const e of toReveal) {
+      const now = await db.entities.get(e.id)
+      if (now?.visibility === 'players') await db.entities.update(e.id, { visibility: e.visibility, updatedAt: Date.now() })
+    }
+    // What was on players' screens (and in their handouts) before, unless the GM has shown something else since.
+    if (shownId)
+      await db.worlds
+        .where('id')
+        .equals(world.id)
+        .modify((w) => {
+          if (!(w.handouts ?? []).some((h) => h.id === shownId)) return
+          w.handouts = worldBefore?.handouts ?? (w.handouts ?? []).filter((h) => h.id !== shownId)
+          if (w.showing?.id === shownId) w.showing = worldBefore?.showing ?? null
+        })
+    if (toReveal.length || shownId) schedule(200)
+  }
 }
 
 /** The planned scene being played now, and the one "Next scene" goes to: the first unplayed one after it. */
@@ -117,12 +169,19 @@ export function plannedScenes(session: Session) {
   return { scenes, current, at, next }
 }
 
-/** Starts a scene from the Lectern with Undo (which puts the last scene back). */
-export async function goToScene(world: World, session: Session, scene: PrepScene) {
+/**
+ * Starts a scene from the Lectern with Undo, which takes it all back: the last scene, the fighters
+ * and pages it added, the pages it revealed and what was on players' screens.
+ */
+export async function goToScene(world: World, session: Session, scene: PrepScene, ask: (r: Review) => Promise<string | null>) {
   const before = sceneSnapshot(session)
-  if (!(await startScene(world, session, scene))) return
+  const undoShown = await startScene(world, session, scene, ask)
+  if (!undoShown) return
   const n = (session.prep?.scenes ?? []).findIndex((x) => x.id === scene.id) + 1
-  toast(`Scene ${n}: ${scene.text.length > 48 ? `${scene.text.slice(0, 48).trimEnd()}…` : scene.text}`, () => restoreScene(session.id, before))
+  toast(`Scene ${n}: ${scene.text.length > 48 ? `${scene.text.slice(0, 48).trimEnd()}…` : scene.text}`, async () => {
+    await restoreScene(session.id, before)
+    await undoShown()
+  })
 }
 
 /**

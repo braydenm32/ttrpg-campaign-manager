@@ -210,7 +210,7 @@ function RollCallPrompt({ world, cloudId }: { world: World; cloudId: string }) {
         </strong>
         {done !== undefined ? (
           <div className="small">
-            You rolled <b>{done}</b>{call.dc !== undefined && (done >= call.dc ? ' ✓' : ' ✗')}. {call.secret ? 'Only your GM sees it.' : 'Everyone at the table sees it.'}
+            You rolled <b>{done}</b>{call.dc !== undefined && (done >= call.dc ? ' ✓' : ' ✗')}. {call.secret ? 'Only your GM (and any co-GM) sees it.' : 'Everyone at the table sees it.'}
           </div>
         ) : (
           asked.map((c) => (

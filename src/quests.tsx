@@ -7,7 +7,7 @@ import { Ico } from './icons'
 import { PagePicker } from './PagePicker'
 import { pagePath } from './paths'
 import { coinKey, editPurse } from './purse'
-import { useReview } from './reveal'
+import { pageReveal, useReview } from './reveal'
 import { toast } from './undo'
 
 /**
@@ -154,13 +154,17 @@ function Rewards({ quest, list, isGM, entities, worldId }: { quest: Entity; list
   const give = async (r: QuestReward) => {
     const coins = r.coins ?? coinsIn(r.text)
     const item = r.itemId ? entities.find((e) => e.id === r.itemId) : undefined
+    // A GM-only item's page is revealed with it: the same review as on the page itself.
+    const page = item && item.visibility !== 'players' ? pageReveal(item, entities) : undefined
     const ok = await ask({
       title: 'Give this to the party?',
       see: [
         `The reward: “${r.text || item?.name || 'reward'}”`,
         ...(coins.length ? [`${coins.map((c) => `${c.amount} ${c.name}`).join(', ')} added to the party’s purse`] : []),
-        ...(item ? [`“${item.name}” in the party stash${item.visibility === 'gm' ? ', and its page (revealed now: not its GM notes or secret passages)' : ''}`] : []),
+        ...(item ? [`“${item.name}” in the party stash${page ? `, and its page (revealed now): ${page.see.join('; ')}` : ''}`] : []),
       ],
+      kept: page?.kept,
+      warn: page?.warn,
       confirm: 'Give to the party',
     })
     if (!ok) return

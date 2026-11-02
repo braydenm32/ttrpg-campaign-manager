@@ -28,6 +28,8 @@ export default function PartyLoot() {
   const fromSession = useLiveQuery(async () => (from ? ((await db.sessions.get(from)) ?? null) : null), [from])
   useKeepScroll(!!world)
   if (!world) return null
+  // The party's purse and who carries what are the table's business, not a public wiki link's.
+  if (world.shared?.token) return <Empty>Party loot is for the players at the table.</Empty>
 
   const loot = partyLoot(entities, world)
   // Player characters always get a section, even with empty pockets.

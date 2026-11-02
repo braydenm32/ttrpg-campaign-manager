@@ -88,7 +88,7 @@ export function RevealToPicker({
 /** Next to a page's title: who a GM-only page has been revealed to, or (for a player) that it's just for them. */
 export function RevealedToBadge({ entity, world, entities, isGM }: { entity: Entity; world: World | null | undefined; entities: Entity[]; isGM: boolean }) {
   const players = useWorldPlayers(isGM && entity.revealedTo?.length ? world : undefined, entities)
-  if (!isGM) return entity.secretForYou ? <span className="badge for-you" title="Your GM revealed this to you, not the whole table"><Ico as={EyeClosed} /> Just for you</span> : null
+  if (!isGM) return entity.secretForYou ? <span className="badge for-you" title="Your GM revealed this to you, not the whole table"><Ico as={EyeClosed} /> Revealed to you</span> : null
   if (entity.visibility !== 'gm' || !entity.revealedTo?.length) return null
   const shown = players.filter((p) => entity.revealedTo!.includes(p.userId))
   return (

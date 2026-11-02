@@ -37,7 +37,7 @@ export const HELP = {
   secrets:
     'Hide part of a page with the 🔒 GM-only passage button: players never see it. Use 🤫 Secret for… to keep a passage for certain characters only, like ":::for Wren and Silas". Names are suggested as you type.',
   revealTo:
-    'This page is GM only, but you can still let particular players see it. Tick their names and only they get it, marked "Just for you". Needs cloud sync and players who have joined.',
+    'This page is GM only, but you can still let particular players see it. Tick their names and only they get it, marked "Revealed to you". Needs cloud sync and players who have joined.',
   gmNotes: 'Notes for you alone. They are never sent to players, not even on revealed pages.',
   fields: 'Free-form details like stats, prices or alignment. Add whatever your game needs. Click 👁 to make a detail 🔒 GM only: players never get it, even on a revealed page.',
   hiddenCampaign:
@@ -124,7 +124,7 @@ export const HELP = {
     'Your world’s own calendar: month and day names, the year’s name (like DR) moons, leap years, festivals and holidays. Pick a ready-made one (Forgotten Realms, Golarion, Eberron, Greyhawk, Exandria) or make your own. Events can then have real dates.',
   worldToday: 'Today’s date in your world. Move it on as time passes in the game; each session remembers the date it started on.',
   relations:
-    'How this page connects to others: family, friends, enemies, who serves whom. Players only see a link when you tick “Players know”. Every link shows up on both pages.',
+    'How this page connects to others: family, friends, enemies, who serves whom. Players only see a link (and its note) when you tick “Players know”. Every link shows up on both pages.',
   relationWeb:
     'Everyone and how they’re connected, drawn as a web. It opens on one person and everyone within two links of them: your own character for a player, otherwise the best-connected player character. Click someone to move to them (Back goes back), pick Everyone to see the whole web, or switch to the family tree. In a big world it shows just people, factions and gods; switch to every kind of page to see places and items too. Add links from any page’s Relationships box; removing one offers Undo.',
   clocks:
@@ -169,7 +169,7 @@ export const HELP = {
   lectern:
     'The Lectern is your screen while you run the session: the scene and its read-aloud text, who is there, the fight, the party, and tools (show players, dice, loot, sounds). On a computer it’s three columns; on a phone the row of buttons at the top jumps to each part. “Wrap up” ends the session.',
   nextScene:
-    'Goes on to the next scene you planned: ticks off this one, and puts the next one’s place, read-aloud text and people on screen (and its fight, sounds and handout, if its card has them). Undo puts the last scene back.',
+    'Goes on to the next scene you planned: ticks off this one, and puts the next one’s place, read-aloud text and people on screen (and its fight, sounds and handout, if its card has them). If it reveals pages, you see what players will get first. Undo puts it all back: the last scene, the fight and people it added, and the pages it revealed or showed.',
   sceneChange:
     'Choosing another place starts a new scene: the read-aloud text and who’s here are replaced with what you planned for that place (or cleared). Undo puts the last scene back.',
   quickNote: 'Jot something down without stopping the game. It goes at the end of this session’s GM notes, with the time. What you’ve typed is kept if you leave the Lectern and come back.',
@@ -254,7 +254,7 @@ export const HELP = {
   home: 'Each world is kept on this device. Sign in to sync your worlds across devices, invite players, or open worlds you play in.',
   joining: 'An invite link from your GM lets you join their world as a player. Paste it here if it opened somewhere else, sign in, and you’re in.',
   questions:
-    'Ask your GM something privately: about a page, or anything at all. Only your GM sees your question, and only you see the answer.',
+    'Ask your GM something privately: about a page, or anything at all. Only your GM (and any co-GM) sees your question, and only you see the answer.',
   questionsGm:
     'Questions your players sent you, privately. Your answer goes only to the player who asked. If they asked about a hidden page, you can reveal it to just them from here.',
   editCharacter:
@@ -301,7 +301,7 @@ export const HELP = {
   newCharacterName:
     'Secret passages written “for” a character reach whoever plays a character with that full name or first name. If the new character shares a name with another, those secrets would reach both players, so give one of them a different name.',
   pageVisibility:
-    'Says who can read this page now: GM only, players, or a few players you revealed it to. Click it to change that. Before anything is revealed you see what players will get (and what stays hidden: GM notes, GM-only passages and details), and a note at the bottom offers Undo afterwards.',
+    'Says who can read this page now: GM only, players, or a few players you revealed it to. Click it to change that. Before anything is revealed you see what players will get (and what stays hidden: GM notes, GM-only passages and details), and a note at the bottom offers Undo afterwards. Hiding a page you also revealed to some players by name leaves it with them, unless you choose “Hide from … too”.',
   pageJumps: 'A long page gets this row: tap a part to go straight to it. Back from a page you opened comes back to where you were.',
   seenMarks: 'In your lists, an open eye marks what players can read, a lock what’s GM only, and a half-shut eye a GM-only page revealed to a few players. The filter and tag you pick stay in the address, so Back from a page returns to the same list.',
   revealQuietly:
@@ -347,7 +347,7 @@ export const HELP = {
   rewards:
     'What finishing the quest is worth. A reward stays hidden from players until you click its eye. “Give to the party” puts any coins in its text (like “200 gp”) into the party’s purse and its item into the party stash, and shows it to players.',
   downtime:
-    'Tell your GM what your character does between sessions: training, research, crafting, visiting someone, working a job. Only your GM sees it, and their answer appears here, for you alone.',
+    'Tell your GM what your character does between sessions: training, research, crafting, visiting someone, working a job. Only your GM (and any co-GM) sees it, and their answer appears here, for you alone.',
   downtimeGm:
     'What your players’ characters are doing between sessions. Answer each one (only that player sees your answer) and it moves to Answered. Players send these from their character tab in the Common Room. When one arrives a note pops up on whatever screen you’re on, and the Desk and its Inbox count the ones waiting.',
   callForRoll:
