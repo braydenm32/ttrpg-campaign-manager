@@ -68,6 +68,7 @@ import { hashRouting, setPages, tidyPath, usePathsVersion } from './paths'
 import { ClaudeJobChips, LeaveGuard } from './ai/LeaveGuard'
 import { useGuardedNavigate } from './ai/leave'
 import { rememberLastWorld } from './install'
+import { useTimedReveals } from './timedReveal'
 import { GroupPostOffer } from './groupPost'
 
 const Router = hashRouting ? HashRouter : BrowserRouter
@@ -222,6 +223,8 @@ function WorldLayout() {
   }, [named, version, pathname, search, navigate])
   // The home-screen icon's shortcuts (Common Room, Lectern) open the world used last.
   useEffect(() => rememberLastWorld(world?.id), [world?.id])
+  // Pages whose "reveal on" date has come turn "Players can see this" (the server already shows them).
+  useTimedReveals(world?.id, !!world && !world.shared)
   if (!named) return <Skeleton />
   if (world?.shared) return (
     <ForcePlayerView>

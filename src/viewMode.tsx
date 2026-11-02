@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Entity, Visibility } from './db'
+import { revealDue } from './revealDue'
 
 /**
  * The app has two lenses: the GM sees everything, players see only what the GM has revealed.
@@ -97,8 +98,8 @@ export function useViewMode() {
   /** True when the current viewer may see content with this visibility. */
   const canSee = (v: Visibility | undefined) => isGM || v === 'players'
   /** Like canSee, for pages: also true for a GM-only page revealed to the player being previewed. */
-  const canSeeEntity = (e: Pick<Entity, 'visibility' | 'revealedTo'>) =>
-    canSee(e.visibility) || (!!previewAs && !!e.revealedTo?.includes(previewAs.userId))
+  const canSeeEntity = (e: Pick<Entity, 'visibility' | 'revealedTo' | 'revealAt'>) =>
+    canSee(e.visibility) || (!!previewAs && !!e.revealedTo?.includes(previewAs.userId)) || revealDue(e)
   return { mode, setMode, isGM, canSee, canSeeEntity, previewAs, setPreviewAs }
 }
 

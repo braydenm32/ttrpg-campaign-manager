@@ -358,6 +358,11 @@ export interface Entity {
   visibility: Visibility
   /** GM-only pages can still be revealed to chosen players (their account ids). Needs cloud sync. */
   revealedTo?: string[]
+  /**
+   * A GM-only page can reveal itself to every player at this time (ms since 1970), without the GM
+   * doing anything: the server checks the date. Never sent to players.
+   */
+  revealAt?: number
   /** Player copies only: this page was revealed to you alone, not to the whole table. */
   secretForYou?: boolean
   tags: string[]
@@ -1023,8 +1028,9 @@ db.version(7).stores({
   history: 'id, entityId, worldId, at, [worldId+reason]',
 })
 
-// v8: who was there (Session.present). Not indexed, so nothing to move: a session from before has
-// none, which counts as the whole party being there.
+// v8: who was there (Session.present) and a page's "reveal on" date (Entity.revealAt). Neither is
+// indexed, so nothing to move: a session from before has none, which counts as the whole party being
+// there, and a page from before has no date.
 db.version(8).stores({})
 
 // The bin is cleared of anything over a month old soon after the app opens, not only when it's

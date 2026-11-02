@@ -216,7 +216,7 @@ export function PageVisibility({ entity: e, world, entities }: { entity: Entity;
       return
     }
     if (answer === 'show') await revealAndShow(worldId, before)
-    else await saveEntity({ ...before, visibility: 'players', updatedAt: Date.now() })
+    else await saveEntity({ ...before, visibility: 'players', revealAt: undefined, updatedAt: Date.now() })
     toast(answer === 'show' ? `“${e.name}” revealed and on players’ screens.` : `“${e.name}” revealed to players.`, async () => {
       if (answer === 'show') await stopShowing(worldId)
       await db.entities.update(e.id, { visibility: before.visibility, updatedAt: Date.now() })

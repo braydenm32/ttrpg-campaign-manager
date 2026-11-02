@@ -460,7 +460,8 @@ function playerPart(table: string, data: Record<string, unknown> | null | undefi
     case 'campaigns':
       return data.visibility === 'gm' ? undefined : data
     case 'entities':
-      if (data.visibility !== 'players' && !(data.revealedTo as unknown[] | undefined)?.length) return undefined
+      // A page with a "reveal on" date counts too: players get it on that date without another save.
+      if (data.visibility !== 'players' && !(data.revealedTo as unknown[] | undefined)?.length && typeof data.revealAt !== 'number') return undefined
       return without('gmNotes', 'gmTags', 'aliases', 'updatedAt')
     case 'maps':
       return data.visibility === 'players' ? without('drawing', 'updatedAt') : undefined

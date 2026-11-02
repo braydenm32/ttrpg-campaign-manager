@@ -1952,3 +1952,8 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .my-session-note { margin-top: .6em; }
 .my-session-note summary { cursor: pointer; }
 .add-to-calendar { display: inline-flex; align-items: center; gap: .2em; }
+
+/* A page that reveals itself on a date. */
+.reveal-on { margin: .4em 0; align-items: center; gap: .4em; }
+.reveal-on label { display: inline-flex; align-items: center; gap: .35em; }
+.reveal-on-chip { font-size: .8rem; }

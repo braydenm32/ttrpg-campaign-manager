@@ -41,6 +41,7 @@ import { DuplicateButton, NewPageButton } from '../NewPage'
 import { useNoteOpened } from '../recent'
 import { PagePrompts } from '../prompts'
 import { PageVisibility, SeenMark } from '../reveal'
+import { RevealOnChip, RevealOnField } from '../timedReveal'
 import { useCharacterOwners } from '../players/owners'
 import { keyNumbers, NumberTiles } from '../players/sheetGlance'
 
@@ -182,6 +183,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
         <div className="page-facts">
           <StatusBadge entity={e} showAlive />
           {isGM && !e.template && <PageVisibility entity={e} world={world} entities={entities} />}
+          {isGM && !e.template && <RevealOnChip entity={e} />}
           {seen && (
             <Link className="tag strip-chip" to={`${worldPath(worldId)}/s/${seen.id}`} title="The latest session it turned up in">
               In #{seen.number} {seen.title}
@@ -676,6 +678,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
         {d.visibility === 'gm' && !d.template && world && (
           <RevealToPicker world={world} entities={entities} value={d.revealedTo ?? []} onChange={(ids) => set('revealedTo', ids.length ? ids : undefined)} />
         )}
+        {d.visibility === 'gm' && !d.template && <RevealOnField value={d.revealAt} onChange={(t) => set('revealAt', t)} />}
         {!d.template && (
           <details className="secrets-explained">
             <summary>

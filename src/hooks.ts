@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'
 import { db, type Asset, type Entity } from './db'
 import { resolveWorld, usePathsVersion } from './paths'
 import { useViewMode } from './viewMode'
+import { revealDue } from './revealDue'
 
 /** Object URL for a stored asset, revoked automatically. */
 export function useAssetUrl(assetId: string | undefined) {
@@ -40,7 +41,7 @@ export function useVisibleEntities(worldId: string) {
       async () => {
         const list = await db.entities
           .where({ worldId })
-          .filter((e) => !e.template && (isGM || e.visibility === 'players' || (!!as && !!e.revealedTo?.includes(as))))
+          .filter((e) => !e.template && (isGM || e.visibility === 'players' || (!!as && !!e.revealedTo?.includes(as)) || revealDue(e)))
           .sortBy('name')
         if (isGM) return list
         // Like the server's copy: a place or carrier the player can't see isn't named.
