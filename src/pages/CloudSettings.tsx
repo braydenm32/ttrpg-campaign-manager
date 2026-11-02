@@ -3,7 +3,7 @@ import { Help } from '../help'
 import '../more.css'
 import { AccountModal, useAuthSession } from '../cloud/auth'
 import { createShareLink, getShareToken, revokeShareLink, shareUrl } from '../cloud/share'
-import { deleteCloudCopy, disableCloud, enableCloud, syncNow, syncStore } from '../cloud/sync'
+import { deleteCloudCopy, disableCloud, enableCloud, syncNow, syncStore, wouldOverwriteCloud } from '../cloud/sync'
 import type { World } from '../db'
 import { myRole } from '../cloud/players'
 import { CoGmSettings, PlayersSettings } from '../players/PlayersSettings'
@@ -27,6 +27,21 @@ export default function CloudSettings({ world }: { world: World }) {
     if (user && enabled) getShareToken(world.id).then(setToken, () => setToken(null))
     if (user && enabled) myRole(world.id).then(setRole, () => setRole('owner'))
   }, [user, enabled, world.id])
+
+  /** Turns sync on, first asking when it would send this copy over a cloud copy this device has never synced with. */
+  const turnOn = () =>
+    run(async () => {
+      if (
+        (await wouldOverwriteCloud(world.id)) &&
+        !confirm(
+          'This world already has a copy in the cloud, and this device has no record of syncing with it.\n\nTurning sync on sends this device’s copy of every page, session and map over the cloud’s. Changes made on your other devices since would be replaced, and things deleted there would come back.\n\nTo use the cloud’s copy instead, cancel, delete this world from this device, and download it again from Home (“In your cloud”). Turn sync on anyway?',
+        )
+      )
+        return
+      await enableCloud(world.id)
+    })
+  // Sync for this world was turned on here by another account: it only syncs while that one is signed in.
+  const otherAccount = enabled && !!user && !!world.cloud?.by && world.cloud.by !== user.id
 
   const run = async (fn: () => Promise<unknown>) => {
     setBusy(true)
@@ -74,8 +89,18 @@ export default function CloudSettings({ world }: { world: World }) {
             Turn on sync to keep this world backed up and in step on every device you sign in on. Changes appear on your other devices
             within a few seconds.
           </p>
-          <button className="primary" disabled={busy} onClick={() => run(() => enableCloud(world.id))}>
+          <button className="primary" disabled={busy} onClick={turnOn}>
             {busy ? 'Uploading…' : 'Turn on sync for this world'}
+          </button>
+        </>
+      ) : otherAccount ? (
+        <>
+          <p className="notice small">
+            Sync for this world was turned on here by a different account from the one signed in now, so it isn’t syncing. Sign in with that account
+            to keep it in step, or stop syncing it on this device.
+          </p>
+          <button disabled={busy} onClick={() => run(() => disableCloud(world.id))}>
+            Stop syncing on this device
           </button>
         </>
       ) : world.cloud?.gone ? (
@@ -85,10 +110,11 @@ export default function CloudSettings({ world }: { world: World }) {
             isn’t syncing.
           </p>
           <div className="row wrap">
-            <button disabled={busy} onClick={() => run(() => disableCloud(world.id, true))}>
+            {/* What was last synced is kept, so turning sync on again later merges instead of sending old copies over newer ones. */}
+            <button disabled={busy} onClick={() => run(() => disableCloud(world.id))}>
               Keep it on this device only
             </button>
-            <button className="primary" disabled={busy} onClick={() => run(() => enableCloud(world.id))}>
+            <button className="primary" disabled={busy} onClick={turnOn}>
               {busy ? 'Uploading…' : 'Upload it to the cloud again'}
             </button>
           </div>
