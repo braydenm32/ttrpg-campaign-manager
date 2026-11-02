@@ -26,7 +26,9 @@ import {
   type Biome,
   type Drawing,
   type GroundId,
+  type GroundStroke,
   type LabelFont,
+  type LandStroke,
   type LayerId,
   type LineStyle,
   type Look,
@@ -42,46 +44,48 @@ import { canTurn, classicBlob, classicHitSvg, drawPiece, floorTest, FONTS, landT
 import { groundColour } from '../mapArt/ground'
 import { useViewMode } from '../viewMode'
 import { worldPath } from '../paths'
+import { Ico } from '../icons'
+import { Cursor, Eraser, Hand, House, Mountains, PaintBrush, PaintBrushBroad, PencilLine, TextT, Tree, Wall, Waves, type Icon as PhosphorIcon } from '@phosphor-icons/react'
 
 type Tool = 'select' | 'hand' | 'land' | 'coast' | 'room' | 'line' | 'stamp' | 'label' | 'erase'
 
 interface ToolDef {
   id: Tool
-  icon: string
+  icon: PhosphorIcon
   label: string
   hint: string
 }
 
 const WORLD_TOOLS: ToolDef[] = [
-  { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a piece, line or label to edit it, drag to move it' },
-  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll, pinch or use + and − to zoom' },
-  { id: 'land', icon: '🖌', label: 'Land', hint: 'Drag to paint land; switch to Water to carve out seas, bays and lakes. The coast draws itself' },
-  { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw rivers, roads, trails and borders' },
-  { id: 'stamp', icon: '⛰', label: 'Place', hint: 'Click to place a piece. Click and hold, then drag, to scatter lots of them' },
-  { id: 'label', icon: '🔤', label: 'Label', hint: 'Click to place text, or drag to write it along a curve' },
-  { id: 'erase', icon: '🧽', label: 'Erase', hint: 'Click a piece, line or label to delete it, or drag across several' },
+  { id: 'select', icon: Cursor, label: 'Select', hint: 'Click a piece, line, label or painted stroke to edit it, drag to move it' },
+  { id: 'hand', icon: Hand, label: 'Pan', hint: 'Drag to move around. Scroll, pinch or use + and − to zoom' },
+  { id: 'land', icon: PaintBrushBroad, label: 'Land', hint: 'Drag to paint land; switch to Water to carve out seas, bays and lakes. The coast draws itself' },
+  { id: 'line', icon: PencilLine, label: 'Line', hint: 'Drag to draw rivers, roads, trails and borders' },
+  { id: 'stamp', icon: Mountains, label: 'Place', hint: 'Click to place a piece. Click and hold, then drag, to scatter lots of them' },
+  { id: 'label', icon: TextT, label: 'Label', hint: 'Click to place text, or drag to write it along a curve' },
+  { id: 'erase', icon: Eraser, label: 'Erase', hint: 'Click a piece, line, label or painted stroke to delete it, or drag across several' },
 ]
 
 const BATTLE_TOOLS: ToolDef[] = [
-  { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a piece, line or label to edit it, drag to move it' },
-  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll, pinch or use + and − to zoom' },
-  { id: 'land', icon: '🖌', label: 'Ground', hint: 'Drag to paint grass, dirt, sand, stone, mud, snow, floors or water. Where two kinds meet they blend softly' },
-  { id: 'room', icon: '🧱', label: 'Rooms', hint: 'Drag to dig out a room, passage or cave. Rooms that touch join up, and the walls draw themselves' },
-  { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw fences, hedges, stone walls and cliff edges' },
-  { id: 'stamp', icon: '🌳', label: 'Place', hint: 'Click to place a piece. Click and hold, then drag, to scatter lots of them' },
-  { id: 'label', icon: '🔤', label: 'Label', hint: 'Click to place text, or drag to write it along a curve' },
-  { id: 'erase', icon: '🧽', label: 'Erase', hint: 'Click a piece, line or label to delete it, or drag across several' },
+  { id: 'select', icon: Cursor, label: 'Select', hint: 'Click a piece, line or label, a room’s edge or a painted stroke to edit it, drag to move it' },
+  { id: 'hand', icon: Hand, label: 'Pan', hint: 'Drag to move around. Scroll, pinch or use + and − to zoom' },
+  { id: 'land', icon: PaintBrush, label: 'Ground', hint: 'Drag to paint grass, dirt, sand, stone, mud, snow, floors or water. Where two kinds meet they blend softly' },
+  { id: 'room', icon: Wall, label: 'Rooms', hint: 'Drag to dig out a room, passage or cave. Rooms that touch join up, and the walls draw themselves' },
+  { id: 'line', icon: PencilLine, label: 'Line', hint: 'Drag to draw fences, hedges, stone walls and cliff edges' },
+  { id: 'stamp', icon: Tree, label: 'Place', hint: 'Click to place a piece. Click and hold, then drag, to scatter lots of them' },
+  { id: 'label', icon: TextT, label: 'Label', hint: 'Click to place text, or drag to write it along a curve' },
+  { id: 'erase', icon: Eraser, label: 'Erase', hint: 'Click a piece, line or label, a room’s edge or a painted stroke to delete it, or drag across several' },
 ]
 
 const CITY_TOOLS: ToolDef[] = [
-  { id: 'select', icon: '🖐', label: 'Select', hint: 'Click a piece, line or label to edit it, drag to move it' },
-  { id: 'hand', icon: '✋', label: 'Pan', hint: 'Drag to move around. Scroll, pinch or use + and − to zoom' },
-  { id: 'land', icon: '🖌', label: 'Ground', hint: 'Drag to paint grass, dirt, sand, paving stones, mud, snow or water: squares, gardens, ponds and canals' },
-  { id: 'coast', icon: '🌊', label: 'Coast', hint: 'Drag to paint land; switch to Sea to carve out the sea, a harbour or a lake. The coast draws itself' },
-  { id: 'line', icon: '〰', label: 'Line', hint: 'Drag to draw streets, town walls, stone walls, fences, hedges and rivers' },
-  { id: 'stamp', icon: '🏠', label: 'Place', hint: 'Click to place a piece. Click and hold, then drag, to scatter lots of them' },
-  { id: 'label', icon: '🔤', label: 'Label', hint: 'Click to place text, or drag to write it along a curve' },
-  { id: 'erase', icon: '🧽', label: 'Erase', hint: 'Click a piece, line or label to delete it, or drag across several' },
+  { id: 'select', icon: Cursor, label: 'Select', hint: 'Click a piece, line, label or painted stroke to edit it, drag to move it' },
+  { id: 'hand', icon: Hand, label: 'Pan', hint: 'Drag to move around. Scroll, pinch or use + and − to zoom' },
+  { id: 'land', icon: PaintBrush, label: 'Ground', hint: 'Drag to paint grass, dirt, sand, paving stones, mud, snow or water: squares, gardens, ponds and canals' },
+  { id: 'coast', icon: Waves, label: 'Coast', hint: 'Drag to paint land; switch to Sea to carve out the sea, a harbour or a lake. The coast draws itself' },
+  { id: 'line', icon: PencilLine, label: 'Line', hint: 'Drag to draw streets, town walls, stone walls, fences, hedges and rivers' },
+  { id: 'stamp', icon: House, label: 'Place', hint: 'Click to place a piece. Click and hold, then drag, to scatter lots of them' },
+  { id: 'label', icon: TextT, label: 'Label', hint: 'Click to place text, or drag to write it along a curve' },
+  { id: 'erase', icon: Eraser, label: 'Erase', hint: 'Click a piece, line, label or painted stroke to delete it, or drag across several' },
 ]
 
 /** Which kinds of line each kind of map offers. */
@@ -222,6 +226,66 @@ const WALL_PIECES = ['ct-gatehouse', 'ct-wall-tower']
 /** Scattered natural things and towns stay on land; ships, serpents and waves stay at sea. */
 const ASHORE = ['mountains', 'hills', 'vegetation', 'settlements', 'landmarks', 'symbols']
 
+/** A room, or a brush stroke of ground or land: drawn by dragging, picked by Select like a piece. */
+type Stroke = RoomStroke | GroundStroke | LandStroke
+/** The drawing without these pieces, lines, labels, rooms and brush strokes. */
+const without = (d: Drawing, ids: Set<string>): Drawing => ({
+  ...d,
+  shapes: d.shapes.filter((s) => !ids.has(s.id)),
+  ...(d.rooms ? { rooms: d.rooms.filter((r) => !ids.has(r.id)) } : {}),
+  ...(d.ground ? { ground: d.ground.filter((g) => !ids.has(g.id)) } : {}),
+  ...(d.land ? { land: d.land.filter((l) => !ids.has(l.id)) } : {}),
+})
+/** How many Undo (and Redo) steps are kept for a map when you leave it, in this tab only. */
+const UNDO_KEPT = 15
+const undoKey = (mapId: string) => `mapUndo.${mapId}`
+/** A short fingerprint of a drawing, to tell whether the map is still as it was when its Undo steps were kept. */
+function fingerprint(d: Drawing) {
+  const t = JSON.stringify(d)
+  let h = 2166136261
+  for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 16777619)
+  return `${t.length}:${h >>> 0}`
+}
+function readUndo(mapId: string, now: Drawing): { past: Drawing[]; future: Drawing[] } {
+  try {
+    const raw = sessionStorage.getItem(undoKey(mapId))
+    if (raw) {
+      const kept = JSON.parse(raw) as { at: string; past: Drawing[]; future: Drawing[] }
+      if (kept.at === fingerprint(now) && Array.isArray(kept.past) && Array.isArray(kept.future)) return kept
+    }
+  } catch {
+    /* nothing kept, or storage is off */
+  }
+  return { past: [], future: [] }
+}
+function writeUndo(mapId: string, { drawing, past, future }: { drawing: Drawing; past: Drawing[]; future: Drawing[] }) {
+  try {
+    if (!past.length && !future.length) return sessionStorage.removeItem(undoKey(mapId))
+    const at = fingerprint(drawing)
+    // a big map's steps may not all fit: keep fewer until they do
+    for (let n = UNDO_KEPT; n > 0; n = Math.floor(n / 2)) {
+      try {
+        sessionStorage.setItem(undoKey(mapId), JSON.stringify({ at, past: past.slice(-n), future: future.slice(0, n) }))
+        return
+      } catch {
+        /* too big: try fewer */
+      }
+    }
+    sessionStorage.removeItem(undoKey(mapId))
+  } catch {
+    /* storage is off: Undo starts afresh next time */
+  }
+}
+/** Whether a key goes to a box being typed in (which has its own Undo), rather than to the map: sliders and ticks don't count. */
+const isTyping = (target: EventTarget | null) => {
+  const el = target as HTMLElement | null
+  if (!el?.closest) return false
+  if (el.closest('textarea, select, [contenteditable="true"]')) return true
+  return el instanceof HTMLInputElement && !['range', 'checkbox', 'radio', 'button', 'submit', 'color'].includes(el.type)
+}
+/** Whether a click target on the map is a room or a brush stroke (rather than a piece, line or label). */
+const isStrokeHit = (target: EventTarget) => !!(target as Element).closest?.('[data-id]')?.hasAttribute('data-stroke')
+
 export default function MapBuilder() {
   const { worldId } = useWorld()
   const { mapId = '' } = useParams()
@@ -242,7 +306,9 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const city = drawing.scene === 'city'
   const top = fromAbove(drawing)
   const TOOLS = battle ? BATTLE_TOOLS : city ? CITY_TOOLS : WORLD_TOOLS
-  const [past, setPast] = useState<Drawing[]>([])
+  // Undo outlasts Done: the last few steps are kept for this tab, and come back if the map is reopened unchanged.
+  const [kept] = useState(() => readUndo(map.id, drawing))
+  const [past, setPast] = useState<Drawing[]>(kept.past)
   const [exporting, setExporting] = useState(false)
   // see the map as players get it, without the secrets
   const [seePlayers, setSeePlayers] = useState(false)
@@ -250,8 +316,21 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   useEffect(() => {
     playersView.current = seePlayers
   }, [seePlayers])
-  const [future, setFuture] = useState<Drawing[]>([])
-  const [tool, setTool] = useState<Tool>('land')
+  const [future, setFuture] = useState<Drawing[]>(kept.future)
+  const undoNow = useRef({ drawing, past, future })
+  useEffect(() => {
+    undoNow.current = { drawing, past, future }
+  }, [drawing, past, future])
+  useEffect(() => {
+    const keep = () => writeUndo(map.id, undoNow.current)
+    window.addEventListener('pagehide', keep)
+    return () => {
+      window.removeEventListener('pagehide', keep)
+      keep()
+    }
+  }, [map.id])
+  // a fresh dungeon is all rock, so it starts on Rooms; a town starts on Place (houses)
+  const [tool, setTool] = useState<Tool>(() => (battle && drawing.outside === 'rock' ? 'room' : city ? 'stamp' : 'land'))
   const [lineStyle, setLineStyle] = useState<LineStyle>(battle ? 'fence' : city ? 'street' : 'river')
   const [lineOpts, setLineOpts] = useState<LineOpts>({ ft: { street: 20, river: 50 }, towers: 0 })
   const [brush, setBrush] = useState<{ mode: 'land' | 'water'; size: number }>(() => ({ mode: 'land', size: Math.round(Math.max(W, H) / 16) }))
@@ -282,7 +361,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     | { kind: 'room'; points: Point[] }
     | { kind: 'move'; id: string; start: Point; before: Drawing }
     | { kind: 'scatter'; before: Drawing; placed: Shape[]; start: Point; at: Point; t0: number; moved: boolean; fits: (asset: string, p: Point) => boolean }
-    | { kind: 'erase'; before: Drawing; ids: Set<string> }
+    | { kind: 'erase'; before: Drawing; ids: Set<string>; strokes: boolean }
     | { kind: 'pinch'; view: typeof view; mid: Point; dist: number }
   >(undefined)
   // Fingers (and pens and mice) on the map, so a second finger zooms instead of breaking the stroke.
@@ -361,11 +440,19 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   }
   const removeShape = useCallback(
     (id: string) => {
-      commit({ ...drawing, shapes: drawing.shapes.filter((s) => s.id !== id) })
+      commit(without(drawing, new Set([id])))
       setSelectedId(undefined)
     },
     [commit, drawing],
   )
+  /** Changes a room, or a brush stroke of ground or land (Select, then its panel). */
+  const updateStroke = (id: string, patch: Partial<Stroke>) =>
+    commit({
+      ...drawing,
+      rooms: drawing.rooms?.map((r) => (r.id === id ? ({ ...r, ...patch } as RoomStroke) : r)),
+      ground: drawing.ground?.map((g) => (g.id === id ? ({ ...g, ...patch } as GroundStroke) : g)),
+      land: drawing.land?.map((l) => (l.id === id ? ({ ...l, ...patch } as LandStroke) : l)),
+    })
 
   // A fogged map's players' picture is remade once you're done drawing (not on every stroke).
   useEffect(() => () => void renderPlayerFog(map.id).catch(() => {}), [map.id])
@@ -551,7 +638,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      const typing = (e.target as HTMLElement).closest('input, textarea, select')
+      const typing = isTyping(e.target)
       if (e.code === 'Space' && !typing) spaceDown.current = true
       if (typing) return
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
@@ -749,13 +836,20 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       ring.setAttribute('cy', String(p[1]))
     }
   }
-  const eraseAt = (g: { before: Drawing; ids: Set<string> }, id?: string) => {
-    if (!id || g.ids.has(id)) return
+  // A drag that starts on a piece, line or label erases only those; one that starts on a room or a
+  // brush stroke erases only rooms and strokes (so sweeping over pieces doesn't take the floor with them).
+  const eraseAt = (g: { before: Drawing; ids: Set<string>; strokes: boolean }, target: EventTarget | null) => {
+    const id = target ? shapeAt(target) : undefined
+    if (!id || g.ids.has(id) || isStrokeHit(target!) !== g.strokes) return
     g.ids.add(id)
-    setDrawing({ ...g.before, shapes: g.before.shapes.filter((s) => !g.ids.has(s.id)) })
+    setDrawing(without(g.before, g.ids))
   }
 
+  /** Whether a point is on the map (not in the dark margin round it). */
+  const onMap = ([x, y]: Point) => x >= 0 && y >= 0 && x <= W && y <= H
   const addLabel = (at: Point, curve?: Point[]) => {
+    // a label off the edge of the map would never be seen
+    if (!onMap(at)) return
     const text = labelText.trim() || prompt('Label text')?.trim()
     if (!text) return
     const id = newId()
@@ -919,7 +1013,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     } else if (tool === 'stamp') {
       if (locked('objects') || !Atlas.assets[piece.asset]) return
       const wall = city && WALL_PIECES.includes(piece.asset) && !piece.mix.length ? snapToWall(p) : undefined
-      if (wall) {
+      if (wall && onMap(wall.at)) {
         // a gatehouse or tower goes in one at a time, onto the town wall
         const { turn: _, ...rest } = makePiece(p, { asset: piece.asset, size: piece.size }) as Extract<Shape, { kind: 'asset' }>
         const turn = (wall.turn + (typeof piece.turn === 'number' ? piece.turn : 0)) % 360
@@ -927,6 +1021,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
         return
       }
       if (battle && isDoor(piece.asset) && !piece.mix.length) {
+        if (!onMap(p)) return
         // a door goes in one at a time, into the wall (a secret one into the wall players see)
         const door = makePiece(p, { asset: piece.asset, size: piece.size }) as Extract<Shape, { kind: 'asset' }>
         const snap = snapDoor(p, piece.size, piece.asset === 'gm-secret-door' ? forPlayers(drawing) : drawing)
@@ -940,16 +1035,17 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
         commit({ ...drawing, shapes: [...drawing.shapes, { ...rest, at: snap.at, ...(turn ? { turn } : {}) }] })
         return
       }
-      const first = makePiece(p)
-      gesture.current = { kind: 'scatter', before: drawing, placed: [first], start: p, at: p, t0: performance.now(), moved: false, fits: scatterFits() }
-      setDrawing({ ...drawing, shapes: [...drawing.shapes, first] })
+      // a click off the edge places nothing, but holding and dragging onto the map still scatters
+      const placed = onMap(p) ? [makePiece(p)] : []
+      gesture.current = { kind: 'scatter', before: drawing, placed, start: p, at: p, t0: performance.now(), moved: false, fits: scatterFits() }
+      if (placed.length) setDrawing({ ...drawing, shapes: [...drawing.shapes, ...placed] })
       window.clearInterval(scatterTimer.current)
       scatterTimer.current = window.setInterval(scatterTick, 45)
     } else if (tool === 'erase') {
       // drag across several things to erase them all in one go
-      const g = { kind: 'erase' as const, before: drawing, ids: new Set<string>() }
+      const g = { kind: 'erase' as const, before: drawing, ids: new Set<string>(), strokes: isStrokeHit(e.target) }
       gesture.current = g
-      eraseAt(g, hit)
+      eraseAt(g, e.target)
     } else if (tool === 'select') {
       setSelectedId(hit)
       if (hit) gesture.current = { kind: 'move', id: hit, start: p, before: drawing }
@@ -977,7 +1073,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     if (tool === 'stamp' && (!g || g.kind === 'scatter')) showRing(toMap(e))
     if (!g) return
     if (g.kind === 'erase') {
-      eraseAt(g, shapeAt(document.elementFromPoint(e.clientX, e.clientY) ?? e.target))
+      eraseAt(g, document.elementFromPoint(e.clientX, e.clientY) ?? e.target)
       return
     }
     if (g.kind === 'scatter') {
@@ -1005,6 +1101,14 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       const dx = p[0] - g.start[0]
       const dy = p[1] - g.start[1]
       const shift = ([x, y]: Point): Point => [x + dx, y + dy]
+      const room = g.before.rooms?.find((r) => r.id === g.id)
+      if (room) {
+        // rooms move a whole square at a time when they snap to the squares, so their walls stay on the grid lines
+        const [sx, sy] = snapping ? [Math.round(dx / gs) * gs, Math.round(dy / gs) * gs] : [dx, dy]
+        if (!sx && !sy) return setDrawing(g.before)
+        const points = room.points.map(([x, y]): Point => [x + sx, y + sy])
+        return setDrawing({ ...g.before, rooms: g.before.rooms!.map((r) => (r === room ? { ...r, points } : r)) })
+      }
       setDrawing({
         ...g.before,
         shapes: g.before.shapes.map((s) => {
@@ -1013,6 +1117,8 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
           if (s.kind === 'label' && s.curve) return { ...s, at: shift(s.at), curve: s.curve.map(shift) }
           return { ...s, at: shift(s.at) }
         }),
+        ...(g.before.ground?.some((x) => x.id === g.id) ? { ground: g.before.ground.map((x) => (x.id === g.id ? { ...x, points: x.points.map(shift) } : x)) } : {}),
+        ...(g.before.land?.some((x) => x.id === g.id) ? { land: g.before.land.map((x) => (x.id === g.id ? { ...x, points: x.points.map(shift) } : x)) } : {}),
       })
     }
   }
@@ -1031,12 +1137,12 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     window.clearInterval(scatterTimer.current)
     if (!g) return
     if (g.kind === 'scatter') {
-      commit({ ...g.before, shapes: [...g.before.shapes, ...g.placed] }, g.before)
+      if (g.placed.length) commit({ ...g.before, shapes: [...g.before.shapes, ...g.placed] }, g.before)
       return
     }
     if (g.kind === 'erase') {
       if (g.ids.size) {
-        commit({ ...g.before, shapes: g.before.shapes.filter((s) => !g.ids.has(s.id)) }, g.before)
+        commit(without(g.before, g.ids), g.before)
         if (selectedId && g.ids.has(selectedId)) setSelectedId(undefined)
       }
       return
@@ -1058,7 +1164,12 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       if (tool === 'land' && top) {
         const inside = groundBrush.inside && !!drawing.rooms?.length
         const stroke = { id: newId(), ground: groundBrush.ground, size: groundBrush.size, points: pts.length > 1 ? pts : [g.points[0]], ...(inside ? { inside } : {}) }
-        commit({ ...drawing, ground: [...(drawing.ground ?? []), stroke] })
+        // underground, ground painted only on the rock round the rooms wouldn't show at all
+        const floor = floorTest(drawing, W, H)
+        const r = stroke.size / 2
+        const shows = drawing.outside !== 'rock' || g.points.some(([x, y]) => [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]].some(([dx, dy]) => floor(x + dx, y + dy)))
+        if (!shows) toast('That’s all solid rock, so there’s nothing to paint: dig out a room with the Rooms tool first, then paint its floor.')
+        else commit({ ...drawing, ground: [...(drawing.ground ?? []), stroke] })
       } else if (tool === 'land' || tool === 'coast') {
         const stroke = { id: newId(), mode: brush.mode, size: brush.size, points: pts.length > 1 ? pts : [g.points[0]] }
         commit({ ...drawing, land: [...(drawing.land ?? []), stroke] })
@@ -1094,6 +1205,9 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const fit = () => fitView(canvas.w, canvas.h)
   const html = useMemo(() => classicHitSvg(drawing), [drawing])
   const selected = drawing.shapes.find((s) => s.id === selectedId)
+  const selectedStroke: Stroke | undefined = selectedId
+    ? (drawing.rooms?.find((r) => r.id === selectedId) ?? drawing.ground?.find((g) => g.id === selectedId) ?? drawing.land?.find((l) => l.id === selectedId))
+    : undefined
   const draftPath = draft.length > 1 ? pathFor(draft, false, tool !== 'line' || !STRAIGHT.includes(lineStyle)) : ''
   const sc = canvas.w / view.w
   const toggleLayer = (key: 'hidden' | 'locked', id: LayerId) => {
@@ -1101,7 +1215,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     commit({ ...drawing, [key]: list.includes(id) ? list.filter((l) => l !== id) : [...list, id] })
   }
   const selectionStyle = selectedId
-    ? `[data-id="${selectedId}"] { stroke: #ffd36b; stroke-opacity: .5; } rect[data-id="${selectedId}"] { stroke-opacity: 1; stroke-width: ${2 * upp}; stroke-dasharray: ${6 * upp} ${4 * upp}; fill: rgba(255,211,107,.08); }`
+    ? `[data-id="${selectedId}"] { stroke: #ffd36b; stroke-opacity: .5; } rect.hit-box[data-id="${selectedId}"] { stroke-opacity: 1; stroke-width: ${2 * upp}; stroke-dasharray: ${6 * upp} ${4 * upp}; fill: rgba(255,211,107,.08); } .hit-room:is(rect, ellipse)[data-id="${selectedId}"] { stroke-opacity: 1; stroke-width: 3px; stroke-dasharray: 8 5; fill: rgba(255,211,107,.12); }`
     : ''
 
   return (
@@ -1138,12 +1252,15 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
           </button>
         </div>
       </div>
+      <p className="builder-phone-note muted small">Maps are best drawn on a computer; small changes work here.</p>
       {exporting && <ExportMap mapId={map.id} fog={map.fog?.on ? map.fog : undefined} name={map.name} drawing={drawing} width={W} height={H} onClose={() => setExporting(false)} />}
       <div className="map-body">
         <div className="builder-tools">
           {TOOLS.map((t) => (
             <button key={t.id} className={tool === t.id ? 'on' : ''} title={t.hint} onClick={() => setTool(t.id)}>
-              <span className="tool-icon">{t.icon}</span>
+              <span className="tool-icon">
+                <Ico as={t.icon} />
+              </span>
               <span className="tool-label">{t.label}</span>
             </button>
           ))}
@@ -1238,6 +1355,14 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
               onChange={(patch) => updateShape(selected.id, patch)}
               onReveal={battle ? () => revealDoor(selected.id) : undefined}
               onDelete={() => removeShape(selected.id)}
+              onClose={() => setSelectedId(undefined)}
+            />
+          ) : selectedStroke ? (
+            <StrokeProps
+              stroke={selectedStroke}
+              drawing={drawing}
+              onChange={(patch) => updateStroke(selectedStroke.id, patch)}
+              onDelete={() => removeShape(selectedStroke.id)}
               onClose={() => setSelectedId(undefined)}
             />
           ) : (
@@ -2005,6 +2130,76 @@ function ShapeProps({ shape, drawing, pin, onLink, onChange, onReveal, onDelete,
       <p className="muted small">
         Drag it on the map to move it. Press Delete to remove it{shape.kind === 'asset' && canTurn(shape.asset) ? ', or R to turn it (Shift+R turns it back)' : ''}.
       </p>
+      <button className="danger" onClick={onDelete}>
+        Delete
+      </button>
+    </div>
+  )
+}
+
+/** A room, passage or cave, or a brush stroke of ground or land, picked with Select: change what it is, or delete it. */
+function StrokeProps({ stroke, drawing, onChange, onDelete, onClose }: {
+  stroke: Stroke
+  drawing: Drawing
+  onChange: (p: Partial<Stroke>) => void
+  onDelete: () => void
+  onClose: () => void
+}) {
+  const city = drawing.scene === 'city'
+  const room = 'shape' in stroke ? stroke : undefined
+  const ground = 'ground' in stroke ? stroke : undefined
+  const land = !room && !ground ? (stroke as LandStroke) : undefined
+  const title = room ? (ROOM_SHAPES.find((r) => r.id === room.shape)?.label ?? 'Room') : ground ? `${GROUNDS[ground.ground]} (painted)` : land?.mode === 'water' ? (city ? 'Sea (painted)' : 'Water (painted)') : 'Land (painted)'
+  return (
+    <div className="form">
+      <header>
+        <h2>{title}</h2>
+        <button className="ghost" onClick={onClose} aria-label="Close">
+          ×
+        </button>
+      </header>
+      {room && (
+        <>
+          <div className="row">
+            <button className={room.mode === 'dig' ? 'primary' : ''} onClick={() => onChange({ mode: 'dig' })}>
+              Dig out
+            </button>
+            <button className={room.mode === 'fill' ? 'primary' : ''} onClick={() => onChange({ mode: 'fill', gm: undefined })}>
+              Fill in
+            </button>
+          </div>
+          {room.mode === 'dig' && (
+            <label className="check">
+              <input type="checkbox" checked={!!room.gm} onChange={(e) => onChange({ gm: e.target.checked || undefined })} /> Secret: only you see it <Help topic="secretRooms" />
+            </label>
+          )}
+          <p className="muted small">Drag its edge to move it.{room.shape === 'rect' || room.shape === 'round' ? ' Click inside a room to pick what stands in it.' : ''}</p>
+        </>
+      )}
+      {ground && (
+        <label>
+          Ground
+          <select value={ground.ground} onChange={(e) => onChange({ ground: e.target.value as GroundId })}>
+            {groundsFor(city).map((g) => (
+              <option key={g} value={g}>
+                {GROUNDS[g]}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {land && (
+        <div className="row">
+          <button className={land.mode === 'land' ? 'primary' : ''} onClick={() => onChange({ mode: 'land' })}>
+            Land
+          </button>
+          <button className={land.mode === 'water' ? 'primary' : ''} onClick={() => onChange({ mode: 'water' })}>
+            {city ? 'Sea' : 'Water'}
+          </button>
+        </div>
+      )}
+      {!room && <p className="muted small">Drag along it to move it.</p>}
+      <p className="muted small">Press Delete to remove it.</p>
       <button className="danger" onClick={onDelete}>
         Delete
       </button>
