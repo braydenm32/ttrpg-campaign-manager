@@ -8,8 +8,31 @@ export const numberFrom = (text: string | undefined) => {
   return m ? Number(m[0]) : null
 }
 
-const hpOf = (e: Entity) => numberFrom(field(e, /^(hp|hit points|health)$/i))
-const acOf = (e: Entity) => field(e, /^(ac|armou?r class|armou?r|defen[cs]e|evasion)$/i)
+export const detailKey = (k: string) => k.trim().toLowerCase()
+const norm = detailKey
+
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * A character's value for a detail, by name. Without a detail of that name, a number written after
+ * the name inside a longer detail counts too, so "AC" finds 15 in a stat line like "AC 15 (leather), HP 13".
+ */
+export function detailOf(e: Entity, key: string) {
+  const own = e.fields.find((f) => norm(f.key) === norm(key))?.value
+  if (own !== undefined) return own
+  const k = key.trim()
+  if (!k) return ''
+  const re = new RegExp(`(?:^|[\\s,;(])${escape(k)}\\s*:?\\s*([+-]?\\d+)`, 'i')
+  for (const f of e.fields) {
+    const m = f.value.match(re)
+    if (m) return m[1]
+  }
+  return ''
+}
+
+// A field named for it, else the number written after "HP" or "AC" in a longer stat line ("5e: AC 15 (leather), HP 13"), GM fields included: this is the GM's screen.
+const hpOf = (e: Entity) => numberFrom(field(e, /^(hp|hit points|health)$/i)) ?? numberFrom(detailOf(e, 'HP')) ?? numberFrom(detailOf(e, 'Hit points'))
+const acOf = (e: Entity) => field(e, /^(ac|armou?r class|armou?r|defen[cs]e|evasion)$/i) || detailOf(e, 'AC') || undefined
 
 /** A combatant made from a page, with HP and AC read from its Details if it has them. */
 export function fromEntity(e: Entity): Omit<Combatant, 'id'> {

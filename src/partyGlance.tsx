@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { db, type Entity, type World } from './db'
 import { Help } from './help'
 import { pagePath } from './paths'
+import { detailKey, detailOf } from './encounters'
 import { StatusBadge } from './status'
 
 /**
@@ -11,26 +12,9 @@ import { StatusBadge } from './status'
  * from the campaign page to the Lectern. Details are matched by name, ignoring case.
  */
 
-const norm = (k: string) => k.trim().toLowerCase()
+const norm = detailKey
 
-const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-
-/**
- * A character's value for a detail, by name. Without a detail of that name, a number written after
- * the name inside a longer detail counts too, so "AC" finds 15 in a stat line like "AC 15 (leather), HP 13".
- */
-export function detailOf(e: Entity, key: string) {
-  const own = e.fields.find((f) => norm(f.key) === norm(key))?.value
-  if (own !== undefined) return own
-  const k = key.trim()
-  if (!k) return ''
-  const re = new RegExp(`(?:^|[\\s,;(])${escape(k)}\\s*:?\\s*([+-]?\\d+)`, 'i')
-  for (const f of e.fields) {
-    const m = f.value.match(re)
-    if (m) return m[1]
-  }
-  return ''
-}
+export { detailOf }
 
 /** Details too long for a column (whole stat lines, backstory). */
 const isLong = (party: Entity[], key: string) => {
