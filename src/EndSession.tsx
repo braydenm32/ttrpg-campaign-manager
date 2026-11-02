@@ -15,6 +15,7 @@ import { stripSecrets } from './Markdown'
 import { toast } from './undo'
 import { jumpTo } from './jump'
 import { WhoWasThere } from './attendance'
+import { offerGroupPost } from './groupPost'
 
 /**
  * Finishing a session: "Mark as played" ends the live link to players, marks it played and gets the
@@ -113,6 +114,7 @@ export function ShowToPlayers({ session, campaign, entities }: { session: Sessio
             await set('players')
             setReview(false)
             toast(`Players can read #${session.number} now.`, () => set('gm'))
+            offerGroupPost(await db.worlds.get(session.worldId), `The recap of #${session.number} ${session.title} is up in the Common Room.`)
           }}
         >
           <Ico as={Eye} /> Show it to players

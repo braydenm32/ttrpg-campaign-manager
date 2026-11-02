@@ -1929,3 +1929,13 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 @media (pointer: coarse) {
   .who-was-there .who-chip { min-height: 44px; }
 }
+
+/* "Post a link for the group" (src/groupPost.tsx): a small card in a corner, above the Undo note. */
+.group-post { position: fixed; z-index: 2300; right: 1em; bottom: 5.5em; width: min(380px, calc(100vw - 2em)); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: .4em; }
+.group-post .row { margin: 0; gap: .4em; }
+.group-post-text { margin: 0; overflow-wrap: anywhere; }
+.group-post-close { min-width: 44px; min-height: 44px; }
+@media (max-width: 700px) {
+  .group-post { right: 1em; bottom: calc(5.5em + env(safe-area-inset-bottom)); }
+  .group-post button { min-height: 44px; }
+}

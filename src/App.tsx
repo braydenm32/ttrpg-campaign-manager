@@ -68,6 +68,7 @@ import { hashRouting, setPages, tidyPath, usePathsVersion } from './paths'
 import { ClaudeJobChips, LeaveGuard } from './ai/LeaveGuard'
 import { useGuardedNavigate } from './ai/leave'
 import { rememberLastWorld } from './install'
+import { GroupPostOffer } from './groupPost'
 
 const Router = hashRouting ? HashRouter : BrowserRouter
 
@@ -372,6 +373,7 @@ function WorldShell() {
       </div>
       <BottomBar frame={frame} links={links} />
       <ToastHost />
+      {isGM && !shared && <GroupPostOffer />}
     </div>
     </FrameProvider>
   )

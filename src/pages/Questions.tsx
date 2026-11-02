@@ -18,6 +18,7 @@ import { ChatCircleDots, EyeClosed, Hourglass, MaskHappy, Question, Tray, UserCi
 import { pagePath, worldPath } from '../paths'
 import { toast } from '../undo'
 import { askToReveal, useReview } from '../reveal'
+import { offerGroupPost } from '../groupPost'
 
 /** Questions: the GM's Inbox (everything players sent), or a player's own questions and answers. */
 export default function Questions() {
@@ -270,7 +271,11 @@ function QuestionItem({
         className="form"
         onSubmit={(e) => {
           e.preventDefault()
-          act(() => answerQuestion(world.id, q.id, answer))
+          act(async () => {
+            const first = !q.answer
+            await answerQuestion(world.id, q.id, answer)
+            if (first && answer.trim()) offerGroupPost(world, `Your GM answered ${who}’s question. It’s waiting in the Common Room.`)
+          })
         }}
       >
         <textarea rows={2} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder={`Your answer, seen only by ${who}`} aria-label={`Answer ${who}`} />
