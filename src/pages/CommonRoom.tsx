@@ -55,6 +55,7 @@ import { SignedOutCard } from '../players/SignedOut'
 import { Highlights, StorySoFar } from '../highlights'
 import { InstallCard } from '../install'
 import { StarsAndWishesCard } from '../players/StarsWishes'
+import { MySessionNote } from '../players/SessionNote'
 
 /**
  * The Common Room: the players' home in a world, made for a phone in one hand. Its tabs (Now, Me,
@@ -328,6 +329,7 @@ function Answers({ ctx }: { ctx: RoomContext }) {
                 <Link className="answer-link" to={`${worldPath(worldId)}/s/${last.id}`}>
                   Read it all
                 </Link>
+                <MySessionNote world={ctx.world} sessionId={last.id} />
               </>
             ) : (
               <span className="muted">Nothing yet. Your GM’s write-up of each session lands here.</span>
@@ -361,6 +363,7 @@ function LastTimeFull({ ctx }: { ctx: RoomContext }) {
           <Link className="answer-link" to={`${worldPath(worldId)}/s/${last.id}`}>
             Read it all
           </Link>
+          <MySessionNote world={ctx.world} sessionId={last.id} />
           <Highlights session={sessions.find((s) => s.id === last.id)!} entities={entities} worldId={worldId} isGM={false} />
         </>
       ) : (

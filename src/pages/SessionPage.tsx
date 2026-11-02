@@ -36,6 +36,7 @@ import { JumpRow, jumpTo, useKeepScroll } from '../jump'
 import { removeWithUndo, SavedMark, saving } from '../undo'
 import { showDay } from '../text'
 import { PresentLine } from '../attendance'
+import { MySessionNote } from '../players/SessionNote'
 
 /**
  * A session. For the GM it's two of the Session area's three stages (the third, Play, is the
@@ -84,6 +85,7 @@ export default function SessionPage() {
         ) : (
           <Empty>No recap yet.</Empty>
         )}
+        {world && <MySessionNote world={world} sessionId={session.id} />}
         <Highlights session={session} entities={entities} worldId={worldId} isGM={false} />
         <FeaturedList worldId={worldId} entities={featured} />
       </div>
