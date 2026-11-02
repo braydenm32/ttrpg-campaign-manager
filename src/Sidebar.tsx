@@ -17,7 +17,7 @@ import { isPlayed, sessionFirstTab } from './sessions'
 import { usePlayingNow } from './stage'
 import { pagePath, resolvePage, worldPath } from './paths'
 import { formatDate } from './calendar'
-import { syncNow, syncStore } from './cloud/sync'
+import { syncNow, syncStore, type SyncState } from './cloud/sync'
 import { leaveWorld } from './cloud/players'
 import { XCardButton } from './pages/Safety'
 
@@ -213,6 +213,9 @@ export function phoneTabIds(frame: Frame): Set<string> {
 /** The phone's bar along the bottom: five areas (players: Now, Me, Party, Leads, World) in thumb reach. */
 export function BottomBar({ frame, links }: { frame: Frame; links: FrameLinks }) {
   const { facts, spot } = frame
+  const sync = useSyncExternalStore(syncStore.subscribe, syncStore.get)
+  // On a phone the sync badge lives on More, so a problem puts a dot on More too (the Desk lists it as well).
+  const syncTrouble = facts.viewer === 'gm' && !!facts.cloud && syncProblem(sync)
   if (facts.viewer === 'wiki') return null
   const items = PHONE_BAR[facts.viewer]
   return (
@@ -226,7 +229,9 @@ export function BottomBar({ frame, links }: { frame: Frame; links: FrameLinks })
             <span className="bar-icon">
               <Ico as={b.icon} size="1.45em" weight={on ? 'fill' : 'regular'} />
               {n ? <i>{n}</i> : null}
+              {!n && b.id === 'more' && syncTrouble ? <i className="bar-dot" title="Sync problem: open More to see it" /> : null}
             </span>
+            {b.id === 'more' && syncTrouble && <span className="sr-only">(sync problem)</span>}
             {b.label}
           </Link>
         )
@@ -274,6 +279,9 @@ export function WorldDate({ world }: { world: World }) {
   if (!cal?.today) return null
   return <span className="world-date">{formatDate(cal, cal.today)}</span>
 }
+
+/** Sync stopped (an error), or finished with a note worth reading (files that didn't upload, say). */
+export const syncProblem = (s: SyncState) => s.status === 'error' || (s.status === 'idle' && !!s.message)
 
 function SyncBadge() {
   const s = useSyncExternalStore(syncStore.subscribe, syncStore.get)

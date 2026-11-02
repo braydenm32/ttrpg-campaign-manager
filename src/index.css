@@ -1934,3 +1934,6 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .device-storage { margin: .6em 0; }
 .device-storage.notice { padding: .4em .7em; }
 .device-storage p { margin: .2em 0; }
+
+/* Phone: a dot on More when cloud sync has a problem */
+.bar-icon i.bar-dot { width: .6em; height: .6em; padding: 0; right: -4px; top: -2px; background: var(--danger); }
