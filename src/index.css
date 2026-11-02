@@ -557,7 +557,8 @@ button.social.facebook .social-icon { background: #1877f2; }
 .roll-log { list-style: none; padding: 0; margin: .3em 0; max-height: 12em; overflow: auto; }
 @media (max-width: 1200px) {
   .lectern { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .lectern-col:last-child { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .lectern-col:last-child { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+  .lectern-col > * { min-width: 0; }
 }
 @media (max-width: 800px) {
   .lectern, .lectern-col:last-child { grid-template-columns: minmax(0, 1fr); }
@@ -929,7 +930,10 @@ label.check-item { display: flex; gap: .4em; align-items: flex-start; font-size:
 .clock-face path { fill: var(--panel-2); stroke: var(--border); stroke-width: 1.5; }
 .clock-face path.filled { fill: var(--danger); }
 .clock-face.full path.filled { fill: var(--accent); }
-.clock-info { display: flex; flex-direction: column; gap: .15em; }
+.clock-info { display: flex; flex-direction: column; gap: .15em; min-width: 0; overflow-wrap: anywhere; }
+.clock-row .row { flex-wrap: wrap; }
+/* A planned fight's button may carry a long name: it wraps rather than pushing the Lectern sideways. */
+.encounter-button { white-space: normal; text-align: left; max-width: 100%; }
 
 /* Link peeks */
 .link-peek { position: fixed; z-index: 3000; width: 320px; max-width: calc(100vw - 24px); background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0, 0, 0, .35); padding: .7em .8em; display: flex; gap: .7em; pointer-events: none; font-size: .9rem; }
@@ -1908,4 +1912,9 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
   .question .link, .choose-character a, .choose-character button, .my-new-characters button, .room-foot-note a, .player-mode .page > a:first-child { min-height: 44px; display: inline-flex; align-items: center; }
   .room-foot-note a { padding: 0 .2em; }
   .player-mode .segmented button { min-height: 44px; min-width: 44px; justify-content: center; }
+}
+
+/* Lists on a phone: the New button, the filter box and the tag picker are a whole fingertip tall. */
+@media (max-width: 800px) {
+  .list-tools :is(input, select), .page-header > button, .page-header > .menu-wrap > button { min-height: 44px; }
 }

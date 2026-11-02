@@ -499,6 +499,7 @@ export function LecternPrep({ session, world }: { session: Session; world: World
             {prep.encounters.map((enc) => (
               <button
                 key={enc.id}
+                className="encounter-button"
                 disabled={!enc.foes.length}
                 title={enc.notes || 'Add to initiative'}
                 onClick={() => {
