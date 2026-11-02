@@ -66,7 +66,7 @@ export const HELP = {
   mapView:
     'Click a pin or region to see what is there. "Enter" opens a more detailed map, such as a town inside a region. As GM, use the toolbar to add pins and regions.',
   fog:
-    'Hide the map from players and uncover it as they explore. Uncover a circle, a box or any shape; switch to Cover to hide a part again. Players get a copy of the picture with the fog painted on, so covered areas and the pins in them can’t be peeked at.',
+    'Hide the map from players and uncover it as they explore. Uncover a circle (its outline follows the pointer at the size you set; drag to uncover a trail), a box or any shape; switch to Cover to hide a part again. Undo takes back the last one (a whole room or trail at once) and Redo puts it back. Players get a copy of the picture with the fog painted on, so covered areas and the pins in them can’t be peeked at.',
   mapBuilder: 'Draw a map from scratch: paint land and water, draw roads, rivers and borders, place mountains, forests and towns, and add labels. It then works like any uploaded map: pins, regions, fog and the player view. On a computer each tool has a key: V Select, H Pan, B the brush (Land or Ground), D Rooms, C Coast, L Line, P Place, T Label, E Erase; Esc goes back to Select.',
   newMap:
     'Pick what you are drawing. "World, region or city" is for continents, kingdoms and towns: start with open sea, all land, or a town seen from above. "Dungeon, building or battle map" is on a grid for fights: start with solid rock to dig a dungeon, or with grass, dirt or paving for an outdoor fight. Small, Medium or Large sets how much room you get: pick the size you’ll need, since it can’t be changed afterwards.',

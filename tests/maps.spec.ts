@@ -184,13 +184,25 @@ test('a door clicked in a passage goes across it, and the fog Room tool stops at
     const shapes = fog.shapes.length
     const bar = page.locator('.fog-bar')
     await bar.getByRole('button', { name: /Undo/ }).click()
-    await expect.poll(async () => (await mapNamed(page, name))?.fog?.shapes.length).toBe(shapes - 1)
+    await expect.poll(async () => (await mapNamed(page, name))?.fog?.shapes.length).toBe(0)
     await bar.getByRole('button', { name: /Redo/ }).click()
     await expect.poll(async () => (await mapNamed(page, name))?.fog?.shapes.length).toBe(shapes)
     // Cover all can be undone too.
     await bar.getByRole('button', { name: 'Cover all', exact: true }).click()
     await expect.poll(async () => (await mapNamed(page, name))?.fog?.shapes.length).toBe(0)
     await page.locator('.undo-toast').getByRole('button', { name: /Undo/ }).click()
+    await expect.poll(async () => (await mapNamed(page, name))?.fog?.shapes.length).toBe(shapes)
+
+    // The circle shows under the pointer at its size; a drag uncovers a trail, and one Undo takes it all back.
+    await bar.getByRole('button', { name: /Circle/ }).click()
+    const from = { x: pic!.x + (300 / 1400) * pic!.width, y: pic!.y + (800 / 1050) * pic!.height }
+    await page.mouse.move(from.x, from.y)
+    await expect(page.locator('.fog-brush')).toBeVisible()
+    await page.mouse.down()
+    await page.mouse.move(from.x + pic!.width * 0.5, from.y, { steps: 20 })
+    await page.mouse.up()
+    await expect.poll(async () => (await mapNamed(page, name))?.fog?.shapes.length).toBeGreaterThan(shapes + 3)
+    await bar.getByRole('button', { name: /Undo/ }).click()
     await expect.poll(async () => (await mapNamed(page, name))?.fog?.shapes.length).toBe(shapes)
   } finally {
     await removeMap(page, name)
