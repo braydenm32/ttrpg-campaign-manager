@@ -15,6 +15,7 @@ import { useViewMode } from './viewMode'
 import { hrefFor, pagePath, worldPath } from './paths'
 import { navPlaces, type NavPlace } from './nav'
 import { useFrameContext } from './Sidebar'
+import { useRecentPages } from './recent'
 
 /**
  * Search everything: page names, nicknames, summaries, details, tags and the text itself, plus
@@ -147,7 +148,11 @@ export function QuickSearch({ worldId, world, onClose }: { worldId: string; worl
   const frame = useFrameContext()
   const places = frame ? navPlaces(frame.facts) : []
   const found = useMemo(() => searchWorld(query, { worldId, world, ...data }), [query, worldId, world, data])
-  const hits = [...commandHits(query, world, data.isGM, places, create), ...found].sort((a, b) => b.score - a.score).slice(0, 40)
+  // Before anything is typed: the pages opened lately on this device, to flip back to.
+  const recent = useRecentPages(worldId, data.entities, 8)
+  const recentHits: Hit[] = recent.map((e) => ({ key: e.id, to: pagePath(worldId, e.id), icon: typeLabel(e, world).icon, node: <TypeIcon type={e.type} custom={world?.customTypes?.find((c) => c.id === e.customType)} />, title: e.name, snippet: e.summary, score: 0, gmOnly: data.isGM && e.visibility === 'gm' }))
+  const typed = !!query.trim()
+  const hits = typed ? [...commandHits(query, world, data.isGM, places, create), ...found].sort((a, b) => b.score - a.score).slice(0, 40) : recentHits
   const open = (h: Hit | undefined) => {
     if (!h) return
     onClose()
@@ -179,8 +184,9 @@ export function QuickSearch({ worldId, world, onClose }: { worldId: string; worl
           />
           <Help topic="search" />
         </div>
-        {query.trim() && (
-          <ul className="search-results">
+        {!typed && hits.length > 0 && <h3 className="search-recent-head small muted">Recently opened</h3>}
+        {(typed || hits.length > 0) && (
+          <ul className="search-results" aria-label={typed ? undefined : 'Recently opened'}>
             {hits.map((h, i) => (
               <li key={h.key} className={i === active ? 'active' : ''}>
                 <button className="link" onMouseEnter={() => setActive(i)} onClick={() => open(h)}>

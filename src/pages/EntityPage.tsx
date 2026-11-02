@@ -38,6 +38,7 @@ import { canSeeMap, quantityLabel } from '../counts'
 import { pinRevealed } from '../fog'
 import { JumpRow, useKeepScroll } from '../jump'
 import { DuplicateButton, NewPageButton } from '../NewPage'
+import { useNoteOpened } from '../recent'
 import { PageVisibility, SeenMark } from '../reveal'
 import { useCharacterOwners } from '../players/owners'
 import { keyNumbers, NumberTiles } from '../players/sheetGlance'
@@ -74,6 +75,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   const entities = useVisibleEntities(worldId)
   const sessions = useWorldSessions(worldId)
   const image = useAssetUrl(e.imageId)
+  useNoteOpened(worldId, e.id)
   const { owners } = useCharacterOwners(e.type === 'pc' ? world : undefined)
   const pins =
     useLiveQuery(

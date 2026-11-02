@@ -371,6 +371,7 @@ export const HELP = {
   lecternNotes:
     'This session’s GM notes, the same ones as on the session page. Add a line with the time from the box (it goes at the end), or press Edit to change them.',
   // The first ten minutes, and between sessions
+  recentPages: 'The pages you opened lately on this device, newest first. They’re also the first thing in the search box (Ctrl+K) before you type.',
   duplicate: 'Make a new page that starts as a copy of this one, with “(copy)” after the name. It starts GM only, and who the original was revealed to doesn’t come along.',
 } as const
 

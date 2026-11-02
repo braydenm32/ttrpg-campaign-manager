@@ -47,6 +47,7 @@ import { createNextSession, isPlayed, localDate, partyOf, sessionStage, startPla
 import { StageChip, usePlayingNow } from '../stage'
 import { detailOf } from '../partyGlance'
 import { toast } from '../undo'
+import { RecentlyOpenedRow } from '../RecentlyOpened'
 import '../desk.css'
 
 /**
@@ -89,6 +90,7 @@ function Today({ world }: { world: World }) {
         <NewPageMenu world={world} />
       </WorldCover>
       <SessionStrip world={world} inHand={inHand} stage={stage} campaigns={campaigns} onNewCampaign={() => setNewCampaign(true)} />
+      <RecentlyOpenedRow world={world} entities={entities} />
       <div className="desk-cols">
         <NeedsYou world={world} entities={entities} sessions={sessions} inHand={inHand} stage={stage} />
         <DeskClocks world={world} entities={entities} />

@@ -150,3 +150,10 @@
   .loading-ring { animation: loading-breathe 2.4s ease-in-out infinite; }
   @keyframes loading-breathe { 50% { opacity: .65; } }
 }
+
+/* Recently opened pages (this device), one short row under the session strip. */
+.recently-opened { display: flex; flex-wrap: wrap; align-items: center; gap: .2em 1em; margin: -.2em 0 1em; }
+.recently-opened a { display: inline-flex; align-items: center; gap: .3em; max-width: 16em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 700px) {
+  .recently-opened a { min-height: 44px; }
+}
