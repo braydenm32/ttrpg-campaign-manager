@@ -1,3 +1,4 @@
+import { PagePicker } from '../PagePicker'
 import { NpcLines } from '../ai/Flavour'
 import { renameLinks } from '../links'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -732,14 +733,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
           </label>
           <label>
             {d.type === 'event' ? 'Where it happened' : d.type === 'location' ? 'Inside' : 'Located in'}
-            <select value={d.parentId ?? ''} onChange={(ev) => set('parentId', ev.target.value || undefined)}>
-              <option value="">(none)</option>
-              {parents.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+            <PagePicker entities={parents} value={d.parentId ?? ''} onPick={(id) => set('parentId', id || undefined)} placeholder="(none): type a place…" label={d.type === 'event' ? 'Where it happened' : d.type === 'location' ? 'Inside' : 'Located in'} recent />
           </label>
           {d.type === 'event' && (
             <>
