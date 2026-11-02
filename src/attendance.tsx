@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { db, type Entity, type Session } from './db'
 import { Help } from './help'
 import { partyOf } from './sessions'
@@ -30,12 +31,17 @@ export function presentLine(session: Pick<Session, 'present' | 'campaignId'>, en
 
 /** The row of ticks. Saving keeps a list from then on (an empty list means nobody was there). */
 export function WhoWasThere({ session, entities, compact }: { session: Session; entities: Entity[]; compact?: boolean }) {
+  // What was just ticked shows at once, before the saved copy comes back.
+  const [ticked, setTicked] = useState<{ sessionId: string; on: Record<string, boolean> }>({ sessionId: session.id, on: {} })
   const party = partyOf(entities, session.campaignId, { activeOnly: !session.present })
   const shown = session.present ? [...party, ...entities.filter((e) => e.type === 'pc' && session.present!.includes(e.id) && !party.includes(e))] : party
   if (!shown.length) return null
-  const ids = new Set(presentIds(session, entities))
-  const toggle = (id: string, on: boolean) =>
-    db.sessions
+  const local = ticked.sessionId === session.id ? ticked.on : {}
+  const saved = new Set(presentIds(session, entities))
+  const ids = new Set(shown.map((e) => e.id).filter((id) => local[id] ?? saved.has(id)))
+  const toggle = (id: string, on: boolean) => {
+    setTicked({ sessionId: session.id, on: { ...local, [id]: on } })
+    return db.sessions
       .where('id')
       .equals(session.id)
       .modify((s) => {
@@ -44,6 +50,7 @@ export function WhoWasThere({ session, entities, compact }: { session: Session; 
         else now.delete(id)
         s.present = [...now]
       })
+  }
   return (
     <fieldset className={`who-was-there ${compact ? 'compact' : ''}`}>
       <legend className="small">

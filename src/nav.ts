@@ -397,7 +397,7 @@ export const MORE_GROUPS: MoreGroup[] = [
         types: ['table'],
         who: own,
         blurb: 'Your own random tables, and names, taverns, shops, people and treasure on the spot.',
-        keywords: 'generators random tables roll d20 d100 names tavern npc shop treasure',
+        keywords: 'generators and random tables roll d20 d100 names tavern npc shop treasure',
       },
       { id: 'boards', label: 'Corkboards', icon: PushPin, to: (f) => w(f, 'boards'), paths: ['boards', 'boards/:boardId'], who: own, blurb: 'Pin pages up and tie them together with string.', keywords: 'board pins strings' },
       { id: 'assets', label: 'Files', icon: Folder, to: (f) => w(f, 'assets'), paths: ['assets'], who: own, blurb: 'Pictures, maps and sounds you’ve uploaded.', keywords: 'assets images uploads pictures' },
