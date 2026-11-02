@@ -28,6 +28,7 @@ import { CalDateInput, formatDate, toDays } from '../calendar'
 import { RelationsBox } from '../relations'
 import { SessionMentions } from '../sessionMentions'
 import { ClocksBox } from '../clocks'
+import { CharacterFame } from '../reputation'
 import { QuestBox, questProgress } from '../quests'
 import { Ico, PageIcon, TypeIcon } from '../icons'
 import { dropHeldPage, heldPage } from '../pendingPages'
@@ -269,6 +270,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           {isGM && world && !e.template && e.type === 'npc' && <NpcLines world={world} entity={e} entities={entities} />}
           {(e.body || gmNotes) && <div className="fleuron" aria-hidden="true">❦</div>}
           {!e.template && e.type === 'quest' && <QuestBox quest={e} entities={entities} isGM={isGM} worldId={worldId} />}
+          {e.type === 'pc' && <CharacterFame entity={e} worldId={worldId} />}
           {!e.template && <ClocksBox entity={e} isGM={isGM} worldId={worldId} />}
           {e.type !== 'item' && e.type !== 'pc' && e.type !== 'npc' && !e.template && <StockTable holder={e} entities={entities} world={world} isGM={isGM} />}
           {!e.template && <RelationsBox entity={e} entities={entities} isGM={isGM} worldId={worldId} />}

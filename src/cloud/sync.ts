@@ -29,7 +29,7 @@ const EDIT_DELAY = 3000
 /** The safety-net check, in case a Realtime message was missed. Paused while the app is hidden. */
 const POLL_EVERY = 5 * 60_000
 
-export const SYNCED_TABLES = ['worlds', 'campaigns', 'entities', 'maps', 'pins', 'sessions', 'assets', 'boards', 'sounds'] as const
+export const SYNCED_TABLES = ['worlds', 'campaigns', 'entities', 'maps', 'pins', 'sessions', 'assets', 'boards', 'sounds', 'reputation'] as const
 type SyncedTable = (typeof SYNCED_TABLES)[number]
 
 interface Row {
@@ -113,7 +113,7 @@ async function localRows(worldId: string): Promise<Row[]> {
   const out: Row[] = []
   const world = await db.worlds.get(worldId)
   if (world) out.push({ table: 'worlds', id: world.id, data: toData('worlds', world as never) })
-  for (const table of ['campaigns', 'entities', 'maps', 'pins', 'sessions', 'boards', 'sounds'] as const) {
+  for (const table of ['campaigns', 'entities', 'maps', 'pins', 'sessions', 'boards', 'sounds', 'reputation'] as const) {
     const rows = await tableOf(table).where({ worldId }).toArray()
     for (const r of rows) out.push({ table, id: r.id as string, data: toData(table, r) })
   }
@@ -467,6 +467,11 @@ function playerPart(table: string, data: Record<string, unknown> | null | undefi
       return data.visibility === 'players' ? without('drawing', 'updatedAt') : undefined
     case 'pins':
       return data.visibility === 'players' ? data : undefined
+    case 'reputation': {
+      // Keep in step with what player_view sends of it (20261103000003_reputation.sql).
+      const known = (list: unknown) => ((list as { known?: boolean }[] | undefined) ?? []).filter((x) => x.known)
+      return { of: data.of, reach: data.reach, lean: data.lean, levels: data.levels, notes: known(data.notes), history: known(data.history) }
+    }
     case 'sessions': {
       if (data.visibility !== 'players') return undefined
       // Keep in step with the session fields player_view sends (supabase/migrations): change both together.
@@ -694,6 +699,21 @@ async function sendRecords(worldId: string, records: Send[]) {
 }
 
 /**
+ * Kinds of row the cloud only takes once a newer server update is in (the reputation table, from
+ * 20261103000003_reputation.sql). Until then the cloud refuses them: they stay on this device and are
+ * tried again on the next sync, and the rest of the world syncs as usual.
+ */
+const NEWER = new Set(['reputation'])
+async function sendNewer(worldId: string, records: Send[]) {
+  if (!records.length) return
+  try {
+    await sendRecords(worldId, records)
+  } catch (e) {
+    if (e instanceof Stopped || !/records_table_name_check|violates check constraint/i.test(String((e as Error)?.message))) throw e
+  }
+}
+
+/**
  * Uploads everything that changed on this device. Says how many rows were sent, whether any of them
  * can reach players, and which files are missing from the cloud or from this device.
  *
@@ -717,7 +737,8 @@ async function pushWorld(worldId: string): Promise<{ sent: number; forPlayers: b
     failures.push(...(await sendFiles(worldId, more)))
     sent += more.length
   }
-  await sendRecords(worldId, plan.records)
+  await sendRecords(worldId, plan.records.filter((r) => !NEWER.has(r.upsert.table_name)))
+  await sendNewer(worldId, plan.records.filter((r) => NEWER.has(r.upsert.table_name)))
   const later = plan.files.filter((f) => !f.first)
   failures.push(...(await sendFiles(worldId, later)))
   sent += plan.records.length + later.length

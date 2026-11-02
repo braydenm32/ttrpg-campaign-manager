@@ -1,0 +1,54 @@
+/* Reputation (src/reputation.tsx): a ladder of places, a lean between infamy and fame, notes and a history. */
+.rep-card { gap: .8em; }
+.rep-standing { display: flex; flex-direction: column; gap: .45em; }
+.rep-measure { display: flex; align-items: baseline; gap: .5em; flex-wrap: wrap; }
+.rep-measure strong { font-family: var(--font-book); font-size: 1.25rem; color: var(--heading); }
+.rep-ladder { list-style: none; margin: 0 0 .4em; padding: 0; display: flex; flex-wrap: wrap; gap: .3em; }
+.rep-ladder li { font-size: .85em; padding: .15em .6em; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); }
+.rep-ladder li.lit { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.rep-ladder li[aria-current='step'] { font-weight: 600; }
+.rep-scale { display: flex; align-items: center; gap: .6em; }
+.rep-dots { display: inline-flex; gap: .35em; align-items: center; }
+.rep-dot { width: .8em; height: .8em; border-radius: 50%; border: 1px solid var(--border); background: transparent; }
+.rep-dot.on { width: 1.05em; height: 1.05em; border-width: 2px; }
+.rep-dot.on.fame { background: var(--good); border-color: var(--good); }
+.rep-dot.on.infamy { background: var(--danger); border-color: var(--danger); }
+.rep-dot.on.mixed { background: var(--accent); border-color: var(--accent); }
+.rep-lean-word.fame { color: var(--good-text, var(--good)); }
+.rep-lean-word.infamy { color: var(--danger); }
+.rep-moves { gap: .4em; }
+.rep-moves button[aria-pressed='true'] { border-color: var(--accent); }
+.rep-change { gap: .6em; max-width: 40em; }
+.rep-change .rep-preview { color: var(--text); font-weight: 600; font-size: 1em; }
+.rep-change-more { align-items: flex-end; gap: .6em 1.2em; }
+.rep-levels-fold { margin-top: .2em; }
+.rep-levels ol { margin: .4em 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: .3em; }
+.rep-levels input { max-width: 18em; }
+.rep-section { margin-top: 1.6em; }
+.rep-notes, .rep-history, .rep-characters { list-style: none; margin: .4em 0; padding: 0; display: flex; flex-direction: column; gap: .7em; }
+.rep-notes li { border-left: 3px solid var(--accent); padding-left: .7em; }
+.rep-notes li.gm-only { border-left-color: var(--secret-border); }
+.rep-notes .rep-note-text { margin: .15em 0 0; }
+.rep-notes input.rep-note-text { width: 100%; max-width: 36em; }
+.rep-notes.compact { gap: .3em; margin: .3em 0 0; font-size: .92em; }
+.rep-notes.compact li { border-left-width: 2px; }
+.rep-note-tools { gap: .2em .8em; align-items: center; margin-top: .2em; }
+.rep-history li { border-bottom: 1px solid var(--border); padding-bottom: .5em; }
+.rep-history li:last-child { border-bottom: none; }
+.rep-history-meta { gap: .2em .9em; align-items: center; margin-top: .15em; }
+.rep-add-note { gap: .6em; max-width: 44em; margin-top: .6em; }
+.rep-add-note .grow { flex: 1 1 14em; }
+.rep-char { margin: 1em 0; padding: .6em .8em; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); display: flex; flex-direction: column; gap: .5em; }
+.rep-char-line { align-items: center; gap: .3em .8em; }
+.rep-char-label { display: inline-flex; align-items: center; gap: .35em; font-weight: 600; color: var(--heading); }
+.rep-char .rep-history { margin: 0; }
+.rep-room p { color: var(--text); font-size: 1em; }
+@media (max-width: 800px) {
+  .rep-moves button, .rep-char button, .rep-history button, .rep-notes button, .rep-levels button, .rep-levels-fold button.link,
+  .rep-change button, .rep-add-note button, .rep-page .add-extra { min-height: 44px; min-width: 44px; justify-content: center; }
+  .rep-page label.inline-check, .rep-char label.inline-check { min-height: 44px; }
+  .rep-history-meta a, .rep-notes .rep-note-place a, .rep-characters a, .rep-room .rep-notes a { display: inline-flex; align-items: center; min-height: 44px; }
+  .rep-moves button { flex: 1 1 40%; }
+  /* The help tips keep their small look but take a fingertip. */
+  .rep-page .help-button, .rep-char .help-button { width: 44px; height: 44px; margin: -12px -10px; border-color: transparent; background: transparent; }
+}

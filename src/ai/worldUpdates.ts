@@ -1,6 +1,7 @@
 import { blankEntity, db, ENTITY_TYPES, LIFE_STATUS, newId, saveEntity, THREAD_STATUS, type Entity, type EntityType, type LedgerEntry, type LifeStatus, type Session, type World, type WorldUpdate } from '../db'
 import { nameIndex } from '../links'
 import { RELATION_KINDS } from '../relations'
+import { moveReputation, type Move } from '../reputation'
 
 /**
  * Keeping the world up to date from a session. Claude reads the transcript next to the list of
@@ -26,6 +27,7 @@ export function updatesInstructions() {
 - {"kind":"status","page":"character","status":"alive|dead|missing|captured","note":"…"}
 - {"kind":"item","item":"name","to":"character name, or party","quantity":1}
 - {"kind":"thread","action":"raised|moved|resolved|dropped","page":"known loose thread (not for raised)","name":"new loose thread (for raised)","note":"…"}
+- {"kind":"reputation","who":"party, or a player character's name","reach":"up|down (optional)","lean":"fame|infamy (optional)","reason":"what they did, in a few words"} when the party (or one player character) did something people will talk about: word of them spreads further (up) or fades (down), or people come to see them more as heroes (fame) or as villains (infamy). At most one for the party and one per character, and only for deeds others would hear of
 - {"kind":"conflict","page":"known page","note":"what was said at the table, and what the notes say instead"}
 Names can be known pages or pages you list as new. Leave out the player characters' everyday actions unless something changed for them. Write [] if nothing changed.`
 }
@@ -131,6 +133,13 @@ function toUpdates(raw: unknown[]): WorldUpdate[] {
       case 'conflict':
         if (str(r.page) && note) out.push({ ...base, kind: 'conflict', page: str(r.page), note })
         break
+      case 'reputation': {
+        const reach = ({ up: 'up', down: 'down', further: 'up', fades: 'down' } as const)[low(r.reach) as 'up']
+        const lean = ({ fame: 'fame', famous: 'fame', heroes: 'fame', hero: 'fame', infamy: 'infamy', infamous: 'infamy', villains: 'infamy', villain: 'infamy' } as const)[low(r.lean) as 'fame']
+        const reason = str(r.reason) || note || ''
+        if ((reach || lean) && reason) out.push({ ...base, kind: 'reputation', who: str(r.who) || 'party', reach, lean, reason })
+        break
+      }
     }
   }
   return out
@@ -170,6 +179,8 @@ export function namesIn(u: WorldUpdate): string[] {
       return []
     case 'thread':
       return u.action === 'raised' ? [] : [u.page ?? '']
+    case 'reputation':
+      return isParty(u.who) ? [] : [u.who]
     default:
       return [u.page]
   }
@@ -198,8 +209,15 @@ export function describe(u: WorldUpdate): string {
         : `Thread ${u.page}: ${u.action === 'moved' ? 'in play' : THREAD_STATUS[u.action].label.toLowerCase()}${u.note ? `, ${u.note}` : ''}`
     case 'conflict':
       return `${u.page}: ${u.note}`
+    case 'reputation': {
+      const what = [u.reach === 'up' ? 'word spreads further' : u.reach === 'down' ? 'word fades' : '', u.lean === 'fame' ? 'toward fame' : u.lean === 'infamy' ? 'toward infamy' : '']
+      return `${isParty(u.who) ? 'The party' : u.who}’s reputation: ${what.filter(Boolean).join(', ')} (${u.reason})`
+    }
   }
 }
+
+/** "party" or "the party", in any case. */
+export const isParty = (who: string) => /^(the )?party$/i.test(who.trim())
 
 /** Adds lines under a "Session log" heading at the end of a page. GM-only lines go in a :::gm block. */
 export function addToSessionLog(body: string, lines: { text: string; players?: boolean }[]) {
@@ -230,6 +248,8 @@ export async function applyUpdates(world: World, session: Session, updates: Worl
   const seen = new Set<string>()
   const logs = new Map<string, { text: string; players?: boolean }[]>()
   const ledger: LedgerEntry[] = []
+  /** Reputation changes, made once the pages are saved. */
+  const fame: { of: string; move: Move }[] = []
   const now = Date.now()
   let order = 0
   const label = `Session ${session.number}`
@@ -359,6 +379,18 @@ export async function applyUpdates(world: World, session: Session, updates: Worl
         record(`Worth checking on ${e.name}: ${u.note}`, e)
         break
       }
+      case 'reputation': {
+        // The party, or a player character (others have no reputation of their own).
+        const who = isParty(u.who) ? undefined : lookup(u.who)
+        if (!isParty(u.who) && who?.type !== 'pc') break
+        if (!u.reach && !u.lean) break
+        fame.push({
+          of: who?.id ?? 'party',
+          move: { reach: u.reach === 'up' ? 1 : u.reach === 'down' ? -1 : 0, lean: u.lean === 'fame' ? 1 : u.lean === 'infamy' ? -1 : 0, reason: u.reason, sessionId: session.id, known: u.players },
+        })
+        record(describe({ ...u, who: who?.name ?? 'party' }), who)
+        break
+      }
     }
   }
 
@@ -376,6 +408,7 @@ export async function applyUpdates(world: World, session: Session, updates: Worl
     else await saveEntity(e)
     if (e.type !== 'event' && e.type !== 'thread' && (made.has(e.id) || seen.has(e.id))) touched.push(e.id)
   }
+  for (const f of fame) await moveReputation(world.id, f.of, f.move)
   // Everyone and everywhere that came up was "in" this session, which also sets their "last seen".
   await db.sessions
     .where('id')

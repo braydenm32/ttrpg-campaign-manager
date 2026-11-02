@@ -659,6 +659,18 @@ export type WorldUpdate = { id: string; on: boolean; /** Also put this on the ti
   | { kind: 'item'; item: string; to: string; quantity?: number }
   | { kind: 'thread'; action: 'raised' | 'moved' | 'resolved' | 'dropped'; page?: string; name?: string; note?: string }
   | { kind: 'conflict'; page: string; note: string }
+  | {
+      kind: 'reputation'
+      /** "party", or a player character's name. */
+      who: string
+      /** How far word spread: one level further, or back one. */
+      reach?: 'up' | 'down'
+      /** Which way the talk turned: toward fame (heroes) or infamy (villains). */
+      lean?: 'fame' | 'infamy'
+      reason: string
+      /** Players can see why (the reason in the history). */
+      players?: boolean
+    }
 )
 
 /** A line in a session’s “What changed” (once the Chronicle): one change made to the world from a session. Always GM-only. */
@@ -670,6 +682,64 @@ export interface LedgerEntry {
   entityId?: string
   /** "new" for a page that was made, so it reads differently from a change. */
   made?: boolean
+}
+
+/**
+ * How well known the party (or one character) is: how far their name has spread, which way the talk
+ * leans, what particular places make of them, and every change with its reason. One row per world
+ * for the party, and one per character the GM has started tracking. GM-only apart from what the GM
+ * marks for players: public.player_view sends the reach, the lean, the level names, and only the
+ * notes and reasons ticked "players can see" (see src/reputation.tsx).
+ */
+export interface Reputation {
+  /** repId(worldId, of): one row per world for the party, one per character. */
+  id: string
+  worldId: string
+  /** Whose name it is: 'party', or a character's page id. */
+  of: string
+  /** How far it has spread: 0 is not known yet, then 1 for the first level of the ladder, and so on. */
+  reach: number
+  /** Which way the talk leans: -3 (notorious) through 0 (mixed) to 3 (celebrated). */
+  lean: number
+  /** The party's row only: the world's own names for the ladder's levels, nearest first. Unset: Town to Global. */
+  levels?: string[]
+  /** How particular places see them ("Cinderford: owe us a debt"). GM only unless known. */
+  notes: ReputationNote[]
+  /** Every change, oldest first (shown newest first). */
+  history: ReputationChange[]
+  createdAt: number
+  updatedAt: number
+}
+
+/** Whose reputation a row is when it's the whole party's. */
+export const PARTY = 'party'
+/** A reputation row's id: one per world for the party, one per character. */
+export const repId = (worldId: string, of: string) => (of === PARTY ? `rep-party-${worldId}` : `rep-${of}`)
+
+export interface ReputationNote {
+  id: string
+  /** The place as written; a linked page's own name is shown instead when there is one. */
+  place: string
+  /** The place's page, when it has one. */
+  entityId?: string
+  text: string
+  /** Players can see this note. */
+  known?: boolean
+}
+
+export interface ReputationChange {
+  id: string
+  at: number
+  /** Reach and lean before and after. */
+  fromReach: number
+  reach: number
+  fromLean: number
+  lean: number
+  reason: string
+  /** The session it happened in. */
+  sessionId?: string
+  /** Players can see why. */
+  known?: boolean
 }
 
 export interface Session {
@@ -1004,6 +1074,7 @@ export const db = new Dexie('ttrpg-campaign-manager') as Dexie & {
   bin: EntityTable<BinItem, 'id'>
   recordingChunks: EntityTable<RecordingChunk, 'id'>
   mapVersions: EntityTable<MapVersion, 'id'>
+  reputation: EntityTable<Reputation, 'id'>
 }
 
 db.version(1).stores({
@@ -1061,9 +1132,12 @@ db.version(7).stores({
 })
 
 // v8: who was there (Session.present) and a page's "reveal on" date (Entity.revealAt), neither
-// indexed, so nothing to move; and saved versions of drawn maps (device-only, never synced).
+// indexed, so nothing to move; saved versions of drawn maps (device-only, never synced); and the
+// party's reputation and each character's (synced; GM-only apart from what's marked for players).
+// The two tables are new, so there is nothing in older versions to move over.
 db.version(8).stores({
   mapVersions: 'id, mapId, worldId, at',
+  reputation: 'id, worldId',
 })
 
 // The bin is cleared of anything over a month old soon after the app opens, not only when it's
@@ -1136,9 +1210,10 @@ export function fromTemplate(t: Entity, name = `New ${t.name}`): Entity {
 }
 
 export async function deleteWorld(worldId: string) {
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds, db.bin, db.recordingChunks, db.mapVersions], async () => {
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds, db.bin, db.recordingChunks, db.mapVersions, db.reputation], async () => {
     await db.history.where({ worldId }).delete()
     await db.mapVersions.where({ worldId }).delete()
+    await db.reputation.where({ worldId }).delete()
     await db.bin.where({ worldId }).delete()
     await db.recordingChunks.filter((c) => c.worldId === worldId).delete()
     await db.boards.where({ worldId }).delete()

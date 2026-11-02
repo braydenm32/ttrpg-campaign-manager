@@ -15,6 +15,7 @@ import { nextSessions, useCampaigns, useWorldSessions } from './threads'
 import { useViewMode } from './viewMode'
 import { isPlayed, sessionFirstTab } from './sessions'
 import { usePlayingNow } from './stage'
+import { useHasReputation } from './reputation'
 import { pagePath, resolvePage, worldPath } from './paths'
 import { formatDate } from './calendar'
 import { syncNow, syncStore, type SyncState } from './cloud/sync'
@@ -55,6 +56,7 @@ export function useFrame(world: World | null | undefined): Frame {
   const playingNow = usePlayingNow(worldId)
   // Corkboards are retired; their More item shows only while the world has some left.
   const boards = useLiveQuery(() => (viewer === 'gm' && worldId ? db.boards.where({ worldId }).count() : 0), [worldId, viewer]) ?? 0
+  const hasReputation = useHasReputation(worldId)
 
   // The session in hand: the one being played (started, live or recording), else the next one to play.
   const first = viewer === 'gm' ? nextSessions(campaigns, sessions, playingNow)[0] : undefined
@@ -75,6 +77,7 @@ export function useFrame(world: World | null | undefined): Frame {
     sessionHome,
     handouts,
     loot: partyLoot(entities, world).any,
+    reputation: hasReputation,
     clocks: tickingClocks(entities).length,
     links: entities.some((e) => e.relations?.some((r) => visibleIds.has(r.to))),
     safety: viewer !== 'wiki' && (viewer === 'gm' || hasSafety(world)),

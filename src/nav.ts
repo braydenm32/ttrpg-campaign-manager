@@ -20,6 +20,7 @@ import {
   Hourglass,
   ListChecks,
   MapTrifold,
+  MegaphoneSimple,
   MusicNotes,
   Newspaper,
   Notepad,
@@ -76,6 +77,8 @@ export interface NavFacts {
   handouts?: number
   /** Anything carried by the party, or any coin. */
   loot?: boolean
+  /** The party's reputation (or a character's) has been written down. */
+  reputation?: boolean
   /** Clocks still ticking that the viewer can see. */
   clocks?: number
   /** Links between pages the viewer can see (the relationship web). */
@@ -284,6 +287,15 @@ export const AREAS: NavArea[] = [
       { id: 'quests', label: 'Quests', icon: Compass, to: (f) => w(f, 'quests'), types: ['quest'], who: own, keywords: 'objectives rewards' },
       { id: 'clocks', label: 'Clocks', icon: Timer, to: (f) => w(f, 'clocks'), paths: ['clocks'], who: own, count: (f) => f.clocks || undefined, keywords: 'countdown progress' },
       { id: 'timeline', label: 'Timeline', icon: Hourglass, to: (f) => w(f, 'timeline'), paths: ['timeline'], who: own, keywords: 'history events calendar' },
+      {
+        id: 'reputation',
+        label: 'Reputation',
+        icon: MegaphoneSimple,
+        to: (f) => w(f, 'reputation'),
+        paths: ['reputation'],
+        who: own,
+        keywords: 'fame infamy notoriety renown known well known heroes villains party standing',
+      },
       { id: 'web', label: 'Relationships', icon: Graph, to: (f) => w(f, 'web'), paths: ['web'], who: own, keywords: 'web family tree who knows' },
     ],
   },
@@ -306,7 +318,7 @@ export const AREAS: NavArea[] = [
     tabs: [
       { id: 'now', label: 'Now', icon: Armchair, to: (f) => w(f), paths: ['?tab=overview', '?tab=scene'], who: players, keywords: 'home common room overview next session the scene' },
       { id: 'me', label: 'Me', searchTitle: 'My character', icon: UserCircle, to: (f) => `${w(f)}?tab=me`, paths: ['?tab=me'], who: players, keywords: 'my character sheet' },
-      { id: 'party', label: 'Party', icon: UsersThree, to: (f) => `${w(f)}?tab=party`, paths: ['?tab=party', 'loot'], who: players, keywords: 'the party loot treasure coin inventory items' },
+      { id: 'party', label: 'Party', icon: UsersThree, to: (f) => `${w(f)}?tab=party`, paths: ['?tab=party', 'loot', 'reputation'], who: players, keywords: 'the party loot treasure coin inventory items reputation fame infamy' },
       {
         id: 'leads',
         label: 'Leads',
@@ -459,6 +471,17 @@ export const PLAYER_MORE_GROUPS: MoreGroup[] = [
       { id: 'everything', label: 'Everything', icon: SquaresFour, to: (f) => w(f, 'everything'), who: readers, blurb: 'Every kind of page, with how many there are.' },
       { id: 'web', label: 'Relationships', icon: Graph, to: (f) => w(f, 'web'), who: readers, when: (f) => !!f.links, blurb: 'Who knows whom.', keywords: 'web family tree who knows' },
       { id: 'timeline', label: 'Timeline', icon: Hourglass, to: (f) => w(f, 'timeline'), who: readers, blurb: 'Dates, history and past sessions.' },
+      // Players have it on their Party tab; a wiki reader has no Common Room, so it's here.
+      {
+        id: 'reputation',
+        label: 'Reputation',
+        icon: MegaphoneSimple,
+        to: (f) => w(f, 'reputation'),
+        who: ['wiki'],
+        when: (f) => !!f.reputation,
+        blurb: 'How far the party’s name has spread.',
+        keywords: 'fame infamy notoriety renown',
+      },
     ],
   },
 ]
