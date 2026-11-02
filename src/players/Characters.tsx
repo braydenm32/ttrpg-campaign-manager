@@ -12,7 +12,7 @@ import { Ico } from '../icons'
 import { FileArrowUp, MaskHappy, PencilSimple } from '@phosphor-icons/react'
 import { ImportSheet } from '../sheets/ImportSheet'
 import { playerSheet } from '../sheets/apply'
-import { pagePath, worldPath } from '../paths'
+import { pagePath, resolvePage, worldPath } from '../paths'
 
 /** On a player character's page: who plays them, their player's notes, and claim / let go buttons. */
 export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: World }) {
@@ -230,14 +230,43 @@ function PlayerNotes({ worldId, initial, onSave }: { worldId: string; initial: s
   )
 }
 
-/** In a world you've joined: a nudge along the top to pick your character until you have one. */
+const laterKey = (worldId: string) => `atlas-choose-later:${worldId}`
+const choseLater = (worldId: string) => {
+  try {
+    return localStorage.getItem(laterKey(worldId)) === '1'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * In a world you've joined: a one-line nudge along the top to pick your character until you have
+ * one. “Later” is remembered on this device, and it stays away from a character's own page (its
+ * Player box has the same button) and from the Me tab (which has the full list).
+ */
 export function ChooseCharacterBanner({ world }: { world: World }) {
-  const [hidden, setHidden] = useState(false)
+  const [hidden, setHidden] = useState(() => choseLater(world.id))
   const { search, pathname } = useLocation()
   // The Common Room's Me tab has the same choice in the page itself.
   const onMe = pathname === worldPath(world.id) && new URLSearchParams(search).get('tab') === 'me'
-  if (hidden || onMe) return null
-  return <ChooseCharacter world={world} banner onLater={() => setHidden(true)} />
+  const slug = pathname.match(/\/p\/([^/]+)/)?.[1]
+  const pageId = slug ? resolvePage(world.id, decodeURIComponent(slug)) : undefined
+  const onCharacterPage = useLiveQuery(async () => (pageId ? (await db.entities.get(pageId))?.type === 'pc' : false), [pageId])
+  if (hidden || onMe || onCharacterPage) return null
+  return (
+    <ChooseCharacter
+      world={world}
+      banner
+      onLater={() => {
+        try {
+          localStorage.setItem(laterKey(world.id), '1')
+        } catch {
+          // Only until the next reload, then.
+        }
+        setHidden(true)
+      }}
+    />
+  )
 }
 
 /**
@@ -260,6 +289,25 @@ export function ChooseCharacter({ world, banner, onLater }: { world: World; bann
       </div>
     )
   const free = pcs.filter((e) => !owners.has(e.id))
+
+  if (banner && free.length > 0)
+    return (
+      <div className="choose-character one-line">
+        <strong>
+          <Ico as={MaskHappy} /> Which character are you playing?
+        </strong>
+        <span className="row">
+          <Link className="button primary small" to={`${worldPath(world.id)}?tab=me`}>
+            Choose
+          </Link>
+          {onLater && (
+            <button className="ghost small" onClick={onLater}>
+              Later
+            </button>
+          )}
+        </span>
+      </div>
+    )
 
   return (
     <div className={banner ? 'choose-character' : 'choose-character inline'}>

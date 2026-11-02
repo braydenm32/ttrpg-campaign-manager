@@ -14,7 +14,7 @@ import { AskForm, pageLink, QuestionList } from '../players/Questions'
 import { LeadRow, LeadsView } from '../players/Leads'
 import { lastTime, liveSeenAt, markLiveSeen, nextSession, roomStage, type NextSession, type RoomStage } from '../players/roomStage'
 import { plainLinks, initials } from '../text'
-import { keyNumbers, NumberTiles } from '../players/sheetGlance'
+import { HP_KEY, keyNumbers, NumberTiles } from '../players/sheetGlance'
 import { useCampaigns, useWorldSessions } from '../threads'
 import { partyOf } from '../sessions'
 import { StatusBadge } from '../status'
@@ -220,6 +220,8 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
       ))}
     </div>
   )
+  // When the dates are still being voted on, the poll sits inside the Next session row instead of a card of its own.
+  const polled = ctx.next.kind === 'poll' && !!scheduler
   const showing = world.showing ? <OnTheTable world={world} entities={ctx.entities} big={stage === 'during'} /> : null
 
   return (
@@ -234,14 +236,16 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
         <>
           <LiveTable ctx={ctx} />
           {showing}
+          {/* Your numbers are what you look at mid-fight, so they sit right under the live card. */}
+          <YouCard ctx={ctx} />
         </>
       )}
-      <div className="room-now">
+      <div className={`room-now ${stage === 'during' ? 'one' : ''}`}>
         <div className="room-main">
           {stage === 'after' && <LastTimeFull ctx={ctx} />}
           {stage !== 'during' && showing}
-          <Answers ctx={ctx} />
-          {stage !== 'during' && scheduler}
+          <Answers ctx={ctx} poll={polled ? scheduler : undefined} />
+          {stage !== 'during' && !polled && scheduler}
           <DoingCard ctx={ctx} />
           {stage === 'after' && <AfterLoot ctx={ctx} />}
           {stage === 'after' && memberOf && (
@@ -250,23 +254,30 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
             </Card>
           )}
         </div>
-        <aside className="room-side">
-          <YouCard ctx={ctx} />
-          {stage !== 'during' && memberOf && <TellYourGm ctx={ctx} />}
-        </aside>
+        {stage !== 'during' && (
+          <aside className="room-side">
+            <YouCard ctx={ctx} />
+            {memberOf && <TellYourGm ctx={ctx} />}
+          </aside>
+        )}
       </div>
-      {stage === 'during' && scheduler}
+      {stage === 'during' && !polled && scheduler}
       {ctx.party.length > 0 && <PartyStrip ctx={ctx} />}
       {campaign && stage === 'before' && <StoryCard ctx={ctx} campaign={campaign} />}
+      {/* While the GM is live the big dice are at the top; the rest of the time a small card keeps them in reach. */}
+      {stage !== 'during' && (
+        <Card title="Dice" icon={Sparkle} help="tableDice" className="room-dice-foot">
+          <TableDice cloudId={undefined} who={ctx.who} />
+        </Card>
+      )}
       <RoomFoot ctx={ctx} />
     </>
   )
 }
 
 /** The three answers: when we play next, what happened last time (and, with no recap yet, saying so). */
-function Answers({ ctx }: { ctx: RoomContext }) {
-  const { next, last, worldId, stage, memberOf } = ctx
-  const scrollToWhen = () => document.getElementById('when')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+function Answers({ ctx, poll }: { ctx: RoomContext; poll?: ReactNode }) {
+  const { next, last, worldId, stage } = ctx
   return (
     <section className="card room-answers" aria-label="Next session and last time">
       <div className="answer-row">
@@ -290,6 +301,7 @@ function Answers({ ctx }: { ctx: RoomContext }) {
               <span className="muted small">
                 · your GM suggested {next.count === 1 ? 'a date' : `${next.count} dates`}
               </span>
+              {poll}
             </>
           ) : (
             <>
@@ -297,11 +309,6 @@ function Answers({ ctx }: { ctx: RoomContext }) {
             </>
           )}
         </div>
-        {next.kind === 'poll' && (
-          <button className="small answer-action" onClick={scrollToWhen}>
-            {memberOf ? 'Say when you’re free' : 'See the dates'}
-          </button>
-        )}
       </div>
       {stage !== 'after' && (
         <div className="answer-row">
@@ -491,7 +498,7 @@ function YouCard({ ctx }: { ctx: RoomContext }) {
   return (
     <Card title="You" icon={Shield} to={roomLink(worldId, 'me')} more="Your character">
       <CharacterHead ctx={ctx} c={c} />
-      <NumberTiles c={c} />
+      <NumberTiles c={c} onChangeHp={ctx.memberOf && ctx.cloudId ? (value) => setMyField(ctx.cloudId!, c, HP_KEY, value) : undefined} />
       {secrets > 0 && (
         <Link className="secret-chip small" to={roomLink(worldId, 'me')}>
           <Ico as={Lock} /> {secrets === 1 ? '1 secret just for you' : `${secrets} secrets just for you`}

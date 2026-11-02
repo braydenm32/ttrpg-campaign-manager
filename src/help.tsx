@@ -206,7 +206,7 @@ export const HELP = {
   assets: 'Every file in this world: map images, portraits and handouts. Mark a file revealed to let players see it.',
   loot:
     'What the party has: the stash, what each player character carries and the party’s coin. Set "Carried by" on any item page. Players see the revealed items and the coins in the purse; things an NPC, shop or place holds are listed only for you.',
-  lootSteps: 'Use − and + to take coins out of the purse or put them in, by the amount in the box (1 to start with). Click the number to type a new total instead.',
+  lootSteps: 'Use − and + to take coins out of the purse or put them in, by the amount in the box (1 to start with). Click the number to type a new total instead. What other people carry, and items nobody does, are folded under “Everything else in the world”.',
   importPages:
     'Bring pages in from Obsidian (or any folder of plain-text notes), a Kanka export or a World Anvil export. Everything arrives as 🔒 GM only, so you can tidy up before revealing anything.',
   importSheet:
@@ -230,7 +230,7 @@ export const HELP = {
   players:
     'Invite your players with a link. They sign in, join, claim their character and keep notes. They only ever receive what you’ve revealed to them.',
   playerNotes:
-    '“My notes” are private to you. “Group notes” are shared with the whole party, and your GM can read them. Both save when you click away. If someone else changed the group notes while you were typing, nothing is lost: you choose to keep both, yours or theirs.',
+    '“My notes” are private to you. “Group notes” are shared with the whole party, and your GM can read them. “My notes” save when you click away. “Group notes” show as they will read: type a line in the box and press “Add a line”, or use “Edit the whole notebook” to rewrite them. If someone else changed the group notes while you were typing, nothing is lost: you choose to keep both, yours or theirs.',
   scratchpad:
     'A notebook for anything that isn’t about one page: plans, names, clues. Keep your own notes (My notes) or write in the party’s shared Group notes.',
   gmPlayerNotes:
@@ -262,7 +262,7 @@ export const HELP = {
     'Keep your character’s details up to date: the one-line summary, stats and anything you want to write about them. Your GM sees your changes and can change them back.',
   character: 'Who plays this character. Players ask to play their character from here, and you approve it (here or in World settings) before it counts, so nobody can take someone else’s character or their secrets. You can release a claim later.',
   roomNow:
-    'Now changes with the game. Before a session: when you play next, what happened last time and what the party is doing. While your GM runs the session live: the scene, whose turn it is, dice everyone sees, a quiet word to the GM and the X-card. After a game, until the day of the next one: last time’s recap first, then the loot and the Group notes.',
+    'Now changes with the game. Before a session: when you play next, what happened last time and what the party is doing. While your GM runs the session live: the scene, whose turn it is, dice everyone sees, a quiet word to the GM and the X-card, with your character’s numbers right under the scene (tap your HP to change it). At any other time a small Dice card at the foot keeps dice in reach. After a game, until the day of the next one: last time’s recap first, then the loot and the Group notes.',
   roomMe: 'Your character at a glance: the numbers that matter, what you carry, passages only you can read, and your own notes. “Edit my character” lets you update the sheet, or fill it in from a character sheet file.',
   roomParty: 'Everyone in the party, who plays them and what each one carries, plus the party’s purse and the stash you share. The full loot list has every item with its notes.',
   tableRules:
@@ -280,7 +280,7 @@ export const HELP = {
     'Every so many years, chosen months get extra days: February’s 29th, or a festival that only happens in leap years (give it 0 days and 1 leap day, like Shieldmeet). Tick “festival” for days between months, like Midwinter: their dates read “Midwinter” or “3rd day of Needfest”. To line a moon up with a published calendar, set a date it was full.',
   timers:
     'Countdowns for the table: a fuse burning, a ritual finishing, a time limit on a puzzle. Tap a length to start one (name it first if you like). It beeps when it runs out. Players see your timers in their Common Room unless you hide one with the eye.',
-  tableDice: 'Rolls here show up for the whole table: the other players and your GM see who rolled what.',
+  tableDice: 'While your GM is running the session live, rolls here show up for the whole table: the other players and your GM see who rolled what. At other times the dice are just for you.',
   tableSignals:
     'A quiet word to your GM without interrupting: they get a pop-up with your character’s name, and you see when they’ve noticed. For something you’d rather not say out loud, use the X-card instead.',
   aiTools: 'Keys for transcription, recaps and the Claude tools, and the voice for reading recaps aloud. They stay on this device and are never in worlds or backups, unless you save the keys to your account.',
