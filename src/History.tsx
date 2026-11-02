@@ -189,9 +189,9 @@ export function RecentlyDeleted() {
             </span>
             <button
               className="small ghost"
-              onClick={() => confirm('Empty the bin? Nothing in it can be brought back afterwards. (Deleted pages below are kept.)') && emptyBin(worldId)}
+              onClick={() => confirm('Delete everything listed here for good? Nothing in it can be brought back afterwards. (Deleted pages below are kept.)') && emptyBin(worldId)}
             >
-              Empty the bin
+              Delete all for good
             </button>
           </p>
         </>

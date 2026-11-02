@@ -96,7 +96,7 @@ export default function WorldSettings() {
             <label>
               Description
               <DraftText multiline rows={4} value={world.description} onCommit={(description) => update({ description })} />
-              <small className="muted">Players can read this. Keep secrets in GM notes or a :::gm block on a page.</small>
+              <small className="muted">Players can see this. Keep secrets in GM notes or a GM-only passage on a page.</small>
             </label>
           </div>
 

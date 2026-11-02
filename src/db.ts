@@ -32,7 +32,7 @@ export const ENTITY_LABELS: Record<EntityType, { one: string; many: string; icon
   shop: { one: 'Shop / Tavern', many: 'Shops & Taverns', icon: '🍺' },
   deity: { one: 'Deity', many: 'Deities', icon: '✨' },
   lore: { one: 'Lore', many: 'Lore', icon: '📚' },
-  thread: { one: 'Loose thread', many: 'Loose threads', icon: '🧵' },
+  thread: { one: 'Thread', many: 'Threads', icon: '🧵' },
   table: { one: 'Random table', many: 'Random tables', icon: '🎲' },
   custom: { one: 'Page', many: 'Other pages', icon: '📄' },
 }

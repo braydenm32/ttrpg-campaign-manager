@@ -17,7 +17,7 @@ The lantern is real. It burns in an iron cage on the Keep's east wall and has no
 Expect investigation, arguments, funerals, a dungeon under a river, long rides across the ash, and a few hard fights. Not every fight is meant to be won with a sword. Running away is allowed, and so is talking to the dead. The factions in town all want something, and they keep moving whether you're watching or not.
 
 ### The tone
-Grim and funny in about equal parts. Soldiers swear, people die plainly, and desire is part of the story (behind a closed door). There is real darkness here and real kindness, and the gallows humour that keeps a company together when the pay doesn't come. Before session 1 the table agrees its lines and veils (**Play → Safety tools**), and anyone can use the X-card at any time without explaining why.
+Grim and funny in about equal parts. Soldiers swear, people die plainly, and desire is part of the story (behind a closed door). There is real darkness here and real kindness, and the gallows humour that keeps a company together when the pay doesn't come. Before session 1 the table agrees its lines and veils (**Table rules**), and anyone can use the X-card at any time without explaining why.
 
 ### What everyone in Cinderford knows
 - **The war.** The Emperor was murdered thirty years ago and the war for his empty throne ran for twenty-one years. It ended at [[The Battle of Cinders]], on 14 Ashfall 3002, when battle sorcery set the plain alight. The Treaty of Ashes was signed afterwards, and eight companies were set to hold the peace. The Ninth was added a year later: the newest, the poorest and the strangest.

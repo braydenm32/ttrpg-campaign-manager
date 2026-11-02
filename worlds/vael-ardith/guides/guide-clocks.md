@@ -5,7 +5,7 @@ summary: "Every clock in The Lantern Gutters on one page: what ticks it, what ro
 tags: [ guide ]
 ---
 
-Seven clocks run under this campaign. Each lives on its own page (the faction's, or the Sleeper's), where **Play → Clocks** reads it; this page is the GM's crib for moving them between sessions. Tick in the open when the players can see cause and effect; tick in the dark when a faction moves while nobody is looking. A clock that fills is not a failure: it is a scene arriving. Each session's "How it ends" closes with a one-line tally of where every clock stands after it on the default path; add or take away what your table actually did. The night of the full Ember in session 3 is also the night of the second guttering: it ticks each clock below that names it once, not twice.
+Seven clocks run under this campaign. Each lives on its own page (the faction's, or the Sleeper's), where **Story › Clocks** lists it; this page is the GM's crib for moving them between sessions. Tick in the open when the players can see cause and effect; tick in the dark when a faction moves while nobody is looking. A clock that fills is not a failure: it is a scene arriving. Each session's "How it ends" closes with a one-line tally of where every clock stands after it on the default path; add or take away what your table actually did. The night of the full Ember in session 3 is also the night of the second guttering: it ticks each clock below that names it once, not twice.
 
 ### At a glance
 

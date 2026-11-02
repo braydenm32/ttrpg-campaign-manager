@@ -15,7 +15,7 @@ The full step-by-step guide is [docs/EDITING.md](../../docs/EDITING.md).
 | History on the timeline | `history/` |
 | Items | `items/` |
 | Random tables | `tables/` |
-| Quests, loose threads, handouts, endings, campaign events | `campaign/` |
+| Quests, threads, handouts, endings, campaign events | `campaign/` |
 | The eight sessions (notes, prep, encounters, Lectern) | `sessions/` |
 | The corkboard | `boards/` |
 | The GM's guides (Start Here, Running The Lantern Gutters, The Clocks) and the Player's Guide | `guides/` |

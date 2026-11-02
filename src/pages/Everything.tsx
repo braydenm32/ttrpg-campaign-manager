@@ -45,6 +45,9 @@ export default function Everything() {
             Everything <Help topic="everything" />
           </h1>
           <p className="lead">{entities.length} pages, by kind.</p>
+          <p className="muted small">
+            Quick links: <Link to={typePath(worldId, 'item')}>Items</Link> · <Link to={typePath(worldId, 'event')}>Events</Link>
+          </p>
         </div>
       </header>
       <input

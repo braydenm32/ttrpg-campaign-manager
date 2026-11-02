@@ -171,7 +171,7 @@ test('search finds every area, tab and More item by name, and the old place name
   const titles = gm.map((p) => p.title)
   for (const a of AREAS.filter((a) => a.who.includes('gm'))) expect(titles).toContain(a.label)
   for (const t of MORE_GROUPS.flatMap((g) => g.items)) if (t.to({ worldId: 'w', viewer: 'gm' })) expect(titles).toContain(t.label)
-  for (const title of ['The Lectern', 'Chronicle', 'Inbox', 'Players’ scratchpad', 'All sessions', 'Templates', 'Recently deleted']) expect(titles).toContain(title)
+  for (const title of ['The Lectern', 'Chronicle', 'Inbox', 'Group notes', 'All sessions', 'Templates', 'Recently deleted']) expect(titles).toContain(title)
   // The names search used before the areas still find somewhere.
   for (const old of ['home', 'loose threads', 'generators and random tables', 'questions', 'campaigns'])
     expect(gm.some((p) => p.title.toLowerCase().includes(old) || p.words.includes(old)), old).toBe(true)

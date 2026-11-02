@@ -156,6 +156,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           </div>
           <h1>
             {e.name} {!isGM && <RevealedToBadge entity={e} world={world} entities={entities} isGM={isGM} />}
+            {isGM && <Help topic="entityPage" />}
           </h1>
           {e.summary && <p className="lead">{e.summary}</p>}
         </div>
@@ -1079,7 +1080,7 @@ function QuestThreads({ quest, entities, worldId }: { quest: Entity; entities: E
   return (
     <div className="side-box">
       <h3>
-        <Ico as={Spiral} /> Loose threads <Help topic="trackAsThread" />
+        <Ico as={Spiral} /> Threads <Help topic="trackAsThread" />
       </h3>
       {following.map((t) => (
         <Link key={t.id} className="block" to={`${pagePath(worldId, t.id)}`}>

@@ -14,11 +14,11 @@ It's grim and funny in about equal parts: real stakes and hard choices, soldiers
 
 ### Run it in five minutes
 1. Read [[Running The Lantern Gutters]], the GM's chapter: the background, the campaign's three parts, every session on one table, and what to do when the table goes off script. [[The Lantern Gutters]], the main quest, shows how the clues connect.
-2. Open **Prep**, then the campaign **The Lantern Gutters**, then **Session 1: Payday**. The notes are a full script with read-aloud text: where the PCs start (with a prologue and four other ways in), seven scenes that each end with a **Development** note saying what happens next, and the treasure. The prep has a strong start, the scenes, clues and three fights ready to go.
+2. Open **Session › All sessions**, then the campaign **The Lantern Gutters**, then **Session 1: Payday** The notes are a full script with read-aloud text: where the PCs start (with a prologue and four other ways in), seven scenes that each end with a **Development** note saying what happens next, and the treasure. The **Prepare** tab has a strong start, the scenes, clues and three fights ready to go.
 3. Hand out the five characters: [[Varra Nine-Knuckles]], [[Ysse Lampwright]], [[Borrin Halt]], [[Tibbet Marlowe]] and [[Quorl Many-Words]]. Point everyone at the [[Player's Guide]]; players making their own characters pick a tie to the Ninth from it.
-4. Press **Run** to open the Lectern. Read the opening aloud. You're playing.
+4. Open **Session › Play** (the Lectern) and read the opening aloud. You're playing.
 
-Between sessions, the Campaign section has side quests that grow out of the town ([[The Wager on Never]], [[The Baker's Hoard]], [[The Unmarked Barrel]] and others), and the loose threads that run past session 8 if you want a second campaign.
+Between sessions, **Story › Quests** has side quests that grow out of the town ([[The Wager on Never]], [[The Baker's Hoard]], [[The Unmarked Barrel]] and others), and the threads that run past session 8 if you want a second campaign.
 
 ### A tour of the app, using this world
 Each stop below is a real page or screen you can open now. The little **?** buttons next to headings explain any feature in a sentence or two.
@@ -29,33 +29,31 @@ Each stop below is a real page or screen you can open now. The little **?** butt
 
 **A street to walk.** [[Ford Street]] is Cinderford's high street, six hundred paces from the West Gate to the Treaty Bell, and the place to send a party with an afternoon and a few coppers: [[The Bridle & Yoke]], [[Ninefingers Forge]], [[The Turncoat]], [[The Hock]], [[The Baker's Wife]], [[Harrow's Simples]], [[The Salt Lake]], [[Quist & Daughter, Surveyors]] and [[The Reeve's House]], and [[Hesk's Chandlery]] a walk away in the Smokes. Every price in the March is on one page, [[What Things Cost in the Ashenreach]]. When the street goes quiet, roll on [[Street Events in Cinderford]].
 
-**The relationship web.** [[Ilse Marrow]] loves [[Sorrel Vey]]; [[Garrick Sallow]] takes money from [[Ansel Mote]]. Open **World → Relationships** to see everyone at once, and drag them about. Links the players don't know about stay hidden from them.
+**The relationship web.** [[Ilse Marrow]] loves [[Sorrel Vey]]; [[Garrick Sallow]] takes money from [[Ansel Mote]]. Open **Story › Relationships** to see everyone at once, and drag them about. Links the players don't know about stay hidden from them.
 
-**Alive, dead, missing.** [[Dannic Rook]] is marked dead (which doesn't stop him climbing out of the river). Status shows in lists, at the Lectern and on corkboards.
+**Alive, dead, missing.** [[Dannic Rook]] is marked dead (which doesn't stop him climbing out of the river). Status shows in lists, at the Lectern and on map pins.
 
-**Clocks.** [[The Ninth Lantern]] has a Mutiny clock; most factions have one. The big one is on [[The Sleeper Below]]: twelve slices, three filled, ticked at each full Ember. **Play → Clocks** shows them all, and [[The Clocks]] is the GM's crib: what ticks each one, what rolls it back and what happens when it fills.
+**Clocks.** [[The Ninth Lantern]] has a Mutiny clock; most factions have one. The big one is on [[The Sleeper Below]]: twelve slices, three filled, ticked at each full Ember. **Story › Clocks** shows them all, and [[The Clocks]] is the GM's crib: what ticks each one, what rolls it back and what happens when it fills.
 
-**Loose threads.** **Prep → Loose threads** holds every mystery you've left dangling, like "Who is cutting the lantern oil?" and "Why does Borrin's shadow lag?". Each says what you know and when it pays off, and a thread that goes cold gets flagged.
+**Threads.** **Story › Threads** holds every mystery you've left dangling, like "Who is cutting the lantern oil?" and "Why does Borrin's shadow lag?". Each says what you know and when it pays off, and a thread that goes cold gets flagged.
 
-**Random tables.** **Prep → Generators & tables** has tables for this world, like [[Ashenreach Encounters]], [[Sleeper Dreams]] and [[Last Words]]. There are tables for the road ([[Travellers on the Ash Road]]), the street ([[Street Events in Cinderford]]), the shelf ([[What the Shop Has Today]]), the tavern ([[Company Gossip]]), people's mouths ([[Sayings, Oaths and Curses of the March]]) and their names ([[Soldier Names]], plus two Names tables for the other peoples). Tables can roll dice and call other tables.
+**Random tables.** **More › Generators and tables** has tables for this world, like [[Ashenreach Encounters]], [[Sleeper Dreams]] and [[Last Words]]. There are tables for the road ([[Travellers on the Ash Road]]), the street ([[Street Events in Cinderford]]), the shelf ([[What the Shop Has Today]]), the tavern ([[Company Gossip]]), people's mouths ([[Sayings, Oaths and Curses of the March]]) and their names ([[Soldier Names]], plus two Names tables for the other peoples). Tables can roll dice and call other tables.
 
 **Session prep and the Lectern.** Every session is fully prepped: a strong start, scenes and clues to tick off, and fights that say which party they were built for. Each session's notes open with a "last time" recap to read aloud and an "If they missed something" list for clues the party missed. At the Lectern, "Run" on a fight adds everyone to initiative, and each session's Lectern already knows its opening scene and who's there.
 
-**History in ages.** **World → Timeline** splits history into ages, from the myths before the count, through [[The Battle of Cinders]], to the campaign's own events, which start on 14 Ashfall.
+**History in ages.** **Story › Timeline** splits history into ages, from the myths before the count, through [[The Battle of Cinders]], to the campaign's own events, which start on 14 Ashfall.
 
 **The calendar and two moons.** World settings holds this world's own calendar: twelve months, six-day weeks, and two moons. The pale one sets the rent. The red one, [[The Ember]], rose the night of Cinders, and when it's full the dead dream.
 
-**Party loot.** **Play → Party loot** shows who carries what. Set "Carried by" on any item, like [[The Cut Oil Tin]], once the party finds it.
+**Party loot.** **Session › Party loot** shows who carries what. Set "Carried by" on any item, like [[The Cut Oil Tin]], once the party finds it.
 
-**The corkboard.** **Prep → Corkboards → "Who's poisoning the flame?"** has the suspects, the clues and red string between them. Drag things about. Rearranging it mid-mystery is half the fun.
-
-**Safety tools.** **Play → Safety tools** has the lines and veils for this world. Agree them with your table before session 1; every player can read them and use the X-card.
+**Safety tools.** **More › Safety tools** has the lines and veils for this world. Agree them with your table before session 1; every player can read them and use the X-card.
 
 **Templates.** Making an NPC or a place? Pick "From template: NPC (Vael Ardith style)" from the New menu and you get the headings this world uses, ready to fill.
 
-**Handouts ready to show.** **Prep → Handouts** lists the letters, notices and charts under "Ready to show", like the [[Pay Notice]], [[A Perfumed Letter]] and [[The Gatehouse Board]], whose every notice opens a door into a side quest. "Reveal and show" puts one on every player's screen at the right moment.
+**Handouts ready to show.** **More › Handouts** lists the letters, notices and charts under "Ready to show", like the [[Pay Notice]], [[A Perfumed Letter]] and [[The Gatehouse Board]], whose every notice opens a door into a side quest. "Reveal and show" puts one on every player's screen at the right moment.
 
-**Maps.** Five maps ship with this world: the continent, the Ashenreach, Cinderford, the Glass Barrow and the Lip of the Rent. **World → Maps** opens them, and is also where you can upload your own or draw one in the map builder.
+**Maps.** Five maps ship with this world: the continent, the Ashenreach, Cinderford, the Glass Barrow and the Lip of the Rent. **Atlas › Maps** opens them, and is also where you can upload your own or draw one in the map builder.
 
 **Flavour pages.** When a scene needs texture, the Lore section has it: [[Feasts, Fasts and Holy Days]], [[Songs of the March]], [[Food and Drink of the March]], [[Coins and Money Slang]], [[Signals of Cinderford]] and [[The Reckoning of Years]]. They are written to be read aloud in pieces, and most are open to players.
 

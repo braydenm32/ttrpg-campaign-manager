@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Books, ChatCircleText, Check, ClipboardText, PaperPlaneRight, PenNib, Scales, Sparkle, X } from '@phosphor-icons/react'
 import { db, type Entity, type Session, type World } from '../db'
@@ -8,6 +8,7 @@ import '../more.css'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { Ico } from '../icons'
 import { Markdown, findBacklinks } from '../Markdown'
+import { worldPath } from '../paths'
 import { useViewMode } from '../viewMode'
 import { Empty, Skeleton } from '../components'
 import { toast } from '../undo'
@@ -244,7 +245,7 @@ export function AskWorld({ world, entities, sessions }: { world: World; entities
           )}
         </div>
       </form>
-      {!key && <p className="muted small">“Copy for Claude” is free with your Claude subscription: it copies your question with the pages most likely to matter. For answers right here, add an Anthropic API key in World settings → AI tools.</p>}
+      {!key && <p className="muted small">“Copy for Claude” is free with your Claude subscription: it copies your question with the pages most likely to matter. For answers right here, add an Anthropic API key in <Link to={`${worldPath(world.id)}/settings?tab=device`}>World settings → This device</Link>.</p>}
       {copied && (
         <div className="recap-paste">
           <p className="small">

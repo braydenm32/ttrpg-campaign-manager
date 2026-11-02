@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Skeleton } from '../components'
 import { answerQuestion, type CharacterRequest } from '../cloud/players'
+import { cloudErrorMessage } from '../cloud/client'
 import { db, saveEntity, type PlayerQuestion, type World } from '../db'
 import { Help } from '../help'
 import { useWorld } from '../hooks'
@@ -255,7 +256,7 @@ function QuestionItem({
       await fn()
       await onChange()
     } catch (e) {
-      setError((e as Error).message)
+      setError(cloudErrorMessage(e))
     } finally {
       setBusy(false)
     }
