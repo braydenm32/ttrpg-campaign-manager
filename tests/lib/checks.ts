@@ -59,9 +59,14 @@ export async function smallTargets(page: Page): Promise<string[]> {
       if (!r.width || !r.height) continue
       if (r.right <= 0 || r.left >= window.innerWidth) continue // off screen, e.g. the closed phone menu
       if (r.width >= 44 && r.height >= 44) continue
+      // A small button can have an invisible tap area bigger than it (the "?" help buttons: an ::after pushed out on every side).
+      const hit = getComputedStyle(el, '::after')
+      if (hit.content !== 'none' && hit.position === 'absolute' && parseFloat(hit.width) >= 44 && parseFloat(hit.height) >= 44) continue
       const style = getComputedStyle(el)
       if (style.display === 'inline') {
-        const block = el.parentElement
+        // The line of text it sits in: its nearest ancestor that is not itself inline (a link in <strong> in a list item counts as in the item's sentence).
+        let block = el.parentElement
+        while (block && getComputedStyle(block).display === 'inline' && block.parentElement) block = block.parentElement
         if (block && (block.textContent ?? '').trim().length > (el.textContent ?? '').trim().length + 15) continue
       }
       // Checkboxes and radios usually sit inside a bigger label you can tap instead.

@@ -101,7 +101,7 @@ export default function EntityList() {
           <TableRoller tables={ofType} worldId={worldId} entities={all} showSecrets={isGM} />
         </div>
       )}
-      <div className="row wrap">
+      <div className="row wrap list-tools">
         <input className="search" type="search" placeholder="Filter…" aria-label={`Filter ${label.many.toLowerCase()}`} value={query} onChange={(e) => setParam('q', e.target.value)} />
         {tags.length > 0 && (
           <select value={tag} onChange={(e) => setParam('tag', e.target.value)} aria-label="Tag">
