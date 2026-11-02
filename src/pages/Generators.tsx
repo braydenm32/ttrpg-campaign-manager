@@ -25,7 +25,8 @@ import { TableRoller } from '../tables'
 import { Ico } from '../icons'
 import { Coins, DiceFive, IdentificationCard, Table } from '@phosphor-icons/react'
 import { NameGenerator, StarterTables, TreasureGenerator } from '../moreGenerators'
-import { pagePath, typePath } from '../paths'
+import { pagePath } from '../paths'
+import { NewPageButton } from '../NewPage'
 
 type Kind = 'tavern' | 'shop' | 'npc'
 
@@ -77,15 +78,27 @@ export default function Generators() {
         </div>
       </header>
 
-      <section className="gen-section">
+      <section className="gen-section" id="tables">
         <h2>
           <Ico as={Table} /> Your tables <Help topic="randomTables" />
-          <Link className="small" to={typePath(worldId, 'table')}>
-            {tables.length ? `All ${tables.length}, to edit` : 'Make a table'}
-          </Link>
+          <span className="grow" />
+          {world && <NewPageButton world={world} type="table" className="small" />}
         </h2>
         {tables.length ? (
-          <TableRoller tables={tables} worldId={worldId} entities={entities} showSecrets />
+          <>
+            <TableRoller tables={tables} worldId={worldId} entities={entities} showSecrets />
+            {/* The tables themselves, to open and edit (this was the separate Random tables list). */}
+            <ul className="recent-list gen-table-list" aria-label="Your tables">
+              {[...tables]
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((t) => (
+                  <li key={t.id}>
+                    <Link to={pagePath(worldId, t.id)}>{t.name}</Link>
+                    {t.summary && <span className="muted small">{t.summary}</span>}
+                  </li>
+                ))}
+            </ul>
+          </>
         ) : (
           <Empty>No tables of your own yet. Make one, like “What’s in the sewer?” or “Tavern rumours”, or start from the ready-made ones below.</Empty>
         )}

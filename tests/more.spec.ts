@@ -20,7 +20,7 @@ async function shot(page: Page, name: string) {
 }
 
 /** The GM tools, by their names on the More page. */
-const GM_TOOLS = ['Soundboard', 'Generators', 'Random tables', 'Corkboards', 'Files', 'The Archivist', 'Templates', 'World settings', 'Players and sharing', 'Backups', 'Recently deleted']
+const GM_TOOLS = ['Soundboard', 'Generators and tables', 'Corkboards', 'Files', 'The Archivist', 'Templates', 'World settings', 'Players and sharing', 'Backups', 'Recently deleted']
 
 test.describe('the More page', () => {
   test('the GM’s lists their tools in three groups, with counts, and Print is a note, not a button', async ({ page, world, device }) => {

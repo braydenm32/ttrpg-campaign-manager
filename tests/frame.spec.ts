@@ -72,10 +72,14 @@ test.describe('GM view', () => {
     const w = `/w/${world.slug}`
     await open(page, `${w}/more`)
     for (const group of ['At the table', 'Workshop', 'Keeping the world']) await expect(page.getByRole('heading', { name: group })).toBeVisible()
-    await page.getByRole('link', { name: /^Random tables/ }).click()
-    await expect.poll(() => here(page)).toBe(`${w}/tables`)
+    await page.getByRole('link', { name: /^Generators and tables/ }).click()
+    await expect.poll(() => here(page)).toBe(`${w}/generators`)
     // An item lights its own name next to More in the top bar.
-    await expect(tabs(page, 'More').getByRole('link', { name: 'Random tables' })).toHaveAttribute('aria-current', 'page')
+    await expect(tabs(page, 'More').getByRole('link', { name: 'Generators and tables' })).toHaveAttribute('aria-current', 'page')
+    // The old tables list is the same place now: /tables lands on Generators and tables.
+    await open(page, `${w}/tables`)
+    await expect.poll(() => here(page)).toBe(`${w}/generators`)
+    await expect(page.getByRole('heading', { name: /Your tables/ })).toBeVisible()
   })
 })
 

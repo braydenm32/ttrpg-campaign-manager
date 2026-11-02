@@ -25,7 +25,7 @@ const PLACES: [string, string, string, [string, string] | null][] = [
   ['Safety tools', 'Safety tools', '/safety', ['Table rules', '/safety']],
   ['Soundboard', 'Soundboard', '/sounds', null],
   ['The Archivist', 'The Archivist', '/archivist', null],
-  ['Generators and random tables', 'Generators', '/generators', null],
+  ['Generators and random tables', 'Generators and tables', '/generators', null],
   ['Corkboards', 'Corkboards', '/boards', null],
   ['Files', 'Files', '/assets', null],
   ['World settings', 'World settings', '/settings', null],
@@ -40,7 +40,7 @@ const NEW_PLACES: [string, string, string | RegExp][] = [
   ['Campaigns', 'All sessions', /^\/c\/[^/]+$/],
   ['Templates', 'Templates', '/settings?at=templates'],
   ['Recently deleted', 'Recently deleted', '/settings?tab=data&at=deleted'],
-  ['Random tables', 'Random tables', '/tables'],
+  ['Random tables', 'Generators and tables', '/generators'],
 ]
 
 async function openSearch(page: Page, device: Device) {

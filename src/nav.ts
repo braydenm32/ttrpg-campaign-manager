@@ -33,7 +33,6 @@ import {
   SquaresFour,
   Stack,
   Sun,
-  Table,
   Television,
   Timer,
   Trash,
@@ -388,8 +387,18 @@ export const MORE_GROUPS: MoreGroup[] = [
     label: 'Workshop',
     blurb: 'Making things between sessions.',
     items: [
-      { id: 'generators', label: 'Generators', icon: DiceFive, to: (f) => w(f, 'generators'), paths: ['generators'], who: own, blurb: 'Names, taverns, shops, people and treasure on the spot.', keywords: 'generators and random tables roll names tavern npc shop treasure' },
-      { id: 'tables', label: 'Random tables', icon: Table, to: (f) => w(f, 'tables'), types: ['table'], who: own, blurb: 'Your own tables to roll on.', keywords: 'roll d20 d100' },
+      // One door to one room: the GM's own tables live on the Generators page (/tables lands there too).
+      {
+        id: 'generators',
+        label: 'Generators and tables',
+        icon: DiceFive,
+        to: (f) => w(f, 'generators'),
+        paths: ['generators'],
+        types: ['table'],
+        who: own,
+        blurb: 'Your own random tables, and names, taverns, shops, people and treasure on the spot.',
+        keywords: 'generators random tables roll d20 d100 names tavern npc shop treasure',
+      },
       { id: 'boards', label: 'Corkboards', icon: PushPin, to: (f) => w(f, 'boards'), paths: ['boards', 'boards/:boardId'], who: own, blurb: 'Pin pages up and tie them together with string.', keywords: 'board pins strings' },
       { id: 'assets', label: 'Files', icon: Folder, to: (f) => w(f, 'assets'), paths: ['assets'], who: own, blurb: 'Pictures, maps and sounds you’ve uploaded.', keywords: 'assets images uploads pictures' },
       { id: 'archivist', label: 'The Archivist', icon: Books, to: (f) => w(f, 'archivist'), paths: ['archivist'], who: own, blurb: 'Ask your world a question, or check it for contradictions.', keywords: 'ai claude ask question answer contradictions continuity check' },

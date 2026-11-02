@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 import { Help } from '../help'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty } from '../components'
 import { NothingHere } from '../NothingHere'
 import { SeenMark } from '../reveal'
@@ -10,9 +10,8 @@ import { treeRoots, useVisibleEntities, useWorld } from '../hooks'
 import { NewPageButton } from '../NewPage'
 import { listedEntries, TableRoller } from '../tables'
 import { pagesIn } from '../counts'
-import { StarterTables } from '../moreGenerators'
 import { useViewMode } from '../viewMode'
-import { pagePath, resolveCustom, sectionType, typePath, usePathsVersion } from '../paths'
+import { pagePath, resolveCustom, sectionType, typePath, usePathsVersion, worldPath } from '../paths'
 
 export default function EntityList() {
   const { worldId, world } = useWorld()
@@ -37,6 +36,8 @@ export default function EntityList() {
     return <NothingHere />
   if (type === 'custom' && kind && world && !world.customTypes?.some((c) => c.id === kind)) return <Empty>This page type has been removed.</Empty>
   const t = type as EntityType
+  // The GM's tables live on Generators and tables (one place, not two); players keep this list.
+  if (t === 'table' && isGM) return <Navigate to={`${worldPath(worldId)}/generators${search.size ? `?${search}` : ''}#tables`} replace />
   const label = typeLabel({ type: t, customType: kind }, world)
   // With no custom type named, the custom section is "Other pages": custom pages with no type of their own.
   const ofType = pagesIn(all, world, t !== 'custom' ? t : kind ? `custom:${kind}` : 'other')
@@ -81,7 +82,6 @@ export default function EntityList() {
           <TableRoller tables={ofType} worldId={worldId} entities={all} showSecrets={isGM} />
         </div>
       )}
-      {t === 'table' && isGM && world && <StarterTables world={world} tables={ofType} />}
       <div className="row wrap">
         <input className="search" type="search" placeholder="Filter…" aria-label={`Filter ${label.many.toLowerCase()}`} value={query} onChange={(e) => setParam('q', e.target.value)} />
         {tags.length > 0 && (
