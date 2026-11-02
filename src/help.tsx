@@ -166,7 +166,7 @@ export const HELP = {
     'Where this page’s name (or a nickname) was said out loud in a session’s transcript. Click a time to open the session and play that moment, if the recording is on this device.',
   sessionMentions: 'Sessions whose notes or recap link to this page.',
   lectern:
-    'Play (the Lectern) is your screen while you run the session: the scene and its read-aloud text, who is there, the fight, the party, and tools (show players, dice, loot, sounds). On a computer it’s three columns; on a phone the row of buttons at the top jumps to each part. “Wrap up” ends the session.',
+    'Play (the Lectern) is your screen while you run the session: the scene and its read-aloud text, who is there, the fight, the party, and tools (show players, dice, loot, sounds). On a computer it’s three columns; on a phone the scene comes first, Who’s here and Clocks start folded, and the row of buttons at the top jumps to each part. “Record” opens the recording panel. “Wrap up” ends the session (on a phone it sits at the bottom, away from your thumb).',
   nextScene:
     'Goes on to the next scene you planned: ticks off this one, and puts the next one’s place, read-aloud text and people on screen (and its fight, sounds and handout, if its card has them). If it reveals pages, you see what players will get first. Undo puts it all back: the last scene, the fight and people it added, and the pages it revealed or showed.',
   sceneChange:
@@ -191,7 +191,7 @@ export const HELP = {
   handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove a picture or text to take it back. A page you remove stays revealed unless you choose to hide it again.',
   handoutsReady: 'Handouts you’ve prepared but not shown yet: any GM-only page tagged “handout”. Players can’t see them. “Reveal and show” first says what players will see, then reveals the page to everyone and puts it on their screens (with Undo), and it moves to Shown so far.',
   playersScreen: 'A clean screen for a TV or second monitor at the table. It shows whatever you’re showing players, and nothing else.',
-  initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go. In the ± box, type +5 to heal or -5 to damage; a plain number follows the button you press, and Undo puts HP back. “Something else…” in the condition list lets you type your own. With a keyboard, N moves to the next turn (press ? for all the shortcuts).',
+  initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Each fighter is one line: tap the name for the details (initiative, side, conditions, exact HP), or use −5 / −1 / +1 right on the line. “Defeated” moves someone to the Down list and skips them in the turn order; “Back in” returns them. In the ± box, type +5 to heal or -5 to damage; a plain number follows the button you press, and Undo puts HP back. “Something else…” in the condition list lets you type your own, and a number at the end, like “Burning 2”, counts down at the end of their turn. With a keyboard, N moves to the next turn (press ? for all the shortcuts).',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',
   randomTables:
     'Your own tables to roll on: one entry per line. "3x Goblins" makes an entry three times as likely, {2d6} rolls dice inside an entry, and {Weather} rolls on your table called Weather.',

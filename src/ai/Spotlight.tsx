@@ -5,7 +5,7 @@ import { db, type Entity, type Session } from '../db'
 import { Help } from '../help'
 import { Ico } from '../icons'
 import { formatTime } from '../recorder'
-import { partyOf } from '../sessions'
+import { notesFromPlay, partyOf } from '../sessions'
 import { stripSecrets } from '../Markdown'
 import { speakerName } from './transcript'
 
@@ -44,7 +44,7 @@ export function spotlight(sessions: Session[], party: Entity[]) {
       }
     }
   // Without a transcript, what the GM wrote about the session is the next best thing.
-  const text = transcribed ? said.join('\n') : sessions.map((s) => `${stripSecrets(s.recap)}\n${s.notes}`).join('\n')
+  const text = transcribed ? said.join('\n') : sessions.map((s) => `${stripSecrets(s.recap)}\n${notesFromPlay(s)}`).join('\n')
   const mentions: Bar[] = party.map((e) => {
     // Not \b: it only knows plain English letters, so "Zoë" or "Élodie" would never count.
     const re = new RegExp(`(?<![\\p{L}\\p{N}])(?:${callNames(e).map(escape).join('|')})(?![\\p{L}\\p{N}])`, 'giu')
@@ -85,7 +85,7 @@ export function SpotlightPanel({ session, entities }: { session: Session; entiti
   const party = useMemo(() => partyOf(entities, session.campaignId), [entities, session.campaignId])
   // Reading every transcript of a campaign is slow, so only when something it uses changes.
   const stats = useMemo(() => spotlight(sessions, party), [sessions, party])
-  const hasAnything = stats.transcribed > 0 || sessions.some((s) => s.recap.trim() || s.notes.trim())
+  const hasAnything = stats.transcribed > 0 || sessions.some((s) => s.recap.trim() || notesFromPlay(s).trim())
   if (!party.length || !hasAnything) return null
   const counted = stats.mentions.filter((m) => m.value > 0)
   const avg = stats.mentions.reduce((n, m) => n + m.value, 0) / Math.max(1, stats.mentions.length)
@@ -111,7 +111,7 @@ export function SpotlightPanel({ session, entities }: { session: Session; entiti
           <Bars bars={stats.talk} format={formatTime} />
         </>
       )}
-      <h3 className="small">How often each character came up {stats.fromNotes ? '(in your notes and recap)' : '(in the transcript)'}</h3>
+      <h3 className="small">How often each character came up {stats.fromNotes ? '(in your recap and the notes from play)' : '(in the transcript)'}</h3>
       {counted.length ? <Bars bars={stats.mentions} format={(v) => `${v}×`} /> : <p className="muted small">None of the party’s names came up yet.</p>}
       {quiet.length > 0 && (
         <p className="small">

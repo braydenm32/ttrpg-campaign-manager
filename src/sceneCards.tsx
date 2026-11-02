@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { stampStart } from './sessions'
 import { blankLectern, db, saveEntity, type Entity, type PrepScene, type Session, type World } from './db'
 import { DraftText } from './components'
 import { Help } from './help'
@@ -9,7 +10,7 @@ import { play } from './sound/player'
 import { schedule } from './cloud/sync'
 import { askToReveal, type Review } from './reveal'
 import { showToPlayers } from './showing'
-import { toast } from './undo'
+import { dismissToast, toast } from './undo'
 
 /**
  * Scene cards: a prep scene can carry what it needs (the place, read-aloud text, who's there, the
@@ -90,7 +91,10 @@ export const restoreScene = (sessionId: string, snap: SceneSnapshot) =>
         s.lectern.combat = { ...combat, combatants: kept, activeId: kept.some((c) => c.id === combat.activeId) ? combat.activeId : snap.activeId }
       }
       if (snap.startedAt) s.startedAt = snap.startedAt
-      else delete s.startedAt
+      else {
+        delete s.startedAt
+        delete s.playStart
+      }
     })
 
 /**
@@ -129,7 +133,7 @@ export async function startScene(world: World, session: Session, scene: PrepScen
       if (enc) addCombatants(l, encounterCombatants(enc))
       const mine = s.prep?.scenes.find((x) => x.id === scene.id)
       if (mine) mine.done = true
-      if (!s.startedAt) s.startedAt = Date.now()
+      stampStart(s)
     })
   // Through saveEntity, so the page's History keeps the version before the reveal.
   for (const e of toReveal) {
@@ -173,6 +177,10 @@ export function plannedScenes(session: Session) {
   return { scenes, current, at, next }
 }
 
+/** The note shown for the last scene change, so leaving the Lectern can take it away (it would mean nothing on another screen). */
+let sceneToast: number | undefined
+export const clearSceneToast = () => dismissToast(sceneToast)
+
 /**
  * Starts a scene from the Lectern with Undo, which takes it all back: the last scene, the fighters
  * and pages it added, the pages it revealed and what was on players' screens.
@@ -182,7 +190,7 @@ export async function goToScene(world: World, session: Session, scene: PrepScene
   const undoShown = await startScene(world, session, scene, ask)
   if (!undoShown) return
   const n = (session.prep?.scenes ?? []).findIndex((x) => x.id === scene.id) + 1
-  toast(`Scene ${n}: ${scene.text.length > 48 ? `${scene.text.slice(0, 48).trimEnd()}…` : scene.text}`, async () => {
+  sceneToast = toast(`Scene ${n}: ${scene.text.length > 48 ? `${scene.text.slice(0, 48).trimEnd()}…` : scene.text}`, async () => {
     await restoreScene(session.id, before)
     await undoShown()
   })
@@ -209,7 +217,7 @@ export async function changePlace(session: Session, placeId: string | undefined,
       const fresh = l.presentIds.filter((id) => !s.entityIds.includes(id))
       if (fresh.length) s.entityIds = [...s.entityIds, ...fresh]
     })
-  toast(placeId ? `The scene is now ${placeName ?? 'somewhere new'}.` : 'The scene is cleared.', () => restoreScene(session.id, before))
+  sceneToast = toast(placeId ? `The scene is now ${placeName ?? 'somewhere new'}.` : 'The scene is cleared.', () => restoreScene(session.id, before))
 }
 
 /** The extra parts of a scene, on the session's Prep tab. */

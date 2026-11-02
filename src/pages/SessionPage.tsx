@@ -25,7 +25,7 @@ import { PrepSheet } from '../prep'
 import { PrintButton } from '../print'
 import { CalDateInput, formatDate } from '../calendar'
 import { DiscordButton, forDiscord } from '../discord'
-import { ShowToPlayers, useFinish, useNextSession, WrapUpChecklist } from '../EndSession'
+import { ShowToPlayers, useFinish, useNextSession, WrapProgress, WrapUpChecklist } from '../EndSession'
 import { Ico, TypeIcon } from '../icons'
 import { BookmarkSimple, CheckCircle, Eye, FlagCheckered, ListChecks, Lock, Microphone, PencilSimple, Play, Spiral, UsersThree, Warning, X } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
@@ -251,6 +251,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus }: ViewPr
       <p className="muted small wrap-intro">
         After the game, top to bottom: your notes, the recording, the write-up, the players’ recap, then mark it played. <Help topic="wrapUp" />
       </p>
+      {stage !== 'preparing' && stage !== 'planned' && <WrapProgress world={world} session={session} campaign={campaign} entities={entities} />}
       <NotesCard session={session} entities={entities} worldId={worldId} id="notes" />
       <div id="recording">
         <Recorder session={session} />
