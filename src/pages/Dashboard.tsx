@@ -1,6 +1,6 @@
 import { Help, HELP } from '../help'
 import { WorldCover } from '../WorldCover'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Modal, useMenu } from '../components'
@@ -811,6 +811,8 @@ export function NewCampaign({
             visibility: 'gm',
             createdAt: Date.now(),
           })
+          // The game system is asked here, once: the world's first campaign sets the world's too (New world doesn't ask).
+          if ((await db.campaigns.where({ worldId }).count()) === 1) await db.worlds.update(worldId, { system, updatedAt: Date.now() })
           onCreated(id)
         }}
       >
@@ -845,6 +847,9 @@ function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign:
   // "Start from an export…" in the New world dialog lands here with ?import=1: the importer open.
   const [search] = useSearchParams()
   const [importing, setImporting] = useState(() => search.get('import') === '1')
+  useEffect(() => {
+    if (search.get('import') === '1') document.getElementById('getting-started-import')?.scrollIntoView({ block: 'center' })
+  }, [search])
   const [hidden, setHidden] = useState(() => {
     try {
       return localStorage.getItem(hideKey(world.id)) === '1'

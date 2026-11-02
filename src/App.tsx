@@ -67,6 +67,7 @@ import './small.css'
 import { hashRouting, setPages, tidyPath, usePathsVersion } from './paths'
 import { ClaudeJobChips, LeaveGuard } from './ai/LeaveGuard'
 import { useGuardedNavigate } from './ai/leave'
+import { rememberLastWorld } from './install'
 
 const Router = hashRouting ? HashRouter : BrowserRouter
 
@@ -218,6 +219,8 @@ function WorldLayout() {
     const tidy = named && tidyPath(pathname)
     if (tidy) navigate(tidy + search, { replace: true })
   }, [named, version, pathname, search, navigate])
+  // The home-screen icon's shortcuts (Common Room, Lectern) open the world used last.
+  useEffect(() => rememberLastWorld(world?.id), [world?.id])
   if (!named) return <Skeleton />
   if (world?.shared) return (
     <ForcePlayerView>

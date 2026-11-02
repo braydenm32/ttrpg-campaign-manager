@@ -368,6 +368,12 @@ export const HELP = {
   inspirationPlayer:
     'Inspiration or hero points your GM has given you. Tap “Use one” to ask to spend one: your GM gets a pop-up and says yes at the table.',
   // The first ten minutes, and between sessions
+  welcome: 'The quickest look is the Shattered Coast, a small example that opens at once. Vael Ardith, the full example with a campaign ready to run, is on the shelf below; it takes a minute to draw its maps the first time. Or start your own world: it asks for a name, and you can bring in notes from Obsidian, Kanka or World Anvil.',
+  installApp: 'Put the Warded Atlas on your home screen and it opens like an app, full screen, straight to your table. It’s the same as the website, kept up to date; nothing extra to download from a store. Hold the icon for shortcuts to the Common Room.',
+  inlineRolls: 'Write roll:1d8+3 anywhere in a page’s text and it shows as a small dice button: press it to roll, and the result appears beside it. {{Blackwood encounters}} rolls on your table of that name. Players get the buttons too, but only in text they can read. While a session is being played, you can add a roll to its notes.',
+  pagePrompts: 'Questions to get a new page going, different for people, places, factions, items, quests and the rest. Answer one and it goes into the description under the question as a heading. Change or delete anything afterwards.',
+  starterTemplates: 'Three ready-made starting points (a person, a town and a quest), each with the questions worth answering as headings. Add them, change them, or make your own with “Save as template” on any page.',
+  whoWasThere: 'Tick the player characters who were at the table. Everyone starts ticked. It goes into the recap and highlights Claude writes (no moments for someone who wasn’t there), Spotlight, and players see it with the recap. Players whose characters weren’t there aren’t asked for downtime.',
   exampleStartHere: 'Vael Ardith comes with four guides written for new GMs: Start Here, the GM’s chapter for the campaign, the clocks and a Player’s Guide. They’re ordinary pages, so you can read them as players would too.',
   recentPages: 'The pages you opened lately on this device, newest first. They’re also the first thing in the search box (Ctrl+K) before you type.',
   duplicate: 'Make a new page that starts as a copy of this one, with “(copy)” after the name. It starts GM only, and who the original was revealed to doesn’t come along.',

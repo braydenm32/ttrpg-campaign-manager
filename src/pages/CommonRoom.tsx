@@ -53,6 +53,7 @@ import { useKeepScroll } from '../jump'
 import { PlayerDowntime } from '../players/Downtime'
 import { SignedOutCard } from '../players/SignedOut'
 import { Highlights, StorySoFar } from '../highlights'
+import { InstallCard } from '../install'
 
 /**
  * The Common Room: the players' home in a world, made for a phone in one hand. Its tabs (Now, Me,
@@ -212,6 +213,9 @@ function Card({ title, icon, to, more, className = '', children, help }: { title
 
 function NowTab({ ctx }: { ctx: RoomContext }) {
   const { world, worldId, stage, campaign, memberOf } = ctx
+  // Just after joining (JoinWorld adds ?joined=1) the "keep this on your phone" card comes first.
+  const [params] = useSearchParams()
+  const joined = params.get('joined') === '1'
   const voting = ctx.campaigns.filter((c) => c.schedule?.length)
   const today = world.calendar?.today ? formatDate(world.calendar, world.calendar.today) : ''
   const scheduler = voting.length > 0 && (
@@ -232,6 +236,7 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
         </span>
       </TabHead>
       <SignedOutCard world={world} />
+      {joined && <InstallCard place="joined" />}
       {stage === 'during' && (
         <>
           <LiveTable ctx={ctx} />
@@ -260,6 +265,7 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
       {stage === 'during' && scheduler}
       {ctx.party.length > 0 && <PartyStrip ctx={ctx} />}
       {campaign && stage === 'before' && <StoryCard ctx={ctx} campaign={campaign} />}
+      {!joined && stage !== 'during' && <InstallCard />}
       <RoomFoot ctx={ctx} />
     </>
   )
@@ -908,6 +914,8 @@ function LeadsTab({ ctx }: { ctx: RoomContext }) {
 
 function NotesTab({ ctx }: { ctx: RoomContext }) {
   const { world, worldId, memberOf, entities, mine } = ctx
+  // Downtime is for the characters who were at the last session (when the GM noted who was there).
+  const wasThere = ctx.last?.present ? mine.filter((c) => ctx.last!.present!.includes(c.id)) : mine
   const questions = world.shared?.questions ?? []
   return (
     <>
@@ -934,8 +942,15 @@ function NotesTab({ ctx }: { ctx: RoomContext }) {
         )}
       </section>
       <div id="downtime">
-        {memberOf && mine.length > 0 ? (
-          <PlayerDowntime world={world} mine={mine} />
+        {memberOf && mine.length > 0 && wasThere.length === 0 ? (
+          <section className="card room-card">
+            <h2 className="room-card-title">
+              <Ico as={Hourglass} /> Between sessions <Help topic="downtime" />
+            </h2>
+            <p className="muted small">Your GM noted that {mine.map((c) => c.name.split(' ')[0]).join(' and ')} wasn’t at the last session, so there’s no downtime to send this time.</p>
+          </section>
+        ) : memberOf && mine.length > 0 ? (
+          <PlayerDowntime world={world} mine={wasThere} />
         ) : (
           <section className="card room-card">
             <h2 className="room-card-title">
