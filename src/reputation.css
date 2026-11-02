@@ -49,4 +49,6 @@
   .rep-page label.inline-check, .rep-char label.inline-check { min-height: 44px; }
   .rep-history-meta a, .rep-notes .rep-note-place a, .rep-characters a, .rep-room .rep-notes a { display: inline-flex; align-items: center; min-height: 44px; }
   .rep-moves button { flex: 1 1 40%; }
+  /* The help tips keep their small look but take a fingertip. */
+  .rep-page .help-button, .rep-char .help-button { width: 44px; height: 44px; margin: -12px -10px; border-color: transparent; background: transparent; }
 }
