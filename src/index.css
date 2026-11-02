@@ -1392,6 +1392,11 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .story-so-far .story-draft { margin-top: .6em; }
 .story-so-far details { margin-top: .6em; }
 .party-glance-value { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 3em; max-width: 16em; }
+/* In the Lectern's narrow column the table is tighter, so its columns fit without cutting the headings. */
+.lectern-panel .party-glance table { font-size: .84em; }
+.lectern-panel .party-glance th, .lectern-panel .party-glance td { padding: .25em .3em; }
+.lectern-panel .party-glance-value { max-width: 6.5em; }
+.lectern-panel .party-glance-extra .row { gap: .1em; flex-wrap: nowrap; }
 .downtime-toasts { right: auto; left: 1em; }
 
 /* Character sheet import */
@@ -1467,6 +1472,7 @@ a.more-item:hover { border-color: var(--accent); }
 .session-title input:focus { background: var(--panel-2); }
 .session-title .session-num { width: 2.6ch; flex: none; text-align: center; padding: .05em 0; }
 .session-title .session-name { flex: 1; width: 100%; }
+.session-details > h2, .needs-you .card-head h2 { margin-top: 0; }
 button.big, .button.big { padding: .7em 1.3em; font-size: 1.05rem; }
 
 .prep-plan { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1em; align-items: start; }
@@ -1575,7 +1581,7 @@ textarea.read-text:hover { border-color: var(--border); border-left-color: var(-
 .quick-note:focus-within { border-color: var(--accent); }
 .scene-now { margin: .2em 0 .5em; }
 .next-scene { margin: .3em 0 .6em; align-items: center; }
-.next-scene .small { flex: 1 1 10em; min-width: 0; }
+.next-scene .small { flex: 1 1 14em; min-width: 0; }
 .scene-where { display: flex; flex-direction: column; gap: .2em; margin: .4em 0; }
 .strong-start { margin: .2em 0 .6em; }
 .strong-start .read-text { border-left: 3px solid var(--accent); padding: .3em .8em; white-space: pre-wrap; }

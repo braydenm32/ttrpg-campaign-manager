@@ -202,8 +202,8 @@ function PrepareView({ session, campaign, world, entities }: ViewProps) {
         targets={[
           { id: 'plan', label: 'Start' },
           { id: 'scenes', label: 'Scenes' },
-          { id: 'clues', label: 'Clues' },
           { id: 'fights', label: 'Fights' },
+          { id: 'clues', label: 'Clues' },
           { id: 'gm-notes', label: 'Notes' },
           { id: 'people', label: 'People' },
           { id: 'details', label: 'Details' },
