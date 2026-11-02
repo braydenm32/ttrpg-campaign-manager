@@ -1,6 +1,6 @@
 import { strFromU8, strToU8, unzipSync, Zip, ZipDeflate, ZipPassThrough } from 'fflate'
 import { loadInBackground } from './worldLoading'
-import { db, newId, type Asset, type Board, type Campaign, type Entity, type Pin, type Session, type Sound, type World, type WorldMap } from './db'
+import { db, newId, PARTY, repId, type Asset, type Board, type Campaign, type Entity, type Pin, type Reputation, type Session, type Sound, type World, type WorldMap } from './db'
 
 /**
  * A whole world in one file, for backups and moving between devices. Version 2 is a .zip holding
@@ -22,6 +22,8 @@ interface WorldBackup {
   /** Added later; older backups don't have them. */
   boards?: Board[]
   sounds?: Sound[]
+  /** The party's and characters' reputation (added later still). */
+  reputation?: Reputation[]
   /** Set when the session recordings' audio was left out on purpose. The sessions, bookmarks and transcripts are all still here. */
   recordingsLeftOut?: { count: number; bytes: number }
 }
@@ -89,6 +91,7 @@ export async function exportWorld(worldId: string, onProgress?: (done: number, t
     sessions,
     boards: await db.boards.where({ worldId }).toArray(),
     sounds: await db.sounds.where({ worldId }).toArray(),
+    reputation: await db.reputation.where({ worldId }).toArray(),
     assets: assets.map(({ blob: _blob, ...a }) => a),
     ...(left.length ? { recordingsLeftOut: { count: left.length, bytes: left.reduce((n, a) => n + a.size, 0) } } : {}),
   }
@@ -204,7 +207,7 @@ export async function importWorld(file: File): Promise<string> {
   const worldId = id(b.world.id)
   const now = Date.now()
 
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.boards, db.sounds], async () => {
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.boards, db.sounds, db.reputation], async () => {
     const showing = b.world.showing
     await db.worlds.add({
       ...b.world,
@@ -303,6 +306,20 @@ export async function importWorld(file: File): Promise<string> {
       }),
     )
     await db.sounds.bulkAdd((b.sounds ?? []).map((x) => ({ ...x, id: id(x.id), worldId, assetId: opt(x.assetId) })))
+    // A reputation's id comes from whose it is, so it follows the world's and the character's new ids.
+    await db.reputation.bulkPut(
+      (b.reputation ?? []).map((r) => {
+        const of = r.of === PARTY ? PARTY : id(r.of)
+        return {
+          ...r,
+          id: repId(worldId, of),
+          worldId,
+          of,
+          notes: r.notes.map((n) => ({ ...n, entityId: opt(n.entityId) })),
+          history: r.history.map((h) => ({ ...h, sessionId: opt(h.sessionId) })),
+        }
+      }),
+    )
   })
   unpackFiles(worldId, b.assets.filter((a) => !blobs.has(a.id)), id, isZip ? entry : () => undefined, b).catch((e: Error) =>
     alert(`The world was imported, but unpacking its files stopped: ${e.message}. Import the backup again to get them all.`),

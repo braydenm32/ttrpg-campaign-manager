@@ -1,4 +1,4 @@
-import { db, type Asset, type Campaign, type Entity, type Pin, type Session, type SharedInfo, type World, type WorldMap } from '../db'
+import { db, PARTY, type Asset, type Campaign, type Entity, type Pin, type Reputation, type Session, type SharedInfo, type World, type WorldMap } from '../db'
 import { worldLoading } from '../worldLoading'
 import { appLink, supabase, SUPABASE_URL } from './client'
 import { joinRoom, sendOnce } from './live'
@@ -46,6 +46,11 @@ export interface SharedPayload {
   pins: Pin[]
   sessions: Session[]
   assets: Omit<Asset, 'blob'>[]
+  /**
+   * The party's and characters' reputation, as much as players may see (only notes and reasons the
+   * GM marked for them). Missing before the server has 20261103000003_reputation.sql: nothing to show.
+   */
+  reputation?: Reputation[]
 }
 
 /** Local id of the read-only copy, kept separate from the GM's own world if both are on one device. */
@@ -194,8 +199,8 @@ export async function storePlayerCopy(
   const changedAssets = assets.filter((a) => !sameFile(a))
   const goneAssets = [...existing.keys()].filter((x) => !keepIds.has(x))
 
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
-    for (const t of [db.campaigns, db.entities, db.maps, db.pins, db.sessions] as const) await t.where({ worldId }).delete()
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.reputation], async () => {
+    for (const t of [db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.reputation] as const) await t.where({ worldId }).delete()
     await db.assets.bulkDelete(goneAssets)
     const showing = p.world?.showing
     await db.worlds.put({
@@ -218,6 +223,16 @@ export async function storePlayerCopy(
     )
     await db.sessions.bulkPut(
       p.sessions.map((s) => ({ ...s, id: id(s.id), worldId, campaignId: id(s.campaignId), entityIds: s.entityIds.map(id), notes: '', recordings: [], lectern: undefined })),
+    )
+    await db.reputation.bulkPut(
+      (Array.isArray(p.reputation) ? p.reputation : []).map((r) => ({
+        ...r,
+        id: id(r.id),
+        worldId,
+        of: r.of === PARTY ? PARTY : id(r.of),
+        notes: (r.notes ?? []).map((n) => ({ ...n, entityId: opt(n.entityId) })),
+        history: (r.history ?? []).map((h) => ({ ...h, sessionId: opt(h.sessionId) })),
+      })),
     )
   })
   if (toFetch.length) void fetchFiles(worldId, gen, toFetch, id, download, hash)

@@ -128,6 +128,14 @@ export const HELP = {
     'Everyone and how they’re connected, drawn as a web. It opens on one person and everyone within two links of them: your own character for a player, otherwise the best-connected player character. Click someone to move to them (Back goes back), pick Everyone to see the whole web, or switch to the family tree. In a big world it shows just people, factions and gods; switch to every kind of page to see places and items too. Add links from any page’s Relationships box; removing one offers Undo.',
   clocks:
     'A progress clock is a circle cut into slices. Fill a slice when a villain’s plan moves on, a rival gets closer or danger grows; when it’s full, it happens. Players only see clocks you mark “Players know”, on pages they can see: each clock says which. Start one here or from a page’s Clocks box; removing one offers Undo.',
+  reputation:
+    'How far the party’s name has spread (from Town up to Global) and what people make of them, from notorious to celebrated. Each change asks what happened and in which session, and the history lists them all, newest first. Players see the reach and the lean on their Party tab, and only the reasons and place notes you tick for them.',
+  reputationNotes:
+    'How particular places see the party: “Cinderford: owe us a debt”, “the Ashen Court: wanted”. Link a note to the place’s page if it has one. Notes are GM only until you tick “Players can see this”.',
+  reputationLevels:
+    'The steps of the ladder, nearest first. Rename them to suit your world (Village, Barony, Kingdom, the Known Lands), or add and remove steps. Characters use the same ladder as the party.',
+  characterFame:
+    'This character’s own fame: how far their name has spread and which way the talk leans, with the history folded away. Players see it on the character’s page and the Party tab, with only the reasons you tick for them.',
   safety:
     'Agree what’s off limits before you play. Lines never happen in the game; veils can happen, but off screen. Everyone in the world can read this page.',
   xcard:
@@ -159,7 +167,7 @@ export const HELP = {
   recap:
     'Claude drafts a GM summary, a player recap and updates for your pages from the transcript. "Copy for Claude" works with a Claude subscription for free; "Write it now" uses your own API key. You review both before saving.',
   worldUpdates:
-    'Claude compares the session with your pages and suggests what to change: new NPCs, places and shops that came up, quests moving on, new relationships, timeline events, deaths and captures, loot changing hands and threads. Tick the ones you want and add them in one go. New pages start GM only, and lines on existing pages go in a “Session log” at the bottom of the page. Every change is listed in the Chronicle and can be undone from the page’s history.',
+    'Claude compares the session with your pages and suggests what to change: new NPCs, places and shops that came up, quests moving on, new relationships, timeline events, deaths and captures, loot changing hands, threads and the party’s reputation. Tick the ones you want and add them in one go. New pages start GM only, and lines on existing pages go in a “Session log” at the bottom of the page. Every change is listed in the Chronicle and can be undone from the page’s history.',
   chronicle:
     'Every change made to your world from a session, newest first: pages made, lines added, quests and fates that changed. Click a line to open the page. Only you see it.',
   heardIn:
@@ -264,7 +272,7 @@ export const HELP = {
   roomNow:
     'Now changes with the game. Before a session: when you play next, what happened last time and what the party is doing. While your GM runs the session live: the scene, whose turn it is, dice everyone sees, a quiet word to the GM and the X-card. After a game, until the day of the next one: last time’s recap first, then the loot and the Group notes.',
   roomMe: 'Your character at a glance: the numbers that matter, what you carry, passages only you can read, and your own notes. “Edit my character” lets you update the sheet, or fill it in from a character sheet file.',
-  roomParty: 'Everyone in the party, who plays them and what each one carries, plus the party’s purse and the stash you share. The full loot list has every item with its notes.',
+  roomParty: 'Everyone in the party, who plays them and what each one carries, plus the party’s purse, the stash you share and how far your name has spread. The full loot list has every item with its notes.',
   tableRules:
     'What your table agreed before playing. Lines never happen in the game; veils can happen, but off screen. The X-card tells your GM, without your name, that something isn’t OK.',
   tableLink:

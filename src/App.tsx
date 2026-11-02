@@ -42,6 +42,7 @@ import Assets from './pages/Assets'
 const Generators = lazy(() => import('./pages/Generators'))
 const Archivist = lazy(() => import('./ai/Archivist'))
 import PartyLoot from './pages/PartyLoot'
+import ReputationPage from './reputation'
 const WorldSettings = lazy(() => import('./pages/WorldSettings'))
 const PrintPage = lazy(() => import('./print'))
 import Boards from './pages/Boards'
@@ -98,6 +99,7 @@ export default function App() {
             <Route path="type/:type" element={<EntityList />} />
             <Route path="type/:type/:kind" element={<EntityList />} />
             <Route path="loot" element={<PartyLoot />} />
+            <Route path="reputation" element={<ReputationPage />} />
             <Route path="p/:entityId" element={<EntityPage />} />
             <Route path="e/:entityId" element={<EntityPage />} />
             <Route path="maps" element={<MapList />} />

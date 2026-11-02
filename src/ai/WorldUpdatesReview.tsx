@@ -5,7 +5,7 @@ import { db, ENTITY_LABELS, newId, type Entity, type Session, type World, type W
 import { Ico } from '../icons'
 import { BookBookmark } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { applyUpdates, describe, LEDGER_NAME, namesIn, pageFinder, UPDATE_TYPES } from './worldUpdates'
+import { applyUpdates, describe, isParty, LEDGER_NAME, namesIn, pageFinder, UPDATE_TYPES } from './worldUpdates'
 
 const GROUPS: { title: string; kinds: WorldUpdate['kind'][] }[] = [
   { title: 'New pages', kinds: ['new'] },
@@ -13,6 +13,7 @@ const GROUPS: { title: string; kinds: WorldUpdate['kind'][] }[] = [
   { title: 'Relationships', kinds: ['relation'] },
   { title: 'Timeline', kinds: ['event'] },
   { title: 'Threads', kinds: ['thread'] },
+  { title: 'Reputation', kinds: ['reputation'] },
   { title: 'Doesn’t match your notes', kinds: ['conflict'] },
 ]
 
@@ -117,6 +118,11 @@ export function WorldUpdatesReview({ world, session, entities }: { world: World;
                               <input type="checkbox" checked={!!u.players} onChange={(e) => change(u.id, { players: e.target.checked })} /> Players can see this line
                             </label>
                           )}
+                          {u.kind === 'reputation' && (
+                            <label className="row">
+                              <input type="checkbox" checked={!!u.players} onChange={(e) => change(u.id, { players: e.target.checked })} /> Players can see why
+                            </label>
+                          )}
                           {(u.kind === 'note' || u.kind === 'status' || u.kind === 'quest') && (
                             <label className="row">
                               <input type="checkbox" checked={!!u.timeline} onChange={(e) => change(u.id, { timeline: e.target.checked })} /> Add to timeline
@@ -134,6 +140,9 @@ export function WorldUpdatesReview({ world, session, entities }: { world: World;
                             </button>
                           </p>
                         ))}
+                        {u.kind === 'reputation' && !isParty(u.who) && find(u.who) && find(u.who)!.type !== 'pc' && (
+                          <p className="warn small">Only the party and player characters have a reputation here, so this will be skipped.</p>
+                        )}
                         {editing === u.id && <UpdateEditor update={u} onChange={(patch) => change(u.id, patch)} />}
                       </li>
                     )
@@ -219,6 +228,28 @@ function UpdateEditor({ update: u, onChange }: { update: WorldUpdate; onChange: 
         <>
           {field('item', 'Item', u.item)}
           {field('to', 'Now with (a character, or “party”)', u.to)}
+        </>
+      )}
+      {u.kind === 'reputation' && (
+        <>
+          {field('who', 'Whose (“party”, or a player character)', u.who)}
+          <label className="stack small">
+            How far word spreads
+            <select value={u.reach ?? ''} onChange={(e) => onChange({ reach: (e.target.value || undefined) as 'up' | undefined })}>
+              <option value="">No change</option>
+              <option value="up">Further</option>
+              <option value="down">Fades</option>
+            </select>
+          </label>
+          <label className="stack small">
+            What people say
+            <select value={u.lean ?? ''} onChange={(e) => onChange({ lean: (e.target.value || undefined) as 'fame' | undefined })}>
+              <option value="">No change</option>
+              <option value="fame">Toward fame</option>
+              <option value="infamy">Toward infamy</option>
+            </select>
+          </label>
+          {field('reason', 'Why', u.reason)}
         </>
       )}
       {u.kind === 'thread' && (

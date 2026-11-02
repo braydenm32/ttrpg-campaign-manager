@@ -36,6 +36,7 @@ import {
   HandPalm,
   Hourglass,
   Lock,
+  MegaphoneSimple,
   MusicNotes,
   Newspaper,
   Notepad,
@@ -53,6 +54,7 @@ import { useKeepScroll } from '../jump'
 import { PlayerDowntime } from '../players/Downtime'
 import { SignedOutCard } from '../players/SignedOut'
 import { Highlights, StorySoFar } from '../highlights'
+import { PartyReputationCard, useCharacterFame } from '../reputation'
 
 /**
  * The Common Room: the players' home in a world, made for a phone in one hand. Its tabs (Now, Me,
@@ -809,6 +811,7 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
   const { world, worldId, entities } = ctx
   const loot = partyLoot(entities, world)
   const carried = new Map(loot.members.map((m) => [m.holder.id, m.items]))
+  const fameOf = useCharacterFame(worldId, entities)
   return (
     <>
       <TabHead title="The party" help="roomParty">
@@ -834,6 +837,7 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
           {!loot.items.length && <span className="muted small">Nobody carries anything yet.</span>}
         </section>
       )}
+      <PartyReputationCard worldId={worldId} entities={entities} />
       {ctx.party.length ? (
         <ul className="party-list">
           {ctx.party.map((e) => {
@@ -865,6 +869,11 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
                 {items.length > 0 && (
                   <div className="small carries">
                     <Ico as={Backpack} /> <ItemLinks items={items} worldId={worldId} />
+                  </div>
+                )}
+                {fameOf(e.id) && (
+                  <div className="small carries">
+                    <Ico as={MegaphoneSimple} /> {fameOf(e.id)}
                   </div>
                 )}
               </li>
