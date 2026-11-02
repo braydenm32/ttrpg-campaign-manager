@@ -1221,7 +1221,8 @@ const rockCache: { key: string; canvas: HTMLCanvasElement }[] = []
 /** A battle map's rooms only change when they're drawn, or the grid or seed change. Underground maps always have them (all rock to start with). */
 function roomsFor(d: Drawing, W: number, H: number): RoomMap | undefined {
   if (!d.rooms?.length && d.outside !== 'rock') return undefined
-  const key = `${W}x${H}|${d.gridSize}|${d.seed}|${(d.rooms ?? []).map((r) => r.id).join(',')}`
+  // a room's id, whether it digs or fills, and where it starts (so a room moved or changed is drawn again)
+  const key = `${W}x${H}|${d.gridSize}|${d.seed}|${(d.rooms ?? []).map((r) => `${r.id}${r.mode[0]}${r.points[0]}`).join(',')}`
   return keep2(roomCache, key, () => buildRooms(d, W, H, key))
 }
 
@@ -1270,7 +1271,7 @@ let landCache: (LandShape & { key: string }) | undefined
 /** The land only changes when the brush strokes, old area shapes, start or seed change. */
 function landFor(d: Drawing, W: number, H: number): LandShape & { key: string } {
   const areas = d.shapes.filter((s) => s.kind === 'area').map((s) => `${s.id}:${s.kind === 'area' ? s.terrain + s.points.length + s.points[0] : ''}`)
-  const strokes = (d.land ?? []).map((s) => s.id)
+  const strokes = (d.land ?? []).map((s) => `${s.id}${s.mode[0]}${s.points[0]}`)
   const key = `${W}x${H}|${d.background}|${d.seed}|${d.hidden?.includes('land') ? 'h' : ''}|${areas.join(',')}|${strokes.join(',')}`
   if (landCache?.key !== key) landCache = { ...landShape(d, W, H), key }
   return landCache
@@ -1281,7 +1282,7 @@ const groundCache: GroundMap[] = []
 /** A battle map's ground only changes when its strokes, old area shapes, starting ground or seed change. */
 function groundFor(d: Drawing, W: number, H: number): GroundMap {
   const areas = d.shapes.filter((s) => s.kind === 'area').map((s) => `${s.id}:${s.kind === 'area' ? s.terrain + s.points.length + s.points[0] : ''}`)
-  const strokes = (d.ground ?? []).map((s) => s.id)
+  const strokes = (d.ground ?? []).map((s) => `${s.id}${s.ground}${s.inside ? 'i' : ''}${s.points[0]}`)
   // floors painted inside the rooms change when the rooms do
   const rooms = d.ground?.some((s) => s.inside) ? roomsFor(d, W, H) : undefined
   const key = `${W}x${H}|${d.groundBase}|${d.gridSize}|${d.seed}|${d.hidden?.includes('land') ? 'h' : ''}|${areas.join(',')}|${strokes.join(',')}|${rooms?.key ?? ''}`
@@ -1585,6 +1586,25 @@ export function classicHitSvg(d: Drawing): string {
   for (const s of d.shapes)
     if (s.kind === 'area' && !off.has('land') && marked(s))
       out.push(`<path data-id="${s.id}" class="hit-area" d="M${s.points.map(([x, y]) => `${f(x)} ${f(y)}`).join(' L')} Z" fill="transparent"/>`)
+  // brush strokes of land and ground are picked along the middle of the stroke, where the brush went
+  const run = (pts: Point[]) => (pts.length > 1 ? `M${pts.map(([x, y]) => `${f(x)} ${f(y)}`).join(' L')}` : `M${f(pts[0][0])} ${f(pts[0][1])} l0.01 0`)
+  if (!off.has('land'))
+    for (const s of [...(d.land ?? []), ...(d.ground ?? [])])
+      if (s.points.length)
+        out.push(`<path data-id="${s.id}" data-stroke="1" class="hit-stroke" d="${run(s.points)}" fill="none" stroke="transparent" stroke-width="16" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="stroke"/>`)
+  // rooms by their outline (inside them you pick what stands there); passages and caves anywhere along them
+  if (d.scene === 'battle' && !off.has('paths'))
+    for (const r of d.rooms ?? []) {
+      if (!r.points.length) continue
+      const attrs = `data-id="${r.id}" data-stroke="1" class="hit-room" fill="none" stroke="transparent" pointer-events="stroke"`
+      const [[ax, ay], [bx, by]] = [r.points[0], r.points[r.points.length - 1]]
+      if (r.shape === 'rect')
+        out.push(`<rect ${attrs} x="${f(Math.min(ax, bx))}" y="${f(Math.min(ay, by))}" width="${f(Math.abs(bx - ax))}" height="${f(Math.abs(by - ay))}" stroke-width="14" vector-effect="non-scaling-stroke"/>`)
+      else if (r.shape === 'round')
+        out.push(`<ellipse ${attrs} cx="${f((ax + bx) / 2)}" cy="${f((ay + by) / 2)}" rx="${f(Math.abs(bx - ax) / 2)}" ry="${f(Math.abs(by - ay) / 2)}" stroke-width="14" vector-effect="non-scaling-stroke"/>`)
+      else
+        out.push(`<path ${attrs} d="${run(r.points)}" stroke-width="${f(r.size ?? (d.gridSize || 70))}" stroke-linecap="${r.shape === 'corridor' ? 'square' : 'round'}" stroke-linejoin="${r.shape === 'corridor' ? 'miter' : 'round'}"/>`)
+    }
   for (const s of d.shapes) {
     if (s.kind === 'area' || off.has(layerOf(s))) continue
     if (s.kind === 'line') {

@@ -54,8 +54,8 @@ export default function MapList() {
         </h1>
         {isGM && (
           <div className="row">
-          <button onClick={() => setDrawing(true)}><Ico as={PencilSimple} /> Draw a new map</button>
-          <label className="button primary">
+          <button className="primary" onClick={() => setDrawing(true)}><Ico as={PencilSimple} /> Draw a new map</button>
+          <label className="button">
             {busy ? 'Uploading…' : '+ Upload map image'}
             <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
           </label>

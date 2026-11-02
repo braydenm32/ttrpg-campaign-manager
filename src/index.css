@@ -439,6 +439,8 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
 @media (max-width: 520px) { .map-kinds { grid-template-columns: 1fr; } }
 .version-any { font-size: 1.5rem; height: 40px; display: grid; place-items: center; }
 .scatter-ring { display: none; }
+.builder-phone-note { display: none; margin: 0; padding: .4em 1em; border-bottom: 1px solid var(--border); background: var(--panel); }
+@media (max-width: 800px) { .builder-phone-note { display: block; } }
 .builder-canvas.tool-hand, .builder-canvas.tool-select { cursor: grab; }
 .builder-canvas.tool-erase { cursor: not-allowed; }
 .builder-panel h2 { margin: 0; }

@@ -4,13 +4,13 @@ import { Help } from '../help'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ImageOverlay, MapContainer, Marker, Polygon, Polyline, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import { Circle, ImageOverlay, MapContainer, Marker, Polygon, Polyline, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { DraftText, Empty, VisibilityBadge } from '../components'
 import { SeenMark, useReview, VisibilityControl } from '../reveal'
 import { sessionInHand } from '../threads'
 import { toast } from '../undo'
-import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type Pin, type World, type WorldMap } from '../db'
+import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type FogShape, type Pin, type World, type WorldMap } from '../db'
 import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { StatusBadge, statusIcon } from '../status'
@@ -165,13 +165,24 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   }, [isGM, fog, fogShapes, map.id, map.imageId, map.playerImageId])
   useEffect(() => () => flushFog(), [])
 
-  const addFogShapes = (shapes: ReturnType<typeof rectShape>[]) =>
-    db.maps
+  // several shapes made in one go (a room, a dragged trail) share an id prefix, so one Undo takes them all back
+  const addFogShapes = (shapes: ReturnType<typeof rectShape>[]) => {
+    const group = newId()
+    const added = shapes.length > 1 ? shapes.map((s, i) => ({ ...s, id: `${group}:${i}` })) : shapes
+    return db.maps
       .where('id')
       .equals(map.id)
       .modify((m) => {
-        m.fog = { on: true, ...m.fog, shapes: [...(m.fog?.shapes ?? []), ...shapes] }
+        m.fog = { on: true, ...m.fog, shapes: [...(m.fog?.shapes ?? []), ...added] }
       })
+  }
+  const fogRadius = Math.max(map.width, map.height) * fogSize
+  // a drag with the circle tool uncovers a trail of circles; the click that ends it adds nothing more
+  const strokeEnded = useRef(0)
+  const fogStroke = (centres: [number, number][]) => {
+    strokeEnded.current = Date.now()
+    void addFogShapes(centres.map((c) => circleShape(c, fogRadius, fogMode)))
+  }
   const addFog = (shape: ReturnType<typeof rectShape>) => addFogShapes([shape])
   // Room tool: the room's floor (stopping at walls and doors) becomes fog shapes like any other
   const fogRoom = async (pos: [number, number]) => {
@@ -185,7 +196,9 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   }
   const fogClick = (pos: [number, number]) => {
     if (tool === 'fog-room') fogRoom(pos)
-    else if (tool === 'fog-circle') addFog(circleShape(pos, Math.max(map.width, map.height) * fogSize, fogMode))
+    else if (tool === 'fog-circle') {
+      if (Date.now() - strokeEnded.current > 400) addFog(circleShape(pos, fogRadius, fogMode))
+    }
     else if (tool === 'fog-rect') {
       if (!fogCorner) return setFogCorner(pos)
       addFog(rectShape(fogCorner, pos, fogMode))
@@ -392,6 +405,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
               }
             }}
           />
+          {isGM && fog && tool === 'fog-circle' && <FogBrush radius={fogRadius} mode={fogMode} onStroke={fogStroke} />}
           <ZoomWatcher bounds={bounds} onChange={setZoomedIn} />
           <KeepView mapId={map.id} bounds={bounds} />
           <FocusPin pin={selected} />
@@ -648,6 +662,40 @@ function FogBar({
       })
   const all = { id: 'all', mode: 'reveal' as const, points: [[0, 0], [0, map.width], [map.height, map.width], [map.height, 0]] as [number, number][] }
   const { ask, dialog } = useReview()
+  // What Undo took off, for Redo (each step one shape, or the shapes made together, like a room or a
+  // dragged trail); good only while nothing new has been added since.
+  const [redo, setRedo] = useState<{ steps: FogShape[][]; after: string }>({ steps: [], after: '' })
+  const lastId = fog?.shapes.at(-1)?.id ?? ''
+  const canRedo = redo.steps.length > 0 && redo.after === lastId
+  const undoShape = async () => {
+    if (!fog?.shapes.length) return
+    const last = fog.shapes[fog.shapes.length - 1]
+    const group = last.id.includes(':') ? last.id.slice(0, last.id.indexOf(':') + 1) : undefined
+    let n = fog.shapes.length - 1
+    while (group && n > 0 && fog.shapes[n - 1].id.startsWith(group)) n--
+    const keep = fog.shapes.slice(0, n)
+    await setFog({ shapes: keep })
+    setRedo({ steps: [...(canRedo ? redo.steps : []), fog.shapes.slice(n)], after: keep.at(-1)?.id ?? '' })
+  }
+  const redoShape = async () => {
+    if (!fog || !canRedo) return
+    const step = redo.steps[redo.steps.length - 1]
+    await setFog({ shapes: [...fog.shapes, ...step] })
+    setRedo({ steps: redo.steps.slice(0, -1), after: step.at(-1)!.id })
+  }
+  const coverAll = async () => {
+    if (!fog) return
+    const was = fog.shapes
+    await setFog({ shapes: [] })
+    toast('The whole map is covered again.', () =>
+      db.maps
+        .where('id')
+        .equals(map.id)
+        .modify((m) => {
+          if (m.fog) m.fog.shapes = [...was, ...m.fog.shapes]
+        }),
+    )
+  }
   const uncoverAll = async () => {
     const ok = await ask({
       title: 'Uncover the whole map?',
@@ -705,10 +753,13 @@ function FogBar({
           </div>
           {rooms && <Help topic="fogRoom" />}
           {tool === 'fog-circle' && (
-            <label className="row small">
-              Size
-              <input type="range" min={0.01} max={0.25} step={0.01} value={size} onChange={(e) => setSize(Number(e.target.value))} />
-            </label>
+            <>
+              <label className="row small">
+                Size
+                <input type="range" min={0.01} max={0.25} step={0.01} value={size} onChange={(e) => setSize(Number(e.target.value))} />
+              </label>
+              <span className="muted small">Click, or drag to {mode === 'reveal' ? 'uncover' : 'cover'} a trail</span>
+            </>
           )}
           {tool === 'fog-room' && <span className="muted small">{note || 'Click inside a room'}</span>}
           {tool === 'fog-rect' && <span className="muted small">{corner ? 'Now click the opposite corner' : 'Click one corner'}</span>}
@@ -723,11 +774,14 @@ function FogBar({
               </button>
             </>
           )}
-          <button disabled={!fog.shapes.length} onClick={() => setFog({ shapes: fog.shapes.slice(0, -1) })}>
+          <button disabled={!fog.shapes.length} onClick={undoShape} title="Take back the last thing you uncovered or covered">
             ↶ Undo
           </button>
+          <button disabled={!canRedo} onClick={redoShape} title="Put back what Undo took away">
+            ↷ Redo
+          </button>
           <button onClick={uncoverAll}>Uncover all</button>
-          <button onClick={() => confirm('Cover the whole map again?') && setFog({ shapes: [] })}>Cover all</button>
+          <button onClick={coverAll}>Cover all</button>
           <button
             className="ghost small"
             onClick={async () => {
@@ -755,6 +809,63 @@ function pinIcon(p: Pin, entity: Entity | undefined, active: boolean, here = fal
     iconSize: [30, 30],
     iconAnchor: [15, 36],
   })
+}
+
+/**
+ * The fog circle under the pointer, at its size; dragging with the mouse strings circles along the way
+ * (the map doesn't pan meanwhile). On a touch screen a tap still makes one circle.
+ */
+function FogBrush({ radius, mode, onStroke }: { radius: number; mode: 'reveal' | 'hide'; onStroke: (centres: [number, number][]) => void }) {
+  const [at, setAt] = useState<[number, number]>()
+  const [trail, setTrail] = useState<[number, number][]>([])
+  const down = useRef<[number, number][]>(undefined)
+  const map = useMapEvents({
+    mousemove: (e) => {
+      const p: [number, number] = [e.latlng.lat, e.latlng.lng]
+      setAt(p)
+      const pts = down.current
+      if (!pts) return
+      const last = pts[pts.length - 1]
+      if (Math.hypot(p[0] - last[0], p[1] - last[1]) < radius * 0.5) return
+      pts.push(p)
+      setTrail([...pts])
+    },
+    mouseout: () => setAt(undefined),
+    mousedown: (e) => {
+      const ev = e.originalEvent as PointerEvent
+      if (ev.button !== 0 || ev.pointerType === 'touch') return
+      down.current = [[e.latlng.lat, e.latlng.lng]]
+      map.dragging.disable()
+    },
+  })
+  const stroke = useRef(onStroke)
+  useEffect(() => {
+    stroke.current = onStroke
+  }, [onStroke])
+  useEffect(() => {
+    const up = () => {
+      const pts = down.current
+      if (!pts) return
+      down.current = undefined
+      map.dragging.enable()
+      setTrail([])
+      if (pts.length > 1) stroke.current(pts)
+    }
+    window.addEventListener('mouseup', up)
+    return () => {
+      window.removeEventListener('mouseup', up)
+      map.dragging.enable()
+    }
+  }, [map])
+  const colour = mode === 'reveal' ? '#ffd36b' : '#9aa4b4'
+  return (
+    <>
+      {trail.map((p, i) => (
+        <Circle key={i} center={p} radius={radius} interactive={false} pathOptions={{ stroke: false, fillColor: colour, fillOpacity: 0.25 }} />
+      ))}
+      {at && <Circle center={at} radius={radius} interactive={false} className="fog-brush" pathOptions={{ color: colour, weight: 1.5, dashArray: '5 4', fill: false }} />}
+    </>
+  )
 }
 
 function ClickHandler({ onClick }: { onClick: (pos: [number, number]) => void }) {

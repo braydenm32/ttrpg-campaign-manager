@@ -81,7 +81,7 @@
   },
   "phone gm /w/:worldId/maps/:mapId/draw": {
     "problems": [],
-    "smallTargets": 25
+    "smallTargets": 41
   },
   "phone gm /w/:worldId/other/:kind": {
     "problems": [],
