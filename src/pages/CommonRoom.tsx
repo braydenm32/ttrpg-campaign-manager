@@ -14,7 +14,7 @@ import { AskForm, pageLink, QuestionList } from '../players/Questions'
 import { LeadRow, LeadsView } from '../players/Leads'
 import { lastTime, liveSeenAt, markLiveSeen, nextSession, roomStage, type NextSession, type RoomStage } from '../players/roomStage'
 import { plainLinks, initials } from '../text'
-import { keyNumbers, NumberTiles } from '../players/sheetGlance'
+import { HP_KEY, keyNumbers, NumberTiles } from '../players/sheetGlance'
 import { useCampaigns, useWorldSessions } from '../threads'
 import { partyOf } from '../sessions'
 import { StatusBadge } from '../status'
@@ -36,6 +36,7 @@ import {
   HandPalm,
   Hourglass,
   Lock,
+  MegaphoneSimple,
   MusicNotes,
   Newspaper,
   Notepad,
@@ -53,6 +54,13 @@ import { useKeepScroll } from '../jump'
 import { PlayerDowntime } from '../players/Downtime'
 import { SignedOutCard } from '../players/SignedOut'
 import { Highlights, StorySoFar } from '../highlights'
+import { InstallCard } from '../install'
+import { AddToCalendar } from '../addToCalendar'
+import { appLink } from '../cloud/client'
+import { setMyField } from '../cloud/players'
+import { StarsAndWishesCard } from '../players/StarsWishes'
+import { MySessionNote } from '../players/SessionNote'
+import { PartyReputationCard, useCharacterFame } from '../reputation'
 
 /**
  * The Common Room: the players' home in a world, made for a phone in one hand. Its tabs (Now, Me,
@@ -212,6 +220,9 @@ function Card({ title, icon, to, more, className = '', children, help }: { title
 
 function NowTab({ ctx }: { ctx: RoomContext }) {
   const { world, worldId, stage, campaign, memberOf } = ctx
+  // Just after joining (JoinWorld adds ?joined=1) the "keep this on your phone" card comes first.
+  const [params] = useSearchParams()
+  const joined = params.get('joined') === '1'
   const voting = ctx.campaigns.filter((c) => c.schedule?.length)
   const today = world.calendar?.today ? formatDate(world.calendar, world.calendar.today) : ''
   const scheduler = voting.length > 0 && (
@@ -221,6 +232,8 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
       ))}
     </div>
   )
+  // When the dates are still being voted on, the poll sits inside the Next session row instead of a card of its own.
+  const polled = ctx.next.kind === 'poll' && !!scheduler
   const showing = world.showing ? <OnTheTable world={world} entities={ctx.entities} big={stage === 'during'} /> : null
 
   return (
@@ -232,18 +245,22 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
         </span>
       </TabHead>
       <SignedOutCard world={world} />
+      {joined && <InstallCard place="joined" />}
       {stage === 'during' && (
         <>
           <LiveTable ctx={ctx} />
           {showing}
+          {/* Your numbers are what you look at mid-fight, so they sit right under the live card. */}
+          <YouCard ctx={ctx} />
         </>
       )}
-      <div className="room-now">
+      <div className={`room-now ${stage === 'during' ? 'one' : ''}`}>
         <div className="room-main">
           {stage === 'after' && <LastTimeFull ctx={ctx} />}
           {stage !== 'during' && showing}
-          <Answers ctx={ctx} />
-          {stage !== 'during' && scheduler}
+          <Answers ctx={ctx} poll={polled ? scheduler : undefined} />
+          {stage !== 'during' && ctx.last && <StarsAndWishesCard world={world} session={ctx.last} mine={ctx.mine} stage={stage} />}
+          {stage !== 'during' && !polled && scheduler}
           <DoingCard ctx={ctx} />
           {stage === 'after' && <AfterLoot ctx={ctx} />}
           {stage === 'after' && memberOf && (
@@ -252,23 +269,31 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
             </Card>
           )}
         </div>
-        <aside className="room-side">
-          <YouCard ctx={ctx} />
-          {stage !== 'during' && memberOf && <TellYourGm ctx={ctx} />}
-        </aside>
+        {stage !== 'during' && (
+          <aside className="room-side">
+            <YouCard ctx={ctx} />
+            {memberOf && <TellYourGm ctx={ctx} />}
+          </aside>
+        )}
       </div>
-      {stage === 'during' && scheduler}
+      {stage === 'during' && !polled && scheduler}
       {ctx.party.length > 0 && <PartyStrip ctx={ctx} />}
       {campaign && stage === 'before' && <StoryCard ctx={ctx} campaign={campaign} />}
+      {!joined && stage !== 'during' && <InstallCard />}
+      {/* While the GM is live the big dice are at the top; the rest of the time a small card keeps them in reach. */}
+      {stage !== 'during' && (
+        <Card title="Dice" icon={Sparkle} className="room-dice-foot">
+          <TableDice cloudId={undefined} who={ctx.who} />
+        </Card>
+      )}
       <RoomFoot ctx={ctx} />
     </>
   )
 }
 
 /** The three answers: when we play next, what happened last time (and, with no recap yet, saying so). */
-function Answers({ ctx }: { ctx: RoomContext }) {
-  const { next, last, worldId, stage, memberOf } = ctx
-  const scrollToWhen = () => document.getElementById('when')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+function Answers({ ctx, poll }: { ctx: RoomContext; poll?: ReactNode }) {
+  const { next, last, worldId, stage } = ctx
   return (
     <section className="card room-answers" aria-label="Next session and last time">
       <div className="answer-row">
@@ -280,6 +305,9 @@ function Answers({ ctx }: { ctx: RoomContext }) {
             <>
               <b>{showDate(next.at)}</b> <span className="muted small">· {until(next.time)}</span>
               {next.at.note && <div className="muted small">{next.at.note}</div>}
+              <div>
+                <AddToCalendar title={next.campaign.name} at={next.at} details={next.at.note} link={appLink(worldPath(worldId))} />
+              </div>
             </>
           ) : next.kind === 'dated' ? (
             <>
@@ -292,6 +320,7 @@ function Answers({ ctx }: { ctx: RoomContext }) {
               <span className="muted small">
                 · your GM suggested {next.count === 1 ? 'a date' : `${next.count} dates`}
               </span>
+              {poll}
             </>
           ) : (
             <>
@@ -299,11 +328,6 @@ function Answers({ ctx }: { ctx: RoomContext }) {
             </>
           )}
         </div>
-        {next.kind === 'poll' && (
-          <button className="small answer-action" onClick={scrollToWhen}>
-            {memberOf ? 'Say when you’re free' : 'See the dates'}
-          </button>
-        )}
       </div>
       {stage !== 'after' && (
         <div className="answer-row">
@@ -320,6 +344,7 @@ function Answers({ ctx }: { ctx: RoomContext }) {
                 <Link className="answer-link" to={`${worldPath(worldId)}/s/${last.id}`}>
                   Read it all
                 </Link>
+                <MySessionNote world={ctx.world} sessionId={last.id} />
               </>
             ) : (
               <span className="muted">Nothing yet. Your GM’s write-up of each session lands here.</span>
@@ -353,6 +378,7 @@ function LastTimeFull({ ctx }: { ctx: RoomContext }) {
           <Link className="answer-link" to={`${worldPath(worldId)}/s/${last.id}`}>
             Read it all
           </Link>
+          <MySessionNote world={ctx.world} sessionId={last.id} />
           <Highlights session={sessions.find((s) => s.id === last.id)!} entities={entities} worldId={worldId} isGM={false} />
         </>
       ) : (
@@ -493,7 +519,7 @@ function YouCard({ ctx }: { ctx: RoomContext }) {
   return (
     <Card title="You" icon={Shield} to={roomLink(worldId, 'me')} more="Your character">
       <CharacterHead ctx={ctx} c={c} />
-      <NumberTiles c={c} />
+      <NumberTiles c={c} onChangeHp={ctx.memberOf && ctx.cloudId ? (value) => setMyField(ctx.cloudId!, c, HP_KEY, value) : undefined} />
       {secrets > 0 && (
         <Link className="secret-chip small" to={roomLink(worldId, 'me')}>
           <Ico as={Lock} /> {secrets === 1 ? '1 secret just for you' : `${secrets} secrets just for you`}
@@ -809,6 +835,7 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
   const { world, worldId, entities } = ctx
   const loot = partyLoot(entities, world)
   const carried = new Map(loot.members.map((m) => [m.holder.id, m.items]))
+  const fameOf = useCharacterFame(worldId, entities)
   return (
     <>
       <TabHead title="The party" help="roomParty">
@@ -834,6 +861,7 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
           {!loot.items.length && <span className="muted small">Nobody carries anything yet.</span>}
         </section>
       )}
+      <PartyReputationCard worldId={worldId} entities={entities} />
       {ctx.party.length ? (
         <ul className="party-list">
           {ctx.party.map((e) => {
@@ -865,6 +893,11 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
                 {items.length > 0 && (
                   <div className="small carries">
                     <Ico as={Backpack} /> <ItemLinks items={items} worldId={worldId} />
+                  </div>
+                )}
+                {fameOf(e.id) && (
+                  <div className="small carries">
+                    <Ico as={MegaphoneSimple} /> {fameOf(e.id)}
                   </div>
                 )}
               </li>
@@ -908,6 +941,8 @@ function LeadsTab({ ctx }: { ctx: RoomContext }) {
 
 function NotesTab({ ctx }: { ctx: RoomContext }) {
   const { world, worldId, memberOf, entities, mine } = ctx
+  // Downtime is for the characters who were at the last session (when the GM noted who was there).
+  const wasThere = ctx.last?.present ? mine.filter((c) => ctx.last!.present!.includes(c.id)) : mine
   const questions = world.shared?.questions ?? []
   return (
     <>
@@ -934,8 +969,15 @@ function NotesTab({ ctx }: { ctx: RoomContext }) {
         )}
       </section>
       <div id="downtime">
-        {memberOf && mine.length > 0 ? (
-          <PlayerDowntime world={world} mine={mine} />
+        {memberOf && mine.length > 0 && wasThere.length === 0 ? (
+          <section className="card room-card">
+            <h2 className="room-card-title">
+              <Ico as={Hourglass} /> Between sessions <Help topic="downtime" />
+            </h2>
+            <p className="muted small">Your GM noted that {mine.map((c) => c.name.split(' ')[0]).join(' and ')} wasn’t at the last session, so there’s no downtime to send this time.</p>
+          </section>
+        ) : memberOf && mine.length > 0 ? (
+          <PlayerDowntime world={world} mine={wasThere} />
         ) : (
           <section className="card room-card">
             <h2 className="room-card-title">

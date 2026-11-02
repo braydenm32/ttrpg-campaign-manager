@@ -2,7 +2,7 @@ import type { CalDate, Clock, Combatant, Entity, EntityType, LifeStatus, Safety,
 import type { Drawing } from '../mapDrawing'
 
 /**
- * The example world is written as plain data: every page, session and board has a short `key`, and
+ * The example world is written as plain data: every page and session has a short `key`, and
  * pages point at each other by key. The loader swaps keys for real ids and draws the pictures.
  * Inside text, link pages the usual way, by name: [[Cinderford]].
  */
@@ -91,12 +91,6 @@ export interface ExSession {
   lectern?: { scene?: string; sceneText: string; present?: string[] }
 }
 
-export interface ExBoard {
-  name: string
-  cards: { key: string; x: number; y: number; page?: string; text?: string; color?: string }[]
-  strings: { from: string; to: string; label?: string }[]
-}
-
 export interface ExWorld {
   name: string
   description: string
@@ -143,6 +137,5 @@ export interface ExampleContent {
   world: ExWorld
   pages: ExPage[]
   sessions: ExSession[]
-  boards: ExBoard[]
   maps?: ExMap[]
 }

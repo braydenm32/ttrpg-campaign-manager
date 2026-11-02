@@ -5,6 +5,7 @@ import { applyImport, exportMarkdown, planImport, readFiles, type ImportPlan, ty
 import { Ico } from './icons'
 import { Folder } from '@phosphor-icons/react'
 import { ImportSheetButton } from './sheets/ImportSheet'
+import { toast } from './undo'
 
 const SOURCES: { id: ImportSource; label: string; hint: string; accept: string; folder?: boolean }[] = [
   { id: 'markdown', label: '📝 Obsidian or Markdown', hint: 'Pick your vault folder, a .zip of it, or some .md files.', accept: '.md,.markdown,.zip', folder: true },
@@ -12,8 +13,11 @@ const SOURCES: { id: ImportSource; label: string; hint: string; accept: string; 
   { id: 'worldanvil', label: '🌍 World Anvil', hint: 'In World Anvil: World, Export (needs a Guild plan). Pick the .zip.', accept: '.zip,.json' },
 ]
 
-/** World settings: bring pages in from other tools, or take them out as Markdown. */
-export function ImportPages({ worldId, system }: { worldId: string; system: string }) {
+/**
+ * World settings: bring pages in from other tools, or take them out as Markdown. `compact` is the
+ * same importer without its heading, character sheets or export, for a new world's Getting started.
+ */
+export function ImportPages({ worldId, system, compact }: { worldId: string; system: string; compact?: boolean }) {
   const [plan, setPlan] = useState<ImportPlan>()
   const [busy, setBusy] = useState('')
   const [done, setDone] = useState('')
@@ -44,10 +48,12 @@ export function ImportPages({ worldId, system }: { worldId: string; system: stri
     : []
 
   return (
-    <section>
-      <h2>
-        📥 Import pages <Help topic="importPages" />
-      </h2>
+    <section className={compact ? 'import-compact' : undefined}>
+      {!compact && (
+        <h2>
+          📥 Import pages <Help topic="importPages" />
+        </h2>
+      )}
       {!plan ? (
         <div className="import-sources">
           {SOURCES.map((s) => (
@@ -94,6 +100,8 @@ export function ImportPages({ worldId, system }: { worldId: string; system: stri
                 try {
                   const n = await applyImport(worldId, plan, skipExisting)
                   setDone(`✓ Added ${n} page${n === 1 ? '' : 's'}.`)
+                  // Getting started goes away once a world has pages, so say it where it stays on screen too.
+                  if (compact) toast(`Added ${n} page${n === 1 ? '' : 's'}. They’re GM only until you reveal them.`)
                   setPlan(undefined)
                 } catch (e) {
                   setError((e as Error).message)
@@ -111,6 +119,8 @@ export function ImportPages({ worldId, system }: { worldId: string; system: stri
       {busy && <p className="muted small">{busy}</p>}
       {done && <p className="small">{done}</p>}
       {error && <p className="error small">{error}</p>}
+      {!compact && (
+        <>
       <h3 className="data-heading">
         🛡️ Character sheets <Help topic="importSheet" />
       </h3>
@@ -122,6 +132,8 @@ export function ImportPages({ worldId, system }: { worldId: string; system: stri
         📤 Export as Markdown <Help topic="exportMarkdown" />
       </h3>
       <button onClick={() => exportMarkdown(worldId)}>⬇ Download pages as Markdown (.zip)</button>
+        </>
+      )}
     </section>
   )
 }

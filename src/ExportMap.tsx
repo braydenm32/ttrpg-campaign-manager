@@ -6,6 +6,7 @@ import { renderPlayerFog } from './fog'
 import { Help } from './help'
 import { forPlayers, hasSecrets, type Drawing } from './mapDrawing'
 import type { VttParts } from './mapArt/vtt'
+import type { KeyEntry } from './mapKey'
 
 type Parts = VttParts & { feet: number; from: Drawing }
 
@@ -45,6 +46,7 @@ export function ExportMap({
   fog,
   width,
   height,
+  mapKey,
   onClose,
 }: {
   /** The saved map this is from, for its fogged picture. */
@@ -55,6 +57,8 @@ export function ExportMap({
   fog?: MapFog
   width: number
   height: number
+  /** The map's numbered key, when numbers are on: drawn on the picture with the key below it. */
+  mapKey?: KeyEntry[]
   onClose: () => void
 }) {
   const battle = drawing.scene === 'battle'
@@ -63,6 +67,7 @@ export function ExportMap({
   const [scale, setScale] = useState(1)
   const [grid, setGrid] = useState(drawing.grid !== 'none')
   const [busy, setBusy] = useState(false)
+  const [withKey, setWithKey] = useState(!!mapKey?.length)
   const [error, setError] = useState('')
   const secrets = hasSecrets(drawing)
   // a map with secrets on it goes out as the players' copy unless you ask for your own
@@ -109,7 +114,9 @@ export function ExportMap({
         return onClose()
       }
       const { exportMap } = await import('./mapArt/export')
-      await exportMap(copy === 'gm' ? `${name} (GM)` : name, await finish(chosen, drawing, width, height), width, height, { format, scale: size.scale, grid })
+      // The players' copy leaves out the GM's own entries, on the picture and in the key.
+      const key = format === 'png' && withKey ? (mapKey ?? []).filter((k) => copy === 'gm' || k.pin.visibility === 'players') : undefined
+      await exportMap(copy === 'gm' ? `${name} (GM)` : name, await finish(chosen, drawing, width, height), width, height, { format, scale: size.scale, grid, key })
       onClose()
     } catch (e) {
       console.warn('Map export failed', e)
@@ -208,6 +215,12 @@ export function ExportMap({
         {!fogged && (battle || drawing.grid !== 'none') && (
           <label className="check">
             <input type="checkbox" checked={grid} onChange={(e) => setGrid(e.target.checked)} /> Show the grid{format === 'vtt' && <span className="muted small">(tabletops draw their own)</span>}
+          </label>
+        )}
+        {!fogged && format === 'png' && !!mapKey?.length && (
+          <label className="check">
+            <input type="checkbox" checked={withKey} onChange={(e) => setWithKey(e.target.checked)} /> Numbers and the key
+            <span className="muted small">{copy === 'gm' ? '(all of them)' : '(only what players can see)'}</span>
           </label>
         )}
         {format === 'vtt' && (

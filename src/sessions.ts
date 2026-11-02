@@ -126,9 +126,30 @@ export const startPlaying = (sessionId: string) =>
   db.sessions
     .where('id')
     .equals(sessionId)
-    .modify((s) => {
-      if (!s.startedAt) s.startedAt = Date.now()
-    })
+    .modify((s) => stampStart(s))
+
+/** The first time a session is started: notes the time, and what was already planned (see Session.playStart). */
+export function stampStart(s: Session) {
+  if (s.startedAt) return
+  s.startedAt = Date.now()
+  s.playStart = { notes: s.notes, entityIds: [...s.entityIds] }
+}
+
+/** Pages that came up in play: added after play began, or put in a scene, a fight or the Lectern's place. Without a start mark, all of those linked. */
+export function featuredInPlay(s: Pick<Session, 'entityIds' | 'lectern' | 'startedAt' | 'playedAt' | 'playStart'>) {
+  if (!s.startedAt) return s.playedAt ? s.entityIds : []
+  const l = s.lectern
+  const played = new Set([l?.sceneId, ...(l?.presentIds ?? []), ...(l?.combat.combatants.map((c) => c.entityId) ?? [])].filter((x): x is string => !!x))
+  if (!s.playStart) return played.size ? s.entityIds.filter((id) => played.has(id)) : s.entityIds
+  const planned = new Set(s.playStart.entityIds)
+  return s.entityIds.filter((id) => !planned.has(id) || played.has(id))
+}
+
+/** What the GM wrote in the notes during play (the prep script that was there at the start left out), where that's known. */
+export function notesFromPlay(s: Pick<Session, 'notes' | 'startedAt' | 'playStart'>) {
+  const before = s.playStart?.notes
+  return s.startedAt && before && s.notes.startsWith(before) ? s.notes.slice(before.length) : s.notes
+}
 
 /**
  * "Not played yet": takes the mark back. The session goes back to Playing (it was started), so

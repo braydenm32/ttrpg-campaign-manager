@@ -1,4 +1,4 @@
-import { blankEntity, blankLectern, blankPrep, db, newId, type Asset, type Board, type CalDate, type Entity, type Pin, type Session, type World, type WorldMap } from '../db'
+import { blankEntity, blankLectern, blankPrep, db, newId, type Asset, type CalDate, type Entity, type Pin, type Session, type World, type WorldMap } from '../db'
 import type { ExampleContent, ExMap, ExPage } from './types'
 import worldFile from '../../worlds/vael-ardith/world.md?raw'
 import { loadInBackground } from '../worldLoading'
@@ -185,19 +185,6 @@ async function addExample(content: ExampleContent, drawArt: DrawArt): Promise<st
     createdAt: now + s.number,
   }))
 
-  const boards: Board[] = content.boards.map((b) => {
-    const cardIds = new Map(b.cards.map((c) => [c.key, newId()]))
-    return {
-      id: newId(),
-      worldId,
-      name: b.name,
-      cards: b.cards.map((c) => ({ id: cardIds.get(c.key)!, x: c.x, y: c.y, entityId: ref(c.page), text: c.text, color: c.color })),
-      strings: b.strings.map((s) => ({ id: newId(), from: cardIds.get(s.from)!, to: cardIds.get(s.to)!, label: s.label })),
-      createdAt: now,
-      updatedAt: now,
-    }
-  })
-
   const w = content.world
   const world: World = {
     id: worldId,
@@ -221,12 +208,11 @@ async function addExample(content: ExampleContent, drawArt: DrawArt): Promise<st
   for (const m of content.maps ?? []) for (const p of m.pins) ref(p.page)
   plan.pages = Object.fromEntries(ids)
 
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.sessions, db.boards], async () => {
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.sessions], async () => {
     await db.worlds.add(world)
     await db.entities.bulkAdd(entities)
     await db.campaigns.add({ id: campaignId, worldId, name: w.campaign.name, description: w.campaign.description, system: w.system, status: 'active', createdAt: now })
     await db.sessions.bulkAdd(sessions)
-    await db.boards.bulkAdd(boards)
   })
   savePlan(worldId, plan)
   // Not awaited: the world opens while this runs.
@@ -271,7 +257,11 @@ async function drawPlan(worldId: string, content: ExampleContent, drawArt: DrawA
     if (blob) {
       // Players see the cover on the world's book, so its picture is theirs too.
       const visibility = a.id === world?.coverId ? ('players' as const) : ('gm' as const)
-      await db.assets.add({ id: a.id, worldId, name: page ? `${page.name}.${blob.type.split('/')[1]?.replace('jpeg', 'jpg').replace('svg+xml', 'svg') || 'png'}` : a.key, mime: blob.type, size: blob.size, blob, tags: ['example'], visibility, createdAt: plan.now })
+      // Named after what it's for (a page's name, the cover), never after its internal key ("sil:npc-…").
+      const ext = blob.type.split('/')[1]?.replace('jpeg', 'jpg').replace('svg+xml', 'svg') || 'png'
+      const forPage = page ?? content.pages.find((p) => p.key === a.key.replace(/^[a-z]+:/, ''))
+      const name = forPage ? `${forPage.name}.${ext}` : a.id === world?.coverId ? `${content.world.name} cover.${ext}` : `${a.key.replace(/^[a-z]+:/, '').replace(/-/g, ' ')}.${ext}`
+      await db.assets.add({ id: a.id, worldId, name, mime: blob.type, size: blob.size, blob, tags: ['example'], visibility, createdAt: plan.now })
     } else {
       // Nothing to draw for this key: the pages that pointed at it go without a picture.
       await db.entities.where({ worldId }).filter((e) => e.imageId === a.id).modify({ imageId: undefined })

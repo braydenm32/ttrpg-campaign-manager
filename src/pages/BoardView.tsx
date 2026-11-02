@@ -4,14 +4,15 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
-import { db, newId, type Board, type BoardCard } from '../db'
+import { db, newId, type Board, type BoardCard, type Entity } from '../db'
+import { copyBoardIntoPage } from '../boardText'
 import { Help } from '../help'
 import '../more.css'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { StatusBadge } from '../status'
 import { useViewMode } from '../viewMode'
 import { Ico, TypeIcon } from '../icons'
-import { PushPin, Spiral } from '@phosphor-icons/react'
+import { FileText, PushPin, Spiral } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
 import { toast } from '../undo'
 
@@ -22,9 +23,27 @@ const CARD_W = 190
 const pinOf = (c: { x: number; y: number }) => ({ x: c.x + CARD_W / 2, y: c.y + 8 })
 const NOTE_COLORS = ['#f6e27a', '#f4a6a6', '#a6d4f4', '#b6e3a8']
 
+/** "Copy into a page": makes the page, opens it, and offers Undo. */
+export function CopyBoardButton({ board, entities, className }: { board: Board; entities: Entity[]; className?: string }) {
+  const navigate = useNavigate()
+  return (
+    <button
+      className={className}
+      onClick={async () => {
+        const page = await copyBoardIntoPage(board, new Map(entities.map((e) => [e.id, e])))
+        navigate(pagePath(board.worldId, page.id))
+        toast(`“${board.name}” copied into a GM-only page. The board is still there until you delete it.`, () => db.entities.delete(page.id))
+      }}
+    >
+      <Ico as={FileText} /> Copy into a page
+    </button>
+  )
+}
+
 /**
  * A corkboard: pin pages and note cards anywhere, drag them about, and tie string between them.
- * GM-only; saved and synced like everything else.
+ * GM-only; saved and synced like everything else. Corkboards are retired: no new ones are made,
+ * and an old one offers "Copy into a page" so nothing on it is lost.
  */
 export default function BoardView() {
   const { worldId } = useWorld()
@@ -117,22 +136,26 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
     <div className="page wide board-page more-screen">
       <header className="page-header">
         <div>
-          <Link to={`${worldPath(worldId)}/boards`}>← Corkboards</Link>
+          <Link to={`${worldPath(worldId)}/boards`}>← Old corkboards</Link>
           <h1 className="row">
             <Ico as={PushPin} /> <DraftText className="title-input" value={board.name} aria-label="Corkboard name" onCommit={(v) => edit((b) => void (b.name = v))} /> <Help topic="boards" />
           </h1>
         </div>
-        <button
-          className="danger"
-          onClick={async () => {
-            if (!confirm(`Delete the board “${board.name}”? The pages on it are kept.`)) return
-            await binBoard(board.id)
-            navigate(`${worldPath(worldId)}/boards`)
-          }}
-        >
-          Delete board
-        </button>
+        <div className="row wrap">
+          <CopyBoardButton board={board} entities={entities} className="primary" />
+          <button
+            className="danger"
+            onClick={async () => {
+              if (!confirm(`Delete the board “${board.name}”? The pages on it are kept.`)) return
+              await binBoard(board.id)
+              navigate(`${worldPath(worldId)}/boards`)
+            }}
+          >
+            Delete board
+          </button>
+        </div>
       </header>
+      <p className="notice small">Corkboards are retired. “Copy into a page” writes this board’s cards and strings into a page, so nothing on it is lost; then you can delete the board.</p>
       <div className="row wrap board-toolbar">
         <PagePicker
           entities={entities.filter((e) => !onBoard.has(e.id))}

@@ -11,6 +11,7 @@ import { characterNames, useViewMode } from './viewMode'
 import { TypeIcon } from './icons'
 import { hrefFor, pagePath } from './paths'
 import { MakePagePopover } from './wanted'
+import { clickInlineRoll, inlineRolls } from './inlineRolls'
 
 type Segment = { kind: 'text' | 'gm' | 'foryou'; body: string } | { kind: 'for'; names: string[]; body: string }
 
@@ -149,6 +150,8 @@ export function Markdown({
       if (stillLinks) return `<span class="wikilink still">${shown}</span>`
       return `<a class="wikilink" href="${hrefFor(pagePath(worldId, target.id))}" data-internal="1" data-id="${target.id}">${shown}</a>`
     })
+    // `roll:1d8+3` and {{Table name}} become roll buttons (only in what's left after the secrets went).
+    src = inlineRolls(src, entities.filter((e) => e.type === 'table'), stillLinks)
     return DOMPurify.sanitize(marked.parse(src, { async: false }) as string)
   }, [text, entities, worldId, showSecrets, forViewer, stillLinks])
 
@@ -180,6 +183,7 @@ export function Markdown({
         ref={box}
         className="markdown"
         onClick={(ev) => {
+          if (!stillLinks && clickInlineRoll(ev.target as HTMLElement, { tables: entities.filter((e) => e.type === 'table'), showSecrets, isGM: isGM && !previewAs, worldId })) return
           const missing = (ev.target as HTMLElement).closest('[data-missing]') as HTMLElement | null
           if (missing && isGM && !stillLinks && !previewAs) {
             const r = missing.getBoundingClientRect()

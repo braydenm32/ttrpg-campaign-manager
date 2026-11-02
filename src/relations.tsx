@@ -1,7 +1,8 @@
+import { PagePicker } from './PagePicker'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Help } from './help'
-import { db, ENTITY_LABELS, newId, type Entity, type Relation } from './db'
+import { db, newId, type Entity, type Relation } from './db'
 import { Ico, TypeIcon } from './icons'
 import { Graph } from '@phosphor-icons/react'
 import { toast } from './undo'
@@ -171,14 +172,7 @@ function AddRelation({ entity, entities, onDone }: { entity: Entity; entities: E
           <option key={k.kind} value={k.kind} />
         ))}
       </datalist>
-      <select value={to} onChange={(e) => setTo(e.target.value)} aria-label="Who">
-        <option value="">Who?</option>
-        {candidates.map((x) => (
-          <option key={x.id} value={x.id}>
-            {ENTITY_LABELS[x.type].icon} {x.name}
-          </option>
-        ))}
-      </select>
+      <PagePicker entities={candidates} value={to} onPick={setTo} placeholder="Who? Type a name…" label="Who" recent className="relation-who" />
       <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (optional)" />
       <label className="small inline-check" title="Players can see this link and its note (when they can see both pages)">
         <input type="checkbox" checked={known} onChange={(e) => setKnown(e.target.checked)} /> Players know

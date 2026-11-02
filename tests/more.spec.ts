@@ -20,7 +20,7 @@ async function shot(page: Page, name: string) {
 }
 
 /** The GM tools, by their names on the More page. */
-const GM_TOOLS = ['Soundboard', 'Generators and tables', 'Random tables', 'Corkboards', 'Files', 'The Archivist', 'Templates', 'World settings', 'Players and sharing', 'Backups', 'Recently deleted']
+const GM_TOOLS = ['Soundboard', 'Generators and tables', 'Old corkboards', 'Files', 'The Archivist', 'Templates', 'World settings', 'Players and sharing', 'Backups', 'Recently deleted']
 
 test.describe('the More page', () => {
   test('the GM’s lists their tools in three groups, with counts, and Print is a note, not a button', async ({ page, world, device }) => {
@@ -251,6 +251,64 @@ test.describe('before players see something', () => {
       await expect.poll(async () => (await getRecord(page, 'worlds', world.id))!.partyCoin).toEqual(before!.partyCoin)
     } finally {
       await putBack(page, 'worlds', [[world.id, before]])
+    }
+  })
+})
+
+test.describe('corkboards are retired', () => {
+  test('an old board is kept: no New board, and “Copy into a page” writes its cards and strings into a GM-only page (Undo takes it back)', async ({ page, world }) => {
+    const w = `/w/${world.slug}`
+    await open(page, `${w}/boards`)
+    await expect(page.getByRole('heading', { name: /Old corkboards/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /New board/ })).toHaveCount(0)
+    await expect(page.getByText('Corkboards are retired').first()).toBeVisible()
+    await page.getByRole('link', { name: /An old corkboard from before/ }).click()
+    await expect(page.locator('.board-card')).toHaveCount(2)
+    const before = await page.evaluate(() => location.pathname)
+    await page.getByRole('button', { name: 'Copy into a page' }).click()
+    await expect.poll(() => here(page)).toMatch(new RegExp(`^${w}/p/`))
+    const body = page.locator('main')
+    await expect(body).toContainText('Copied from the corkboard')
+    await expect(body.getByRole('link', { name: 'Dannic Rook' }).first()).toBeVisible()
+    await expect(body).toContainText('Who paid for the round?')
+    await expect(body).toContainText('paid by?')
+    const id = await page.evaluate(async () => {
+      const req = indexedDB.open('ttrpg-campaign-manager')
+      const idb: IDBDatabase = await new Promise((r) => (req.onsuccess = () => r(req.result)))
+      const all: { id: string; name: string; visibility: string }[] = await new Promise((r) => {
+        const g = idb.transaction('entities').objectStore('entities').getAll()
+        g.onsuccess = () => r(g.result)
+      })
+      idb.close()
+      return all.filter((e) => e.name === 'An old corkboard from before').map((e) => `${e.id} ${e.visibility}`)
+    })
+    expect(id).toHaveLength(1)
+    expect(id[0].endsWith(' gm')).toBe(true)
+    await undo(page).click()
+    await expect.poll(async () => (await getRecord(page, 'entities', id[0].split(' ')[0])) ?? null).toBeNull()
+    // The board itself is still there.
+    await open(page, before)
+    await expect(page.locator('.board-card')).toHaveCount(2)
+  })
+
+  test('the Chronicle is “What changed” in a session’s Wrap up, and its old address opens it', async ({ page, world }) => {
+    const w = `/w/${world.slug}`
+    const s = world.session(1)
+    await open(page, w)
+    const before = await getRecord(page, 'sessions', s.id)
+    const pageId = world.page('Dannic Rook').id
+    try {
+      await putBack(page, 'sessions', [[s.id, { ...before!, ledger: [{ id: 'l1', text: 'Dannic Rook: drowned at the ford', entityId: pageId }] }]])
+      await open(page, `${w}/chronicle`)
+      await expect.poll(() => here(page)).toBe(`${w}/s/${s.id}?tab=notes&at=changed`)
+      const part = page.locator('#changed')
+      await expect(part.getByRole('heading', { name: /What changed/ })).toBeVisible()
+      await expect(part.getByRole('link', { name: 'Dannic Rook: drowned at the ford' })).toBeVisible()
+      // Story has no Chronicle tab any more.
+      await open(page, `${w}/threads`)
+      await expect(page.getByRole('link', { name: 'Chronicle', exact: true })).toHaveCount(0)
+    } finally {
+      await putBack(page, 'sessions', [[s.id, before]])
     }
   })
 })

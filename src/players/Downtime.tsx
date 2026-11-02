@@ -5,12 +5,13 @@ import { useAuthSession } from '../cloud/auth'
 import { cloudErrorMessage, supabase } from '../cloud/client'
 import { tellPlayers } from '../cloud/sync'
 import { tellDowntime, useTable } from '../cloud/table'
-import type { Entity, World } from '../db'
+import { db, type Entity, type World } from '../db'
 import { Help } from '../help'
 import { Ico } from '../icons'
 import { worldPath } from '../paths'
 import { needsAnswer } from '../counts'
 import { removeWithUndo, toast } from '../undo'
+import { offerGroupPost } from '../groupPost'
 
 /**
  * Downtime: between sessions, a player says what their character spends the time doing (research
@@ -224,7 +225,10 @@ export function DowntimeItem({ cloudId, d, who, onChange, onDelete, head }: { cl
         className="form"
         onSubmit={(e) => {
           e.preventDefault()
-          act(() => answerDowntime(cloudId, d.id, answer))
+          act(async () => {
+            await answerDowntime(cloudId, d.id, answer)
+            if (!d.answer && answer.trim()) offerGroupPost(await db.worlds.get(cloudId), `Your GM answered ${who}’s downtime. It’s waiting in the Common Room.`)
+          })
         }}
       >
         <textarea rows={2} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder={`What happens? Seen only by ${who}`} />

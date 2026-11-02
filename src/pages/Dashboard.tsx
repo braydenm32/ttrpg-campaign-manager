@@ -1,7 +1,7 @@
 import { Help, HELP } from '../help'
 import { WorldCover } from '../WorldCover'
-import { useState, type ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Modal, useMenu } from '../components'
 import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel, type Campaign, type Entity, type Session, type World } from '../db'
@@ -19,13 +19,15 @@ import { ClockFace } from '../clocks'
 import { approveClaimLater } from '../players/inboxActions'
 import { ReviewCharacter } from '../players/NewCharacters'
 import type { CharacterRequest } from '../cloud/players'
-import { useInbox } from '../Sidebar'
+import { syncProblem, useInbox } from '../Sidebar'
+import { syncNow, syncStore } from '../cloud/sync'
 import { clockSize, isOpenQuest, isOpenThread, prepCounts, tickingClocks } from '../counts'
 import { Ico, TypeIcon } from '../icons'
 import {
   CalendarBlank,
   ChatCircleDots,
   CheckCircle,
+  CloudWarning,
   Eye,
   FloppyDisk,
   Flame,
@@ -47,6 +49,9 @@ import { createNextSession, isPlayed, localDate, partyOf, sessionStage, startPla
 import { StageChip, usePlayingNow } from '../stage'
 import { detailOf } from '../partyGlance'
 import { toast } from '../undo'
+import { RecentlyOpenedRow } from '../RecentlyOpened'
+import { ImportPages } from '../ImportPages'
+import { ExampleStartHere, SeeTheExampleButton } from '../firstSteps'
 import '../desk.css'
 
 /**
@@ -88,7 +93,9 @@ function Today({ world }: { world: World }) {
       <WorldCover world={world} compact>
         <NewPageMenu world={world} />
       </WorldCover>
+      <ExampleStartHere world={world} entities={entities} />
       <SessionStrip world={world} inHand={inHand} stage={stage} campaigns={campaigns} onNewCampaign={() => setNewCampaign(true)} />
+      <RecentlyOpenedRow world={world} entities={entities} />
       <div className="desk-cols">
         <NeedsYou world={world} entities={entities} sessions={sessions} inHand={inHand} stage={stage} />
         <DeskClocks world={world} entities={entities} />
@@ -293,10 +300,15 @@ interface Need {
   action?: ReactNode
   /** One of the Inbox's items (what the badge counts). */
   inbox?: boolean
+  /** A reminder rather than a question: listed, but not in the red number. */
+  reminder?: boolean
 }
 
 /** How many of the Inbox's items "Needs you" lists before "…and N more in the Inbox". */
 const INBOX_ROWS = 5
+
+/** How many pressing threads "Needs you" lists before "…and N more". */
+const PRESSING_ROWS = 3
 
 const clip = (text: string, n = 90) => (text.length > n ? `${text.slice(0, n)}…` : text)
 
@@ -309,8 +321,18 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
   const inbox = useInbox()
   const backup = useBackupDue(world)
   const audio = useRecordingsOnlyHere(world)
+  const sync = useSyncExternalStore(syncStore.subscribe, syncStore.get)
   const [reading, setReading] = useState<CharacterRequest>()
   const [wantedOpen, setWantedOpen] = useState(false)
+  const [, bump] = useState(0)
+  const skipRecap = (id: string) => {
+    try {
+      localStorage.setItem(recapSkipKey(id), '1')
+    } catch {
+      /* the row just stays */
+    }
+    bump((n) => n + 1)
+  }
   const w = worldPath(world.id)
   const nameOf = (id: string) => entities.find((e) => e.id === id)?.name ?? 'a character'
   const ask = (id: string) => `${w}/questions?item=${id}`
@@ -402,17 +424,52 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
         </Link>
       ),
     })
-  for (const t of entities.filter((e) => isOpenThread(e) && e.threadUrgency === 'high'))
+  const recapNeed = recapRow(world, sessions, inHand, skipRecap)
+  if (recapNeed) needs.push(recapNeed)
+  const pressing = entities.filter((e) => isOpenThread(e) && e.threadUrgency === 'high')
+  for (const t of pressing.slice(0, PRESSING_ROWS))
     needs.push({
       key: t.id,
       chip: 'Pressing',
       icon: Flame,
       tone: 'bad',
+      reminder: true,
       text: <span className="clip">{t.name}</span>,
       action: (
         <Link className="button small" to={pagePath(world.id, t.id)}>
           Open
         </Link>
+      ),
+    })
+  if (pressing.length > PRESSING_ROWS)
+    needs.push({
+      key: 'pressing-more',
+      chip: 'Pressing',
+      icon: Flame,
+      tone: 'quiet',
+      text: <span className="muted">…and {pressing.length - PRESSING_ROWS} more pressing</span>,
+      action: (
+        <Link className="button small ghost" to={`${w}/threads`}>
+          Threads
+        </Link>
+      ),
+    })
+  if (world.cloud?.enabled && syncProblem(sync))
+    needs.push({
+      key: 'sync',
+      chip: 'Sync',
+      icon: CloudWarning,
+      tone: sync.status === 'error' ? 'bad' : 'warn',
+      text: (
+        <>
+          {sync.status === 'error' ? 'Your changes aren’t reaching the cloud, so players and your other devices don’t get them.' : 'Synced, with a note.'}{' '}
+          {sync.message && <span className="muted">{clip(sync.message, 140)}</span>} <Help topic="syncProblem" />
+        </>
+      ),
+      action: (
+        <button className="small" onClick={() => syncNow()}>
+          Try again
+        </button>
       ),
     })
   if (backup.due)
@@ -502,7 +559,7 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
       ),
     })
   const more = fromPlayers.length - INBOX_ROWS
-  const waiting = needs.filter((n) => n.tone !== 'quiet').length + Math.max(0, more)
+  const waiting = needs.filter((n) => n.tone !== 'quiet' && !n.reminder).length + Math.max(0, more)
 
   return (
     <section className="card needs-you" data-inbox-total={inbox.total}>
@@ -539,6 +596,71 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
       {reading && <ReviewCharacter world={world} request={reading} player={inbox.nameOf(reading.userId)} onClose={() => setReading(undefined)} onDone={inbox.reload} />}
     </section>
   )
+}
+
+const recapSkipKey = (sessionId: string) => `atlas-recap-skip:${sessionId}`
+const recapSkipped = (sessionId: string) => {
+  try {
+    return localStorage.getItem(recapSkipKey(sessionId)) === '1'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * The session just played, when players have no recap for it yet: none written ("Write it"), or one
+ * written but still GM only ("Show to players", with Undo). "Skip" quiets it on this device.
+ */
+function recapRow(world: World, sessions: Session[], inHand: InHand | undefined, skip: (id: string) => void): Need | undefined {
+  if (!inHand) return undefined
+  const last = sessions
+    .filter((x) => x.campaignId === inHand.campaign.id && x.playedAt && x.id !== inHand.session.id)
+    .sort((a, b) => b.number - a.number)[0]
+  if (!last || recapSkipped(last.id)) return undefined
+  const written = !!last.recap.trim()
+  if (written && last.visibility === 'players') return undefined
+  const skipButton = (
+    <button className="small ghost" onClick={() => skip(last.id)} title="Don’t remind me about this one on this device">
+      Skip
+    </button>
+  )
+  if (!written)
+    return {
+      key: 'recap',
+      chip: 'Recap',
+      icon: Eye,
+      tone: 'warn',
+      text: <>Players have no recap of #{last.number} {last.title} yet</>,
+      action: (
+        <span className="row">
+          <Link className="button small" to={`${worldPath(world.id)}/s/${last.id}?tab=recap`}>
+            Write it
+          </Link>
+          {skipButton}
+        </span>
+      ),
+    }
+  return {
+    key: 'recap',
+    chip: 'Recap',
+    icon: Eye,
+    tone: 'warn',
+    text: <>The recap of #{last.number} {last.title} is still GM only</>,
+    action: (
+      <span className="row">
+        <button
+          className="small"
+          onClick={async () => {
+            await db.sessions.update(last.id, { visibility: 'players' })
+            toast(`Players can read #${last.number} now.`, () => db.sessions.update(last.id, { visibility: 'gm' }))
+          }}
+        >
+          Show to players
+        </button>
+        {skipButton}
+      </span>
+    ),
+  }
 }
 
 /** "Set a date": a date box in place; the session takes the day you pick (today or later). */
@@ -806,6 +928,8 @@ export function NewCampaign({
             visibility: 'gm',
             createdAt: Date.now(),
           })
+          // The game system is asked here, once: the world's first campaign sets the world's too (New world doesn't ask).
+          if ((await db.campaigns.where({ worldId }).count()) === 1) await db.worlds.update(worldId, { system, updatedAt: Date.now() })
           onCreated(id)
         }}
       >
@@ -837,6 +961,12 @@ const hideKey = (worldId: string) => `gettingStarted.hidden.${worldId}`
 function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign: () => void }) {
   const create = useCreatePage(world)
   const w = worldPath(world.id)
+  // "Start from an export…" in the New world dialog lands here with ?import=1: the importer open.
+  const [search] = useSearchParams()
+  const [importing, setImporting] = useState(() => search.get('import') === '1')
+  useEffect(() => {
+    if (search.get('import') === '1') document.getElementById('getting-started-import')?.scrollIntoView({ block: 'center' })
+  }, [search])
   const [hidden, setHidden] = useState(() => {
     try {
       return localStorage.getItem(hideKey(world.id)) === '1'
@@ -846,6 +976,14 @@ function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign:
   })
   if (hidden) return null
   const steps: [string, string, string, ReactNode][] = [
+    [
+      '📥',
+      'Already have notes? Bring them in',
+      'From Obsidian or a Markdown folder, Kanka or World Anvil. Everything comes in GM only.',
+      <button key="import" className="small" aria-expanded={importing} onClick={() => setImporting(!importing)}>
+        {importing ? 'Close' : 'Import notes'}
+      </button>,
+    ],
     ['🎲', 'Make a campaign', 'One group’s story in this world.', <button key="campaign" className="small" onClick={onNewCampaign}>Make a campaign</button>],
     [
       '🧑',
@@ -859,6 +997,7 @@ function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign:
     ['🗺️', 'Add a map', 'Upload one or draw it, then pin your places on it.', <Link key="maps" className="button small" to={`${w}/maps`}>Maps</Link>],
     ['🔒', 'Keep secrets', 'Pages start GM only. Reveal them when the players find out.', null],
     ['☁️', 'Invite your players (optional)', 'Turn on cloud sync, then send invite links.', <Link key="players" className="button small" to={`${w}/settings?tab=players`}>Players</Link>],
+    ['📖', 'See how a finished campaign looks', 'Vael Ardith, the full example, starting at its Start Here guide.', <SeeTheExampleButton key="example" />],
   ]
   return (
     <section className="card getting-started">
@@ -881,12 +1020,17 @@ function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign:
         </button>
       </div>
       <ol>
-        {steps.map(([icon, title, text, action]) => (
+        {steps.map(([icon, title, text, action], i) => (
           <li key={title}>
             <span>
               {icon} <strong>{title}.</strong> <span className="muted">{text}</span>
             </span>
             {action}
+            {i === 0 && importing && (
+              <div className="getting-started-import" id="getting-started-import">
+                <ImportPages worldId={world.id} system={world.system} compact />
+              </div>
+            )}
           </li>
         ))}
       </ol>

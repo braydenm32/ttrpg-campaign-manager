@@ -537,6 +537,23 @@ button.social.facebook .social-icon { background: #1877f2; }
 .combatant.down { opacity: .55; }
 .combatant.down .combatant-name { text-decoration: line-through; }
 .combatant-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A fighter on one line; the details open on tap. */
+.combatant { scroll-margin-block: calc(var(--topbar-h) + 7em) 5em; }
+.fighter-line { display: flex; align-items: center; flex-wrap: wrap; gap: .3em .5em; }
+.fighter-name { flex: 1 1 8em; min-width: 0; display: flex; align-items: center; gap: .5em; padding: .2em .3em; background: none; border: none; box-shadow: none; text-align: left; color: var(--text); font-weight: normal; justify-content: flex-start; }
+.fighter-name svg:last-child { flex: none; color: var(--muted); transition: transform .15s; }
+.fighter-name[aria-expanded=true] svg:last-child { transform: rotate(180deg); }
+.init-chip { flex: none; min-width: 2em; text-align: center; font: 700 .9rem var(--font-body); padding: .1em .35em; border-radius: 6px; background: var(--panel); border: 1px solid var(--border); }
+.hp-compact { display: inline-flex; align-items: center; gap: .35em; flex: none; }
+.hp-quick { display: inline-flex; gap: .1em; flex: none; }
+.hp-quick button { min-width: 2.4em; justify-content: center; padding: .2em .4em; }
+.fighter-conds { padding-left: .3em; }
+.fighter-details { display: flex; flex-direction: column; gap: .4em; padding-top: .3em; border-top: 1px dashed var(--border); }
+.fighter-details .init-input { margin-left: .3em; }
+.condition-custom input { width: 12em; max-width: 100%; }
+.down-list { margin: .4em 0; }
+.down-list ul { list-style: none; padding: 0; margin: .3em 0 0; display: flex; flex-direction: column; gap: .2em; }
+.down-list .combatant-name { text-decoration: line-through; }
 .row > input.init-input, .init-input { width: 3.4em; flex: none; text-align: center; font-weight: 700; padding: .3em .2em; }
 .init-input, .hp-input { -moz-appearance: textfield; appearance: textfield; }
 .init-input::-webkit-inner-spin-button, .hp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -855,6 +872,8 @@ label.check-item { display: flex; gap: .4em; align-items: flex-start; font-size:
 .search-results { list-style: none; padding: 0; margin: .6em 0 0; max-height: 60vh; overflow: auto; }
 .search-results li button { display: flex; flex-direction: column; align-items: flex-start; gap: .1em; width: 100%; text-align: left; padding: .45em .6em; border-radius: 6px; }
 .search-results li.active button { background: var(--panel-2); }
+.search-recent-head { margin: .8em .6em 0; font-family: inherit; font-weight: 500; }
+.search-results .hit-kind { font-weight: 600; }
 .news-banner .chip { flex: 0 1 auto; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .news-banner { border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); border-radius: var(--radius); padding: .6em .9em; margin-bottom: 1em; display: flex; flex-direction: column; gap: .4em; }
 .backup-reminder { display: flex; flex-wrap: wrap; gap: .5em 1em; align-items: center; justify-content: space-between; border: 1px dashed var(--border); border-radius: var(--radius); padding: .6em .9em; margin-bottom: 1em; }
@@ -1341,6 +1360,7 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .page-picker-list li > button { display: block; width: 100%; text-align: left; border: none; background: transparent; padding: .35em .5em; border-radius: 6px; }
 .page-picker-list li.active > button { background: var(--panel-2); }
 .page-picker-list li.muted { padding: .3em .5em; }
+.add-relation .relation-who { min-width: 14em; }
 
 /* A warning under a text box: players would read the name of a GM-only page */
 .secret-names { margin: .3em 0; padding: .35em .6em; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 4px; color: var(--text); }
@@ -1567,6 +1587,7 @@ textarea.read-text:hover { border-color: var(--border); border-left-color: var(-
 .reveal-review ul { margin: 0; padding-left: 1.2em; }
 .reveal-review p { margin: 0; }
 .wrap-intro { margin: 0 0 .5em; }
+.wrap-progress { margin: 0 0 .8em; display: flex; flex-wrap: wrap; align-items: center; gap: .3em .5em; }
 .thread-lines { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .3em; }
 .finish-row { display: flex; flex-wrap: wrap; align-items: center; gap: .6em 1em; margin-top: 1em; padding-top: 1em; border-top: 1px solid var(--border); }
 .finish-row p { margin: 0; flex: 1 1 16em; }
@@ -1640,26 +1661,37 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .loot-coin .hp-input { width: 4.5em; }
 .loot-coin select { width: auto; flex: none; }
 .lectern-page:has(.fight-bar) .lectern-jump { top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px) + 3.6em); }
+/* The quick note and the find box sit above the columns on a laptop and after the scene on a phone. */
+.lectern-top { grid-column: 1 / -1; }
+.wrap-up-foot { display: none; }
+.record-chip .rec-dot { margin-right: .1em; }
 @media (max-width: 800px) {
   .lectern { display: flex; flex-direction: column; gap: 1em; }
+  .lectern-top { order: 2; }
+  .lectern-top.searching { order: 0; }
+  .lectern-top .quick-note { margin-bottom: .5em; }
+  .wrap-up-top { display: none; }
+  .wrap-up-foot { display: flex; align-items: center; gap: .8em; margin: 1em 0 .5em; }
   .lectern-col, .lectern-col:last-child { display: contents; }
   .lectern-col > * { order: 20; min-width: 0; max-width: 100%; }
   #lectern-scene { order: 1; }
-  #lectern-prep { order: 2; }
-  #lectern-initiative { order: 3; }
-  #lectern-party { order: 4; }
-  #lectern-present { order: 5; }
-  #lectern-clocks { order: 6; }
-  #lectern-show { order: 7; }
-  #lectern-loot { order: 8; }
-  #lectern-dice { order: 9; }
-  #lectern-notes { order: 10; }
+  #lectern-prep { order: 3; }
+  #lectern-initiative { order: 4; }
+  #lectern-party { order: 5; }
+  #lectern-present { order: 6; }
+  #lectern-clocks { order: 7; }
+  #lectern-show { order: 8; }
+  #lectern-loot { order: 9; }
+  #lectern-dice { order: 10; }
+  #lectern-notes { order: 11; }
   .lectern-page [id^='lectern-'] { scroll-margin-top: calc(var(--topbar-h) + 4.5em); }
   .lectern-page:has(.fight-bar) [id^='lectern-'] { scroll-margin-top: calc(var(--topbar-h) + 8em); }
   .quick-note button { min-height: 44px; }
   .lectern-panel .fold-toggle { min-width: 44px; min-height: 44px; }
   .planned-scenes button { min-height: 44px; }
   .initiative button.ghost, .hp button.ghost, .tags .tag button { min-width: 44px; min-height: 44px; }
+  .fighter-name { min-height: 44px; }
+  .hp-quick button { min-width: 44px; min-height: 44px; }
 }
 .world-today-fold > summary { cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; gap: .4em; font-weight: 600; }
 .world-today-fold[open] > summary { margin-bottom: .3em; }
@@ -1914,7 +1946,132 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
   .player-mode .segmented button { min-height: 44px; min-width: 44px; justify-content: center; }
 }
 
+/* Roll buttons inside page text: `roll:1d8+3` and {{Table name}}. */
+.inline-roll-wrap { display: inline-flex; align-items: baseline; gap: .35em; flex-wrap: wrap; }
+.markdown .inline-roll { display: inline-flex; align-items: center; gap: .2em; min-height: 0; padding: .05em .45em; font-size: .9em; border-radius: 999px; vertical-align: baseline; }
+.inline-roll.still { padding: 0 .3em; border: 1px solid var(--border); border-radius: 999px; font-size: .9em; }
+.inline-roll-out:empty { display: none; }
+@media (pointer: coarse) {
+  .markdown .inline-roll { min-height: 36px; padding: .2em .7em; }
+}
+
+/* Prompts for a blank page, under the Description box. */
+.page-prompts { display: flex; flex-wrap: wrap; align-items: center; gap: .4em; margin-top: -.4em; }
+.page-prompts-list { flex-basis: 100%; margin: .2em 0 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: .5em; }
+.page-prompts-list label { display: flex; flex-direction: column; gap: .2em; }
+.page-prompts-list .row { gap: .4em; margin: 0; }
+.page-prompts-list input { flex: 1; min-width: 0; }
+
+/* Who was there (Lectern strip, Wrap up). */
+.who-was-there { display: flex; flex-wrap: wrap; align-items: center; gap: .2em .8em; border: 0; margin: 0; padding: 0; }
+.who-was-there legend { float: left; margin-right: .4em; padding: 0; color: var(--muted); }
+.who-was-there .who-chip { min-height: 32px; }
+.present-line { margin: 0 0 .6em; }
+@media (pointer: coarse) {
+  .who-was-there .who-chip { min-height: 44px; }
+}
+
+/* "Post a link for the group" (src/groupPost.tsx): a small card in a corner, above the Undo note. */
+.group-post { position: fixed; z-index: 2300; right: 1em; bottom: 5.5em; width: min(380px, calc(100vw - 2em)); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: .4em; }
+.group-post .row { margin: 0; gap: .4em; }
+.group-post-text { margin: 0; overflow-wrap: anywhere; }
+.group-post-close { min-width: 44px; min-height: 44px; }
+@media (max-width: 700px) {
+  .group-post { right: 1em; bottom: calc(5.5em + env(safe-area-inset-bottom)); }
+  .group-post button { min-height: 44px; }
+}
+
+/* Stars and wishes (players' Now, GM Inbox) and a player's notes on a session. */
+.stars-wishes label { display: grid; gap: .25em; }
+.stars-wishes-sent { margin: .3em 0 .5em; padding-left: 1.1em; }
+.inbox-feedback { margin-top: 1.5em; }
+.inbox-feedback h2 { display: flex; align-items: center; gap: .4em; font-size: 1.1rem; }
+.inbox-feedback h3 { margin: 0 0 .4em; }
+.stars-wishes-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .6em; }
+.stars-wishes-list li { display: grid; gap: .15em; }
+.stars-wishes-list .link { justify-self: start; }
+.my-session-note { margin-top: .6em; }
+.my-session-note summary { cursor: pointer; }
+.add-to-calendar { display: inline-flex; align-items: center; gap: .2em; }
+
+/* A page that reveals itself on a date. */
+.reveal-on { margin: .4em 0; align-items: center; gap: .4em; }
+.reveal-on label { display: inline-flex; align-items: center; gap: .35em; }
+.reveal-on-chip { font-size: .8rem; }
+/* Party loot: what isn't the party's is folded, and the "who carries it" picker keeps one width. */
+.loot-else { margin-top: 1em; }
+.loot-else > summary { cursor: pointer; }
+.loot-else > summary h2 { display: inline; font-size: 1.15rem; }
+.loot-else h3 { margin: .8em 0 .3em; font-size: 1rem; }
+.loot-list select { width: 11em; max-width: 45%; flex: none; }
+@media (max-width: 800px) { .loot-list li { flex-wrap: wrap; } .loot-list select { width: 100%; max-width: 100%; } }
+
+/* Players' Now: the HP tile can be changed in place; the live stage has one column; the dice card at the foot. */
+.room-now.one { grid-template-columns: minmax(0, 1fr); }
+.number-tiles .tile-value { padding: 0; min-height: 0; font-weight: 600; text-align: left; }
+.number-tiles dd:has(.tile-edit) { overflow: visible; white-space: normal; }
+.tile-edit { display: flex; flex-wrap: wrap; gap: .3em; align-items: center; }
+.tile-edit input { width: 4.5em; padding: .2em .4em; }
+.room-dice-foot { margin-top: 1em; }
+@media (max-width: 800px) { .number-tiles .tile-value, .tile-edit :is(input, button) { min-height: 44px; } }
+.choose-character.one-line { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: .5em .9em; }
+@media (max-width: 800px) { .choose-character.one-line :is(.button, button) { min-height: 44px; min-width: 44px; justify-content: center; } }
+
+/* A fighter stays on one line on a phone too; the details below tidy into rows that fit. */
+.fighter-details .hp { flex-wrap: nowrap; max-width: 100%; }
+.fighter-actions { display: inline-flex; align-items: center; gap: .3em; margin-left: auto; }
+@media (max-width: 800px) {
+  .fighter-line { flex-wrap: nowrap; gap: .2em .35em; }
+  .fighter-name { flex: 1 1 0; min-width: 0; padding: .2em 0; }
+  .fighter-name svg:last-child { display: none; }
+  .fighter-line > .field-chip, .hp-compact .hp-bar { display: none; }
+  .fighter-name { gap: .35em; }
+  .init-chip { min-width: 1.6em; padding: .1em .2em; }
+  .hp-compact { gap: .25em; }
+  .hp-quick { gap: 0; }
+  .hp-quick button.ghost { padding: .2em 0; }
+  .fighter-details .hp-bar { width: 1.6em; }
+  .fighter-details .hp-input { width: 2.9em; }
+}
+@media (max-width: 800px) { .room-dice-foot .dice-buttons button, .room-dice-foot .table-dice :is(input, button) { min-height: 44px; min-width: 44px; } }
+/* A map's numbered key (Show numbers): numbers on pins and pieces, the Key panel, the legend, print */
+.map-pin .pin-no { font: 700 13px/1 Georgia, serif; color: #1b1508; }
+.leaflet-tooltip.pin-number { padding: 0 6px; min-width: 1.6em; text-align: center; border-radius: 999px; border: 2px solid #2b2420; background: #fbf7ee; color: #2b2420; font: 700 .8rem/1.4 Georgia, serif; box-shadow: 0 1px 3px rgba(0,0,0,.35); pointer-events: none; }
+.leaflet-tooltip.pin-number::before { display: none; }
+.key-no { display: inline-grid; place-items: center; min-width: 1.6em; height: 1.6em; padding: 0 .3em; border-radius: 999px; border: 2px solid currentColor; font-size: .85em; margin-right: .2em; }
+.map-key-list { list-style: none; padding: 0; margin: .4em 0 1em; display: grid; gap: .5em; }
+.map-legend { display: flex; flex-wrap: wrap; gap: .35em; padding: .4em 1em; border-bottom: 1px solid var(--border); background: var(--panel); }
+.map-legend .chip { border-radius: 999px; padding: .2em .8em; font-size: .85rem; }
+.map-legend .chip.on { background: var(--accent); color: var(--accent-ink, #1b1508); border-color: var(--accent); }
+.pin-scene { gap: .5em; align-items: center; padding: .4em .6em; border-left: 3px solid var(--accent); background: var(--panel-2); border-radius: 4px; }
+.print-map-picture { position: relative; }
+.print-map-picture img { display: block; width: 100%; height: auto; }
+.print-map-no { position: absolute; transform: translate(-50%, -50%); min-width: 1.5em; height: 1.5em; padding: 0 .25em; border-radius: 999px; border: 2px solid #2b2420; background: #fbf7ee; color: #2b2420; font: 700 .8rem/1.3 Georgia, serif; text-align: center; }
+.print-map-key li { margin: .25em 0; break-inside: avoid; }
+@media (max-width: 800px) { .map-legend { padding: .3em .6em; } .map-legend .chip { min-height: 44px; } }
+
+/* Stock on a shop's page */
+.stock-table { width: 100%; border-collapse: collapse; }
+.stock-table th, .stock-table td { text-align: left; padding: .35em .5em; border-bottom: 1px solid var(--border); vertical-align: top; }
+.stock-table td input { width: 7em; }
+
+/* Timeline: the place filter keeps its whole name on a phone ("Everywhere", not "Every") */
+.timeline-controls select { flex: 1 1 10em; min-width: 10em; max-width: 100%; }
+
+/* World settings: how much room the app takes on this device */
+.device-storage { margin: .6em 0; }
+.device-storage.notice { padding: .4em .7em; }
+.device-storage p { margin: .2em 0; }
+
+/* Phone: a dot on More when cloud sync has a problem */
+.bar-icon i.bar-dot { width: .6em; height: .6em; padding: 0; right: -4px; top: -2px; background: var(--danger); }
 /* Lists on a phone: the New button, the filter box and the tag picker are a whole fingertip tall. */
 @media (max-width: 800px) {
   .list-tools :is(input, select), .page-header > button, .page-header > .menu-wrap > button { min-height: 44px; }
+}
+
+/* Phones: the find-a-page box, the old Chronicle's session list and old corkboards' names are a fingertip tall. */
+@media (max-width: 800px) {
+  .page-picker input { min-height: 44px; }
+  .session-picks li > a, .board-name > a { display: inline-flex; align-items: center; min-height: 44px; }
 }

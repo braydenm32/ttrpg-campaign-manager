@@ -45,12 +45,15 @@ import { pagePath, worldPath } from '../paths'
 import { clockText, GoLive, RollDetail, RollLog, timeLeft, useNow } from '../atTheTable'
 import { setLiveSession, shareRoll, useLiveSession, useTable } from '../cloud/table'
 import { StageChip, useSessionStage } from '../stage'
-import { JumpRow, useKeepScroll } from '../jump'
-import { changePlace, goToScene, plannedScenes } from '../sceneCards'
+import { JumpRow, jumpTo, useKeepScroll } from '../jump'
+import { changePlace, clearSceneToast, goToScene, plannedScenes } from '../sceneCards'
 import { useReview } from '../reveal'
 import { markSaved, removeWithUndo, SavedMark, toast } from '../undo'
 import { changeCoin } from '../purse'
 import { Recorder } from './SessionPage'
+import { WhoWasThere } from '../attendance'
+import { useLiveRecording } from '../recordingStore'
+import { CONDITIONS, DownList, Fighter, tickConditions } from '../fighters'
 
 /**
  * The Lectern (Session › Play): one screen for running a session at the table. A strip across the
@@ -80,6 +83,8 @@ export default function Lectern() {
   }
   const folding = useFolding(query)
   useKeepScroll(!!session && !!world)
+  // Leaving the Lectern (to Wrap up, say) takes its “Scene 2: …” note with it.
+  useEffect(() => clearSceneToast, [])
 
   if (session === undefined) return <Skeleton />
   if (!isGM) return <Empty>The Lectern is a GM tool. Switch back to the GM view to use it.</Empty>
@@ -107,6 +112,15 @@ export default function Lectern() {
   // Opening a folded panel before jumping to it.
   const unfold = (id: string) => () => folding.value.folded.has(id) && folding.value.toggle(id)
   const party = partyOf(entities, session.campaignId, { activeOnly: true })
+  const wrapUp = () => {
+    if (live) setLiveSession(worldId, undefined)
+    navigate(`${w}/s/${session.id}?end=1`)
+  }
+  // The Record chip: open the Recording panel (with its consent note) and go to it.
+  const openRecording = () => {
+    unfold('recording')()
+    requestAnimationFrame(() => jumpTo('lectern-recording'))
+  }
 
   return (
     <div className="page wide lectern-page">
@@ -128,24 +142,20 @@ export default function Lectern() {
           <span className="grow" />
           {world && <GoLive world={world} session={session} />}
           {world?.cloud?.enabled && <Help topic="goLive" />}
+          <RecordChip onOpen={openRecording} />
           {stage !== 'playing' && stage !== 'played' ? (
             <button className="primary" title={HELP.startPlaying} onClick={() => startPlaying(session.id)}>
               <Ico as={Play} weight="fill" /> Start playing
             </button>
           ) : (
-            <button
-              className={stage === 'playing' ? 'primary' : ''}
-              title="End the session at the table: stops showing it live to players, then opens Wrap up"
-              onClick={() => {
-                if (live) setLiveSession(worldId, undefined)
-                navigate(`${w}/s/${session.id}?end=1`)
-              }}
-            >
+            // On a phone this button moves to the foot of the page, out of the way of a thumb in mid-game.
+            <button className={`wrap-up-top ${stage === 'playing' ? 'primary' : ''}`} title={WRAP_UP_TITLE} onClick={wrapUp}>
               <Ico as={FlagCheckered} /> Wrap up
             </button>
           )}
         </div>
         <div className="row wrap lectern-extras">
+          <WhoWasThere session={session} entities={entities} compact />
           {world && <WorldToday world={world} isGM folded />}
           <PreviouslyOn session={session} />
           {!!(world?.safety?.lines.length || world?.safety?.veils.length) && (
@@ -172,27 +182,30 @@ export default function Lectern() {
             { id: 'lectern-notes', label: 'Notes', open: unfold('notes') },
           ]}
         />
-        <QuickNote session={session} />
-        <div className="lectern-tools row wrap">
-          <input
-            type="search"
-            className="lectern-search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
-            placeholder="Find a panel or a page… (initiative, loot, Mirela)"
-            aria-label="Find a panel or a page"
-          />
-          <Help topic="lecternSearch" />
-          <button className="ghost small" onClick={() => folding.foldAll(LECTERN_PANELS)}>
-            Fold all
-          </button>
-          <button className="ghost small" onClick={folding.openAll}>
-            Open all
-          </button>
-        </div>
-        {query.trim() && <FoundPages query={query} entities={entities} worldId={worldId} lectern={lectern} edit={edit} />}
         <div className="lectern">
+          {/* Inside the columns' grid so a phone can put the scene before these. */}
+          <div className={`lectern-top ${query.trim() ? 'searching' : ''}`}>
+            <QuickNote session={session} />
+            <div className="lectern-tools row wrap">
+              <input
+                type="search"
+                className="lectern-search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
+                placeholder="Find a panel or a page… (initiative, loot, Mirela)"
+                aria-label="Find a panel or a page"
+              />
+              <Help topic="lecternSearch" />
+              <button className="ghost small" onClick={() => folding.foldAll(LECTERN_PANELS)}>
+                Fold all
+              </button>
+              <button className="ghost small" onClick={folding.openAll}>
+                Open all
+              </button>
+            </div>
+            {query.trim() && <FoundPages query={query} entities={entities} worldId={worldId} lectern={lectern} edit={edit} />}
+          </div>
           <div className="lectern-col">
             {world && <Scene session={session} world={world} lectern={lectern} edit={edit} entities={entities} worldId={worldId} />}
             <Present lectern={lectern} edit={edit} entities={entities} worldId={worldId} />
@@ -214,7 +227,7 @@ export default function Lectern() {
             <Dice lectern={lectern} edit={edit} shareTo={shareTo} />
             <Soundboard worldId={worldId} compact />
             {world?.cloud?.enabled && <CommonRoomPanel world={world} session={session} lectern={lectern} edit={edit} live={live} />}
-            <LecternPanel id="recording" name="Recording" keywords="record microphone audio transcript" title={<><Ico as={Microphone} /> Recording</>}>
+            <LecternPanel id="recording" sectionId="lectern-recording" name="Recording" keywords="record microphone audio transcript" title={<><Ico as={Microphone} /> Recording</>}>
               <Recorder session={session} />
             </LecternPanel>
             <TablesPanel tables={entities.filter((e) => e.type === 'table')} worldId={worldId} entities={entities} />
@@ -234,9 +247,29 @@ export default function Lectern() {
             {world && <QuickGenerators lectern={lectern} edit={edit} world={world} entities={entities} parentId={lectern.sceneId} />}
           </div>
         </div>
+        {stage !== 'played' && stage !== 'planned' && stage !== 'preparing' && (
+          <div className="wrap-up-foot">
+            <button className={stage === 'playing' ? 'primary' : ''} title={WRAP_UP_TITLE} onClick={wrapUp}>
+              <Ico as={FlagCheckered} /> Wrap up
+            </button>
+            <span className="muted small">When the night is over.</span>
+          </div>
+        )}
         {query.trim() && <p className="muted small lectern-search-note">Showing the panels that match “{query.trim()}”. Clear the search to see them all.</p>}
       </FoldingProvider>
     </div>
+  )
+}
+
+const WRAP_UP_TITLE = 'End the session at the table: stops showing it live to players, then opens Wrap up'
+
+/** A small “Record” chip in the strip: opens the Recording panel, where the consent note and Start are. */
+function RecordChip({ onOpen }: { onOpen: () => void }) {
+  const live = useLiveRecording()
+  return (
+    <button className="ghost small record-chip" onClick={onOpen} title="Recording: ask everyone first, then start it here" aria-label={live ? 'Recording now: open the recording panel' : 'Record this session'}>
+      {live ? <span className="rec-dot" /> : <Ico as={Microphone} />} {live ? 'Recording' : 'Record'}
+    </button>
   )
 }
 
@@ -463,12 +496,21 @@ function Scene({ session, world, lectern, edit, entities, worldId }: PanelProps 
           <Help topic="nextScene" />
         </div>
       )}
-      {strong && !current && strong !== lectern.sceneText.trim() && (
-        <div className="strong-start">
-          <span className="muted small">Strong start</span>
-          <div className="read-text">{strong}</div>
-        </div>
-      )}
+      {strong && strong !== lectern.sceneText.trim() &&
+        (!current ? (
+          <div className="strong-start">
+            <span className="muted small">Strong start</span>
+            <div className="read-text">{strong}</div>
+          </div>
+        ) : (
+          // Still reachable through the first scene (and gone once you reach scene 2).
+          at === 0 && (
+            <details className="strong-start">
+              <summary className="small muted">Strong start</summary>
+              <div className="read-text">{strong}</div>
+            </details>
+          )
+        ))}
       <label className="small muted scene-where">
         Where is the party?
         <select
@@ -659,16 +701,19 @@ function LecternThreads({ lectern, entities, worldId, sessionId }: { lectern: Le
   )
 }
 
-const CONDITIONS = ['Blinded', 'Charmed', 'Concentrating', 'Deafened', 'Exhausted', 'Frightened', 'Grappled', 'Hidden', 'Incapacitated', 'Invisible', 'Paralysed', 'Petrified', 'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious']
-
 const field = fieldOf
 
 const ordered = initiativeOrder
 
-/** Passes the turn on (1) or back (-1), counting rounds; on a fight that hasn't started, starts it. */
-function stepTurn(edit: Edit, dir: 1 | -1) {
-  return edit((l) => {
-    const order = ordered(l.combat.combatants)
+/**
+ * Passes the turn on (1) or back (-1), counting rounds, skipping anyone who is down; on a fight that
+ * hasn't started, starts it. Passing the turn on also counts down the conditions of whoever just
+ * finished (“Burning 2” becomes “Burning 1”), and says which ones ran out.
+ */
+async function stepTurn(edit: Edit, dir: 1 | -1) {
+  const ended: string[] = []
+  await edit((l) => {
+    const order = ordered(l.combat.combatants).filter((c) => !c.defeated)
     if (!order.length) return
     const i = order.findIndex((c) => c.id === l.combat.activeId)
     if (i < 0) {
@@ -676,6 +721,7 @@ function stepTurn(edit: Edit, dir: 1 | -1) {
       l.combat.round = Math.max(1, l.combat.round)
       return
     }
+    if (dir === 1) for (const k of tickConditions(order[i])) ended.push(`${k} on ${order[i].name}`)
     let j = i + dir
     if (j >= order.length) {
       j = 0
@@ -687,11 +733,27 @@ function stepTurn(edit: Edit, dir: 1 | -1) {
     }
     l.combat.activeId = order[j].id
   })
+  if (ended.length) toast(`${ended.join(', ')} ${ended.length === 1 ? 'has' : 'have'} run out.`)
 }
 
 function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { entities: Entity[]; campaignId: string }) {
   const { round, activeId } = lectern.combat
   const list = ordered(lectern.combat.combatants)
+  const up = list.filter((c) => !c.defeated)
+  const down = list.filter((c) => c.defeated)
+  // Which fighters have their details open; the rest stay on one line.
+  const [opened, setOpened] = useState<Set<string>>(new Set())
+  const listRef = useRef<HTMLOListElement>(null)
+  // When the turn passes, bring whoever's up into view (if you're looking at the fight at all).
+  const lastTurn = useRef(activeId)
+  useEffect(() => {
+    if (lastTurn.current === activeId) return
+    lastTurn.current = activeId
+    const row = listRef.current?.querySelector<HTMLElement>('.combatant.active')
+    const panel = listRef.current?.closest('section')?.getBoundingClientRect()
+    if (!row || !panel || panel.bottom < 0 || panel.top > window.innerHeight) return
+    row.scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  }, [activeId])
   // Conditions typed in for this fight (any game's: “Burning 2”, “Marked”, “ends round 5”) are offered again for the others.
   const customConditions = [...new Set(list.flatMap((c) => c.conditions))].filter((k) => !CONDITIONS.includes(k))
   const [name, setName] = useState('')
@@ -729,7 +791,7 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
     >
       <div className="row wrap">
         <button onClick={() => step(-1)} disabled={!activeId}>◀ Back</button>
-        <button className="primary" onClick={() => step(1)} disabled={!list.length}>
+        <button className="primary" onClick={() => step(1)} disabled={!up.length}>
           {activeId ? 'Next turn ▶' : 'Start combat ▶'}
         </button>
         <button
@@ -745,96 +807,22 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
       </div>
 
       {list.length === 0 && <p className="muted small">Add the party and the opposition, type or roll initiative, then start.</p>}
-      <ol className="initiative">
-        {list.map((c) => (
-          <li key={c.id} className={`combatant side-${c.side} ${c.id === activeId ? 'active' : ''} ${c.hp === 0 ? 'down' : ''}`}>
-            <div className="row">
-              <DraftText
-                className="init-input"
-                inputMode="numeric"
-                value={c.init?.toString() ?? ''}
-                placeholder="–"
-                title="Initiative"
-                aria-label={`Initiative for ${c.name}`}
-                saveOn="leave"
-                onCommit={(v) => change(c.id, (x) => void (x.init = toNumber(v)))}
-              />
-              <button className="ghost" title={`Roll d20${initMod(c) ? ` ${initMod(c) > 0 ? '+' : ''}${initMod(c)}` : ''}`} onClick={() => change(c.id, (x) => void (x.init = rollDie(20) + initMod(c)))}>
-                <Ico as={DiceFive} />
-              </button>
-              <strong className="combatant-name">{c.name}</strong>
-              {c.ac && <span className="field-chip" title="Armour class / defence"><Ico as={Shield} /> {c.ac}</span>}
-              <select
-                className="side-select"
-                value={c.side}
-                title="Side"
-                aria-label={`Side for ${c.name}`}
-                onChange={(e) => {
-                  const v = e.target.value as Combatant['side']
-                  change(c.id, (x) => void (x.side = v))
-                }}
-              >
-                <option value="pc">PC</option>
-                <option value="ally">Ally</option>
-                <option value="foe">Foe</option>
-              </select>
-              <button className="ghost" title="Remove" aria-label={`Remove ${c.name}`} onClick={() =>
-                  removeWithUndo(`${c.name} is out of the fight.`, () => edit((l) => {
-                    // Removing whoever's turn it is passes the turn on to the next one, not back to the top.
-                    if (l.combat.activeId === c.id) {
-                      const order = ordered(l.combat.combatants)
-                      const i = order.findIndex((x) => x.id === c.id)
-                      const rest = order.filter((x) => x.id !== c.id)
-                      if (rest.length && i === order.length - 1) l.combat.round++
-                      l.combat.activeId = rest.length ? rest[i % rest.length].id : undefined
-                    }
-                    l.combat.combatants = l.combat.combatants.filter((x) => x.id !== c.id)
-                  }), () => edit((l) => void (l.combat.combatants.some((x) => x.id === c.id) || l.combat.combatants.push(c))))
-                }>
-                ✕
-              </button>
-            </div>
-            <div className="row wrap">
-              <HpControl c={c} onChange={(fn) => change(c.id, fn)} />
-              <span className="tags">
-                {c.conditions.map((k) => (
-                  <span key={k} className="tag">
-                    {k}
-                    <button
-                      title="Remove"
-                      aria-label={`Remove ${k}`}
-                      onClick={() =>
-                        removeWithUndo(
-                          `${k} taken off ${c.name}.`,
-                          () => change(c.id, (x) => void (x.conditions = x.conditions.filter((y) => y !== k))),
-                          () => change(c.id, (x) => void (x.conditions = [...new Set([...x.conditions, k])])),
-                        )
-                      }
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-              </span>
-              <select
-                className="condition-select"
-                value=""
-                onChange={(e) => {
-                  const picked = e.target.value
-                  const v = picked === '__custom' ? prompt('Name the condition. You can add a note, like “Burning 2” or “Marked, ends round 5”.')?.trim() : picked
-                  if (v) change(c.id, (x) => void (x.conditions = [...new Set([...x.conditions, v])]))
-                }}
-              >
-                <option value="">+ condition</option>
-                {[...CONDITIONS, ...customConditions].filter((k) => !c.conditions.includes(k)).map((k) => (
-                  <option key={k}>{k}</option>
-                ))}
-                <option value={'__custom'}>Something else…</option>
-              </select>
-            </div>
-          </li>
+      <ol className="initiative" ref={listRef}>
+        {up.map((c) => (
+          <Fighter
+            key={c.id}
+            c={c}
+            active={c.id === activeId}
+            open={opened.has(c.id)}
+            onToggle={() => setOpened((o) => (o.has(c.id) ? new Set([...o].filter((x) => x !== c.id)) : new Set([...o, c.id])))}
+            change={change}
+            edit={edit}
+            initMod={initMod(c)}
+            conditionOptions={[...CONDITIONS, ...customConditions]}
+          />
         ))}
       </ol>
+      <DownList down={down} change={change} edit={edit} />
 
       {list.length > 0 && (
         <div className="row end-fight">
@@ -890,85 +878,6 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
       )}
     </LecternPanel>
   )
-}
-
-function HpControl({ c, onChange }: { c: Combatant; onChange: (fn: (c: Combatant) => void) => void }) {
-  const [amount, setAmount] = useState('')
-  // What HP was before the last change, so a slip can be taken back.
-  const [was, setWas] = useState<number | null>(null)
-  // "+8" heals and "-8" damages whatever button or key is used; a bare number follows the button (Enter damages).
-  const apply = (button: 1 | -1) => {
-    const m = amount.trim().match(/^([+\-−–])?\s*(\d+)/)
-    if (!m) return
-    const sign = m[1] ? (m[1] === '+' ? 1 : -1) : button
-    const n = Number(m[2])
-    setWas(c.hp ?? c.maxHp ?? 0)
-    onChange((x) => {
-      const now = (x.hp ?? x.maxHp ?? 0) + sign * n
-      x.hp = Math.max(0, x.maxHp ? Math.min(now, x.maxHp) : now)
-    })
-    setAmount('')
-  }
-  if (c.hp == null && c.maxHp == null)
-    return (
-      <button className="ghost small" onClick={() => onChange((x) => void ((x.hp = 10), (x.maxHp = 10)))}>
-        + track HP
-      </button>
-    )
-  const pct = c.maxHp ? Math.max(0, Math.min(1, (c.hp ?? 0) / c.maxHp)) : 1
-  return (
-    <span className="hp">
-      <span className="hp-bar" title={`${c.hp} / ${c.maxHp ?? '?'}`}>
-        <span style={{ width: `${pct * 100}%` }} className={pct <= 0.25 ? 'low' : pct <= 0.5 ? 'mid' : ''} />
-      </span>
-      <DraftText
-        className="hp-input"
-        inputMode="numeric"
-        value={c.hp?.toString() ?? ''}
-        title="Current HP"
-        onCommit={(v) => onChange((x) => void (x.hp = toNumber(v)))}
-      />
-      <span className="muted">/</span>
-      <DraftText
-        className="hp-input"
-        inputMode="numeric"
-        value={c.maxHp?.toString() ?? ''}
-        title="Max HP"
-        onCommit={(v) => onChange((x) => void (x.maxHp = toNumber(v)))}
-      />
-      <input
-        className="hp-input"
-        value={amount}
-        placeholder="±"
-        title="Amount of damage or healing. Type +5 to heal or -5 to damage; a plain number follows the button you press (Enter damages)."
-        onChange={(e) => setAmount(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && apply(-1)}
-      />
-      <button className="ghost" title="Damage" onClick={() => apply(-1)}>
-        −
-      </button>
-      <button className="ghost" title="Heal" onClick={() => apply(1)}>
-        +
-      </button>
-      {was !== null && (
-        <button
-          className="ghost small"
-          title="Put HP back to what it was before the last change"
-          onClick={() => {
-            onChange((x) => void (x.hp = was))
-            setWas(null)
-          }}
-        >
-          Undo (was {was})
-        </button>
-      )}
-    </span>
-  )
-}
-
-const toNumber = (v: string) => {
-  const n = parseInt(v, 10)
-  return Number.isNaN(n) ? null : n
 }
 
 const QUICK_DICE = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100']

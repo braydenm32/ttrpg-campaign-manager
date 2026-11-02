@@ -1,6 +1,6 @@
 import { expect, go, here, open, test, type Page } from './fixtures'
 import { readDatabase } from './lib/world'
-import { getRecord, putBack } from './lib/records'
+import { getRecord, patchRecord, putBack } from './lib/records'
 
 /**
  * The GM's Session area (Prepare → Play → Wrap up), on a laptop and a phone: a session moves
@@ -28,7 +28,8 @@ test('a session moves Prepare → Play → Wrap up, then the next one is up on t
     await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}/lectern`)
     await expect(page.getByRole('heading', { name: /The Lectern/ })).toBeVisible()
     await expect(page.locator('.lectern-strip [data-stage]')).toHaveAttribute('data-stage', 'playing')
-    await page.locator('.lectern-strip').getByRole('button', { name: 'Wrap up' }).click()
+    // On a phone “Wrap up” sits at the foot of the page, away from a thumb.
+    await page.getByRole('button', { name: 'Wrap up' }).click()
 
     await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}?end=1`)
     await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'playing')
@@ -86,6 +87,9 @@ test('changing the scene at the Lectern replaces the read-aloud text and who’s
   try {
     const scene = page.locator('#lectern-scene')
     const present = page.locator('#lectern-present')
+    // On a phone Who's here starts folded.
+    const unfold = present.getByRole('button', { name: /^Open Who/ })
+    if (await unfold.count()) await unfold.click()
     const text = scene.getByRole('textbox', { name: 'Read-aloud text' })
     await text.fill('The old room, read aloud.')
     await expect(present).toContainText('Ilse Marrow')
@@ -243,5 +247,93 @@ test('nothing typed in the page editor is lost by leaving, and an untouched new 
     await expect.poll(count).toBe(pages + 1)
   } finally {
     await putBack(page, 'entities', [[npc.id, original], ...made.map((id): [string, null] => [id, null])])
+  }
+})
+
+test('a fight runs from one-line fighters: quick HP, Defeated folds into Down, conditions count down', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  await open(page, `${w}/s/${s1.id}/lectern`)
+  const before = await getRecord(page, 'sessions', s1.id)
+  try {
+    const panel = page.locator('#lectern-initiative')
+    await panel.getByRole('button', { name: /Add the party/ }).click()
+    const rows = panel.locator('.combatant')
+    await expect(rows.first()).toBeVisible()
+    const count = await rows.count()
+    expect(count).toBeGreaterThan(1)
+    // Each fighter is one line; the details are closed until the name is tapped.
+    await expect(panel.locator('.fighter-details')).toHaveCount(0)
+
+    // Quick damage right on the line.
+    const first = rows.first()
+    const hp = first.locator('.hp-compact')
+    const name = (await first.locator('.combatant-name').first().textContent())!.replace(/^▶\s*/, '').trim()
+    const was = await hp.textContent()
+    await first.getByRole('button', { name: /Damage .* by 5/ }).click()
+    await expect(hp).not.toHaveText(was!)
+
+    // A condition with a number counts down at the end of their turn and says when it runs out.
+    await first.getByRole('button', { name: new RegExp(name) }).first().click()
+    await first.getByLabel(/Add a condition to/).selectOption('__custom')
+    await first.getByLabel(/Condition for/).fill('Burning 1')
+    await first.getByRole('button', { name: 'Add', exact: true }).click()
+    await expect(first.locator('.tag', { hasText: 'Burning 1' })).toBeVisible()
+    await panel.getByRole('button', { name: 'Start combat ▶' }).click()
+    await panel.getByRole('button', { name: 'Next turn ▶' }).click()
+    await expect(toast(page)).toContainText('Burning')
+    await expect(panel.locator('.tag', { hasText: 'Burning' })).toHaveCount(0)
+
+    if (process.env.SHOTS_DIR) await panel.screenshot({ path: `${process.env.SHOTS_DIR}/fighters.png` })
+
+    // Defeated: the fighter leaves the order for a folded Down list, and can come back.
+    await first.getByRole('button', { name: 'Defeated' }).click()
+    await expect(toast(page)).toContainText('is down')
+    await expect(rows).toHaveCount(count - 1)
+    await panel.getByText(/Down \(1\)/).click()
+    await panel.getByRole('button', { name: 'Back in' }).click()
+    await expect(rows).toHaveCount(count)
+  } finally {
+    await putBack(page, 'sessions', [[s1.id, before]])
+  }
+})
+
+test('on the Lectern: Wrap up sits at the foot on a phone, Record opens the consent note, the Strong start stays', async ({ page, world, device }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  await open(page, `${w}/s/${s1.id}/lectern`)
+  const before = await getRecord(page, 'sessions', s1.id)
+  try {
+    await patchRecord(page, 'sessions', s1.id, { startedAt: Date.now() - 1000 })
+    await open(page, `${w}/s/${s1.id}/lectern`)
+    const top = page.locator('.lectern-strip .wrap-up-top')
+    const foot = page.locator('.wrap-up-foot')
+    if (device === 'phone') {
+      await expect(top).toBeHidden()
+      await expect(foot.getByRole('button', { name: 'Wrap up' })).toBeVisible()
+      // The scene comes before the quick note, and Who's here starts folded.
+      const scene = await page.locator('#lectern-scene').boundingBox()
+      const note = await page.locator('.quick-note').boundingBox()
+      expect(scene!.y).toBeLessThan(note!.y)
+    } else {
+      await expect(top).toBeVisible()
+      await expect(foot).toBeHidden()
+    }
+
+    if (process.env.SHOTS_DIR) await page.screenshot({ path: `${process.env.SHOTS_DIR}/lectern-${device}.png` })
+
+    // The Record chip opens the Recording panel with its reminder to ask everyone first.
+    await page.locator('.record-chip').click()
+    await expect(page.locator('#lectern-recording')).toContainText('Ask everyone at the table before you record')
+
+    // After “First scene” the Strong start is still there, folded, until scene 2.
+    const scene = page.locator('#lectern-scene')
+    await scene.getByRole('button', { name: 'First scene' }).click()
+    await expect(scene.locator('h2')).toContainText('Scene 1 of')
+    await expect(scene.locator('details.strong-start')).toBeVisible()
+    await scene.getByRole('button', { name: 'Next scene' }).click()
+    await expect(scene.locator('details.strong-start')).toHaveCount(0)
+  } finally {
+    await putBack(page, 'sessions', [[s1.id, before]])
   }
 })

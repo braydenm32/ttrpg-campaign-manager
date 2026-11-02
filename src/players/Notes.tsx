@@ -28,12 +28,12 @@ export function PlayerNotesBox({
   start?: 'mine' | 'group'
 }) {
   const memberOf = world.shared?.memberOf
-  if (memberOf) return <MemberNotes world={world} memberOf={memberOf} entityId={entityId} big={big} start={start} />
+  if (memberOf) return <MemberNotes world={world} memberOf={memberOf} entityId={entityId} entities={entities} big={big} start={start} />
   if (!world.shared && world.cloud?.enabled) return <GmGroupNotes world={world} entityId={entityId} entities={entities} big={big} />
   return null
 }
 
-function MemberNotes({ world, memberOf, entityId, big, start }: { world: World; memberOf: string; entityId: string; big?: boolean; start: 'mine' | 'group' }) {
+function MemberNotes({ world, memberOf, entityId, entities, big, start }: { world: World; memberOf: string; entityId: string; entities: Entity[]; big?: boolean; start: 'mine' | 'group' }) {
   const [tab, setTab] = useState<'mine' | 'group'>(start)
   const notes = world.shared?.notes ?? []
   const find = (shared: boolean) => notes.find((n) => n.entityId === entityId && n.shared === shared)
@@ -65,10 +65,15 @@ function MemberNotes({ world, memberOf, entityId, big, start }: { world: World; 
           nameOf={() => ''}
         />
       ) : (
-        <NoteEditor
-          key={`${entityId}:group`}
+        <GroupNotes
+          key={entityId}
+          world={world}
+          memberOf={memberOf}
+          entityId={entityId}
+          entities={entities}
           saved={group?.body ?? ''}
           savedAt={group?.updatedAt}
+          who={names.get(world.shared?.me ?? '') ?? 'A player'}
           nameOf={(id) => (id === world.shared?.me ? 'You' : (names.get(id) ?? 'Another player'))}
           hint={
             <>
@@ -77,10 +82,87 @@ function MemberNotes({ world, memberOf, entityId, big, start }: { world: World; 
             </>
           }
           placeholder={big ? 'The party’s shared notes: names, clues, plans, who owes whom…' : 'Shared with the whole party…'}
-          onSave={(body, expected) => savePlayerNote(memberOf, entityId, true, body, expected)}
         />
       )}
     </section>
+  )
+}
+
+/**
+ * The party's notes: read as they are written (names in bold, the GM's replies set apart), with a
+ * box to add a line signed with your name. "Edit the whole notebook" opens the plain text for the
+ * rare rewrite.
+ */
+function GroupNotes({
+  world,
+  memberOf,
+  entityId,
+  entities,
+  saved,
+  savedAt,
+  who,
+  nameOf,
+  hint,
+  placeholder,
+}: {
+  world: World
+  memberOf: string
+  entityId: string
+  entities: Entity[]
+  saved: string
+  savedAt?: string
+  who: string
+  nameOf: (userId: string) => string
+  hint: ReactNode
+  placeholder: string
+}) {
+  const [editAll, setEditAll] = useState(false)
+  const [line, setLine] = useState('')
+  const [state, setState] = useState('')
+  if (editAll)
+    return (
+      <>
+        <NoteEditor saved={saved} savedAt={savedAt} nameOf={nameOf} hint={hint} placeholder={placeholder} onSave={(body, expected) => savePlayerNote(memberOf, entityId, true, body, expected)} />
+        <button type="button" className="small" onClick={() => setEditAll(false)}>
+          Done editing
+        </button>
+      </>
+    )
+  return (
+    <>
+      {saved.trim() ? (
+        <div className="side-box group-notes-read">
+          <NotesText text={saved} entities={entities} worldId={world.id} />
+        </div>
+      ) : (
+        <p className="muted small">Nothing yet. {placeholder}</p>
+      )}
+      <form
+        className="row"
+        onSubmit={async (e) => {
+          e.preventDefault()
+          const text = line.trim()
+          if (!text) return
+          setState('Saving…')
+          try {
+            await addToPartyNotes(world, who, text, entityId)
+            setLine('')
+            setState('')
+          } catch {
+            setState('Couldn’t save. Check your connection.')
+          }
+        }}
+      >
+        <input value={line} onChange={(e) => setLine(e.target.value)} placeholder="Add a line…" aria-label="Add a line to the group notes" maxLength={500} />
+        <button disabled={!line.trim()}>Add a line</button>
+      </form>
+      <span className="note-meta">
+        {state || hint}{' '}
+        <button type="button" className="link" onClick={() => setEditAll(true)}>
+          Edit the whole notebook
+        </button>
+      </span>
+    </>
   )
 }
 
@@ -106,14 +188,14 @@ export function MyNote({ world, entityId, placeholder }: { world: World; entityI
  * Adds a line to the party's shared scratchpad, signed with who wrote it. If someone else saved in
  * the meantime the line goes on the end of their version, so nothing is lost.
  */
-export async function addToPartyNotes(world: World, who: string, line: string) {
+export async function addToPartyNotes(world: World, who: string, line: string, entityId = '') {
   const memberOf = world.shared!.memberOf!
-  const note = world.shared?.notes?.find((n) => n.entityId === '' && n.shared)
+  const note = world.shared?.notes?.find((n) => n.entityId === entityId && n.shared)
   // "GM" is how the GM's replies are signed, so a player of that name signs as a player.
   const name = /^\s*gm\s*$/i.test(who) ? `${who.trim()} (a player)` : who
   const add = (body = '') => `${body.trimEnd()}${body.trim() ? '\n' : ''}- **${name}:** ${line}`
-  const clash = await savePlayerNote(memberOf, '', true, add(note?.body), note?.updatedAt ?? null)
-  if (clash) await savePlayerNote(memberOf, '', true, add(clash.body), clash.updatedAt)
+  const clash = await savePlayerNote(memberOf, entityId, true, add(note?.body), note?.updatedAt ?? null)
+  if (clash) await savePlayerNote(memberOf, entityId, true, add(clash.body), clash.updatedAt)
 }
 
 /**

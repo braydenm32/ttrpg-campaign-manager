@@ -42,6 +42,7 @@ import Assets from './pages/Assets'
 const Generators = lazy(() => import('./pages/Generators'))
 const Archivist = lazy(() => import('./ai/Archivist'))
 import PartyLoot from './pages/PartyLoot'
+import ReputationPage from './reputation'
 const WorldSettings = lazy(() => import('./pages/WorldSettings'))
 const PrintPage = lazy(() => import('./print'))
 import Boards from './pages/Boards'
@@ -67,6 +68,9 @@ import './small.css'
 import { hashRouting, setPages, tidyPath, usePathsVersion } from './paths'
 import { ClaudeJobChips, LeaveGuard } from './ai/LeaveGuard'
 import { useGuardedNavigate } from './ai/leave'
+import { rememberLastWorld } from './install'
+import { useTimedReveals } from './timedReveal'
+import { GroupPostOffer } from './groupPost'
 
 const Router = hashRouting ? HashRouter : BrowserRouter
 
@@ -98,6 +102,7 @@ export default function App() {
             <Route path="type/:type" element={<EntityList />} />
             <Route path="type/:type/:kind" element={<EntityList />} />
             <Route path="loot" element={<PartyLoot />} />
+            <Route path="reputation" element={<ReputationPage />} />
             <Route path="p/:entityId" element={<EntityPage />} />
             <Route path="e/:entityId" element={<EntityPage />} />
             <Route path="maps" element={<MapList />} />
@@ -218,6 +223,10 @@ function WorldLayout() {
     const tidy = named && tidyPath(pathname)
     if (tidy) navigate(tidy + search, { replace: true })
   }, [named, version, pathname, search, navigate])
+  // The home-screen icon's shortcuts (Common Room, Lectern) open the world used last.
+  useEffect(() => rememberLastWorld(world?.id), [world?.id])
+  // Pages whose "reveal on" date has come turn "Players can see this" (the server already shows them).
+  useTimedReveals(world?.id, !!world && !world.shared)
   if (!named) return <Skeleton />
   if (world?.shared) return (
     <ForcePlayerView>
@@ -369,6 +378,7 @@ function WorldShell() {
       </div>
       <BottomBar frame={frame} links={links} />
       <ToastHost />
+      {isGM && !shared && <GroupPostOffer />}
     </div>
     </FrameProvider>
   )

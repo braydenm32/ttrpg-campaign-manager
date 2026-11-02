@@ -65,22 +65,38 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
+        id: '/',
         name: 'The Warded Atlas',
         short_name: 'Warded Atlas',
         description: 'GM-focused campaign and world manager for tabletop RPGs',
+        start_url: '/',
+        scope: '/',
         theme_color: '#16141a',
         background_color: '#16141a',
         display: 'standalone',
         icons: [
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          // Android crops icons to its own shape; this one leaves room for that instead of shrinking into a white circle.
+          { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml' },
+        ],
+        // Long-press the home-screen icon: straight to the world used last (see src/install.tsx).
+        shortcuts: [
+          { name: 'Common Room', short_name: 'Common Room', description: 'Your table: next session, last time and your character', url: '/?open=room', icons: [{ src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] },
+          { name: 'The Lectern', short_name: 'Lectern', description: 'The GM’s session in hand', url: '/?open=session', icons: [{ src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] },
+        ],
+        // Chrome's fuller install sheet shows these.
+        screenshots: [
+          { src: 'screenshot-room-phone.png', sizes: '390x844', type: 'image/png', form_factor: 'narrow', label: 'The Common Room on a player’s phone' },
+          { src: 'screenshot-lectern-laptop.png', sizes: '1366x860', type: 'image/png', form_factor: 'wide', label: 'The Lectern on the GM’s laptop' },
         ],
       },
       // The legal pages are their own pages, not routes inside the app, so the offline cache must not swap them for the app.
       // The on-device transcription engine is big and needs the internet for its model anyway, so it isn't kept for offline.
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        globIgnores: ['**/whisper.worker-*.js'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
+        // Pictures only for link previews and the install sheet aren't needed offline.
+        globIgnores: ['**/whisper.worker-*.js', 'social.png', 'screenshot-*.png'],
         navigateFallbackDenylist: [/\.html$/],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },

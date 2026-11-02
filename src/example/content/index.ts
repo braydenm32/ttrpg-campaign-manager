@@ -3,8 +3,8 @@ import { describeProblems, parseExampleFiles } from '../parse'
 import { MAPS } from '../maps'
 
 /**
- * The whole example world, read from the Markdown files in worlds/vael-ardith (one file per page,
- * session and board; see docs/EDITING.md). The build checks the same files first, so a mistake
+ * The whole example world, read from the Markdown files in worlds/vael-ardith (one file per page
+ * and session; see docs/EDITING.md). The build checks the same files first, so a mistake
  * stops the build rather than reaching anyone's copy.
  */
 const files = import.meta.glob<string>('/worlds/vael-ardith/**/*.md', { query: '?raw', import: 'default', eager: true })

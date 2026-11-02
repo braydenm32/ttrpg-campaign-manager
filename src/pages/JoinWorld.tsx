@@ -41,7 +41,7 @@ export default function JoinWorld() {
         navigate(`${worldPath(cloudId)}`, { replace: true })
         return
       }
-      navigate(`${worldPath(await loadMemberWorld(cloudId))}`, { replace: true })
+      navigate(`${worldPath(await loadMemberWorld(cloudId))}?joined=1`, { replace: true })
     } catch (e) {
       // A link that's been turned off would otherwise send the player back here every time they open the app.
       pendingInvite.set(null)
