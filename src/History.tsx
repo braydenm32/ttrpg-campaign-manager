@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Empty, Modal } from './components'
-import { db, saveEntity, type Entity, type PageVersion } from './db'
+import { db, restoreDeletedPage, saveEntity, type Entity, type PageVersion } from './db'
+import { renameLinks } from './links'
 import { Help } from './help'
 import { binSize, deleteFromBin, emptyBin, restoreFromBin, useBin } from './bin'
 import { formatBytes, useWorld } from './hooks'
@@ -52,6 +53,28 @@ export function HistoryButton({ entity }: { entity: Entity }) {
   )
 }
 
+/**
+ * Puts a page back the way an old version had it. Only the GM's writing comes back: who can see it
+ * stays as now (an old version must never quietly reveal the page again), and so does what the
+ * player wrote and their inspiration. A different name takes the links to the page with it.
+ */
+async function restoreVersion(entity: Entity, v: PageVersion) {
+  const now = (await db.entities.get(entity.id)) ?? entity
+  const restored: Entity = {
+    ...v.entity,
+    visibility: now.visibility,
+    revealedTo: now.revealedTo,
+    playerBody: now.playerBody,
+    inspiration: now.inspiration,
+    updatedAt: Date.now(),
+  }
+  await saveEntity(restored)
+  if (!restored.template && restored.name.trim() !== now.name.trim()) {
+    const note = await renameLinks(now.worldId, now, restored)
+    if (note) alert(note)
+  }
+}
+
 function HistoryModal({ entity, onClose }: { entity: Entity; onClose: () => void }) {
   const versions = useLiveQuery(() => db.history.where({ entityId: entity.id }).reverse().sortBy('at'), [entity.id]) ?? []
   const [peek, setPeek] = useState<string>()
@@ -76,9 +99,14 @@ function HistoryModal({ entity, onClose }: { entity: Entity; onClose: () => void
                 <button
                   className="small"
                   onClick={async () => {
-                    if (!confirm(`Put ${entity.name} back the way it was on ${when(v.at)}? Who can see it stays as it is now.`)) return
-                    // Only the writing comes back: an old version must never quietly reveal the page again.
-                    await saveEntity({ ...v.entity, visibility: entity.visibility, revealedTo: entity.revealedTo, updatedAt: Date.now() })
+                    const pc = entity.type === 'pc' || !!entity.playerBody
+                    if (
+                      !confirm(
+                        `Put “${entity.name}” back the way it was on ${when(v.at)}?\n\nIts name, description, GM notes, details and tags come back. Who can see it stays as it is now${pc ? ', and so does what the player wrote (in their own words) and their inspiration' : ''}.`,
+                      )
+                    )
+                      return
+                    await restoreVersion(entity, v)
                     onClose()
                   }}
                 >
@@ -103,7 +131,7 @@ function HistoryModal({ entity, onClose }: { entity: Entity; onClose: () => void
   )
 }
 
-const BIN_ICON: Record<string, string> = { session: '📖', campaign: '🎲', file: '📁', board: '📌', sound: '🎵', map: '🗺️', elsewhere: '☁️' }
+const BIN_ICON: Record<string, string> = { session: '📖', campaign: '🎲', file: '📁', board: '📌', sound: '🎵', map: '🗺️', elsewhere: '☁️', conflict: '🔀' }
 
 /** How many of each list show before "Show all". */
 const SHORT_LIST = 30
@@ -136,13 +164,17 @@ export function RecentlyDeleted() {
                 <span>
                   {BIN_ICON[b.kind]} {b.label || 'Untitled'}{' '}
                   <span className="muted small">
-                    · {b.kind === 'elsewhere' ? 'deleted on another device' : 'deleted'} {when(b.at)}
+                    · {b.kind === 'elsewhere' ? 'deleted on another device' : b.kind === 'conflict' ? 'changed on another device' : 'deleted'} {when(b.at)}
                     {binSize(b) ? ` · ${formatBytes(binSize(b))}` : ''}
                   </span>
                 </span>
                 <span className="row">
-                  <button className="small" onClick={() => restoreFromBin(b.id)}>
-                    Restore
+                  <button
+                    className="small"
+                    title={b.kind === 'conflict' ? 'Use the other device’s version of these parts instead of this one' : undefined}
+                    onClick={() => restoreFromBin(b.id)}
+                  >
+                    {b.kind === 'conflict' ? 'Use this version' : 'Restore'}
                   </button>
                   <button className="small ghost" onClick={() => confirm(`Delete “${b.label || 'Untitled'}” for good? It can’t be brought back.`) && deleteFromBin(b.id)}>
                     Delete forever
@@ -176,9 +208,7 @@ export function RecentlyDeleted() {
               <span className="row">
                 <button
                   className="small"
-                  onClick={async () => {
-                    await db.entities.put({ ...v.entity, updatedAt: Date.now() })
-                  }}
+                  onClick={() => restoreDeletedPage(v)}
                 >
                   Restore
                 </button>
@@ -203,7 +233,8 @@ export function RecentlyDeleted() {
       )}
       {deleted.length > 0 && (
         <p className="muted small">
-          Restored pages come back where they were, but pins on maps need adding again.
+          Restoring a page also puts back the places inside it, what it carried and its map pins, unless they’ve been linked
+          somewhere else since.
         </p>
       )}
     </section>
