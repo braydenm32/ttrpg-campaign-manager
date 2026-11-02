@@ -121,6 +121,7 @@ export const ROUTES: RouteEntry[] = [
   { path: '/w/:worldId/type/:type', screen: 'Old list address', who: 'both', kind: 'legacy', samples: [{ url: `${W}/type/npc` }] },
   { path: '/w/:worldId/type/:type/:kind', screen: 'Old custom list address', who: 'both', kind: 'legacy', samples: [{ url: `${W}/type/custom/{customId}` }] },
   { path: '/w/:worldId/loot', screen: 'Party loot', who: 'both', kind: 'screen', samples: [{ url: `${W}/loot` }] },
+  { path: '/w/:worldId/reputation', screen: 'Reputation (the party’s and each character’s)', who: 'both', kind: 'screen', samples: [{ url: `${W}/reputation` }] },
   {
     path: '/w/:worldId/p/:entityId',
     screen: 'A page',
