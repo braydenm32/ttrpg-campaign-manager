@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
-import { backupStore, exportWorld, recordingsSize } from './backup'
+import { backupStore, exportWorld, recordingsOnlyHere, recordingsSize } from './backup'
 import { db, type World } from './db'
 import { formatBytes } from './hooks'
 import { Help } from './help'
@@ -38,13 +38,48 @@ export function useBackupDue(world: World) {
 }
 
 /**
+ * Whether session recordings exist only on this device (in no backup from here, not in the cloud),
+ * for a line in the Desk's "Needs you". Recordings stay on the device that made them, so losing
+ * that device loses the audio. "Later" waits a week.
+ */
+export function useRecordingsOnlyHere(world: World) {
+  const found = useLiveQuery(() => recordingsOnlyHere(world.id), [world.id])
+  const [hidden, setHidden] = useState(false)
+  const [now] = useState(() => Date.now())
+  const show = !!found && found.count > 0 && !hidden && !world.shared && now >= backupStore.read(world.id, 'audioSnooze')
+  return {
+    show,
+    count: found?.count ?? 0,
+    bytes: found?.bytes ?? 0,
+    done: () => setHidden(true),
+    later: () => {
+      backupStore.write(world.id, 'audioSnooze', Date.now() + 7 * DAY)
+      setHidden(true)
+    },
+  }
+}
+
+/**
  * Downloads a backup of the world, saying how far it has got (a world with recordings can take a while) and what went wrong if it fails.
  * Recording audio is left out unless ticked, since it can be many times bigger than everything else.
  */
-export function BackupButton({ worldId, className, label = '⬇ Download backup', onDone }: { worldId: string; className?: string; label?: string; onDone?: () => void }) {
+export function BackupButton({
+  worldId,
+  className,
+  label = '⬇ Download backup',
+  onDone,
+  recordings = false,
+}: {
+  worldId: string
+  className?: string
+  label?: string
+  onDone?: () => void
+  /** Start with "Include session recordings" ticked. */
+  recordings?: boolean
+}) {
   const [progress, setProgress] = useState<string>()
   const [error, setError] = useState('')
-  const [withAudio, setWithAudio] = useState(false)
+  const [withAudio, setWithAudio] = useState(recordings)
   const audioBytes = useLiveQuery(() => recordingsSize(worldId), [worldId]) ?? 0
   const run = async () => {
     setError('')

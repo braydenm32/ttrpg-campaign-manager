@@ -6,12 +6,12 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Modal } from '../components'
 import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel, type Campaign, type Entity, type Session, type World } from '../db'
 import { useCreatePage } from '../NewPage'
-import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
+import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { initials } from '../text'
 import { nextSessions, useCampaigns, useWorldSessions } from '../threads'
 import { WantedPages, wantedPages } from '../wanted'
 import { useViewMode } from '../viewMode'
-import { BackupButton, useBackupDue } from '../BackupReminder'
+import { BackupButton, useBackupDue, useRecordingsOnlyHere } from '../BackupReminder'
 import WikiHome from './WikiHome'
 import CommonRoom, { ago } from './CommonRoom'
 import { showDate, upcoming } from '../players/Schedule'
@@ -308,6 +308,7 @@ const clip = (text: string, n = 90) => (text.length > n ? `${text.slice(0, n)}â€
 function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; entities: Entity[]; sessions: Session[]; inHand?: InHand; stage?: SessionStage }) {
   const inbox = useInbox()
   const backup = useBackupDue(world)
+  const audio = useRecordingsOnlyHere(world)
   const [reading, setReading] = useState<CharacterRequest>()
   const [wantedOpen, setWantedOpen] = useState(false)
   const w = worldPath(world.id)
@@ -428,6 +429,26 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
         <span className="row">
           <BackupButton worldId={world.id} className="small" label="Back up now" onDone={backup.done} />
           <button className="small ghost" onClick={backup.later}>
+            Later
+          </button>
+        </span>
+      ),
+    })
+  if (audio.show)
+    needs.push({
+      key: 'audio',
+      chip: 'Recordings',
+      icon: FloppyDisk,
+      text: (
+        <>
+          {audio.count} recording{audio.count === 1 ? ' is' : 's are'} only on this device ({formatBytes(audio.bytes)}). 
+          <Help topic="backupRecordings" />
+        </>
+      ),
+      action: (
+        <span className="row">
+          <BackupButton worldId={world.id} className="small" label="Back up" recordings onDone={audio.done} />
+          <button className="small ghost" onClick={audio.later}>
             Later
           </button>
         </span>

@@ -28,18 +28,34 @@ interface WorldBackup {
 
 /** When this device last downloaded a backup of a world, and when a reminder was put off until (device-only). */
 export const backupStore = {
-  read: (worldId: string, what: 'last' | 'snooze') => {
+  read: (worldId: string, what: 'last' | 'snooze' | 'audioSnooze') => {
     try {
       return Number(localStorage.getItem(`codex.backup.${what}.${worldId}`)) || 0
     } catch {
       return 0
     }
   },
-  write: (worldId: string, what: 'last' | 'snooze', at: number) => {
+  write: (worldId: string, what: 'last' | 'snooze' | 'audioSnooze', at: number) => {
     try {
       localStorage.setItem(`codex.backup.${what}.${worldId}`, String(at))
     } catch {
       // Storage blocked: the reminder just comes back next time.
+    }
+  },
+  /** The recordings (their file ids) that a backup downloaded from this device has had the audio of. */
+  readAudio: (worldId: string): string[] => {
+    try {
+      const ids = JSON.parse(localStorage.getItem(`codex.backup.audio.${worldId}`) || '[]')
+      return Array.isArray(ids) ? ids : []
+    } catch {
+      return []
+    }
+  },
+  writeAudio: (worldId: string, ids: string[]) => {
+    try {
+      localStorage.setItem(`codex.backup.audio.${worldId}`, JSON.stringify([...new Set([...backupStore.readAudio(worldId), ...ids])]))
+    } catch {
+      // Storage blocked: the reminder just keeps asking.
     }
   },
 }
@@ -121,6 +137,7 @@ export async function exportWorld(worldId: string, onProgress?: (done: number, t
   link.click()
   setTimeout(() => URL.revokeObjectURL(link.href), 60_000)
   backupStore.write(worldId, 'last', Date.now())
+  if (recordings) backupStore.writeAudio(worldId, [...recorded])
 }
 
 /** The ids of the files that are session recordings (audio), which are by far the biggest. */
@@ -132,6 +149,18 @@ async function recordingAssetIds(worldId: string, sessions?: Session[]) {
 export async function recordingsSize(worldId: string) {
   const ids = [...(await recordingAssetIds(worldId))]
   return (await db.assets.bulkGet(ids)).reduce((n, a) => n + (a?.size ?? 0), 0)
+}
+
+/**
+ * The session recordings whose audio exists only on this device: here, in no backup downloaded from
+ * this device, and not in the cloud (new recordings never sync; a few made before that rule did).
+ */
+export async function recordingsOnlyHere(worldId: string) {
+  const done = new Set(backupStore.readAudio(worldId))
+  const ids = [...(await recordingAssetIds(worldId))].filter((id) => !done.has(id))
+  const [assets, metas] = await Promise.all([db.assets.bulkGet(ids), db.syncMeta.bulkGet(ids.map((id) => `assets:${id}`))])
+  const here = assets.filter((a, i) => a && a.size > 0 && !(metas[i] && !metas[i]!.deleted && !metas[i]!.failed))
+  return { count: here.length, bytes: here.reduce((n, a) => n + (a?.size ?? 0), 0) }
 }
 
 /** Imports a backup as a new copy of the world (fresh ids), so importing twice never overwrites anything. */
