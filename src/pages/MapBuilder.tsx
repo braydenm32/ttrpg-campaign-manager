@@ -966,6 +966,39 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     return { at: best.at, turn: Math.round(((turn % 360) + 360) % 360) }
   }
 
+  /** Whether the chosen piece snaps into a wall: a door on a battle map, a gatehouse or wall tower on a town wall. */
+  const snapsAlone = () => !piece.mix.length && ((battle && isDoor(piece.asset)) || (city && WALL_PIECES.includes(piece.asset)))
+  /** Where a door, gatehouse or wall tower clicked at p lands, and how it's turned; nothing if it doesn't snap there. */
+  const snapPlace = (p: Point): { at: Point; turn: number } | undefined => {
+    if (!snapsAlone() || !onMap(p)) return undefined
+    const extra = typeof piece.turn === 'number' ? piece.turn : 0
+    if (city) {
+      const wall = snapToWall(p)
+      return wall && onMap(wall.at) ? { at: wall.at, turn: (wall.turn + extra) % 360 } : undefined
+    }
+    // a secret door goes into the wall players see
+    const snap = snapDoor(p, piece.size, piece.asset === 'gm-secret-door' ? forPlayers(drawing) : drawing)
+    let turn = (snap.turn + extra) % 360
+    // doors open into the room, never into solid rock
+    const inRoom = roomTest(drawing, W, H)
+    const a = (turn * Math.PI) / 180
+    const [dx, dy] = [-Math.sin(a) * gs * 0.4, Math.cos(a) * gs * 0.4]
+    if (inRoom && !inRoom(snap.at[0] + dx, snap.at[1] + dy) && inRoom(snap.at[0] - dx, snap.at[1] - dy)) turn = (turn + 180) % 360
+    return { at: snap.at, turn }
+  }
+  /** A faint outline of where a snapping piece will land, under the pointer. */
+  const ghostRef = useRef<SVGPathElement>(null)
+  const showGhost = (p?: Point) => {
+    const ghost = ghostRef.current
+    if (!ghost) return
+    const snap = p && snapPlace(p)
+    ghost.style.display = snap ? 'inline' : 'none'
+    if (!snap) return
+    const variant = typeof piece.variant === 'number' ? piece.variant : 0
+    const outline = pieceOutline({ id: 'ghost', asset: piece.asset, at: snap.at, size: piece.size, seed: 1, variant, flip: false, turn: snap.turn })
+    ghost.setAttribute('d', `M${outline.map(([x, y]) => `${x} ${y}`).join(' L')} Z`)
+  }
+
   /** Two fingers between them: the point halfway, and how far apart they are. */
   const twoFingers = (): { mid: Point; dist: number } => {
     const [a, b] = [...pointers.current.values()].map((x) => x.at)
@@ -1012,29 +1045,15 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       setRoomDraft(roomOf([p, p]))
     } else if (tool === 'stamp') {
       if (locked('objects') || !Atlas.assets[piece.asset]) return
-      const wall = city && WALL_PIECES.includes(piece.asset) && !piece.mix.length ? snapToWall(p) : undefined
-      if (wall && onMap(wall.at)) {
-        // a gatehouse or tower goes in one at a time, onto the town wall
+      // a door, gatehouse or wall tower goes in one at a time, into its wall
+      const snap = snapPlace(p)
+      if (snap) {
         const { turn: _, ...rest } = makePiece(p, { asset: piece.asset, size: piece.size }) as Extract<Shape, { kind: 'asset' }>
-        const turn = (wall.turn + (typeof piece.turn === 'number' ? piece.turn : 0)) % 360
-        commit({ ...drawing, shapes: [...drawing.shapes, { ...rest, at: wall.at, ...(turn ? { turn } : {}) }] })
+        commit({ ...drawing, shapes: [...drawing.shapes, { ...rest, at: snap.at, ...(snap.turn ? { turn: snap.turn } : {}) }] })
         return
       }
-      if (battle && isDoor(piece.asset) && !piece.mix.length) {
-        if (!onMap(p)) return
-        // a door goes in one at a time, into the wall (a secret one into the wall players see)
-        const door = makePiece(p, { asset: piece.asset, size: piece.size }) as Extract<Shape, { kind: 'asset' }>
-        const snap = snapDoor(p, piece.size, piece.asset === 'gm-secret-door' ? forPlayers(drawing) : drawing)
-        let turn = (snap.turn + (typeof piece.turn === 'number' ? piece.turn : 0)) % 360
-        // doors open into the room, never into solid rock
-        const inRoom = roomTest(drawing, W, H)
-        const a = (turn * Math.PI) / 180
-        const [dx, dy] = [-Math.sin(a) * gs * 0.4, Math.cos(a) * gs * 0.4]
-        if (inRoom && !inRoom(snap.at[0] + dx, snap.at[1] + dy) && inRoom(snap.at[0] - dx, snap.at[1] - dy)) turn = (turn + 180) % 360
-        const { turn: _, ...rest } = door
-        commit({ ...drawing, shapes: [...drawing.shapes, { ...rest, at: snap.at, ...(turn ? { turn } : {}) }] })
-        return
-      }
+      // (a gatehouse clicked away from any town wall is placed like any other piece; a door off the map is not)
+      if (snapsAlone() && isDoor(piece.asset)) return
       // a click off the edge places nothing, but holding and dragging onto the map still scatters
       const placed = onMap(p) ? [makePiece(p)] : []
       gesture.current = { kind: 'scatter', before: drawing, placed, start: p, at: p, t0: performance.now(), moved: false, fits: scatterFits() }
@@ -1070,7 +1089,13 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       return
     }
     if (g && e.pointerId !== owner.current) return
-    if (tool === 'stamp' && (!g || g.kind === 'scatter')) showRing(toMap(e))
+    if (tool === 'stamp' && (!g || g.kind === 'scatter')) {
+      // a piece that snaps into a wall shows where it will land instead of the scatter ring
+      const at = toMap(e)
+      const snaps = !g && snapsAlone()
+      showRing(snaps ? undefined : at)
+      showGhost(snaps ? at : undefined)
+    }
     if (!g) return
     if (g.kind === 'erase') {
       eraseAt(g, document.elementFromPoint(e.clientX, e.clientY) ?? e.target)
@@ -1281,7 +1306,10 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
-            onPointerLeave={() => showRing()}
+            onPointerLeave={() => {
+              showRing()
+              showGhost()
+            }}
             onWheel={onWheel}
           >
             <g dangerouslySetInnerHTML={{ __html: html }} />
@@ -1289,6 +1317,9 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
             <rect width={W} height={H} fill="none" stroke="#000" strokeOpacity={0.4} strokeWidth={2 * upp} pointerEvents="none" />
             {tool === 'stamp' && (
               <circle ref={ringRef} className="scatter-ring" r={spray.spread} fill="none" stroke="#e0b354" strokeOpacity={0.7} strokeWidth={1.5 * upp} strokeDasharray={`${5 * upp} ${4 * upp}`} pointerEvents="none" />
+            )}
+            {tool === 'stamp' && (
+              <path ref={ghostRef} className="snap-ghost" fill="rgba(224,179,84,.3)" stroke="#e0b354" strokeWidth={1.5 * upp} strokeDasharray={`${4 * upp} ${3 * upp}`} pointerEvents="none" style={{ display: 'none' }} />
             )}
             {roomDraft && <RoomPreview room={roomDraft} upp={upp} />}
             {draftPath &&
@@ -1667,7 +1698,7 @@ function ToolOptions(p: {
               <option value="ground">The ground (buildings, ruins)</option>
             </select>
           </label>
-          <p className="muted small">Doors are in the Place tool: click a wall or a passage's end and the door fits itself to the grid line.</p>
+          <p className="muted small">Doors are in the Place tool: click a wall or a passage and the door fits itself across it, on the grid line.</p>
         </>
       )}
       {(p.tool === 'coast' || (p.tool === 'land' && !top)) && (
@@ -2173,7 +2204,6 @@ function StrokeProps({ stroke, drawing, onChange, onDelete, onClose }: {
               <input type="checkbox" checked={!!room.gm} onChange={(e) => onChange({ gm: e.target.checked || undefined })} /> Secret: only you see it <Help topic="secretRooms" />
             </label>
           )}
-          <p className="muted small">Drag its edge to move it.{room.shape === 'rect' || room.shape === 'round' ? ' Click inside a room to pick what stands in it.' : ''}</p>
         </>
       )}
       {ground && (
@@ -2198,8 +2228,9 @@ function StrokeProps({ stroke, drawing, onChange, onDelete, onClose }: {
           </button>
         </div>
       )}
-      {!room && <p className="muted small">Drag along it to move it.</p>}
-      <p className="muted small">Press Delete to remove it.</p>
+      <p className="muted small">
+        {room ? `Drag its edge to move it.${room.shape === 'rect' || room.shape === 'round' ? ' Click inside a room to pick what stands in it.' : ''}` : 'Drag along it to move it.'} Press Delete to remove it.
+      </p>
       <button className="danger" onClick={onDelete}>
         Delete
       </button>

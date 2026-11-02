@@ -140,6 +140,11 @@ test('a door clicked in a passage goes across it, and the fog Room tool stops at
     await tool(page, 'Place').click()
     await panel(page).getByLabel('Find a piece').fill('door')
     await panel(page).locator('.stamp-grid button[title="Door"]').first().click()
+    // Before the click, a faint outline shows where it will land.
+    const at = await onScreen(page, [690, 335])
+    await page.mouse.move(at.x - 5, at.y)
+    await page.mouse.move(at.x, at.y)
+    await expect(page.locator('.snap-ghost')).toBeVisible()
     await clickMap(page, [690, 335])
     // A piece clicked in the dark margin off the map's edge is ignored.
     const box = await page.locator('svg.builder-canvas').evaluate((svg: SVGSVGElement) => svg.viewBox.baseVal)
