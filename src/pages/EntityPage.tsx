@@ -37,7 +37,7 @@ import { pagePath, resolvePage, typePath, usePathsVersion, worldPath } from '../
 import { canSeeMap, quantityLabel } from '../counts'
 import { pinRevealed } from '../fog'
 import { JumpRow, useKeepScroll } from '../jump'
-import { NewPageButton } from '../NewPage'
+import { DuplicateButton, NewPageButton } from '../NewPage'
 import { PageVisibility, SeenMark } from '../reveal'
 import { useCharacterOwners } from '../players/owners'
 import { keyNumbers, NumberTiles } from '../players/sheetGlance'
@@ -204,6 +204,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             {isGM && <HistoryButton entity={e} />}
             <PrintButton to={`${worldPath(worldId)}/print/e/${e.id}`} />
             {isGM && world && !e.template && e.type !== 'custom' && <NewPageButton world={world} type={e.type} className="ghost new-from-page" />}
+            {isGM && !e.template && <DuplicateButton entity={e} />}
             {isGM && <DeletePageButton entity={e} className="ghost danger" />}
           </span>
         </div>
