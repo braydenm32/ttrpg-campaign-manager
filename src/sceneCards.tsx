@@ -216,6 +216,13 @@ export async function changePlace(session: Session, placeId: string | undefined,
 export function SceneCardEditor({ scene, session, entities, onChange }: { scene: PrepScene; session: Session; entities: Entity[]; onChange: (fn: (s: PrepScene) => void) => void }) {
   const sounds = useLiveQuery(() => db.sounds.where({ worldId: session.worldId }).toArray(), [session.worldId]) ?? []
   const pictures = useLiveQuery(() => db.assets.where({ worldId: session.worldId }).filter((a) => a.mime.startsWith('image/')).toArray(), [session.worldId]) ?? []
+  // Pins, by map, for "On the map": the pin's popup then offers to start this scene.
+  const mapPins =
+    useLiveQuery(async () => {
+      const maps = await db.maps.where({ worldId: session.worldId }).sortBy('name')
+      const pins = await db.pins.where({ worldId: session.worldId }).toArray()
+      return maps.map((m) => ({ map: m, pins: pins.filter((p) => p.mapId === m.id).sort((a, b) => (a.number ?? 0) - (b.number ?? 0) || a.label.localeCompare(b.label)) })).filter((g) => g.pins.length)
+    }, [session.worldId]) ?? []
   const byId = new Map(entities.map((e) => [e.id, e]))
   const places = entities.filter((e) => e.type === 'location' || e.type === 'shop')
   const people = entities.filter((e) => ['npc', 'pc', 'faction', 'deity'].includes(e.type))
@@ -267,6 +274,32 @@ export function SceneCardEditor({ scene, session, entities, onChange }: { scene:
             ))}
           </div>
         </div>
+      )}
+      {mapPins.length > 0 && (
+        <label>
+          <span>
+            On the map <Help topic="scenePin" />
+          </span>
+          <select
+            value={scene.pinId ?? ''}
+            onChange={(e) => {
+              const v = e.target.value || undefined
+              onChange((s) => void (s.pinId = v))
+            }}
+          >
+            <option value="">No pin</option>
+            {mapPins.map((g) => (
+              <optgroup key={g.map.id} label={g.map.name}>
+                {g.pins.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.number ? `${p.number}. ` : ''}
+                    {p.label || byId.get(p.entityId ?? '')?.name || 'Pin'}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
       )}
       {(session.prep?.encounters.length ?? 0) > 0 && (
         <label>

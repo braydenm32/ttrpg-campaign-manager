@@ -1,5 +1,6 @@
 import { expect, here, open, test, type Page } from './fixtures'
 import { getRecord, putBack } from './lib/records'
+import type { World } from './lib/world'
 
 /**
  * Tools for building the world, on a laptop: finding a page by typing (a relationship's "Who?" and
@@ -68,4 +69,173 @@ test('search finds every word in any order, and says what kind of page each resu
   // Words that aren't all on one page find nothing.
   await box.fill('mercy zzqx')
   await expect(page.locator('.search-results')).toContainText('Nothing matches')
+})
+
+/** The Glass Barrow (a drawn dungeon) and a pin of it that's linked to a page players can see. */
+function barrowPin(world: World) {
+  const map = world.map('The Glass Barrow')
+  const pins = world.dump.pins.filter((p) => p.mapId === map.id)
+  return { map, pins, pin: pins.find((p) => p.visibility === 'players' && (p as { entityId?: string }).entityId) ?? pins[0] }
+}
+
+/** Every row of a table that matches, read straight from the database. */
+function rowsOf<T>(page: Page, table: string, match: (row: T) => boolean) {
+  return page
+    .evaluate(async (table) => {
+      const req = indexedDB.open('ttrpg-campaign-manager')
+      const idb: IDBDatabase = await new Promise((r) => (req.onsuccess = () => r(req.result)))
+      const all: unknown[] = await new Promise((r) => {
+        const g = idb.transaction(table).objectStore(table).getAll()
+        g.onsuccess = () => r(g.result)
+      })
+      idb.close()
+      return all
+    }, table)
+    .then((all) => (all as T[]).filter(match))
+}
+
+test('a map pin opens on its page peek for the GM, with Edit pin a tap further', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const { map, pin } = barrowPin(world)
+  await open(page, `${w}/maps/${map.id}?pin=${pin.id}`)
+  const panel = page.locator('.map-panel')
+  await expect(panel.getByRole('link', { name: 'Open page' })).toBeVisible()
+  await expect(panel.locator('.pin-editor')).toHaveCount(0)
+  await panel.getByRole('button', { name: 'Edit pin' }).click()
+  await expect(panel.locator('.pin-editor')).toBeVisible()
+  await expect(panel.getByRole('link', { name: /^Open “/ })).toBeVisible()
+  await panel.getByRole('button', { name: 'Done' }).click()
+  await expect(panel.getByRole('button', { name: 'Edit pin' })).toBeVisible()
+})
+
+test('pin categories: a legend above the map filters the pins, and the address remembers it', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const { map, pins } = barrowPin(world)
+  await open(page, `${w}/maps/${map.id}`)
+  const before = await Promise.all(pins.slice(0, 2).map((p) => getRecord(page, 'pins', p.id)))
+  try {
+    await putBack(page, 'pins', [
+      [pins[0].id, { ...before[0]!, category: 'Danger' }],
+      [pins[1].id, { ...before[1]!, category: 'Treasure' }],
+    ])
+    await open(page, `${w}/maps/${map.id}`)
+    const legend = page.getByRole('navigation', { name: 'Show pins of these kinds' })
+    await expect(legend.getByRole('button', { name: /Danger/ })).toBeVisible()
+    const all = await page.locator('.map-pin').count()
+    await legend.getByRole('button', { name: /Danger/ }).click()
+    await expect.poll(() => here(page)).toContain('only=Danger')
+    await expect(page.locator('.map-pin')).toHaveCount(1)
+    await page.reload()
+    await expect(page.locator('.map-pin')).toHaveCount(1)
+    await legend.getByRole('button', { name: 'All' }).click()
+    await expect(page.locator('.map-pin')).toHaveCount(all)
+  } finally {
+    await putBack(page, 'pins', [
+      [pins[0].id, before[0]],
+      [pins[1].id, before[1]],
+    ])
+  }
+})
+
+test('Show numbers: pins get numbers and a key, and the players’ copy leaves out GM-only pins', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const { map, pins } = barrowPin(world)
+  await open(page, `${w}/maps/${map.id}`)
+  const mapBefore = await getRecord(page, 'maps', map.id)
+  const pinsBefore = await Promise.all(pins.map((p) => getRecord(page, 'pins', p.id)))
+  const secret = pins[pins.length - 1]
+  try {
+    await putBack(page, 'pins', [[secret.id, { ...pinsBefore[pins.length - 1]!, visibility: 'gm' }]])
+    await open(page, `${w}/maps/${map.id}`)
+    await page.getByRole('button', { name: /Map settings/ }).click()
+    await page.getByLabel(/Show numbers/).check()
+    await page.locator('.map-panel').getByRole('button', { name: 'Close' }).click()
+    await page.getByRole('button', { name: 'Key' }).click()
+    await expect(page.locator('.map-key-list li')).toHaveCount(pins.length)
+    await expect(page.locator('.map-pin .pin-no').first()).toBeVisible()
+    // The players' copy on paper: the GM-only pin is not in the key.
+    await open(page, `${w}/print/m/${map.id}?copy=players`)
+    await expect(page.locator('.print-map-key li')).toHaveCount(pins.length - 1)
+    await expect(page.locator('.print-map-key')).not.toContainText(secret.label)
+  } finally {
+    await putBack(page, 'maps', [[map.id, mapBefore]])
+    await putBack(
+      page,
+      'pins',
+      pins.map((p, i) => [p.id, pinsBefore[i]]),
+    )
+  }
+})
+
+test('“Pin on a map…” from a page places a pin for it where you click', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const gerda = world.page('Gerda Hollin')
+  const { map } = barrowPin(world)
+  await open(page, `${w}/p/${world.pageSlug('Gerda Hollin')}`)
+  const more = page.locator('.page-more-toggle')
+  if (await more.isVisible()) await more.click()
+  await page.getByRole('button', { name: 'Pin on a map…' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: /The Glass Barrow/ }).click()
+  await expect.poll(() => here(page)).toContain(`place=${gerda.id}`)
+  await expect(page.getByText('Click the map where “Gerda Hollin” is.')).toBeVisible()
+  const box = (await page.locator('.leaflet-container').boundingBox())!
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+  await expect(toast(page)).toContainText('Gerda Hollin')
+  const made = await rowsOf<{ id: string; mapId: string; label: string; entityId?: string }>(page, 'pins', (p) => p.mapId === map.id && p.label === 'Gerda Hollin')
+  expect(made).toHaveLength(1)
+  expect(made[0].entityId).toBe(gerda.id)
+  await putBack(page, 'pins', [[made[0].id, null]])
+})
+
+test('a scene can name a pin, and the pin offers to start it', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const { map, pin } = barrowPin(world)
+  await open(page, w)
+  // Every session gets the scene, so whichever is in hand has it.
+  const befores = await Promise.all(world.dump.sessions.map((s) => getRecord(page, 'sessions', s.id)))
+  try {
+    await putBack(
+      page,
+      'sessions',
+      befores.map((b) => {
+        const prep = (b!.prep as { scenes?: unknown[] } | undefined) ?? { strongStart: '', scenes: [], clues: [], encounters: [] }
+        return [b!.id, { ...b!, prep: { ...prep, scenes: [...(prep.scenes ?? []), { id: `test-scene-${b!.id}`, text: 'Ambush in the culvert', done: false, pinId: pin.id }] } }]
+      }),
+    )
+    await open(page, `${w}/maps/${map.id}?pin=${pin.id}`)
+    const scene = page.locator('.pin-scene')
+    await expect(scene).toContainText('Ambush in the culvert')
+    await expect(scene.getByRole('button', { name: 'Start' })).toBeVisible()
+  } finally {
+    await putBack(
+      page,
+      'sessions',
+      befores.map((b) => [b!.id, b]),
+    )
+  }
+})
+
+test('saved map versions: name one, and restore it', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const { map } = barrowPin(world)
+  await open(page, `${w}/maps/${map.id}/draw`)
+  try {
+    await page.getByRole('button', { name: /Versions/ }).click()
+    const dialog = page.getByRole('dialog', { name: 'Saved versions' })
+    await dialog.getByLabel('Name this version').fill('Before the test')
+    await dialog.getByRole('button', { name: 'Name this version' }).click()
+    await expect(dialog.locator('.map-version-list li')).toHaveCount(1)
+    await dialog.getByRole('button', { name: 'Restore' }).click()
+    await expect(toast(page)).toContainText('Restored')
+    // Restoring kept the drawing as it was, too.
+    await page.getByRole('button', { name: /Versions/ }).click()
+    await expect(dialog.locator('.map-version-list li')).toHaveCount(2)
+  } finally {
+    const kept = await rowsOf<{ id: string; mapId: string }>(page, 'mapVersions', (v) => v.mapId === map.id)
+    await putBack(
+      page,
+      'mapVersions',
+      kept.map((v) => [v.id, null]),
+    )
+  }
 })
