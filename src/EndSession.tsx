@@ -214,7 +214,7 @@ export function WrapProgress(props: WrapProps) {
  * "Mark as played", after which it shows the next session.
  */
 export function WrapUpChecklist(props: WrapProps & { played: boolean }) {
-  const { world, session, campaign, entities, played } = props
+  const { world, session, played } = props
   const { finish, busy, blocked } = useFinish(session)
   const next = useNextSession(session)
   const w = worldPath(world.id)

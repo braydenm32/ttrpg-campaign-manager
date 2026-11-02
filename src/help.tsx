@@ -146,7 +146,7 @@ export const HELP = {
     'The real date you play (leave it empty until it’s set; booking a date on the campaign page fills it in), the date in your world, and whether players can read this session’s recap. Print and Delete are here too.',
   featured: 'The pages this session is about. People you put in a scene at the Lectern are added by themselves.',
   wrapUp:
-    'After play, in order: your notes, the recording and its transcript, the write-up from Claude, the players’ recap, highlights, and changes to your pages. Then “Mark as played”, and the next session is ready to prepare.',
+    'After play, in order: your notes, the recording and its transcript, the write-up from Claude, the players’ recap, highlights, and changes to your pages. Then “Mark as played”, and the next session is ready to prepare. The line at the top counts how many of the “Before you finish” steps are done; “who featured” and the notes only count what happened once you pressed Start playing, not the plan.',
   markPlayed:
     'Marks this session played and moves on: the next session (made now if there isn’t one, with the clues and scenes you didn’t reach) becomes the one the Desk and the Session area open. Undo puts it back.',
   revealRecap:
@@ -295,7 +295,7 @@ export const HELP = {
   npcLines:
     'Say what’s happening and Claude writes four lines this character might say, in their voice, using what their page says about them. Keep the ones you like in your GM notes.',
   spotlight:
-    'Who got time at the table. With a transcript that tells speakers apart, it shows how long each person talked; it also counts how often each character came up (in the transcript, or in your notes and recap without one). Worked out on this device; nothing is sent anywhere.',
+    'Who got time at the table. With a transcript that tells speakers apart, it shows how long each person talked; it also counts how often each character came up (in the transcript, or in your recap and the notes you wrote during play without one). Worked out on this device; nothing is sent anywhere.',
   readAloud: 'Reads recaps aloud with your device’s own voices: free, private, and secret passages are never read, not even ones meant only for you (the whole table would hear them). Pick a voice and speed here.',
   newCharacterName:
     'Secret passages written “for” a character reach whoever plays a character with that full name or first name. If the new character shares a name with another, those secrets would reach both players, so give one of them a different name.',
