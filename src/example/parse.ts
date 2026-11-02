@@ -1,13 +1,13 @@
 import { parse as parseYaml, YAMLParseError } from 'yaml'
 import type { CalDate, EntityType, LifeStatus, ThreadStatus, WorldCalendar } from '../db.ts'
-import type { ExAge, ExampleContent, ExBoard, ExFoe, ExPage, ExSession, ExWorld } from './types.ts'
+import type { ExAge, ExampleContent, ExFoe, ExPage, ExSession, ExWorld } from './types.ts'
 
 /**
  * Reads an example world written as Markdown files (see docs/EDITING.md):
  *
  *   world.md            the world itself: name, calendar, history ages, safety tools
  *   sessions/*.md       one file per session
- *   boards/*.md         one file per corkboard
+ *   boards/*.md         old corkboards: retired, so skipped (with a warning) rather than refused
  *   anything else .md   one page each, named by its key (people/varra.md is the page "varra")
  *
  * Each file opens with settings between two "---" lines, then the text. Lines like "== GM notes =="
@@ -41,7 +41,6 @@ const PAGE_SETTINGS = [
   'questStatus', 'threadStatus', 'threadUrgency', 'raisedIn', 'tiedOffIn', 'heldBy', 'quantity', 'template', 'fields', 'gmFields', 'relations', 'clocks',
 ]
 const SESSION_SETTINGS = ['number', 'title', 'players', 'worldDate', 'pages', 'encounters', 'lectern']
-const BOARD_SETTINGS = ['name', 'order', 'cards', 'strings']
 const WORLD_SETTINGS = ['version', 'name', 'system', 'color', 'cover', 'campaign', 'calendar', 'ages', 'safety', 'partyCoin']
 
 /** One file split into its settings, its main text and its "== Name ==" parts. */
@@ -71,7 +70,6 @@ export function parseExampleFiles(files: Record<string, string>, maps: MapRefs[]
   const problems: Problem[] = []
   const pages: (ExPage & { file: string })[] = []
   const sessions: (ExSession & { file: string })[] = []
-  const boards: (ExBoard & { file: string; order?: number })[] = []
   let world: ExWorld | undefined
   let version = 1
   // Pages that couldn't be read: their own mistake is reported, so references to them aren't.
@@ -95,8 +93,13 @@ export function parseExampleFiles(files: Record<string, string>, maps: MapRefs[]
   for (const file of paths) {
     if (file === worldPath || /(^|\/)readme\.md$/i.test(file) || !file.endsWith('.md')) continue
     const key = file.replace(/^.*\//, '').replace(/\.md$/, '')
+    // Corkboards are retired: an old board file is skipped, not a mistake, so it never stops the build.
+    if (file.startsWith('boards/')) {
+      problems.push({ file, message: 'Corkboards are retired, so this file is skipped. Copy what matters into a page (a quest or lore page), then delete the file.', level: 'warning' })
+      continue
+    }
     const split = splitFile(file, files[file], problems)
-    const isPage = !file.startsWith('sessions/') && !file.startsWith('boards/')
+    const isPage = !file.startsWith('sessions/')
     if (!split) {
       if (isPage) unreadable.add(key)
       continue
@@ -105,9 +108,6 @@ export function parseExampleFiles(files: Record<string, string>, maps: MapRefs[]
     if (file.startsWith('sessions/')) {
       const s = readSession(split, report, months)
       if (s) sessions.push({ ...s, file })
-    } else if (file.startsWith('boards/')) {
-      const b = readBoard(split, report)
-      if (b) boards.push({ ...b, file })
     } else {
       if (!/^[a-z0-9][a-z0-9-]*$/.test(key))
         report(`The file name "${key}.md" can only use small letters, numbers and dashes (it becomes the page's key).`)
@@ -117,15 +117,13 @@ export function parseExampleFiles(files: Record<string, string>, maps: MapRefs[]
     }
   }
 
-  checkReferences(pages, sessions, boards, world, problems, unreadable, maps)
+  checkReferences(pages, sessions, world, problems, unreadable, maps)
   sessions.sort((a, b) => a.number - b.number)
-  boards.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
   const strip = <T extends { file: string }>({ file: _file, ...rest }: T) => rest
   const content: ExampleContent = {
     world: world ?? blankWorld(),
     pages: pages.map(strip),
     sessions: sessions.map(strip),
-    boards: boards.map(({ file: _file, order: _order, ...b }) => b),
   }
   return { content, problems, version }
 }
@@ -363,7 +361,7 @@ function checkParts(split: Split, report: Report, allowed: string[]) {
   }
 }
 
-// ───────────────────────────── Pages, sessions, boards, world ─────────────────────────────
+// ───────────────────────────── Pages, sessions, world ─────────────────────────────
 
 function readPage(key: string, split: Split, report: Report, months: string[]): ExPage | undefined {
   const r = reader(split, report, PAGE_SETTINGS)
@@ -484,24 +482,6 @@ function readSession(split: Split, report: Report, months: string[]): ExSession 
   }
 }
 
-function readBoard(split: Split, report: Report): (ExBoard & { order?: number }) | undefined {
-  const r = reader(split, report, BOARD_SETTINGS)
-  checkParts(split, report, [])
-  const name = r.text('name', true)
-  if (!name) return undefined
-  const cards = (r.records('cards') ?? []).flatMap((rec, i) => {
-    const e = entry<ExBoard['cards'][number]>(rec, `card ${i + 1}`, 'cards', report, { key: 'text', x: 'num', y: 'num', page: 'text?', text: 'text?', color: 'text?' })
-    return e ? [e] : []
-  })
-  const strings = (r.records('strings') ?? []).flatMap((rec, i) => {
-    const e = entry<ExBoard['strings'][number]>(rec, `string ${i + 1}`, 'strings', report, { from: 'text', to: 'text', label: 'text?' })
-    if (!e) return []
-    for (const end of [e.from, e.to]) if (!cards.some((c) => c.key === end)) report(`string ${i + 1}: no card with key "${end}" on this board.`, 'strings')
-    return [e]
-  })
-  return { name, order: r.num('order'), cards, strings }
-}
-
 function readWorld(split: Split, report: Report): { world?: ExWorld; version: number } {
   const r = reader(split, report, WORLD_SETTINGS)
   checkParts(split, report, [])
@@ -602,7 +582,6 @@ function blankWorld(): ExWorld {
 function checkReferences(
   pages: (ExPage & { file: string })[],
   sessions: (ExSession & { file: string })[],
-  boards: (ExBoard & { file: string })[],
   world: ExWorld | undefined,
   problems: Problem[],
   unreadable: Set<string>,
@@ -652,7 +631,6 @@ function checkReferences(
     page(s.file, s.lectern?.scene, 'lectern "scene"')
     for (const k of s.lectern?.present ?? []) page(s.file, k, 'lectern "present"')
   }
-  for (const b of boards) for (const c of b.cards) page(b.file, c.page, `card "${c.key}"`)
   const mapKeys = new Set(maps.map((m) => m.key))
   for (const m of maps) {
     const file = `src/example/maps (the ${m.name} map)`

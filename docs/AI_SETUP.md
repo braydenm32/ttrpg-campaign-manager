@@ -135,7 +135,7 @@ On the session page, under **Write up this session**:
 4. Under **Keep the world up to date**, go through Claude's suggestions: new NPCs and places that came up, lines for existing pages, quest progress, relationships, timeline events, deaths and captures, loot changing hands, loose threads, and things that contradict your notes. Untick or **Edit** anything wrong; tick **Players can see this line** or **Add to timeline** where you want them.
 5. Press **Add N changes to the world**.
 
-New pages start GM only; lines on existing pages go under a "Session log" heading. **Story › Chronicle** lists every change by session, and each page's **History** can roll any one back.
+New pages start GM only; lines on existing pages go under a "Session log" heading. **What changed**, in each session's Wrap up, lists every change that session made, and each page's **History** can roll any one back.
 
 ### 5d. The Archivist (More › Workshop › The Archivist)
 

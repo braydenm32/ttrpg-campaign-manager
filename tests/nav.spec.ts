@@ -84,7 +84,6 @@ test('each address lights the right area and tab, GM view', () => {
     [`${W}/p/drowned`, 'story/quests'],
     [`${W}/clocks`, 'story/clocks'],
     [`${W}/timeline`, 'story/timeline'],
-    [`${W}/chronicle`, 'story/chronicle'],
     [`${W}/web`, 'story/web'],
     [`${W}/more`, 'more/more'],
     [`${W}/handouts`, 'more/handouts'],
@@ -103,6 +102,8 @@ test('each address lights the right area and tab, GM view', () => {
     [`${W}/settings?tab=data`, 'more/backups'],
   ]
   for (const [url, want] of cases) expect(where(url, gm), url).toBe(want)
+  // The Chronicle is now part of Wrap up: its old address only redirects, so it lights nothing itself.
+  expect(where(`${W}/chronicle`, gm)).toBeUndefined()
   // A session that has been played opens on its notes, so plain /s/<id> is Wrap up.
   expect(where(`${W}/s/1`, help('gm', true))).toBe('session/wrap')
 })

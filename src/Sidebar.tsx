@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect, useRef, useState, useSyncExternal
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { CaretLeft, Shield, SlidersHorizontal } from '@phosphor-icons/react'
 import logo from './assets/logo.svg'
-import type { World } from './db'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db, type World } from './db'
 import { Help, HELP } from './help'
 import { useVisibleEntities } from './hooks'
 import { Ico } from './icons'
@@ -52,6 +53,8 @@ export function useFrame(world: World | null | undefined): Frame {
   const handouts = useVisibleHandouts(world, entities).length
   const inbox = useGmInbox(viewer === 'gm' ? world : undefined)
   const playingNow = usePlayingNow(worldId)
+  // Corkboards are retired; their More item shows only while the world has some left.
+  const boards = useLiveQuery(() => (viewer === 'gm' && worldId ? db.boards.where({ worldId }).count() : 0), [worldId, viewer]) ?? 0
 
   // The session in hand: the one being played (started, live or recording), else the next one to play.
   const first = viewer === 'gm' ? nextSessions(campaigns, sessions, playingNow)[0] : undefined
@@ -79,6 +82,7 @@ export function useFrame(world: World | null | undefined): Frame {
     questions: inbox.available,
     threads: entities.filter(isOpenThread).length,
     leads: openLeads(entities).length,
+    boards,
     campaigns: campaigns.map((c) => ({ id: c.id, name: c.name })),
   }
   const help: LocateHelp = {

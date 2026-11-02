@@ -634,7 +634,7 @@ export type WorldUpdate = { id: string; on: boolean; /** Also put this on the ti
   | { kind: 'conflict'; page: string; note: string }
 )
 
-/** A line in the Chronicle: one change made to the world from a session. Always GM-only. */
+/** A line in a session’s “What changed” (once the Chronicle): one change made to the world from a session. Always GM-only. */
 export interface LedgerEntry {
   id: string
   at: number
@@ -663,7 +663,7 @@ export interface Session {
   highlights?: SessionHighlight[]
   /** The last AI recap draft, kept until the GM uses or discards it. Always GM-only. */
   recapDraft?: RecapDraft
-  /** Changes made to the world from this session (the Chronicle). Always GM-only. */
+  /** Changes made to the world from this session (“What changed” in its Wrap up). Always GM-only. */
   ledger?: LedgerEntry[]
   /** The Lectern: live state while running this session at the table. Always GM-only. */
   lectern?: LecternState

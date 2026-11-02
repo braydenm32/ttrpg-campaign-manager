@@ -122,7 +122,7 @@ test.describe('player view', () => {
   test('the More page offers no GM tools', async ({ page, world }) => {
     await open(page, `/w/${world.slug}/more`)
     await expect(page.getByRole('heading', { name: 'The world' })).toBeVisible()
-    for (const gm of ['Soundboard', 'Generators', 'Corkboards', 'Files', 'The Archivist', 'World settings', 'Templates', 'Recently deleted'])
+    for (const gm of ['Soundboard', 'Generators', 'Old corkboards', 'Files', 'The Archivist', 'World settings', 'Templates', 'Recently deleted'])
       await expect(page.getByRole('link', { name: new RegExp(`^${gm}`) })).toHaveCount(0)
   })
 })

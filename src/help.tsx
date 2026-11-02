@@ -10,7 +10,7 @@ export const HELP = {
   overview: 'Your Desk: the session in hand with the one button for what comes next, everything waiting on you before it, ticking clocks, the party, the sessions coming up and what changed lately. “New page” makes a page of any type.',
   areas:
     'The world is split into areas, down the side on a computer and along the bottom on a phone. Desk is what needs you now. Session is the session in hand: prepare it, play it (the Lectern) and wrap it up. Atlas is the world itself (maps, places, people), Story is what’s moving (threads, quests, clocks, timeline), and More has the tools you need now and then. The tabs along the top belong to the area you’re in, and each area remembers where you were. Players get the Common Room and The World instead.',
-  more: 'Things used now and then, in one place: what you reach for at the table (handouts, sounds, safety tools, the players’ screen), the workshop (generators and tables, corkboards, files, the Archivist, templates) and keeping the world (settings, backups, importing, Recently deleted). The numbers say how many there are (and how much space files take). Search (Ctrl+K) finds every one of them by name too.',
+  more: 'Things used now and then, in one place: what you reach for at the table (handouts, sounds, safety tools, the players’ screen), the workshop (generators and tables, files, the Archivist, templates) and keeping the world (settings, backups, importing, Recently deleted). The numbers say how many there are (and how much space files take). Search (Ctrl+K) finds every one of them by name too.',
   settings:
     'Everything about this world in four tabs: the world itself (name, cover, calendar, your own page types, templates), players and sharing (sync, invite links, the wiki link, co-GMs), this device (look, help tips, Discord, AI keys) and data (backups, importing, recently deleted). Each tab is a step in Back.',
   everything:
@@ -58,7 +58,7 @@ export const HELP = {
   templates:
     'A template is a starting point for new pages, like a "Dungeon room" with the headings and details you always fill in. Templates are always GM only and never appear in lists. Make one with "Save as template" on any page.',
   lifeStatus:
-    'Mark a character alive, dead, missing or captured. It shows in lists, on map pins, at the Lectern and on corkboards. Players only see it if you tick "Players know this".',
+    'Mark a character alive, dead, missing or captured. It shows in lists, on map pins and at the Lectern. Players only see it if you tick "Players know this".',
   print: 'A clean copy to print or save as a PDF (choose "Save as PDF" in the print window). The player copy leaves out secrets, GM notes and anything not revealed.',
   customTypes: 'Add your own kinds of page, such as Ships, Spells or Gods of the Deep. Each gets its own section in Everything.',
 
@@ -159,9 +159,9 @@ export const HELP = {
   recap:
     'Claude drafts a GM summary, a player recap and updates for your pages from the transcript. "Copy for Claude" works with a Claude subscription for free; "Write it now" uses your own API key. You review both before saving.',
   worldUpdates:
-    'Claude compares the session with your pages and suggests what to change: new NPCs, places and shops that came up, quests moving on, new relationships, timeline events, deaths and captures, loot changing hands and threads. Tick the ones you want and add them in one go. New pages start GM only, and lines on existing pages go in a “Session log” at the bottom of the page. Every change is listed in the Chronicle and can be undone from the page’s history.',
-  chronicle:
-    'Every change made to your world from a session, newest first: pages made, lines added, quests and fates that changed. Click a line to open the page. Only you see it.',
+    'Claude compares the session with your pages and suggests what to change: new NPCs, places and shops that came up, quests moving on, new relationships, timeline events, deaths and captures, loot changing hands and threads. Tick the ones you want and add them in one go. New pages start GM only, and lines on existing pages go in a “Session log” at the bottom of the page. Every change is listed under “What changed” in this session’s Wrap up and can be undone from the page’s history.',
+  whatChanged:
+    'In a session’s Wrap up: every change its write-up made to your world (pages made, lines added, quests and fates that changed). Click a line to open the page. It used to be the Chronicle tab under Story; old Chronicle links open the newest one here. Only you see it.',
   heardIn:
     'Where this page’s name (or a nickname) was said out loud in a session’s transcript. Click a time to open the session and play that moment, if the recording is on this device.',
   sessionMentions: 'Sessions whose notes or recap link to this page.',
@@ -199,7 +199,7 @@ export const HELP = {
 
   // Tools
   boards:
-    'A corkboard for mysteries, plots and politics. Pin pages and note cards, drag them about, and tie string between them with 🧶. Click a string to label or cut it. GM only.',
+    'Corkboards are retired: you can’t make new ones, and this only shows while your world still has some. “Copy into a page” writes a board’s cards (pages as links, notes as quotes) and its strings into a new GM-only page, so nothing is lost; then delete the board. Until then you can still move cards, tie string and cut it. GM only.',
   generators: 'Your own random tables come first: pick one and roll. Below, roll up taverns, shops and NPCs without any AI, then names and treasure. Save the ones you like; they start as GM only.',
   playersWillSee:
     'Before something reaches your players you see what they’ll get: which page, which coins, which items. Once you go ahead, Undo takes it back for a few seconds, though anyone looking at that moment may already have seen it.',
