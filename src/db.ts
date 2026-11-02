@@ -690,6 +690,11 @@ export interface Session {
    * they can see).
    */
   present?: string[]
+  /**
+   * What the session held when play began (the prep script in the GM notes, the pages already linked),
+   * so Wrap up can tell what happened in play from what was only planned. GM-only.
+   */
+  playStart?: { notes: string; entityIds: string[] }
   createdAt: number
 }
 
@@ -758,6 +763,8 @@ export interface Combatant {
   side: 'pc' | 'ally' | 'foe'
   conditions: string[]
   entityId?: string
+  /** Out of the fight (listed under "Down", skipped in the turn order) without being removed. */
+  defeated?: boolean
 }
 
 export interface LecternState {

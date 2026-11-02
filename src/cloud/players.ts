@@ -1,4 +1,4 @@
-import { db, type Availability, type PlayerNote, type PlayerQuestion, type SharedInfo } from '../db'
+import { db, type Entity, type Availability, type PlayerNote, type PlayerQuestion, type SharedInfo } from '../db'
 import { tellPlayers } from './sync'
 import { appLink, supabase } from './client'
 import { downloadFiles, storePlayerCopy, tellOtherPlayers, type SharedPayload } from './share'
@@ -197,6 +197,17 @@ export async function editMyCharacter(cloudId: string, localEntityId: string, sh
   if (error) throw error
   await loadMemberWorld(cloudId)
   tellOtherPlayers(cloudId)
+}
+
+/** A player changes one number on their sheet (their HP, say) without opening the whole editor. Goes through the same path as the editor. */
+export function setMyField(cloudId: string, entity: Entity, key: RegExp, value: string) {
+  let done = false
+  const fields = entity.fields.map((f) => {
+    if (done || f.gm || !key.test(f.key.trim())) return f
+    done = true
+    return { ...f, value }
+  })
+  return editMyCharacter(cloudId, entity.id, { summary: entity.summary, fields, playerBody: entity.playerBody ?? '' })
 }
 
 /** A group note someone else saved while this player was typing. */

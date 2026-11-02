@@ -299,3 +299,45 @@ test.describe('with players (a pretend cloud)', () => {
     await expect(start).toHaveCount(0)
   })
 })
+
+test('Needs you asks for the last played session’s recap, and keeps pressing threads to three', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  await open(page, w)
+  const before = await getRecord(page, 'sessions', s1.id)
+  // Two more pressing threads, copied from one that is already there, so there are more than three.
+  const thread = world.dump.entities.find((e) => {
+    const t = e as typeof e & { threadUrgency?: string }
+    return e.type === 'thread' && t.threadUrgency === 'high'
+  })!
+  const copies = [1, 2].map((n) => ({ ...(thread as unknown as Record<string, unknown>), id: `test-pressing-${n}`, name: `Extra pressing ${n}` }))
+  await putBack(page, 'entities', copies.map((c) => [c.id as string, c as never]))
+  try {
+    await patchRecord(page, 'sessions', s1.id, { startedAt: Date.now() - 1000, playedAt: Date.now(), recap: '', visibility: 'gm' })
+    await open(page, w)
+    const section = needs(page)
+
+    // Three pressing threads, then “and N more” that goes to Threads, and none of it in the red number.
+    await expect(section.locator('.need-chip.bad')).toHaveCount(3)
+    await expect(section.getByText(/…and \d+ more pressing/)).toBeVisible()
+    await expect(section.getByRole('link', { name: 'Threads' })).toBeVisible()
+    await expect(section.locator('.count.alert')).toHaveText(String(await section.locator('.need:not(.quiet):not(.bad)').count()))
+
+    // No recap yet: “Write it” goes to the recap box.
+    const row = section.locator('.need', { hasText: 'Recap' })
+    await expect(row).toContainText('Players have no recap of #1')
+    await expect(row.getByRole('link', { name: 'Write it' })).toHaveAttribute('href', new RegExp(`/s/${s1.id}\\?tab=recap`))
+
+    // A recap that is still GM only: “Show to players”, with Undo.
+    await patchRecord(page, 'sessions', s1.id, { recap: 'The company mustered.' })
+    await open(page, w)
+    await section.getByRole('button', { name: 'Show to players' }).click()
+    await expect(toast(page)).toContainText('Players can read #1 now')
+    await expect(section.locator('.need', { hasText: 'still GM only' })).toHaveCount(0)
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect(section.locator('.need', { hasText: 'still GM only' })).toBeVisible()
+  } finally {
+    await putBack(page, 'sessions', [[s1.id, before]])
+    await putBack(page, 'entities', copies.map((c) => [c.id as string, null]))
+  }
+})

@@ -534,6 +534,23 @@ button.social.facebook .social-icon { background: #1877f2; }
 .combatant.down { opacity: .55; }
 .combatant.down .combatant-name { text-decoration: line-through; }
 .combatant-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A fighter on one line; the details open on tap. */
+.combatant { scroll-margin-block: calc(var(--topbar-h) + 7em) 5em; }
+.fighter-line { display: flex; align-items: center; flex-wrap: wrap; gap: .3em .5em; }
+.fighter-name { flex: 1 1 8em; min-width: 0; display: flex; align-items: center; gap: .5em; padding: .2em .3em; background: none; border: none; box-shadow: none; text-align: left; color: var(--text); font-weight: normal; justify-content: flex-start; }
+.fighter-name svg:last-child { flex: none; color: var(--muted); transition: transform .15s; }
+.fighter-name[aria-expanded=true] svg:last-child { transform: rotate(180deg); }
+.init-chip { flex: none; min-width: 2em; text-align: center; font: 700 .9rem var(--font-body); padding: .1em .35em; border-radius: 6px; background: var(--panel); border: 1px solid var(--border); }
+.hp-compact { display: inline-flex; align-items: center; gap: .35em; flex: none; }
+.hp-quick { display: inline-flex; gap: .1em; flex: none; }
+.hp-quick button { min-width: 2.4em; justify-content: center; padding: .2em .4em; }
+.fighter-conds { padding-left: .3em; }
+.fighter-details { display: flex; flex-direction: column; gap: .4em; padding-top: .3em; border-top: 1px dashed var(--border); }
+.fighter-details .init-input { margin-left: .3em; }
+.condition-custom input { width: 12em; max-width: 100%; }
+.down-list { margin: .4em 0; }
+.down-list ul { list-style: none; padding: 0; margin: .3em 0 0; display: flex; flex-direction: column; gap: .2em; }
+.down-list .combatant-name { text-decoration: line-through; }
 .row > input.init-input, .init-input { width: 3.4em; flex: none; text-align: center; font-weight: 700; padding: .3em .2em; }
 .init-input, .hp-input { -moz-appearance: textfield; appearance: textfield; }
 .init-input::-webkit-inner-spin-button, .hp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -1561,6 +1578,7 @@ textarea.read-text:hover { border-color: var(--border); border-left-color: var(-
 .reveal-review ul { margin: 0; padding-left: 1.2em; }
 .reveal-review p { margin: 0; }
 .wrap-intro { margin: 0 0 .5em; }
+.wrap-progress { margin: 0 0 .8em; display: flex; flex-wrap: wrap; align-items: center; gap: .3em .5em; }
 .thread-lines { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .3em; }
 .finish-row { display: flex; flex-wrap: wrap; align-items: center; gap: .6em 1em; margin-top: 1em; padding-top: 1em; border-top: 1px solid var(--border); }
 .finish-row p { margin: 0; flex: 1 1 16em; }
@@ -1634,26 +1652,37 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .loot-coin .hp-input { width: 4.5em; }
 .loot-coin select { width: auto; flex: none; }
 .lectern-page:has(.fight-bar) .lectern-jump { top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px) + 3.6em); }
+/* The quick note and the find box sit above the columns on a laptop and after the scene on a phone. */
+.lectern-top { grid-column: 1 / -1; }
+.wrap-up-foot { display: none; }
+.record-chip .rec-dot { margin-right: .1em; }
 @media (max-width: 800px) {
   .lectern { display: flex; flex-direction: column; gap: 1em; }
+  .lectern-top { order: 2; }
+  .lectern-top.searching { order: 0; }
+  .lectern-top .quick-note { margin-bottom: .5em; }
+  .wrap-up-top { display: none; }
+  .wrap-up-foot { display: flex; align-items: center; gap: .8em; margin: 1em 0 .5em; }
   .lectern-col, .lectern-col:last-child { display: contents; }
   .lectern-col > * { order: 20; min-width: 0; max-width: 100%; }
   #lectern-scene { order: 1; }
-  #lectern-prep { order: 2; }
-  #lectern-initiative { order: 3; }
-  #lectern-party { order: 4; }
-  #lectern-present { order: 5; }
-  #lectern-clocks { order: 6; }
-  #lectern-show { order: 7; }
-  #lectern-loot { order: 8; }
-  #lectern-dice { order: 9; }
-  #lectern-notes { order: 10; }
+  #lectern-prep { order: 3; }
+  #lectern-initiative { order: 4; }
+  #lectern-party { order: 5; }
+  #lectern-present { order: 6; }
+  #lectern-clocks { order: 7; }
+  #lectern-show { order: 8; }
+  #lectern-loot { order: 9; }
+  #lectern-dice { order: 10; }
+  #lectern-notes { order: 11; }
   .lectern-page [id^='lectern-'] { scroll-margin-top: calc(var(--topbar-h) + 4.5em); }
   .lectern-page:has(.fight-bar) [id^='lectern-'] { scroll-margin-top: calc(var(--topbar-h) + 8em); }
   .quick-note button { min-height: 44px; }
   .lectern-panel .fold-toggle { min-width: 44px; min-height: 44px; }
   .planned-scenes button { min-height: 44px; }
   .initiative button.ghost, .hp button.ghost, .tags .tag button { min-width: 44px; min-height: 44px; }
+  .fighter-name { min-height: 44px; }
+  .hp-quick button { min-width: 44px; min-height: 44px; }
 }
 .world-today-fold > summary { cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; gap: .4em; font-weight: 600; }
 .world-today-fold[open] > summary { margin-bottom: .3em; }
@@ -1957,3 +1986,39 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .reveal-on { margin: .4em 0; align-items: center; gap: .4em; }
 .reveal-on label { display: inline-flex; align-items: center; gap: .35em; }
 .reveal-on-chip { font-size: .8rem; }
+/* Party loot: what isn't the party's is folded, and the "who carries it" picker keeps one width. */
+.loot-else { margin-top: 1em; }
+.loot-else > summary { cursor: pointer; }
+.loot-else > summary h2 { display: inline; font-size: 1.15rem; }
+.loot-else h3 { margin: .8em 0 .3em; font-size: 1rem; }
+.loot-list select { width: 11em; max-width: 45%; flex: none; }
+@media (max-width: 800px) { .loot-list li { flex-wrap: wrap; } .loot-list select { width: 100%; max-width: 100%; } }
+
+/* Players' Now: the HP tile can be changed in place; the live stage has one column; the dice card at the foot. */
+.room-now.one { grid-template-columns: minmax(0, 1fr); }
+.number-tiles .tile-value { padding: 0; min-height: 0; font-weight: 600; text-align: left; }
+.number-tiles dd:has(.tile-edit) { overflow: visible; white-space: normal; }
+.tile-edit { display: flex; flex-wrap: wrap; gap: .3em; align-items: center; }
+.tile-edit input { width: 4.5em; padding: .2em .4em; }
+.room-dice-foot { margin-top: 1em; }
+@media (max-width: 800px) { .number-tiles .tile-value, .tile-edit :is(input, button) { min-height: 44px; } }
+.choose-character.one-line { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: .5em .9em; }
+@media (max-width: 800px) { .choose-character.one-line :is(.button, button) { min-height: 44px; min-width: 44px; justify-content: center; } }
+
+/* A fighter stays on one line on a phone too; the details below tidy into rows that fit. */
+.fighter-details .hp { flex-wrap: nowrap; max-width: 100%; }
+.fighter-actions { display: inline-flex; align-items: center; gap: .3em; margin-left: auto; }
+@media (max-width: 800px) {
+  .fighter-line { flex-wrap: nowrap; gap: .2em .35em; }
+  .fighter-name { flex: 1 1 0; min-width: 0; padding: .2em 0; }
+  .fighter-name svg:last-child { display: none; }
+  .fighter-line > .field-chip, .hp-compact .hp-bar { display: none; }
+  .fighter-name { gap: .35em; }
+  .init-chip { min-width: 1.6em; padding: .1em .2em; }
+  .hp-compact { gap: .25em; }
+  .hp-quick { gap: 0; }
+  .hp-quick button.ghost { padding: .2em 0; }
+  .fighter-details .hp-bar { width: 1.6em; }
+  .fighter-details .hp-input { width: 2.9em; }
+}
+@media (max-width: 800px) { .room-dice-foot .dice-buttons button, .room-dice-foot .table-dice :is(input, button) { min-height: 44px; min-width: 44px; } }

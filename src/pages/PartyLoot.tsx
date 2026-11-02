@@ -80,21 +80,28 @@ export default function PartyLoot() {
           .
         </p>
       )}
-      {isGM && loot.elsewhere.length > 0 && (
-        <section>
-          <h2>Carried by others</h2>
-          <ItemList items={loot.elsewhere} worldId={worldId} holders={holders} isGM={isGM} />
-        </section>
-      )}
-      {isGM && (
-        <section>
-          <h2>Items nobody is carrying</h2>
-          {loot.loose.length === 0 ? (
-            <Empty>Every item is with someone. New treasure? Make an item page and set who carries it.</Empty>
-          ) : (
-            <ItemList items={loot.loose} worldId={worldId} holders={holders} isGM={isGM} />
+      {isGM && loot.elsewhere.length + loot.loose.length > 0 && (
+        // What isn't the party's folds away, so the party's own gear is the answer to “what do we have?”.
+        <details className="loot-else">
+          <summary>
+            <h2>Everything else in the world ({loot.elsewhere.length + loot.loose.length})</h2>
+          </summary>
+          {loot.elsewhere.length > 0 && (
+            <section>
+              <h3>Carried by others ({loot.elsewhere.length})</h3>
+              <ItemList items={loot.elsewhere} worldId={worldId} holders={holders} isGM={isGM} />
+            </section>
           )}
-        </section>
+          {loot.loose.length > 0 && (
+            <section>
+              <h3>Items nobody is carrying ({loot.loose.length})</h3>
+              <ItemList items={loot.loose} worldId={worldId} holders={holders} isGM={isGM} />
+            </section>
+          )}
+        </details>
+      )}
+      {isGM && loot.elsewhere.length + loot.loose.length === 0 && (
+        <Empty>Every item is with someone. New treasure? Make an item page and set who carries it.</Empty>
       )}
     </div>
   )

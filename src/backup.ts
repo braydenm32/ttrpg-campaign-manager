@@ -265,6 +265,7 @@ export async function importWorld(file: File): Promise<string> {
         notes: pics(s.notes),
         recap: pics(s.recap),
         entityIds: s.entityIds.map(id),
+        playStart: s.playStart && { notes: pics(s.playStart.notes), entityIds: s.playStart.entityIds.map(id) },
         recordings: s.recordings.map((r) => ({ ...r, assetId: id(r.assetId) })),
         ledger: s.ledger?.map((l) => ({ ...l, entityId: opt(l.entityId) })),
         // The Lectern points at pages: the scene, who's present and who's in the fight.

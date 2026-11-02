@@ -15,7 +15,7 @@ export const HELP = {
     'Everything about this world in four tabs: the world itself (name, cover, calendar, your own page types, templates), players and sharing (sync, invite links, the wiki link, co-GMs), this device (look, help tips, Discord, AI keys) and data (backups, importing, recently deleted). Each tab is a step in Back.',
   everything:
     'Every kind of page in this world with how many there are, your own kinds included. Maps, places (shops and taverns too), people, factions and lore (deities too) have tabs of their own; items, events and your own kinds are only here.',
-  needsYou: 'Everything waiting on you before the next session, each with one button: what players sent (questions, downtime, claims, new characters, the same as the Inbox), a session with no date or no plan yet, pressing threads, a backup that’s due, characters nobody plays yet and pages you’ve linked but not written. When it’s empty you’re all caught up.',
+  needsYou: 'Everything waiting on you before the next session, each with one button: what players sent (questions, downtime, claims, new characters, the same as the Inbox), a session with no date or no plan yet, a recap for the session you just played, a few pressing threads (reminders, not counted in the red number), a backup that’s due, characters nobody plays yet and pages you’ve linked but not written. When it’s empty you’re all caught up.',
   sampleWorld:
     'A small, simple world for a first look: a coast, a town, a handful of people and two drawn maps with pins. Good for learning the basics in a few minutes. Vael Ardith is the full example with a campaign ready to run.',
   exampleWorld:
@@ -146,7 +146,7 @@ export const HELP = {
     'The real date you play (leave it empty until it’s set; booking a date on the campaign page fills it in), the date in your world, and whether players can read this session’s recap. Print and Delete are here too.',
   featured: 'The pages this session is about. People you put in a scene at the Lectern are added by themselves.',
   wrapUp:
-    'After play, in order: your notes, the recording and its transcript, the write-up from Claude, the players’ recap, highlights, and changes to your pages. Then “Mark as played”, and the next session is ready to prepare.',
+    'After play, in order: your notes, the recording and its transcript, the write-up from Claude, the players’ recap, highlights, and changes to your pages. Then “Mark as played”, and the next session is ready to prepare. The line at the top counts how many of the “Before you finish” steps are done; “who featured” and the notes only count what happened once you pressed Start playing, not the plan.',
   markPlayed:
     'Marks this session played and moves on: the next session (made now if there isn’t one, with the clues and scenes you didn’t reach) becomes the one the Desk and the Session area open. Undo puts it back.',
   revealRecap:
@@ -166,7 +166,7 @@ export const HELP = {
     'Where this page’s name (or a nickname) was said out loud in a session’s transcript. Click a time to open the session and play that moment, if the recording is on this device.',
   sessionMentions: 'Sessions whose notes or recap link to this page.',
   lectern:
-    'Play (the Lectern) is your screen while you run the session: the scene and its read-aloud text, who is there, the fight, the party, and tools (show players, dice, loot, sounds). On a computer it’s three columns; on a phone the row of buttons at the top jumps to each part. “Wrap up” ends the session.',
+    'Play (the Lectern) is your screen while you run the session: the scene and its read-aloud text, who is there, the fight, the party, and tools (show players, dice, loot, sounds). On a computer it’s three columns; on a phone the scene comes first, Who’s here and Clocks start folded, and the row of buttons at the top jumps to each part. “Record” opens the recording panel. “Wrap up” ends the session (on a phone it sits at the bottom, away from your thumb).',
   nextScene:
     'Goes on to the next scene you planned: ticks off this one, and puts the next one’s place, read-aloud text and people on screen (and its fight, sounds and handout, if its card has them). If it reveals pages, you see what players will get first. Undo puts it all back: the last scene, the fight and people it added, and the pages it revealed or showed.',
   sceneChange:
@@ -191,7 +191,7 @@ export const HELP = {
   handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove a picture or text to take it back. A page you remove stays revealed unless you choose to hide it again.',
   handoutsReady: 'Handouts you’ve prepared but not shown yet: any GM-only page tagged “handout”. Players can’t see them. “Reveal and show” first says what players will see, then reveals the page to everyone and puts it on their screens (with Undo), and it moves to Shown so far.',
   playersScreen: 'A clean screen for a TV or second monitor at the table. It shows whatever you’re showing players, and nothing else.',
-  initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Track HP and conditions as you go. In the ± box, type +5 to heal or -5 to damage; a plain number follows the button you press, and Undo puts HP back. “Something else…” in the condition list lets you type your own. With a keyboard, N moves to the next turn (press ? for all the shortcuts).',
+  initiative: 'Add everyone in the fight, roll or type initiative, then step through turns. Each fighter is one line: tap the name for the details (initiative, side, conditions, exact HP), or use −5 / −1 / +1 right on the line. “Defeated” moves someone to the Down list and skips them in the turn order; “Back in” returns them. In the ± box, type +5 to heal or -5 to damage; a plain number follows the button you press, and Undo puts HP back. “Something else…” in the condition list lets you type your own, and a number at the end, like “Burning 2”, counts down at the end of their turn. With a keyboard, N moves to the next turn (press ? for all the shortcuts).',
   dice: 'Roll any dice. Type things like 2d6+3 or 4d6kh3 (keep the highest three), or tap a quick die.',
   randomTables:
     'Your own tables to roll on: one entry per line. "3x Goblins" makes an entry three times as likely, {2d6} rolls dice inside an entry, and {Weather} rolls on your table called Weather.',
@@ -206,7 +206,7 @@ export const HELP = {
   assets: 'Every file in this world: map images, portraits and handouts. Mark a file revealed to let players see it.',
   loot:
     'What the party has: the stash, what each player character carries and the party’s coin. Set "Carried by" on any item page. Players see the revealed items and the coins in the purse; things an NPC, shop or place holds are listed only for you.',
-  lootSteps: 'Use − and + to take coins out of the purse or put them in, by the amount in the box (1 to start with). Click the number to type a new total instead.',
+  lootSteps: 'Use − and + to take coins out of the purse or put them in, by the amount in the box (1 to start with). Click the number to type a new total instead. What other people carry, and items nobody does, are folded under “Everything else in the world”.',
   importPages:
     'Bring pages in from Obsidian (or any folder of plain-text notes), a Kanka export or a World Anvil export. Everything arrives as 🔒 GM only, so you can tidy up before revealing anything.',
   importSheet:
@@ -230,7 +230,7 @@ export const HELP = {
   players:
     'Invite your players with a link. They sign in, join, claim their character and keep notes. They only ever receive what you’ve revealed to them.',
   playerNotes:
-    '“My notes” are private to you. “Group notes” are shared with the whole party, and your GM can read them. Both save when you click away. If someone else changed the group notes while you were typing, nothing is lost: you choose to keep both, yours or theirs.',
+    '“My notes” are private to you. “Group notes” are shared with the whole party, and your GM can read them. “My notes” save when you click away. “Group notes” show as they will read: type a line in the box and press “Add a line”, or use “Edit the whole notebook” to rewrite them. If someone else changed the group notes while you were typing, nothing is lost: you choose to keep both, yours or theirs.',
   scratchpad:
     'A notebook for anything that isn’t about one page: plans, names, clues. Keep your own notes (My notes) or write in the party’s shared Group notes.',
   gmPlayerNotes:
@@ -262,7 +262,7 @@ export const HELP = {
     'Keep your character’s details up to date: the one-line summary, stats and anything you want to write about them. Your GM sees your changes and can change them back.',
   character: 'Who plays this character. Players ask to play their character from here, and you approve it (here or in World settings) before it counts, so nobody can take someone else’s character or their secrets. You can release a claim later.',
   roomNow:
-    'Now changes with the game. Before a session: when you play next, what happened last time and what the party is doing. While your GM runs the session live: the scene, whose turn it is, dice everyone sees, a quiet word to the GM and the X-card. After a game, until the day of the next one: last time’s recap first, then the loot and the Group notes.',
+    'Now changes with the game. Before a session: when you play next, what happened last time and what the party is doing. While your GM runs the session live: the scene, whose turn it is, dice everyone sees, a quiet word to the GM and the X-card, with your character’s numbers right under the scene (tap your HP to change it). At any other time a small Dice card at the foot keeps dice in reach. After a game, until the day of the next one: last time’s recap first, then the loot and the Group notes.',
   roomMe: 'Your character at a glance: the numbers that matter, what you carry, passages only you can read, and your own notes. “Edit my character” lets you update the sheet, or fill it in from a character sheet file.',
   roomParty: 'Everyone in the party, who plays them and what each one carries, plus the party’s purse and the stash you share. The full loot list has every item with its notes.',
   tableRules:
@@ -280,7 +280,7 @@ export const HELP = {
     'Every so many years, chosen months get extra days: February’s 29th, or a festival that only happens in leap years (give it 0 days and 1 leap day, like Shieldmeet). Tick “festival” for days between months, like Midwinter: their dates read “Midwinter” or “3rd day of Needfest”. To line a moon up with a published calendar, set a date it was full.',
   timers:
     'Countdowns for the table: a fuse burning, a ritual finishing, a time limit on a puzzle. Tap a length to start one (name it first if you like). It beeps when it runs out. Players see your timers in their Common Room unless you hide one with the eye.',
-  tableDice: 'Rolls here show up for the whole table: the other players and your GM see who rolled what.',
+  tableDice: 'While your GM is running the session live, rolls here show up for the whole table: the other players and your GM see who rolled what. At other times the dice are just for you.',
   tableSignals:
     'A quiet word to your GM without interrupting: they get a pop-up with your character’s name, and you see when they’ve noticed. For something you’d rather not say out loud, use the X-card instead.',
   aiTools: 'Keys for transcription, recaps and the Claude tools, and the voice for reading recaps aloud. They stay on this device and are never in worlds or backups, unless you save the keys to your account.',
@@ -295,7 +295,7 @@ export const HELP = {
   npcLines:
     'Say what’s happening and Claude writes four lines this character might say, in their voice, using what their page says about them. Keep the ones you like in your GM notes.',
   spotlight:
-    'Who got time at the table. With a transcript that tells speakers apart, it shows how long each person talked; it also counts how often each character came up (in the transcript, or in your notes and recap without one). Worked out on this device; nothing is sent anywhere.',
+    'Who got time at the table. With a transcript that tells speakers apart, it shows how long each person talked; it also counts how often each character came up (in the transcript, or in your recap and the notes you wrote during play without one). Worked out on this device; nothing is sent anywhere.',
   readAloud: 'Reads recaps aloud with your device’s own voices: free, private, and secret passages are never read, not even ones meant only for you (the whole table would hear them). Pick a voice and speed here.',
   newCharacterName:
     'Secret passages written “for” a character reach whoever plays a character with that full name or first name. If the new character shares a name with another, those secrets would reach both players, so give one of them a different name.',

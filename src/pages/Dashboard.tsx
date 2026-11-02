@@ -298,10 +298,15 @@ interface Need {
   action?: ReactNode
   /** One of the Inbox's items (what the badge counts). */
   inbox?: boolean
+  /** A reminder rather than a question: listed, but not in the red number. */
+  reminder?: boolean
 }
 
 /** How many of the Inbox's items "Needs you" lists before "…and N more in the Inbox". */
 const INBOX_ROWS = 5
+
+/** How many pressing threads "Needs you" lists before "…and N more". */
+const PRESSING_ROWS = 3
 
 const clip = (text: string, n = 90) => (text.length > n ? `${text.slice(0, n)}…` : text)
 
@@ -316,6 +321,15 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
   const audio = useRecordingsOnlyHere(world)
   const [reading, setReading] = useState<CharacterRequest>()
   const [wantedOpen, setWantedOpen] = useState(false)
+  const [, bump] = useState(0)
+  const skipRecap = (id: string) => {
+    try {
+      localStorage.setItem(recapSkipKey(id), '1')
+    } catch {
+      /* the row just stays */
+    }
+    bump((n) => n + 1)
+  }
   const w = worldPath(world.id)
   const nameOf = (id: string) => entities.find((e) => e.id === id)?.name ?? 'a character'
   const ask = (id: string) => `${w}/questions?item=${id}`
@@ -407,16 +421,33 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
         </Link>
       ),
     })
-  for (const t of entities.filter((e) => isOpenThread(e) && e.threadUrgency === 'high'))
+  const recapNeed = recapRow(world, sessions, inHand, skipRecap)
+  if (recapNeed) needs.push(recapNeed)
+  const pressing = entities.filter((e) => isOpenThread(e) && e.threadUrgency === 'high')
+  for (const t of pressing.slice(0, PRESSING_ROWS))
     needs.push({
       key: t.id,
       chip: 'Pressing',
       icon: Flame,
       tone: 'bad',
+      reminder: true,
       text: <span className="clip">{t.name}</span>,
       action: (
         <Link className="button small" to={pagePath(world.id, t.id)}>
           Open
+        </Link>
+      ),
+    })
+  if (pressing.length > PRESSING_ROWS)
+    needs.push({
+      key: 'pressing-more',
+      chip: 'Pressing',
+      icon: Flame,
+      tone: 'quiet',
+      text: <span className="muted">…and {pressing.length - PRESSING_ROWS} more pressing</span>,
+      action: (
+        <Link className="button small ghost" to={`${w}/threads`}>
+          Threads
         </Link>
       ),
     })
@@ -507,7 +538,7 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
       ),
     })
   const more = fromPlayers.length - INBOX_ROWS
-  const waiting = needs.filter((n) => n.tone !== 'quiet').length + Math.max(0, more)
+  const waiting = needs.filter((n) => n.tone !== 'quiet' && !n.reminder).length + Math.max(0, more)
 
   return (
     <section className="card needs-you" data-inbox-total={inbox.total}>
@@ -544,6 +575,71 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
       {reading && <ReviewCharacter world={world} request={reading} player={inbox.nameOf(reading.userId)} onClose={() => setReading(undefined)} onDone={inbox.reload} />}
     </section>
   )
+}
+
+const recapSkipKey = (sessionId: string) => `atlas-recap-skip:${sessionId}`
+const recapSkipped = (sessionId: string) => {
+  try {
+    return localStorage.getItem(recapSkipKey(sessionId)) === '1'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * The session just played, when players have no recap for it yet: none written ("Write it"), or one
+ * written but still GM only ("Show to players", with Undo). "Skip" quiets it on this device.
+ */
+function recapRow(world: World, sessions: Session[], inHand: InHand | undefined, skip: (id: string) => void): Need | undefined {
+  if (!inHand) return undefined
+  const last = sessions
+    .filter((x) => x.campaignId === inHand.campaign.id && x.playedAt && x.id !== inHand.session.id)
+    .sort((a, b) => b.number - a.number)[0]
+  if (!last || recapSkipped(last.id)) return undefined
+  const written = !!last.recap.trim()
+  if (written && last.visibility === 'players') return undefined
+  const skipButton = (
+    <button className="small ghost" onClick={() => skip(last.id)} title="Don’t remind me about this one on this device">
+      Skip
+    </button>
+  )
+  if (!written)
+    return {
+      key: 'recap',
+      chip: 'Recap',
+      icon: Eye,
+      tone: 'warn',
+      text: <>Players have no recap of #{last.number} {last.title} yet</>,
+      action: (
+        <span className="row">
+          <Link className="button small" to={`${worldPath(world.id)}/s/${last.id}?tab=recap`}>
+            Write it
+          </Link>
+          {skipButton}
+        </span>
+      ),
+    }
+  return {
+    key: 'recap',
+    chip: 'Recap',
+    icon: Eye,
+    tone: 'warn',
+    text: <>The recap of #{last.number} {last.title} is still GM only</>,
+    action: (
+      <span className="row">
+        <button
+          className="small"
+          onClick={async () => {
+            await db.sessions.update(last.id, { visibility: 'players' })
+            toast(`Players can read #${last.number} now.`, () => db.sessions.update(last.id, { visibility: 'gm' }))
+          }}
+        >
+          Show to players
+        </button>
+        {skipButton}
+      </span>
+    ),
+  }
 }
 
 /** "Set a date": a date box in place; the session takes the day you pick (today or later). */

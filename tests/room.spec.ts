@@ -44,6 +44,11 @@ test('Now answers next session, last time and what we’re doing first, and chan
   if (device === 'phone') expect(d.y + d.height).toBeLessThan(844 - 64)
   // The purse is on Party, not here.
   await expect(page.locator('.common-room')).not.toContainText('Purse')
+  // A small Dice card sits at the foot of Now even when nothing is live, and rolls on the spot.
+  const dice = page.locator('.room-dice-foot')
+  await expect(dice).toBeVisible()
+  await dice.getByRole('button', { name: 'd20', exact: true }).click()
+  await expect(dice.locator('.table-rolls li').first()).toBeVisible()
 
   // A recap revealed ten days ago and a date booked in three days: the recap stays first until the next game.
   const at = new Date(Date.now() + 3 * 86_400_000)
@@ -100,6 +105,10 @@ test('while the GM runs a session live, the scene, dice and a word to the GM com
     await expect(page.getByRole('heading', { name: 'Dice' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Tell your GM' })).toBeVisible()
     expect((await live.boundingBox())!.y).toBeLessThan((await answers(page).boundingBox())!.y)
+    // Your own numbers sit right under the live card, before the answers.
+    const you = (await page.getByRole('heading', { name: 'You', exact: true }).boundingBox())!
+    expect(you.y).toBeGreaterThan((await live.boundingBox())!.y)
+    expect(you.y).toBeLessThan((await answers(page).boundingBox())!.y)
     // Dice: a quick die rolls at once; Roll waits for something typed.
     await expect(page.getByRole('button', { name: 'Roll', exact: true })).toBeDisabled()
     await page.getByRole('button', { name: 'd20', exact: true }).click()
