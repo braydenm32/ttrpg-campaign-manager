@@ -119,7 +119,7 @@ test('nothing typed in the page editor is lost by leaving, and an untouched new 
     const newNpc = async () => {
       await open(page, `${w}/npcs`)
       await page.getByRole('button', { name: /^\+ New NPC/ }).first().click()
-      const blank = page.getByRole('button', { name: 'Blank page' })
+      const blank = page.getByRole('menuitem', { name: 'Blank page' })
       if (await blank.isVisible()) await blank.click()
       await expect.poll(() => here(page)).toMatch(/\?edit=1&new=1$/)
       return page.getByPlaceholder('Name this npc')

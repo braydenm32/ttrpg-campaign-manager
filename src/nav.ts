@@ -109,7 +109,7 @@ export interface NavTab {
   types?: EntityType[]
   /** Who it's for. GM-only things never get 'player' or 'wiki'. */
   who: Viewer[]
-  /** Shown only when this holds (there are handouts, cloud sync is on…). Search ignores it. */
+  /** Shown only when this holds (there are handouts, cloud sync is on…). Search follows it too. */
   when?: (f: NavFacts) => boolean
   /** A count beside it; `alert` when it's something waiting on you. */
   count?: (f: NavFacts) => number | undefined
@@ -412,8 +412,8 @@ export const MORE_GROUPS: MoreGroup[] = [
         blurb: 'Cloud sync, invites, the wiki link and who plays whom.',
         keywords: 'invite players sync share wiki link co-gm claims',
       },
-      { id: 'backups', label: 'Backups', icon: DownloadSimple, to: (f) => w(f, 'settings?tab=data'), paths: ['settings?tab=data'], who: own, blurb: 'Download the whole world as one file.', keywords: 'backup download export' },
-      { id: 'import', label: 'Import pages and character sheets', icon: FileArrowUp, to: (f) => w(f, 'settings?tab=data&at=import'), who: own, blurb: 'Bring in pages, or a character from D&D Beyond, Foundry and others.', keywords: 'import character sheet dndbeyond foundry pathbuilder' },
+      { id: 'backups', label: 'Backups', icon: DownloadSimple, to: (f) => w(f, 'settings?tab=data'), paths: ['settings?tab=data'], who: own, blurb: 'Download the whole world as one file.', keywords: 'backup download export markdown obsidian json copy save' },
+      { id: 'import', label: 'Import pages and character sheets', icon: FileArrowUp, to: (f) => w(f, 'settings?tab=data&at=import'), who: own, blurb: 'Bring in pages, or a character from D&D Beyond, Foundry and others.', keywords: 'import character sheet dndbeyond foundry pathbuilder obsidian kanka markdown world anvil' },
       { id: 'deleted', label: 'Recently deleted', icon: Trash, to: (f) => w(f, 'settings?tab=data&at=deleted'), who: own, blurb: 'Bring back what you deleted in the last month.', keywords: 'bin trash restore undelete' },
       { id: 'print', label: 'Print', icon: Printer, to: () => undefined, who: own, blurb: 'Every page and session has a Print button, for a GM copy or a player copy.', keywords: 'pdf paper' },
     ],
@@ -611,10 +611,10 @@ export function navPlaces(f: NavFacts): NavPlace[] {
   }
   for (const area of areasFor(f.viewer)) {
     add(area.label, areaHome(area, f), area.keywords)
-    for (const t of area.tabs) if (t.who.includes(f.viewer)) add(t.searchTitle ?? t.label, t.to(f), `${t.label} ${t.keywords ?? ''}`)
+    for (const t of area.tabs) if (showsTab(t, f)) add(t.searchTitle ?? t.label, t.to(f), `${t.label} ${t.keywords ?? ''}`)
   }
   for (const g of f.viewer === 'gm' ? MORE_GROUPS : PLAYER_MORE_GROUPS)
-    for (const t of g.items) if (t.who.includes(f.viewer)) add(t.searchTitle ?? t.label, t.to(f), `${g.label} ${t.keywords ?? ''}`, t.external)
+    for (const t of g.items) if (t.who.includes(f.viewer) && (!t.when || t.when(f))) add(t.searchTitle ?? t.label, t.to(f), `${g.label} ${t.keywords ?? ''}`, t.external)
   for (const c of f.campaigns ?? []) add(c.name, w(f, `c/${c.id}`), 'campaign sessions')
   return out
 }

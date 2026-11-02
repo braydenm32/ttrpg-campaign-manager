@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type InputHTMLAttributes, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type FocusEvent, type InputHTMLAttributes, type KeyboardEvent, type ReactNode } from 'react'
 import type { Visibility } from './db'
 import { Ico } from './icons'
 import { Lock } from '@phosphor-icons/react'
@@ -60,27 +60,131 @@ export function TagInput({ tags, onChange, placeholder = 'Add tag…' }: { tags:
   )
 }
 
+/** The pop-ups open right now, topmost last: only that one answers Escape and Tab. */
+const openDialogs: object[] = []
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
+
+/**
+ * Everything on the page except the pop-up's own branch is switched off (`inert`), so Tab, taps from
+ * a screen reader and typing can't reach what's behind it. Gives back what it switched off.
+ */
+function blockBehind(dialog: HTMLElement) {
+  const switched: HTMLElement[] = []
+  let node: HTMLElement | null = dialog
+  while (node && node !== document.body) {
+    const parent: HTMLElement | null = node.parentElement
+    if (!parent) break
+    for (const sibling of Array.from(parent.children) as HTMLElement[]) {
+      // The Undo note and other live notes stay reachable.
+      if (sibling === node || sibling.hasAttribute('inert') || sibling.matches('script, style, [role="status"], [aria-live]')) continue
+      sibling.setAttribute('inert', '')
+      switched.push(sibling)
+    }
+    node = parent
+  }
+  return () => switched.forEach((el) => el.removeAttribute('inert'))
+}
+
 /**
  * Keyboard care for a pop-up: it takes the focus when it opens (so Tab and screen readers start
- * inside it), Escape closes it, and the focus goes back where it was afterwards.
+ * inside it), Tab stays inside it, the page behind is switched off, Escape closes it, and the focus
+ * goes back to what opened it afterwards.
  */
 export function useDialog(onClose: () => void) {
   const ref = useRef<HTMLDivElement>(null)
   const close = useRef(onClose)
+  // What had the focus before the pop-up drew: read while rendering, before a field inside takes it.
+  const [opener] = useState(() => (typeof document === 'undefined' ? null : (document.activeElement as HTMLElement | null)))
   useEffect(() => {
     close.current = onClose
   })
   useEffect(() => {
-    const before = document.activeElement as HTMLElement | null
-    if (!ref.current?.contains(document.activeElement)) ref.current?.focus()
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close.current()
+    const dialog = ref.current
+    const me = {}
+    openDialogs.push(me)
+    if (dialog && !dialog.contains(document.activeElement)) dialog.focus()
+    const unblock = dialog ? blockBehind(dialog) : undefined
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (openDialogs[openDialogs.length - 1] !== me) return
+      if (e.key === 'Escape') {
+        close.current()
+        return
+      }
+      if (e.key !== 'Tab' || !dialog) return
+      const stops = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.getClientRects().length > 0 && el.tabIndex >= 0)
+      if (!stops.length) {
+        e.preventDefault()
+        dialog.focus()
+        return
+      }
+      const first = stops[0]
+      const last = stops[stops.length - 1]
+      const at = document.activeElement
+      if (e.shiftKey && (at === first || at === dialog || !dialog.contains(at))) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && (at === last || !dialog.contains(at))) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
     document.addEventListener('keydown', onKey)
     return () => {
       document.removeEventListener('keydown', onKey)
-      before?.focus?.()
+      openDialogs.splice(openDialogs.indexOf(me), 1)
+      unblock?.()
+      if (opener?.isConnected) opener.focus?.()
     }
-  }, [])
+  }, [opener])
   return ref
+}
+
+/**
+ * A small pop-down menu (New page…): it closes on Escape (focus goes back to its button), when you
+ * tap or click elsewhere, and when Tab leaves it; the arrow keys step through its items.
+ * Spread `wrapProps` on the wrapper, `buttonProps` on the button and `menuProps` on the list.
+ */
+export function useMenu() {
+  const [open, setOpen] = useState(false)
+  const wrap = useRef<HTMLSpanElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: Event) => {
+      if (!wrap.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setOpen(false)
+      wrap.current?.querySelector<HTMLElement>('button[aria-haspopup]')?.focus()
+    }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+  const wrapProps = {
+    ref: wrap,
+    onBlur: (e: FocusEvent<HTMLElement>) => {
+      // Only when focus lands somewhere else (Safari gives buttons no focus on a tap, so "nowhere" doesn't count).
+      if (open && e.relatedTarget && !wrap.current?.contains(e.relatedTarget as Node)) setOpen(false)
+    },
+    onKeyDown: (e: KeyboardEvent<HTMLElement>) => {
+      if (!open || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return
+      const items = Array.from(wrap.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])
+      if (!items.length) return
+      e.preventDefault()
+      const at = items.indexOf(document.activeElement as HTMLElement)
+      const next = e.key === 'ArrowDown' ? (at + 1) % items.length : (at <= 0 ? items.length : at) - 1
+      items[next].focus()
+    },
+  }
+  const buttonProps = { 'aria-haspopup': 'menu' as const, 'aria-expanded': open, onClick: () => setOpen(!open) }
+  const menuProps = { role: 'menu', onMouseLeave: () => setOpen(false) }
+  return { open, setOpen, wrapProps, buttonProps, menuProps }
 }
 
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {

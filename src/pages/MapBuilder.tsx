@@ -1092,7 +1092,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     <div className="map-page builder">
       <div className="map-toolbar builder-bar">
         <Link to={`${worldPath(worldId)}/maps/${map.id}`}>← Done</Link>
-        <strong>{map.name}</strong>
+        <strong role="heading" aria-level={1}>{map.name}</strong>
         {saveError && !saved ? (
           <span className="error small">
             Couldn’t save: {saveError} Your drawing is still here.{' '}

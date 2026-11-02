@@ -102,40 +102,42 @@ export function ToastHost() {
     const timer = setTimeout(() => dismissToast(t.id), SHOW_FOR)
     return () => clearTimeout(timer)
   }, [t, held])
-  if (!t) return null
+  // The live region is always on the page, empty, so a screen reader hears the note when its text arrives.
   return (
-    <div
-      key={t.id}
-      className="undo-toast"
-      role="status"
-      aria-live="polite"
-      onMouseEnter={() => setHeld(true)}
-      onMouseLeave={() => setHeld(false)}
-      onFocus={() => setHeld(true)}
-      onBlur={() => setHeld(false)}
-    >
-      <span>{t.text}</span>
-      {t.undo && (
-        <button
-          className="undo-button"
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true)
-            try {
-              await t.undo!()
-            } finally {
-              setBusy(false)
-              setHeld(false)
-              dismissToast(t.id)
-            }
-          }}
-        >
-          <Ico as={ArrowCounterClockwise} /> {t.undoLabel ?? 'Undo'}
+    <div role="status" aria-live="polite" aria-atomic="true">
+      {t && (
+      <div
+        key={t.id}
+        className="undo-toast"
+        onMouseEnter={() => setHeld(true)}
+        onMouseLeave={() => setHeld(false)}
+        onFocus={() => setHeld(true)}
+        onBlur={() => setHeld(false)}
+      >
+        <span>{t.text}</span>
+        {t.undo && (
+          <button
+            className="undo-button"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true)
+              try {
+                await t.undo!()
+              } finally {
+                setBusy(false)
+                setHeld(false)
+                dismissToast(t.id)
+              }
+            }}
+          >
+            <Ico as={ArrowCounterClockwise} /> {t.undoLabel ?? 'Undo'}
+          </button>
+        )}
+        <button className="ghost undo-close" aria-label="Close" onClick={() => dismissToast(t.id)}>
+          ✕
         </button>
+      </div>
       )}
-      <button className="ghost undo-close" aria-label="Close" onClick={() => dismissToast(t.id)}>
-        ✕
-      </button>
     </div>
   )
 }

@@ -21,7 +21,8 @@ const PLACES: [string, string, string, [string, string] | null][] = [
   ['Loose threads', 'Threads', '/threads', ['Leads', '?tab=leads']],
   ['Clocks', 'Clocks', '/clocks', ['Clocks', '/clocks']],
   ['Party loot', 'Party loot', '/loot', ['Party loot', '/loot']],
-  ['Handouts', 'Handouts', '/handouts', ['Handouts', '/handouts']],
+  // Players are offered Handouts only once the GM has shown something (search follows the menus' `when`).
+  ['Handouts', 'Handouts', '/handouts', null],
   ['Safety tools', 'Safety tools', '/safety', ['Table rules', '/safety']],
   ['Soundboard', 'Soundboard', '/sounds', null],
   ['The Archivist', 'The Archivist', '/archivist', null],
@@ -36,7 +37,7 @@ const NEW_PLACES: [string, string, string | RegExp][] = [
   ['Lectern', 'The Lectern', /^\/s\/[^/]+\/lectern$/],
   ['Chronicle', 'Chronicle', '/chronicle'],
   ['Questions', 'Inbox', '/questions'],
-  ['Scratchpad', 'Players’ scratchpad', '/scratchpad'],
+  // (The players' scratchpad is offered only with cloud sync on, like the More page: search follows each item's `when`.)
   ['Campaigns', 'All sessions', /^\/c\/[^/]+$/],
   ['Templates', 'Templates', '/settings?at=templates'],
   ['Recently deleted', 'Recently deleted', '/settings?tab=data&at=deleted'],
