@@ -121,7 +121,7 @@ export function pageReveal(e: Entity, pages: Entity[]) {
   if (e.imageId) see.push('the picture')
   if (e.playerBody) see.push('what the player wrote')
   const known = (e.relations ?? []).filter((r) => r.known).length
-  if (known) see.push(`${plural(known, 'relationship')} marked “Players know” (with pages they can see)`)
+  if (known) see.push(`${plural(known, 'relationship')} marked “Players know”, with ${known === 1 ? 'its note' : 'their notes'} (to pages they can see)`)
   const gmPassages = segs.filter((s) => s.kind === 'gm').length
   const forPassages = segs.filter((s) => s.kind === 'for')
   if (e.gmNotes.trim()) kept.push('GM notes')
@@ -135,6 +135,42 @@ export function pageReveal(e: Entity, pages: Entity[]) {
   if (hiddenRel) kept.push(plural(hiddenRel, 'relationship') + ' not marked “Players know”')
   const names = secretNames([e.summary, e.body, e.playerBody], pages)
   return { see, kept, warn: names.length ? `These GM-only pages are named in it, so players will read their names: ${names.join(', ')}.` : undefined }
+}
+
+/**
+ * The same review for several pages at once (starting a scene that reveals two NPCs, say): what
+ * players get of each, what stays hidden, and one warning for GM-only names in any of them.
+ */
+export function pagesReveal(list: Entity[], pages: Entity[]) {
+  if (list.length === 1) return pageReveal(list[0], pages)
+  const see: ReactNode[] = []
+  const kept: ReactNode[] = []
+  const names = new Set<string>()
+  for (const e of list) {
+    const r = pageReveal(e, pages)
+    see.push(<><strong>{e.name}</strong>: {r.see.join('; ')}</>)
+    if (r.kept.length) kept.push(<><strong>{e.name}</strong>: {r.kept.join('; ')}</>)
+    for (const n of secretNames([e.summary, e.body, e.playerBody], pages)) if (!list.some((x) => x.name === n)) names.add(n)
+  }
+  return { see, kept, warn: names.size ? `These GM-only pages are named in them, so players will read their names: ${[...names].join(', ')}.` : undefined }
+}
+
+/** "Sam", "Sam and Ana", "Sam, Ana and Wren", or "2 players" when the names aren't known here. */
+export function whoByName(e: Pick<Entity, 'revealedTo'>, names: string[]) {
+  if (!e.revealedTo?.length) return ''
+  if (!names.length) return plural(e.revealedTo.length, 'player')
+  return names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+}
+
+/**
+ * Asks before a page goes out (or goes out wider), with the same review the page's own control
+ * uses. For places that reveal a page on the way to something else: the Lectern's "Show players",
+ * "Reveal this page to Sam" on a question, a quest reward. True if the GM said yes.
+ */
+export async function askToReveal(ask: (r: Review) => Promise<string | null>, list: Entity[], how: { title: string; note?: ReactNode; confirm: string }) {
+  if (!list.length) return true
+  const pages = await db.entities.where({ worldId: list[0].worldId }).toArray()
+  return (await ask({ ...how, ...pagesReveal(list, pages) })) === 'ok'
 }
 
 /** Who can see a page right now, in words: for the summary strip and the control. */
@@ -187,21 +223,29 @@ export function PageVisibility({ entity: e, world, entities }: { entity: Entity;
     })
   }
   const hide = async () => {
+    // Revealed to everyone and, before that, to some players by name: those players keep it unless the GM says otherwise.
+    const keepers = whoByName(e, names)
     const answer = await ask({
-      title: `Make “${e.name}” GM only again?`,
+      title: keepers ? `Hide “${e.name}” from players?` : `Make “${e.name}” GM only again?`,
       note: (
         <>
-          Players stop seeing it straight away.{onScreen && ' It’s on their screens right now, and will come off.'} Anything they already read, they may remember.
+          Players stop seeing it straight away.
+          {keepers && <> <strong>{keepers} can still see it</strong>: it was revealed to them by name.</>}
+          {onScreen && ' It’s on their screens right now, and will come off.'} Anything they already read, they may remember.
         </>
       ),
-      confirm: 'Make it GM only',
+      confirm: keepers ? `Hide from everyone else` : 'Make it GM only',
+      others: keepers ? [{ label: `Hide from ${keepers} too`, value: 'all' }] : undefined,
     })
     if (!answer) return
     const before = await db.entities.get(e.id)
     if (!before) return
+    const all = answer === 'all'
     if (onScreen) await stopShowing(worldId)
-    await saveEntity({ ...before, visibility: 'gm', updatedAt: Date.now() })
-    toast(`“${e.name}” is GM only again.`, () => db.entities.update(e.id, { visibility: 'players', updatedAt: Date.now() }))
+    await saveEntity({ ...before, visibility: 'gm', ...(all ? { revealedTo: undefined } : {}), updatedAt: Date.now() })
+    toast(keepers && !all ? `“${e.name}” is hidden from players. ${keepers} can still see it.` : `“${e.name}” is GM only again.`, () =>
+      db.entities.update(e.id, { visibility: 'players', revealedTo: before.revealedTo, updatedAt: Date.now() }),
+    )
   }
 
   return (
@@ -233,6 +277,7 @@ export function VisibilityControl({
   name,
   see,
   kept,
+  warn,
   compact,
 }: {
   value: Visibility
@@ -241,12 +286,14 @@ export function VisibilityControl({
   name: string
   see?: ReactNode[]
   kept?: ReactNode[]
+  /** Something to read before revealing it (a session recording: the whole audio goes out). */
+  warn?: ReactNode
   compact?: boolean
 }) {
   const { ask, dialog } = useReview()
   const flip = async () => {
     if (value === 'gm') {
-      const ok = await ask({ title: `Reveal ${name} to players?`, see, kept, confirm: 'Reveal to players' })
+      const ok = await ask({ title: `Reveal ${name} to players?`, see, kept, warn, confirm: 'Reveal to players' })
       if (!ok) return
       await onChange('players')
       toast(`Revealed ${name} to players.`, () => onChange('gm'))

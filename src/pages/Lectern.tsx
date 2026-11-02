@@ -47,6 +47,7 @@ import { setLiveSession, shareRoll, useLiveSession, useTable } from '../cloud/ta
 import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, useKeepScroll } from '../jump'
 import { changePlace, goToScene, plannedScenes } from '../sceneCards'
+import { useReview } from '../reveal'
 import { markSaved, removeWithUndo, SavedMark, toast } from '../undo'
 import { changeCoin } from '../purse'
 import { Recorder } from './SessionPage'
@@ -442,6 +443,8 @@ function Scene({ session, world, lectern, edit, entities, worldId }: PanelProps 
   const here = place ? entities.filter((e) => e.parentId === place.id && !lectern.presentIds.includes(e.id) && e.type !== 'location') : []
   const { scenes, current, at, next } = plannedScenes(session)
   const strong = session.prep?.strongStart?.trim()
+  // Starting a scene that reveals pages asks first, with the same review as the page itself.
+  const { ask, dialog } = useReview()
   return (
     <LecternPanel
       id="scene"
@@ -453,7 +456,7 @@ function Scene({ session, world, lectern, edit, entities, worldId }: PanelProps 
       {current && <p className="scene-now"><strong>{current.text}</strong></p>}
       {next && (
         <div className="row wrap next-scene">
-          <button className="primary" onClick={() => goToScene(world, session, next)}>
+          <button className="primary" onClick={() => goToScene(world, session, next, ask)}>
             <Ico as={SkipForward} /> {current ? 'Next scene' : 'First scene'}
           </button>
           <span className="small muted">{shorten(next.text, 70)}</span>
@@ -527,7 +530,7 @@ function Scene({ session, world, lectern, edit, entities, worldId }: PanelProps 
           <ol>
             {scenes.map((x) => (
               <li key={x.id} className={x.id === current?.id ? 'now' : x.done ? 'done' : ''}>
-                <button className="ghost" aria-current={x.id === current?.id ? 'step' : undefined} onClick={() => goToScene(world, session, x)} title="Start this scene">
+                <button className="ghost" aria-current={x.id === current?.id ? 'step' : undefined} onClick={() => goToScene(world, session, x, ask)} title="Start this scene">
                   <span className="plan-num" aria-hidden>{x.id === current?.id ? '▶' : x.done ? '✓' : '○'}</span> {shorten(x.text, 90)}
                 </button>
               </li>
@@ -535,6 +538,7 @@ function Scene({ session, world, lectern, edit, entities, worldId }: PanelProps 
           </ol>
         </details>
       )}
+      {dialog}
     </LecternPanel>
   )
 }

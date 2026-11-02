@@ -502,7 +502,7 @@ function YouCard({ ctx }: { ctx: RoomContext }) {
   )
 }
 
-/** Ask a question or say what you do between sessions: both just between you and your GM. */
+/** Ask a question or say what you do between sessions: both read only by your GM (and any co-GM). */
 function TellYourGm({ ctx }: { ctx: RoomContext }) {
   return (
     <Card title="Tell your GM" icon={ChatCircleDots}>
@@ -748,7 +748,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
       {secrets.length > 0 && (
         <section className="card room-card">
           <h2 className="room-card-title">
-            <Ico as={Lock} /> Only you know
+            <Ico as={Lock} /> Just for you
           </h2>
           {secrets.map((s, i) => (
             <div key={i} className="secret for-you small">
@@ -760,7 +760,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
       )}
       {revealed.length > 0 && (
         <section className="card room-card">
-          <h2 className="room-card-title">Revealed just to you</h2>
+          <h2 className="room-card-title">Revealed to you (not the whole table)</h2>
           <ul className="room-list">
             {revealed.map((e) => (
               <li key={e.id}>
@@ -911,11 +911,11 @@ function NotesTab({ ctx }: { ctx: RoomContext }) {
         </h2>
         {memberOf ? (
           <>
-            <AskForm memberOf={memberOf} entityId="" placeholder="Ask your GM anything, just between the two of you…" />
+            <AskForm memberOf={memberOf} entityId="" placeholder="Ask your GM anything. Only your GM (and any co-GM) reads it…" />
             <QuestionList questions={questions} memberOf={memberOf} pageName={(q) => pageLink(worldId, q.entityId, entities.find((e) => e.id === q.entityId)?.name)} />
           </>
         ) : (
-          <p className="muted small">Players ask their GM questions here, just between the two of them.</p>
+          <p className="muted small">Players ask their GM questions here. Only the GM (and any co-GM) reads them.</p>
         )}
       </section>
       <div id="downtime">

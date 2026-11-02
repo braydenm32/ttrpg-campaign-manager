@@ -103,7 +103,8 @@ export default function WikiHome({ world }: { world: World }) {
                     #{s.number} {s.title}
                   </Link>{' '}
                   <span className="muted small">
-                    {campaigns.find((c) => c.id === s.campaignId)?.name} · {s.date}
+                    {campaigns.find((c) => c.id === s.campaignId)?.name}
+                    {s.date && ` · ${s.date}`}
                   </span>
                 </h3>
                 <Markdown text={s.recap.length > 600 ? `${s.recap.slice(0, 600)}…` : s.recap} entities={entities} worldId={worldId} showSecrets={false} />

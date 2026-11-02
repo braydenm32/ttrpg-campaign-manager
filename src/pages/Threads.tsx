@@ -28,8 +28,10 @@ export default function Threads() {
 }
 
 function PlayerLeads() {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const entities = useVisibleEntities(worldId)
+  // What the party is chasing is the table's business, not a public wiki link's.
+  if (world?.shared?.token) return <Empty>Leads are for the players at the table.</Empty>
   return (
     <div className="page">
       <header className="page-header">

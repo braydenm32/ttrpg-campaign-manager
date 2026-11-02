@@ -26,7 +26,7 @@ export function AskGmBox({ world, entityId }: { world: World; entityId: string }
         <Ico as={Question} /> Ask your GM <Help topic="questions" />
       </h2>
       <QuestionList questions={mine} memberOf={memberOf} />
-      <AskForm memberOf={memberOf} entityId={entityId} placeholder="Something you want to know about this, just between you and your GM…" />
+      <AskForm memberOf={memberOf} entityId={entityId} placeholder="Something you want to know about this. Only your GM (and any co-GM) reads it…" />
     </section>
   )
 }
@@ -55,7 +55,7 @@ export function AskForm({ memberOf, entityId, placeholder }: { memberOf: string;
     >
       <textarea rows={2} value={text} maxLength={4000} onChange={(e) => setText(e.target.value)} placeholder={placeholder} />
       <div className="row end">
-        <span className="muted small">Only your GM sees this.</span>
+        <span className="muted small">Only your GM (and any co-GM) sees this.</span>
         <button className="primary" disabled={busy || !text.trim()}>
           {busy ? 'Sending…' : 'Ask'}
         </button>

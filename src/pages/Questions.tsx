@@ -16,6 +16,7 @@ import { Ico } from '../icons'
 import { ChatCircleDots, EyeClosed, Hourglass, MaskHappy, Question, Tray, UserCirclePlus, UsersThree } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
 import { toast } from '../undo'
+import { askToReveal, useReview } from '../reveal'
 
 /** Questions: the GM's Inbox (everything players sent), or a player's own questions and answers. */
 export default function Questions() {
@@ -29,7 +30,11 @@ export default function Questions() {
         <div className="calm-note card">
           <Ico as={Question} size="2em" />
           <h1>Questions for your GM</h1>
-          <p>Players ask you things here from their own copy of the world, and read your answers. Switch back to the GM view to read your Inbox.</p>
+          {world.shared?.token ? (
+            <p>Questions are for players who have joined this world with an invite.</p>
+          ) : (
+            <p>Players ask you things here from their own copy of the world, and read your answers. Switch back to the GM view to read your Inbox.</p>
+          )}
         </div>
       </div>
     )
@@ -48,7 +53,7 @@ function PlayerQuestions({ world, memberOf }: { world: World; memberOf: string }
           <h1>
             <Ico as={Question} /> Questions for your GM <Help topic="questions" />
           </h1>
-          <p className="lead">Ask anything, just between you and your GM. Only you see the answer.</p>
+          <p className="lead">Ask anything. Only your GM (and any co-GM) reads it, and only you see the answer.</p>
         </div>
       </header>
       <div className="card ask-card">
@@ -238,6 +243,7 @@ function QuestionItem({
   onChange: () => Promise<unknown>
 }) {
   const [answer, setAnswer] = useState(q.answer ?? '')
+  const { ask, dialog } = useReview()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const page = pages.find((p) => p.id === q.entityId)
@@ -280,6 +286,8 @@ function QuestionItem({
                 act(async () => {
                   const e = await db.entities.get(page.id)
                   if (!e) return
+                  const ok = await askToReveal(ask, [e], { title: `Reveal “${e.name}” to ${who}?`, note: `Only ${who} gets it; the rest of the table doesn’t.`, confirm: `Reveal to ${who}` })
+                  if (!ok) return
                   await saveEntity({ ...e, revealedTo: [...new Set([...(e.revealedTo ?? []), q.userId!])], updatedAt: Date.now() })
                   toast(`${page.name} revealed to ${who}.`, async () => {
                     const now = await db.entities.get(page.id)
@@ -297,6 +305,7 @@ function QuestionItem({
         </div>
         {error && <p className="error small">{error}</p>}
       </form>
+      {dialog}
     </div>
   )
 }

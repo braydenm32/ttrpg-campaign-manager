@@ -60,6 +60,45 @@ test('a page’s visibility control says who can see it, reveals after a review,
   }
 })
 
+test('hiding a page also revealed to a player by name says they keep it, and can hide it from them too', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const secret = world.dump.entities.find(
+    (e) => e.type === 'npc' && e.visibility === 'gm' && !e.template && !(e as { revealedTo?: string[] }).revealedTo?.length,
+  )!
+  await open(page, w)
+  const before = await getRecord(page, 'entities', secret.id)
+  await putBack(page, 'entities', [[secret.id, { ...before!, visibility: 'players', revealedTo: ['test-player'] }]])
+  try {
+    await open(page, `${w}/p/${world.pageSlugs.get(secret.id)}`)
+    const control = page.locator('.page-strip .vis-control')
+    await expect(control).toContainText('Players can see this')
+
+    // The default keeps it with the player it was revealed to, and says so.
+    await control.click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toContainText(`Hide “${secret.name}” from players?`)
+    await expect(dialog).toContainText('1 player can still see it')
+    await dialog.getByRole('button', { name: 'Hide from everyone else' }).click()
+    await expect(control).toContainText('Revealed to 1 player')
+    await expect(toast(page)).toContainText('1 player can still see it')
+    await expect.poll(async () => (await getRecord(page, 'entities', secret.id))?.revealedTo).toEqual(['test-player'])
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect(control).toContainText('Players can see this')
+
+    // "Hide from … too" clears it for them as well, and Undo gives it back to them.
+    await control.click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Hide from 1 player too' }).click()
+    await expect(control).toContainText('GM only')
+    await expect(toast(page)).toContainText('is GM only again')
+    await expect.poll(async () => (await getRecord(page, 'entities', secret.id))?.revealedTo ?? null).toBe(null)
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect(control).toContainText('Players can see this')
+    await expect.poll(async () => (await getRecord(page, 'entities', secret.id))?.revealedTo).toEqual(['test-player'])
+  } finally {
+    await putBack(page, 'entities', [[secret.id, before]])
+  }
+})
+
 test('the breadcrumb starts at the list, not the world, and folds the middle on a phone', async ({ page, world, device }) => {
   const w = `/w/${world.slug}`
   // The Lantern Keep sits in Lantern Hill, in Cinderford, and further out still.

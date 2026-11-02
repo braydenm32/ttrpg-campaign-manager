@@ -215,6 +215,27 @@ test.describe('a joined player and a wiki reader (pretend player copies)', () =>
       await copy.remove()
     }
   })
+
+  test('a wiki reader opening the table’s own screens by address gets a plain note instead', async ({ page, world }) => {
+    await offline(page)
+    await page.goto('/')
+    const copy = await makePlayerCopy(page, world, 'wiki')
+    try {
+      await open(page, `/w/${copy.id}/questions`)
+      await expect(page.getByText('Questions are for players who have joined this world with an invite.')).toBeVisible()
+      await expect(page.getByText('Switch back to the GM view')).toHaveCount(0)
+      for (const [where, note] of [
+        ['loot', 'Party loot is for the players at the table.'],
+        ['threads', 'Leads are for the players at the table.'],
+        ['clocks', 'Clocks are for the players at the table.'],
+      ]) {
+        await open(page, `/w/${copy.id}/${where}`)
+        await expect(page.getByText(note)).toBeVisible()
+      }
+    } finally {
+      await copy.remove()
+    }
+  })
 })
 
 test.describe('Dialogs on small screens', () => {
