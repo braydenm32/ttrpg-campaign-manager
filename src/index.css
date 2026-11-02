@@ -1904,3 +1904,28 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
   .room-foot-note a { padding: 0 .2em; }
   .player-mode .segmented button { min-height: 44px; min-width: 44px; justify-content: center; }
 }
+
+/* Roll buttons inside page text: `roll:1d8+3` and {{Table name}}. */
+.inline-roll-wrap { display: inline-flex; align-items: baseline; gap: .35em; flex-wrap: wrap; }
+.markdown .inline-roll { display: inline-flex; align-items: center; gap: .2em; min-height: 0; padding: .05em .45em; font-size: .9em; border-radius: 999px; vertical-align: baseline; }
+.inline-roll.still { padding: 0 .3em; border: 1px solid var(--border); border-radius: 999px; font-size: .9em; }
+.inline-roll-out:empty { display: none; }
+@media (pointer: coarse) {
+  .markdown .inline-roll { min-height: 36px; padding: .2em .7em; }
+}
+
+/* Prompts for a blank page, under the Description box. */
+.page-prompts { display: flex; flex-wrap: wrap; align-items: center; gap: .4em; margin-top: -.4em; }
+.page-prompts-list { flex-basis: 100%; margin: .2em 0 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: .5em; }
+.page-prompts-list label { display: flex; flex-direction: column; gap: .2em; }
+.page-prompts-list .row { gap: .4em; margin: 0; }
+.page-prompts-list input { flex: 1; min-width: 0; }
+
+/* Who was there (Lectern strip, Wrap up). */
+.who-was-there { display: flex; flex-wrap: wrap; align-items: center; gap: .2em .8em; border: 0; margin: 0; padding: 0; }
+.who-was-there legend { float: left; margin-right: .4em; padding: 0; color: var(--muted); }
+.who-was-there .who-chip { min-height: 32px; }
+.present-line { margin: 0 0 .6em; }
+@media (pointer: coarse) {
+  .who-was-there .who-chip { min-height: 44px; }
+}

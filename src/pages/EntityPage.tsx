@@ -39,6 +39,7 @@ import { pinRevealed } from '../fog'
 import { JumpRow, useKeepScroll } from '../jump'
 import { DuplicateButton, NewPageButton } from '../NewPage'
 import { useNoteOpened } from '../recent'
+import { PagePrompts } from '../prompts'
 import { PageVisibility, SeenMark } from '../reveal'
 import { useCharacterOwners } from '../players/owners'
 import { keyNumbers, NumberTiles } from '../players/sheetGlance'
@@ -890,8 +891,11 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
             Description <Help topic="secrets" />
           </span>
           <SecretTextarea worldId={worldId} rows={10} value={d.body} onChange={(v) => set('body', v)} />
-          <small className="muted">Link pages by typing @ or [[ and a name. The buttons hide a passage from every player, or keep it for some characters only.</small>
+          <small className="muted">
+            Link pages by typing @ or [[ and a name. The buttons hide a passage from every player, or keep it for some characters only. Write roll:1d8+3 for a dice button, or {'{{Table name}}'} to roll on one of your tables. <Help topic="inlineRolls" />
+          </small>
         </label>
+        <PagePrompts type={d.type} body={d.body} onChange={(v) => set('body', v)} />
         <SecretNamesWarning worldId={worldId} texts={[d.summary, d.body, d.playerBody]} show={d.visibility === 'players' && !d.template} />
         <label className="gm-notes-field">
           <span>

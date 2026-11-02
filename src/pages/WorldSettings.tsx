@@ -23,6 +23,7 @@ import { pagePath, typePath, worldPath } from '../paths'
 import { EXAMPLE_VERSION, resetExampleWorld } from '../example/load'
 import { DraftText, Empty, Skeleton } from '../components'
 import { useViewMode } from '../viewMode'
+import { starterTemplates } from '../prompts'
 
 const TABS = [
   ['world', 'World'],
@@ -327,7 +328,13 @@ function Templates({ world }: { world: World }) {
         <Ico as={Ruler} /> Templates <Help topic="templates" />
       </h2>
       {templates.length === 0 ? (
-        <p className="muted">No templates yet. Open any page, edit it, and choose “Save as template”.</p>
+        <>
+          <p className="muted">No templates yet. Open any page, edit it, and choose “Save as template”. Or start from three ready-made ones:</p>
+          <p className="row wrap">
+            <button onClick={() => db.entities.bulkAdd(starterTemplates(world.id))}>Add a person, a town and a quest</button>
+            <Help topic="starterTemplates" />
+          </p>
+        </>
       ) : (
         <ul className="entity-list">
           {templates.map((t) => (
