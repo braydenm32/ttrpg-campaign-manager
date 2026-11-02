@@ -1,7 +1,7 @@
 import { Help, HELP } from '../help'
 import { WorldCover } from '../WorldCover'
 import { useState, type ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Modal } from '../components'
 import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel, type Campaign, type Entity, type Session, type World } from '../db'
@@ -48,6 +48,8 @@ import { StageChip, usePlayingNow } from '../stage'
 import { detailOf } from '../partyGlance'
 import { toast } from '../undo'
 import { RecentlyOpenedRow } from '../RecentlyOpened'
+import { ImportPages } from '../ImportPages'
+import { ExampleStartHere, SeeTheExampleButton } from '../firstSteps'
 import '../desk.css'
 
 /**
@@ -89,6 +91,7 @@ function Today({ world }: { world: World }) {
       <WorldCover world={world} compact>
         <NewPageMenu world={world} />
       </WorldCover>
+      <ExampleStartHere world={world} entities={entities} />
       <SessionStrip world={world} inHand={inHand} stage={stage} campaigns={campaigns} onNewCampaign={() => setNewCampaign(true)} />
       <RecentlyOpenedRow world={world} entities={entities} />
       <div className="desk-cols">
@@ -839,6 +842,9 @@ const hideKey = (worldId: string) => `gettingStarted.hidden.${worldId}`
 function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign: () => void }) {
   const create = useCreatePage(world)
   const w = worldPath(world.id)
+  // "Start from an export…" in the New world dialog lands here with ?import=1: the importer open.
+  const [search] = useSearchParams()
+  const [importing, setImporting] = useState(() => search.get('import') === '1')
   const [hidden, setHidden] = useState(() => {
     try {
       return localStorage.getItem(hideKey(world.id)) === '1'
@@ -848,6 +854,14 @@ function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign:
   })
   if (hidden) return null
   const steps: [string, string, string, ReactNode][] = [
+    [
+      '📥',
+      'Already have notes? Bring them in',
+      'From Obsidian or a Markdown folder, Kanka or World Anvil. Everything comes in GM only.',
+      <button key="import" className="small" aria-expanded={importing} onClick={() => setImporting(!importing)}>
+        {importing ? 'Close' : 'Import notes'}
+      </button>,
+    ],
     ['🎲', 'Make a campaign', 'One group’s story in this world.', <button key="campaign" className="small" onClick={onNewCampaign}>Make a campaign</button>],
     [
       '🧑',
@@ -861,6 +875,7 @@ function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign:
     ['🗺️', 'Add a map', 'Upload one or draw it, then pin your places on it.', <Link key="maps" className="button small" to={`${w}/maps`}>Maps</Link>],
     ['🔒', 'Keep secrets', 'Pages start GM only. Reveal them when the players find out.', null],
     ['☁️', 'Invite your players (optional)', 'Turn on cloud sync, then send invite links.', <Link key="players" className="button small" to={`${w}/settings?tab=players`}>Players</Link>],
+    ['📖', 'See how a finished campaign looks', 'Vael Ardith, the full example, starting at its Start Here guide.', <SeeTheExampleButton key="example" />],
   ]
   return (
     <section className="card getting-started">
@@ -883,12 +898,17 @@ function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign:
         </button>
       </div>
       <ol>
-        {steps.map(([icon, title, text, action]) => (
+        {steps.map(([icon, title, text, action], i) => (
           <li key={title}>
             <span>
               {icon} <strong>{title}.</strong> <span className="muted">{text}</span>
             </span>
             {action}
+            {i === 0 && importing && (
+              <div className="getting-started-import" id="getting-started-import">
+                <ImportPages worldId={world.id} system={world.system} compact />
+              </div>
+            )}
           </li>
         ))}
       </ol>

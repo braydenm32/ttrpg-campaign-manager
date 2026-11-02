@@ -157,3 +157,8 @@
 @media (max-width: 700px) {
   .recently-opened a { min-height: 44px; }
 }
+
+/* Getting started: the importer opens inside its own step. The example's Desk points at its guide. */
+.getting-started-import { flex-basis: 100%; padding: .4em 0 .6em; }
+.getting-started-import .import-sources { display: flex; flex-direction: column; gap: .4em; }
+.example-start-here { margin: 0 0 1em; padding: .6em .9em; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); border-radius: 0 var(--radius) var(--radius) 0; }
