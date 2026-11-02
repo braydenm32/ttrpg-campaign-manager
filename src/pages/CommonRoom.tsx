@@ -54,6 +54,8 @@ import { PlayerDowntime } from '../players/Downtime'
 import { SignedOutCard } from '../players/SignedOut'
 import { Highlights, StorySoFar } from '../highlights'
 import { InstallCard } from '../install'
+import { AddToCalendar } from '../addToCalendar'
+import { appLink } from '../cloud/client'
 import { StarsAndWishesCard } from '../players/StarsWishes'
 import { MySessionNote } from '../players/SessionNote'
 
@@ -289,6 +291,9 @@ function Answers({ ctx }: { ctx: RoomContext }) {
             <>
               <b>{showDate(next.at)}</b> <span className="muted small">· {until(next.time)}</span>
               {next.at.note && <div className="muted small">{next.at.note}</div>}
+              <div>
+                <AddToCalendar title={next.campaign.name} at={next.at} details={next.at.note} link={appLink(worldPath(worldId))} />
+              </div>
             </>
           ) : next.kind === 'dated' ? (
             <>

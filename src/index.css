@@ -1951,3 +1951,4 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .stars-wishes-list .link { justify-self: start; }
 .my-session-note { margin-top: .6em; }
 .my-session-note summary { cursor: pointer; }
+.add-to-calendar { display: inline-flex; align-items: center; gap: .2em; }
