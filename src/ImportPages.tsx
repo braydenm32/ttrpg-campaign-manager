@@ -5,6 +5,7 @@ import { applyImport, exportMarkdown, planImport, readFiles, type ImportPlan, ty
 import { Ico } from './icons'
 import { Folder } from '@phosphor-icons/react'
 import { ImportSheetButton } from './sheets/ImportSheet'
+import { ImportNotesButton } from './notes/ImportNotes'
 import { toast } from './undo'
 
 const SOURCES: { id: ImportSource; label: string; hint: string; accept: string; folder?: boolean }[] = [
@@ -78,6 +79,12 @@ export function ImportPages({ worldId, system, compact }: { worldId: string; sys
               <span className="muted small">{s.hint}</span>
             </div>
           ))}
+          {compact && (
+            <div className="row wrap">
+              <ImportNotesButton worldId={worldId} label="Hand-written notes" />
+              <span className="muted small">Photos of your notebook, or typed notes. Claude turns them into pages.</span>
+            </div>
+          )}
         </div>
       ) : (
         <div className="card">
@@ -121,6 +128,13 @@ export function ImportPages({ worldId, system, compact }: { worldId: string; sys
       {error && <p className="error small">{error}</p>}
       {!compact && (
         <>
+      <h3 className="data-heading">
+        ✍️ Hand-written notes <Help topic="importNotes" />
+      </h3>
+      <div className="row wrap">
+        <ImportNotesButton worldId={worldId} />
+        <span className="muted small">Photos or scans of your notebook, or notes you typed. Claude turns them into pages for you to look over.</span>
+      </div>
       <h3 className="data-heading">
         🛡️ Character sheets <Help topic="importSheet" />
       </h3>

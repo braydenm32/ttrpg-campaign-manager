@@ -37,6 +37,7 @@ A few words you'll see:
 | Prep helper | Copy for Claude | **Suggest prep** | About 10 to 25 US cents |
 | Flavour for generators | Copy for Claude | **Add flavour** | About 1 US cent |
 | NPC lines in character | Copy for Claude | **Give me lines** | About 1 US cent |
+| Hand-written notes → pages | Copy for Claude (add the photos on claude.ai yourself) | **Read my notes** | About 5 to 10 US cents a page of notes |
 | Read recaps aloud | Always free (your device's own voices) | – | Free |
 | Spotlight stats | Always free (worked out in the app) | – | Free |
 
@@ -162,6 +163,12 @@ Under **Lines in character**, say what's happening ("The party asks about the mi
 
 On each session page: how long each person talked (needs a transcript with speaker names) and how often each character came up. Worked out on your device; nothing is sent anywhere.
 
+### 5j. Hand-written notes → pages (World settings › Data, or a new world's Getting started)
+
+Press **Import hand-written notes**, add photos or scans of your notebook (one page per photo, flat, in good light; a PDF from a scanner app works too; up to 20 at a time) and/or paste notes you typed. If it helps, say who's who in **Anything Claude should know?** ("Bram and Kit are the players' characters; red ink means secret"). Then **Read my notes**, or **Copy for Claude**: paste it into claude.ai, add the same photos with the + button, send, and paste the answer back.
+
+You get a list to look over before anything changes: untick pages you don't want, fix a name, change a type, or point a page at one you already have (its notes are added under "From my notes", kept GM only if players can see that page). Words Claude couldn't read for sure are listed at the top. New pages arrive GM only and tagged "from my notes"; secrets go into GM notes; nights of play become played sessions at the end of your campaign.
+
 ---
 
 ## 6. Which Claude does which job
@@ -170,7 +177,7 @@ The app uses two Claude models and picks for you. The button shows which one (ho
 
 | Model | Price (US$ per million tokens, in / out) | Used for |
 | --- | --- | --- |
-| **Claude Opus 5.5**, the most capable | $4 / $20 | Recaps with world updates, contradiction checks, prep |
+| **Claude Opus 5.5**, the most capable | $4 / $20 | Recaps with world updates, contradiction checks, prep, reading hand-written notes |
 | **Claude Sonnet 5.5**, quicker and half the price | $2 / $10 | Archivist questions, flavour, NPC lines |
 
 A token is about four letters of English. Big jobs that have to be right (changing your world, spotting contradictions) get Opus; small, quick ones get Sonnet. Both read your world's material once and remember it briefly (Anthropic calls it caching), so follow-up questions only pay for what's new.
@@ -239,5 +246,6 @@ Everything is in `src/ai/`, all client-side: no Supabase edge function and no se
 | `Archivist.tsx`, `PrepHelper.tsx`, `Flavour.tsx` | The other Claude tools; `ClaudeJob.tsx` is their shared Copy for Claude / one-click panel |
 | `jobs.ts`, `LeaveGuard.tsx`, `kept.ts` | Jobs that keep writing while the GM is on another page |
 | `ReadAloud.tsx`, `Spotlight.tsx` | The free features |
+| `../notes/` | Hand-written notes → pages: `photos.ts` shrinks photos for Claude, `claude.ts` the ask and reading the reply, `ImportNotes.tsx` the dialog and review, `apply.ts` adds the pages and sessions. Photos go to Claude through `JobRequest.attachments` in `ClaudeJob.tsx` |
 
 When a model, price or setup step changes, update this guide, the help tips in `src/help.tsx` (`aiTools`, `keysInAccount`, `claudeJobs`, `transcript`, `keepAtAssembly`) and the AI section of `docs/ROADMAP.md`.

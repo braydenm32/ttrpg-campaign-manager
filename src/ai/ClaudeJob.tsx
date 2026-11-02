@@ -22,6 +22,11 @@ export interface JobRequest {
   maxTokens?: number
   /** Roughly how long the answer will be, for the price shown on the button. */
   expectOut?: number
+  /**
+   * Pictures or PDFs sent with the ask (photos of hand-written notes). With “Copy for Claude” the GM
+   * adds them on claude.ai themselves, so the copied text says so.
+   */
+  attachments?: { name: string; mediaType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' | 'application/pdf'; data: string; tokens: number }[]
 }
 
 /**
@@ -63,6 +68,8 @@ export function ClaudeJob({
   const job = useJob(jobId)
   const writing = job?.status === 'writing' ? job : undefined
   const [paste, setPaste] = useState<'closed' | 'open' | 'copied'>('closed')
+  /** How many photos the GM has to add on claude.ai alongside what was copied. */
+  const [toAttach, setToAttach] = useState(0)
   const [pasted, setPasted] = useState('')
   const [error, setError] = useState('')
   const [cost, setCost] = useState('')
@@ -80,7 +87,7 @@ export function ClaudeJob({
     if (disabled) return undefined
     const r = build()
     // Tools read more pages as they go: allow for a few more rounds of reading.
-    const input = estimateTokens(r.system + r.prompt) * (r.tools?.length ? 1.6 : 1)
+    const input = estimateTokens(r.system + r.prompt) * (r.tools?.length ? 1.6 : 1) + (r.attachments ?? []).reduce((n, a) => n + a.tokens, 0)
     const model = r.model ?? MODEL
     return { usd: claudeCost(model, input, r.expectOut ?? 1500), model }
     // Building the request can mean writing out the whole world, so only redo it when it changes.
@@ -97,7 +104,21 @@ export function ClaudeJob({
         apiKey: key,
         model,
         system: r.system,
-        messages: [{ role: 'user', content: r.prompt }],
+        messages: [
+          {
+            role: 'user',
+            content: r.attachments?.length
+              ? [
+                  ...r.attachments.map((a) =>
+                    a.mediaType === 'application/pdf'
+                      ? ({ type: 'document', source: { type: 'base64', media_type: a.mediaType, data: a.data } } as const)
+                      : ({ type: 'image', source: { type: 'base64', media_type: a.mediaType, data: a.data } } as const),
+                  ),
+                  { type: 'text' as const, text: r.prompt },
+                ]
+              : r.prompt,
+          },
+        ],
         tools: r.tools,
         describe: r.describe,
         effort: r.effort,
@@ -115,6 +136,7 @@ export function ClaudeJob({
     const r = build()
     try {
       await navigator.clipboard.writeText(`${r.system}\n\n${r.prompt}`)
+      setToAttach(r.attachments?.length ?? 0)
       setPaste('copied')
     } catch {
       setError('Couldn’t copy. Your browser may have blocked the clipboard.')
@@ -166,7 +188,13 @@ export function ClaudeJob({
               <a href="https://claude.ai/new" target="_blank" rel="noreferrer">
                 claude.ai
               </a>
-              , paste it in and send. When Claude answers, copy its reply and paste it below.
+              , paste it in
+              {toAttach > 0 && (
+                <>
+                  , <strong>add your {toAttach === 1 ? 'photo' : `${toAttach} photos`}</strong> (the + or paperclip button)
+                </>
+              )}{' '}
+              and send. When Claude answers, copy its reply and paste it below.
             </p>
           )}
           <textarea rows={5} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder="Paste Claude’s reply here" />
