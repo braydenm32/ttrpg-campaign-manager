@@ -147,14 +147,19 @@ export function DraftText({
   }, [grow, shown])
   const props = {
     value: draft ?? value,
-    onFocus: () => setDraft(value),
+    // A save that failed keeps what was typed in the box (rather than showing the old text), so it isn't lost.
+    onFocus: () => setDraft((d) => d ?? value),
     onBlur: () => {
-      if (saveOn === 'leave' && draft !== null && draft !== value) saving(onCommit(draft))
+      if (saveOn === 'leave' && draft !== null && draft !== value) {
+        const v = draft
+        saving(onCommit(v), () => setDraft((d) => d ?? v))
+      }
       setDraft(null)
     },
     onChange: (e: { target: { value: string } }) => {
-      setDraft(e.target.value)
-      if (saveOn !== 'leave') saving(onCommit(e.target.value))
+      const v = e.target.value
+      setDraft(v)
+      if (saveOn !== 'leave') saving(onCommit(v), () => setDraft((d) => d ?? v))
     },
     ...(saveOn === 'leave' ? { onKeyDown: (e: { key: string; currentTarget: { blur: () => void } }) => e.key === 'Enter' && e.currentTarget.blur() } : {}),
   }

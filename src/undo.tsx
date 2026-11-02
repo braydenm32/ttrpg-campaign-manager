@@ -51,6 +51,14 @@ export function toast(text: string, undo?: () => unknown, undoLabel?: string) {
   return current.id
 }
 
+/**
+ * Whether a note with Undo is on screen now. Sync holds back a page's reveal while one is (see
+ * holdReveals in cloud/sync.ts), so Undo really takes the reveal back before players get it.
+ */
+export const undoShowing = () => !!current?.undo
+/** Hears every change of note (one shown, replaced or gone). Returns the way to stop listening. */
+export const onToastChange = subscribe
+
 /** Takes a note away (e.g. once what it offered to undo can't be undone any more). */
 export function dismissToast(id?: number) {
   if (!current || (id !== undefined && current.id !== id)) return
@@ -151,9 +159,31 @@ export function markSaved() {
   savedListeners.forEach((l) => l())
 }
 
-/** Runs a save and marks it saved once it's done (a value or a promise). */
-export function saving<T>(result: T) {
-  Promise.resolve(result).then(markSaved, () => {})
+/** True when a save failed because the device (the browser's storage) is full. */
+export const outOfRoom = (err: unknown) => err instanceof Error && /quota/i.test(`${err.name} ${err.message}`)
+
+/**
+ * Says plainly that a save failed (the same words as the map builder's): `what` is what wasn't
+ * saved, e.g. “your changes to Ilse Marrow”.
+ */
+export function saveFailed(what: string, err: unknown) {
+  console.warn('Save failed', err)
+  toast(
+    outOfRoom(err)
+      ? `Couldn’t save ${what}: this device has run out of room. Free some space (old recordings, big files, or Recently deleted in More), then try again.`
+      : `Couldn’t save ${what}: something went wrong. Try again.`,
+  )
+}
+
+/**
+ * Runs a save and marks it saved once it's done (a value or a promise). A save that fails says so,
+ * and `onFail` hears about it (a text box keeps what was typed, say).
+ */
+export function saving<T>(result: T, onFail?: () => void) {
+  Promise.resolve(result).then(markSaved, (err) => {
+    saveFailed('that', err)
+    onFail?.()
+  })
   return result
 }
 

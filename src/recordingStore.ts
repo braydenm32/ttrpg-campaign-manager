@@ -127,13 +127,34 @@ export async function unsavedRecordings(sessionId: string) {
   })
 }
 
-/** Joins the saved pieces of a cut-off recording into one file on its session. */
+/**
+ * Joins the saved pieces of a cut-off recording into one file on its session. It runs once at a
+ * time (a second tap while it works does nothing, rather than adding a second copy). Joining needs
+ * about as much free space again as the recording; on a full device it fails with a plain reason,
+ * and the pieces stay, so it can be tried again.
+ */
 export async function recoverRecording(sessionId: string, recordingId: string, sessionNumber: number) {
-  const list = (await db.recordingChunks.where({ recordingId }).toArray()).sort((a, b) => a.seq - b.seq)
-  if (!list.length) return
-  const blob = new Blob(list.map((p) => p.blob), { type: list[0].mime })
-  await attach(sessionId, list[0].worldId, sessionNumber, list[0].startedAt, blob, list.at(-1)!.bookmarks)
-  await db.recordingChunks.where({ recordingId }).delete()
+  if (saving.has(recordingId)) return
+  saving.add(recordingId)
+  try {
+    const list = (await db.recordingChunks.where({ recordingId }).toArray()).sort((a, b) => a.seq - b.seq)
+    if (!list.length) return
+    const blob = new Blob(list.map((p) => p.blob), { type: list[0].mime })
+    try {
+      await attach(sessionId, list[0].worldId, sessionNumber, list[0].startedAt, blob, list.at(-1)!.bookmarks)
+    } catch (err) {
+      console.warn('Recovering a recording failed', err)
+      const full = err instanceof Error && /quota/i.test(`${err.name} ${err.message}`)
+      throw new Error(
+        full
+          ? `Couldn’t recover the recording: this device has run out of room. Recovering needs about as much free space again as the recording takes (${Math.round(blob.size / 1e6)} MB). Free some space (old recordings, big files, or Recently deleted in More), then press Recover it again. Nothing has been lost.`
+          : `Couldn’t recover the recording (${(err as Error).message || 'something went wrong'}). Nothing has been lost: press Recover it to try again.`,
+      )
+    }
+    await db.recordingChunks.where({ recordingId }).delete()
+  } finally {
+    saving.delete(recordingId)
+  }
 }
 
 export const discardRecording = (recordingId: string) => db.recordingChunks.where({ recordingId }).delete()

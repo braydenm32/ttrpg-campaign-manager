@@ -1,9 +1,10 @@
 import Dexie from 'dexie'
 import { loadInBackground } from '../worldLoading'
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import { db, keepVersion, type Asset, type Entity, type SyncMeta, type World } from '../db'
+import { db, keepVersion, newId, type Asset, type Entity, type SyncMeta, type World } from '../db'
 import { sendOnce } from './live'
 import { binRemovedElsewhere } from '../bin'
+import { onToastChange, undoShowing } from '../undo'
 import { supabase, cloudErrorMessage } from './client'
 
 /**
@@ -225,23 +226,140 @@ async function retryMissing(worldId: string) {
   }
 }
 
+const same = (a: unknown, b: unknown) => stableStringify(a) === stableStringify(b)
+
+type Item = Record<string, unknown> & { id: string }
+/** A list whose entries all have their own (different) ids, so it can be merged entry by entry. */
+const idList = (v: unknown): v is Item[] =>
+  Array.isArray(v) && v.every((x) => !!x && typeof x === 'object' && typeof (x as Item).id === 'string') && new Set(v.map((x) => (x as Item).id)).size === v.length
+
+/**
+ * Merges a list changed on both devices entry by entry (by id): an entry added on either side is
+ * kept, one deleted on one side and untouched on the other goes, and an entry changed on both
+ * sides keeps this device's version (a clash). One side's deletion never wins over the other's edit.
+ * The order follows whichever side reordered it (this device's, when both did).
+ */
+export function mergeList(base: Item[], mine: Item[], theirs: Item[]) {
+  const B = new Map(base.map((x) => [x.id, x]))
+  const M = new Map(mine.map((x) => [x.id, x]))
+  const T = new Map(theirs.map((x) => [x.id, x]))
+  let clash = false
+  const pick = (id: string) => {
+    const b = B.get(id)
+    const m = M.get(id)
+    const t = T.get(id)
+    if (same(m, b)) return t
+    if (same(t, b) || same(m, t)) return m
+    // Changed on both sides. A deletion on one side gives way to the other side's edit.
+    if (!m || !t) return m ?? t
+    clash = true
+    return m
+  }
+  // Start from the side that reordered, then slot the other side's new entries in after the entry they followed there.
+  const order = (xs: Item[], keep: Map<string, Item>) => xs.filter((x) => B.has(x.id) && keep.has(x.id)).map((x) => x.id)
+  const moved = (xs: Item[], map: Map<string, Item>) => !same(order(xs, map), order(base, map))
+  const [lead, other] = moved(mine, M) || !moved(theirs, T) ? [mine, theirs] : [theirs, mine]
+  const ids = lead.map((x) => x.id)
+  other.forEach((x, i) => {
+    if (ids.includes(x.id)) return
+    const after = i ? ids.indexOf(other[i - 1].id) : -1
+    ids.splice(after + 1, 0, x.id)
+  })
+  const list = ids.flatMap((id) => {
+    const v = pick(id)
+    return v ? [v] : []
+  })
+  return { list, clash }
+}
+
+/**
+ * Parts of a row that are merged piece by piece rather than whole when both devices changed them:
+ * a session's prep (its opening, scenes, clues and encounters) and a corkboard's cards and strings.
+ */
+const BY_PIECE: Partial<Record<SyncedTable, string[]>> = { sessions: ['prep'], boards: ['cards', 'strings'] }
+
+/** Merges one part changed on both devices, where it can be: lists entry by entry, the prep sheet part by part. */
+function mergePart(base: unknown, mine: unknown, theirs: unknown): { value: unknown; clash: boolean } {
+  if (same(mine, base)) return { value: theirs, clash: false }
+  if (same(theirs, base) || same(mine, theirs)) return { value: mine, clash: false }
+  if (idList(base) && idList(mine) && idList(theirs)) {
+    const { list, clash } = mergeList(base, mine, theirs)
+    return { value: list, clash }
+  }
+  const plain = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
+  if (plain(base) && plain(mine) && plain(theirs)) {
+    const out: Record<string, unknown> = {}
+    let clash = false
+    for (const k of new Set([...Object.keys(base), ...Object.keys(mine), ...Object.keys(theirs)])) {
+      const m = mergePart(base[k], mine[k], theirs[k])
+      clash ||= m.clash
+      if (m.value !== undefined) out[k] = m.value
+    }
+    return { value: out, clash }
+  }
+  return { value: mine, clash: true }
+}
+
 /**
  * Merges a row changed both here and on another device since they last agreed (base): each part
- * (field) takes this device's value if it changed here, and the other device's otherwise.
- * Returns the merged row, and whether both sides changed the same part.
+ * (field) takes this device's value if it changed here, and the other device's otherwise. Where
+ * both changed the same part, a session's prep and a board's cards are merged entry by entry;
+ * anything else keeps this device's value. Returns the merged row, whether both sides changed the
+ * same part in a way that couldn't be merged, and which parts those were.
  */
-export function mergeRows(base: Record<string, unknown>, mine: Record<string, unknown>, theirs: Record<string, unknown>) {
+export function mergeRows(base: Record<string, unknown>, mine: Record<string, unknown>, theirs: Record<string, unknown>, table?: SyncedTable) {
   const merged: Record<string, unknown> = { ...theirs }
-  let clash = false
+  const clashed: string[] = []
   for (const k of new Set([...Object.keys(base), ...Object.keys(mine), ...Object.keys(theirs)])) {
-    const mineChanged = stableStringify(mine[k]) !== stableStringify(base[k])
-    if (!mineChanged) continue
+    if (same(mine[k], base[k])) continue
+    let value = mine[k]
     // Both sides always move "updatedAt", so that alone isn't a clash.
-    if (k !== 'updatedAt' && stableStringify(theirs[k]) !== stableStringify(base[k]) && stableStringify(theirs[k]) !== stableStringify(mine[k])) clash = true
-    if (mine[k] === undefined) delete merged[k]
-    else merged[k] = mine[k]
+    if (k !== 'updatedAt' && !same(theirs[k], base[k]) && !same(theirs[k], mine[k])) {
+      if (table && BY_PIECE[table]?.includes(k)) {
+        const m = mergePart(base[k], mine[k], theirs[k])
+        value = m.value
+        if (m.clash) clashed.push(k)
+      } else clashed.push(k)
+    }
+    if (value === undefined) delete merged[k]
+    else merged[k] = value
   }
-  return { merged, clash }
+  return { merged, clash: clashed.length > 0, clashed }
+}
+
+/** Parts that change all the time while playing (dice, turn order): a clash there isn't worth keeping. */
+const PASSING = new Set(['lectern', 'updatedAt'])
+/** Parts of a session, board or world in plain words, for the sync note. */
+const PART_NAMES: Record<string, string> = {
+  notes: 'notes',
+  prep: 'prep',
+  recap: 'recap',
+  cards: 'cards',
+  strings: 'strings',
+  highlights: 'highlights',
+  gmScreen: 'GM screen',
+  calendar: 'calendar',
+}
+/** Clashes this sync kept the other version of, per world, for the sync note. */
+const keptTheirs = new Map<string, string[]>()
+
+/**
+ * Both devices changed the same part of a session, board or the world's settings: this device's
+ * version is kept (and sent), and the other device's version of those parts goes in Recently
+ * deleted, as "changed on another device", so the GM can look at it and bring it back.
+ */
+async function keepTheirs(worldId: string, table: SyncedTable, theirs: Record<string, unknown>, clashed: string[]) {
+  const parts = clashed.filter((k) => !PASSING.has(k))
+  if (!parts.length || (table !== 'sessions' && table !== 'boards' && table !== 'worlds')) return
+  const name =
+    table === 'sessions'
+      ? `#${theirs.number ?? ''} ${theirs.title ?? ''}`.trim()
+      : table === 'worlds'
+        ? `${theirs.name ?? 'The world'}’s settings`
+        : String(theirs.name ?? 'A corkboard')
+  const label = `${name} (${parts.map((k) => PART_NAMES[k] ?? k).join(', ')})`
+  await db.bin.add({ id: newId(), worldId, at: Date.now(), kind: 'conflict', label, rows: [{ table, rows: [theirs] }], fields: parts })
+  keptTheirs.set(worldId, [...(keptTheirs.get(worldId) ?? []), label])
 }
 
 /**
@@ -283,9 +401,11 @@ async function applyRemote(
     // Changed on both devices: keep both sets of changes where they touch different parts. Files
     // aren't merged (this device's copy wins, as before). The merged row is pushed next.
     if (local && data && remoteHash && meta?.base && table !== 'assets') {
-      const { merged, clash } = mergeRows(meta.base, toData(table, local), data)
-      // Where both changed the same part this device's edit wins; keep the other version of a page to go back to.
+      const { merged, clash, clashed } = mergeRows(meta.base, toData(table, local), data, table)
+      // Where both changed the same part this device's edit wins; keep the other version to go back to
+      // (a page's in its History, anything else in Recently deleted).
       if (clash && table === 'entities') await keepVersion({ ...(data as unknown as Entity) }, 'conflict')
+      else if (clash) await keepTheirs(worldId, table, data, clashed)
       if (table === 'worlds') await db.worlds.put({ ...(merged as unknown as World), cloud: (local as unknown as World).cloud, shared: (local as unknown as World).shared })
       else await tableOf(table).put(merged)
       await db.syncMeta.put({ key, worldId, hash: remoteHash, base: data })
@@ -348,8 +468,9 @@ function playerPart(table: string, data: Record<string, unknown> | null | undefi
       return data.visibility === 'players' ? data : undefined
     case 'sessions': {
       if (data.visibility !== 'players') return undefined
-      const { campaignId, number, title, date, worldDate, recap, entityIds } = data
-      return { campaignId, number, title, date, worldDate, recap, entityIds }
+      // Keep in step with the session fields player_view sends (supabase/migrations): change both together.
+      const { campaignId, number, title, date, worldDate, recap, entityIds, highlights } = data
+      return { campaignId, number, title, date, worldDate, recap, entityIds, highlights }
     }
     default:
       return undefined
@@ -421,6 +542,25 @@ async function stillSyncing(worldId: string) {
   if (closing.has(worldId) || !(await db.worlds.get(worldId))?.cloud?.enabled) throw new Stopped()
 }
 
+/** Whether a page reaches players it didn't before: revealed to everyone, or to someone new by name. */
+function newlyRevealed(before: Record<string, unknown> | undefined, after: Record<string, unknown>) {
+  if (after.visibility === 'players' && before?.visibility !== 'players') return true
+  const had = new Set((before?.revealedTo as string[] | undefined) ?? [])
+  return ((after.revealedTo as string[] | undefined) ?? []).some((id) => !had.has(id))
+}
+
+/** Set while a reveal is held back: syncs again as soon as no Undo note is on screen. */
+let stopWaitingForUndo: (() => void) | undefined
+function syncWhenUndoGone() {
+  if (stopWaitingForUndo) return
+  stopWaitingForUndo = onToastChange(() => {
+    if (undoShowing()) return
+    stopWaitingForUndo?.()
+    stopWaitingForUndo = undefined
+    schedule(200)
+  })
+}
+
 /** Works out what changed on this device since the last sync. */
 async function planPush(worldId: string) {
   // Sync's own notes first, then the rows: if another tab changes a row in between, the row just
@@ -438,6 +578,10 @@ async function planPush(worldId: string) {
   // Session recordings are big, so new ones stay on the device that made them (their transcripts
   // sync with the session). Ones uploaded before this rule keep syncing as they were.
   const recordings = new Set((await db.sessions.where({ worldId }).toArray()).flatMap((x) => x.recordings.map((r) => r.assetId)))
+  // A page just revealed waits while an Undo note is up, so Undo takes it back before any player
+  // gets it; it goes once the note has gone. A page put on players' screens goes at once: the table is waiting.
+  const holding = undoShowing()
+  const onScreen = holding ? (await db.worlds.get(worldId))?.showing?.entityId : undefined
 
   for (const r of rows) {
     const key = metaKey(r.table, r.id)
@@ -446,6 +590,10 @@ async function planPush(worldId: string) {
     const meta = metas.get(key) ?? (r.table === 'assets' ? await db.syncMeta.get(key) : undefined)
     metas.delete(key)
     if (meta && !meta.deleted && meta.hash === hash) continue
+    if (holding && r.table === 'entities' && r.id !== onScreen && newlyRevealed(meta && !meta.deleted ? meta.base : undefined, r.data)) {
+      syncWhenUndoGone()
+      continue
+    }
     if (meta?.failed && meta.hash === hash) {
       failed.push(`${labelOf(r.table, r.data, r.id)} (${meta.failed})`)
       continue
@@ -616,8 +764,36 @@ function oneTabAtATime<T>(fn: () => Promise<T>): Promise<T> {
   return typeof navigator !== 'undefined' && navigator.locks ? (navigator.locks.request('atlas-sync', fn) as Promise<T>) : fn()
 }
 
-async function syncedWorldIds() {
-  return (await db.worlds.toArray()).filter((w) => w.cloud?.enabled && !w.cloud.gone && !w.shared && !closing.has(w.id)).map((w) => w.id)
+/**
+ * Whether this world syncs for the account signed in now. A world remembers which account turned
+ * sync on for it on this device: someone else signing in here (a player borrowing the laptop, the
+ * GM's second account) never syncs it, and so never marks its cloud copy as gone.
+ */
+const syncsFor = (w: World, userId: string) => !!w.cloud?.enabled && !w.shared && (!w.cloud.by || w.cloud.by === userId)
+
+async function syncedWorldIds(userId: string) {
+  return (await db.worlds.toArray()).filter((w) => syncsFor(w, userId) && !w.cloud!.gone && !closing.has(w.id)).map((w) => w.id)
+}
+
+/** The account the last sync ran for, and the "cloud copy is gone" worlds checked again since it signed in. */
+let syncedFor: string | undefined
+const recheckedGone = new Set<string>()
+
+/**
+ * Worlds whose cloud copy looked gone are looked for again once each time someone signs in (or the
+ * account changes): one that's there after all (it was only out of sight to another account, or
+ * the GM was invited back) syncs again, without the GM having to do anything.
+ */
+async function recheckGone(userId: string) {
+  for (const w of await db.worlds.toArray()) {
+    if (!syncsFor(w, userId) || !w.cloud!.gone || recheckedGone.has(w.id)) continue
+    recheckedGone.add(w.id)
+    const { data, error } = await supabase.from('cloud_worlds').select('id').eq('id', w.id).maybeSingle()
+    if (error || !data) continue
+    const now = await db.worlds.get(w.id)
+    if (now?.cloud?.enabled) await db.worlds.update(w.id, { cloud: { ...now.cloud, gone: undefined, by: userId } })
+    confirmed.add(w.id)
+  }
 }
 
 /**
@@ -625,12 +801,15 @@ async function syncedWorldIds() {
  * a problem). When it was deleted on another device, or this GM was removed from it, sync stops for
  * the world and its settings ask what to do, instead of saying "Synced" and then failing on every edit.
  */
-async function cloudCopyThere(worldId: string) {
+async function cloudCopyThere(worldId: string, userId: string) {
   if (confirmed.has(worldId)) return true
   const { data, error } = await supabase.from('cloud_worlds').select('id').eq('id', worldId).maybeSingle()
   if (error) throw error
   if (data) {
     confirmed.add(worldId)
+    // A world that synced before worlds remembered their account: it's this one's.
+    const w = await db.worlds.get(worldId)
+    if (w?.cloud?.enabled && !w.cloud.by) await db.worlds.update(worldId, { cloud: { ...w.cloud, by: userId } })
     return true
   }
   const w = await db.worlds.get(worldId)
@@ -656,11 +835,22 @@ export function syncNow(): Promise<void> {
 
 async function syncAll() {
   const { data } = await supabase.auth.getSession()
-  if (!data.session) return setState({ status: 'off' })
+  if (!data.session) {
+    syncedFor = undefined
+    return setState({ status: 'off' })
+  }
   if (!navigator.onLine) return setState({ status: 'offline' })
+  const userId = data.session.user.id
+  // Signed in again, or as someone else: what was seen of the cloud before doesn't count.
+  if (userId !== syncedFor) {
+    syncedFor = userId
+    confirmed.clear()
+    recheckedGone.clear()
+  }
   setState({ status: 'syncing' })
   try {
-    const ids = await syncedWorldIds()
+    await recheckGone(userId)
+    const ids = await syncedWorldIds(userId)
     await subscribeRealtime(ids)
     // One world failing doesn't stop the others.
     const problems: string[] = []
@@ -668,7 +858,7 @@ async function syncAll() {
     for (const id of ids) {
       const name = (await db.worlds.get(id))?.name ?? 'A world'
       try {
-        if (!(await cloudCopyThere(id))) continue
+        if (!(await cloudCopyThere(id, userId))) continue
         await quietly(async () => {
           await pullWorld(id)
           await retryMissing(id)
@@ -677,6 +867,12 @@ async function syncAll() {
         // Players only refresh when something they can see changed. Telling them doesn't hold up the next world.
         if (forPlayers) void notifyShareViewers(id).catch(() => {})
         if (failed.length) notes.push(`“${name}”: some files couldn’t upload, so other devices and players don’t get them: ${failed.join('; ')}.`)
+        const clashes = keptTheirs.get(id)
+        keptTheirs.delete(id)
+        if (clashes?.length)
+          notes.push(
+            `“${name}”: ${clashes.join('; ')} ${clashes.length === 1 ? 'was' : 'were'} changed here and on another device at the same time. This device’s version was kept; the other is in More → Recently deleted, marked “changed on another device”, if you want it back.`,
+          )
         if (missing) notes.push(`“${name}”: ${missing === 1 ? 'one file' : `${missing} files`} couldn’t be downloaded to this device; ${missing === 1 ? 'it’s' : 'they’re'} tried again next time the app opens.`)
       } catch (err) {
         if (err instanceof Stopped) continue
@@ -684,7 +880,7 @@ async function syncAll() {
         problems.push(`“${name}”: ${cloudErrorMessage(err)}`)
       }
     }
-    const gone = (await db.worlds.toArray()).filter((w) => w.cloud?.enabled && w.cloud.gone && !w.shared)
+    const gone = (await db.worlds.toArray()).filter((w) => syncsFor(w, userId) && w.cloud!.gone)
     for (const w of gone) notes.push(`“${w.name}”: its cloud copy is gone (deleted on another device, or you’re no longer its GM). Open its Cloud settings to decide what to do.`)
     if (problems.length) throw new Error(problems.join(' '))
     retries = 0
@@ -775,17 +971,47 @@ export function stopSync() {
 
 // ---------- opting worlds in and out ----------
 
+/**
+ * Turns sync on (or back on) for a world on this device. The owner (or someone making its first
+ * cloud copy) creates or renames the cloud copy; a co-GM turning sync back on leaves the owner's
+ * copy as it is (only its owner may change it) and just starts syncing again.
+ */
 export async function enableCloud(worldId: string) {
   const world = await db.worlds.get(worldId)
   if (!world) throw new Error('World not found')
-  const { error } = await supabase.from('cloud_worlds').upsert({ id: worldId, name: world.name }, { onConflict: 'id' })
-  if (error) throw error
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) throw new Error('Sign in first, then turn sync on.')
+  const { data: row, error: readError } = await supabase.from('cloud_worlds').select('id, owner').eq('id', worldId).maybeSingle()
+  if (readError) throw readError
+  if (!row) {
+    const { error } = await supabase.from('cloud_worlds').insert({ id: worldId, name: world.name })
+    if (error)
+      throw new Error(
+        error.code === '23505' || /duplicate|row-level security/i.test(error.message)
+          ? 'This world’s cloud copy belongs to another account, and you’re not one of its GMs. Ask its owner to invite you as a co-GM, then try again.'
+          : cloudErrorMessage(error),
+      )
+  } else if (row.owner === auth.user.id) {
+    const { error } = await supabase.from('cloud_worlds').update({ name: world.name }).eq('id', worldId)
+    if (error) throw error
+  }
   // A brand-new (or emptied) cloud copy gets everything, not just what changed since the last sync.
   const { count } = await supabase.from('records').select('id', { count: 'exact', head: true }).eq('world_id', worldId)
   if (!count) await db.syncMeta.where({ worldId }).delete()
-  await db.worlds.update(worldId, { cloud: { enabled: true } })
+  await db.worlds.update(worldId, { cloud: { enabled: true, by: auth.user.id } })
   confirmed.add(worldId)
   await syncNow()
+}
+
+/**
+ * Whether turning sync on would send this device's copy over a cloud copy it has never synced with
+ * (or has forgotten): then every row here looks like an edit, and would replace newer changes made on
+ * other devices. Worth a warning first.
+ */
+export async function wouldOverwriteCloud(worldId: string) {
+  const { count, error } = await supabase.from('records').select('id', { count: 'exact', head: true }).eq('world_id', worldId)
+  if (error || !count) return false
+  return (await db.syncMeta.where({ worldId }).count()) === 0
 }
 
 /**
@@ -874,16 +1100,17 @@ export async function downloadCloudWorld(cw: CloudWorld) {
   await idle()
   // The pages come first, so the world opens; its files follow in the background.
   const later: Pulled[] = []
+  const by = (await supabase.auth.getSession()).data.session?.user.id
   const job = oneTabAtATime(async () => {
     if (!(await db.worlds.get(cw.id))) {
       const now = Date.now()
       // Placeholder until the real world row arrives in the first pull. Marking it as already synced
       // lets the cloud version replace it instead of being treated as a local edit.
-      const placeholder: World = { id: cw.id, name: cw.name, description: '', system: 'System agnostic', createdAt: now, updatedAt: now, cloud: { enabled: true } }
+      const placeholder: World = { id: cw.id, name: cw.name, description: '', system: 'System agnostic', createdAt: now, updatedAt: now, cloud: { enabled: true, by } }
       await db.worlds.add(placeholder)
       await db.syncMeta.put({ key: metaKey('worlds', cw.id), worldId: cw.id, hash: fingerprint(toData('worlds', placeholder as never)) })
     } else {
-      await db.worlds.update(cw.id, { cloud: { enabled: true } })
+      await db.worlds.update(cw.id, { cloud: { enabled: true, by } })
     }
     confirmed.add(cw.id)
     await quietly(() => pullWorld(cw.id, later))

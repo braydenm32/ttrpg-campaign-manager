@@ -501,6 +501,8 @@ export function Recorder({ session }: { session: Session }) {
   const [elapsed, setElapsed] = useState(0)
   const [mark, setMark] = useState('')
   const [error, setError] = useState('')
+  /** The cut-off recording being recovered now: one at a time. */
+  const [recovering, setRecovering] = useState<string>()
   // Recordings cut off by a crash or a closed tab, waiting to be put back together.
   const cutOff = useLiveQuery(() => unsavedRecordings(session.id), [session.id, live?.recordingId]) ?? []
 
@@ -533,8 +535,22 @@ export function Recorder({ session }: { session: Session }) {
             <Ico as={Warning} /> A recording from {new Date(r.startedAt).toLocaleString()} wasn’t finished (the app closed while it was running). About{' '}
             {formatTime(r.seconds)} ({formatBytes(r.bytes)}) was saved as it went.
           </span>
-          <button className="primary small" onClick={() => recoverRecording(session.id, r.recordingId, session.number)}>
-            Recover it
+          <button
+            className="primary small"
+            disabled={!!recovering}
+            onClick={async () => {
+              setRecovering(r.recordingId)
+              setError('')
+              try {
+                await recoverRecording(session.id, r.recordingId, session.number)
+              } catch (err) {
+                setError((err as Error).message)
+              } finally {
+                setRecovering(undefined)
+              }
+            }}
+          >
+            {recovering === r.recordingId ? 'Recovering…' : 'Recover it'}
           </button>
           <button className="small ghost" onClick={() => confirm('Throw this recording away?') && discardRecording(r.recordingId)}>
             Discard

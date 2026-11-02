@@ -1,4 +1,4 @@
-import Dexie, { type EntityTable } from 'dexie'
+import Dexie, { type EntityTable, type Table } from 'dexie'
 import type { Drawing } from './mapDrawing'
 
 /** Who can see a piece of content. GM-only content never appears in the player view. */
@@ -212,6 +212,8 @@ export interface World {
     pullVersion?: number
     /** Set when the cloud copy turned out to be gone (deleted on another device, or this GM was removed): sync stops until the GM decides. */
     gone?: boolean
+    /** The account (user id) that turned sync on here: the world only syncs while that account is signed in. */
+    by?: string
   }
   /**
    * Device-only: set when this world is a read-only player copy, either opened from a share link
@@ -471,6 +473,18 @@ export interface PageVersion {
   /** Why it was kept: before an edit here, before a change from another device, or when deleted. */
   reason: 'edit' | 'synced' | 'deleted' | 'conflict'
   entity: Entity
+  /**
+   * For a deleted page: the links to it that were cleared when it was deleted (places inside it,
+   * items it carried, map pins, maps that show it), so restoring it puts them back.
+   */
+  relinks?: PageRelink[]
+}
+
+/** Rows whose link to a deleted page was cleared: `field` on each of `ids` pointed at it. */
+export interface PageRelink {
+  table: 'entities' | 'pins' | 'maps'
+  field: 'parentId' | 'heldBy' | 'entityId' | 'locationId'
+  ids: string[]
 }
 
 export interface WorldMap {
@@ -896,12 +910,18 @@ export interface BinItem {
   id: string
   worldId: string
   at: number
-  /** "elsewhere": removed because it was deleted on another device (several things at once, maybe). */
-  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map' | 'elsewhere'
+  /**
+   * "elsewhere": removed because it was deleted on another device (several things at once, maybe).
+   * "conflict": another device's version of a session, board or the world's settings, kept when both
+   * devices changed the same part at once and this device's version won (see `fields`).
+   */
+  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map' | 'elsewhere' | 'conflict'
   /** What to call it in the list, e.g. the session's title. */
   label: string
   /** The rows that were removed, by table, so restoring puts every one back. */
-  rows: { table: 'campaigns' | 'sessions' | 'assets' | 'boards' | 'sounds' | 'maps' | 'pins'; rows: unknown[] }[]
+  rows: { table: 'campaigns' | 'sessions' | 'assets' | 'boards' | 'sounds' | 'maps' | 'pins' | 'worlds'; rows: unknown[] }[]
+  /** Set for "conflict": only these parts of the rows are put back on restore (the rest stays as it is now). */
+  fields?: string[]
   /**
    * Links that pointed at what was deleted and were cleared (pins on other maps that led into a map,
    * characters who played in a campaign), so restoring puts them back.
@@ -1009,10 +1029,12 @@ export const newId = () => crypto.randomUUID()
 const HISTORY_PER_PAGE = 40
 
 /** Keeps a copy of a page as it was, so it can be restored later. */
-export async function keepVersion(entity: Entity, reason: PageVersion['reason']) {
-  await db.history.add({ id: newId(), entityId: entity.id, worldId: entity.worldId, at: Date.now(), reason, entity })
+export async function keepVersion(entity: Entity, reason: PageVersion['reason'], relinks?: PageRelink[]) {
+  const v: PageVersion = { id: newId(), entityId: entity.id, worldId: entity.worldId, at: Date.now(), reason, entity, ...(relinks?.length ? { relinks } : {}) }
+  await db.history.add(v)
   const old = await db.history.where({ entityId: entity.id }).sortBy('at')
   if (old.length > HISTORY_PER_PAGE) await db.history.bulkDelete(old.slice(0, old.length - HISTORY_PER_PAGE).map((v) => v.id))
+  return v
 }
 
 /** Saves a page, keeping the version it replaces. */
@@ -1082,14 +1104,54 @@ export async function deleteWorld(worldId: string) {
   })
 }
 
+/** What deleting a page would unlink: places (or pages) inside it, items it carries, map pins and maps that show it. */
+export async function whatDeleteUnlinks(id: string) {
+  const inside = await db.entities.where({ parentId: id }).toArray()
+  const carried = await db.entities.filter((x) => x.heldBy === id).primaryKeys()
+  const pins = await db.pins.where({ entityId: id }).primaryKeys()
+  const maps = await db.maps.where({ locationId: id }).primaryKeys()
+  const relinks: PageRelink[] = [
+    { table: 'entities' as const, field: 'parentId' as const, ids: inside.map((e) => e.id) },
+    { table: 'entities' as const, field: 'heldBy' as const, ids: carried },
+    { table: 'pins' as const, field: 'entityId' as const, ids: pins },
+    { table: 'maps' as const, field: 'locationId' as const, ids: maps },
+  ].filter((l) => l.ids.length)
+  return { inside, carried: carried.length, pins: pins.length, maps: maps.length, relinks }
+}
+
+/**
+ * Deletes a page. Links to it are cleared (places inside it move up a level, items it carried
+ * belong to no one, pins and maps stop pointing at it) and remembered with the deleted version,
+ * so restoring it (restoreDeletedPage) puts them back.
+ */
 export async function deleteEntity(id: string) {
-  await db.transaction('rw', [db.entities, db.pins, db.maps, db.history], async () => {
+  return db.transaction('rw', [db.entities, db.pins, db.maps, db.history], async () => {
     const e = await db.entities.get(id)
-    if (e) await keepVersion(e, 'deleted')
+    const { relinks } = await whatDeleteUnlinks(id)
+    const v = e ? await keepVersion(e, 'deleted', relinks) : undefined
     await db.entities.filter((x) => x.heldBy === id).modify({ heldBy: undefined })
     await db.pins.where({ entityId: id }).modify({ entityId: undefined })
     await db.maps.where({ locationId: id }).modify({ locationId: undefined })
     await db.entities.where({ parentId: id }).modify({ parentId: undefined })
     await db.entities.delete(id)
+    return v
+  })
+}
+
+/**
+ * Brings a deleted page back from its deleted version, and puts back the links to it that are
+ * still empty (a place moved somewhere else since stays where it is now).
+ */
+export async function restoreDeletedPage(v: PageVersion) {
+  await db.transaction('rw', [db.entities, db.pins, db.maps], async () => {
+    await db.entities.put({ ...v.entity, updatedAt: Date.now() })
+    for (const l of v.relinks ?? []) {
+      const table = db[l.table] as unknown as Table<Record<string, unknown>, string>
+      await table
+        .where(':id')
+        .anyOf(l.ids)
+        .filter((x) => !x[l.field])
+        .modify({ [l.field]: v.entityId, ...(l.table === 'entities' ? { updatedAt: Date.now() } : {}) })
+    }
   })
 }

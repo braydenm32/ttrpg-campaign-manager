@@ -5,7 +5,7 @@ import { Help } from '../help'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, Skeleton, TagInput } from '../components'
-import { blankEntity, db, deleteEntity, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, PICKER_TYPES, saveEntity, templateOf, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus, type World } from '../db'
+import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, PICKER_TYPES, saveEntity, templateOf, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus, type World } from '../db'
 import { HistoryButton } from '../History'
 import { listedEntries, TableRoller } from '../tables'
 import { newThread, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
@@ -28,7 +28,8 @@ import { ClocksBox } from '../clocks'
 import { QuestBox, questProgress } from '../quests'
 import { Ico, TypeIcon } from '../icons'
 import { dropHeldPage, heldPage } from '../pendingPages'
-import { markSaved, toast } from '../undo'
+import { markSaved, saveFailed, toast } from '../undo'
+import { DeletePageButton } from '../pageDelete'
 import { DotsThreeOutline, Eye, Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Sparkle, Spiral, UserCircle } from '@phosphor-icons/react'
 import { initials } from '../text'
 import { ImportSheetButton } from '../sheets/ImportSheet'
@@ -203,6 +204,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             {isGM && <HistoryButton entity={e} />}
             <PrintButton to={`${worldPath(worldId)}/print/e/${e.id}`} />
             {isGM && world && !e.template && e.type !== 'custom' && <NewPageButton world={world} type={e.type} className="ghost new-from-page" />}
+            {isGM && <DeletePageButton entity={e} className="ghost danger" />}
           </span>
         </div>
       </div>
@@ -518,8 +520,19 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
       const { d: last, dirty: changed, closed } = leaving.current
       if (closed || !changed) return
       // Left without Save or Cancel (a link, Back, another screen): keep what was typed, with Undo.
-      void writeChanges(opened, last, world).then(({ before, merged }) =>
-        toast(`Saved your changes to “${merged.name}”.`, () => (before ? db.entities.put(before) : db.entities.delete(merged.id))),
+      void writeChanges(opened, last, world).then(
+        ({ before, merged }) =>
+          toast(`Saved your changes to “${merged.name}”.`, async () => {
+            if (!before) return db.entities.delete(merged.id)
+            await db.entities.put(before)
+            // Renamed on the way out: the links that followed the new name go back to the old one too.
+            if (!merged.template && before.name.trim() !== merged.name.trim()) await renameLinks(merged.worldId, merged, before)
+          }),
+        // What was typed is kept on this device (the draft), and offered next time the editor opens.
+        (err) => {
+          keep()
+          saveFailed(`your changes to “${last.name.trim() || 'this page'}” (what you typed is offered again next time you edit it)`, err)
+        },
       )
     }
     // Once per editor: `opened` and `world` are what it opened with.
@@ -528,7 +541,15 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
 
   const save = async () => {
     leaving.current.closed = true
-    const { renamed } = await writeChanges(opened, d, world)
+    let renamed: string
+    try {
+      ;({ renamed } = await writeChanges(opened, d, world))
+    } catch (err) {
+      // Still open, with what was typed, so Save can be pressed again once there's room.
+      leaving.current.closed = false
+      saveFailed(`“${d.name.trim() || 'this page'}”`, err)
+      return
+    }
     if (renamed) alert(renamed)
     markSaved()
     onDone()
@@ -957,18 +978,15 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
         </div>
         <div className="row spread">
           <div className="row">
-            <button
-              type="button"
-              className="danger"
-              onClick={async () => {
-                if (!confirm(`Delete "${entity.name}"? You can bring it back from World settings → Recently deleted, on this device.`)) return
+            <DeletePageButton
+              entity={d}
+              beforeDelete={() => {
+                // Nothing is saved on the way out: the editor closes because the page is gone.
+                leaving.current.closed = true
                 clearDraft(entity.id)
-                await deleteEntity(entity.id)
-                navigate(entity.template ? `${worldPath(worldId)}/settings` : typePath(worldId, entity.type, entity.customType))
+                dropHeldPage(entity.id)
               }}
-            >
-              Delete
-            </button>
+            />
             {!d.template && (
               <button type="button" title="Keep a copy of this page as a starting point for new ones" onClick={saveAsTemplate}>
                 <Ico as={Ruler} /> Save as template

@@ -53,7 +53,7 @@ export const HELP = {
   history:
     'Every time you save a page, the version before is kept on this device (the last 40). Look at an old version or restore it; restoring keeps today’s version too, and who can see the page stays as it is now.',
   recentlyDeleted:
-    'Pages, sessions, campaigns, maps, files, corkboards and sounds deleted on this device, or on another device that syncs this world. Restore brings them back as they were. Things other than pages are kept for a month; “Delete forever” or “Empty the bin” frees the space straight away.',
+    'Pages, sessions, campaigns, maps, files, corkboards and sounds deleted on this device, or on another device that syncs this world. Restore brings them back as they were; a page comes back with the places inside it, what it carried and its map pins. When two devices change the same session, corkboard or world setting at once, this device’s version is kept and the other one waits here, marked “changed on another device”. Things other than pages are kept for a month; “Delete forever” or “Empty the bin” frees the space straight away.',
   templates:
     'A template is a starting point for new pages, like a "Dungeon room" with the headings and details you always fill in. Templates are always GM only and never appear in lists. Make one with "Save as template" on any page.',
   lifeStatus:
