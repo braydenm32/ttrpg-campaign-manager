@@ -333,8 +333,10 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
 .swatch.on { border-color: var(--text); }
 
 /* Modal */
-.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: grid; place-items: center; z-index: 2000; padding: 1em; }
-.modal { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 1.25em 1.5em; width: min(480px, 100%); }
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; z-index: 2000; padding: 1em; }
+/* Fits the screen: never wider than it, and a tall one scrolls inside itself, so Save can always be reached. */
+.modal { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 1.25em 1.5em; width: min(480px, 100%); max-width: 100%; box-sizing: border-box; max-height: calc(100vh - 2em); max-height: calc(100dvh - 2em); overflow-y: auto; overscroll-behavior: contain; }
+.modal .field-row input, .modal .field-row select, .modal .field-row textarea { min-width: 0; }
 .modal header { display: flex; justify-content: space-between; align-items: center; }
 .modal h2 { margin: 0; }
 
@@ -1633,6 +1635,10 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .next-up { margin: 1em 0; }
 .next-up h2 { margin-top: 0; }
 .next-up .next-title { font-family: var(--font-display); font-size: 1.25rem; }
+.campaign-settings { margin: 1.5em 0 1em; }
+.campaign-settings > summary { margin: 0; font-weight: 600; }
+.campaign-settings[open] > summary { margin-bottom: .6em; }
+.campaign-settings > * + *:not(summary) { margin-top: .7em; }
 .session-rows { list-style: none; padding: 0; margin: .4em 0; display: flex; flex-direction: column; }
 .session-rows li { display: flex; align-items: center; gap: .5em; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding: .2em 0; }
 .session-rows li > a { flex: 1 1 14em; min-width: 0; min-height: 44px; display: flex; align-items: baseline; gap: .5em; padding: .55em 0; flex-wrap: wrap; }

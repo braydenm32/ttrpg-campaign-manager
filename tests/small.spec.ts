@@ -216,3 +216,34 @@ test.describe('a joined player and a wiki reader (pretend player copies)', () =>
     }
   })
 })
+
+test.describe('Dialogs on small screens', () => {
+  // A tall dialog fits the window and scrolls inside itself, so its buttons can always be reached (a phone held sideways, a very short laptop window).
+  for (const [label, size] of [['a phone sideways', { width: 390, height: 380 }], ['a very short laptop window', { width: 1366, height: 400 }]] as const)
+    test(`a tall dialog’s buttons can be scrolled to and pressed on ${label}`, async ({ page, world }) => {
+      await page.setViewportSize(size)
+      await open(page, `/w/${world.slug}/maps`)
+      await page.getByRole('button', { name: 'Draw a new map' }).first().click()
+      const dialog = page.getByRole('dialog', { name: 'Draw a new map' })
+      await expect(dialog).toBeVisible()
+      const box = (await dialog.boundingBox())!
+      expect(box.x).toBeGreaterThanOrEqual(0)
+      expect(box.x + box.width).toBeLessThanOrEqual(size.width)
+      expect(box.y + box.height).toBeLessThanOrEqual(size.height)
+      // The dialog itself scrolls...
+      expect(await dialog.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true)
+      await dialog.getByLabel('Name').fill('Dialog test')
+      const start = dialog.getByRole('button', { name: 'Start drawing' })
+      await start.scrollIntoViewIfNeeded()
+      // ...and the button is what you hit at its middle (not something behind the dialog).
+      expect(
+        await start.evaluate((el) => {
+          const r = el.getBoundingClientRect()
+          const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+          return hit === el || el.contains(hit)
+        }),
+      ).toBe(true)
+      await dialog.getByRole('button', { name: 'Cancel' }).click()
+      await expect(dialog).toBeHidden()
+    })
+})

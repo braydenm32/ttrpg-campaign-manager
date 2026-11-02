@@ -46,6 +46,36 @@ test('a session moves Prepare → Play → Wrap up, then the next one is up on t
   }
 })
 
+test('typing the recap does not mark a session played; "Not played yet" takes the mark back, with Undo', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  await open(page, `${w}/s/${s1.id}?tab=prep`)
+  const before = await getRecord(page, 'sessions', s1.id)
+  try {
+    await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+    await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}/lectern`)
+    await open(page, `${w}/s/${s1.id}?end=1`)
+
+    // One typed letter in the recap leaves it Playing, with "Mark as played" still to press.
+    await page.getByPlaceholder('What the players get to read').fill('The company mustered.')
+    await expect.poll(async () => (await getRecord(page, 'sessions', s1.id))?.recap).toBe('The company mustered.')
+    await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'playing')
+    await page.getByRole('button', { name: 'Mark as played' }).first().click()
+    await expect(toast(page)).toContainText('#1 marked played')
+    await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'played')
+    await expect(page.locator('#finish')).toContainText(`Next up: #2 ${world.session(2).title}`)
+
+    // "Not played yet" works even with a recap, and Undo marks it played again.
+    await page.locator('#finish').getByRole('button', { name: 'Not played yet' }).click()
+    await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'playing')
+    await expect(toast(page)).toContainText('not played yet')
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'played')
+  } finally {
+    await putBack(page, 'sessions', [[s1.id, before]])
+  }
+})
+
 test('changing the scene at the Lectern replaces the read-aloud text and who’s here, with Undo', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   const s1 = world.session(1)

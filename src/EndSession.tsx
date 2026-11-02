@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { WorldToday } from './calendar'
 import { db, type Campaign, type Entity, type Session, type World } from './db'
 import { Help } from './help'
-import { markPlayed } from './sessions'
+import { markPlayed, unmarkPlayed } from './sessions'
 import { Ico } from './icons'
 import { CheckCircle, Eye, EyeSlash, FlagCheckered, ListChecks } from '@phosphor-icons/react'
 import { worldPath } from './paths'
@@ -27,6 +27,7 @@ export function useFinish(session: Session) {
   const blocked = recording?.sessionId === session.id ? 'Stop the recording first' : undefined
   const finish = async () => {
     if (blocked || busy) return
+    if (!session.startedAt && live !== session.id && !confirm('You haven’t started playing this one. Mark it played anyway?')) return
     setBusy(true)
     try {
       // Players' Common Room stops showing this session as being played.
@@ -228,7 +229,13 @@ export function WrapUpChecklist({ world, session, campaign, entities, played }: 
                 </Link>
               )}
               {session.playedAt && (
-                <button type="button" onClick={() => db.sessions.update(session.id, { playedAt: undefined })}>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const undo = await unmarkPlayed(session)
+                    toast(`#${session.number} is not played yet.`, undo)
+                  }}
+                >
                   Not played yet
                 </button>
               )}
