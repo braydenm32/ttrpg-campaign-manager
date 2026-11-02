@@ -235,7 +235,7 @@ export function ShowButton({ worldId, what, disabled }: { worldId: string; what:
 }
 
 /** The Lectern's panel: pick a picture or a page (revealing it if need be), or type something, and show it. */
-export function ShowPanel({ world, sceneText }: { world: World; sceneText?: string }) {
+export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; sceneText?: string; sceneIds?: string[] }) {
   const entities = useVisibleEntities(world.id)
   const images = useLiveQuery(async () => {
     // Not a map picture players mustn't see: their own copy is in the list anyway.
@@ -251,6 +251,12 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
   const [title, setTitle] = useState('')
   const revealed = entities.filter((e) => e.visibility === 'players')
   const hidden = entities.filter((e) => e.visibility !== 'players' && !e.template)
+  // A picture is named for the page it belongs to ("Jeb Marrowick"), not its file key ("sil:npc-jeb-marrowick"); pictures of this scene's pages come first.
+  const pageOf = new Map(entities.filter((e) => e.imageId).map((e) => [e.imageId!, e]))
+  const inScene = new Set(sceneIds)
+  const shown = (images ?? [])
+    .map((a) => ({ asset: a, name: pictureName(a.name, pageOf.get(a.id)?.name), first: inScene.has(pageOf.get(a.id)?.id ?? '') }))
+    .sort((a, b) => Number(b.first) - Number(a.first))
   return (
     <LecternPanel id="show" sectionId="lectern-show" name="Show players" keywords="handout picture screen tv reveal" title={<><Ico as={Television} /> Show players <Help topic="showPlayers" /></>}>
       {/* Always the same height, so the pictures below don't jump when something is shown. */}
@@ -290,12 +296,13 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
               }}
             />
           </label>
-          {(images ?? []).slice(0, 30).map((a) => (
+          {shown.slice(0, 30).map(({ asset: a, name }) => (
             <Thumb
               key={a.id}
               asset={a}
+              name={name}
               on={world.showing?.kind === 'image' && world.showing.assetId === a.id}
-              onClick={() => showToPlayers(world.id, { kind: 'image', title: a.name.replace(/\.[^.]+$/, ''), assetId: a.id })}
+              onClick={() => showToPlayers(world.id, { kind: 'image', title: name, assetId: a.id })}
             />
           ))}
         </div>
@@ -370,10 +377,21 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
   )
 }
 
+/**
+ * What to call a picture: its page's name when a page uses it, else its file name without the
+ * ending; a bare key from an older copy of the example world ("sil:npc-jeb-marrowick") reads as words.
+ */
+function pictureName(fileName: string, pageName?: string) {
+  if (pageName) return pageName
+  const key = fileName.match(/^[a-z]+:(.+)$/)
+  if (!key) return fileName.replace(/\.[^.]+$/, '')
+  const words = key[1].replace(/^(npc|loc|f|h|i|item)-/, '').replace(/[-_]+/g, ' ')
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
 /** A picture to show, with its name under it (and marked while it's on players' screens). */
-function Thumb({ asset, onClick, on }: { asset: Parameters<typeof useBlobUrl>[0]; onClick: () => void; on?: boolean }) {
+function Thumb({ asset, name, onClick, on }: { asset: Parameters<typeof useBlobUrl>[0]; name: string; onClick: () => void; on?: boolean }) {
   const url = useBlobUrl(asset)
-  const name = asset?.name.replace(/\.[^.]+$/, '') ?? ''
   return (
     <button className={`show-thumb named ${on ? 'on' : ''}`} title={`Show ${name}`} aria-pressed={on} onClick={onClick}>
       <span className="thumb-img">{url && <img src={url} alt="" />}</span>

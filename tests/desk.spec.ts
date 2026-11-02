@@ -35,6 +35,30 @@ async function shot(page: Page, name: string) {
   if (process.env.SHOTS_DIR) await page.screenshot({ path: `${process.env.SHOTS_DIR}/${name}.png`, fullPage: true })
 }
 
+test('“Needs you” says when session recordings are only on this device, and Later waits', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  await open(page, w)
+  const before = await getRecord(page, 'sessions', s1.id)
+  try {
+    await expect(needs(page)).not.toContainText('only on this device')
+    await putBack(page, 'assets', [['rec-test-1', { id: 'rec-test-1', worldId: world.id, name: 'Session 1.webm', mime: 'audio/webm', size: 4_000_000, tags: ['recording'], visibility: 'gm', createdAt: 1 }]])
+    await patchRecord(page, 'sessions', s1.id, { recordings: [{ assetId: 'rec-test-1', startedAt: Date.now(), bookmarks: [] }] })
+    await open(page, w)
+    const line = needs(page).locator('li.need').filter({ hasText: 'only on this device' })
+    await expect(line).toContainText('1 recording is only on this device')
+    await expect(line.getByRole('button', { name: 'Back up' })).toBeVisible()
+    await line.getByRole('button', { name: 'Later' }).click()
+    await expect(needs(page)).not.toContainText('only on this device')
+    await open(page, w)
+    await expect(needs(page)).not.toContainText('only on this device')
+  } finally {
+    await putBack(page, 'sessions', [[s1.id, before]])
+    await putBack(page, 'assets', [['rec-test-1', null]])
+    await page.evaluate((id) => localStorage.removeItem(`codex.backup.audioSnooze.${id}`), world.id)
+  }
+})
+
 test('the strip’s main button follows the stage of the session in hand', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   const s1 = world.session(1)

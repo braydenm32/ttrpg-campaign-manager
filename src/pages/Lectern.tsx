@@ -208,7 +208,7 @@ export default function Lectern() {
             {world && <JourneyPanel world={world} lectern={lectern} edit={edit} entities={entities} partySize={party.length} />}
           </div>
           <div className="lectern-col">
-            {world && <ShowPanel world={world} sceneText={lectern.sceneText} />}
+            {world && <ShowPanel world={world} sceneText={lectern.sceneText} sceneIds={[...(lectern.sceneId ? [lectern.sceneId] : []), ...lectern.presentIds]} />}
             {world && <LootPanel world={world} sessionId={session.id} />}
             <Dice lectern={lectern} edit={edit} shareTo={shareTo} />
             <Soundboard worldId={worldId} compact />

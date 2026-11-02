@@ -177,7 +177,7 @@ export const HELP = {
   partyFound:
     'What the party actually found: add coins to the purse, or give them an item (a new item page, GM only until you reveal it, carried by the party). Nothing random.',
   prep:
-    'Plan the session: a strong start, the scenes you expect, secrets and clues, and fights ready to run. At the Lectern you tick scenes and clues off as they happen.',
+    'Plan the session: a strong start, the scenes you expect, secrets and clues, and fights ready to run. At the Lectern you tick scenes and clues off as they happen. Removed something by mistake? The note at the bottom of the screen has Undo for a few seconds.',
   strongStart: 'How the session opens. Starting in the middle of something happening gets the table going fast.',
   clues:
     'Things the players could learn, not tied to any one scene. Drop each one wherever it fits and tick it off when they find it; leftovers carry into your next prep.',
@@ -215,7 +215,7 @@ export const HELP = {
   exportMarkdown: 'Download every page as Markdown files in folders, ready to open in Obsidian or any notes app. GM notes and secrets are included, so keep it to yourself.',
   discord:
     'Post recaps and session dates to your group’s Discord channel. In Discord: Server settings, Integrations, Webhooks, New webhook, then copy its link here. The link is kept on this device only.',
-  backup: 'Save the whole world, uploaded files and recordings included, as one .zip file. Keep a backup even if sync is on. Older .json backups still import.',
+  backup: 'Save the whole world, with its uploaded files, as one .zip file. Session recordings are only in it if you tick “Include session recordings”, and they stay on the device that made them, even with sync on, so back them up too. Keep a backup even if sync is on. Older .json backups still import.',
 
   // Sharing and players
   cloudSync:
@@ -327,7 +327,7 @@ export const HELP = {
   secretNames:
     'Players can read this text, and it links to a GM-only page, so they would see that page’s name. Move the link into a :::gm secret, give it a label like [[Lord Vexis|the stranger]], or reveal the page. This is only a warning; nothing is blocked.',
   backupRecordings:
-    'Recordings can be very large. Leave this unticked for a small backup that has everything except the audio; transcripts, bookmarks and the rest of each session are kept. Tick it to keep the audio too.',
+    'Recordings can be very large. Leave this unticked for a small backup that has everything except the audio; transcripts, bookmarks and the rest of each session are kept. Tick it to keep the audio too. Recordings are never sent to the cloud, so a backup is the only other copy.',
   lecternSearch:
     'Type to find a panel (“initiative”, “dice”, “music”) or a page by name. Only the matching panels show, opened, and matching pages appear above them with their GM notes and buttons to add them to the scene. Click a panel’s title to fold it away; this device remembers which you folded. “Fold all” leaves just the titles.',
   wantedPages:

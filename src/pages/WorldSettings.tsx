@@ -141,7 +141,7 @@ export default function WorldSettings() {
                 : 'No backup downloaded from this device yet.'}
             </p>
             <p className="muted">
-              A backup is a single file with the whole world in it, including uploaded files. Keep one even if sync is on; you can import it from the
+              A backup is a single file with the whole world in it, including uploaded files. Session recordings are left out unless you tick the box below (they stay on the device that made them). Keep one even if sync is on; you can import it from the
               home screen on any device.
             </p>
             <BackupButton worldId={worldId} />
