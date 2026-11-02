@@ -149,7 +149,6 @@ Everything is in the folder **`worlds/vael-ardith/`**. Each page in the app is o
 | The three endings | `campaign/endings/` |
 | Events that happen during play | `campaign/events/` |
 | Sessions 1 to 8: GM notes, recap, prep, encounters, the Lectern | `sessions/session-1.md` … `session-8.md` |
-| The corkboard ("Who's poisoning the flame?") | `boards/` |
 | The GM's "Start here" tour, the GM's chapter and the Player's Guide | `guides/guide-start.md`, `guide-running.md`, `guide-players.md` |
 | Page templates | `templates/` |
 
@@ -246,7 +245,7 @@ Lines like `== GM notes ==` start another part of the text:
 | `== GM notes ==` | any page | The GM notes box |
 | `== Entries ==` | random tables | One entry per line (see [tables](#6g-random-tables)) |
 
-Sessions have their own parts (see [sessions](#6f-sessions-quests-loose-threads-and-the-corkboard)).
+Sessions have their own parts (see [sessions](#6f-sessions-quests-and-loose-threads)).
 
 ### Writing settings safely
 
@@ -374,7 +373,7 @@ What happened, in a paragraph or two.
 
 **Adding a holiday or festival:** under `holidays:` in the `calendar:` part of `world.md`, add a line like `- { name: Doorsnight, day: 1 Leafrot }` (a day and a month, no year). It comes round every year and shows beside that date on the calendar. Write about it on its own page too if it needs more than a name.
 
-### 6f. Sessions, quests, loose threads and the corkboard
+### 6f. Sessions, quests and loose threads
 
 **Sessions** are `sessions/session-1.md` to `session-8.md`:
 
@@ -435,7 +434,7 @@ The session notes follow one pattern, so a GM always knows where to look. Keep i
 
 **Handouts** (`campaign/handouts/`) are ordinary pages tagged `handout`. They show under More › At the table › Handouts, ready to show players.
 
-**The corkboard** (`boards/`) is a list of cards and the strings between them. Each card has its own short `key`, a position (`x` across, `y` down, in pixels) and either a `page` (by key) or a `text` note with a `color`. Strings join two cards by their card keys. It's easiest to move cards around in the app, then copy the numbers back.
+**No corkboards.** Corkboards are retired in the app, and the example no longer has one: the clues that were on "Who's poisoning the flame?" are now a list under "The clue board" in the GM part of `campaign/quests/q-poisoned-flame.md`. If an old file turns up in a `boards/` folder, the check skips it with a warning (it doesn't stop the build); copy anything worth keeping into a page and delete the file.
 
 ### 6g. Random tables
 

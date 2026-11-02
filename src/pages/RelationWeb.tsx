@@ -274,10 +274,10 @@ function viewBoxOf(pos: Pos): Box {
 
 const boxText = (b: Box) => `${b.x} ${b.y} ${b.w} ${b.h}`
 
-function NodeBox({ e, x, y, focus, onPointerDown }: { e: Entity; x: number; y: number; focus: boolean; onPointerDown: (ev: ReactPointerEvent) => void }) {
+function NodeBox({ e, x, y, focus, ui = 1, onPointerDown }: { e: Entity; x: number; y: number; focus: boolean; ui?: number; onPointerDown: (ev: ReactPointerEvent) => void }) {
   const name = e.name.length > 18 ? `${e.name.slice(0, 17)}…` : e.name
   return (
-    <g className={`web-node ${focus ? 'focus' : ''}`} transform={`translate(${x - NODE_W / 2} ${y - NODE_H / 2})`} onPointerDown={onPointerDown}>
+    <g className={`web-node ${focus ? 'focus' : ''}`} transform={`translate(${x} ${y}) scale(${ui}) translate(${-NODE_W / 2} ${-NODE_H / 2})`} onPointerDown={onPointerDown}>
       <rect width={NODE_W} height={NODE_H} rx={8} />
       <text x={NODE_W / 2} y={NODE_H / 2 + 5} textAnchor="middle">
         {ENTITY_LABELS[e.type].icon} {name}
@@ -291,9 +291,21 @@ function WebGraph({ nodeIds, edges, byId, focus, onPick }: { nodeIds: string[]; 
   const initial = useMemo(() => layout(nodeIds, edges), [nodeIds, edges])
   const [pos, setPos] = useState<Pos>(initial)
   const full = useMemo(() => viewBoxOf(initial), [initial])
-  // A big web opens zoomed in on its middle so names stay readable. The mouse wheel or the buttons zoom; dragging the background pans.
-  const [box, setBox] = useState(() => zoomBox(full, Math.max(1, full.w / READABLE_W)))
+  // The whole web shows when it opens (nothing cut off at the edges). The mouse wheel or the buttons zoom; dragging the background pans.
+  const [box, setBox] = useState(full)
   const svg = useRef<SVGSVGElement>(null)
+  // How many of the web's units one screen pixel is: names and labels grow by this (up to a point)
+  // when zoomed out, so they stay readable at any zoom instead of shrinking to a few pixels.
+  const [px, setPx] = useState<{ w: number; h: number }>()
+  useEffect(() => {
+    const el = svg.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const watch = new ResizeObserver(() => setPx({ w: el.clientWidth, h: el.clientHeight }))
+    watch.observe(el)
+    return () => watch.disconnect()
+  }, [])
+  const fitted = px?.w && px.h ? Math.max(box.w / px.w, box.h / px.h) : 1
+  const ui = Math.min(2.6, Math.max(1, fitted * 0.9))
   const drag = useRef<{ id: string; moved: boolean } | null>(null)
   const pan = useRef<{ x: number; y: number } | null>(null)
   useEffect(() => {
@@ -376,8 +388,8 @@ function WebGraph({ nodeIds, edges, byId, focus, onPick }: { nodeIds: string[]; 
           const cy = my + (dx / len) * bend
           return (
             <g key={e.id} className={`web-edge tone-${toneOf(e.kind)}`}>
-              <path d={`M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}`} markerEnd="url(#web-arrow)" />
-              <text x={(mx + cx) / 2} y={(my + cy) / 2 - 4} textAnchor="middle">
+              <path d={`M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}`} markerEnd="url(#web-arrow)" vectorEffect="non-scaling-stroke" />
+              <text x={(mx + cx) / 2} y={(my + cy) / 2 - 4 * ui} textAnchor="middle" style={{ fontSize: `${11 * ui}px`, strokeWidth: `${3 * ui}px` }}>
                 {e.kind}
               </text>
             </g>
@@ -399,6 +411,7 @@ function WebGraph({ nodeIds, edges, byId, focus, onPick }: { nodeIds: string[]; 
               x={p.x}
               y={p.y}
               focus={id === focus}
+              ui={ui}
               onPointerDown={(ev) => {
                 ;(ev.target as Element).setPointerCapture?.(ev.pointerId)
                 drag.current = { id, moved: false }
@@ -411,8 +424,6 @@ function WebGraph({ nodeIds, edges, byId, focus, onPick }: { nodeIds: string[]; 
   )
 }
 
-/** How wide a slice of the web to show at first: about six names across. */
-const READABLE_W = 1100
 
 /** The view box scaled by `k` (above 1 zooms in) around a point, or around its middle. */
 function zoomBox(b: Box, k: number, at?: { x: number; y: number }): Box {

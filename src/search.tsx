@@ -31,6 +31,8 @@ export interface Hit {
   title: string
   /** A little of the text around the match. */
   snippet: string
+  /** What kind of thing it is ("NPC", "Session"), shown before the snippet. */
+  kind?: string
   score: number
   /** Drawn instead of the emoji icon where there's room for a line icon. */
   node?: ReactNode
@@ -40,6 +42,15 @@ export interface Hit {
   run?: () => void
   /** Opens in a new tab (the players' screen). */
   external?: boolean
+}
+
+/** The query's words: "mercy glass" finds pages with both words, in any order. */
+const searchWords = (q: string) => [...new Set(q.toLowerCase().split(/\s+/).filter(Boolean))]
+
+/** Whether every word is somewhere in the texts (each word may be in a different one). */
+const allIn = (words: string[], texts: string[]) => {
+  const low = texts.map((t) => t.toLowerCase())
+  return words.every((w) => low.some((t) => t.includes(w)))
 }
 
 /** The words around the first match, for showing under a result. */
@@ -55,8 +66,9 @@ export function searchWorld(
   query: string,
   { worldId, world, entities, sessions, maps, isGM }: { worldId: string; world?: World | null; entities: Entity[]; sessions: Session[]; maps: WorldMap[]; isGM: boolean },
 ): Hit[] {
-  const q = query.trim().toLowerCase()
+  const q = query.trim().toLowerCase().replace(/\s+/g, ' ')
   if (!q) return []
+  const words = searchWords(q)
   const text = (t: string | undefined) => plainLinks(isGM ? (t ?? '') : stripSecrets(t ?? ''))
   const hits: Hit[] = []
   for (const e of entities) {
@@ -79,24 +91,35 @@ export function searchWorld(
       score = 20
       snippet = around(body, q) || around(extra, q)
     }
+    // Several words, not side by side: every one must be somewhere on the page, in any order.
+    if (!score && words.length > 1 && allIn(words, [...names, e.summary, ...tags, ...fields, body, extra])) {
+      if (allIn(words, names)) score = 58
+      else if (allIn(words, [...names, e.summary, ...tags])) score = 38
+      else {
+        score = 18
+        const inText = words.find((w) => ![...names, e.summary, ...tags].some((t) => t.toLowerCase().includes(w)))
+        snippet = inText ? fields.find((f) => f.toLowerCase().includes(inText)) || around(body, inText) || around(extra, inText) : ''
+      }
+    }
     if (score)
-      hits.push({ key: e.id, to: `${pagePath(worldId, e.id)}`, icon: typeLabel(e, world).icon, node: <TypeIcon type={e.type} custom={world?.customTypes?.find((c) => c.id === e.customType)} />, title: e.name, snippet: snippet || e.summary, score, gmOnly: isGM && e.visibility === 'gm' })
+      hits.push({ key: e.id, to: `${pagePath(worldId, e.id)}`, icon: typeLabel(e, world).icon, node: <TypeIcon type={e.type} custom={world?.customTypes?.find((c) => c.id === e.customType)} />, title: e.name, kind: typeLabel(e, world).one, snippet: snippet || e.summary, score, gmOnly: isGM && e.visibility === 'gm' })
   }
   for (const s of sessions) {
     const title = `#${s.number} ${s.title}`
     const recap = text(s.recap)
     const notes = isGM ? text(s.notes) : ''
-    const inTitle = title.toLowerCase().includes(q)
-    if (inTitle || recap.toLowerCase().includes(q) || notes.toLowerCase().includes(q))
-      hits.push({ key: s.id, to: `${worldPath(worldId)}/s/${s.id}`, icon: '📖', node: <Ico as={BookOpen} />, title, snippet: inTitle ? s.date : around(recap, q) || around(notes, q), score: inTitle ? 50 : 15 })
+    const inTitle = title.toLowerCase().includes(q) || (words.length > 1 && allIn(words, [title]))
+    const w = recap.toLowerCase().includes(q) || notes.toLowerCase().includes(q) ? q : words.find((x) => !title.toLowerCase().includes(x)) ?? q
+    if (inTitle || recap.toLowerCase().includes(q) || notes.toLowerCase().includes(q) || allIn(words, [title, recap, notes]))
+      hits.push({ key: s.id, to: `${worldPath(worldId)}/s/${s.id}`, icon: '📖', node: <Ico as={BookOpen} />, title, kind: 'Session', snippet: inTitle ? s.date : around(recap, w) || around(notes, w), score: inTitle ? 50 : 15 })
   }
   for (const m of maps)
-    if (m.name.toLowerCase().includes(q)) hits.push({ key: m.id, to: `${worldPath(worldId)}/maps/${m.id}`, icon: '🗺️', node: <Ico as={MapTrifold} />, title: m.name, snippet: 'Map', score: 45 })
+    if (allIn(words, [m.name])) hits.push({ key: m.id, to: `${worldPath(worldId)}/maps/${m.id}`, icon: '🗺️', node: <Ico as={MapTrifold} />, title: m.name, snippet: 'Map', score: 45 })
   // Clocks live on pages; finding one by its name opens the Clocks screen.
   for (const e of entities)
     for (const c of e.clocks ?? []) {
       if (!isGM && !c.known) continue
-      if (c.name.toLowerCase().includes(q))
+      if (allIn(words, [c.name]))
         hits.push({ key: `clock:${c.id}`, to: `${worldPath(worldId)}/clocks`, icon: '⏳', node: <Ico as={Timer} />, title: c.name, snippet: `Clock, ${c.filled} of ${c.segments} · on ${e.name}`, score: 47 })
     }
   return hits.sort((a, b) => b.score - a.score || a.title.localeCompare(b.title)).slice(0, 40)
@@ -135,7 +158,7 @@ function commandHits(
   // Every area, tab and More item the viewer has (src/nav.ts), found by its name or the names it used to have.
   for (const p of places) {
     const title = p.title.toLowerCase()
-    if (!title.includes(q) && !p.words.includes(q)) continue
+    if (!title.includes(q) && !p.words.includes(q) && !allIn(searchWords(q), [`${title} ${p.words}`])) continue
     hits.push({ key: `go:${p.title}:${p.to}`, to: p.to, icon: '→', node: <Ico as={ArrowRight} />, title: p.title, snippet: 'Go to', score: title.startsWith(q) ? 90 : 35, external: p.external })
   }
   return hits
@@ -212,7 +235,13 @@ export function QuickSearch({ worldId, world, onClose }: { worldId: string; worl
                     {h.node ?? h.icon} {h.title}
                     {h.gmOnly && <span title="GM only" aria-label="GM only"><Ico as={Lock} /></span>}
                   </strong>
-                  {h.snippet && <span className="muted small">{h.snippet}</span>}
+                  {(h.kind || h.snippet) && (
+                    <span className="muted small">
+                      {h.kind && <b className="hit-kind">{h.kind}</b>}
+                      {h.kind && h.snippet && ' · '}
+                      {h.snippet}
+                    </span>
+                  )}
                 </button>
               </li>
             ))}

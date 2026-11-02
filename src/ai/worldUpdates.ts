@@ -12,7 +12,7 @@ import { RELATION_KINDS } from '../relations'
 export const UPDATES_HEADING = '## World updates'
 
 /** The name of the record of changes made to the world from sessions. */
-export const LEDGER_NAME = 'The Chronicle'
+export const LEDGER_NAME = '“What changed”'
 
 const NEW_TYPES = ['npc', 'location', 'shop', 'item', 'faction', 'quest', 'deity', 'lore'] as const
 

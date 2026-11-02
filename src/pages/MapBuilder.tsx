@@ -6,6 +6,7 @@ import { DraftText, Empty } from '../components'
 import { VisibilityControl } from '../reveal'
 import { toast } from '../undo'
 import { ExportMap } from '../ExportMap'
+import { keepBeforeChange, keepMapVersion, MapVersions, restorePiecePins } from '../mapVersions'
 import { blankEntity, db, ENTITY_LABELS, newId, type Entity, type Pin, type WorldMap } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { renderPlayerFog } from '../fog'
@@ -45,7 +46,7 @@ import { groundColour } from '../mapArt/ground'
 import { useViewMode } from '../viewMode'
 import { worldPath } from '../paths'
 import { Ico } from '../icons'
-import { Cursor, Eraser, Hand, House, Mountains, PaintBrush, PaintBrushBroad, PencilLine, TextT, Tree, Wall, Waves, type Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { ClockCounterClockwise, Cursor, Eraser, Hand, House, Mountains, PaintBrush, PaintBrushBroad, PencilLine, TextT, Tree, Wall, Waves, type Icon as PhosphorIcon } from '@phosphor-icons/react'
 
 type Tool = 'select' | 'hand' | 'land' | 'coast' | 'room' | 'line' | 'stamp' | 'label' | 'erase'
 
@@ -312,6 +313,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const [kept] = useState(() => readUndo(map.id, drawing))
   const [past, setPast] = useState<Drawing[]>(kept.past)
   const [exporting, setExporting] = useState(false)
+  const [versions, setVersions] = useState(false)
   // see the map as players get it, without the secrets
   const [seePlayers, setSeePlayers] = useState(false)
   const playersView = useRef(false)
@@ -545,6 +547,8 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       // with secrets on it, the players get a picture of their own without them
       const forThem = hasSecrets(d) ? await classicBlob(renderClassic(playersCopy(d, W, H), W, H)) : undefined
       const now = Date.now()
+      // The drawing as it was before this spell of drawing is kept as a version (Versions › Restore).
+      await keepBeforeChange({ id: map.id, worldId }, lastSaved.current)
       await db.transaction('rw', [db.maps, db.assets], async () => {
         let playerImageId = (await db.maps.get(map.id))?.playerImageId
         if (forThem && playerImageId && (await db.assets.get(playerImageId))) {
@@ -1282,8 +1286,25 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
           <button onClick={() => setExporting(true)} title="Download as a picture or a virtual tabletop file">
             ⤓ Export
           </button>
+          <button onClick={() => setVersions(true)} title="Earlier versions of this map, to name or restore">
+            <Ico as={ClockCounterClockwise} /> Versions
+          </button>
         </div>
       </div>
+      {versions && (
+        <MapVersions
+          map={map}
+          drawing={drawing}
+          onClose={() => setVersions(false)}
+          onRestore={async (v) => {
+            // The drawing as it is now is kept first, so a restore can itself be undone (Undo, or Versions again).
+            await keepMapVersion(map, drawing, undefined)
+            await restorePiecePins(v)
+            commit(structuredClone(v.drawing))
+            toast(`Restored the version from ${new Date(v.at).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}${v.name ? ` (“${v.name}”)` : ''}.`)
+          }}
+        />
+      )}
       <p className="builder-phone-note muted small">Maps are best drawn on a computer; small changes work here.</p>
       {exporting && <ExportMap mapId={map.id} fog={map.fog?.on ? map.fog : undefined} name={map.name} drawing={drawing} width={W} height={H} onClose={() => setExporting(false)} />}
       <div className="map-body">

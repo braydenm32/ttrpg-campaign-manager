@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect, useRef, useState, useSyncExternal
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { CaretLeft, Shield, SlidersHorizontal } from '@phosphor-icons/react'
 import logo from './assets/logo.svg'
-import type { World } from './db'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db, type World } from './db'
 import { Help, HELP } from './help'
 import { useVisibleEntities } from './hooks'
 import { Ico } from './icons'
@@ -16,7 +17,7 @@ import { isPlayed, sessionFirstTab } from './sessions'
 import { usePlayingNow } from './stage'
 import { pagePath, resolvePage, worldPath } from './paths'
 import { formatDate } from './calendar'
-import { syncNow, syncStore } from './cloud/sync'
+import { syncNow, syncStore, type SyncState } from './cloud/sync'
 import { leaveWorld } from './cloud/players'
 import { XCardButton } from './pages/Safety'
 
@@ -52,6 +53,8 @@ export function useFrame(world: World | null | undefined): Frame {
   const handouts = useVisibleHandouts(world, entities).length
   const inbox = useGmInbox(viewer === 'gm' ? world : undefined)
   const playingNow = usePlayingNow(worldId)
+  // Corkboards are retired; their More item shows only while the world has some left.
+  const boards = useLiveQuery(() => (viewer === 'gm' && worldId ? db.boards.where({ worldId }).count() : 0), [worldId, viewer]) ?? 0
 
   // The session in hand: the one being played (started, live or recording), else the next one to play.
   const first = viewer === 'gm' ? nextSessions(campaigns, sessions, playingNow)[0] : undefined
@@ -79,6 +82,7 @@ export function useFrame(world: World | null | undefined): Frame {
     questions: inbox.available,
     threads: entities.filter(isOpenThread).length,
     leads: openLeads(entities).length,
+    boards,
     campaigns: campaigns.map((c) => ({ id: c.id, name: c.name })),
   }
   const help: LocateHelp = {
@@ -209,6 +213,9 @@ export function phoneTabIds(frame: Frame): Set<string> {
 /** The phone's bar along the bottom: five areas (players: Now, Me, Party, Leads, World) in thumb reach. */
 export function BottomBar({ frame, links }: { frame: Frame; links: FrameLinks }) {
   const { facts, spot } = frame
+  const sync = useSyncExternalStore(syncStore.subscribe, syncStore.get)
+  // On a phone the sync badge lives on More, so a problem puts a dot on More too (the Desk lists it as well).
+  const syncTrouble = facts.viewer === 'gm' && !!facts.cloud && syncProblem(sync)
   if (facts.viewer === 'wiki') return null
   const items = PHONE_BAR[facts.viewer]
   return (
@@ -222,7 +229,9 @@ export function BottomBar({ frame, links }: { frame: Frame; links: FrameLinks })
             <span className="bar-icon">
               <Ico as={b.icon} size="1.45em" weight={on ? 'fill' : 'regular'} />
               {n ? <i>{n}</i> : null}
+              {!n && b.id === 'more' && syncTrouble ? <i className="bar-dot" title="Sync problem: open More to see it" /> : null}
             </span>
+            {b.id === 'more' && syncTrouble && <span className="sr-only">(sync problem)</span>}
             {b.label}
           </Link>
         )
@@ -270,6 +279,9 @@ export function WorldDate({ world }: { world: World }) {
   if (!cal?.today) return null
   return <span className="world-date">{formatDate(cal, cal.today)}</span>
 }
+
+/** Sync stopped (an error), or finished with a note worth reading (files that didn't upload, say). */
+export const syncProblem = (s: SyncState) => s.status === 'error' || (s.status === 'idle' && !!s.message)
 
 function SyncBadge() {
   const s = useSyncExternalStore(syncStore.subscribe, syncStore.get)

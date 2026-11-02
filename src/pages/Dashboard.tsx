@@ -1,6 +1,6 @@
 import { Help, HELP } from '../help'
 import { WorldCover } from '../WorldCover'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Modal, useMenu } from '../components'
@@ -19,13 +19,15 @@ import { ClockFace } from '../clocks'
 import { approveClaimLater } from '../players/inboxActions'
 import { ReviewCharacter } from '../players/NewCharacters'
 import type { CharacterRequest } from '../cloud/players'
-import { useInbox } from '../Sidebar'
+import { syncProblem, useInbox } from '../Sidebar'
+import { syncNow, syncStore } from '../cloud/sync'
 import { clockSize, isOpenQuest, isOpenThread, prepCounts, tickingClocks } from '../counts'
 import { Ico, TypeIcon } from '../icons'
 import {
   CalendarBlank,
   ChatCircleDots,
   CheckCircle,
+  CloudWarning,
   Eye,
   FloppyDisk,
   Flame,
@@ -319,6 +321,7 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
   const inbox = useInbox()
   const backup = useBackupDue(world)
   const audio = useRecordingsOnlyHere(world)
+  const sync = useSyncExternalStore(syncStore.subscribe, syncStore.get)
   const [reading, setReading] = useState<CharacterRequest>()
   const [wantedOpen, setWantedOpen] = useState(false)
   const [, bump] = useState(0)
@@ -449,6 +452,24 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
         <Link className="button small ghost" to={`${w}/threads`}>
           Threads
         </Link>
+      ),
+    })
+  if (world.cloud?.enabled && syncProblem(sync))
+    needs.push({
+      key: 'sync',
+      chip: 'Sync',
+      icon: CloudWarning,
+      tone: sync.status === 'error' ? 'bad' : 'warn',
+      text: (
+        <>
+          {sync.status === 'error' ? 'Your changes aren’t reaching the cloud, so players and your other devices don’t get them.' : 'Synced, with a note.'}{' '}
+          {sync.message && <span className="muted">{clip(sync.message, 140)}</span>} <Help topic="syncProblem" />
+        </>
+      ),
+      action: (
+        <button className="small" onClick={() => syncNow()}>
+          Try again
+        </button>
       ),
     })
   if (backup.due)

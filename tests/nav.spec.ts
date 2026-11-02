@@ -84,7 +84,6 @@ test('each address lights the right area and tab, GM view', () => {
     [`${W}/p/drowned`, 'story/quests'],
     [`${W}/clocks`, 'story/clocks'],
     [`${W}/timeline`, 'story/timeline'],
-    [`${W}/chronicle`, 'story/chronicle'],
     [`${W}/web`, 'story/web'],
     [`${W}/more`, 'more/more'],
     [`${W}/handouts`, 'more/handouts'],
@@ -103,6 +102,8 @@ test('each address lights the right area and tab, GM view', () => {
     [`${W}/settings?tab=data`, 'more/backups'],
   ]
   for (const [url, want] of cases) expect(where(url, gm), url).toBe(want)
+  // The Chronicle is now part of Wrap up: its old address only redirects, so it lights nothing itself.
+  expect(where(`${W}/chronicle`, gm)).toBeUndefined()
   // A session that has been played opens on its notes, so plain /s/<id> is Wrap up.
   expect(where(`${W}/s/1`, help('gm', true))).toBe('session/wrap')
 })
@@ -167,11 +168,11 @@ test('nothing in a player’s menus or search leads to a GM tool', () => {
 })
 
 test('search finds every area, tab and More item by name, and the old place names', () => {
-  const gm = navPlaces({ worldId: 'w', viewer: 'gm', cloud: true, sessionId: 's', campaignId: 'c', sessionHome: '/w/w/s/s?tab=prep' })
+  const gm = navPlaces({ worldId: 'w', viewer: 'gm', cloud: true, boards: 1, sessionId: 's', campaignId: 'c', sessionHome: '/w/w/s/s?tab=prep' })
   const titles = gm.map((p) => p.title)
   for (const a of AREAS.filter((a) => a.who.includes('gm'))) expect(titles).toContain(a.label)
   for (const t of MORE_GROUPS.flatMap((g) => g.items)) if (t.to({ worldId: 'w', viewer: 'gm' })) expect(titles).toContain(t.label)
-  for (const title of ['The Lectern', 'Chronicle', 'Inbox', 'Group notes', 'All sessions', 'Templates', 'Recently deleted']) expect(titles).toContain(title)
+  for (const title of ['The Lectern', 'Wrap up the session', 'Inbox', 'Group notes', 'All sessions', 'Templates', 'Recently deleted']) expect(titles).toContain(title)
   // The names search used before the areas still find somewhere.
   for (const old of ['home', 'loose threads', 'generators and random tables', 'questions', 'campaigns'])
     expect(gm.some((p) => p.title.toLowerCase().includes(old) || p.words.includes(old)), old).toBe(true)

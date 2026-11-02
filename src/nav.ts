@@ -1,7 +1,6 @@
 import {
   Armchair,
   Backpack,
-  BookBookmark,
   BookOpenText,
   Books,
   CastleTurret,
@@ -90,6 +89,8 @@ export interface NavFacts {
   /** Open loose threads (GM) or leads and quests (players). */
   threads?: number
   leads?: number
+  /** Old corkboards the world still has (corkboards are retired; More lists them only while some are left). */
+  boards?: number
   /** Campaigns the viewer can see. */
   campaigns?: { id: string; name: string }[]
 }
@@ -225,7 +226,7 @@ export const AREAS: NavArea[] = [
         to: (f) => (f.sessionId ? w(f, `s/${f.sessionId}?tab=notes`) : undefined),
         paths: ['s/:sessionId?tab=notes', 's/:sessionId?tab=recap', 's/:sessionId?end=1'],
         who: own,
-        keywords: 'gm notes recap end of session recording transcript',
+        keywords: 'gm notes recap end of session recording transcript chronicle what changed',
       },
       {
         id: 'sessions',
@@ -283,7 +284,6 @@ export const AREAS: NavArea[] = [
       { id: 'quests', label: 'Quests', icon: Compass, to: (f) => w(f, 'quests'), types: ['quest'], who: own, keywords: 'objectives rewards' },
       { id: 'clocks', label: 'Clocks', icon: Timer, to: (f) => w(f, 'clocks'), paths: ['clocks'], who: own, count: (f) => f.clocks || undefined, keywords: 'countdown progress' },
       { id: 'timeline', label: 'Timeline', icon: Hourglass, to: (f) => w(f, 'timeline'), paths: ['timeline'], who: own, keywords: 'history events calendar' },
-      { id: 'chronicle', label: 'Chronicle', icon: BookBookmark, to: (f) => w(f, 'chronicle'), paths: ['chronicle'], who: own, keywords: 'what happened sessions history' },
       { id: 'web', label: 'Relationships', icon: Graph, to: (f) => w(f, 'web'), paths: ['web'], who: own, keywords: 'web family tree who knows' },
     ],
   },
@@ -399,7 +399,18 @@ export const MORE_GROUPS: MoreGroup[] = [
         blurb: 'Your own random tables, and names, taverns, shops, people and treasure on the spot.',
         keywords: 'generators and random tables roll d20 d100 names tavern npc shop treasure',
       },
-      { id: 'boards', label: 'Corkboards', icon: PushPin, to: (f) => w(f, 'boards'), paths: ['boards', 'boards/:boardId'], who: own, blurb: 'Pin pages up and tie them together with string.', keywords: 'board pins strings' },
+      {
+        id: 'boards',
+        label: 'Old corkboards',
+        icon: PushPin,
+        to: (f) => w(f, 'boards'),
+        paths: ['boards', 'boards/:boardId'],
+        who: own,
+        // Corkboards are retired: listed only while the world still has some, to copy them into pages.
+        when: (f) => !!f.boards,
+        blurb: 'Corkboards are retired. Copy each one into a page so nothing on it is lost.',
+        keywords: 'corkboards board pins strings',
+      },
       { id: 'assets', label: 'Files', icon: Folder, to: (f) => w(f, 'assets'), paths: ['assets'], who: own, blurb: 'Pictures, maps and sounds you’ve uploaded.', keywords: 'assets images uploads pictures' },
       { id: 'archivist', label: 'The Archivist', icon: Books, to: (f) => w(f, 'archivist'), paths: ['archivist'], who: own, blurb: 'Ask your world a question, or check it for contradictions.', keywords: 'ai claude ask question answer contradictions continuity check' },
       { id: 'templates', label: 'Templates', icon: Ruler, to: (f) => w(f, 'settings?at=templates'), who: own, blurb: 'Starting points for new pages (in World settings).', keywords: 'template starting point' },
@@ -463,6 +474,7 @@ export const CONTEXTUAL: { path: string; from: string }[] = [
   { path: '/screen/:worldId', from: 'More › Players’ screen, and “Players’ screen” while showing something' },
   { path: '/w/:worldId/print/:kind/:id', from: 'Print on a page or a session' },
   { path: '/w/:worldId/p/:entityId', from: 'every link to a page; it lights the tab for its type (?edit=1 and ?new=1 from Edit and New)' },
+  { path: '/w/:worldId/chronicle', from: 'old links to the Chronicle: it’s now “What changed” in each session’s Wrap up, so this opens the latest one' },
   { path: '/w/:worldId/e/:entityId', from: 'old links: moved to /p/ on arrival' },
   { path: '/w/:worldId/type/:type', from: 'old links: moved to the list’s own address on arrival' },
   { path: '/w/:worldId/type/:type/:kind', from: 'old links: moved to /other/ on arrival' },

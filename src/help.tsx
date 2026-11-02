@@ -10,7 +10,7 @@ export const HELP = {
   overview: 'Your Desk: the session in hand with the one button for what comes next, everything waiting on you before it, ticking clocks, the party, the sessions coming up and what changed lately. “New page” makes a page of any type.',
   areas:
     'The world is split into areas, down the side on a computer and along the bottom on a phone. Desk is what needs you now. Session is the session in hand: prepare it, play it (the Lectern) and wrap it up. Atlas is the world itself (maps, places, people), Story is what’s moving (threads, quests, clocks, timeline), and More has the tools you need now and then. The tabs along the top belong to the area you’re in, and each area remembers where you were. Players get the Common Room and The World instead.',
-  more: 'Things used now and then, in one place: what you reach for at the table (handouts, sounds, safety tools, the players’ screen), the workshop (generators and tables, corkboards, files, the Archivist, templates) and keeping the world (settings, backups, importing, Recently deleted). The numbers say how many there are (and how much space files take). Search (Ctrl+K) finds every one of them by name too.',
+  more: 'Things used now and then, in one place: what you reach for at the table (handouts, sounds, safety tools, the players’ screen), the workshop (generators and tables, files, the Archivist, templates) and keeping the world (settings, backups, importing, Recently deleted). The numbers say how many there are (and how much space files take). Search (Ctrl+K) finds every one of them by name too.',
   settings:
     'Everything about this world in four tabs: the world itself (name, cover, calendar, your own page types, templates), players and sharing (sync, invite links, the wiki link, co-GMs), this device (look, help tips, Discord, AI keys) and data (backups, importing, recently deleted). Each tab is a step in Back.',
   everything:
@@ -28,6 +28,7 @@ export const HELP = {
     'Pick one player to see the world exactly as they do: what’s revealed to everyone, plus pages revealed just to them and passages written for their character. Without invited players you can still pick a character, to check their passages and their Common Room.',
   codex:
     'Every page in your world, grouped by type. Places (with shops and taverns), People, Factions and Lore (with deities) have tabs of their own in the Atlas, and this list shows every type with how many pages it has. Pages of no particular type are under Other pages. Pages can sit inside places (a tavern inside a town).',
+  questList: 'Quests are grouped by where they stand: Active (the party is on it now), Open (waiting to be taken up) and Done (finished or failed). Change a quest’s status on its page with Edit.',
   quickAdd: 'Make a new page of any type. It starts as GM only, so nothing is revealed until you choose. You can also press Ctrl+K and type “new npc”.',
   visibility:
     '🔒 GM only means just you. 👁 Players can see this means every player can see it. Click to switch. Pins, maps, sessions and files work the same way.',
@@ -45,7 +46,7 @@ export const HELP = {
     'A campaign you’re still planning can stay 🔒 GM only: players don’t see it or any of its sessions until you switch it to 👁 Players can see this.',
   pictures:
     'Type @ or [[ and the start of a page’s name to link to it: pick it from the list (arrow keys and Enter work too). Put pictures in the text: paste one, drop one in, or use 🖼️ Picture. Players see a picture once the text around it is revealed to them (not inside a secret passage).',
-  search: 'Finds pages by name, nickname, summary, details, tags and the words in them, plus sessions and maps. It also does things: type “new npc” to make a page, or “clocks” to go there. Press Ctrl+K (⌘K on a Mac) anywhere to open it. In the player view it only searches what players can read.',
+  search: 'Finds pages by name, nickname, summary, details, tags and the words in them, plus sessions and maps. Several words find pages that have all of them, in any order (“mercy fort” finds Fort Mercy), and each result says what kind of page it is. It also does things: type “new npc” to make a page, or “clocks” to go there. Press Ctrl+K (⌘K on a Mac) anywhere to open it. In the player view it only searches what players can read.',
   news: 'What’s happened since you last looked: new pages, handouts and session recaps, answers to your questions, and what changed on pages you already had (new writing, someone’s fate, a clock that moved). Tap one to read it, and “Got it” when you’re done.',
   backupReminder: 'A reminder to download a backup of this world every two weeks (monthly with cloud sync on). Save the file somewhere safe, like Google Drive or a USB stick. “Later” asks again in a week.',
   aliases:
@@ -58,16 +59,27 @@ export const HELP = {
   templates:
     'A template is a starting point for new pages, like a "Dungeon room" with the headings and details you always fill in. Templates are always GM only and never appear in lists. Make one with "Save as template" on any page.',
   lifeStatus:
-    'Mark a character alive, dead, missing or captured. It shows in lists, on map pins, at the Lectern and on corkboards. Players only see it if you tick "Players know this".',
+    'Mark a character alive, dead, missing or captured. It shows in lists, on map pins and at the Lectern. Players only see it if you tick "Players know this".',
   print: 'A clean copy to print or save as a PDF (choose "Save as PDF" in the print window). The player copy leaves out secrets, GM notes and anything not revealed.',
   customTypes: 'Add your own kinds of page, such as Ships, Spells or Gods of the Deep. Each gets its own section in Everything.',
 
   // Maps
   maps: 'Upload a map image or draw one in the map builder. Then drop pins and draw regions, and link them to pages so clicking them shows what is there.',
   mapView:
-    'Click a pin or region to see what is there. "Enter" opens a more detailed map, such as a town inside a region. As GM, use the toolbar to add pins and regions.',
+    'Click a pin or region to see what is there. "Enter" opens a more detailed map, such as a town inside a region. As GM, use the toolbar to add pins and regions. Clicking a pin shows its page first (Open page); “Edit pin” changes its name, colour, page, category or note.',
   fog:
     'Hide the map from players and uncover it as they explore. Uncover a circle (its outline follows the pointer at the size you set; drag to uncover a trail), a box or any shape; switch to Cover to hide a part again. Undo takes back the last one (a whole room or trail at once) and Redo puts it back. Players get a copy of the picture with the fog painted on, so covered areas and the pins in them can’t be peeked at.',
+  signOut: 'Signing out stops cloud sync on this device; your own worlds stay here. If you joined worlds as a player, it asks whether to remove their copies from this device too (handy on a shared computer). You stay in those worlds: sign in again and Home lists them to open.',
+  syncProblem: 'Cloud sync stopped, or finished with something to tell you (a file that didn’t upload, say). Nothing is lost: your changes stay on this device and go up once sync works again. “Try again” syncs now; if it keeps failing, check you’re online and signed in (World settings › Players and sharing).',
+  deviceStorage: 'How much room this app’s worlds, pictures, recordings and Recently deleted take in this browser, and whether the browser has promised to keep them. Without that promise a browser may clear the data when the device runs short of space (Safari on an iPhone can after a week unused), so keep a backup. Installing the app to your home screen usually earns the promise.',
+  unusedFiles: 'Files no page, map, handout, sound or session uses (as a picture, in its text, or as a recording). Handy for tidying up: deleted files go to Recently deleted for a month. Each file also says what uses it.',
+  stock: 'Items a shop sells (or that are kept at this place): set an item’s “Carried by, or sold at” to the shop. The price is the item’s Price detail; players see it when the item is revealed to them. “Sold to the party” moves one into the party stash, reveals it, and takes the price from the purse (Undo puts both back).',
+  scenePin: 'Where this scene happens on a map. Tapping that pin on the map then shows “Scene: …” with Start, for the session you’re preparing or playing, so you can run it straight from the map.',
+  pinCategories: 'Give pins a kind, like “Quest sites”, “Danger” or “Shops” (type your own, or pick one you used before). The row of kinds above the map shows only the pins of the kinds you tap; “All” shows every pin again. Your choice stays in the address, so Back keeps it. Players see the kinds of the pins they can see.',
+  mapNumbers: 'For dungeons and towns: switch on “Show numbers” in Map settings and each pin and linked piece gets a number, like a published adventure (“4. The ossuary”). Key lists number, name and one line; tap one to find it. Numbers stay put as you add and reveal pins; “Number again” starts over. The Export picture and Print can include the numbers and key. Players see only the numbers and key entries they can see.',
+  pinOnMap: 'Opens the map you pick ready to place a pin for this page: click the spot and the pin is made, linked to the page and named after it. It starts GM only, like a new page.',
+  mapVersions:
+    'The map builder saves as you draw. Before each spell of drawing it also keeps the map as it was (the last ten, on this device only), so a fill or erase you regret after closing the tab can still be put right. “Name this version” keeps the map as it is now under a name, until you delete it. Restore puts that drawing back, with the pins of its linked pieces, and the players’ copy is redrawn from it; Undo takes a restore back.',
   mapBuilder: 'Draw a map from scratch: paint land and water, draw roads, rivers and borders, place mountains, forests and towns, and add labels. It then works like any uploaded map: pins, regions, fog and the player view. On a computer each tool has a key: V Select, H Pan, B the brush (Land or Ground), D Rooms, C Coast, L Line, P Place, T Label, E Erase; Esc goes back to Select.',
   newMap:
     'Pick what you are drawing. “World or region (side view)” is for continents and kingdoms: start with open sea or all land. “Town or city (from above)” is a town seen from above. “Battle map or dungeon (5 ft squares)” is on a grid for fights: start with solid rock to dig a dungeon, or with grass, dirt or paving for an outdoor fight. Small, Medium or Large sets how much room you get: pick the size you’ll need, since it can’t be changed afterwards.',
@@ -159,9 +171,9 @@ export const HELP = {
   recap:
     'Claude drafts a GM summary, a player recap and updates for your pages from the transcript. "Copy for Claude" works with a Claude subscription for free; "Write it now" uses your own API key. You review both before saving.',
   worldUpdates:
-    'Claude compares the session with your pages and suggests what to change: new NPCs, places and shops that came up, quests moving on, new relationships, timeline events, deaths and captures, loot changing hands and threads. Tick the ones you want and add them in one go. New pages start GM only, and lines on existing pages go in a “Session log” at the bottom of the page. Every change is listed in the Chronicle and can be undone from the page’s history.',
-  chronicle:
-    'Every change made to your world from a session, newest first: pages made, lines added, quests and fates that changed. Click a line to open the page. Only you see it.',
+    'Claude compares the session with your pages and suggests what to change: new NPCs, places and shops that came up, quests moving on, new relationships, timeline events, deaths and captures, loot changing hands and threads. Tick the ones you want and add them in one go. New pages start GM only, and lines on existing pages go in a “Session log” at the bottom of the page. Every change is listed under “What changed” in this session’s Wrap up and can be undone from the page’s history.',
+  whatChanged:
+    'In a session’s Wrap up: every change its write-up made to your world (pages made, lines added, quests and fates that changed). Click a line to open the page. It used to be the Chronicle tab under Story; old Chronicle links open the newest one here. Only you see it.',
   heardIn:
     'Where this page’s name (or a nickname) was said out loud in a session’s transcript. Click a time to open the session and play that moment, if the recording is on this device.',
   sessionMentions: 'Sessions whose notes or recap link to this page.',
@@ -199,7 +211,7 @@ export const HELP = {
 
   // Tools
   boards:
-    'A corkboard for mysteries, plots and politics. Pin pages and note cards, drag them about, and tie string between them with 🧶. Click a string to label or cut it. GM only.',
+    'Corkboards are retired: you can’t make new ones, and this only shows while your world still has some. “Copy into a page” writes a board’s cards (pages as links, notes as quotes) and its strings into a new GM-only page, so nothing is lost; then delete the board. Until then you can still move cards, tie string and cut it. GM only.',
   generators: 'Your own random tables come first: pick one and roll. Below, roll up taverns, shops and NPCs without any AI, then names and treasure. Save the ones you like; they start as GM only.',
   playersWillSee:
     'Before something reaches your players you see what they’ll get: which page, which coins, which items. Once you go ahead, Undo takes it back for a few seconds, though anyone looking at that moment may already have seen it.',

@@ -56,7 +56,11 @@ export function WorldUpdatesReview({ world, session, entities }: { world: World;
       setBusy(false)
     }
   }
-  const ledgerLink = <Link to={`${worldPath(world.id)}/chronicle`}>{LEDGER_NAME}</Link>
+  const ledgerLink = (
+    <Link to={`${worldPath(world.id)}/s/${session.id}?tab=notes&at=changed`} onClick={() => requestAnimationFrame(() => document.getElementById('changed')?.scrollIntoView({ block: 'start' }))}>
+      {LEDGER_NAME}
+    </Link>
+  )
 
   if (draft.updatesDone || result !== undefined)
     return (

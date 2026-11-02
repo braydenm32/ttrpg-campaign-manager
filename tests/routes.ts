@@ -74,7 +74,7 @@ export const ROUTES: RouteEntry[] = [
   { path: '/join/:token', screen: 'Join a world (invite link)', who: 'special', kind: 'loader', samples: [{ url: '/join/test-token' }, { url: '/join/test-token?as=gm', label: 'co-GM' }] },
   {
     path: '/w/:worldId/print/:kind/:id',
-    screen: 'Print a page or session',
+    screen: 'Print a page, session or map',
     who: 'both',
     kind: 'screen',
     // It sits outside the world's frame, so the player view doesn't reach it: the Print button adds
@@ -84,6 +84,7 @@ export const ROUTES: RouteEntry[] = [
       { url: '/w/{worldId}/print/e/{pageId:Ford Street}?copy=players', label: 'page, player copy' },
       { url: '/w/{worldId}/print/s/{session:1}', label: 'session', player: 'skip' },
       { url: '/w/{worldId}/print/s/{session:1}?copy=players', label: 'session, player copy', gm: 'not-found', player: 'not-found' },
+      { url: '/w/{worldId}/print/m/{map:Cinderford}', label: 'map with its key', player: 'skip' },
     ],
     note: 'Uses long ids, not short names.',
   },

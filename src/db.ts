@@ -513,7 +513,25 @@ export interface WorldMap {
   fog?: MapFog
   /** How far things are: this many image pixels are this distance. Players get it too, for the ruler. */
   scale?: MapScale
+  /** Dungeon and town maps: numbers on the pins and linked pieces, with a key beside the map. */
+  numbers?: boolean
   createdAt: number
+}
+
+/**
+ * A saved version of a drawn map, kept on this device only (never synced): the drawing as it was,
+ * and the pins of its linked pieces, so Restore puts both back. The last few are kept per map, plus
+ * any the GM has named.
+ */
+export interface MapVersion {
+  id: string
+  mapId: string
+  worldId: string
+  at: number
+  /** Named by the GM ("Before the flood"); named versions are never dropped to make room. */
+  name?: string
+  drawing: Drawing
+  piecePins: Pin[]
 }
 
 export interface MapScale {
@@ -557,6 +575,10 @@ export interface Pin {
   note: string
   /** Set when the pin is a piece on a drawn map that was linked to a page: the piece's id in the drawing. */
   pieceId?: string
+  /** A kind of pin the GM names ("quest sites", "danger", "shops"), for the map's legend that filters. Players see it. */
+  category?: string
+  /** Its number in the map's key ("Room 4"), once the GM has switched numbers on for the map. Players see it on pins they can see. */
+  number?: number
 }
 
 export interface Bookmark {
@@ -639,7 +661,7 @@ export type WorldUpdate = { id: string; on: boolean; /** Also put this on the ti
   | { kind: 'conflict'; page: string; note: string }
 )
 
-/** A line in the Chronicle: one change made to the world from a session. Always GM-only. */
+/** A line in a session’s “What changed” (once the Chronicle): one change made to the world from a session. Always GM-only. */
 export interface LedgerEntry {
   id: string
   at: number
@@ -668,7 +690,7 @@ export interface Session {
   highlights?: SessionHighlight[]
   /** The last AI recap draft, kept until the GM uses or discards it. Always GM-only. */
   recapDraft?: RecapDraft
-  /** Changes made to the world from this session (the Chronicle). Always GM-only. */
+  /** Changes made to the world from this session (“What changed” in its Wrap up). Always GM-only. */
   ledger?: LedgerEntry[]
   /** The Lectern: live state while running this session at the table. Always GM-only. */
   lectern?: LecternState
@@ -716,6 +738,8 @@ export interface PrepScene extends CheckItem {
   soundIds?: string[]
   /** One of this session's planned encounters. */
   encounterId?: string
+  /** Where it happens on a map: a pin, whose popup then offers to start this scene. */
+  pinId?: string
   /** Put on players' screens when it starts: a page (revealed first) or a picture from the world's files. */
   show?: { kind: 'page'; entityId: string } | { kind: 'image'; assetId: string }
   /** GM-only pages revealed to everyone when it starts. */
@@ -979,6 +1003,7 @@ export const db = new Dexie('ttrpg-campaign-manager') as Dexie & {
   sounds: EntityTable<Sound, 'id'>
   bin: EntityTable<BinItem, 'id'>
   recordingChunks: EntityTable<RecordingChunk, 'id'>
+  mapVersions: EntityTable<MapVersion, 'id'>
 }
 
 db.version(1).stores({
@@ -1035,10 +1060,11 @@ db.version(7).stores({
   history: 'id, entityId, worldId, at, [worldId+reason]',
 })
 
-// v8: who was there (Session.present) and a page's "reveal on" date (Entity.revealAt). Neither is
-// indexed, so nothing to move: a session from before has none, which counts as the whole party being
-// there, and a page from before has no date.
-db.version(8).stores({})
+// v8: who was there (Session.present) and a page's "reveal on" date (Entity.revealAt), neither
+// indexed, so nothing to move; and saved versions of drawn maps (device-only, never synced).
+db.version(8).stores({
+  mapVersions: 'id, mapId, worldId, at',
+})
 
 // The bin is cleared of anything over a month old soon after the app opens, not only when it's
 // looked at, so deleting a big recording to make room does give the space back in time.
@@ -1110,8 +1136,9 @@ export function fromTemplate(t: Entity, name = `New ${t.name}`): Entity {
 }
 
 export async function deleteWorld(worldId: string) {
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds, db.bin, db.recordingChunks], async () => {
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds, db.bin, db.recordingChunks, db.mapVersions], async () => {
     await db.history.where({ worldId }).delete()
+    await db.mapVersions.where({ worldId }).delete()
     await db.bin.where({ worldId }).delete()
     await db.recordingChunks.filter((c) => c.worldId === worldId).delete()
     await db.boards.where({ worldId }).delete()

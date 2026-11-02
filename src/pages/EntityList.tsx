@@ -69,7 +69,7 @@ export default function EntityList() {
         <div>
           {group && <div className="kicker">{label.many}</div>}
           <h1>
-            {label.icon} {group ? group.title : label.many} <Help topic={t === 'table' ? 'randomTables' : t === 'custom' && kind ? 'customTypes' : 'codex'} />
+            {label.icon} {group ? group.title : label.many} <Help topic={t === 'table' ? 'randomTables' : t === 'quest' ? 'questList' : t === 'custom' && kind ? 'customTypes' : 'codex'} />
           </h1>
         </div>
         {isGM && world && (t !== 'custom' || kind) && <NewPageButton world={world} type={t} customType={kind} />}
@@ -116,6 +116,8 @@ export default function EntityList() {
         <Empty>{ofType.length === 0 ? `No ${/^[A-Z]{2}/.test(label.many) ? label.many : label.many.toLowerCase()} yet.` : 'Nothing matches.'}</Empty>
       ) : showTree ? (
         <LocationTree worldId={worldId} entities={filtered} isGM={isGM} />
+      ) : t === 'quest' ? (
+        <QuestGroups worldId={worldId} entities={filtered} isGM={isGM} />
       ) : (
         <div className="card-grid">
           {filtered.map((e) => (
@@ -145,6 +147,36 @@ function EntityCard({ worldId, entity: e, isGM }: { worldId: string; entity: Ent
         ))}
       </div>
     </Link>
+  )
+}
+
+/** Quests by where they stand: what the party is on now, then what's open to take up, then what's over. */
+const QUEST_GROUPS: { title: string; blurb: string; has: (e: Entity) => boolean }[] = [
+  { title: 'Active', blurb: 'The party is on these now.', has: (e) => e.questStatus === 'active' },
+  { title: 'Open', blurb: 'Waiting to be taken up.', has: (e) => !e.questStatus || e.questStatus === 'open' },
+  { title: 'Done', blurb: 'Finished or failed.', has: (e) => e.questStatus === 'done' || e.questStatus === 'failed' },
+]
+
+function QuestGroups({ worldId, entities, isGM }: { worldId: string; entities: Entity[]; isGM: boolean }) {
+  return (
+    <>
+      {QUEST_GROUPS.map((g) => {
+        const list = entities.filter(g.has)
+        if (!list.length) return null
+        return (
+          <section key={g.title} className="quest-group" aria-label={`${g.title} quests`}>
+            <h2>
+              {g.title} <span className="muted small">· {list.length} · {g.blurb}</span>
+            </h2>
+            <div className="card-grid">
+              {list.map((e) => (
+                <EntityCard key={e.id} worldId={worldId} entity={e} isGM={isGM} />
+              ))}
+            </div>
+          </section>
+        )
+      })}
+    </>
   )
 }
 

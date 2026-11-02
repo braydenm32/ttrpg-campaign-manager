@@ -1,6 +1,6 @@
 import { test as base, expect, type BrowserContext, type Page } from '@playwright/test'
 import { PORT, type Device } from './lib/server'
-import { addCustomType, readDatabase, World } from './lib/world'
+import { addCustomType, addOldBoard, readDatabase, World } from './lib/world'
 
 export type { Device }
 export type View = 'gm' | 'player'
@@ -67,6 +67,8 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
       const first = new World(await readDatabase(page))
       await page.goto('/')
       await addCustomType(page, first.id)
+      // Corkboards are retired and the example has none; an older world keeps its boards, so the tests add one.
+      await addOldBoard(page, first.id, first.page('Dannic Rook').id)
       const world = new World(await readDatabase(page))
       await page.close()
       await provide({ context, world })

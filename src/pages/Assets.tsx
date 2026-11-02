@@ -11,15 +11,23 @@ import { ShowButton, unshowableImages } from '../showing'
 import { Ico } from '../icons'
 import { useViewMode } from '../viewMode'
 import { File, Folder } from '@phosphor-icons/react'
+import { assetUses, friendlyName, keyNamed } from '../assetUses'
 
 export default function Assets() {
   const { worldId } = useWorld()
   const stored = useLiveQuery(() => db.assets.where({ worldId }).reverse().sortBy('createdAt'), [worldId])
   const assets = stored ?? []
   const unshowable = useLiveQuery(() => unshowableImages(worldId), [worldId])
+  const uses = useLiveQuery(() => assetUses(worldId), [worldId])
   const [filter, setFilter] = useState('')
+  const [unused, setUnused] = useState(false)
   const q = filter.trim().toLowerCase()
-  const shown = assets.filter((a) => !q || a.name.toLowerCase().includes(q) || a.tags.some((t) => t.toLowerCase().includes(q)))
+  const nameOf = (a: Asset) => friendlyName(a.name, uses?.get(a.id))
+  const isUnused = (a: Asset) => !!uses && !uses.has(a.id)
+  const shown = assets.filter(
+    (a) => (!q || nameOf(a).toLowerCase().includes(q) || a.name.toLowerCase().includes(q) || a.tags.some((t) => t.toLowerCase().includes(q))) && (!unused || isUnused(a)),
+  )
+  const unusedCount = assets.filter(isUnused).length
   const total = assets.reduce((n, a) => n + a.size, 0)
   const { isGM } = useViewMode()
   if (!isGM) return <Empty>Files are a GM tool. Switch back to the GM view to use them.</Empty>
@@ -49,15 +57,23 @@ export default function Assets() {
           />
         </label>
       </header>
-      {assets.length > 0 && <input className="search" placeholder="Filter by name or tag…" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter files" />}
+      {assets.length > 0 && (
+        <div className="row wrap">
+          <input className="search" placeholder="Filter by name or tag…" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter files" />
+          <label className="inline-check">
+            <input type="checkbox" checked={unused} onChange={(e) => setUnused(e.target.checked)} /> Not used anywhere{uses ? ` (${unusedCount})` : ''}
+          </label>
+          <Help topic="unusedFiles" />
+        </div>
+      )}
       {assets.length === 0 ? (
         <Empty>Nothing uploaded yet. Handouts, portraits, maps, music, PDFs: anything you upload, here or on a page, is kept here.</Empty>
       ) : shown.length === 0 ? (
-        <Empty>No file’s name or tag has “{filter.trim()}” in it.</Empty>
+        <Empty>{unused && !q ? 'Every file is used somewhere.' : `No ${unused ? 'unused ' : ''}file’s name or tag has “${filter.trim()}” in it.`}</Empty>
       ) : (
         <div className="card-grid">
           {shown.map((a) => (
-            <AssetCard key={a.id} asset={a} unshowable={unshowable} />
+            <AssetCard key={a.id} asset={a} unshowable={unshowable} uses={uses?.get(a.id)} known={!!uses} />
           ))}
         </div>
       )}
@@ -65,7 +81,7 @@ export default function Assets() {
   )
 }
 
-function AssetCard({ asset, unshowable }: { asset: Asset; unshowable?: Map<string, string | undefined> }) {
+function AssetCard({ asset, unshowable, uses, known }: { asset: Asset; unshowable?: Map<string, string | undefined>; uses?: string[]; known: boolean }) {
   const url = useBlobUrl(asset)
   const update = (patch: Partial<Asset>) => db.assets.update(asset.id, patch)
   const kind = asset.mime.split('/')[0]
@@ -75,8 +91,12 @@ function AssetCard({ asset, unshowable }: { asset: Asset; unshowable?: Map<strin
       {url && kind === 'image' && <img src={url} alt={asset.name} />}
       {url && kind === 'audio' && <audio controls src={url} preload="none" />}
       {kind !== 'image' && kind !== 'audio' && <div className="file-icon"><Ico as={File} /></div>}
-      <input value={asset.name} onChange={(e) => update({ name: e.target.value })} aria-label="File name" />
-      <div className="muted small">{formatBytes(asset.size)}</div>
+      {/* The example's pictures are stored under internal names: they show (and are saved, once edited) as what they're for. */}
+      <input value={keyNamed(asset.name) ? friendlyName(asset.name, uses) : asset.name} onChange={(e) => update({ name: e.target.value })} aria-label="File name" />
+      <div className="muted small">
+        {formatBytes(asset.size)}
+        {known && (uses?.length ? ` · Used by ${uses.slice(0, 2).join(', ')}${uses.length > 2 ? ` and ${uses.length - 2} more` : ''}` : ' · Not used anywhere')}
+      </div>
       <TagInput tags={asset.tags} onChange={(tags) => update({ tags })} />
       {/* A map picture players mustn't see shows their copy instead (showToPlayers swaps it). */}
       {kind === 'image' && !asset.tags.includes('fog') && unshowable && (
