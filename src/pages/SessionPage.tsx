@@ -34,6 +34,7 @@ import { prepCounts } from '../counts'
 import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, jumpTo, useKeepScroll } from '../jump'
 import { removeWithUndo, SavedMark, saving } from '../undo'
+import { showDay } from '../text'
 
 /**
  * A session. For the GM it's two of the Session area's three stages (the third, Play, is the
@@ -68,7 +69,7 @@ export default function SessionPage() {
         </h1>
         <div className="row spread">
           <div className="muted">
-            {session.date}
+            {showDay(session.date)}
             {session.worldDate && world?.calendar && ` · in the world: ${formatDate(world.calendar, session.worldDate)}`}
           </div>
           <div className="row">

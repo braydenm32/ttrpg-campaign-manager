@@ -370,6 +370,8 @@ export const HELP = {
     'A catch-up of the whole campaign, for players before a session and for anyone joining late. Write it yourself, or have Claude write it from the player recaps (never from your GM notes). Players also get every session’s recap underneath, in order.',
   lecternNotes:
     'This session’s GM notes, the same ones as on the session page. Add a line with the time from the box (it goes at the end), or press Edit to change them.',
+  inspirationPlayer:
+    'Inspiration or hero points your GM has given you. Tap “Use one” to ask to spend one: your GM gets a pop-up and says yes at the table.',
 } as const
 
 export type HelpTopic = keyof typeof HELP

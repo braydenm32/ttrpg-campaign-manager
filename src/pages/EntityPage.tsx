@@ -26,7 +26,7 @@ import { RelationsBox } from '../relations'
 import { SessionMentions } from '../sessionMentions'
 import { ClocksBox } from '../clocks'
 import { QuestBox, questProgress } from '../quests'
-import { Ico, TypeIcon } from '../icons'
+import { Ico, PageIcon, TypeIcon } from '../icons'
 import { dropHeldPage, heldPage } from '../pendingPages'
 import { markSaved, toast } from '../undo'
 import { DotsThreeOutline, Eye, Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Sparkle, Spiral, UserCircle } from '@phosphor-icons/react'
@@ -57,7 +57,7 @@ export default function EntityPage() {
   if (stored === undefined) return <Skeleton />
   if (held && held.worldId === worldId) return <EntityEditor key={held.id} entity={held} fresh held onDone={() => setParams({})} />
   if (stored === null || stored.worldId !== worldId || stored.template && !isGM || !canSeeEntity(stored))
-    return <Empty>This page doesn't exist or hasn't been revealed.</Empty>
+    return <Empty>{isGM ? 'This page doesn’t exist.' : 'This page isn’t here, or your GM hasn’t shared it with you yet.'}</Empty>
   const entity = isGM ? stored : asPlayerSees(stored)
 
   return editing ? (
@@ -73,6 +73,8 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   const entities = useVisibleEntities(worldId)
   const sessions = useWorldSessions(worldId)
   const image = useAssetUrl(e.imageId)
+  // People, places and groups wear their initials where a picture would be; quests, threads, events, lore and tables a type icon ("The Drowned Man" would read as "DM").
+  const lettered = ['npc', 'pc', 'faction', 'location', 'shop', 'deity', 'item', 'custom'].includes(e.type)
   const { owners } = useCharacterOwners(e.type === 'pc' ? world : undefined)
   const pins =
     useLiveQuery(
@@ -303,12 +305,12 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               <img className="portrait" src={image} alt={e.name} />
             ) : isGM && !e.template ? (
               <button className="portrait-placeholder" onClick={onEdit} title="Add a picture">
-                <span aria-hidden="true">{initials(e.name)}</span>
+                <span aria-hidden="true">{lettered ? initials(e.name) : <PageIcon page={e} world={world} size="1em" />}</span>
                 <small>Add a picture</small>
               </button>
             ) : (
               <div className="portrait-placeholder" aria-hidden="true">
-                <span>{initials(e.name)}</span>
+                <span>{lettered ? initials(e.name) : <PageIcon page={e} world={world} size="1em" />}</span>
               </div>
             )}
             <dl className="facts">
@@ -589,8 +591,10 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
         </div>
         <header className="page-header">
           <div className="title-block">
+            <h1 className="sr-only">Editing {d.name || `a new ${typeLabel(d, world).one.toLowerCase()}`}</h1>
             <input
               className="title-input"
+              aria-label={`Name of this ${typeLabel(d, world).one.toLowerCase()}`}
               value={d.name}
               onChange={(ev) => set('name', ev.target.value)}
               placeholder={`Name this ${typeLabel(d, world).one.toLowerCase()}`}

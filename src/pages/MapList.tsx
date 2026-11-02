@@ -66,7 +66,7 @@ export default function MapList() {
         <Empty>
           {isGM
             ? 'Draw a map here, or upload one (from Inkarnate, Wonderdraft, Dungeon Alchemist, a scan…), then add clickable pins and regions.'
-            : 'No maps have been revealed yet.'}
+            : 'Your GM hasn’t shared a map yet.'}
         </Empty>
       ) : (
         <div className="card-grid">
@@ -252,9 +252,9 @@ function MapCard({ map, worldId }: { map: WorldMap; worldId: string }) {
   return (
     <Link className="card map-card" to={`${worldPath(worldId)}/maps/${map.id}`}>
       {url && <img src={url} alt="" />}
-      <h3>
+      <h2 className="card-title">
         {map.name} {isGM && <SeenMark entity={map} />}
-      </h3>
+      </h2>
     </Link>
   )
 }

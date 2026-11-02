@@ -51,6 +51,7 @@ import {
 import { pagePath, worldPath } from '../paths'
 import { useKeepScroll } from '../jump'
 import { PlayerDowntime } from '../players/Downtime'
+import { SignedOutCard } from '../players/SignedOut'
 import { Highlights, StorySoFar } from '../highlights'
 
 /**
@@ -230,6 +231,7 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
           {today && <span className="phone-only">{`${campaign ? ' · ' : ''}${today}`}</span>}
         </span>
       </TabHead>
+      <SignedOutCard world={world} />
       {stage === 'during' && (
         <>
           <LiveTable ctx={ctx} />
@@ -615,6 +617,7 @@ function onlyYouKnow(entities: Entity[], previewNames: string[] = []) {
 /** A character's picture, name, one-line summary and inspiration. */
 function CharacterHead({ ctx, c, big }: { ctx: RoomContext; c: Entity; big?: boolean }) {
   const { worldId, memberOf, cloudId } = ctx
+  const { isGM } = useViewMode()
   const [asked, setAsked] = useState('')
   return (
     <div className="room-character">
@@ -644,7 +647,7 @@ function CharacterHead({ ctx, c, big }: { ctx: RoomContext; c: Entity; big?: boo
             </button>
           )}
           {asked && <span className="small">{asked}</span>}
-          <Help topic="inspiration" />
+          <Help topic={isGM ? 'inspiration' : 'inspirationPlayer'} />
         </div>
       )}
     </div>
@@ -664,6 +667,12 @@ function NoCharacter({ ctx }: { ctx: RoomContext }) {
           <Ico as={Shield} /> Choose your character
         </Link>
       </>
+    )
+  if (!ctx.party.length)
+    return (
+      <p className="muted small">
+        Previewing as every player, so there’s no “you” here, and no player characters to preview as yet. Make a Player Character page and reveal it to the players, and this becomes their seat.
+      </p>
     )
   return <p className="muted small">Previewing as every player, so there’s no “you” here. Choose a character in the Player view bar above to see the Common Room as them.</p>
 }
@@ -858,7 +867,7 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
           })}
         </ul>
       ) : (
-        <p className="muted">No player characters revealed yet.</p>
+        <p className="muted">Nobody’s in the party yet. Once your GM adds your characters, they show here.</p>
       )}
     </>
   )
@@ -898,6 +907,7 @@ function NotesTab({ ctx }: { ctx: RoomContext }) {
   return (
     <>
       <TabHead title="Notes" help="scratchpad" />
+      <SignedOutCard world={world} />
       <section className="card room-card">
         {memberOf || world.cloud?.enabled ? (
           <PlayerNotesBox world={world} entityId="" entities={entities} big start="group" />

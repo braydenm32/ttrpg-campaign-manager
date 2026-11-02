@@ -157,9 +157,9 @@ export function EditMyCharacter({ entity, cloudId, system }: { entity: Entity; c
             <div className="label">Details (stats, class, level…)</div>
             {fields.map((f, i) => (
               <div key={i} className="row field-row">
-                <input value={f.key} placeholder="Field" onChange={(e) => setFields(fields.map((x, j) => (j === i ? { ...x, key: e.target.value } : x)))} />
-                <input value={f.value} placeholder="Value" onChange={(e) => setFields(fields.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} />
-                <button type="button" className="ghost" onClick={() => setFields(fields.filter((_, j) => j !== i))}>
+                <input value={f.key} placeholder="Field" aria-label={`Detail ${i + 1} name`} onChange={(e) => setFields(fields.map((x, j) => (j === i ? { ...x, key: e.target.value } : x)))} />
+                <input value={f.value} placeholder="Value" aria-label={`Detail ${i + 1} value`} onChange={(e) => setFields(fields.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} />
+                <button type="button" className="ghost" aria-label={`Remove ${f.key || `detail ${i + 1}`}`} onClick={() => setFields(fields.filter((_, j) => j !== i))}>
                   ×
                 </button>
               </div>
