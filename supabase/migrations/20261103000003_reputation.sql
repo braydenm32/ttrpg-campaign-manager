@@ -4,7 +4,7 @@
 --  - records: a new kind of row, "reputation" (one per world for the party, one per character). Until
 --    this runs the cloud refuses those rows; the app keeps them on the GM's device and sends them on the
 --    first sync after (src/cloud/sync.ts, sendNewer), and the rest of the world syncs as before.
---  - player_view: as in 20261102000000_review_round5.sql, plus ONE new key, "reputation" (marked >>> <<<
+--  - player_view: as in 20261103000001_between_sessions.sql, plus ONE new key, "reputation" (marked >>> <<<
 --    below). Only the reach, the lean, the level names and what the GM ticked for players go out; GM-only
 --    place notes and GM-only reasons never do. Nothing else in player_view changes.
 -- Safe to run more than once; the app works both before and after it.
@@ -59,8 +59,10 @@ begin
   shown as (
     select (select data->'showing'->>'assetId' from wrow where data->'showing'->>'kind' = 'image' and viewer is not null) as img
   ),
+  -- A handout with a "reveal on" date stays back until then.
   handouts as (
     select h from wrow, jsonb_array_elements(case when jsonb_typeof(data->'handouts') = 'array' and viewer is not null then data->'handouts' else '[]'::jsonb end) h
+    where not (h ? 'revealAt') or public.reveal_due(h)
   ),
   handimg as (
     select h->>'assetId' as img from handouts where h->>'kind' = 'image' and h->>'assetId' is not null
@@ -121,14 +123,14 @@ begin
         || case when data ? 'storySoFar' then jsonb_build_object('storySoFar', public.player_text(data->>'storySoFar', names)) else '{}'::jsonb end) from camps), '[]'::jsonb),
     'entities', coalesce((select jsonb_agg(
         -- Nicknames and GM tags are the GM's own; details ticked "GM only" are left out.
-        (data - 'revealedTo' - 'aliases' - 'gmTags') || jsonb_build_object(
+        (data - 'revealedTo' - 'aliases' - 'gmTags' - 'revealAt') || jsonb_build_object(
           'fields', coalesce((select jsonb_agg(f) from jsonb_array_elements(
               case when jsonb_typeof(data->'fields') = 'array' then data->'fields' else '[]'::jsonb end) f
             where coalesce(f->>'gm', '') <> 'true'), '[]'::jsonb),
           'gmNotes', '',
           -- Pages revealed only to this viewer arrive as ordinary revealed pages, flagged so the app can say so.
           'visibility', 'players',
-          'secretForYou', data->>'visibility' <> 'players',
+          'secretForYou', data->>'visibility' <> 'players' and not public.reveal_due(data),
           'body', public.player_text(data->>'body', names),
           'playerBody', case when data ? 'playerBody' then to_jsonb(public.player_text(data->>'playerBody', names)) else 'null'::jsonb end,
           'parentId', case when data->>'parentId' in (select id from ents) then data->'parentId' else 'null'::jsonb end,
@@ -202,7 +204,11 @@ begin
             from jsonb_array_elements(case when jsonb_typeof(data->'highlights') = 'array' then data->'highlights' else '[]'::jsonb end) h), '[]'::jsonb),
           'notes', '',
           'recordings', '[]'::jsonb,
-          'entityIds', coalesce((select jsonb_agg(e) from jsonb_array_elements_text(data->'entityIds') e where e in (select id from ents)), '[]'::jsonb)
+          'entityIds', coalesce((select jsonb_agg(e) from jsonb_array_elements_text(data->'entityIds') e where e in (select id from ents)), '[]'::jsonb),
+          -- Who was there: only player characters the viewer can see.
+          'present', coalesce((select jsonb_agg(p) from jsonb_array_elements_text(
+              case when jsonb_typeof(data->'present') = 'array' then data->'present' else '[]'::jsonb end) p
+            where p in (select id from ents where data->>'type' = 'pc')), '[]'::jsonb)
         )) from ses), '[]'::jsonb),
     -- >>> 20261103000003_reputation: the one addition to player_view in this file (keep it when combining).
     -- How far the party's name (and each character's) has spread. Rebuilt from a list of safe fields, like
