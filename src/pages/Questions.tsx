@@ -19,6 +19,7 @@ import { pagePath, worldPath } from '../paths'
 import { toast } from '../undo'
 import { askToReveal, useReview } from '../reveal'
 import { offerGroupPost } from '../groupPost'
+import { FeedbackInInbox } from '../players/StarsWishes'
 
 /** Questions: the GM's Inbox (everything players sent), or a player's own questions and answers. */
 export default function Questions() {
@@ -105,6 +106,7 @@ function ItemHead({ kind, who, at, extra }: { kind: keyof typeof KINDS; who: str
 function GmInbox({ world }: { world: World }) {
   const inbox = useInbox()
   const pages = useLiveQuery(() => db.entities.where({ worldId: world.id }).toArray(), [world.id]) ?? []
+  const sessions = useLiveQuery(() => db.sessions.where({ worldId: world.id }).toArray(), [world.id]) ?? []
   const [reading, setReading] = useState<CharacterRequest>()
   const [params] = useSearchParams()
   const focus = params.get('item')
@@ -195,6 +197,7 @@ function GmInbox({ world }: { world: World }) {
           </p>
         </div>
       )}
+      <FeedbackInInbox world={world} sessions={sessions} nameOf={inbox.nameOf} />
       {answered.length > 0 && (
         <details className="inbox-answered">
           <summary>Answered ({answered.length})</summary>

@@ -54,6 +54,7 @@ import { PlayerDowntime } from '../players/Downtime'
 import { SignedOutCard } from '../players/SignedOut'
 import { Highlights, StorySoFar } from '../highlights'
 import { InstallCard } from '../install'
+import { StarsAndWishesCard } from '../players/StarsWishes'
 
 /**
  * The Common Room: the players' home in a world, made for a phone in one hand. Its tabs (Now, Me,
@@ -248,6 +249,7 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
           {stage === 'after' && <LastTimeFull ctx={ctx} />}
           {stage !== 'during' && showing}
           <Answers ctx={ctx} />
+          {stage !== 'during' && ctx.last && <StarsAndWishesCard world={world} session={ctx.last} mine={ctx.mine} stage={stage} />}
           {stage !== 'during' && scheduler}
           <DoingCard ctx={ctx} />
           {stage === 'after' && <AfterLoot ctx={ctx} />}
