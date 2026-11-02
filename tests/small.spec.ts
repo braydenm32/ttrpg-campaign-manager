@@ -104,7 +104,7 @@ test('the players’ TV screen: a calm waiting screen, then what the GM shows, w
 
 test('the scratchpad without players says what it is for, and the GM’s way to invite them', async ({ page, world, device }) => {
   await open(page, `/w/${world.slug}/scratchpad`)
-  await expect(page.getByRole('heading', { name: 'Scratchpad' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Group notes' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Players and sharing' })).toHaveAttribute('href', /settings\?tab=players/)
   await tidy(page, device)
   await shot(page, `scratchpad-gm-${device}`)
@@ -181,7 +181,7 @@ test.describe('a joined player and a wiki reader (pretend player copies)', () =>
     const copy = await makePlayerCopy(page, world, 'member')
     try {
       await open(page, `/w/${copy.id}/scratchpad`)
-      await expect(page.getByRole('heading', { name: /Scratchpad/ })).toBeVisible()
+      await expect(page.getByRole('heading', { name: /Group notes/ })).toBeVisible()
       await tidy(page, device)
       await shot(page, `scratchpad-player-${device}`)
       await page.getByPlaceholder('Anything you want to remember…').fill('Ask the fence about the red wax.')
@@ -215,4 +215,56 @@ test.describe('a joined player and a wiki reader (pretend player copies)', () =>
       await copy.remove()
     }
   })
+
+  test('a wiki reader opening the table’s own screens by address gets a plain note instead', async ({ page, world }) => {
+    await offline(page)
+    await page.goto('/')
+    const copy = await makePlayerCopy(page, world, 'wiki')
+    try {
+      await open(page, `/w/${copy.id}/questions`)
+      await expect(page.getByText('Questions are for players who have joined this world with an invite.')).toBeVisible()
+      await expect(page.getByText('Switch back to the GM view')).toHaveCount(0)
+      for (const [where, note] of [
+        ['loot', 'Party loot is for the players at the table.'],
+        ['threads', 'Leads are for the players at the table.'],
+        ['clocks', 'Clocks are for the players at the table.'],
+      ]) {
+        await open(page, `/w/${copy.id}/${where}`)
+        await expect(page.getByText(note)).toBeVisible()
+      }
+    } finally {
+      await copy.remove()
+    }
+  })
+})
+
+test.describe('Dialogs on small screens', () => {
+  // A tall dialog fits the window and scrolls inside itself, so its buttons can always be reached (a phone held sideways, a very short laptop window).
+  for (const [label, size] of [['a phone sideways', { width: 390, height: 380 }], ['a very short laptop window', { width: 1366, height: 400 }]] as const)
+    test(`a tall dialog’s buttons can be scrolled to and pressed on ${label}`, async ({ page, world }) => {
+      await page.setViewportSize(size)
+      await open(page, `/w/${world.slug}/maps`)
+      await page.getByRole('button', { name: 'Draw a new map' }).first().click()
+      const dialog = page.getByRole('dialog', { name: 'Draw a new map' })
+      await expect(dialog).toBeVisible()
+      const box = (await dialog.boundingBox())!
+      expect(box.x).toBeGreaterThanOrEqual(0)
+      expect(box.x + box.width).toBeLessThanOrEqual(size.width)
+      expect(box.y + box.height).toBeLessThanOrEqual(size.height)
+      // The dialog itself scrolls...
+      expect(await dialog.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true)
+      await dialog.getByLabel('Name').fill('Dialog test')
+      const start = dialog.getByRole('button', { name: 'Start drawing' })
+      await start.scrollIntoViewIfNeeded()
+      // ...and the button is what you hit at its middle (not something behind the dialog).
+      expect(
+        await start.evaluate((el) => {
+          const r = el.getBoundingClientRect()
+          const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+          return hit === el || el.contains(hit)
+        }),
+      ).toBe(true)
+      await dialog.getByRole('button', { name: 'Cancel' }).click()
+      await expect(dialog).toBeHidden()
+    })
 })

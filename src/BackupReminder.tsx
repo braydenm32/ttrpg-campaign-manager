@@ -1,9 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
-import { backupStore, exportWorld, recordingsSize } from './backup'
+import { backupStore, exportWorld, recordingsOnlyHere, recordingsSize } from './backup'
 import { db, type World } from './db'
 import { formatBytes } from './hooks'
 import { Help } from './help'
+import { toast } from './undo'
 
 /**
  * A nudge on the Desk to download a backup now and then. A world kept only on this device is
@@ -12,6 +13,17 @@ import { Help } from './help'
  */
 
 const DAY = 24 * 60 * 60_000
+
+/** True the first time a backup is downloaded on this device (then remembered). */
+function firstBackup() {
+  try {
+    if (localStorage.getItem('codex.backup.told')) return false
+    localStorage.setItem('codex.backup.told', '1')
+  } catch {
+    // Storage blocked: say it every time.
+  }
+  return true
+}
 
 /**
  * Whether a backup is due, the words for it, and Later (which waits a week). The Desk shows it as a
@@ -38,19 +50,57 @@ export function useBackupDue(world: World) {
 }
 
 /**
+ * Whether session recordings exist only on this device (in no backup from here, not in the cloud),
+ * for a line in the Desk's "Needs you". Recordings stay on the device that made them, so losing
+ * that device loses the audio. "Later" waits a week.
+ */
+export function useRecordingsOnlyHere(world: World) {
+  const found = useLiveQuery(() => recordingsOnlyHere(world.id), [world.id])
+  const [hidden, setHidden] = useState(false)
+  const [now] = useState(() => Date.now())
+  const show = !!found && found.count > 0 && !hidden && !world.shared && now >= backupStore.read(world.id, 'audioSnooze')
+  return {
+    show,
+    count: found?.count ?? 0,
+    bytes: found?.bytes ?? 0,
+    done: () => setHidden(true),
+    later: () => {
+      backupStore.write(world.id, 'audioSnooze', Date.now() + 7 * DAY)
+      setHidden(true)
+    },
+  }
+}
+
+/**
  * Downloads a backup of the world, saying how far it has got (a world with recordings can take a while) and what went wrong if it fails.
  * Recording audio is left out unless ticked, since it can be many times bigger than everything else.
  */
-export function BackupButton({ worldId, className, label = '⬇ Download backup', onDone }: { worldId: string; className?: string; label?: string; onDone?: () => void }) {
+export function BackupButton({
+  worldId,
+  className,
+  label = '⬇ Download backup',
+  onDone,
+  recordings = false,
+}: {
+  worldId: string
+  className?: string
+  label?: string
+  onDone?: () => void
+  /** Start with "Include session recordings" ticked. */
+  recordings?: boolean
+}) {
   const [progress, setProgress] = useState<string>()
   const [error, setError] = useState('')
-  const [withAudio, setWithAudio] = useState(false)
+  const [withAudio, setWithAudio] = useState(recordings)
   const audioBytes = useLiveQuery(() => recordingsSize(worldId), [worldId]) ?? 0
   const run = async () => {
     setError('')
     setProgress('Preparing…')
     try {
       await exportWorld(worldId, (done, total) => setProgress(total > 1 ? `Preparing… ${done} of ${total} files` : 'Preparing…'), { recordings: withAudio })
+      // The browser can't tell the app whether the file really landed (a cancelled save, a phone
+      // that ignores downloads), so the first time it asks the GM to look.
+      toast(firstBackup() ? 'Backup downloaded — check it’s in your Downloads (or Files) folder.' : 'Backup downloaded.')
       onDone?.()
     } catch (e) {
       setError(`The backup couldn’t be made (${(e as Error).message || 'something went wrong'}). If this device is short of space, free some up and try again.`)

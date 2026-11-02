@@ -92,8 +92,13 @@ export const STAGES: Record<SessionStage, { label: string; tone: string }> = {
 
 type StageFacts = Pick<Session, 'recap' | 'date' | 'notes' | 'prep' | 'startedAt' | 'playedAt'>
 
-/** Whether a session has been played: marked played, written up, or its date has gone by. */
-export const isPlayed = (s: Pick<Session, 'recap' | 'date' | 'playedAt'>, today = localDate()) => !!s.playedAt || !!s.recap.trim() || (!!s.date && s.date < today)
+/**
+ * Whether a session has been played: marked played. A session you pressed "Start playing" on is not,
+ * however much recap you type, until you mark it. Only a session never started in the app (an old
+ * or imported one) counts as played by a written recap or a date that has gone by.
+ */
+export const isPlayed = (s: Pick<Session, 'recap' | 'date' | 'playedAt'> & { startedAt?: number }, today = localDate()) =>
+  !!s.playedAt || (!s.startedAt && (!!s.recap.trim() || (!!s.date && s.date < today)))
 
 /** Whether there's any plan for a session yet. */
 const hasPlan = (s: StageFacts) => {
@@ -105,8 +110,8 @@ const hasPlan = (s: StageFacts) => {
 export function sessionStage(s: StageFacts, live = false, today = localDate()): SessionStage {
   if (s.playedAt) return 'played'
   if (live) return 'playing'
-  if (s.recap.trim() || (s.date && s.date < today)) return 'played'
   if (s.startedAt) return 'playing'
+  if (s.recap.trim() || (s.date && s.date < today)) return 'played'
   return hasPlan(s) ? 'preparing' : 'planned'
 }
 
@@ -124,6 +129,17 @@ export const startPlaying = (sessionId: string) =>
     .modify((s) => {
       if (!s.startedAt) s.startedAt = Date.now()
     })
+
+/**
+ * "Not played yet": takes the mark back. The session goes back to Playing (it was started), so
+ * "Mark as played" is there again; a recap or a past date no longer makes it played. Gives back an
+ * undo that restores the mark.
+ */
+export async function unmarkPlayed(session: Session) {
+  const { playedAt, startedAt } = session
+  await db.sessions.update(session.id, { playedAt: undefined, startedAt: startedAt ?? Date.now() })
+  return () => db.sessions.update(session.id, { playedAt, startedAt })
+}
 
 /**
  * "Mark as played", at the end of Wrap up: the session is done and the next one becomes the one in

@@ -47,6 +47,7 @@ import { setLiveSession, shareRoll, useLiveSession, useTable } from '../cloud/ta
 import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, useKeepScroll } from '../jump'
 import { changePlace, goToScene, plannedScenes } from '../sceneCards'
+import { useReview } from '../reveal'
 import { markSaved, removeWithUndo, SavedMark, toast } from '../undo'
 import { changeCoin } from '../purse'
 import { Recorder } from './SessionPage'
@@ -208,7 +209,7 @@ export default function Lectern() {
             {world && <JourneyPanel world={world} lectern={lectern} edit={edit} entities={entities} partySize={party.length} />}
           </div>
           <div className="lectern-col">
-            {world && <ShowPanel world={world} sceneText={lectern.sceneText} />}
+            {world && <ShowPanel world={world} sceneText={lectern.sceneText} sceneIds={[...(lectern.sceneId ? [lectern.sceneId] : []), ...lectern.presentIds]} />}
             {world && <LootPanel world={world} sessionId={session.id} />}
             <Dice lectern={lectern} edit={edit} shareTo={shareTo} />
             <Soundboard worldId={worldId} compact />
@@ -442,6 +443,8 @@ function Scene({ session, world, lectern, edit, entities, worldId }: PanelProps 
   const here = place ? entities.filter((e) => e.parentId === place.id && !lectern.presentIds.includes(e.id) && e.type !== 'location') : []
   const { scenes, current, at, next } = plannedScenes(session)
   const strong = session.prep?.strongStart?.trim()
+  // Starting a scene that reveals pages asks first, with the same review as the page itself.
+  const { ask, dialog } = useReview()
   return (
     <LecternPanel
       id="scene"
@@ -453,7 +456,7 @@ function Scene({ session, world, lectern, edit, entities, worldId }: PanelProps 
       {current && <p className="scene-now"><strong>{current.text}</strong></p>}
       {next && (
         <div className="row wrap next-scene">
-          <button className="primary" onClick={() => goToScene(world, session, next)}>
+          <button className="primary" onClick={() => goToScene(world, session, next, ask)}>
             <Ico as={SkipForward} /> {current ? 'Next scene' : 'First scene'}
           </button>
           <span className="small muted">{shorten(next.text, 70)}</span>
@@ -527,7 +530,7 @@ function Scene({ session, world, lectern, edit, entities, worldId }: PanelProps 
           <ol>
             {scenes.map((x) => (
               <li key={x.id} className={x.id === current?.id ? 'now' : x.done ? 'done' : ''}>
-                <button className="ghost" aria-current={x.id === current?.id ? 'step' : undefined} onClick={() => goToScene(world, session, x)} title="Start this scene">
+                <button className="ghost" aria-current={x.id === current?.id ? 'step' : undefined} onClick={() => goToScene(world, session, x, ask)} title="Start this scene">
                   <span className="plan-num" aria-hidden>{x.id === current?.id ? '▶' : x.done ? '✓' : '○'}</span> {shorten(x.text, 90)}
                 </button>
               </li>
@@ -535,6 +538,7 @@ function Scene({ session, world, lectern, edit, entities, worldId }: PanelProps 
           </ol>
         </details>
       )}
+      {dialog}
     </LecternPanel>
   )
 }
@@ -620,9 +624,9 @@ function LecternThreads({ lectern, entities, worldId, sessionId }: { lectern: Le
   return (
     <LecternPanel
       id="threads"
-      name="Loose threads"
-      keywords="hooks mysteries leads quests"
-      title={<><Ico as={Spiral} /> Loose threads</>}
+      name="Threads"
+      keywords="loose threads hooks mysteries leads quests"
+      title={<><Ico as={Spiral} /> Threads</>}
       extra={
         <Link className="small" to={`${worldPath(worldId)}/threads`}>
           All threads
@@ -751,6 +755,7 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
                 value={c.init?.toString() ?? ''}
                 placeholder="–"
                 title="Initiative"
+                aria-label={`Initiative for ${c.name}`}
                 saveOn="leave"
                 onCommit={(v) => change(c.id, (x) => void (x.init = toNumber(v)))}
               />
@@ -763,6 +768,7 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
                 className="side-select"
                 value={c.side}
                 title="Side"
+                aria-label={`Side for ${c.name}`}
                 onChange={(e) => {
                   const v = e.target.value as Combatant['side']
                   change(c.id, (x) => void (x.side = v))

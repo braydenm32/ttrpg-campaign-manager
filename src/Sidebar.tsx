@@ -1,4 +1,4 @@
-import { createContext, useContext, useSyncExternalStore } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { CaretLeft, Shield, SlidersHorizontal } from '@phosphor-icons/react'
 import logo from './assets/logo.svg'
@@ -35,6 +35,8 @@ export interface Frame {
   inHandId?: string
   /** What's waiting on the GM from players (empty for anyone else). Screens read this copy, so counts agree. */
   inbox: GmInbox
+  /** The name of the page or session an address names (for the browser tab's title). */
+  nameOf: (kind: 'page' | 'session', param: string) => string | undefined
 }
 
 /** Works out the frame for the current address and viewer. */
@@ -87,7 +89,12 @@ export function useFrame(world: World | null | undefined): Frame {
       return s ? sessionFirstTab(s) : 'prep'
     },
   }
-  return { facts, help, spot: locate(pathname, search, help), inHandId: inHand?.id, inbox }
+  const nameOf: Frame['nameOf'] = (kind, param) => {
+    if (kind === 'page') return entities.find((e) => e.id === resolvePage(worldId, param))?.name
+    const s = sessions.find((x) => x.id === param)
+    return s ? `#${s.number} ${s.title}`.trim() : undefined
+  }
+  return { facts, help, spot: locate(pathname, search, help), inHandId: inHand?.id, inbox, nameOf }
 }
 
 const FrameContext = createContext<Frame | undefined>(undefined)
@@ -135,11 +142,34 @@ export function AreaSidebar({ world, frame, links }: { world: World; frame: Fram
 export function AreaTabs({ frame, phoneTabs }: { frame: Frame; phoneTabs: Set<string> }) {
   const { facts, spot } = frame
   const { pathname, search } = useLocation()
+  const strip = useRef<HTMLElement>(null)
+  // On a phone the tabs scroll sideways: the open one is brought into view, and a "›" says when more wait off to the right.
+  const [more, setMore] = useState(false)
+  const lit = spot?.tab?.id
+  useEffect(() => {
+    const nav = strip.current
+    if (!nav) return
+    const measure = () => setMore(nav.scrollWidth - nav.clientWidth - nav.scrollLeft > 4)
+    const on = nav.querySelector<HTMLElement>('a.on')
+    if (on && nav.scrollWidth > nav.clientWidth) {
+      const at = on.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft
+      nav.scrollTo({ left: Math.max(0, at - (nav.clientWidth - on.offsetWidth) / 2) })
+    }
+    measure()
+    nav.addEventListener('scroll', measure, { passive: true })
+    const watcher = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : undefined
+    watcher?.observe(nav)
+    return () => {
+      nav.removeEventListener('scroll', measure)
+      watcher?.disconnect()
+    }
+  }, [lit, spot?.area.id, facts.viewer])
   if (!spot) return <nav className="area-tabs" aria-label="Tabs" />
   const tabs = topTabs(spot.area, facts, spot.tab)
   const here = pathname + search
   return (
-    <nav className="area-tabs" aria-label={spot.area.label}>
+    <>
+    <nav className="area-tabs" aria-label={spot.area.label} ref={strip} data-more={more || undefined}>
       {tabs.map((t) => {
         const to = t.to(facts)!
         const on = spot.tab?.id === t.id
@@ -160,6 +190,8 @@ export function AreaTabs({ frame, phoneTabs }: { frame: Frame; phoneTabs: Set<st
         )
       })}
     </nav>
+    {more && <span className="tabs-more" aria-hidden="true">›</span>}
+    </>
   )
 }
 
@@ -340,4 +372,61 @@ export function frameLinks(frame: Frame, memory: Partial<Record<AreaId, string>>
 export function isDeep(frame: Frame, pathname: string) {
   const to = frame.spot?.tab?.to(frame.facts) ?? (frame.spot && areaHome(frame.spot.area, frame.facts))
   return !to || pathOf(to) !== pathname
+}
+
+/** The name of the screen at an address, as the browser tab shows it: "Ford Street · Atlas · Vael Ardith". */
+export function screenTitle(world: World, frame: Frame, pathname: string) {
+  const { spot, nameOf } = frame
+  const parts = pathname.match(/^\/w\/[^/]+(?:\/(.*))?$/)?.[1]?.split('/').filter(Boolean) ?? []
+  let name: string | undefined
+  if ((parts[0] === 'p' || parts[0] === 'e') && parts[1]) name = nameOf('page', parts[1])
+  else if (parts[0] === 's' && parts[1]) name = nameOf('session', parts[1])
+  // The first tab of an area (Today, Now) is the area itself.
+  const tab = spot?.tab && spot.tab.label !== spot.area.label && !['today', 'now'].includes(spot.tab.id) ? spot.tab.label : undefined
+  const sub = name && tab && name.toLowerCase() !== tab.toLowerCase() ? undefined : tab
+  return [name ?? sub, spot?.area.label, world.name].filter((x, i, all) => x && all.indexOf(x) === i).join(' · ')
+}
+
+/** Keeps the browser tab's title in step with the screen, and puts it back on leaving the world. */
+export function useScreenTitle(world: World | null | undefined, frame: Frame) {
+  const { pathname } = useLocation()
+  const title = world ? screenTitle(world, frame, pathname) : ''
+  useEffect(() => {
+    if (!title) return
+    const before = document.title
+    document.title = title
+    return () => {
+      document.title = before
+    }
+  }, [title])
+}
+
+/**
+ * After moving to another screen (not a tab or menu press, and not while typing), the focus goes to
+ * the screen's main heading, so a keyboard or screen-reader user starts at the top of what opened.
+ */
+export function useRouteFocus() {
+  const { pathname } = useLocation()
+  const first = useRef(pathname)
+  useEffect(() => {
+    if (first.current === pathname) return
+    first.current = pathname
+    let tries = 0
+    const timer = setInterval(() => {
+      tries++
+      const at = document.activeElement as HTMLElement | null
+      const typing = !!at && (at.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(at.tagName))
+      // Pressing a tab, an area or a bar item keeps the focus where it is.
+      const kept = !!at?.closest('.area-tabs, .sidebar, .bottom-bar, .topbar, [role="dialog"], .modal-backdrop')
+      if (typing || kept) return clearInterval(timer)
+      const heading = document.querySelector<HTMLElement>('main.content h1')
+      if (heading) {
+        heading.tabIndex = -1
+        heading.focus({ preventScroll: true })
+        return clearInterval(timer)
+      }
+      if (tries > 25) clearInterval(timer)
+    }, 60)
+    return () => clearInterval(timer)
+  }, [pathname])
 }

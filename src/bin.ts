@@ -16,14 +16,14 @@ type Relinks = NonNullable<BinItem['relinks']>
 /** The pins or pages a relink touches. */
 const linkTable = (l: Relinks[number]) => db[l.table] as unknown as Table<Record<string, unknown>, string>
 
-const BIN_TABLES = [db.bin, db.campaigns, db.sessions, db.assets, db.boards, db.sounds, db.maps, db.pins, db.entities]
+const BIN_TABLES = [db.bin, db.worlds, db.campaigns, db.sessions, db.assets, db.boards, db.sounds, db.maps, db.pins, db.entities]
 
 async function moveToBin(worldId: string, kind: BinItem['kind'], label: string, rows: Rows, relinks: Relinks = []) {
   await db.transaction('rw', BIN_TABLES, async () => {
     const links = relinks.filter((l) => l.ids.length)
     await db.bin.add({ id: newId(), worldId, at: Date.now(), kind, label, rows: rows.filter((r) => r.rows.length), ...(links.length ? { relinks: links } : {}) })
     for (const l of links) await linkTable(l).where(':id').anyOf(l.ids).modify({ [l.field]: undefined })
-    for (const r of rows) await db[r.table].bulkDelete((r.rows as { id: string }[]).map((x) => x.id))
+    for (const r of rows) await (db[r.table] as unknown as Table<unknown, string>).bulkDelete((r.rows as { id: string }[]).map((x) => x.id))
   })
 }
 
@@ -138,7 +138,17 @@ export async function restoreFromBin(id: string) {
   const item = await db.bin.get(id)
   if (!item) return
   await db.transaction('rw', BIN_TABLES, async () => {
-    for (const r of item.rows) await (db[r.table] as unknown as { bulkPut: (rows: unknown[]) => Promise<unknown> }).bulkPut(r.rows)
+    // Another device's version kept after a clash: only the parts that clashed go back, on top of the row as it is now.
+    if (item.fields)
+      for (const r of item.rows)
+        for (const row of r.rows as Record<string, unknown>[]) {
+          const table = db[r.table] as unknown as Table<Record<string, unknown>, string>
+          const now = await table.get(row.id as string)
+          if (!now) continue
+          const back = Object.fromEntries(item.fields.map((k) => [k, row[k]]))
+          await table.put({ ...now, ...back, updatedAt: Date.now() })
+        }
+    else for (const r of item.rows) await (db[r.table] as unknown as { bulkPut: (rows: unknown[]) => Promise<unknown> }).bulkPut(r.rows)
     // Only links still missing go back: a pin that has since been pointed somewhere else stays as it is.
     for (const l of item.relinks ?? [])
       await linkTable(l)

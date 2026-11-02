@@ -3,15 +3,15 @@ import { WorldCover } from '../WorldCover'
 import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Modal } from '../components'
+import { Modal, useMenu } from '../components'
 import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel, type Campaign, type Entity, type Session, type World } from '../db'
 import { useCreatePage } from '../NewPage'
-import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
+import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { initials } from '../text'
 import { nextSessions, useCampaigns, useWorldSessions } from '../threads'
 import { WantedPages, wantedPages } from '../wanted'
 import { useViewMode } from '../viewMode'
-import { BackupButton, useBackupDue } from '../BackupReminder'
+import { BackupButton, useBackupDue, useRecordingsOnlyHere } from '../BackupReminder'
 import WikiHome from './WikiHome'
 import CommonRoom, { ago } from './CommonRoom'
 import { showDate, upcoming } from '../players/Schedule'
@@ -111,21 +111,21 @@ function Today({ world }: { world: World }) {
 /** "New page": one button with every page type, instead of a row of quick-add buttons. */
 function NewPageMenu({ world }: { world: World }) {
   const create = useCreatePage(world)
-  const [open, setOpen] = useState(false)
+  const menu = useMenu()
   return (
-    <span className="menu-wrap new-page-menu">
-      <button className="primary" aria-expanded={open} onClick={() => setOpen(!open)} title={HELP.quickAdd}>
+    <span className="menu-wrap new-page-menu" {...menu.wrapProps}>
+      <button className="primary" {...menu.buttonProps} title={HELP.quickAdd}>
         <Ico as={Plus} /> New page
       </button>
-      {open && (
-        <span className="menu" onMouseLeave={() => setOpen(false)}>
+      {menu.open && (
+        <span className="menu" {...menu.menuProps}>
           {PICKER_TYPES.map((t) => (
-            <button key={t} onClick={() => create(t)}>
+            <button key={t} role="menuitem" onClick={() => create(t)}>
               <TypeIcon type={t} /> {ENTITY_LABELS[t].one}
             </button>
           ))}
           {world.customTypes?.map((c) => (
-            <button key={c.id} onClick={() => create('custom', c.id)}>
+            <button key={c.id} role="menuitem" onClick={() => create('custom', c.id)}>
               <TypeIcon type="custom" custom={c} /> {c.one}
             </button>
           ))}
@@ -308,6 +308,7 @@ const clip = (text: string, n = 90) => (text.length > n ? `${text.slice(0, n)}â€
 function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; entities: Entity[]; sessions: Session[]; inHand?: InHand; stage?: SessionStage }) {
   const inbox = useInbox()
   const backup = useBackupDue(world)
+  const audio = useRecordingsOnlyHere(world)
   const [reading, setReading] = useState<CharacterRequest>()
   const [wantedOpen, setWantedOpen] = useState(false)
   const w = worldPath(world.id)
@@ -391,7 +392,7 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
   if (s && stage === 'planned')
     needs.push({
       key: 'prep',
-      chip: 'Prep',
+      chip: 'Prepare',
       icon: NotePencil,
       tone: 'warn',
       text: <>Nothing planned for #{s.number} yet</>,
@@ -428,6 +429,26 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
         <span className="row">
           <BackupButton worldId={world.id} className="small" label="Back up now" onDone={backup.done} />
           <button className="small ghost" onClick={backup.later}>
+            Later
+          </button>
+        </span>
+      ),
+    })
+  if (audio.show)
+    needs.push({
+      key: 'audio',
+      chip: 'Recordings',
+      icon: FloppyDisk,
+      text: (
+        <>
+          {audio.count} recording{audio.count === 1 ? ' is' : 's are'} only on this device ({formatBytes(audio.bytes)}). 
+          <Help topic="backupRecordings" />
+        </>
+      ),
+      action: (
+        <span className="row">
+          <BackupButton worldId={world.id} className="small" label="Back up" recordings onDone={audio.done} />
+          <button className="small ghost" onClick={audio.later}>
             Later
           </button>
         </span>
@@ -707,7 +728,7 @@ function RecentlyChanged({ world, entities }: { world: World; entities: Entity[]
   if (!recent.length) return null
   return (
     <section className="card recently-changed">
-      <h2>Recently changed</h2>
+      <h2>Recently changed <Help topic="recentChanges" /></h2>
       <ul className="recent-list">
         {recent.map((e) => (
           <li key={e.id}>

@@ -34,7 +34,7 @@ for (const c of cases)
     await open(page, c.from(world))
     await expect.poll(() => here(page)).toBe(c.to(world))
     await expect(page.getByText(c.shows(world)).first()).toBeVisible()
-    await expect(page.getByText(/Something went wrong|There’s nothing at this address|Unknown category|doesn't exist or hasn't been revealed/)).toHaveCount(0)
+    await expect(page.getByText(/Something went wrong|There’s nothing at this address|Unknown category|This page isn’t here, or your GM hasn’t shared it|This page doesn’t exist\./)).toHaveCount(0)
     expect(pageErrors).toEqual([])
   })
 

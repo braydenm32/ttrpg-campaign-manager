@@ -60,6 +60,45 @@ test('a page’s visibility control says who can see it, reveals after a review,
   }
 })
 
+test('hiding a page also revealed to a player by name says they keep it, and can hide it from them too', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const secret = world.dump.entities.find(
+    (e) => e.type === 'npc' && e.visibility === 'gm' && !e.template && !(e as { revealedTo?: string[] }).revealedTo?.length,
+  )!
+  await open(page, w)
+  const before = await getRecord(page, 'entities', secret.id)
+  await putBack(page, 'entities', [[secret.id, { ...before!, visibility: 'players', revealedTo: ['test-player'] }]])
+  try {
+    await open(page, `${w}/p/${world.pageSlugs.get(secret.id)}`)
+    const control = page.locator('.page-strip .vis-control')
+    await expect(control).toContainText('Players can see this')
+
+    // The default keeps it with the player it was revealed to, and says so.
+    await control.click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toContainText(`Hide “${secret.name}” from players?`)
+    await expect(dialog).toContainText('1 player can still see it')
+    await dialog.getByRole('button', { name: 'Hide from everyone else' }).click()
+    await expect(control).toContainText('Revealed to 1 player')
+    await expect(toast(page)).toContainText('1 player can still see it')
+    await expect.poll(async () => (await getRecord(page, 'entities', secret.id))?.revealedTo).toEqual(['test-player'])
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect(control).toContainText('Players can see this')
+
+    // "Hide from … too" clears it for them as well, and Undo gives it back to them.
+    await control.click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Hide from 1 player too' }).click()
+    await expect(control).toContainText('GM only')
+    await expect(toast(page)).toContainText('is GM only again')
+    await expect.poll(async () => (await getRecord(page, 'entities', secret.id))?.revealedTo ?? null).toBe(null)
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect(control).toContainText('Players can see this')
+    await expect.poll(async () => (await getRecord(page, 'entities', secret.id))?.revealedTo).toEqual(['test-player'])
+  } finally {
+    await putBack(page, 'entities', [[secret.id, before]])
+  }
+})
+
 test('the breadcrumb starts at the list, not the world, and folds the middle on a phone', async ({ page, world, device }) => {
   const w = `/w/${world.slug}`
   // The Lantern Keep sits in Lantern Hill, in Cinderford, and further out still.
@@ -155,4 +194,25 @@ test('Timeline keeps List or Month in the address, and Back steps between them',
   await page.goBack()
   await expect.poll(() => here(page)).toBe(`${w}/timeline`)
   await expect(page.locator('.timeline-era').first()).toBeVisible()
+})
+
+test('Places, People and Lore each switch between their two kinds, and headings follow the tabs', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  for (const [path, heading, kinds] of [
+    ['locations', 'Places', ['Locations', 'Shops & Taverns']],
+    ['npcs', 'People', ['NPCs', 'Player Characters']],
+    ['lore', 'Lore', ['Lore', 'Deities']],
+  ] as const) {
+    await open(page, `${w}/${path}`)
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(heading)
+    for (const k of kinds) await expect(page.locator('.people-switch').getByRole('link', { name: k })).toBeVisible()
+  }
+  // The second kind opens its own list.
+  await open(page, `${w}/locations`)
+  await page.locator('.people-switch').getByRole('link', { name: 'Shops & Taverns' }).click()
+  await expect(page.locator('.kicker').first()).toContainText('Shops & Taverns')
+  // Threads has one name everywhere.
+  await open(page, `${w}/threads`)
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Threads')
+  await expect(page.getByRole('heading', { level: 1 })).not.toContainText('Loose')
 })

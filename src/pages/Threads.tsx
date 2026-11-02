@@ -28,8 +28,10 @@ export default function Threads() {
 }
 
 function PlayerLeads() {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const entities = useVisibleEntities(worldId)
+  // What the party is chasing is the table's business, not a public wiki link's.
+  if (world?.shared?.token) return <Empty>Leads are for the players at the table.</Empty>
   return (
     <div className="page">
       <header className="page-header">
@@ -108,7 +110,7 @@ function ThreadBoard() {
       <header className="page-header">
         <div>
           <h1>
-            <Ico as={Spiral} /> Loose threads <Help topic="threads" />
+            <Ico as={Spiral} /> Threads <Help topic="threads" />
           </h1>
           <p className="muted">Hooks you’ve planted, mysteries the players noticed, promises and grudges. Keep them here so nothing gets forgotten.</p>
         </div>
@@ -164,7 +166,7 @@ function ThreadBoard() {
       </p>
 
       {threads.length === 0 ? (
-        <Empty>No loose threads yet. Add one above, or from the Lectern during a game.</Empty>
+        <Empty>No threads yet. Add one above, or from the Lectern during a game.</Empty>
       ) : (
         <div className="thread-board" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
           {columns.map((status) => {

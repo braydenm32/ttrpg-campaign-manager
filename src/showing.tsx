@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Help } from './help'
 import { LecternPanel } from './lecternPanel'
-import { db, newId, type Entity, type Showing, type World } from './db'
+import { db, newId, saveEntity, type Entity, type Showing, type World } from './db'
 import { saveFileAsAsset, useAssetUrl, useBlobUrl, useVisibleEntities } from './hooks'
 import { Markdown, stripSecrets } from './Markdown'
 import { schedule } from './cloud/sync'
@@ -12,6 +12,8 @@ import { Ico } from './icons'
 import { Television } from '@phosphor-icons/react'
 import { useDialog } from './components'
 import { worldPath } from './paths'
+import { askToReveal, useReview } from './reveal'
+import { toast } from './undo'
 
 /**
  * "Show to players": the GM puts a picture, a page or some text on every player's screen.
@@ -95,8 +97,14 @@ export async function revealAndShow(worldId: string, page: Entity) {
   }
 }
 
-/** Takes a handout off the list (and off players' screens, if it's up now). With hidePage, its page is made GM only again. */
-export async function removeHandout(worldId: string, id: string, hidePage?: string) {
+/**
+ * Takes a handout off the list (and off players' screens, if it's up now). With hidePage, its page
+ * is hidden from players again; players it was revealed to by name keep it unless alsoNamed is set.
+ * Returns a function that puts it all back (for Undo).
+ */
+export async function removeHandout(worldId: string, id: string, hidePage?: string, alsoNamed = false) {
+  const before = await db.worlds.get(worldId)
+  const page = hidePage ? await db.entities.get(hidePage) : undefined
   await db.worlds
     .where('id')
     .equals(worldId)
@@ -104,8 +112,20 @@ export async function removeHandout(worldId: string, id: string, hidePage?: stri
       w.handouts = (w.handouts ?? []).filter((h) => h.id !== id)
       if (w.showing?.id === id) w.showing = null
     })
-  if (hidePage) await db.entities.update(hidePage, { visibility: 'gm', updatedAt: Date.now() })
+  if (page) await saveEntity({ ...page, visibility: 'gm', ...(alsoNamed ? { revealedTo: undefined } : {}), updatedAt: Date.now() })
   schedule(200)
+  return async () => {
+    if (page) await db.entities.update(page.id, { visibility: page.visibility, revealedTo: page.revealedTo, updatedAt: Date.now() })
+    const was = before?.handouts?.find((h) => h.id === id)
+    await db.worlds
+      .where('id')
+      .equals(worldId)
+      .modify((w) => {
+        if (was && !(w.handouts ?? []).some((h) => h.id === id)) w.handouts = [...(w.handouts ?? []), was].sort((a, b) => b.at - a.at)
+        if (before?.showing?.id === id && !w.showing) w.showing = before.showing
+      })
+    schedule(200)
+  }
 }
 
 export async function stopShowing(worldId: string) {
@@ -233,7 +253,7 @@ export function ShowButton({ worldId, what, disabled }: { worldId: string; what:
 }
 
 /** The Lectern's panel: pick a picture or a page (revealing it if need be), or type something, and show it. */
-export function ShowPanel({ world, sceneText }: { world: World; sceneText?: string }) {
+export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; sceneText?: string; sceneIds?: string[] }) {
   const entities = useVisibleEntities(world.id)
   const images = useLiveQuery(async () => {
     // Not a map picture players mustn't see: their own copy is in the list anyway.
@@ -249,6 +269,21 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
   const [title, setTitle] = useState('')
   const revealed = entities.filter((e) => e.visibility === 'players')
   const hidden = entities.filter((e) => e.visibility !== 'players' && !e.template)
+  // A picture is named for the page it belongs to ("Jeb Marrowick"), not its file key ("sil:npc-jeb-marrowick"); pictures of this scene's pages come first.
+  const pageOf = new Map(entities.filter((e) => e.imageId).map((e) => [e.imageId!, e]))
+  const inScene = new Set(sceneIds)
+  const shown = (images ?? [])
+    .map((a) => ({ asset: a, name: pictureName(a.name, pageOf.get(a.id)?.name), first: inScene.has(pageOf.get(a.id)?.id ?? '') }))
+    .sort((a, b) => Number(b.first) - Number(a.first))
+  const { ask, dialog } = useReview()
+  // A page players can't see yet gets the same review as on the page itself, then is revealed and shown (with Undo).
+  const showPage = async (p: Entity) => {
+    if (p.visibility === 'players') return void showToPlayers(world.id, { kind: 'page', title: p.name, entityId: p.id })
+    const ok = await askToReveal(ask, [p], { title: `Reveal “${p.name}” to players and show it?`, note: 'Every player can read it from now on, and it goes on their screens.', confirm: 'Reveal and show' })
+    if (!ok) return
+    const undo = await revealAndShow(world.id, p)
+    toast(`“${p.name}” is revealed and on the players’ screens.`, undo, 'Hide it again')
+  }
   return (
     <LecternPanel id="show" sectionId="lectern-show" name="Show players" keywords="handout picture screen tv reveal" title={<><Ico as={Television} /> Show players <Help topic="showPlayers" /></>}>
       {/* Always the same height, so the pictures below don't jump when something is shown. */}
@@ -288,12 +323,13 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
               }}
             />
           </label>
-          {(images ?? []).slice(0, 30).map((a) => (
+          {shown.slice(0, 30).map(({ asset: a, name }) => (
             <Thumb
               key={a.id}
               asset={a}
+              name={name}
               on={world.showing?.kind === 'image' && world.showing.assetId === a.id}
-              onClick={() => showToPlayers(world.id, { kind: 'image', title: a.name.replace(/\.[^.]+$/, ''), assetId: a.id })}
+              onClick={() => showToPlayers(world.id, { kind: 'image', title: name, assetId: a.id })}
             />
           ))}
         </div>
@@ -304,8 +340,7 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
           onChange={(e) => {
             const p = entities.find((x) => x.id === e.target.value)
             if (!p) return
-            if (p.visibility === 'players') showToPlayers(world.id, { kind: 'page', title: p.name, entityId: p.id })
-            else if (confirm(`Reveal “${p.name}” to every player and show it? GM notes and secret passages stay hidden.`)) revealAndShow(world.id, p)
+            void showPage(p)
           }}
         >
           <option value="">Pick a page…</option>
@@ -339,7 +374,7 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
           }}
         >
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title, e.g. A letter sealed in red wax" />
-          <textarea rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="What the players read. Markdown works." />
+          <textarea rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="What the players read. Links like [[Page name]] work." />
           <div className="row wrap">
             <button className="primary" disabled={!text.trim()}>
               Show
@@ -356,6 +391,7 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
         Open the players’ screen (for a TV) ↗
       </Link>{' '}
       <Help topic="playersScreen" />
+      {dialog}
       {!!world.handouts?.length && (
         <>
           {' · '}
@@ -368,10 +404,21 @@ export function ShowPanel({ world, sceneText }: { world: World; sceneText?: stri
   )
 }
 
+/**
+ * What to call a picture: its page's name when a page uses it, else its file name without the
+ * ending; a bare key from an older copy of the example world ("sil:npc-jeb-marrowick") reads as words.
+ */
+function pictureName(fileName: string, pageName?: string) {
+  if (pageName) return pageName
+  const key = fileName.match(/^[a-z]+:(.+)$/)
+  if (!key) return fileName.replace(/\.[^.]+$/, '')
+  const words = key[1].replace(/^(npc|loc|f|h|i|item)-/, '').replace(/[-_]+/g, ' ')
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
 /** A picture to show, with its name under it (and marked while it's on players' screens). */
-function Thumb({ asset, onClick, on }: { asset: Parameters<typeof useBlobUrl>[0]; onClick: () => void; on?: boolean }) {
+function Thumb({ asset, name, onClick, on }: { asset: Parameters<typeof useBlobUrl>[0]; name: string; onClick: () => void; on?: boolean }) {
   const url = useBlobUrl(asset)
-  const name = asset?.name.replace(/\.[^.]+$/, '') ?? ''
   return (
     <button className={`show-thumb named ${on ? 'on' : ''}`} title={`Show ${name}`} aria-pressed={on} onClick={onClick}>
       <span className="thumb-img">{url && <img src={url} alt="" />}</span>

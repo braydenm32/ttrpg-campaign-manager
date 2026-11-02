@@ -51,6 +51,7 @@ import {
 import { pagePath, worldPath } from '../paths'
 import { useKeepScroll } from '../jump'
 import { PlayerDowntime } from '../players/Downtime'
+import { SignedOutCard } from '../players/SignedOut'
 import { Highlights, StorySoFar } from '../highlights'
 
 /**
@@ -230,6 +231,7 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
           {today && <span className="phone-only">{`${campaign ? ' · ' : ''}${today}`}</span>}
         </span>
       </TabHead>
+      <SignedOutCard world={world} />
       {stage === 'during' && (
         <>
           <LiveTable ctx={ctx} />
@@ -502,7 +504,7 @@ function YouCard({ ctx }: { ctx: RoomContext }) {
   )
 }
 
-/** Ask a question or say what you do between sessions: both just between you and your GM. */
+/** Ask a question or say what you do between sessions: both read only by your GM (and any co-GM). */
 function TellYourGm({ ctx }: { ctx: RoomContext }) {
   return (
     <Card title="Tell your GM" icon={ChatCircleDots}>
@@ -581,7 +583,12 @@ function RoomFoot({ ctx }: { ctx: RoomContext }) {
         </Link>
       )}
       {/* Live, the X-card is in the session's own card. */}
-      {ctx.memberOf && world.safety?.xcard && ctx.stage !== 'during' && <XCardButton cloudId={ctx.memberOf} small />}
+      {/* On a laptop the sidebar already has one. */}
+      {ctx.memberOf && world.safety?.xcard && ctx.stage !== 'during' && (
+        <span className="room-foot-xcard">
+          <XCardButton cloudId={ctx.memberOf} small />
+        </span>
+      )}
     </nav>
   )
 }
@@ -615,6 +622,7 @@ function onlyYouKnow(entities: Entity[], previewNames: string[] = []) {
 /** A character's picture, name, one-line summary and inspiration. */
 function CharacterHead({ ctx, c, big }: { ctx: RoomContext; c: Entity; big?: boolean }) {
   const { worldId, memberOf, cloudId } = ctx
+  const { isGM } = useViewMode()
   const [asked, setAsked] = useState('')
   return (
     <div className="room-character">
@@ -644,7 +652,7 @@ function CharacterHead({ ctx, c, big }: { ctx: RoomContext; c: Entity; big?: boo
             </button>
           )}
           {asked && <span className="small">{asked}</span>}
-          <Help topic="inspiration" />
+          <Help topic={isGM ? 'inspiration' : 'inspirationPlayer'} />
         </div>
       )}
     </div>
@@ -664,6 +672,12 @@ function NoCharacter({ ctx }: { ctx: RoomContext }) {
           <Ico as={Shield} /> Choose your character
         </Link>
       </>
+    )
+  if (!ctx.party.length)
+    return (
+      <p className="muted small">
+        Previewing as every player, so there’s no “you” here, and no player characters to preview as yet. Make a Player Character page and reveal it to the players, and this becomes their seat.
+      </p>
     )
   return <p className="muted small">Previewing as every player, so there’s no “you” here. Choose a character in the Player view bar above to see the Common Room as them.</p>
 }
@@ -748,7 +762,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
       {secrets.length > 0 && (
         <section className="card room-card">
           <h2 className="room-card-title">
-            <Ico as={Lock} /> Only you know
+            <Ico as={Lock} /> Just for you
           </h2>
           {secrets.map((s, i) => (
             <div key={i} className="secret for-you small">
@@ -760,7 +774,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
       )}
       {revealed.length > 0 && (
         <section className="card room-card">
-          <h2 className="room-card-title">Revealed just to you</h2>
+          <h2 className="room-card-title">Revealed to you (not the whole table)</h2>
           <ul className="room-list">
             {revealed.map((e) => (
               <li key={e.id}>
@@ -858,7 +872,7 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
           })}
         </ul>
       ) : (
-        <p className="muted">No player characters revealed yet.</p>
+        <p className="muted">Nobody’s in the party yet. Once your GM adds your characters, they show here.</p>
       )}
     </>
   )
@@ -898,6 +912,7 @@ function NotesTab({ ctx }: { ctx: RoomContext }) {
   return (
     <>
       <TabHead title="Notes" help="scratchpad" />
+      <SignedOutCard world={world} />
       <section className="card room-card">
         {memberOf || world.cloud?.enabled ? (
           <PlayerNotesBox world={world} entityId="" entities={entities} big start="group" />
@@ -911,11 +926,11 @@ function NotesTab({ ctx }: { ctx: RoomContext }) {
         </h2>
         {memberOf ? (
           <>
-            <AskForm memberOf={memberOf} entityId="" placeholder="Ask your GM anything, just between the two of you…" />
+            <AskForm memberOf={memberOf} entityId="" placeholder="Ask your GM anything. Only your GM (and any co-GM) reads it…" />
             <QuestionList questions={questions} memberOf={memberOf} pageName={(q) => pageLink(worldId, q.entityId, entities.find((e) => e.id === q.entityId)?.name)} />
           </>
         ) : (
-          <p className="muted small">Players ask their GM questions here, just between the two of them.</p>
+          <p className="muted small">Players ask their GM questions here. Only the GM (and any co-GM) reads them.</p>
         )}
       </section>
       <div id="downtime">

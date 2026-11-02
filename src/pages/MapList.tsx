@@ -54,8 +54,8 @@ export default function MapList() {
         </h1>
         {isGM && (
           <div className="row">
-          <button onClick={() => setDrawing(true)}><Ico as={PencilSimple} /> Draw a new map</button>
-          <label className="button primary">
+          <button className="primary" onClick={() => setDrawing(true)}><Ico as={PencilSimple} /> Draw a new map</button>
+          <label className="button">
             {busy ? 'Uploading…' : '+ Upload map image'}
             <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
           </label>
@@ -66,7 +66,7 @@ export default function MapList() {
         <Empty>
           {isGM
             ? 'Draw a map here, or upload one (from Inkarnate, Wonderdraft, Dungeon Alchemist, a scan…), then add clickable pins and regions.'
-            : 'No maps have been revealed yet.'}
+            : 'Your GM hasn’t shared a map yet.'}
         </Empty>
       ) : (
         <div className="card-grid">
@@ -177,35 +177,38 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
           <div className="map-kinds" role="radiogroup" aria-label="Kind of map">
             {(
               [
-                ['world', 'World, region or city', 'Coasts, mountains, forests and towns, or a town seen from above'],
-                ['battle', 'Dungeon, building or battle map', 'On 5 ft squares, for fights and exploring'],
+                ['world', 'World or region (side view)', 'Coasts, mountains, forests and towns drawn as little pictures'],
+                ['town', 'Town or city (from above)', 'Streets, walls and houses seen from above, like a bird flying over'],
+                ['battle', 'Battle map or dungeon (5 ft squares)', 'On a grid, for fights and exploring dungeons and buildings'],
               ] as const
-            ).map(([k, title, note]) => (
-              <button
-                key={k}
-                type="button"
-                role="radio"
-                aria-checked={kind === k}
-                className={kind === k ? 'on' : ''}
-                onClick={() => {
-                  setKind(k)
-                  setStart(k === 'battle' ? 'rock' : 'sea')
-                }}
-              >
-                <strong>{title}</strong>
-                <small>{note}</small>
-              </button>
-            ))}
+            ).map(([k, title, note]) => {
+              const on = k === 'battle' ? kind === 'battle' : kind === 'world' && (k === 'town') === (start === 'town')
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  className={on ? 'on' : ''}
+                  onClick={() => {
+                    setKind(k === 'battle' ? 'battle' : 'world')
+                    setStart(k === 'battle' ? 'rock' : k === 'town' ? 'town' : 'sea')
+                  }}
+                >
+                  <strong>{title}</strong>
+                  <small>{note}</small>
+                </button>
+              )
+            })}
           </div>
         </div>
-        <label>
+        {start !== 'town' && <label>
           Start with
           <select value={start} onChange={(e) => setStart(e.target.value as Start)}>
             {kind === 'world' ? (
               <>
                 <option value="sea">Open sea (paint the land)</option>
                 <option value="land">All land (carve out the water)</option>
-                <option value="town">A town or city seen from above</option>
               </>
             ) : (
               <>
@@ -218,7 +221,7 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
               </>
             )}
           </select>
-        </label>
+        </label>}
         <div className="label">
           Size
           <div className="segmented">
@@ -252,9 +255,9 @@ function MapCard({ map, worldId }: { map: WorldMap; worldId: string }) {
   return (
     <Link className="card map-card" to={`${worldPath(worldId)}/maps/${map.id}`}>
       {url && <img src={url} alt="" />}
-      <h3>
+      <h2 className="card-title">
         {map.name} {isGM && <SeenMark entity={map} />}
-      </h3>
+      </h2>
     </Link>
   )
 }

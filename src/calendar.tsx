@@ -325,6 +325,7 @@ export function CalendarEditor({ world }: { world: World }) {
       </h2>
       <div className="row wrap">
         <select
+          aria-label="Which calendar"
           value={c?.preset ?? (c ? 'custom' : '')}
           onChange={(e) => {
             const p = CALENDAR_PRESETS[e.target.value]
@@ -426,7 +427,7 @@ export function CalendarEditor({ world }: { world: World }) {
                   <input type="checkbox" checked={!!m.festival} onChange={(e) => change({ months: c.months.map((x, j) => (j === i ? { ...x, festival: e.target.checked || undefined } : x)) })} />
                   festival
                 </label>
-                <button type="button" className="ghost" disabled={c.months.length < 2} onClick={() => removeMonth(world, c, i)}>
+                <button type="button" className="ghost" aria-label={`Remove month ${i + 1}`} disabled={c.months.length < 2} onClick={() => removeMonth(world, c, i)}>
                   ×
                 </button>
               </div>

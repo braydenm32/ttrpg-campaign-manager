@@ -207,7 +207,7 @@ function About() {
         <li><strong>Secrets stay secret:</strong> anything marked for the GM never reaches players, and you can reveal pages to individual players.</li>
         <li><strong>Players join your world</strong> to see what you’ve revealed, claim their characters and keep notes.</li>
       </ul>
-      <h2>Why sign in?</h2>
+      <h2>Why sign in? <Help topic="cloudSync" /></h2>
       <p>
         Signing in is optional. An account, using your email or your Google account, lets you sync your worlds between your devices and invite players. The
         Warded Atlas only uses your sign-in to know who you are: your name and email address. It never posts anything or reads your contacts. See the{' '}

@@ -37,7 +37,7 @@ export const runEncounter = (sessionId: string, enc: Encounter) =>
 /**
  * The plan on Prepare: a strong start, the scenes you expect, secrets and clues to drop wherever
  * they fit, and fights ready to run, as cards you can read at a glance (and edit in place). All
- * GM-only. On a computer it's two columns: the opening and the scenes, then clues and fights.
+ * GM-only. On a computer it's two columns: the opening, the scenes and the fights, then the clues.
  */
 export function PrepSheet({ session, entities, worldId }: { session: Session; entities: Entity[]; worldId: string }) {
   const prep = { ...blankPrep(), ...session.prep }
@@ -64,7 +64,7 @@ export function PrepSheet({ session, entities, worldId }: { session: Session; en
         <section className="card plan-card" id="scenes">
           <div className="plan-head">
             <h2>
-              <Ico as={FilmSlate} /> Scenes <Help topic="prep" /> <Help topic="undo" />
+              <Ico as={FilmSlate} /> Scenes <Help topic="prep" />
             </h2>
             {prep.scenes.length > 0 && <span className="muted small">{prepCounts(prep).scenes.total}</span>}
           </div>
@@ -82,6 +82,14 @@ export function PrepSheet({ session, entities, worldId }: { session: Session; en
             }}
           />
         </section>
+        <section className="card plan-card" id="fights">
+          <div className="plan-head">
+            <h2>
+              <Ico as={Sword} /> Encounters <Help topic="encounters" />
+            </h2>
+          </div>
+          <Encounters session={session} prep={prep} entities={entities} worldId={worldId} />
+        </section>
       </div>
       <div className="prep-col">
         <section className="card plan-card" id="clues">
@@ -92,14 +100,6 @@ export function PrepSheet({ session, entities, worldId }: { session: Session; en
             {prep.clues.length > 0 && <span className="muted small">{prepCounts(prep).clues.total}</span>}
           </div>
           <PlanList kind="clue" items={prep.clues} placeholder="Add something the players could learn, e.g. ‘The mayor paid the bandits’" doneLabel="Found" onEdit={(fn) => edit((p) => fn(p.clues))} />
-        </section>
-        <section className="card plan-card" id="fights">
-          <div className="plan-head">
-            <h2>
-              <Ico as={Sword} /> Encounters <Help topic="encounters" />
-            </h2>
-          </div>
-          <Encounters session={session} prep={prep} entities={entities} worldId={worldId} />
         </section>
       </div>
     </div>
@@ -499,6 +499,7 @@ export function LecternPrep({ session, world }: { session: Session; world: World
             {prep.encounters.map((enc) => (
               <button
                 key={enc.id}
+                className="encounter-button"
                 disabled={!enc.foes.length}
                 title={enc.notes || 'Add to initiative'}
                 onClick={() => {

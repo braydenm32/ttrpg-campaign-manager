@@ -3,7 +3,7 @@ import { PORT, type Device } from './tests/lib/server'
 
 /**
  * Browser tests (see tests/README.md). They run against the real production build: `vite build`,
- * then `vite preview` on port 4175, in Chromium at two sizes, a laptop and a phone.
+ * then `vite preview` on port 4175, in Chromium at a laptop and a phone size (and, for the screens test, a tablet).
  *
  *   npm test                      run everything
  *   npm test -- -u                run everything and rewrite tests/baseline.json (today's known problems)
@@ -50,6 +50,12 @@ export default defineConfig<{ device: Device }>({
         isMobile: true,
         hasTouch: true,
       },
+    },
+    {
+      // An iPad held upright (801-1000 px wide still has the sidebar): the screens test only checks that nothing scrolls sideways.
+      name: 'tablet',
+      testMatch: /screens\.spec\.ts/,
+      use: { device: 'tablet', viewport: { width: 820, height: 1180 } },
     },
   ],
   webServer: {

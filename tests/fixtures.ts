@@ -38,7 +38,7 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
       const context = await browser.newContext({
         baseURL: `http://localhost:${PORT}`,
         serviceWorkers: 'block',
-        viewport: phone ? { width: 390, height: 844 } : { width: 1366, height: 860 },
+        viewport: phone ? { width: 390, height: 844 } : device === 'tablet' ? { width: 820, height: 1180 } : { width: 1366, height: 860 },
         ...(phone
           ? {
               isMobile: true,

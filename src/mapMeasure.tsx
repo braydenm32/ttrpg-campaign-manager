@@ -189,7 +189,7 @@ export function ScaleSetting({ map }: { map: WorldMap }) {
       <span className="row wrap">
         <span className="small">From left to right, the map is</span>
         <input
-          className="hp-input"
+          className="hp-input scale-value"
           type="number"
           min={0}
           step="any"
@@ -199,6 +199,7 @@ export function ScaleSetting({ map }: { map: WorldMap }) {
           aria-label="How far across"
         />
         <select
+          className="scale-unit"
           value={unit}
           onChange={(e) => {
             setUnit(e.target.value)

@@ -159,7 +159,7 @@ test('Me: previewing as one character shows them, and nothing GM-only', async ({
   await page.locator('.preview-as select').selectOption({ label: 'Varra Nine-Knuckles' })
   await expect(page.locator('.room-me')).toContainText('Varra Nine-Knuckles')
   await expect(page.locator('.room-me .number-tiles')).toContainText('Level')
-  await expect(page.getByRole('heading', { name: 'Only you know' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Just for you' })).toBeVisible()
   // Her GM-only details (armour, hit points) stay out.
   await expect(page.locator('body')).not.toContainText('chain mail')
   // Now's You card is her too.

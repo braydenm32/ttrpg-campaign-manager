@@ -6,10 +6,12 @@ import { useViewMode } from './viewMode'
 
 /** A small badge for a character who is dead, missing or captured (alive needs no badge in lists). */
 export function StatusBadge({ entity: e, showAlive }: { entity: Entity; showAlive?: boolean }) {
+  const { isGM } = useViewMode()
   if (!e.status || (e.status === 'alive' && !showAlive)) return null
   const s = LIFE_STATUS[e.status]
+  // "Players know this" is ticked or not there at all: unticked, players aren't told.
   return (
-    <span className={`tag status-life status-${e.status}`} title={e.statusKnown === false ? `${s.label} (players don’t know)` : s.label}>
+    <span className={`tag status-life status-${e.status}`} title={isGM && !e.statusKnown ? `${s.label} (players don’t know)` : s.label}>
       {s.icon} {s.label}
     </span>
   )

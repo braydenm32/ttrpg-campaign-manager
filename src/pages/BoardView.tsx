@@ -119,7 +119,7 @@ function BoardEditor({ board, worldId }: { board: Board; worldId: string }) {
         <div>
           <Link to={`${worldPath(worldId)}/boards`}>← Corkboards</Link>
           <h1 className="row">
-            <Ico as={PushPin} /> <DraftText className="title-input" value={board.name} onCommit={(v) => edit((b) => void (b.name = v))} /> <Help topic="boards" />
+            <Ico as={PushPin} /> <DraftText className="title-input" value={board.name} aria-label="Corkboard name" onCommit={(v) => edit((b) => void (b.name = v))} /> <Help topic="boards" />
           </h1>
         </div>
         <button

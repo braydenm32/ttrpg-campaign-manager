@@ -142,6 +142,28 @@ export function joinRoom(topic: string): LiveRoom {
   }
 }
 
+/**
+ * Posts one message to a room the sender may post to but not listen to (the "gm:<world>" room:
+ * players post, only GMs hear). Joining needs permission to listen, so this goes over a plain web
+ * request instead. If the room is already open here (a GM), it's sent through that. False if the
+ * server refused it (a server without the room yet) or it couldn't be sent.
+ */
+export async function postOnce(topic: string, event: string, payload: object = {}) {
+  const open = rooms.get(topic)
+  if (open?.joined) return sendOnce(topic, event, payload)
+  const had = supabase.getChannels().some((c) => c.topic === `realtime:${topic}`)
+  const ch = supabase.channel(topic, { config: { private: true } })
+  try {
+    const res = await ch.httpSend(event, payload, { timeout: 5000 })
+    return res.success
+  } catch {
+    return false
+  } finally {
+    // Only close a channel made just for this (never one a room is using).
+    if (!had && !rooms.has(topic)) void supabase.removeChannel(ch).catch(() => undefined)
+  }
+}
+
 /** Sends one message to a room without staying in it (it reuses the room if it's already open). */
 export async function sendOnce(topic: string, event: string, payload: object = {}, wait = 5000) {
   const room = joinRoom(topic)

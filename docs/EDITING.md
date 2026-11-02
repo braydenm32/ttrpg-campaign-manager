@@ -144,7 +144,7 @@ Everything is in the folder **`worlds/vael-ardith/`**. Each page in the app is o
 | Items, treasure, clues | `items/` |
 | Random tables | `tables/` |
 | Quests | `campaign/quests/` |
-| Loose threads | `campaign/threads/` |
+| Threads | `campaign/threads/` |
 | Handouts | `campaign/handouts/` |
 | The three endings | `campaign/endings/` |
 | Events that happen during play | `campaign/events/` |
@@ -229,9 +229,9 @@ Only `type` and `name` are required. Leave out anything you don't need.
 | `date` | Events: the date in words, shown as written | `date: The night of the Battle of Cinders` |
 | `order` | Events: the order within their age, smallest first | `order: 120` |
 | `questStatus` | Quests: `open`, `active`, `done` or `failed` | `questStatus: active` |
-| `threadStatus` | Loose threads: `open` (dangling), `active`, `resolved` or `dropped` | `threadStatus: open` |
-| `threadUrgency` | Loose threads: `low`, `normal` or `high` | `threadUrgency: high` |
-| `raisedIn` / `tiedOffIn` | Loose threads: the session number that raised or resolved it | `raisedIn: 1` |
+| `threadStatus` | Threads: `open` (dangling), `active`, `resolved` or `dropped` | `threadStatus: open` |
+| `threadUrgency` | Threads: `low`, `normal` or `high` | `threadUrgency: high` |
+| `raisedIn` / `tiedOffIn` | Threads: the session number that raised or resolved it | `raisedIn: 1` |
 | `heldBy` | Items: who has it, by key, or `party` | `heldBy: party` |
 | `quantity` | Items: how many | `quantity: 3` |
 | `template` | `true` makes it a page template rather than a page | `template: true` |
@@ -431,7 +431,7 @@ The session notes follow one pattern, so a GM always knows where to look. Keep i
 - One `### Scene` heading per scene. Each scene ends with **Development** (what happens next, with "if they do this, then that", and which scene comes next) and, when there's something to find, **Treasure**.
 - Each fight's `notes` end with the party it was built for, like "Built for five level-2 PCs: medium".
 
-**Quests** (`campaign/quests/`) are pages with `type: quest` and a `questStatus`. **Loose threads** (`campaign/threads/`) are pages with `type: thread`, a `threadStatus`, a `threadUrgency`, and `raisedIn` (the session number). Link them to the NPCs and places involved with `relations`.
+**Quests** (`campaign/quests/`) are pages with `type: quest` and a `questStatus`. **Threads** (`campaign/threads/`) are pages with `type: thread`, a `threadStatus`, a `threadUrgency`, and `raisedIn` (the session number). Link them to the NPCs and places involved with `relations`.
 
 **Handouts** (`campaign/handouts/`) are ordinary pages tagged `handout`. They show under More › At the table › Handouts, ready to show players.
 

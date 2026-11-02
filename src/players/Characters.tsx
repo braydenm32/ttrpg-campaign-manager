@@ -77,7 +77,7 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
 
       {owner?.mine && !owner.pending && memberOf && <EditMyCharacter entity={entity} cloudId={memberOf} system={world.system} />}
       {owner?.mine ? (
-        <PlayerNotes key={entity.id} initial={owner.notes} onSave={(notes) => savePlayerNotes(memberOf!, entity.id, notes)} />
+        <PlayerNotes key={entity.id} worldId={entity.worldId} initial={owner.notes} onSave={(notes) => savePlayerNotes(memberOf!, entity.id, notes)} />
       ) : (
         owner?.notes && (
           <div className="player-notes">
@@ -157,9 +157,9 @@ export function EditMyCharacter({ entity, cloudId, system }: { entity: Entity; c
             <div className="label">Details (stats, class, level…)</div>
             {fields.map((f, i) => (
               <div key={i} className="row field-row">
-                <input value={f.key} placeholder="Field" onChange={(e) => setFields(fields.map((x, j) => (j === i ? { ...x, key: e.target.value } : x)))} />
-                <input value={f.value} placeholder="Value" onChange={(e) => setFields(fields.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} />
-                <button type="button" className="ghost" onClick={() => setFields(fields.filter((_, j) => j !== i))}>
+                <input value={f.key} placeholder="Field" aria-label={`Detail ${i + 1} name`} onChange={(e) => setFields(fields.map((x, j) => (j === i ? { ...x, key: e.target.value } : x)))} />
+                <input value={f.value} placeholder="Value" aria-label={`Detail ${i + 1} value`} onChange={(e) => setFields(fields.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} />
+                <button type="button" className="ghost" aria-label={`Remove ${f.key || `detail ${i + 1}`}`} onClick={() => setFields(fields.filter((_, j) => j !== i))}>
                   ×
                 </button>
               </div>
@@ -169,7 +169,7 @@ export function EditMyCharacter({ entity, cloudId, system }: { entity: Entity; c
             </button>
             <label>
               In your own words
-              <textarea rows={8} value={playerBody} onChange={(e) => setPlayerBody(e.target.value)} placeholder="Appearance, personality, backstory. Markdown and [[links]] work." />
+              <textarea rows={8} value={playerBody} onChange={(e) => setPlayerBody(e.target.value)} placeholder="Appearance, personality, backstory. Links like [[Page name]] work." />
             </label>
             {error && <p className="error small">{error}</p>}
             <div className="row end">
@@ -201,7 +201,7 @@ export function EditMyCharacter({ entity, cloudId, system }: { entity: Entity; c
   )
 }
 
-function PlayerNotes({ initial, onSave }: { initial: string; onSave: (notes: string) => Promise<void> }) {
+function PlayerNotes({ worldId, initial, onSave }: { worldId: string; initial: string; onSave: (notes: string) => Promise<void> }) {
   const [text, setText] = useState(initial)
   const [state, setState] = useState<'' | 'saving' | 'saved' | 'error'>('')
   const save = async () => {
@@ -215,13 +215,18 @@ function PlayerNotes({ initial, onSave }: { initial: string; onSave: (notes: str
     }
   }
   return (
-    <label className="player-notes">
-      <span className="small">Your notes (your GM and the table can read these)</span>
-      <textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} onBlur={save} placeholder="Backstory, goals, who you trust, what you’re hiding…" />
-      <span className="muted small">
-        {state === 'saving' ? 'Saving…' : state === 'saved' ? '✓ Saved' : state === 'error' ? 'Couldn’t save. Check your connection.' : 'Saves when you click away.'}
-      </span>
-    </label>
+    <div>
+      <label className="player-notes">
+        <span className="small">Your notes (your GM and the table can read these)</span>
+        <textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} onBlur={save} placeholder="Backstory, goals, what the party knows about you…" />
+        <span className="muted small">
+          {state === 'saving' ? 'Saving…' : state === 'saved' ? '✓ Saved' : state === 'error' ? 'Couldn’t save. Check your connection.' : 'Saves when you click away.'}
+        </span>
+      </label>
+      <p className="muted small">
+        Anything secret goes in <Link to={`${worldPath(worldId)}?tab=me`}>My notes on the Me tab</Link>: only you see those.
+      </p>
+    </div>
   )
 }
 

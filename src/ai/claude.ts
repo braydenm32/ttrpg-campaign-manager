@@ -154,7 +154,7 @@ export const CUT_OFF = 'Claude ran out of room before it finished, so the end of
 
 /** Turns the SDK's errors into something a GM can act on. */
 export function friendly(err: unknown, Anthropic: typeof import('@anthropic-ai/sdk').default) {
-  if (err instanceof Anthropic.AuthenticationError) return new Error('Anthropic didn’t accept the API key. Check it in World settings → AI tools.')
+  if (err instanceof Anthropic.AuthenticationError) return new Error('Anthropic didn’t accept the API key. Check it in World settings → This device.')
   if (err instanceof Anthropic.RateLimitError) return new Error('Anthropic says you’re over your limit for now. Wait a minute and try again.')
   if (err instanceof Anthropic.APIError && /credit/i.test(err.message)) return new Error('Your Anthropic account is out of credit. Add some at console.anthropic.com → Billing.')
   if (err instanceof Anthropic.APIConnectionError) return new Error('Could not reach Anthropic. Check your internet connection.')

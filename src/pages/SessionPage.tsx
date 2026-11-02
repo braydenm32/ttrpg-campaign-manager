@@ -34,6 +34,7 @@ import { prepCounts } from '../counts'
 import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, jumpTo, useKeepScroll } from '../jump'
 import { removeWithUndo, SavedMark, saving } from '../undo'
+import { showDay } from '../text'
 
 /**
  * A session. For the GM it's two of the Session area's three stages (the third, Play, is the
@@ -68,7 +69,7 @@ export default function SessionPage() {
         </h1>
         <div className="row spread">
           <div className="muted">
-            {session.date}
+            {showDay(session.date)}
             {session.worldDate && world?.calendar && ` · in the world: ${formatDate(world.calendar, session.worldDate)}`}
           </div>
           <div className="row">
@@ -176,6 +177,7 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
           <DraftText className="session-num" inputMode="numeric" aria-label="Session number" title={HELP.sessionTitle} saveOn="leave" value={String(session.number)} onCommit={(v) => update({ number: Number(v) || 0 })} />
           <DraftText className="session-name" aria-label="Session title" title={HELP.sessionTitle} value={session.title} onCommit={(title) => update({ title })} />
         </h1>
+        <Help topic="session" />
         <SavedMark />
       </div>
       <div className="strip-facts">
@@ -183,7 +185,7 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
           {stats.map((s) => (
             <span key={s}>{s}</span>
           ))}
-          <span>{session.visibility === 'players' ? <><Ico as={Eye} /> players can read it</> : <><Ico as={Lock} /> GM only</>}</span>
+          <span>{session.visibility === 'players' ? <><Ico as={Eye} /> players can see this</> : <><Ico as={Lock} /> GM only</>}</span>
         </span>
         <span className="grow" />
         {action}
@@ -202,8 +204,8 @@ function PrepareView({ session, campaign, world, entities }: ViewProps) {
         targets={[
           { id: 'plan', label: 'Start' },
           { id: 'scenes', label: 'Scenes' },
-          { id: 'clues', label: 'Clues' },
           { id: 'fights', label: 'Fights' },
+          { id: 'clues', label: 'Clues' },
           { id: 'gm-notes', label: 'Notes' },
           { id: 'people', label: 'People' },
           { id: 'details', label: 'Details' },
@@ -335,7 +337,7 @@ function NotesCard({ session, entities, worldId, id }: { session: Session; entit
           className="notes-text"
           aria-label="GM notes"
           value={session.notes}
-          placeholder="What happened, who they met, what’s left hanging… Use [[Name]] to link pages. Only you see these."
+          placeholder="What happened, who they met, what’s left hanging… Links like [[Page name]] work. Only you see these."
           onCommit={(notes) => saving(db.sessions.update(session.id, { notes }))}
         />
       ) : (
@@ -501,6 +503,8 @@ export function Recorder({ session }: { session: Session }) {
   const [elapsed, setElapsed] = useState(0)
   const [mark, setMark] = useState('')
   const [error, setError] = useState('')
+  /** The cut-off recording being recovered now: one at a time. */
+  const [recovering, setRecovering] = useState<string>()
   // Recordings cut off by a crash or a closed tab, waiting to be put back together.
   const cutOff = useLiveQuery(() => unsavedRecordings(session.id), [session.id, live?.recordingId]) ?? []
 
@@ -533,8 +537,22 @@ export function Recorder({ session }: { session: Session }) {
             <Ico as={Warning} /> A recording from {new Date(r.startedAt).toLocaleString()} wasn’t finished (the app closed while it was running). About{' '}
             {formatTime(r.seconds)} ({formatBytes(r.bytes)}) was saved as it went.
           </span>
-          <button className="primary small" onClick={() => recoverRecording(session.id, r.recordingId, session.number)}>
-            Recover it
+          <button
+            className="primary small"
+            disabled={!!recovering}
+            onClick={async () => {
+              setRecovering(r.recordingId)
+              setError('')
+              try {
+                await recoverRecording(session.id, r.recordingId, session.number)
+              } catch (err) {
+                setError((err as Error).message)
+              } finally {
+                setRecovering(undefined)
+              }
+            }}
+          >
+            {recovering === r.recordingId ? 'Recovering…' : 'Recover it'}
           </button>
           <button className="small ghost" onClick={() => confirm('Throw this recording away?') && discardRecording(r.recordingId)}>
             Discard
@@ -694,7 +712,7 @@ function SessionThreads({ session, entities, worldId }: { session: Session; enti
     <section className="card wrap-card" id="threads">
       <div className="plan-head">
         <h2>
-          <Ico as={Spiral} /> Loose threads from this session
+          <Ico as={Spiral} /> Threads from this session
         </h2>
         <Link className="small" to={`${worldPath(worldId)}/threads`}>
           All threads
@@ -723,7 +741,7 @@ function SessionThreads({ session, entities, worldId }: { session: Session; enti
           setName('')
         }}
       >
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Add a thread this session left hanging" aria-label="New loose thread" />
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Add a thread this session left hanging" aria-label="New thread" />
         <button disabled={!name.trim()}>Add</button>
       </form>
     </section>

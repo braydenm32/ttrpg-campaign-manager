@@ -46,6 +46,36 @@ test('a session moves Prepare → Play → Wrap up, then the next one is up on t
   }
 })
 
+test('typing the recap does not mark a session played; "Not played yet" takes the mark back, with Undo', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  await open(page, `${w}/s/${s1.id}?tab=prep`)
+  const before = await getRecord(page, 'sessions', s1.id)
+  try {
+    await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+    await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}/lectern`)
+    await open(page, `${w}/s/${s1.id}?end=1`)
+
+    // One typed letter in the recap leaves it Playing, with "Mark as played" still to press.
+    await page.getByPlaceholder('What the players get to read').fill('The company mustered.')
+    await expect.poll(async () => (await getRecord(page, 'sessions', s1.id))?.recap).toBe('The company mustered.')
+    await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'playing')
+    await page.getByRole('button', { name: 'Mark as played' }).first().click()
+    await expect(toast(page)).toContainText('#1 marked played')
+    await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'played')
+    await expect(page.locator('#finish')).toContainText(`Next up: #2 ${world.session(2).title}`)
+
+    // "Not played yet" works even with a recap, and Undo marks it played again.
+    await page.locator('#finish').getByRole('button', { name: 'Not played yet' }).click()
+    await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'playing')
+    await expect(toast(page)).toContainText('not played yet')
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'played')
+  } finally {
+    await putBack(page, 'sessions', [[s1.id, before]])
+  }
+})
+
 test('changing the scene at the Lectern replaces the read-aloud text and who’s here, with Undo', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   const s1 = world.session(1)
@@ -77,6 +107,75 @@ test('changing the scene at the Lectern replaces the read-aloud text and who’s
     await expect(scene.locator('h2')).toContainText('Scene 2 of')
   } finally {
     await putBack(page, 'sessions', [[s1.id, before]])
+  }
+})
+
+test('starting a scene that reveals a page asks first, and Undo takes all of it back', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  const secret = world.dump.entities.find((e) => e.type === 'npc' && e.visibility === 'gm' && !e.template && !(e as { revealedTo?: string[] }).revealedTo?.length)!
+  const newcomer = world.dump.entities.find((e) => e.type === 'npc' && e.id !== secret.id && !e.template && !s1.entityIds.includes(e.id))!
+  await open(page, `${w}/s/${s1.id}/lectern`)
+  const before = await getRecord(page, 'sessions', s1.id)
+  const pageBefore = await getRecord(page, 'entities', secret.id)
+  const worldBefore = await getRecord(page, 'worlds', world.id)
+  type Prep = { scenes: Record<string, unknown>[]; encounters: unknown[] }
+  type Lect = { combat?: { combatants: unknown[] } }
+  const prep = before!.prep as Prep
+  // The first planned scene brings a fight, someone new, reveals a GM-only page and shows it.
+  await putBack(page, 'sessions', [
+    [
+      s1.id,
+      {
+        ...before!,
+        startedAt: undefined,
+        prep: {
+          ...prep,
+          encounters: [...prep.encounters, { id: 'test-fight', name: 'Test fight', notes: '', foes: [{ id: 'f1', name: 'Test goblin', count: 2, side: 'foe' }] }],
+          scenes: prep.scenes.map((x, i) => (i === 0 ? { ...x, done: false, encounterId: 'test-fight', presentIds: [newcomer.id], revealIds: [secret.id], show: { kind: 'page', entityId: secret.id } } : x)),
+        },
+      },
+    ],
+  ])
+  try {
+    await open(page, `${w}/s/${s1.id}/lectern`)
+    const scene = page.locator('#lectern-scene')
+    const fighters = ((before!.lectern as Lect | undefined)?.combat?.combatants ?? []).length
+
+    // The same review as on the page: what players get, and Cancel changes nothing.
+    await scene.getByRole('button', { name: 'First scene' }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toContainText(`Starting this scene reveals “${secret.name}” to players`)
+    await expect(dialog).toContainText('Players will see')
+    await dialog.getByRole('button', { name: 'Cancel' }).click()
+    await expect(scene.locator('h2')).not.toContainText('Scene 1 of')
+    expect((await getRecord(page, 'entities', secret.id))?.visibility).toBe('gm')
+
+    await scene.getByRole('button', { name: 'First scene' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Start the scene' }).click()
+    await expect(scene.locator('h2')).toContainText('Scene 1 of')
+    await expect.poll(async () => (await getRecord(page, 'entities', secret.id))?.visibility).toBe('players')
+    const started = (await getRecord(page, 'sessions', s1.id))!
+    expect(((started.lectern as Lect).combat?.combatants ?? []).length).toBe(fighters + 2)
+    expect(started.entityIds).toContain(newcomer.id)
+    expect(started.startedAt).toBeTruthy()
+    expect(((await getRecord(page, 'worlds', world.id)) as { showing?: { entityId?: string } }).showing?.entityId).toBe(secret.id)
+
+    // Undo: the page is hidden again, off players' screens, and the fight, the newcomer and the start time are gone.
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect.poll(async () => (await getRecord(page, 'entities', secret.id))?.visibility).toBe('gm')
+    await expect.poll(async () => ((await getRecord(page, 'worlds', world.id)) as { showing?: { id?: string } | null }).showing?.id ?? null).toBe(
+      (worldBefore as { showing?: { id?: string } | null }).showing?.id ?? null,
+    )
+    const undone = (await getRecord(page, 'sessions', s1.id))!
+    expect(((undone.lectern as Lect).combat?.combatants ?? []).length).toBe(fighters)
+    expect(undone.entityIds).not.toContain(newcomer.id)
+    expect(undone.startedAt).toBeFalsy()
+    await expect(scene.locator('h2')).not.toContainText('Scene 1 of')
+  } finally {
+    await putBack(page, 'sessions', [[s1.id, before]])
+    await putBack(page, 'entities', [[secret.id, pageBefore]])
+    await putBack(page, 'worlds', [[world.id, worldBefore]])
   }
 })
 
@@ -119,7 +218,7 @@ test('nothing typed in the page editor is lost by leaving, and an untouched new 
     const newNpc = async () => {
       await open(page, `${w}/npcs`)
       await page.getByRole('button', { name: /^\+ New NPC/ }).first().click()
-      const blank = page.getByRole('button', { name: 'Blank page' })
+      const blank = page.getByRole('menuitem', { name: 'Blank page' })
       if (await blank.isVisible()) await blank.click()
       await expect.poll(() => here(page)).toMatch(/\?edit=1&new=1$/)
       return page.getByPlaceholder('Name this npc')

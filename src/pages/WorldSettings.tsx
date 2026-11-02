@@ -47,8 +47,28 @@ export default function WorldSettings() {
   // ?at=templates (or import, deleted, backup) from the More page: scroll to that part.
   const at = params.get('at')
   const ready = !!world
+  // The pictures and calendar above it settle a moment later and push it down, so it scrolls again until they have (or you scroll yourself).
   useEffect(() => {
-    if (at && ready) document.getElementById(`settings-${at}`)?.scrollIntoView({ block: 'start' })
+    if (!at || !ready) return
+    let moved = false
+    const go = () => {
+      if (!moved) document.getElementById(`settings-${at}`)?.scrollIntoView({ block: 'start' })
+    }
+    go()
+    const stop = () => {
+      moved = true
+    }
+    const events = ['wheel', 'touchstart', 'keydown', 'mousedown'] as const
+    events.forEach((ev) => window.addEventListener(ev, stop, { once: true, passive: true }))
+    const page = document.querySelector('.more-screen')
+    const watcher = page && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(go) : undefined
+    if (page) watcher?.observe(page)
+    const done = setTimeout(() => watcher?.disconnect(), 2500)
+    return () => {
+      clearTimeout(done)
+      watcher?.disconnect()
+      events.forEach((ev) => window.removeEventListener(ev, stop))
+    }
   }, [at, tab, ready])
   if (!world) return <Skeleton />
   // A player's copy of someone else's world has no settings to change.
@@ -96,7 +116,7 @@ export default function WorldSettings() {
             <label>
               Description
               <DraftText multiline rows={4} value={world.description} onCommit={(description) => update({ description })} />
-              <small className="muted">Players can read this. Keep secrets in GM notes or a :::gm block on a page.</small>
+              <small className="muted">Players can see this. Keep secrets in GM notes or a GM-only passage on a page.</small>
             </label>
           </div>
 
@@ -141,7 +161,7 @@ export default function WorldSettings() {
                 : 'No backup downloaded from this device yet.'}
             </p>
             <p className="muted">
-              A backup is a single file with the whole world in it, including uploaded files. Keep one even if sync is on; you can import it from the
+              A backup is a single file with the whole world in it, including uploaded files. Session recordings are left out unless you tick the box below (they stay on the device that made them). Keep one even if sync is on; you can import it from the
               home screen on any device.
             </p>
             <BackupButton worldId={worldId} />

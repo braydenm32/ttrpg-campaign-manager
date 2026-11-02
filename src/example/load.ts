@@ -271,7 +271,7 @@ async function drawPlan(worldId: string, content: ExampleContent, drawArt: DrawA
     if (blob) {
       // Players see the cover on the world's book, so its picture is theirs too.
       const visibility = a.id === world?.coverId ? ('players' as const) : ('gm' as const)
-      await db.assets.add({ id: a.id, worldId, name: a.key, mime: blob.type, size: blob.size, blob, tags: ['example'], visibility, createdAt: plan.now })
+      await db.assets.add({ id: a.id, worldId, name: page ? `${page.name}.${blob.type.split('/')[1]?.replace('jpeg', 'jpg').replace('svg+xml', 'svg') || 'png'}` : a.key, mime: blob.type, size: blob.size, blob, tags: ['example'], visibility, createdAt: plan.now })
     } else {
       // Nothing to draw for this key: the pages that pointed at it go without a picture.
       await db.entities.where({ worldId }).filter((e) => e.imageId === a.id).modify({ imageId: undefined })

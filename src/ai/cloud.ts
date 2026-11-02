@@ -11,7 +11,7 @@ async function call<T>(url: string, key: string, init: RequestInit = {}, signal?
     if ((err as Error).name === 'AbortError') throw err
     throw new Error('Could not reach AssemblyAI. Check your internet connection and try again.')
   }
-  if (res.status === 401) throw new Error('AssemblyAI didn’t accept the API key. Check it in World settings → AI tools.')
+  if (res.status === 401) throw new Error('AssemblyAI didn’t accept the API key. Check it in World settings → This device.')
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     throw new Error(`AssemblyAI said: ${body.error ?? res.statusText}`)

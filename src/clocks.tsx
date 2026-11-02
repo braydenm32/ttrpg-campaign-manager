@@ -249,12 +249,14 @@ export function ClocksPanel({ worldId, entities }: { worldId: string; entities: 
 
 /** The Clocks page: every ticking clock, by page. */
 export default function ClocksPage() {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const { isGM } = useViewMode()
   const entities = useVisibleEntities(worldId)
   const all = allClocks(entities)
   const ticking = tickingClocks(entities)
   const done = all.filter(({ clock }) => !isTicking(clock))
+  // The party's clocks are the table's business, not a public wiki link's.
+  if (world?.shared?.token) return <Empty>Clocks are for the players at the table.</Empty>
   return (
     <div className="page">
       <header className="page-header">
@@ -265,11 +267,11 @@ export default function ClocksPage() {
       {isGM && <NewClock entities={entities} />}
       {all.length === 0 ? (
         <Empty>
-          {isGM ? 'No clocks yet. Open a faction, a villain or a loose thread and add one from its Clocks box.' : 'Your GM hasn’t shared any clocks.'}
+          {isGM ? 'No clocks yet. Open a faction, a villain or a thread and add one from its Clocks box.' : 'Your GM hasn’t shared any clocks.'}
         </Empty>
       ) : (
         <>
-          <div className="clock-list">
+          <div className="clock-list clock-grid">
             {ticking.map(({ clock, owner }) => (
               <ClockRow key={clock.id} clock={clock} owner={owner} isGM={isGM} showOwner worldId={worldId} />
             ))}
@@ -277,7 +279,7 @@ export default function ClocksPage() {
           {done.length > 0 && (
             <>
               <h2>Run out</h2>
-              <div className="clock-list">
+              <div className="clock-list clock-grid">
                 {done.map(({ clock, owner }) => (
                   <ClockRow key={clock.id} clock={clock} owner={owner} isGM={isGM} showOwner worldId={worldId} />
                 ))}

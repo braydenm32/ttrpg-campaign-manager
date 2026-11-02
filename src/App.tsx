@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, HashRouter, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useWorld } from './hooks'
-import { AreaSidebar, AreaTabs, BottomBar, FrameProvider, frameLinks, isDeep, phoneTabIds, useFrame, WorldDate, WorldTile } from './Sidebar'
+import { AreaSidebar, AreaTabs, BottomBar, FrameProvider, frameLinks, isDeep, phoneTabIds, useFrame, useRouteFocus, useScreenTitle, WorldDate, WorldTile } from './Sidebar'
 import { ToastHost } from './undo'
 import type { AreaId } from './nav'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -253,6 +253,22 @@ function ScreenRoute() {
   )
 }
 
+/** Hidden until it gets the focus: the first Tab stop, so the keyboard can jump past the menus. */
+function SkipLink() {
+  return (
+    <a
+      className="skip-link"
+      href="#main-content"
+      onClick={(e) => {
+        e.preventDefault()
+        document.getElementById('main-content')?.focus()
+      }}
+    >
+      Skip to content
+    </a>
+  )
+}
+
 function WorldShell() {
   const { worldId, world } = useWorld()
   const { isGM, setMode, previewAs } = useViewMode()
@@ -269,6 +285,8 @@ function WorldShell() {
   const { pathname, search } = useLocation()
   const frame = useFrame(world)
   const { facts, spot } = frame
+  useScreenTitle(world, frame)
+  useRouteFocus()
   // Each area goes back to the address you last had open in it (forgotten when you switch GM / Player view).
   const here = pathname + search
   const [memory, setMemory] = useState<{ viewer: string; paths: Partial<Record<AreaId, string>> }>({ viewer: facts.viewer, paths: {} })
@@ -303,6 +321,7 @@ function WorldShell() {
   return (
     <FrameProvider value={frame}>
     <div className={`layout app-shell viewer-${facts.viewer} ${isGM ? '' : 'player-mode'} ${phoneTabs.size > 1 ? 'with-phone-tabs' : ''} ${facts.viewer === 'wiki' ? '' : 'with-bottom-bar'}`}>
+      <SkipLink />
       <LeaveGuard />
       <header className="topbar">
         <WorldTile world={world} frame={frame} deep={deep} />
@@ -315,7 +334,7 @@ function WorldShell() {
       </header>
       <div className="layout-body">
         <AreaSidebar world={world} frame={frame} links={links} />
-        <main className="content">
+        <main className="content" id="main-content" tabIndex={-1}>
           {shareError && <div className="player-banner">Couldn’t refresh: {shareError}</div>}
           {isGM && !shared && <RecordingBar />}
           {memberOf && <ChooseCharacterBanner world={world} />}

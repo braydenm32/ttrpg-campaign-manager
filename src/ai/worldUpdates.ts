@@ -194,8 +194,8 @@ export function describe(u: WorldUpdate): string {
       return `${u.quantity && u.quantity !== 1 ? `${u.quantity} × ` : ''}${u.item} now with ${u.to}`
     case 'thread':
       return u.action === 'raised'
-        ? `New loose thread: ${u.name}${u.note ? `, ${u.note}` : ''}`
-        : `Loose thread ${u.page}: ${u.action === 'moved' ? 'in play' : THREAD_STATUS[u.action].label.toLowerCase()}${u.note ? `, ${u.note}` : ''}`
+        ? `New thread: ${u.name}${u.note ? `, ${u.note}` : ''}`
+        : `Thread ${u.page}: ${u.action === 'moved' ? 'in play' : THREAD_STATUS[u.action].label.toLowerCase()}${u.note ? `, ${u.note}` : ''}`
     case 'conflict':
       return `${u.page}: ${u.note}`
   }
