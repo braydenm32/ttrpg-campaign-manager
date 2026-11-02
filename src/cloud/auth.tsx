@@ -4,7 +4,7 @@ import { Modal } from '../components'
 import { Help } from '../help'
 import { currentPath, goToPath } from '../paths'
 import { appLink, appUrl, cloudErrorMessage, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
-import { pendingInvite } from './players'
+import { joinedHere, pendingInvite, removeJoinedCopies } from './players'
 import { deleteMyAccount } from './sync'
 
 type Provider = 'google' | 'facebook'
@@ -137,14 +137,31 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
               </button>
               <Help topic="deleteAccount" />
             </span>
-            <button
-              onClick={async () => {
-                await supabase.auth.signOut()
-                onClose()
-              }}
-            >
-              Sign out
-            </button>
+            <span className="row">
+              <button
+                onClick={async () => {
+                  // On a shared computer the worlds you joined shouldn't stay readable after you leave.
+                  const joined = await joinedHere()
+                  if (
+                    joined.length &&
+                    confirm(
+                      `Also remove the ${joined.length === 1 ? 'world' : `${joined.length} worlds`} you joined as a player from this device?\n\n${joined
+                        .map((w) => `• ${w.name}`)
+                        .join('\n')}\n\nYou stay in ${joined.length === 1 ? 'it' : 'them'}: sign in again and Home lists ${joined.length === 1 ? 'it' : 'them'} to open. Cancel keeps ${joined.length === 1 ? 'it' : 'them'} here.`,
+                    )
+                  ) {
+                    await removeJoinedCopies()
+                    // Don't leave the screen on a world that's just gone.
+                    if (currentPath().startsWith('/w/')) goToPath('/')
+                  }
+                  await supabase.auth.signOut()
+                  onClose()
+                }}
+              >
+                Sign out
+              </button>
+              <Help topic="signOut" />
+            </span>
           </div>
         </div>
       </Modal>

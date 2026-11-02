@@ -320,6 +320,17 @@ export async function leaveWorld(cloudId: string) {
   await deleteLocalCopy(memberWorldId(cloudId))
 }
 
+/** Worlds joined with an invite that are saved on this device (read-only player copies). */
+export const joinedHere = () => db.worlds.filter((w) => !!w.shared?.memberOf).toArray()
+
+/**
+ * Removes this device's copies of joined worlds (when signing out on a shared computer, say).
+ * Only the copies here: you stay a member, and Home lists them to open again once you sign back in.
+ */
+export async function removeJoinedCopies() {
+  for (const w of await joinedHere()) await deleteLocalCopy(w.id)
+}
+
 async function deleteLocalCopy(worldId: string) {
   await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets], async () => {
     for (const t of [db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets] as const) await t.where({ worldId }).delete()
