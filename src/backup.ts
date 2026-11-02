@@ -136,7 +136,14 @@ export async function recordingsSize(worldId: string) {
 
 /** Imports a backup as a new copy of the world (fresh ids), so importing twice never overwrites anything. */
 export async function importWorld(file: File): Promise<string> {
-  const bytes = new Uint8Array(await file.arrayBuffer())
+  let bytes: Uint8Array<ArrayBuffer>
+  try {
+    bytes = new Uint8Array(await file.arrayBuffer())
+  } catch (err) {
+    // The whole file is read into memory first, which a very big backup (hours of recordings) can be too much for.
+    console.warn('Reading the backup failed', err)
+    throw new Error(tooBigToOpen(file))
+  }
   // A zip starts with "PK".
   const isZip = bytes[0] === 0x50 && bytes[1] === 0x4b
   // One file at a time out of the zip, so a big backup isn't unpacked into memory all at once.
@@ -144,7 +151,8 @@ export async function importWorld(file: File): Promise<string> {
   let b: WorldBackup
   try {
     b = JSON.parse(isZip ? strFromU8(entry('world.json') ?? new Uint8Array()) : strFromU8(bytes)) as WorldBackup
-  } catch {
+  } catch (err) {
+    if (err instanceof RangeError || /memory|allocation/i.test(String((err as Error)?.message))) throw new Error(tooBigToOpen(file))
     throw new Error(
       isZip ? 'This backup file is damaged or incomplete (it may not have finished downloading). Try another copy.' : 'This file is not a Warded Atlas world backup.',
     )
@@ -162,6 +170,8 @@ export async function importWorld(file: File): Promise<string> {
   const opt = (old?: string) => (old ? id(old) : undefined)
   // Pictures in text point at files by id, and the files get new ids.
   const pics = <T extends string | undefined>(t: T): T => (t ? (t.replace(/asset:([0-9a-fA-F-]{36})/g, (m, old: string) => (ids.has(old) ? `asset:${ids.get(old)}` : m)) as T) : t)
+  // Every file gets its new id now, so pictures in text find theirs even before the file is unpacked.
+  for (const a of b.assets) id(a.id)
   const worldId = id(b.world.id)
   const now = Date.now()
 
@@ -177,6 +187,8 @@ export async function importWorld(file: File): Promise<string> {
       coverId: opt(b.world.coverId),
       showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId) } : undefined,
       handouts: b.world.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId) })),
+      // The GM screen's pinned pages.
+      gmScreen: b.world.gmScreen && { ...b.world.gmScreen, pages: b.world.gmScreen.pages.map(id) },
     })
     await db.assets.bulkAdd(b.assets.flatMap(({ data: _data, ...a }) => (blobs.has(a.id) ? [{ ...a, id: id(a.id), worldId, blob: blobs.get(a.id)! }] : [])))
     await db.campaigns.bulkAdd(b.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))
@@ -197,6 +209,8 @@ export async function importWorld(file: File): Promise<string> {
         tiedOffIn: opt(e.tiedOffIn),
         heldBy: e.heldBy === 'party' ? 'party' : opt(e.heldBy),
         relations: e.relations?.map((r) => ({ ...r, to: id(r.to) })),
+        // A quest reward's item page.
+        rewards: e.rewards?.map((r) => ({ ...r, itemId: opt(r.itemId) })),
       })),
     )
     await db.maps.bulkAdd(
@@ -211,7 +225,7 @@ export async function importWorld(file: File): Promise<string> {
       })),
     )
     await db.pins.bulkAdd(
-      b.pins.map((p) => ({ ...p, id: id(p.id), worldId, mapId: id(p.mapId), entityId: opt(p.entityId), childMapId: opt(p.childMapId) })),
+      b.pins.map((p) => ({ ...p, id: id(p.id), worldId, mapId: id(p.mapId), entityId: opt(p.entityId), childMapId: opt(p.childMapId), note: pics(p.note) })),
     )
     await db.sessions.bulkAdd(
       b.sessions.map((s) => ({
@@ -230,9 +244,25 @@ export async function importWorld(file: File): Promise<string> {
           sceneId: opt(s.lectern.sceneId),
           presentIds: s.lectern.presentIds.map(id),
           combat: { ...s.lectern.combat, combatants: s.lectern.combat.combatants.map((c) => ({ ...c, entityId: opt(c.entityId) })) },
+          // The roll called for (which characters, and who has answered) and the journey's encounter table.
+          rollCall: s.lectern.rollCall && {
+            ...s.lectern.rollCall,
+            to: s.lectern.rollCall.to.map(id),
+            answers: s.lectern.rollCall.answers.map((a) => ({ ...a, entityId: opt(a.entityId) })),
+          },
+          journey: s.lectern.journey && { ...s.lectern.journey, encounterTableId: opt(s.lectern.journey.encounterTableId) },
         },
+        // Prepared scenes point at pages, sounds and pictures; their encounters keep their ids (they live in the session).
         prep: s.prep && {
           ...s.prep,
+          scenes: s.prep.scenes.map((sc) => ({
+            ...sc,
+            placeId: opt(sc.placeId),
+            presentIds: sc.presentIds?.map(id),
+            soundIds: sc.soundIds?.map(id),
+            revealIds: sc.revealIds?.map(id),
+            show: !sc.show ? undefined : sc.show.kind === 'page' ? { ...sc.show, entityId: id(sc.show.entityId) } : { ...sc.show, assetId: id(sc.show.assetId) },
+          })),
           encounters: s.prep.encounters.map((enc) => ({ ...enc, foes: enc.foes.map((f) => ({ ...f, entityId: opt(f.entityId) })) })),
         },
       })),
@@ -281,6 +311,12 @@ async function unpackFiles(
     alert(
       `The world was imported, but ${missing.length === 1 ? 'one file was' : `${missing.length} files were`} missing from the backup and came in empty: ${missing.slice(0, 5).join(', ')}${missing.length > 5 ? '…' : ''}. The backup may be damaged; if you have another copy, try that one too.`,
     )
+}
+
+/** What to say when a backup is too big for this browser to open. */
+function tooBigToOpen(file: File) {
+  const size = file.size >= 1e9 ? `${(file.size / 1e9).toFixed(1)} GB` : `${Math.round(file.size / 1e6)} MB`
+  return `This backup (${size}) is too big for this browser to open: it ran out of memory. Try importing it on a computer, in Firefox or Chrome, which cope best with big files. Next time, a backup without “Include session recordings” ticked is much smaller (the recordings’ transcripts and bookmarks are still in it).`
 }
 
 function base64ToBlob(data: string, mime: string) {
