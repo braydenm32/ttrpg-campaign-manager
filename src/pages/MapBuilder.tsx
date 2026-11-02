@@ -812,7 +812,11 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     }
     return { ...base, shape, points: path, size: w }
   }
-  /** A door sits on the nearest grid line that has a room wall on it, or failing that the nearest line. */
+  /**
+   * A door sits on the nearest grid line where it fits. Best is an opening: floor on both sides of
+   * the door and rock at both ends (across a passage, or where a passage meets a room). Next best is
+   * a room's wall (floor on one side only, like a building's outer wall). Failing both, the nearest line.
+   */
   const snapDoor = (p: Point, size: number, d: Drawing = drawing): { at: Point; turn: number } => {
     if (d.grid !== 'square') return { at: p, turn: 0 }
     const off = Math.max(1, Math.round(size / gs)) % 2 ? gs / 2 : 0
@@ -821,9 +825,21 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     const inRoom = roomTest(d, W, H)
     if (inRoom) {
       const h = gs / 2
+      // just past each end of the door, a quarter square beyond its jambs; a wall there on either side
+      // of the line counts (where a passage meets a room, the room's floor is on one side of it)
+      const end = size / 2 + gs / 4
+      const q = gs / 4
+      const rock = (x: number, y: number, dx: number, dy: number) => !inRoom(x + dx, y + dy) || !inRoom(x - dx, y - dy)
+      const opening = ({ at: [x, y], turn }: { at: Point; turn: number }) =>
+        turn === 0
+          ? inRoom(x, y - h) && inRoom(x, y + h) && rock(x - end, y, 0, q) && rock(x + end, y, 0, q)
+          : inRoom(x - h, y) && inRoom(x + h, y) && rock(x, y - end, q, 0) && rock(x, y + end, q, 0)
+      const openAcross = opening(across)
+      const openDown = opening(down)
+      if (openAcross !== openDown) return openAcross ? across : down
       const wallAcross = inRoom(across.at[0], across.at[1] - h) !== inRoom(across.at[0], across.at[1] + h)
       const wallDown = inRoom(down.at[0] - h, down.at[1]) !== inRoom(down.at[0] + h, down.at[1])
-      if (wallAcross !== wallDown) return wallAcross ? across : down
+      if (!openAcross && wallAcross !== wallDown) return wallAcross ? across : down
     }
     return Math.abs(p[1] - across.at[1]) <= Math.abs(p[0] - down.at[0]) ? across : down
   }
