@@ -269,7 +269,7 @@ export default function ClocksPage() {
         </Empty>
       ) : (
         <>
-          <div className="clock-list">
+          <div className="clock-list clock-grid">
             {ticking.map(({ clock, owner }) => (
               <ClockRow key={clock.id} clock={clock} owner={owner} isGM={isGM} showOwner worldId={worldId} />
             ))}
@@ -277,7 +277,7 @@ export default function ClocksPage() {
           {done.length > 0 && (
             <>
               <h2>Run out</h2>
-              <div className="clock-list">
+              <div className="clock-list clock-grid">
                 {done.map(({ clock, owner }) => (
                   <ClockRow key={clock.id} clock={clock} owner={owner} isGM={isGM} showOwner worldId={worldId} />
                 ))}
