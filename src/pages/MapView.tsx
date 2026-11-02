@@ -10,7 +10,7 @@ import { DraftText, Empty, VisibilityBadge } from '../components'
 import { SeenMark, useReview, VisibilityControl } from '../reveal'
 import { sessionInHand } from '../threads'
 import { toast } from '../undo'
-import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type Pin, type World, type WorldMap } from '../db'
+import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type FogShape, type Pin, type World, type WorldMap } from '../db'
 import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { StatusBadge, statusIcon } from '../status'
@@ -648,6 +648,35 @@ function FogBar({
       })
   const all = { id: 'all', mode: 'reveal' as const, points: [[0, 0], [0, map.width], [map.height, map.width], [map.height, 0]] as [number, number][] }
   const { ask, dialog } = useReview()
+  // Fog shapes taken off with Undo, for Redo; good only while nothing new has been added since.
+  const [redo, setRedo] = useState<{ shapes: FogShape[]; after: string }>({ shapes: [], after: '' })
+  const lastId = fog?.shapes.at(-1)?.id ?? ''
+  const canRedo = redo.shapes.length > 0 && redo.after === lastId
+  const undoShape = async () => {
+    if (!fog?.shapes.length) return
+    const shape = fog.shapes[fog.shapes.length - 1]
+    await setFog({ shapes: fog.shapes.slice(0, -1) })
+    setRedo({ shapes: [...(canRedo ? redo.shapes : []), shape], after: fog.shapes.at(-2)?.id ?? '' })
+  }
+  const redoShape = async () => {
+    if (!fog || !canRedo) return
+    const shape = redo.shapes[redo.shapes.length - 1]
+    await setFog({ shapes: [...fog.shapes, shape] })
+    setRedo({ shapes: redo.shapes.slice(0, -1), after: shape.id })
+  }
+  const coverAll = async () => {
+    if (!fog) return
+    const was = fog.shapes
+    await setFog({ shapes: [] })
+    toast('The whole map is covered again.', () =>
+      db.maps
+        .where('id')
+        .equals(map.id)
+        .modify((m) => {
+          if (m.fog) m.fog.shapes = [...was, ...m.fog.shapes]
+        }),
+    )
+  }
   const uncoverAll = async () => {
     const ok = await ask({
       title: 'Uncover the whole map?',
@@ -723,11 +752,14 @@ function FogBar({
               </button>
             </>
           )}
-          <button disabled={!fog.shapes.length} onClick={() => setFog({ shapes: fog.shapes.slice(0, -1) })}>
+          <button disabled={!fog.shapes.length} onClick={undoShape} title="Take back the last thing you uncovered or covered">
             ↶ Undo
           </button>
+          <button disabled={!canRedo} onClick={redoShape} title="Put back what Undo took away">
+            ↷ Redo
+          </button>
           <button onClick={uncoverAll}>Uncover all</button>
-          <button onClick={() => confirm('Cover the whole map again?') && setFog({ shapes: [] })}>Cover all</button>
+          <button onClick={coverAll}>Cover all</button>
           <button
             className="ghost small"
             onClick={async () => {
