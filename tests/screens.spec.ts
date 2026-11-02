@@ -7,7 +7,7 @@ import { expect, open, test, type View } from './fixtures'
  * Every screen, on a laptop and on a phone, in the GM view and (where players can go) the player
  * view: it must open without an uncaught error, without "Something went wrong", without "not
  * found" (unless that's the point of the sample), and without the page scrolling sideways. On the
- * phone, buttons and links must be at least 44×44 px. Problems today's app already has are listed
+ * phone, buttons and links must be at least 44×44 px. A tablet width (820 px) is only checked for sideways scrolling. Problems today's app already has are listed
  * in tests/baseline.json; only new ones fail (see tests/lib/baseline.ts).
  */
 
@@ -26,6 +26,11 @@ for (const route of ROUTES)
           // The world's own screens must show the world, not bounce somewhere else.
           if (route.path.startsWith('/w/') && !route.path.includes('/print/')) await expect(page.locator('.topbar')).toBeVisible()
           const found = await checkScreen(page, { phone: device === 'phone', notFound: want === 'not-found', errors: pageErrors })
+          // On a tablet (820 px) only one thing is checked, with no allowance: the page must not scroll sideways.
+          if (device === 'tablet') {
+            expect(found.problems.filter((p) => p === 'sideways scroll'), `${url} scrolls sideways on a tablet`).toEqual([])
+            return
+          }
           const key = `${device} ${view} ${route.path}${sample.label ? ` (${sample.label})` : ''}`
           const fresh = compare(key, found, info)
           expect(fresh, `New problems on ${url} (${key}). If they're expected, update the baseline: npm test -- -u`).toEqual([])

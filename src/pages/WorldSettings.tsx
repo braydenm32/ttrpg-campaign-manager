@@ -47,8 +47,28 @@ export default function WorldSettings() {
   // ?at=templates (or import, deleted, backup) from the More page: scroll to that part.
   const at = params.get('at')
   const ready = !!world
+  // The pictures and calendar above it settle a moment later and push it down, so it scrolls again until they have (or you scroll yourself).
   useEffect(() => {
-    if (at && ready) document.getElementById(`settings-${at}`)?.scrollIntoView({ block: 'start' })
+    if (!at || !ready) return
+    let moved = false
+    const go = () => {
+      if (!moved) document.getElementById(`settings-${at}`)?.scrollIntoView({ block: 'start' })
+    }
+    go()
+    const stop = () => {
+      moved = true
+    }
+    const events = ['wheel', 'touchstart', 'keydown', 'mousedown'] as const
+    events.forEach((ev) => window.addEventListener(ev, stop, { once: true, passive: true }))
+    const page = document.querySelector('.more-screen')
+    const watcher = page && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(go) : undefined
+    if (page) watcher?.observe(page)
+    const done = setTimeout(() => watcher?.disconnect(), 2500)
+    return () => {
+      clearTimeout(done)
+      watcher?.disconnect()
+      events.forEach((ev) => window.removeEventListener(ev, stop))
+    }
   }, [at, tab, ready])
   if (!world) return <Skeleton />
   // A player's copy of someone else's world has no settings to change.

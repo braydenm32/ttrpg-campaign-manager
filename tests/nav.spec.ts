@@ -167,7 +167,7 @@ test('nothing in a player’s menus or search leads to a GM tool', () => {
 })
 
 test('search finds every area, tab and More item by name, and the old place names', () => {
-  const gm = navPlaces({ worldId: 'w', viewer: 'gm', sessionId: 's', campaignId: 'c', sessionHome: '/w/w/s/s?tab=prep' })
+  const gm = navPlaces({ worldId: 'w', viewer: 'gm', cloud: true, sessionId: 's', campaignId: 'c', sessionHome: '/w/w/s/s?tab=prep' })
   const titles = gm.map((p) => p.title)
   for (const a of AREAS.filter((a) => a.who.includes('gm'))) expect(titles).toContain(a.label)
   for (const t of MORE_GROUPS.flatMap((g) => g.items)) if (t.to({ worldId: 'w', viewer: 'gm' })) expect(titles).toContain(t.label)

@@ -6,7 +6,7 @@ import { WorldCover } from '../WorldCover'
 import { useVisibleEntities } from '../hooks'
 import { Markdown } from '../Markdown'
 import { searchWorld, useSearchable } from '../search'
-import { plainLinks } from '../text'
+import { plainLinks, showDay } from '../text'
 import { useCampaigns, useWorldSessions } from '../threads'
 import { Ico, TypeIcon } from '../icons'
 import { Hourglass, MapTrifold } from '@phosphor-icons/react'
@@ -104,7 +104,7 @@ export default function WikiHome({ world }: { world: World }) {
                   </Link>{' '}
                   <span className="muted small">
                     {campaigns.find((c) => c.id === s.campaignId)?.name}
-                    {s.date && ` · ${s.date}`}
+                    {s.date && ` · ${showDay(s.date)}`}
                   </span>
                 </h3>
                 <Markdown text={s.recap.length > 600 ? `${s.recap.slice(0, 600)}…` : s.recap} entities={entities} worldId={worldId} showSecrets={false} />

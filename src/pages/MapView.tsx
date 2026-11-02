@@ -245,7 +245,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
         <Link className="map-back" to={`${worldPath(worldId)}/maps`} aria-label="All maps">
           ← <span>Maps</span>
         </Link>
-        <strong className="map-title">{map.name}</strong> {isGM && <SeenMark entity={map} />} <Help topic="mapView" />
+        <strong className="map-title" role="heading" aria-level={1}>{map.name}</strong> {isGM && <SeenMark entity={map} />} <Help topic="mapView" />
         <div className="row map-quick">
           <button type="button" className={`names-toggle ${showNames ? 'on' : ''}`} aria-pressed={showNames} onClick={() => setShowNames(!showNames)} title="Show the pins’ names on the map">
             <Ico as={Tag} /> Names
@@ -469,6 +469,8 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
                 key={p.id}
                 position={p.position}
                 icon={pinIcon(p, entity, p.id === selectedId, isHere)}
+                title={label}
+                alt={label}
                 draggable={isGM && tool === 'select'}
                 eventHandlers={{
                   ...handlers,

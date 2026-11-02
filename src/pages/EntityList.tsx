@@ -130,9 +130,9 @@ export default function EntityList() {
 function EntityCard({ worldId, entity: e, isGM }: { worldId: string; entity: Entity; isGM: boolean }) {
   return (
     <Link className="card" to={`${pagePath(worldId, e.id)}`}>
-      <h3>
+      <h2 className="card-title">
         {e.name} {isGM && <SeenMark entity={e} />}
-      </h3>
+      </h2>
       {e.summary && <p>{e.summary}</p>}
       <div className="tags">
         {e.questStatus && <span className={`tag status-${e.questStatus}`}>{e.questStatus}</span>}

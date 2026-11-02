@@ -6,7 +6,8 @@ import { renameLinks } from './links'
 import { Help } from './help'
 import { binSize, deleteFromBin, emptyBin, restoreFromBin, useBin } from './bin'
 import { formatBytes, useWorld } from './hooks'
-import { PageIcon } from './icons'
+import { Ico, PageIcon } from './icons'
+import { ClockCounterClockwise } from '@phosphor-icons/react'
 
 /**
  * Page history: every save keeps the version it replaced, on this device. Changes that arrive from
@@ -46,7 +47,7 @@ export function HistoryButton({ entity }: { entity: Entity }) {
   return (
     <>
       <button className="ghost" title="Earlier versions of this page" onClick={() => setOpen(true)}>
-        🕘 History
+        <Ico as={ClockCounterClockwise} /> History
       </button>
       {open && <HistoryModal entity={entity} onClose={() => setOpen(false)} />}
     </>

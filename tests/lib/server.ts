@@ -4,5 +4,5 @@
  */
 export const PORT = Number(process.env.TEST_PORT) || 4175
 
-/** The two screen sizes every screen is tried at (playwright.config.ts projects). */
-export type Device = 'laptop' | 'phone'
+/** The screen sizes every screen is tried at (playwright.config.ts projects). A tablet is an iPad held upright (820 px): only checked for sideways scrolling. */
+export type Device = 'laptop' | 'phone' | 'tablet'

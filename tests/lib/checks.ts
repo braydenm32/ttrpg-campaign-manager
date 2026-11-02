@@ -3,7 +3,7 @@ import type { Found } from './baseline'
 
 /** Messages the app shows when an address leads nowhere (EntityList, EntityPage, MapView, App.tsx NotFound…). */
 export const NOT_FOUND =
-  /There’s nothing at this address|doesn't exist or hasn't been revealed|Unknown category\.|This page type has been removed|Map not found\.|Session not found\.|Campaign not found\.|Board not found\.|World not found\.|Page not found\.|is GM only, so a player copy would be empty/
+  /There’s nothing at this address|This page isn’t here, or your GM hasn’t shared it|This page doesn’t exist\.|Unknown category\.|This page type has been removed|Map not found\.|Session not found\.|Campaign not found\.|Board not found\.|World not found\.|Page not found\.|is GM only, so a player copy would be empty/
 
 /** An error message boiled down to something that stays the same between runs (no ids, numbers or addresses). */
 export function tidyError(message: string) {
