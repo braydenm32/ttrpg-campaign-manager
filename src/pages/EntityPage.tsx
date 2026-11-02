@@ -1,4 +1,5 @@
 import { PagePicker } from '../PagePicker'
+import { PinOnMapButton } from '../pinOnMap'
 import { NpcLines } from '../ai/Flavour'
 import { renameLinks } from '../links'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -206,6 +207,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
             {isGM && !e.template && e.visibility === 'players' && <ShowButton worldId={worldId} what={{ kind: 'page', title: e.name, entityId: e.id }} />}
             {isGM && e.type === 'pc' && !e.template && world && <ImportSheetButton worldId={worldId} system={world.system} into={e} label="Update from sheet" />}
             {isGM && <HistoryButton entity={e} />}
+            {isGM && !e.template && <PinOnMapButton entity={e} className="ghost" />}
             <PrintButton to={`${worldPath(worldId)}/print/e/${e.id}`} />
             {isGM && world && !e.template && e.type !== 'custom' && <NewPageButton world={world} type={e.type} className="ghost new-from-page" />}
             {isGM && <DeletePageButton entity={e} className="ghost danger" />}
