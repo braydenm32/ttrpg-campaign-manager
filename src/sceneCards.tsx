@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { blankLectern, db, type Entity, type PrepScene, type Session, type World } from './db'
+import { blankLectern, db, saveEntity, type Entity, type PrepScene, type Session, type World } from './db'
 import { DraftText } from './components'
 import { Help } from './help'
 import { PagePicker } from './PagePicker'
@@ -97,7 +97,11 @@ export async function startScene(world: World, session: Session, scene: PrepScen
       if (mine) mine.done = true
       if (!s.startedAt) s.startedAt = Date.now()
     })
-  for (const e of toReveal) await db.entities.update(e.id, { visibility: 'players', updatedAt: Date.now() })
+  // Through saveEntity, so the page's History keeps the version before the reveal.
+  for (const e of toReveal) {
+    const now = await db.entities.get(e.id)
+    if (now) await saveEntity({ ...now, visibility: 'players', updatedAt: Date.now() })
+  }
   const sounds = (await db.sounds.bulkGet(scene.soundIds ?? [])).filter((x) => !!x)
   for (const s of sounds) await play(s).catch(() => undefined)
   if (scene.show?.kind === 'page' && shownPage) await showToPlayers(world.id, { kind: 'page', title: shownPage.name, entityId: shownPage.id })

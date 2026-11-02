@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Help } from './help'
 import { LecternPanel } from './lecternPanel'
-import { db, newId, type Entity, type Showing, type World } from './db'
+import { db, newId, saveEntity, type Entity, type Showing, type World } from './db'
 import { saveFileAsAsset, useAssetUrl, useBlobUrl, useVisibleEntities } from './hooks'
 import { Markdown, stripSecrets } from './Markdown'
 import { schedule } from './cloud/sync'
@@ -104,7 +104,9 @@ export async function removeHandout(worldId: string, id: string, hidePage?: stri
       w.handouts = (w.handouts ?? []).filter((h) => h.id !== id)
       if (w.showing?.id === id) w.showing = null
     })
-  if (hidePage) await db.entities.update(hidePage, { visibility: 'gm', updatedAt: Date.now() })
+  // Through saveEntity, so the page's History keeps the version before it was hidden.
+  const page = hidePage ? await db.entities.get(hidePage) : undefined
+  if (page) await saveEntity({ ...page, visibility: 'gm', updatedAt: Date.now() })
   schedule(200)
 }
 
