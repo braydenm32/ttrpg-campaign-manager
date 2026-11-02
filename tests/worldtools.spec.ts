@@ -20,7 +20,7 @@ test('a relationship’s “Who?” and the editor’s “Inside” find a page 
   try {
     const add = page.getByRole('button', { name: 'Add a relationship' })
     if (await add.count()) await add.click()
-    else await page.locator('.relations').getByRole('button', { name: /Add/ }).first().click()
+    else await page.locator('.relations').getByRole('button', { name: '+ Link' }).click()
     const who = page.getByRole('combobox', { name: 'Who' })
     await who.click()
     // An empty box offers pages straight away (the ones changed most recently first), never all of them at once.
@@ -49,7 +49,7 @@ test('a relationship’s “Who?” and the editor’s “Inside” find a page 
 
 test('Quests are grouped Active, Open, Done', async ({ page, world }) => {
   await open(page, `/w/${world.slug}/quests`)
-  const groups = page.locator('.quest-group h2')
+  const groups = page.locator('.quest-group > h2')
   const titles = (await groups.allTextContents()).map((t) => t.split(' ')[0])
   expect(titles.length).toBeGreaterThan(0)
   const order = ['Active', 'Open', 'Done']
@@ -145,10 +145,18 @@ test('Show numbers: pins get numbers and a key, and the players’ copy leaves o
   const pinsBefore = await Promise.all(pins.map((p) => getRecord(page, 'pins', p.id)))
   const secret = pins[pins.length - 1]
   try {
-    await putBack(page, 'pins', [[secret.id, { ...pinsBefore[pins.length - 1]!, visibility: 'gm' }]])
+    // The example's barrow is GM only: show it (and all its pins but one) to players for this test.
+    await putBack(page, 'maps', [[map.id, { ...mapBefore!, visibility: 'players' }]])
+    await putBack(
+      page,
+      'pins',
+      pins.map((p, i) => [p.id, { ...pinsBefore[i]!, visibility: p.id === secret.id ? 'gm' : 'players' }]),
+    )
     await open(page, `${w}/maps/${map.id}`)
     await page.getByRole('button', { name: /Map settings/ }).click()
-    await page.getByLabel(/Show numbers/).check()
+    // The box follows the saved map, a moment after the click.
+    await page.getByLabel(/Show numbers/).click()
+    await expect(page.getByLabel(/Show numbers/)).toBeChecked()
     await page.locator('.map-panel').getByRole('button', { name: 'Close' }).click()
     await page.getByRole('button', { name: 'Key' }).click()
     await expect(page.locator('.map-key-list li')).toHaveCount(pins.length)
@@ -307,4 +315,11 @@ test('on a phone, the timeline’s place filter shows “Everywhere” in full',
     return s.clientWidth >= need
   })
   expect(fits).toBe(true)
+})
+
+test('World settings say how much room the app takes on this device', async ({ page, world }) => {
+  await open(page, `/w/${world.slug}/settings?tab=device`)
+  await expect(page.locator('.device-storage')).toContainText(/This device:/)
+  await open(page, `/w/${world.slug}/settings?tab=data`)
+  await expect(page.locator('.device-storage')).toContainText(/This device:/)
 })
