@@ -851,6 +851,7 @@ label.check-item { display: flex; gap: .4em; align-items: flex-start; font-size:
 .search-results { list-style: none; padding: 0; margin: .6em 0 0; max-height: 60vh; overflow: auto; }
 .search-results li button { display: flex; flex-direction: column; align-items: flex-start; gap: .1em; width: 100%; text-align: left; padding: .45em .6em; border-radius: 6px; }
 .search-results li.active button { background: var(--panel-2); }
+.search-results .hit-kind { font-weight: 600; }
 .news-banner .chip { flex: 0 1 auto; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .news-banner { border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); border-radius: var(--radius); padding: .6em .9em; margin-bottom: 1em; display: flex; flex-direction: column; gap: .4em; }
 .backup-reminder { display: flex; flex-wrap: wrap; gap: .5em 1em; align-items: center; justify-content: space-between; border: 1px dashed var(--border); border-radius: var(--radius); padding: .6em .9em; margin-bottom: 1em; }
@@ -1334,6 +1335,7 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .page-picker-list li > button { display: block; width: 100%; text-align: left; border: none; background: transparent; padding: .35em .5em; border-radius: 6px; }
 .page-picker-list li.active > button { background: var(--panel-2); }
 .page-picker-list li.muted { padding: .3em .5em; }
+.add-relation .relation-who { min-width: 14em; }
 
 /* A warning under a text box: players would read the name of a GM-only page */
 .secret-names { margin: .3em 0; padding: .35em .6em; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 4px; color: var(--text); }

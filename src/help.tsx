@@ -28,6 +28,7 @@ export const HELP = {
     'Pick one player to see the world exactly as they do: what’s revealed to everyone, plus pages revealed just to them and passages written for their character. Without invited players you can still pick a character, to check their passages and their Common Room.',
   codex:
     'Every page in your world, grouped by type. Places (with shops and taverns), People, Factions and Lore (with deities) have tabs of their own in the Atlas, and this list shows every type with how many pages it has. Pages of no particular type are under Other pages. Pages can sit inside places (a tavern inside a town).',
+  questList: 'Quests are grouped by where they stand: Active (the party is on it now), Open (waiting to be taken up) and Done (finished or failed). Change a quest’s status on its page with Edit.',
   quickAdd: 'Make a new page of any type. It starts as GM only, so nothing is revealed until you choose. You can also press Ctrl+K and type “new npc”.',
   visibility:
     '🔒 GM only means just you. 👁 Players can see this means every player can see it. Click to switch. Pins, maps, sessions and files work the same way.',
@@ -45,7 +46,7 @@ export const HELP = {
     'A campaign you’re still planning can stay 🔒 GM only: players don’t see it or any of its sessions until you switch it to 👁 Players can see this.',
   pictures:
     'Type @ or [[ and the start of a page’s name to link to it: pick it from the list (arrow keys and Enter work too). Put pictures in the text: paste one, drop one in, or use 🖼️ Picture. Players see a picture once the text around it is revealed to them (not inside a secret passage).',
-  search: 'Finds pages by name, nickname, summary, details, tags and the words in them, plus sessions and maps. It also does things: type “new npc” to make a page, or “clocks” to go there. Press Ctrl+K (⌘K on a Mac) anywhere to open it. In the player view it only searches what players can read.',
+  search: 'Finds pages by name, nickname, summary, details, tags and the words in them, plus sessions and maps. Several words find pages that have all of them, in any order (“mercy fort” finds Fort Mercy), and each result says what kind of page it is. It also does things: type “new npc” to make a page, or “clocks” to go there. Press Ctrl+K (⌘K on a Mac) anywhere to open it. In the player view it only searches what players can read.',
   news: 'What’s happened since you last looked: new pages, handouts and session recaps, answers to your questions, and what changed on pages you already had (new writing, someone’s fate, a clock that moved). Tap one to read it, and “Got it” when you’re done.',
   backupReminder: 'A reminder to download a backup of this world every two weeks (monthly with cloud sync on). Save the file somewhere safe, like Google Drive or a USB stick. “Later” asks again in a week.',
   aliases:
@@ -68,6 +69,8 @@ export const HELP = {
     'Click a pin or region to see what is there. "Enter" opens a more detailed map, such as a town inside a region. As GM, use the toolbar to add pins and regions.',
   fog:
     'Hide the map from players and uncover it as they explore. Uncover a circle (its outline follows the pointer at the size you set; drag to uncover a trail), a box or any shape; switch to Cover to hide a part again. Undo takes back the last one (a whole room or trail at once) and Redo puts it back. Players get a copy of the picture with the fog painted on, so covered areas and the pins in them can’t be peeked at.',
+  mapVersions:
+    'The map builder saves as you draw. Before each spell of drawing it also keeps the map as it was (the last ten, on this device only), so a fill or erase you regret after closing the tab can still be put right. “Name this version” keeps the map as it is now under a name, until you delete it. Restore puts that drawing back, with the pins of its linked pieces, and the players’ copy is redrawn from it; Undo takes a restore back.',
   mapBuilder: 'Draw a map from scratch: paint land and water, draw roads, rivers and borders, place mountains, forests and towns, and add labels. It then works like any uploaded map: pins, regions, fog and the player view. On a computer each tool has a key: V Select, H Pan, B the brush (Land or Ground), D Rooms, C Coast, L Line, P Place, T Label, E Erase; Esc goes back to Select.',
   newMap:
     'Pick what you are drawing. “World or region (side view)” is for continents and kingdoms: start with open sea or all land. “Town or city (from above)” is a town seen from above. “Battle map or dungeon (5 ft squares)” is on a grid for fights: start with solid rock to dig a dungeon, or with grass, dirt or paving for an outdoor fight. Small, Medium or Large sets how much room you get: pick the size you’ll need, since it can’t be changed afterwards.',
