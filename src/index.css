@@ -2069,3 +2069,9 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 @media (max-width: 800px) {
   .list-tools :is(input, select), .page-header > button, .page-header > .menu-wrap > button { min-height: 44px; }
 }
+
+/* Phones: the find-a-page box, the old Chronicle's session list and old corkboards' names are a fingertip tall. */
+@media (max-width: 800px) {
+  .page-picker input { min-height: 44px; }
+  .session-picks li > a, .board-name > a { display: inline-flex; align-items: center; min-height: 44px; }
+}

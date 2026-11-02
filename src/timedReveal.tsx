@@ -31,9 +31,14 @@ export async function revealDuePages(worldId: string) {
 export function useTimedReveals(worldId: string | undefined, own: boolean) {
   useEffect(() => {
     if (!worldId || !own) return
-    void revealDuePages(worldId)
+    // Started on a fresh task, never from inside a live query's update (React can run this effect while
+    // one is delivering), where Dexie refuses writes ("Readwrite transaction in liveQuery context").
+    const first = setTimeout(() => void revealDuePages(worldId))
     const t = setInterval(() => !document.hidden && revealDuePages(worldId), 60_000)
-    return () => clearInterval(t)
+    return () => {
+      clearTimeout(first)
+      clearInterval(t)
+    }
   }, [worldId, own])
 }
 

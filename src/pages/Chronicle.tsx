@@ -34,7 +34,7 @@ export default function Chronicle() {
       {newestFirst.length === 0 ? (
         <Empty>No sessions yet.</Empty>
       ) : (
-        <ul className="entity-list">
+        <ul className="entity-list session-picks">
           {newestFirst.map((s) => (
             <li key={s.id}>
               <Link to={wrap(s.id)}>

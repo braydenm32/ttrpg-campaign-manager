@@ -42,7 +42,7 @@ export default function Boards() {
         <div className="card-grid">
           {boards.map((b) => (
             <div key={b.id} className="card">
-              <h3>
+              <h3 className="board-name">
                 <Link to={`${worldPath(worldId)}/boards/${b.id}`}>
                   <Ico as={PushPin} /> {b.name}
                 </Link>
