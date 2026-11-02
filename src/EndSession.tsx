@@ -14,6 +14,7 @@ import { prepCounts } from './counts'
 import { stripSecrets } from './Markdown'
 import { toast } from './undo'
 import { jumpTo } from './jump'
+import { WhoWasThere } from './attendance'
 
 /**
  * Finishing a session: "Mark as played" ends the live link to players, marks it played and gets the
@@ -168,6 +169,11 @@ export function WrapUpChecklist({ world, session, campaign, entities, played }: 
           ? `Claude suggested ${session.recapDraft.updates.length} updates to your pages`
           : 'Update your pages from the session',
       detail: !session.ledger?.length && jump('writeup', session.recapDraft?.updates?.length ? 'Tick the ones you want' : 'Claude suggests them along with the write-up'),
+    },
+    {
+      done: true,
+      label: 'Who was there',
+      detail: <WhoWasThere session={session} entities={entities} />,
     },
     {
       done: featured > 0,

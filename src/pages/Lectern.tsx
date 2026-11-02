@@ -51,6 +51,7 @@ import { useReview } from '../reveal'
 import { markSaved, removeWithUndo, SavedMark, toast } from '../undo'
 import { changeCoin } from '../purse'
 import { Recorder } from './SessionPage'
+import { WhoWasThere } from '../attendance'
 
 /**
  * The Lectern (Session › Play): one screen for running a session at the table. A strip across the
@@ -146,6 +147,7 @@ export default function Lectern() {
           )}
         </div>
         <div className="row wrap lectern-extras">
+          <WhoWasThere session={session} entities={entities} compact />
           {world && <WorldToday world={world} isGM folded />}
           <PreviouslyOn session={session} />
           {!!(world?.safety?.lines.length || world?.safety?.veils.length) && (

@@ -469,8 +469,8 @@ function playerPart(table: string, data: Record<string, unknown> | null | undefi
     case 'sessions': {
       if (data.visibility !== 'players') return undefined
       // Keep in step with the session fields player_view sends (supabase/migrations): change both together.
-      const { campaignId, number, title, date, worldDate, recap, entityIds, highlights } = data
-      return { campaignId, number, title, date, worldDate, recap, entityIds, highlights }
+      const { campaignId, number, title, date, worldDate, recap, entityIds, highlights, present } = data
+      return { campaignId, number, title, date, worldDate, recap, entityIds, highlights, present }
     }
     default:
       return undefined

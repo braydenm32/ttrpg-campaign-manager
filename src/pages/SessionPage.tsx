@@ -35,6 +35,7 @@ import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, jumpTo, useKeepScroll } from '../jump'
 import { removeWithUndo, SavedMark, saving } from '../undo'
 import { showDay } from '../text'
+import { PresentLine } from '../attendance'
 
 /**
  * A session. For the GM it's two of the Session area's three stages (the third, Play, is the
@@ -77,6 +78,7 @@ export default function SessionPage() {
             <PrintButton to={`${worldPath(worldId)}/print/s/${session.id}`} />
           </div>
         </div>
+        <PresentLine session={session} entities={entities} />
         {session.recap ? (
           <Markdown text={session.recap} entities={entities} worldId={worldId} showSecrets={false} />
         ) : (
@@ -274,6 +276,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus }: ViewPr
           onChange={(v) => update({ recap: v })}
         />
         <SecretNamesWarning worldId={worldId} texts={[session.recap]} />
+        <PresentLine session={session} entities={entities} />
         {session.recap.trim() && (
           <div className="row wrap">
             <ReadAloud text={session.recap} id={`recap-${session.id}`} className="small" />

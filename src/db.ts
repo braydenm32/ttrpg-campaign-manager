@@ -679,6 +679,12 @@ export interface Session {
    */
   startedAt?: number
   playedAt?: number
+  /**
+   * Who was there: the ids of the player characters at the table (src/attendance.tsx). Unset means
+   * nobody said, which counts as the whole party. Players see it with the recap (only characters
+   * they can see).
+   */
+  present?: string[]
   createdAt: number
 }
 
@@ -1016,6 +1022,10 @@ db.version(6).stores({
 db.version(7).stores({
   history: 'id, entityId, worldId, at, [worldId+reason]',
 })
+
+// v8: who was there (Session.present). Not indexed, so nothing to move: a session from before has
+// none, which counts as the whole party being there.
+db.version(8).stores({})
 
 // The bin is cleared of anything over a month old soon after the app opens, not only when it's
 // looked at, so deleting a big recording to make room does give the space back in time.

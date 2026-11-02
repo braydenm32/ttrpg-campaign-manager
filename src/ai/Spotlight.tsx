@@ -6,6 +6,7 @@ import { Help } from '../help'
 import { Ico } from '../icons'
 import { formatTime } from '../recorder'
 import { partyOf } from '../sessions'
+import { presentCharacters } from '../attendance'
 import { stripSecrets } from '../Markdown'
 import { speakerName } from './transcript'
 
@@ -82,7 +83,12 @@ export function SpotlightPanel({ session, entities }: { session: Session; entiti
   const [scope, setScope] = useState<'session' | 'campaign'>('session')
   const campaign = useLiveQuery(() => db.sessions.where({ worldId: session.worldId }).filter((s) => s.campaignId === session.campaignId).toArray(), [session.worldId, session.campaignId])
   const sessions = useMemo(() => (scope === 'session' ? [session] : (campaign ?? [])), [scope, session, campaign])
-  const party = useMemo(() => partyOf(entities, session.campaignId), [entities, session.campaignId])
+  // For one session, the characters who were there (an absent one didn't miss the spotlight).
+  const party = useMemo(
+    () => (scope === 'session' && session.present ? presentCharacters(session, entities) : partyOf(entities, session.campaignId)),
+    [entities, session, scope],
+  )
+  const away = scope === 'session' && session.present ? partyOf(entities, session.campaignId, { activeOnly: true }).filter((p) => !session.present!.includes(p.id)) : []
   // Reading every transcript of a campaign is slow, so only when something it uses changes.
   const stats = useMemo(() => spotlight(sessions, party), [sessions, party])
   const hasAnything = stats.transcribed > 0 || sessions.some((s) => s.recap.trim() || s.notes.trim())
@@ -113,6 +119,7 @@ export function SpotlightPanel({ session, entities }: { session: Session; entiti
       )}
       <h3 className="small">How often each character came up {stats.fromNotes ? '(in your notes and recap)' : '(in the transcript)'}</h3>
       {counted.length ? <Bars bars={stats.mentions} format={(v) => `${v}×`} /> : <p className="muted small">None of the party’s names came up yet.</p>}
+      {away.length > 0 && <p className="muted small">Not at the table: {away.map((p) => p.name).join(', ')}.</p>}
       {quiet.length > 0 && (
         <p className="small">
           <b>{quiet.map((q) => q.name).join(' and ')}</b> got less of the spotlight. Maybe give {quiet.length > 1 ? 'them' : 'them a'} scene{quiet.length > 1 ? 's' : ''} next time: a clue from their past, an NPC who wants something from them.
