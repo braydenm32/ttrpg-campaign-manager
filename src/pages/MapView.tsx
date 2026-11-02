@@ -139,7 +139,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const areaNamesOn = showNames && zoomedIn
   const here = useWhereWeAre(world, entities, table?.scene?.entityId)
   // The pin for where the party is: the place itself, or the nearest place it's inside.
-  const herePin = here.around.map((id) => pins.find((p) => p.entityId === id)).find(Boolean)
+  const herePin = here.around.map((id) => allPins.find((p) => p.entityId === id)).find(Boolean)
   const hasRooms = !!exportDrawing?.rooms?.length && exportDrawing.scene === 'battle'
   const selectedId = params.get('pin')
   // The legend's choice of categories lives in the address, so Back keeps it; picking a pin keeps it too.
