@@ -323,3 +323,97 @@ test('World settings say how much room the app takes on this device', async ({ p
   await open(page, `/w/${world.slug}/settings?tab=data`)
   await expect(page.locator('.device-storage')).toContainText(/This device:/)
 })
+
+test('hand-written notes: Claude’s pasted reply becomes pages to look over, players see only what they know, and questions can be answered', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const cinderford = world.page('Cinderford')
+  await open(page, `${w}/settings?tab=data`)
+  const before = await getRecord(page, 'entities', cinderford.id)
+  const reply = JSON.stringify({
+    pages: [
+      { name: 'Test Notes Hermit', type: 'npc', summary: 'Lives under the toll bridge', fields: [{ key: 'Role', value: 'Hermit' }], body: 'Feeds the crows by [[Cinderford]]’s bridge.', secrets: 'Was a Lantern deserter.', in: 'Cinderford', aliases: ['Old Crowman'], existing: '', known: false },
+      { name: 'Test Notes Toll Gate', type: 'location', summary: 'Where the party paid twice', body: 'A rusted gate on the bridge.', secrets: 'The toll goes to the tab-keepers.', in: 'Cinderford', known: true },
+      { name: 'Cinderford', type: 'location', summary: '', fields: [{ key: 'Notable for', value: 'should not double' }], body: 'Test note: the bell is cracked.', secrets: '', existing: 'Cinderford', known: false },
+    ],
+    sessions: [{ title: 'Test notes night', date: '12 March', notes: 'The party met [[Test Notes Hermit]].' }],
+    unsure: ['Photo 1, the hermit’s nickname: “Crowman” or “Crewman”?', 'Photo 1: the frog in a crown in the margin: a joke, or a character?'],
+  })
+  let made: { pages: string[]; sessions: string[] } = { pages: [], sessions: [] }
+  try {
+    await page.getByRole('button', { name: 'Import hand-written notes' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Import hand-written notes' })
+    // Nothing to read yet, so no Claude buttons.
+    await expect(dialog.getByRole('button', { name: 'Copy for Claude' })).toHaveCount(0)
+    await dialog.getByPlaceholder('Paste notes from your phone').fill('Hermit under the bridge, feeds crows. SECRET: Lantern deserter.')
+    await dialog.getByRole('button', { name: 'Paste a reply' }).click()
+    await dialog.getByPlaceholder('Paste Claude’s reply here').fill(`Here you go:\n${reply}`)
+    await dialog.getByRole('button', { name: 'Use this reply' }).click()
+
+    // Questions and unclear words, each with an answer box; answers go back for another read.
+    await expect(dialog.locator('.notes-check')).toContainText('Crowman')
+    await expect(dialog.locator('.notes-check li')).toHaveCount(2)
+    await dialog.getByRole('textbox', { name: 'Answer 2' }).fill('Just a joke, leave it out')
+    await dialog.getByRole('button', { name: 'Read again with my answers' }).click()
+    await expect(dialog.getByPlaceholder(/Bram, Ysolde/)).toHaveValue(/frog in a crown.*Just a joke, leave it out/s)
+    await dialog.getByRole('button', { name: 'Paste a reply' }).click()
+    await dialog.getByPlaceholder('Paste Claude’s reply here').fill(reply)
+    await dialog.getByRole('button', { name: 'Use this reply' }).click()
+
+    // The review: Cinderford going onto the page the world has; the toll gate players know ticked for them.
+    const rows = dialog.locator('.notes-pages > li')
+    await expect(rows).toHaveCount(4)
+    await expect(rows.nth(0).getByRole('checkbox', { name: /Players can see this page/ })).not.toBeChecked()
+    await expect(rows.nth(1).getByRole('checkbox', { name: /Players can see this page/ })).toBeChecked()
+    await expect(rows.nth(2).getByRole('combobox', { name: 'Where it goes' })).toHaveValue(cinderford.id)
+    await expect(rows.nth(2).getByRole('checkbox', { name: /Players can see the added notes/ })).not.toBeChecked()
+    await expect(rows.nth(0).getByRole('combobox', { name: 'Where it goes' })).toHaveValue('')
+    await dialog.getByRole('button', { name: 'Add 2 pages, update 1, add 1 session' }).click()
+    await expect(toast(page)).toContainText('From your notes')
+    await expect.poll(() => here(page)).toContain('/p/test-notes-hermit')
+
+    const all = await page.evaluate(
+      () =>
+        new Promise<{ entities: Record<string, unknown>[]; sessions: Record<string, unknown>[] }>((resolve) => {
+          const req = indexedDB.open('ttrpg-campaign-manager')
+          req.onsuccess = () => {
+            const tx = req.result.transaction(['entities', 'sessions'], 'readonly')
+            const e = tx.objectStore('entities').getAll()
+            const s = tx.objectStore('sessions').getAll()
+            tx.oncomplete = () => (req.result.close(), resolve({ entities: e.result, sessions: s.result }))
+          }
+        }),
+    )
+    const hermit = all.entities.find((e) => e.name === 'Test Notes Hermit')!
+    const gate = all.entities.find((e) => e.name === 'Test Notes Toll Gate')!
+    const night = all.sessions.find((s) => s.title === 'Test notes night')!
+    made = { pages: [hermit.id as string, gate.id as string], sessions: [night.id as string] }
+    expect(hermit).toMatchObject({ visibility: 'gm', type: 'npc', gmNotes: 'Was a Lantern deserter.', parentId: cinderford.id, aliases: ['Old Crowman'], gmTags: ['from my notes'], tags: [] })
+    expect(gate).toMatchObject({ visibility: 'players', gmNotes: 'The toll goes to the tab-keepers.', body: 'A rusted gate on the bridge.' })
+    expect(night).toMatchObject({ visibility: 'gm', date: '', entityIds: [hermit.id] })
+    expect(night.notes).toContain('12 March')
+
+    // Players can see Cinderford, so the added notes sit inside a GM-only block, and its own field isn't doubled.
+    const town = await getRecord(page, 'entities', cinderford.id)
+    expect(town!.body).toContain('### From my notes\n\n:::gm\nTest note: the bell is cracked.\n:::')
+    expect((town!.fields as { key: string }[]).filter((f) => f.key === 'Notable for')).toHaveLength(1)
+  } finally {
+    await putBack(page, 'entities', [[cinderford.id, before], ...made.pages.map((id): [string, null] => [id, null])])
+    await putBack(page, 'sessions', made.sessions.map((id): [string, null] => [id, null]))
+    // The version of Cinderford kept in its history.
+    await page.evaluate(
+      (id) =>
+        new Promise<void>((resolve) => {
+          const req = indexedDB.open('ttrpg-campaign-manager')
+          req.onsuccess = () => {
+            const tx = req.result.transaction('history', 'readwrite')
+            const all = tx.objectStore('history').getAll()
+            all.onsuccess = () => {
+              for (const v of all.result as { id: string; entityId: string; at: number }[]) if (v.entityId === id && v.at > Date.now() - 10 * 60_000) tx.objectStore('history').delete(v.id)
+            }
+            tx.oncomplete = () => (req.result.close(), resolve())
+          }
+        }),
+      cinderford.id,
+    )
+  }
+})

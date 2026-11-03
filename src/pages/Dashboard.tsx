@@ -979,7 +979,7 @@ function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign:
     [
       '📥',
       'Already have notes? Bring them in',
-      'From Obsidian or a Markdown folder, Kanka or World Anvil. Everything comes in GM only.',
+      'Photos of your notebook, Obsidian or a Markdown folder, Kanka or World Anvil. Everything comes in GM only.',
       <button key="import" className="small" aria-expanded={importing} onClick={() => setImporting(!importing)}>
         {importing ? 'Close' : 'Import notes'}
       </button>,
