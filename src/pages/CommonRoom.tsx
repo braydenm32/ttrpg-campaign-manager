@@ -20,7 +20,7 @@ import { partyOf } from '../sessions'
 import { StatusBadge } from '../status'
 import { formatDate } from '../calendar'
 import { hasSafety, openLeads, partyLoot, quantityLabel, useVisibleHandouts } from '../counts'
-import { ShowingView } from '../showing'
+import { ShowingView, spreadTitle, SpreadView, useSpreadItems } from '../showing'
 import { XCardButton } from './Safety'
 import { SignalButtons, TableDice, TimerList, TurnOrder, useMe } from '../atTheTable'
 import { gmIdOf, localIdOf, sendSignal, useTable, type TableState } from '../cloud/table'
@@ -234,7 +234,7 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
   )
   // When the dates are still being voted on, the poll sits inside the Next session row instead of a card of its own.
   const polled = ctx.next.kind === 'poll' && !!scheduler
-  const showing = world.showing ? <OnTheTable world={world} entities={ctx.entities} big={stage === 'during'} /> : null
+  const showing = world.showing || world.spread ? <OnTheTable world={world} entities={ctx.entities} big={stage === 'during'} /> : null
 
   return (
     <>
@@ -482,8 +482,27 @@ function LiveTable({ ctx }: { ctx: RoomContext }) {
 
 /** What the GM is showing now, and a way to the handouts from before. Only there when something is shown. */
 function OnTheTable({ world, entities, big }: { world: World; entities: Entity[]; big?: boolean }) {
+  const items = useSpreadItems(world)
+  const up = new Set(items.map((i) => i.handoutId))
+  const earlier = useVisibleHandouts(world, entities).filter((h) => h.id !== world.showing?.id && !up.has(h.id)).length
+  if (world.spread)
+    return items.length ? (
+      <section className="card room-card on-the-table">
+        <div className="room-card-head">
+          <h2>
+            <Ico as={Television} /> On the table now: {spreadTitle(world.spread, items.length)}
+          </h2>
+          <span className="muted small">Shown {ago(world.spread.at)}</span>
+        </div>
+        <SpreadView items={items} worldId={world.id} />
+        {earlier > 0 && (
+          <Link className="small" to={`${worldPath(world.id)}/handouts`}>
+            Earlier handouts ({earlier})
+          </Link>
+        )}
+      </section>
+    ) : null
   const showing = world.showing!
-  const earlier = useVisibleHandouts(world, entities).filter((h) => h.id !== showing.id).length
   return (
     <section className="card room-card on-the-table">
       <div className="room-card-head">

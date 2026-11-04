@@ -4,7 +4,7 @@ import type { Showing } from '../db'
 import { Help } from '../help'
 import '../more.css'
 import { useVisibleEntities, useWorld } from '../hooks'
-import { removeHandout, revealAndShow, showToPlayers, ShowingView } from '../showing'
+import { removeHandout, revealAndShow, ShowBoards, showToPlayers, ShowingView } from '../showing'
 import { useViewMode } from '../viewMode'
 import { useState } from 'react'
 import { Ico } from '../icons'
@@ -50,6 +50,10 @@ export default function Handouts() {
       </header>
       {isGM && (
         <section>
+          <h2>
+            Several at once <Help topic="showSeveral" />
+          </h2>
+          <ShowBoards world={world} />
           <h2>
             Ready to show <Help topic="handoutsReady" />
           </h2>

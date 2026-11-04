@@ -1,5 +1,6 @@
 import { strFromU8, strToU8, unzipSync, Zip, ZipDeflate, ZipPassThrough } from 'fflate'
 import { loadInBackground } from './worldLoading'
+import { showBoardsOf } from './showBoards'
 import { db, newId, PARTY, repId, type Asset, type Board, type Campaign, type Entity, type Pin, type Reputation, type Session, type Sound, type World, type WorldMap } from './db'
 
 /**
@@ -220,7 +221,13 @@ export async function importWorld(file: File): Promise<string> {
       showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId) } : undefined,
       handouts: b.world.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId) })),
       // The GM screen's pinned pages.
-      gmScreen: b.world.gmScreen && { ...b.world.gmScreen, pages: b.world.gmScreen.pages.map(id) },
+      gmScreen: b.world.gmScreen && {
+        ...b.world.gmScreen,
+        pages: b.world.gmScreen.pages.map(id),
+        // The board for showing several at once: its pictures and pages have new ids too.
+        showBoards: showBoardsOf(b.world).map((s) => ({ ...s, shown: undefined, changed: undefined, items: s.items.map((i) => ({ ...i, assetId: opt(i.assetId), entityId: opt(i.entityId) })) })),
+        board: undefined,
+      },
     })
     await db.assets.bulkAdd(b.assets.flatMap(({ data: _data, ...a }) => (blobs.has(a.id) ? [{ ...a, id: id(a.id), worldId, blob: blobs.get(a.id)! }] : [])))
     await db.campaigns.bulkAdd(b.campaigns.map((c) => ({ ...c, id: id(c.id), worldId })))

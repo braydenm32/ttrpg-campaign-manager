@@ -182,6 +182,9 @@ test.describe('Undo on the More area’s quick removes', () => {
 })
 
 test.describe('before players see something', () => {
+  // A click that can't happen fails with the reason instead of waiting out the whole test.
+  test.use({ actionTimeout: 15_000 })
+
   test('a handout is revealed and shown only after saying what players will see, and Undo hides it again', async ({ page, world, device }) => {
     await open(page, `/w/${world.slug}/handouts`)
     const first = page.locator('.handout-list li', { has: page.getByRole('button', { name: 'Reveal and show…' }) }).first()
@@ -213,6 +216,135 @@ test.describe('before players see something', () => {
     } finally {
       await putBack(page, 'worlds', [[world.id, before]])
       await putBack(page, 'entities', [[handout.id, pageBefore]])
+    }
+  })
+
+  test('several handouts are arranged on the board, shown together after a review, laid out on the players’ screen, and Undo takes them back', async ({ page, world, device }) => {
+    await open(page, `/w/${world.slug}/handouts`)
+    // A GM-only page tagged "handout", to be revealed as the board is shown.
+    const hidden = world.dump.entities.find((e) => e.visibility === 'gm' && e.tags.includes('handout') && !e.template)!
+    const before = await getRecord(page, 'worlds', world.id)
+    const pageBefore = await getRecord(page, 'entities', hidden.id)
+    try {
+      await page.getByRole('button', { name: /Show several at once/ }).click()
+      const board = page.getByRole('dialog', { name: 'Show several at once' })
+      await expect(board.getByRole('status')).toContainText('Add pictures, pages or text')
+      // Two pictures and a page not revealed yet.
+      const thumbs = board.locator('.show-thumb.named')
+      await thumbs.nth(0).click()
+      await thumbs.nth(1).click()
+      await board.getByRole('button', { name: '📄 Page' }).click()
+      await board.getByLabel('Add a page').selectOption(hidden.id)
+      const items = board.locator('.spread-stage .spread-item')
+      await expect(items).toHaveCount(3)
+      await expect(board.locator('.spread-lock')).toHaveCount(1)
+      await expect(board.getByRole('status')).toContainText('Players can’t see this yet')
+      // Nothing reaches players while arranging, but the board is kept (GM only) for later.
+      await expect.poll(async () => ((await getRecord(page, 'worlds', world.id))!.gmScreen as { showBoards?: { items: unknown[] }[] })?.showBoards?.[0]?.items.length).toBe(3)
+      expect((await getRecord(page, 'worlds', world.id))!.spread ?? null).toBeNull()
+      // Dragging one moves it.
+      const box = (await items.nth(0).boundingBox())!
+      const left = await items.nth(0).evaluate((el) => (el as HTMLElement).style.left)
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+      await page.mouse.down()
+      await page.mouse.move(box.x + box.width / 2 + 30, box.y + box.height / 2 + 10, { steps: 4 })
+      await page.mouse.up()
+      await expect.poll(() => items.nth(0).evaluate((el) => (el as HTMLElement).style.left)).not.toBe(left)
+      await shot(page, `show-several-board-${device}`)
+
+      await board.getByRole('button', { name: 'Show all 3' }).click()
+      const review = page.getByRole('dialog', { name: new RegExp(`Reveal “${hidden.name}” to players and show it`) })
+      await expect(review).toContainText('Players will see')
+      await review.getByRole('button', { name: 'Reveal and show' }).click()
+      await expect.poll(async () => ((await getRecord(page, 'worlds', world.id))!.spread as { items: unknown[] } | null)?.items.length).toBe(3)
+      expect((await getRecord(page, 'entities', hidden.id))!.visibility).toBe('players')
+      await expect(board.getByRole('status')).toContainText('on the players’ screens now')
+      await expect(board.getByRole('button', { name: 'Update players’ screen' })).toBeDisabled()
+
+      // The players' screen lays them out as arranged, with none of the page's GM notes.
+      const tv = await page.context().newPage()
+      await open(tv, `/screen/${world.slug}`)
+      await expect(tv.locator('.spread-stage .spread-item')).toHaveCount(3)
+      await expect(tv.locator('.spread-item.kind-page')).toContainText(hidden.name)
+      if (hidden.gmNotes.trim()) await expect(tv.locator('body')).not.toContainText(hidden.gmNotes.trim().split('\n')[0].slice(0, 40))
+      await shot(tv, `show-several-tv-${device}`)
+      await tv.close()
+      // Players' Common Room lists them one under another.
+      const player = await page.context().newPage()
+      await setView(player, world, 'player')
+      await open(player, `/w/${world.slug}`)
+      await expect(player.locator('.on-the-table .spread-list > li')).toHaveCount(3)
+      await shot(player, `show-several-room-${device}`)
+      await player.close()
+      // The player view was remembered for this world on the device: back to the GM's.
+      await page.evaluate((key) => localStorage.setItem(key, 'gm'), `viewMode.${world.id}`)
+
+      await page.getByRole('button', { name: 'Undo (and hide again)' }).click()
+      await expect.poll(async () => (await getRecord(page, 'entities', hidden.id))!.visibility).toBe('gm')
+      const after = await getRecord(page, 'worlds', world.id)
+      expect(after!.spread ?? null).toEqual(before!.spread ?? null)
+      expect(after!.handouts ?? []).toEqual(before!.handouts ?? [])
+    } finally {
+      await putBack(page, 'worlds', [[world.id, before]])
+      await putBack(page, 'entities', [[hidden.id, pageBefore]])
+    }
+  })
+
+  test('named boards: made and named in prep, put up with one tap from Handouts, switched between, and deleted with Undo', async ({ page, world, device }) => {
+    await open(page, `/w/${world.slug}/handouts`)
+    const before = await getRecord(page, 'worlds', world.id)
+    const boardsNow = async () => (((await getRecord(page, 'worlds', world.id))!.gmScreen as { showBoards?: { name: string; items: unknown[] }[] } | undefined)?.showBoards ?? [])
+    try {
+      await page.getByRole('button', { name: /Show several at once/ }).click()
+      const dialog = page.getByRole('dialog', { name: 'Show several at once' })
+      const name = dialog.getByLabel('This board’s name (only you see it)')
+      await expect(name).toHaveValue('Board 1')
+      await name.fill('Crime scene')
+      await name.press('Enter')
+      const thumbs = dialog.locator('.show-thumb.named')
+      await thumbs.nth(0).click()
+      await thumbs.nth(1).click()
+      // A second board, with one picture.
+      await dialog.getByRole('button', { name: 'New board' }).click()
+      await expect(name).toHaveValue('Board 2')
+      await name.fill('The letters')
+      await name.press('Enter')
+      await thumbs.nth(2).click()
+      await expect(dialog.locator('.spread-stage .spread-item')).toHaveCount(1)
+      // Back to the first: its two are still there.
+      await dialog.locator('.board-tabs').getByRole('button', { name: /Crime scene/ }).click()
+      await expect(dialog.locator('.spread-stage .spread-item')).toHaveCount(2)
+      await expect.poll(async () => (await boardsNow()).map((b) => `${b.name}:${b.items.length}`)).toEqual(['Crime scene:2', 'The letters:1'])
+      expect((await getRecord(page, 'worlds', world.id))!.spread ?? null).toBeNull()
+      await shot(page, `show-boards-arrange-${device}`)
+      await dialog.getByRole('button', { name: 'Close' }).click()
+
+      // Both wait in Handouts; one tap puts a board up, as arranged.
+      const ready = page.getByRole('list', { name: 'Boards ready to show' })
+      await expect(ready.locator('li')).toHaveCount(2)
+      await shot(page, `show-boards-ready-${device}`)
+      await ready.getByRole('button', { name: /The letters/ }).first().click()
+      await expect.poll(async () => ((await getRecord(page, 'worlds', world.id))!.spread as { items: unknown[] } | null)?.items.length).toBe(1)
+      await expect(ready.locator('li.on')).toContainText('The letters')
+      // The "Showing players" banner pushes the page down, which can leave the pointer over a "?" with its tip open.
+      await page.mouse.move(0, 0)
+      await expect(page.locator('.help-bubble')).toHaveCount(0)
+      await ready.getByRole('button', { name: /Crime scene/ }).first().click()
+      await expect.poll(async () => ((await getRecord(page, 'worlds', world.id))!.spread as { items: unknown[] } | null)?.items.length).toBe(2)
+      await expect(ready.locator('li.on')).toContainText('Crime scene')
+      await page.mouse.move(0, 0)
+      await expect(page.locator('.help-bubble')).toHaveCount(0)
+
+      // Deleting a board has Undo.
+      await ready.getByRole('button', { name: 'Arrange The letters' }).click()
+      await expect(name).toHaveValue('The letters')
+      await dialog.getByRole('button', { name: 'Delete' }).click()
+      await expect(name).toHaveValue('Crime scene')
+      await expect.poll(async () => (await boardsNow()).map((b) => b.name)).toEqual(['Crime scene'])
+      await toast(page).getByRole('button', { name: /Undo/ }).click()
+      await expect.poll(async () => (await boardsNow()).map((b) => b.name)).toEqual(['Crime scene', 'The letters'])
+    } finally {
+      await putBack(page, 'worlds', [[world.id, before]])
     }
   })
 

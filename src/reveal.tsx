@@ -190,7 +190,10 @@ export function PageVisibility({ entity: e, world, entities }: { entity: Entity;
   const players = useWorldPlayers(e.revealedTo?.length ? world : undefined, entities)
   const names = players.filter((p) => e.revealedTo?.includes(p.userId)).map((p) => p.name)
   const who = pageAudience(e, names)
-  const onScreen = world?.showing?.kind === 'page' && world.showing.entityId === e.id
+  const shownAlone = world?.showing?.kind === 'page' && world.showing.entityId === e.id
+  // One of several up at once comes off by itself once hidden (players only get pages they can see).
+  const up = new Set(world?.spread?.items.map((i) => i.handoutId))
+  const onScreen = shownAlone || !!world?.handouts?.some((h) => h.kind === 'page' && h.entityId === e.id && up.has(h.id))
   const worldId = e.worldId
 
   const reveal = async () => {
@@ -241,7 +244,7 @@ export function PageVisibility({ entity: e, world, entities }: { entity: Entity;
     const before = await db.entities.get(e.id)
     if (!before) return
     const all = answer === 'all'
-    if (onScreen) await stopShowing(worldId)
+    if (shownAlone) await stopShowing(worldId)
     await saveEntity({ ...before, visibility: 'gm', ...(all ? { revealedTo: undefined } : {}), updatedAt: Date.now() })
     toast(keepers && !all ? `“${e.name}” is hidden from players. ${keepers} can still see it.` : `“${e.name}” is GM only again.`, () =>
       db.entities.update(e.id, { visibility: 'players', revealedTo: before.revealedTo, updatedAt: Date.now() }),
