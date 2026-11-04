@@ -974,7 +974,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
               Image <Help topic="existingImage" />
             </div>
             {image && <img className="portrait" src={image} alt="" />}
-            <div className="row wrap">
+            <div className="row wrap image-actions">
               <label className="button">
                 {d.imageId ? 'Upload a new image' : 'Upload image'}
                 <input

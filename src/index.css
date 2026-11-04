@@ -426,6 +426,8 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
   .modal header button { min-width: 44px; min-height: 44px; }
   /* The GM previewing as a player: the way back is a whole fingertip too. */
   .player-banner > button { min-height: 44px; }
+  /* A page's picture: Upload, Use an existing image and Remove are whole fingertips. */
+  .image-actions > :is(button, .button) { min-height: 44px; }
 }
 .page-header > .row { flex-wrap: wrap; justify-content: flex-end; }
 
