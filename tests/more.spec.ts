@@ -326,9 +326,14 @@ test.describe('before players see something', () => {
       await ready.getByRole('button', { name: /The letters/ }).first().click()
       await expect.poll(async () => ((await getRecord(page, 'worlds', world.id))!.spread as { items: unknown[] } | null)?.items.length).toBe(1)
       await expect(ready.locator('li.on')).toContainText('The letters')
+      // The "Showing players" banner pushes the page down, which can leave the pointer over a "?" with its tip open.
+      await page.mouse.move(0, 0)
+      await expect(page.locator('.help-bubble')).toHaveCount(0)
       await ready.getByRole('button', { name: /Crime scene/ }).first().click()
       await expect.poll(async () => ((await getRecord(page, 'worlds', world.id))!.spread as { items: unknown[] } | null)?.items.length).toBe(2)
       await expect(ready.locator('li.on')).toContainText('Crime scene')
+      await page.mouse.move(0, 0)
+      await expect(page.locator('.help-bubble')).toHaveCount(0)
 
       // Deleting a board has Undo.
       await ready.getByRole('button', { name: 'Arrange The letters' }).click()
