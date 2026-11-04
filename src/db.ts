@@ -233,11 +233,13 @@ export interface GmScreen {
   pages: string[]
   rolls: { id: string; name: string; expr: string }[]
   /**
-   * The arranging board for showing several handouts at once (src/showBoard.tsx): the GM's draft,
-   * kept here because public.player_view never sends gmScreen, so nothing on it reaches players
-   * until the GM presses Show.
+   * Boards for showing several handouts at once (src/showBoard.tsx), each named ("Crime scene",
+   * "The letters") so they can be set up in prep and put up with one tap. Kept here because
+   * public.player_view never sends gmScreen, so nothing on them reaches players until Show.
    */
-  board?: ShowBoard
+  showBoards?: ShowBoard[]
+  /** The first, single board (before boards had names): read as the first board, then left behind. */
+  board?: Omit<ShowBoard, 'id' | 'name'>
 }
 
 /** Where something sits on the table: left, top, width and height, in percent of a 16:9 screen. */
@@ -254,6 +256,12 @@ export interface Spot {
 export type BoardItem = Omit<Showing, 'id' | 'at'> & Spot & { key: string }
 
 export interface ShowBoard {
+  id: string
+  /** The GM's name for it; players never see it. */
+  name: string
+  /** When it last changed, so the arranging screen opens on the one in hand. */
+  at?: number
+  /** An optional heading over it on the players' screen. */
   title?: string
   items: BoardItem[]
   /** Laid out by the app (Tidy up) until the GM moves something by hand. */

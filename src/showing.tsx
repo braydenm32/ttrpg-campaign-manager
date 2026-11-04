@@ -15,6 +15,7 @@ import { worldPath } from './paths'
 import { askToReveal, useReview } from './reveal'
 import { toast } from './undo'
 import { offerGroupPost } from './groupPost'
+import { saveShowBoard, showBoardsOf } from './showBoards'
 import { visibleHandouts } from './counts'
 import './spread.css'
 
@@ -406,21 +407,81 @@ export function ShowingBanner({ world }: { world: World }) {
   )
 }
 
-/** Opens the arranging board, for showing several handouts at once (saying how many wait on it). */
-export function ShowSeveralButton({ world, sceneIds, className = '' }: { world: World; sceneIds?: string[]; className?: string }) {
-  const [open, setOpen] = useState(false)
-  const count = world.gmScreen?.board?.items.length ?? 0
+/**
+ * Puts a board up on players' screens: pages on it not revealed yet get the usual review first, then
+ * everything goes up as arranged, with Undo. Returns the spread's id, or undefined if nothing went up.
+ */
+export async function putUpBoard(worldId: string, board: ShowBoard, entities: Entity[], ask: Parameters<typeof askToReveal>[0]) {
+  const byId = new Map(entities.map((e) => [e.id, e]))
+  // A page deleted since it went on the board just drops off.
+  const items = board.items.filter((i) => i.kind !== 'page' || (!!i.entityId && byId.has(i.entityId)))
+  if (!items.length) return undefined
+  const hidden = items.flatMap((i) => {
+    const e = i.kind === 'page' ? byId.get(i.entityId!) : undefined
+    return e && e.visibility !== 'players' ? [e] : []
+  })
+  if (hidden.length) {
+    const one = hidden.length === 1
+    const ok = await askToReveal(ask, hidden, {
+      title: one ? `Reveal “${hidden[0].name}” to players and show it with the rest?` : `Reveal ${hidden.length} pages to players and show them with the rest?`,
+      note: `Every player can read ${one ? 'it' : 'them'} from now on, and ${one ? 'it goes' : 'they go'} on their screens.`,
+      confirm: 'Reveal and show',
+    })
+    if (!ok) return undefined
+  }
+  const done = await showSpread(worldId, { ...board, items }, hidden)
+  if (!done) return undefined
+  await saveShowBoard(worldId, { ...board, shown: done.id, changed: undefined })
+  toast(`${titlesInWords(items.map((i) => i.title))} ${items.length > 1 ? 'are' : 'is'} on the players’ screens.`, done.undo, hidden.length ? 'Undo (and hide again)' : undefined)
+  return done.id
+}
+
+/**
+ * The GM's boards, each ready to go up with one tap, and the way to the arranging screen (to make
+ * or change one). On the Lectern and in Handouts.
+ */
+export function ShowBoards({ world, sceneIds }: { world: World; sceneIds?: string[] }) {
+  const entities = useVisibleEntities(world.id)
+  const { ask, dialog } = useReview()
+  // Which board the arranging screen opens on: one picked here, or (null) the board in hand.
+  const [open, setOpen] = useState<string | null>()
+  const boards = showBoardsOf(world).filter((b) => b.items.length)
   return (
-    <>
-      <button type="button" className={`show-several ${className}`} onClick={() => setOpen(true)} title="Lay out several pictures, pages and texts, then show them all at once">
-        <Ico as={SquaresFour} /> Show several at once…{count > 0 && <span className="muted"> ({count} on the board)</span>}
+    <div className="show-boards">
+      {boards.length > 0 && (
+        <ul className="show-board-list" aria-label="Boards ready to show">
+          {boards.map((b) => {
+            const live = !!world.spread && world.spread.id === b.shown
+            return (
+              <li key={b.id} className={live ? 'on' : ''}>
+                <button
+                  className="show-board-go"
+                  disabled={live && !b.changed}
+                  aria-pressed={live}
+                  title={live ? (b.changed ? 'Show the changes on players’ screens' : 'On players’ screens now') : `Put all ${b.items.length} on players’ screens`}
+                  onClick={() => putUpBoard(world.id, b, entities, ask)}
+                >
+                  <Ico as={Television} /> <span className="grow-text-line">{b.name}</span>
+                  <span className="muted small">{live ? (b.changed ? 'update' : 'showing') : b.items.length}</span>
+                </button>
+                <button className="ghost small" onClick={() => setOpen(b.id)} aria-label={`Arrange ${b.name}`}>
+                  Arrange
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      <button type="button" className="show-several" onClick={() => setOpen(null)} title="Lay out several pictures, pages and texts, then show them all at once">
+        <Ico as={SquaresFour} /> {boards.length ? 'Boards for showing several…' : 'Show several at once…'}
       </button>
-      {open && (
+      {open !== undefined && (
         <Suspense fallback={null}>
-          <ArrangeBoard world={world} sceneIds={sceneIds} onClose={() => setOpen(false)} />
+          <ArrangeBoard world={world} sceneIds={sceneIds} boardId={open ?? undefined} onClose={() => setOpen(undefined)} />
         </Suspense>
       )}
-    </>
+      {dialog}
+    </div>
   )
 }
 
@@ -471,7 +532,7 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
           <span className="muted">Nothing on players’ screens.</span>
         )}
       </div>
-      <ShowSeveralButton world={world} sceneIds={sceneIds} />
+      <ShowBoards world={world} sceneIds={sceneIds} />
       <div className="segmented">
         {(['image', 'page', 'text'] as const).map((k) => (
           <button key={k} className={kind === k ? 'on' : ''} onClick={() => setKind(k)}>

@@ -1,22 +1,24 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowsOutSimple, Lock, SquaresFour, Television, Trash } from '@phosphor-icons/react'
-import { db, newId, type BoardItem, type Entity, type ShowBoard, type Showing, type World } from './db'
+import { ArrowsOutSimple, Copy, Lock, Plus, SquaresFour, Television, Trash } from '@phosphor-icons/react'
+import { newId, type BoardItem, type Entity, type ShowBoard, type Showing, type World } from './db'
 import { useDialog } from './components'
 import { Help } from './help'
 import { saveFileAsAsset, useVisibleEntities } from './hooks'
 import { Ico } from './icons'
 import { stripSecrets } from './Markdown'
 import { worldPath } from './paths'
-import { askToReveal, useReview } from './reveal'
-import { sameHandout, showSpread, SpreadPiece, stopShowing, Thumb, titlesInWords, useShowablePictures } from './showing'
+import { useReview } from './reveal'
+import { putUpBoard, sameHandout, SpreadPiece, stopShowing, Thumb, useShowablePictures } from './showing'
+import { blankBoard, boardInHand, deleteShowBoard, freeName, saveShowBoard, showBoardsOf } from './showBoards'
 import { toast } from './undo'
 
 /**
  * Show several at once: the GM's arranging board. A 16:9 preview of the players' screen where
  * pictures, pages and texts are dropped in, dragged about and resized; nothing reaches players
- * until Show. The board is kept in the world's GM screen (World.gmScreen.board), which the server
- * never sends to players, so it can be filled in during prep and is still there at the table.
+ * until Show. A world has as many boards as the GM likes, each named ("Crime scene", "The letters"),
+ * kept in the world's GM screen (World.gmScreen.showBoards), which the server never sends to
+ * players, so they can be set up in prep and put up with one tap at the table (ShowBoards).
  */
 
 const MIN = 8
@@ -50,23 +52,17 @@ function nextSpot(items: BoardItem[]) {
   return { x: 30 + k * 4, y: 22 + k * 4, w: 34, h: 46 }
 }
 
-function saveBoard(worldId: string, board: ShowBoard) {
-  return db.worlds
-    .where('id')
-    .equals(worldId)
-    .modify((w) => {
-      w.gmScreen = { pages: [], rolls: [], ...w.gmScreen, board }
-      w.updatedAt = Date.now()
-    })
-}
-
 type Tray = 'image' | 'page' | 'text' | 'handouts'
 
-export default function ArrangeBoard({ world, onClose, sceneIds = [] }: { world: World; onClose: () => void; sceneIds?: string[] }) {
+export default function ArrangeBoard({ world, onClose, sceneIds = [], boardId }: { world: World; onClose: () => void; sceneIds?: string[]; boardId?: string }) {
   const ref = useDialog(onClose)
   const entities = useVisibleEntities(world.id)
   const pictures = useShowablePictures(world.id, entities, sceneIds)
-  const [board, setBoard] = useState<ShowBoard>(() => world.gmScreen?.board ?? { items: [], auto: true })
+  const saved = showBoardsOf(world)
+  // The board open now: the one asked for, else the one in hand, else a new one (kept once something goes on it).
+  const [board, setBoard] = useState<ShowBoard>(() => saved.find((b) => b.id === boardId) ?? boardInHand(saved, world) ?? blankBoard(saved))
+  const boards = saved.some((b) => b.id === board.id) ? saved.map((b) => (b.id === board.id ? board : b)) : [...saved, board]
+  const nameBox = useRef<HTMLInputElement>(null)
   const [picked, setPicked] = useState<string>()
   const [tray, setTray] = useState<Tray>('image')
   const [text, setText] = useState('')
@@ -82,10 +78,6 @@ export default function ArrangeBoard({ world, onClose, sceneIds = [] }: { world:
   const byId = new Map(entities.map((e) => [e.id, e]))
   // A page deleted since it went on the board just drops off.
   const items = board.items.filter((i) => i.kind !== 'page' || (i.entityId && byId.has(i.entityId)))
-  const hiddenPages = items.flatMap((i) => {
-    const e = i.kind === 'page' ? byId.get(i.entityId!) : undefined
-    return e && e.visibility !== 'players' ? [e] : []
-  })
   const live = !!world.spread && world.spread.id === board.shown
   const status = live
     ? board.changed
@@ -97,9 +89,9 @@ export default function ArrangeBoard({ world, onClose, sceneIds = [] }: { world:
 
   /** Keeps a change: on screen now, and in the world (so it syncs to the GM's other devices). */
   const commit = (next: ShowBoard) => {
-    const b = { ...next, changed: next.shown ? true : undefined }
+    const b = { ...next, at: Date.now(), changed: next.shown ? true : undefined }
     setBoard(b)
-    void saveBoard(world.id, b)
+    void saveShowBoard(world.id, b)
   }
   const change = (fn: (items: BoardItem[]) => BoardItem[], manual = false) => {
     const auto = manual ? false : (board.auto ?? true)
@@ -157,9 +149,9 @@ export default function ArrangeBoard({ world, onClose, sceneIds = [] }: { world:
       drag.current = undefined
       const to = d.to
       if (!to || Object.entries(to).every(([k, v]) => d.from[k as keyof BoardItem] === v)) return
-      const b = { ...latest.current, auto: false, changed: latest.current.shown ? true : undefined, items: latest.current.items.map((i) => (i.key === d.key ? { ...i, ...to } : i)) }
+      const b = { ...latest.current, at: Date.now(), auto: false, changed: latest.current.shown ? true : undefined, items: latest.current.items.map((i) => (i.key === d.key ? { ...i, ...to } : i)) }
       setBoard(b)
-      void saveBoard(worldId, b)
+      void saveShowBoard(worldId, b)
     }
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up)
@@ -197,30 +189,39 @@ export default function ArrangeBoard({ world, onClose, sceneIds = [] }: { world:
   }
 
   const show = async () => {
-    if (!items.length) return
-    if (hiddenPages.length) {
-      const one = hiddenPages.length === 1
-      const ok = await askToReveal(ask, hiddenPages, {
-        title: one ? `Reveal “${hiddenPages[0].name}” to players and show it with the rest?` : `Reveal ${hiddenPages.length} pages to players and show them with the rest?`,
-        note: `Every player can read ${one ? 'it' : 'them'} from now on, and ${one ? 'it goes' : 'they go'} on their screens.`,
-        confirm: 'Reveal and show',
-      })
-      if (!ok) return
-    }
-    const done = await showSpread(world.id, { ...board, items }, hiddenPages)
-    if (!done) return
-    const b = { ...latest.current, shown: done.id, changed: undefined }
-    setBoard(b)
-    await saveBoard(world.id, b)
-    toast(
-      `${titlesInWords(items.map((i) => i.title))} ${items.length > 1 ? 'are' : 'is'} on the players’ screens.`,
-      async () => {
-        await done.undo()
-        commit({ ...latest.current, shown: undefined })
-      },
-      hiddenPages.length ? 'Undo (and hide again)' : undefined,
-    )
+    const id = await putUpBoard(world.id, latest.current, entities, ask)
+    if (id) setBoard((b) => ({ ...b, shown: id, changed: undefined }))
   }
+
+  // The boards themselves: switch, start a new one, copy or delete this one, rename it.
+  const switchTo = (b: ShowBoard) => {
+    setBoard(b)
+    setPicked(undefined)
+  }
+  const startNew = () => {
+    const b = blankBoard(boards)
+    void saveShowBoard(world.id, b)
+    switchTo(b)
+    setTimeout(() => nameBox.current?.select(), 0)
+  }
+  const copy = () => {
+    const b: ShowBoard = { ...board, id: newId(), name: freeName(boards, `${board.name} (copy)`), at: Date.now(), shown: undefined, changed: undefined, items: board.items.map((i) => ({ ...i, key: newId() })) }
+    void saveShowBoard(world.id, b)
+    switchTo(b)
+    toast(`Copied to “${b.name}”.`)
+  }
+  const remove_ = async () => {
+    const gone = board
+    const undo = await deleteShowBoard(world.id, gone.id)
+    const rest = boards.filter((b) => b.id !== gone.id)
+    switchTo(rest[0] ?? blankBoard(rest))
+    toast(`“${gone.name}” is deleted.`, async () => {
+      await undo()
+      switchTo(gone)
+    })
+  }
+  const rename = (name: string) => setBoard({ ...board, name })
+  const keepName = () => commit({ ...board, name: board.name.trim() || freeName(boards.filter((b) => b.id !== board.id), 'Board') })
 
   const sel = items.find((i) => i.key === picked)
   const revealed = entities.filter((e) => e.visibility === 'players' && !e.template)
@@ -238,6 +239,30 @@ export default function ArrangeBoard({ world, onClose, sceneIds = [] }: { world:
             ×
           </button>
         </header>
+        <div className="board-bar" role="group" aria-label="Boards">
+          <div className="board-tabs">
+            {boards.map((b) => {
+              const up = !!world.spread && world.spread.id === b.shown
+              return (
+                <button key={b.id} className={`chip ${b.id === board.id ? 'on' : ''}`} aria-pressed={b.id === board.id} onClick={() => switchTo(b)} title={up ? 'On players’ screens now' : undefined}>
+                  {up && <Ico as={Television} />} {b.name} <span className="muted">· {b.items.length}</span>
+                </button>
+              )
+            })}
+            <button className="chip" onClick={startNew}>
+              <Ico as={Plus} /> New board
+            </button>
+          </div>
+          <div className="row wrap board-name">
+            <input ref={nameBox} value={board.name} onChange={(e) => rename(e.target.value)} onBlur={keepName} onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()} aria-label="This board’s name (only you see it)" placeholder="Name, e.g. Crime scene" />
+            <button className="small" onClick={copy} disabled={!board.items.length}>
+              <Ico as={Copy} /> Copy
+            </button>
+            <button className="small ghost" onClick={remove_} disabled={!saved.some((b) => b.id === board.id)}>
+              <Ico as={Trash} /> Delete
+            </button>
+          </div>
+        </div>
         <p className={`small arrange-status ${live && !board.changed ? 'on' : ''}`} role="status">
           {status}
         </p>

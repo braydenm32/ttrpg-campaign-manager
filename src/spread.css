@@ -73,3 +73,23 @@
   .arrange-modal { padding: 1em; }
   .arrange-tools .grow-text-line, .arrange-foot > .arrange-heading { flex-basis: 100%; }
 }
+
+/* The GM's named boards: tabs along the top of the arranging screen. */
+.board-bar { display: flex; flex-direction: column; gap: .5em; margin: .5em 0 .25em; }
+.board-tabs { display: flex; flex-wrap: wrap; gap: .4em; }
+.board-tabs .chip { display: inline-flex; align-items: center; gap: .35em; padding: .35em .7em; border-radius: 999px; }
+.board-tabs .chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.board-tabs .chip.on .muted { color: inherit; opacity: .75; }
+.board-name { gap: .5em; align-items: center; }
+.row.board-name > input { flex: 1 1 200px; max-width: 360px; }
+
+/* Boards ready to show, one tap each (Lectern and Handouts). */
+.show-boards { display: flex; flex-direction: column; gap: .5em; align-items: flex-start; }
+.show-board-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .35em; width: 100%; }
+.show-board-list li { display: flex; gap: .4em; align-items: center; }
+.show-board-go { flex: 1; min-width: 0; display: flex; align-items: center; gap: .45em; text-align: left; }
+.show-board-go .grow-text-line { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.show-board-list li.on .show-board-go { border-color: var(--accent); color: var(--secret-ink); }
+@media (pointer: coarse) {
+  .board-tabs .chip { min-height: 44px; }
+}
