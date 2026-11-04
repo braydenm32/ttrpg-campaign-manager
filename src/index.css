@@ -2098,3 +2098,8 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .notes-check li > span { display: block; margin-bottom: .2em; }
 .notes-check input { width: 100%; }
 .notes-review .notes-pages label.inline-check { flex-wrap: wrap; white-space: normal; }
+
+/* "Use an existing image": a wider pop-up so a page of pictures fits. */
+.modal:has(.image-picker) { width: min(720px, 100%); }
+.image-picker .search { width: 100%; box-sizing: border-box; margin-bottom: .6em; }
+.image-picker .show-thumbs.image-picker-grid { max-height: min(60vh, 520px); grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }

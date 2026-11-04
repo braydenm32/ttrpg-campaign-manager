@@ -225,6 +225,8 @@ export const HELP = {
   generators: 'Your own random tables come first: pick one and roll. Below, roll up taverns, shops and NPCs without any AI, then names and treasure. Save the ones you like; they start as GM only.',
   playersWillSee:
     'Before something reaches your players you see what they’ll get: which page, which coins, which items. Once you go ahead, Undo takes it back for a few seconds, though anyone looking at that moment may already have seen it.',
+  existingImage:
+    'A page’s picture can be uploaded, or picked from the pictures already in this world (anything uploaded on another page, as a handout or in More › Files) with “Use an existing image”. The picture isn’t copied, so one portrait can be on several pages. Players see it once the page is revealed to them, just like an uploaded one.',
   assets: 'Every file in this world: map images, portraits and handouts. Mark a file revealed to let players see it.',
   loot:
     'What the party has: the stash, what each player character carries and the party’s coin. Set "Carried by" on any item page. Players see the revealed items and the coins in the purse; things an NPC, shop or place holds are listed only for you.',

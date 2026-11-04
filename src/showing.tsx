@@ -672,11 +672,24 @@ function pictureName(fileName: string, pageName?: string) {
 }
 
 /** A picture to show, with its name under it (and marked while it's on players' screens). */
-export function Thumb({ asset, name, onClick, on }: { asset: Parameters<typeof useBlobUrl>[0]; name: string; onClick: () => void; on?: boolean }) {
+export function Thumb({
+  asset,
+  name,
+  onClick,
+  on,
+  verb = 'Show',
+}: {
+  asset: Parameters<typeof useBlobUrl>[0]
+  name: string
+  onClick: () => void
+  on?: boolean
+  /** What a tap does, for its tip ("Show Jeb", "Use Jeb"). */
+  verb?: string
+}) {
   const url = useBlobUrl(asset)
   return (
-    <button className={`show-thumb named ${on ? 'on' : ''}`} title={`Show ${name}`} aria-pressed={on} onClick={onClick}>
-      <span className="thumb-img">{url && <img src={url} alt="" />}</span>
+    <button type="button" className={`show-thumb named ${on ? 'on' : ''}`} title={`${verb} ${name}`} aria-pressed={on} onClick={onClick}>
+      <span className="thumb-img">{url && <img src={url} alt="" loading="lazy" />}</span>
       <span className="thumb-name">{name}</span>
     </button>
   )
