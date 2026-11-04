@@ -182,6 +182,9 @@ test.describe('Undo on the More area’s quick removes', () => {
 })
 
 test.describe('before players see something', () => {
+  // A click that can't happen fails with the reason instead of waiting out the whole test.
+  test.use({ actionTimeout: 15_000 })
+
   test('a handout is revealed and shown only after saying what players will see, and Undo hides it again', async ({ page, world, device }) => {
     await open(page, `/w/${world.slug}/handouts`)
     const first = page.locator('.handout-list li', { has: page.getByRole('button', { name: 'Reveal and show…' }) }).first()
