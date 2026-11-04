@@ -162,7 +162,10 @@ export async function startScene(world: World, session: Session, scene: PrepScen
         .modify((w) => {
           if (!(w.handouts ?? []).some((h) => h.id === shownId)) return
           w.handouts = worldBefore?.handouts ?? (w.handouts ?? []).filter((h) => h.id !== shownId)
-          if (w.showing?.id === shownId) w.showing = worldBefore?.showing ?? null
+          if (w.showing?.id === shownId) {
+            w.showing = worldBefore?.showing ?? null
+            w.spread = worldBefore?.spread ?? null
+          }
         })
     if (toReveal.length || shownId) schedule(200)
   }

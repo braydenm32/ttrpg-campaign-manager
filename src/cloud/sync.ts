@@ -485,6 +485,15 @@ function playerPart(table: string, data: Record<string, unknown> | null | undefi
 const playersCare = (table: string, before: Record<string, unknown> | null | undefined, after: Record<string, unknown> | null | undefined) =>
   stableStringify(playerPart(table, before)) !== stableStringify(playerPart(table, after))
 
+/** Pages on players' screens now: the one shown, or those among several shown at once. */
+function pagesOnScreen(w: World | undefined) {
+  const ids = new Set<string>()
+  if (w?.showing?.entityId) ids.add(w.showing.entityId)
+  const up = new Set(w?.spread?.items.map((i) => i.handoutId))
+  for (const h of w?.handouts ?? []) if (h.entityId && up.has(h.id)) ids.add(h.entityId)
+  return ids
+}
+
 /** Pictures players can receive: ones marked for players, plus those used by something they can see (map pictures are redrawn in place). */
 function picturesForPlayers(rows: Row[]) {
   const ids = new Set<string>()
@@ -587,7 +596,7 @@ async function planPush(worldId: string) {
   // A page just revealed waits while an Undo note is up, so Undo takes it back before any player
   // gets it; it goes once the note has gone. A page put on players' screens goes at once: the table is waiting.
   const holding = undoShowing()
-  const onScreen = holding ? (await db.worlds.get(worldId))?.showing?.entityId : undefined
+  const onScreen = holding ? pagesOnScreen(await db.worlds.get(worldId)) : undefined
 
   for (const r of rows) {
     const key = metaKey(r.table, r.id)
@@ -596,7 +605,7 @@ async function planPush(worldId: string) {
     const meta = metas.get(key) ?? (r.table === 'assets' ? await db.syncMeta.get(key) : undefined)
     metas.delete(key)
     if (meta && !meta.deleted && meta.hash === hash) continue
-    if (holding && r.table === 'entities' && r.id !== onScreen && newlyRevealed(meta && !meta.deleted ? meta.base : undefined, r.data)) {
+    if (holding && r.table === 'entities' && !onScreen?.has(r.id) && newlyRevealed(meta && !meta.deleted ? meta.base : undefined, r.data)) {
       syncWhenUndoGone()
       continue
     }

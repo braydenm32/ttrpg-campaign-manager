@@ -201,6 +201,12 @@ export interface World {
   sample?: boolean
   /** What the GM is showing every player right now (a handout, a page or some text). */
   showing?: Showing | null
+  /**
+   * Several handouts on players' screens at once, as the GM arranged them (instead of `showing`).
+   * Only which handouts and where each sits: what they are comes from `handouts`, which the server
+   * filters for each player, so this needs nothing of its own in public.player_view.
+   */
+  spread?: Spread | null
   /** Everything the GM has shown, newest first, so players can read a handout again later. */
   handouts?: Showing[]
   /** The table's safety tools: lines (never in the game) and veils (happens off screen). Everyone sees these. */
@@ -226,6 +232,43 @@ export interface World {
 export interface GmScreen {
   pages: string[]
   rolls: { id: string; name: string; expr: string }[]
+  /**
+   * The arranging board for showing several handouts at once (src/showBoard.tsx): the GM's draft,
+   * kept here because public.player_view never sends gmScreen, so nothing on it reaches players
+   * until the GM presses Show.
+   */
+  board?: ShowBoard
+}
+
+/** Where something sits on the table: left, top, width and height, in percent of a 16:9 screen. */
+export interface Spot {
+  x: number
+  y: number
+  w: number
+  h: number
+  /** Leave its name off the screen (a map scrap needs no caption). */
+  noTitle?: boolean
+}
+
+/** One thing on the GM's arranging board: what it is (as a handout) and where it sits. */
+export type BoardItem = Omit<Showing, 'id' | 'at'> & Spot & { key: string }
+
+export interface ShowBoard {
+  title?: string
+  items: BoardItem[]
+  /** Laid out by the app (Tidy up) until the GM moves something by hand. */
+  auto?: boolean
+  /** The spread last shown from this board, and whether the board has changed since. */
+  shown?: string
+  changed?: boolean
+}
+
+/** Several handouts on players' screens at once (World.spread). */
+export interface Spread {
+  id: string
+  at: number
+  title?: string
+  items: (Spot & { handoutId: string })[]
 }
 
 /** A date on the world's calendar. month is the position in the calendar's list (from 0), day starts at 1. */

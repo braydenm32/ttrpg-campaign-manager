@@ -4,7 +4,7 @@ import type { Showing } from '../db'
 import { Help } from '../help'
 import '../more.css'
 import { useVisibleEntities, useWorld } from '../hooks'
-import { removeHandout, revealAndShow, showToPlayers, ShowingView } from '../showing'
+import { removeHandout, revealAndShow, ShowSeveralButton, showToPlayers, ShowingView } from '../showing'
 import { useViewMode } from '../viewMode'
 import { useState } from 'react'
 import { Ico } from '../icons'
@@ -47,6 +47,7 @@ export default function Handouts() {
         <h1>
           <Ico as={Newspaper} /> Handouts <Help topic="handouts" />
         </h1>
+        {isGM && <ShowSeveralButton world={world} />}
       </header>
       {isGM && (
         <section>

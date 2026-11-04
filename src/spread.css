@@ -1,0 +1,75 @@
+/*
+ * Several handouts at once (src/showing.tsx, src/showBoard.tsx). The table is a 16:9 box whose
+ * contents are sized in cqw (hundredths of its width), so the GM's preview and the TV look the same,
+ * just bigger or smaller.
+ */
+.spread-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; container-type: inline-size; overflow: hidden; -webkit-text-size-adjust: none; text-size-adjust: none; }
+.spread-item { position: absolute; box-sizing: border-box; display: flex; flex-direction: column; min-width: 0; min-height: 0; font-size: 1.5cqw; line-height: 1.45; }
+.spread-item .showing-view, .players-screen .spread-item .showing-view { flex: 1; min-height: 0; width: 100%; gap: .4em; overflow: hidden; }
+.spread-item.kind-image .showing-view { justify-content: center; }
+.spread-item.kind-image .showing-view img,
+.players-screen .spread-item.kind-image .showing-view img { width: 100%; height: 100%; min-height: 0; max-height: none; object-fit: contain; border-radius: 4px; }
+.spread-name { flex: none; font-size: .95em; text-align: center; color: var(--muted); margin-top: .25em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.players-screen .spread-name { color: var(--text); }
+
+/* A page or a text: a sheet of paper, its title at the top. */
+.spread-item:is(.kind-text, .kind-page) { background: #ede3cf; color: #2b2420; border-radius: .4cqw; padding: .8em 1em; box-shadow: 0 .3cqw 1.2cqw rgba(0, 0, 0, .3); font-family: var(--font-book); }
+.spread-item:is(.kind-text, .kind-page) .spread-name { order: -1; text-align: left; text-transform: uppercase; letter-spacing: .1em; font-size: .8em; color: #6d5d47; margin: 0 0 .4em; }
+.spread-item:is(.kind-text, .kind-page) .showing-view img { max-width: 100%; max-height: 45%; object-fit: contain; align-self: center; }
+.spread-item .showing-view .markdown,
+.players-screen .spread-item .showing-view .markdown,
+.players-screen .spread-item .lead { font-size: 1em; line-height: 1.45; color: inherit; }
+.spread-item .lead { margin: 0; font-style: italic; color: inherit; }
+.players-screen .spread-item .showing-view .markdown :is(h2, h3), .spread-item .markdown :is(h2, h3) { font-size: 1.15em; }
+.spread-item .markdown > :first-child { margin-top: 0; }
+.spread-item a { color: inherit; }
+/* On the TV, a long letter can still be scrolled with a mouse. */
+.players-screen .spread-item:is(.kind-text, .kind-page) .showing-view { overflow: auto; }
+
+/* The players' screen with several up: as big as the window allows, keeping 16:9. */
+.players-screen.with-spread { padding: 1.5vh 1.5vw; justify-content: center; gap: .5em; }
+.players-screen.with-spread > h1 { font-size: 2.2rem; margin: 0; }
+.players-screen.with-spread .spread-stage { width: min(100%, calc((100dvh - 3vh) * 16 / 9)); }
+.players-screen.with-spread:has(> h1) .spread-stage { width: min(100%, calc((100dvh - 3vh - 4rem) * 16 / 9)); }
+
+/* On a phone and in the Common Room: one under another. */
+.spread-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .9em; }
+
+/* The GM's arranging board. */
+.show-several { align-self: flex-start; }
+.arrange-modal { width: min(1280px, 100%); }
+.arrange-status { margin: .25em 0 .75em; color: var(--muted); }
+.arrange-status.on { color: var(--secret-ink); font-weight: 600; }
+.arrange-body { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 1em; align-items: start; }
+.arrange-main { min-width: 0; }
+.arrange-frame { border: 2px dashed var(--border); border-radius: 8px; background: var(--bg); overflow: hidden; }
+.arrange-empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 1em; margin: 0; font-size: max(13px, 1.6cqw); }
+.spread-stage.editing .spread-item { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.spread-stage.editing .spread-item:active { cursor: grabbing; }
+.spread-stage.editing .spread-item > :not(.spread-resize) { pointer-events: none; }
+.spread-stage.editing .spread-item.picked, .spread-stage.editing .spread-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.spread-stage.editing .spread-item:focus { outline-style: solid; }
+.spread-resize { position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); border-radius: 6px 0 4px 0; cursor: nwse-resize; opacity: 0; font-size: 13px; touch-action: none; z-index: 1; }
+.spread-item.picked .spread-resize, .spread-item:hover .spread-resize { opacity: 1; }
+.spread-lock { position: absolute; bottom: 3px; left: 3px; display: inline-flex; gap: .25em; align-items: center; font: 11px/1.3 system-ui, sans-serif; letter-spacing: 0; text-transform: none; padding: .15em .45em; border-radius: 999px; background: var(--secret-bg); color: var(--secret-ink); border: 1px solid var(--secret-border); white-space: nowrap; }
+.arrange-tools { margin-top: .5em; min-height: 44px; align-items: center; gap: .5em; }
+.arrange-tools .grow-text-line { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arrange-tray { display: flex; flex-direction: column; gap: .6em; min-width: 0; }
+.arrange-tray .segmented { display: flex; }
+.arrange-tray .segmented button { flex: 1 1 auto; justify-content: center; font-size: .9em; }
+.arrange-tray .show-thumbs:has(.named) { max-height: 380px; }
+.arrange-tray select { width: 100%; }
+.arrange-earlier { list-style: none; padding: 0; margin: 0; max-height: 380px; overflow: auto; display: flex; flex-direction: column; gap: .2em; }
+.arrange-earlier button { text-align: left; min-height: 36px; }
+.arrange-foot { margin-top: 1em; align-items: center; gap: .6em; }
+.arrange-heading { flex: 1 1 220px; min-width: 0; }
+
+@media (pointer: coarse) {
+  .spread-resize { width: 30px; height: 30px; opacity: .9; }
+  .arrange-earlier button { min-height: 44px; }
+}
+@media (max-width: 760px) {
+  .arrange-body { grid-template-columns: minmax(0, 1fr); }
+  .arrange-modal { padding: 1em; }
+  .arrange-tools .grow-text-line, .arrange-foot > .arrange-heading { flex-basis: 100%; }
+}
