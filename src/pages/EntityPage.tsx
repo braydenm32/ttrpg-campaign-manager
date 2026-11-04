@@ -1,4 +1,5 @@
 import { PagePicker } from '../PagePicker'
+import { ImagePicker } from '../ImagePicker'
 import { PinOnMapButton } from '../pinOnMap'
 import { StockTable } from '../shopStock'
 import { NpcLines } from '../ai/Flavour'
@@ -34,7 +35,7 @@ import { Ico, PageIcon, TypeIcon } from '../icons'
 import { dropHeldPage, heldPage } from '../pendingPages'
 import { markSaved, saveFailed, toast } from '../undo'
 import { DeletePageButton } from '../pageDelete'
-import { DotsThreeOutline, Eye, Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Sparkle, Spiral, UserCircle } from '@phosphor-icons/react'
+import { DotsThreeOutline, Eye, Images, Lock, MapPin, MapTrifold, PenNib, PencilSimple, Ruler, Sparkle, Spiral, UserCircle } from '@phosphor-icons/react'
 import { initials } from '../text'
 import { ImportSheetButton } from '../sheets/ImportSheet'
 import { pagePath, resolvePage, typePath, usePathsVersion, worldPath } from '../paths'
@@ -490,6 +491,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
   const image = useAssetUrl(d.imageId)
   const set = <K extends keyof Entity>(k: K, v: Entity[K]) => setD((x) => ({ ...x, [k]: v }))
   const [holderPick, setHolderPick] = useState(false)
+  const [pickImage, setPickImage] = useState(false)
   const campaigns = useCampaigns(worldId)
   const dirty = JSON.stringify(d) !== JSON.stringify(opened)
   const changedElsewhere = entity.updatedAt !== opened.updatedAt
@@ -968,11 +970,13 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
             </button>
           </div>
           <div>
-            <div className="label">Image</div>
+            <div className="label">
+              Image <Help topic="existingImage" />
+            </div>
             {image && <img className="portrait" src={image} alt="" />}
-            <div className="row">
+            <div className="row wrap image-actions">
               <label className="button">
-                {d.imageId ? 'Replace image' : 'Upload image'}
+                {d.imageId ? 'Upload a new image' : 'Upload image'}
                 <input
                   type="file"
                   accept="image/*"
@@ -983,12 +987,25 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
                   }}
                 />
               </label>
+              <button type="button" onClick={() => setPickImage(true)}>
+                <Ico as={Images} /> Use an existing image
+              </button>
               {d.imageId && (
                 <button type="button" onClick={() => set('imageId', undefined)}>
                   Remove
                 </button>
               )}
             </div>
+            {pickImage && (
+              <ImagePicker
+                worldId={worldId}
+                entities={entities}
+                pageName={d.name}
+                current={d.imageId}
+                onPick={(id) => set('imageId', id)}
+                onClose={() => setPickImage(false)}
+              />
+            )}
           </div>
         </div>
         <div className="grid-2">

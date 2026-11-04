@@ -6,7 +6,8 @@ import { getRecord, putBack } from './lib/records'
  * reveals only after a short review and hides with Undo; the breadcrumb starts at the list (never
  * the world's name) and folds on a phone; players get none of the GM's bits of a page; map pins
  * carry their names and, on a phone, open in a sheet over the map; Threads keeps its search when
- * you come Back, and Timeline keeps List or Month in the address.
+ * you come Back, and Timeline keeps List or Month in the address; a page's picture can be one
+ * already in the world ("Use an existing image").
  *
  * Each test puts back what it changed (straight in the database), since tests in one worker share
  * the world.
@@ -216,3 +217,57 @@ test('Places, People and Lore each switch between their two kinds, and headings 
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Threads')
   await expect(page.getByRole('heading', { level: 1 })).not.toContainText('Loose')
 })
+
+test('“Use an existing image” puts a picture already in the world on a page, without uploading it again', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const pictured = (e: (typeof world.dump.entities)[number]) => (e as { imageId?: string }).imageId
+  // A person with a portrait, and another person to give the same portrait to.
+  const all = world.dump.entities
+  const people = all.filter((e) => e.type === 'npc' && !e.template && all.filter((o) => o.name === e.name).length === 1)
+  // Its picture is named after it alone (no other page uses it, no other name contains it).
+  const from = people.find(
+    (e) => pictured(e) && !all.some((o) => o !== e && (pictured(o) === pictured(e) || o.name.toLowerCase().includes(e.name.toLowerCase()))),
+  )!
+  const to = people.find((e) => e !== from && pictured(e) !== pictured(from))!
+  expect(from && to).toBeTruthy()
+  await open(page, `${w}/p/${world.pageSlug(to.name)}?edit=1`)
+  const before = await getRecord(page, 'entities', to.id)
+  const filesBefore = await countFiles(page, world.id)
+  try {
+    await page.getByRole('button', { name: 'Use an existing image' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Use an existing image' })
+    await expect(dialog).toBeVisible()
+    await dialog.getByRole('searchbox', { name: 'Find a picture' }).fill(from.name)
+    await dialog.getByRole('button', { name: from.name, exact: true }).first().click()
+    await expect(dialog).toHaveCount(0)
+    // Still in the editor (picking didn't save or leave), with the picture showing.
+    await expect(page.locator('.label', { hasText: 'Image' }).locator('xpath=..').locator('img.portrait')).toBeVisible()
+    await page.locator('.editor-bar').getByRole('button', { name: 'Save' }).click()
+    await expect.poll(async () => ((await getRecord(page, 'entities', to.id)) as { imageId?: string } | undefined)?.imageId).toBe(pictured(from))
+    // The picture isn't copied: the world has no new file.
+    expect(await countFiles(page, world.id)).toBe(filesBefore)
+  } finally {
+    await putBack(page, 'entities', [[to.id, before]])
+  }
+})
+
+/** How many files a world has, read straight from the database. */
+function countFiles(page: Page, worldId: string) {
+  return page.evaluate(
+    (id) =>
+      new Promise<number>((resolve, reject) => {
+        const req = indexedDB.open('ttrpg-campaign-manager')
+        req.onerror = () => reject(req.error)
+        req.onsuccess = () => {
+          const idb = req.result
+          const r = idb.transaction('assets', 'readonly').objectStore('assets').index('worldId').count(id)
+          r.onsuccess = () => {
+            idb.close()
+            resolve(r.result)
+          }
+          r.onerror = () => reject(r.error)
+        }
+      }),
+    worldId,
+  )
+}
