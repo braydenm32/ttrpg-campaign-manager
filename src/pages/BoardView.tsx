@@ -30,7 +30,9 @@ export function CopyBoardButton({ board, entities, className }: { board: Board; 
     <button
       className={className}
       onClick={async () => {
-        const page = await copyBoardIntoPage(board, new Map(entities.map((e) => [e.id, e])))
+        // Read the pages now, not from the screen's list: a click before that list has loaded would name every page "deleted".
+        const pages = entities.length ? entities : await db.entities.where({ worldId: board.worldId }).filter((e) => !e.template).toArray()
+        const page = await copyBoardIntoPage(board, new Map(pages.map((e) => [e.id, e])))
         navigate(pagePath(board.worldId, page.id))
         toast(`“${board.name}” copied into a GM-only page. The board is still there until you delete it.`, () => db.entities.delete(page.id))
       }}
