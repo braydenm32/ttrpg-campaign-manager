@@ -25,6 +25,7 @@ import { EXAMPLE_VERSION, resetExampleWorld } from '../example/load'
 import { DraftText, Empty, Skeleton } from '../components'
 import { useViewMode } from '../viewMode'
 import { starterTemplates } from '../prompts'
+import { WorldPacks } from '../packs/WorldPacks'
 
 const TABS = [
   ['world', 'World'],
@@ -127,6 +128,8 @@ export default function WorldSettings() {
           <CalendarEditor world={world} />
 
           <CustomTypes world={world} update={update} />
+
+          <WorldPacks world={world} />
 
           <div id="settings-templates">
             <Templates world={world} />

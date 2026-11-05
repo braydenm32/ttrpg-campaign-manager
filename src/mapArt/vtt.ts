@@ -228,7 +228,7 @@ export function vttParts(d: Drawing, W: number, H: number): VttParts {
 
   const solid = pieces.filter((s) => SOLID.has(s.asset))
   const lights = pieces.flatMap((s) => {
-    const l = LIGHTS[s.asset]?.(variantOf(s))
+    const l = LIGHTS[s.asset]?.(variantOf(s)) ?? (Atlas.assets[s.asset]?.light ? { range: 6, color: 'ffffc477' } : undefined)
     return l ? [{ at: s.at, ...l }] : []
   })
   return {

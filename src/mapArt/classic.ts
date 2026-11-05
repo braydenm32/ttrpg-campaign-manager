@@ -873,11 +873,15 @@ export interface Piece {
   flip: boolean
   /** Degrees clockwise. Only pieces seen from above (or map furniture) turn; side-on ones stay upright. */
   turn?: number
+  /** A piece from the GM's own map pack that takes on the map's look and climate. */
+  tint?: boolean
+  /** A pack piece's condition (damaged, burned…), when it comes in several. */
+  state?: string
 }
 
 const pieceOf = (s: Shape, battle = false): Piece | undefined =>
   s.kind === 'asset'
-    ? { id: s.id, asset: s.asset, at: s.at, size: s.size, seed: s.seed, variant: s.variant, flip: !!s.flip, turn: s.turn }
+    ? { id: s.id, asset: s.asset, at: s.at, size: s.size, seed: s.seed, variant: s.variant, flip: !!s.flip, turn: s.turn, ...(s.tint ? { tint: true } : {}), ...(s.state ? { state: s.state } : {}) }
     : s.kind === 'stamp'
       ? {
           id: s.id,
@@ -894,11 +898,13 @@ const pieceOf = (s: Shape, battle = false): Piece | undefined =>
 export function pieceBox(p: Piece): [number, number, number, number] {
   const def = Atlas.assets[p.asset]
   const s = p.size
+  // pieces from the GM's own packs are as tall as their picture
+  const aspect = def?.aspect?.(p.variant)
   if (def?.view === 'side') {
-    const w = def.category === 'settlements' || def.category === 'landmarks' ? s * 1.6 : s
+    const w = aspect ? s / aspect : def.category === 'settlements' || def.category === 'landmarks' ? s * 1.6 : s
     return [p.at[0] - w / 2, p.at[1] - s, w, s * 1.05]
   }
-  const h = p.asset === 'cartouche' ? s / 2 : p.asset === 'scale-bar' ? s / 3 : s
+  const h = aspect ? s * aspect : p.asset === 'cartouche' ? s / 2 : p.asset === 'scale-bar' ? s / 3 : s
   return [p.at[0] - s / 2, p.at[1] - h / 2, s, h]
 }
 
@@ -927,6 +933,18 @@ export function pieceOutline(p: Piece): Point[] {
 export function drawPiece(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle) {
   const def = Atlas.assets[p.asset]
   if (!def) return
+  if (!p.tint && !p.state) return drawPieceAsIs(ctx, p, st, def)
+  Atlas.packTint = p.tint || undefined
+  Atlas.packState = p.state
+  try {
+    drawPieceAsIs(ctx, p, st, def)
+  } finally {
+    Atlas.packTint = undefined
+    Atlas.packState = undefined
+  }
+}
+
+function drawPieceAsIs(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle, def: (typeof Atlas.assets)[string]) {
   const variant = ((p.variant % 8) + 8) % 8
   if (Atlas.bird && def.category?.startsWith('bm-trees')) return drawStandingTree(ctx, p, st, variant)
   const a = turnOf(p)

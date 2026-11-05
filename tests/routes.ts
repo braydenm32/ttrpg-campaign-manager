@@ -204,6 +204,7 @@ export const ROUTES: RouteEntry[] = [
   },
   { path: '/w/:worldId/boards', screen: 'Corkboards', who: 'gm', kind: 'screen', samples: [{ url: `${W}/boards` }] },
   { path: '/w/:worldId/boards/:boardId', screen: 'A corkboard', who: 'gm', kind: 'screen', samples: [{ url: `${W}/boards/{board}` }] },
+  { path: '/w/:worldId/packs', screen: 'Map packs', who: 'gm', kind: 'screen', samples: [{ url: `${W}/packs` }] },
   { path: '/w/:worldId/sounds', screen: 'Soundboard', who: 'gm', kind: 'screen', samples: [{ url: `${W}/sounds` }] },
   { path: '/w/:worldId/questions', screen: 'Inbox (GM) / Questions (players)', who: 'both', kind: 'screen', samples: [{ url: `${W}/questions` }], note: 'Needs cloud sync; offline it explains that (desk.spec.ts tries it with a pretend cloud).' },
   { path: '/w/:worldId/web', screen: 'Relationships web', who: 'both', kind: 'screen', samples: [{ url: `${W}/web` }, { url: `${W}/web?view=family`, label: 'family tree' }] },

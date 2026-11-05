@@ -3,6 +3,7 @@
  * (.dd2vtt) with the picture and its walls, doors and lights inside.
  */
 import { loadMapFonts, renderClassicOnce } from './classic'
+import { ensurePackArt } from '../packs/art'
 import { vttFile } from './vtt'
 import type { Drawing } from '../mapDrawing'
 import type { KeyEntry } from '../mapKey'
@@ -90,6 +91,8 @@ export function withKey(art: HTMLCanvasElement, key: KeyEntry[], scale: number) 
 
 export async function exportMap(name: string, d: Drawing, W: number, H: number, c: ExportChoice) {
   await loadMapFonts()
+  const missing = await ensurePackArt(d)
+  if (missing.length) throw new Error(`The pictures of ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? ' and others' : ''} from your map packs aren’t on this device yet. Go online and try again.`)
   const drawn: Drawing = { ...d, grid: c.grid ? (d.grid === 'none' ? 'square' : d.grid) : 'none' }
   const drawnArt = renderClassicOnce(drawn, W, H, c.scale)
   const canvas = c.key?.length && c.format === 'png' ? withKey(drawnArt, c.key, c.scale) : drawnArt

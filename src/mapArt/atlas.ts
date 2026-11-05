@@ -55,6 +55,16 @@ export interface AssetDef {
   /** side: (x, y) is the middle of the base and s the height; top and furniture: (x, y) is the centre, s the width. */
   view: 'side' | 'top' | 'furniture'
   draw(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, r: Rng, st: InkStyle, variant: number): void
+  /** Pieces from the GM's own map packs (src/packs/art.ts): height over width of a version's picture. */
+  aspect?: (variant: number) => number
+  /** A pack piece that gives off light in a VTT export. */
+  light?: boolean
+  /** A pack piece: its starting size on a map with this grid (map pixels across). */
+  sizeFor?: (gridSize: number, W: number, H: number) => number
+  /** A pack piece: how many versions it has (1 to 8). */
+  versions?: number
+  /** The conditions a GM's pack piece comes in (intact, damaged, burned…). */
+  states?: string[]
 }
 
 type Opts = Record<string, unknown>
@@ -87,6 +97,10 @@ export interface AtlasApi {
   sideLight?: [number, number]
   /** Set with bird: how tall the town wall stands, in map pixels, so gatehouses and wall towers can stand taller than it. */
   wallHeight?: number
+  /** Set while a pack piece the GM asked to tint draws: it takes on the map's look and climate. */
+  packTint?: boolean
+  /** Set while a pack piece with a condition draws (damaged, burned…). */
+  packState?: string
 }
 
 export const Atlas = (window as unknown as { Atlas: AtlasApi }).Atlas

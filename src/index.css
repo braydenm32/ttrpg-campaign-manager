@@ -2125,3 +2125,46 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .modal:has(.image-picker) { width: min(720px, 100%); }
 .image-picker .search { width: 100%; box-sizing: border-box; margin-bottom: .6em; }
 .image-picker .show-thumbs.image-picker-grid { max-height: min(60vh, 520px); grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+
+/* Map packs: the GM's own map pieces */
+.piece-from { display: flex; align-items: center; gap: .4em; margin-bottom: .5em; }
+.piece-from .segmented { display: flex; flex: 1; }
+.piece-from .segmented button { flex: 1; justify-content: center; font-size: .85rem; padding: .35em .4em; }
+.pack-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: .5em; }
+.pack-chips button { font-size: .8rem; padding: .25em .7em; border-radius: 999px; }
+.pack-chips button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, var(--panel-2)); }
+.stamp-grid .pack-tile { position: relative; }
+.pack-tile img, .pack-thumb-empty { display: block; margin: 0 auto; }
+.pack-thumb-empty { border-radius: 4px; background: repeating-linear-gradient(45deg, transparent 0 6px, color-mix(in srgb, var(--muted) 18%, transparent) 6px 12px); }
+.pack-badge { position: absolute; top: 3px; right: 3px; width: 10px; height: 10px; border-radius: 50%; }
+.pack-badge.ok { background: var(--accent); }
+.pack-badge.get { border: 1.5px dashed var(--muted); }
+.pack-badge.busy { border: 2px solid var(--muted); border-top-color: var(--accent); animation: pack-spin .8s linear infinite; }
+@keyframes pack-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .pack-badge.busy { animation: none; } }
+.pack-foot { margin-top: .5em; }
+.pack-foot button.link, .pack-actions button.link { padding: 0; min-height: 0; }
+.pack-drop { border: 2px dashed var(--border); border-radius: 10px; padding: 1.4em 1em; text-align: center; display: flex; flex-direction: column; align-items: center; gap: .6em; }
+.pack-drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.pack-drop .row { justify-content: center; flex-wrap: wrap; }
+.pack-check { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.pack-check th { text-align: left; font-weight: 500; font-size: .75rem; color: var(--muted); padding: .2em .3em; }
+.pack-check td { padding: .2em .3em; vertical-align: middle; border-top: 1px solid var(--border); }
+.pack-check td input[type=text], .pack-check td select { width: 100%; min-width: 6em; }
+.pack-check td input.size { width: 3.6em; min-width: 0; }
+.pack-check .thumbs { display: flex; gap: 2px; }
+.pack-card { margin-top: 1em; }
+.pack-card h3 { margin: 0; flex: 1; min-width: 0; }
+.pack-card .stamp-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+.pack-card .pack-tile.hidden { opacity: .45; }
+.pack-edit { margin-top: .6em; }
+.pack-switch { display: flex; align-items: center; gap: .6em; padding: .35em 0; border-top: 1px solid var(--border); }
+.pack-switch:first-child { border-top: none; }
+.pack-switch label { flex: 1; flex-direction: row; align-items: center; gap: .5em; color: var(--text); }
+.pack-switch label input { width: auto; }
+@media (max-width: 640px) {
+  .pack-check thead { display: none; }
+  .pack-check tr { display: grid; grid-template-columns: auto 1fr 1fr; gap: .3em; padding: .4em 0; border-top: 1px solid var(--border); }
+  .pack-check td { border: none; }
+}
+@media (pointer: coarse) { .pack-chips button, .pack-foot button.link { min-height: 44px; } }

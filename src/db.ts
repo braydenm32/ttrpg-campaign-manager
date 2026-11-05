@@ -240,6 +240,15 @@ export interface GmScreen {
   showBoards?: ShowBoard[]
   /** The first, single board (before boards had names): read as the first board, then left behind. */
   board?: Omit<ShowBoard, 'id' | 'name'>
+  /** The GM's own map packs switched on for this world (MapPack ids), for the map builder's "Your packs". */
+  mapPacks?: string[]
+  /** Built-in packs (the Warded Atlas pack) switched off for this world; they're on unless listed here. */
+  packsOff?: string[]
+  /**
+   * Pieces whose pack has newer pictures that the GM chose not to use on this world's maps: piece id
+   * to the newest picture (rev) they said no to, so they aren't asked again until it changes again.
+   */
+  packKept?: Record<string, number>
 }
 
 /** Where something sits on the table: left, top, width and height, in percent of a 16:9 screen. */
@@ -1006,6 +1015,89 @@ export interface Asset {
   updatedAt?: number
 }
 
+/**
+ * The GM's own map packs (src/packs/): pictures they made or bought, used as map pieces next to the
+ * drawn ones. A pack belongs to the GM's account, not to a world: it's stored online once (when signed
+ * in) and switched on per world (GmScreen.mapPacks). Device copies live in packs, packPieces and packFiles.
+ */
+export interface MapPack {
+  id: string
+  name: string
+  createdAt: number
+  updatedAt: number
+  /** The account that owns it (its user id); unset while it's only on this device. */
+  owner?: string
+  /** Taken out of the pack list. Its pieces stay readable, so maps that use them never break. */
+  deleted?: boolean
+  /** Waiting to be sent to the cloud (made or changed while signed out or offline). */
+  pending?: boolean
+  /** Came with a backup, or is another GM's pack used on a shared world: read-only here. */
+  borrowed?: boolean
+  /** Comes with the app (the Warded Atlas pack), for everyone: read from its own web address, never changed here. */
+  builtin?: boolean
+}
+
+/** What kind of map a pack piece is for: battle maps and dungeons, town maps, or world and region maps. */
+export type PackScene = 'battle' | 'city' | 'world'
+
+/** One version (picture) of a pack piece. */
+export interface PackVersion {
+  /** Size of the full picture in pixels. */
+  w: number
+  h: number
+  /** 'webp' or 'png'. */
+  ext: string
+  /** Bytes, full picture plus preview. */
+  bytes: number
+  /**
+   * For packs with a look for every map (imported from a pack index): which design this picture is
+   * (0-7, what the version picker shows), its look, climate and condition. The map picks the
+   * picture that matches it. Left out, each picture is a design of its own.
+   */
+  d?: number
+  mode?: 'colour' | 'ink'
+  biome?: string
+  state?: string
+}
+
+export interface PackPiece {
+  id: string
+  packId: string
+  label: string
+  group: string
+  scene: PackScene
+  /** How big it is: on battle and town maps, in 5 ft squares across and down; on world maps, the width in squares of 30 px. */
+  cols: number
+  rows: number
+  /** Gives off light in a VTT export (torches, braziers, fires). */
+  light?: boolean
+  /** How it's drawn: from above (centred), or side-on standing on its base (world maps' mountains and towns). Left out: side-on on world maps. */
+  view?: 'top' | 'side'
+  /** The conditions it comes in (intact, damaged, burned…), chosen when it's placed. */
+  states?: string[]
+  versions: PackVersion[]
+  /** Goes up each time the pictures change; maps keep the rev they were made with until the GM swaps. */
+  rev: number
+  /** The versions of earlier revs, for maps still drawn with them. */
+  older?: Record<number, PackVersion[]>
+  /** The account the pictures are filed under online. */
+  owner?: string
+  /** Taken out of the pack: hidden from the picker, still drawn on maps that use it. */
+  hidden?: boolean
+  updatedAt: number
+  /** Not yet sent to the cloud. */
+  pending?: boolean
+}
+
+/** A picture of a pack piece kept on this device: `${pieceId}@${rev}/${version}/${kind}`. */
+export interface PackFile {
+  key: string
+  pieceId: string
+  blob: Blob
+  /** Made on this device and not yet uploaded. */
+  unsent?: boolean
+}
+
 /** A corkboard: pages and notes pinned up, with string between them. GM-only. */
 export interface Board {
   id: string
@@ -1126,6 +1218,9 @@ export const db = new Dexie('ttrpg-campaign-manager') as Dexie & {
   recordingChunks: EntityTable<RecordingChunk, 'id'>
   mapVersions: EntityTable<MapVersion, 'id'>
   reputation: EntityTable<Reputation, 'id'>
+  packs: EntityTable<MapPack, 'id'>
+  packPieces: EntityTable<PackPiece, 'id'>
+  packFiles: EntityTable<PackFile, 'key'>
 }
 
 db.version(1).stores({
@@ -1189,6 +1284,14 @@ db.version(7).stores({
 db.version(8).stores({
   mapVersions: 'id, mapId, worldId, at',
   reputation: 'id, worldId',
+})
+
+// v9: the GM's own map packs (src/packs/), which belong to the account rather than any one world:
+// the packs, their pieces and the pictures kept on this device. All new, so nothing to move.
+db.version(9).stores({
+  packs: 'id',
+  packPieces: 'id, packId',
+  packFiles: 'key, pieceId',
 })
 
 // The bin is cleared of anything over a month old soon after the app opens, not only when it's

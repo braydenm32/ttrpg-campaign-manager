@@ -41,6 +41,8 @@ import {
   type Terrain,
 } from '../mapDrawing'
 import { ASSET_GROUPS, Atlas, assetNamesIn, BATTLE_GROUPS, CITY_GROUPS } from '../mapArt/atlas'
+import { ensurePackArt, isPackAsset } from '../packs/art'
+import { ConditionPicker, PackPicker } from '../packs/PackPicker'
 import { canTurn, classicBlob, classicHitSvg, drawPiece, floorTest, FONTS, landTest, loadMapFonts, LOOKS, pieceOutline, playersCopy, renderClassic, riverWidth, roomTest, secretFloorTest, streetWidth, styleFor, townWallHalf } from '../mapArt/classic'
 import { groundColour } from '../mapArt/ground'
 import { useViewMode } from '../viewMode'
@@ -151,6 +153,8 @@ const PIECE_SIZE: Record<string, number> = {
   'city-dot': 9, 'compass-rose': 120, cartouche: 320, 'scale-bar': 160, ship: 50, 'sea-serpent': 56, cloud: 100, waves: 22, whirlpool: 30,
 }
 const pieceSize = (asset: string, W: number, H: number, gridSize = 70) => {
+  // the GM's own pack pieces know their size on the grid
+  if (isPackAsset(asset)) return Atlas.assets[asset]?.sizeFor?.(gridSize, W, H) ?? Math.round(gridSize || 70)
   if (asset.startsWith('ct-')) return Math.round(((CITY_SIZE[asset] ?? 120) * (gridSize || CITY_GRID)) / CITY_GRID)
   if (/^(bm|dg)-/.test(asset)) return Math.round(((BATTLE_SIZE[asset] ?? 80) * (gridSize || 70)) / 70)
   // the GM's marks are a square across on battle maps, and much the same on others (where a square is tiny or not there)
@@ -170,7 +174,7 @@ const randomSeed = () => 1 + Math.floor(Math.random() * 2 ** 30)
  */
 /** How a piece is turned: as drawn or by so many degrees, every which way, or (town maps) lined up with the nearest street. */
 type Turn = number | 'random' | 'street'
-type PieceChoice = { asset: string; size: number; variant: number | 'random'; turn: Turn; mix: string[] }
+type PieceChoice = { asset: string; size: number; variant: number | 'random'; turn: Turn; mix: string[]; tint?: boolean; state?: string }
 /** On town maps, buildings and fields line up with the streets and keep off them. */
 const LINES_UP = ['ct-houses', 'ct-castle', 'ct-fields', 'bm-buildings']
 const linesUp = (asset: string) => (LINES_UP.includes(Atlas.assets[asset]?.category ?? '') || LINES_UP.includes(asset)) && !WALL_PIECES.includes(asset)
@@ -472,6 +476,8 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     if (artTimer.current !== undefined) return
     artTimer.current = window.setTimeout(async () => {
       await loadMapFonts()
+      // the GM's own pack pieces need their pictures before they can be drawn
+      await ensurePackArt(nextArt.current)
       artTimer.current = undefined
       const d = nextArt.current
       const el = artRef.current
@@ -542,6 +548,14 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const save = useCallback(
     async (d: Drawing) => {
       await loadMapFonts()
+      // A pack piece whose picture can't be had (offline) would be a dashed box on the map's picture:
+      // the drawing is saved, and the picture waits until it can be drawn properly.
+      if ((await ensurePackArt(d)).length) {
+        await db.maps.update(map.id, { drawing: d })
+        lastSaved.current = d
+        await syncPiecePins(d)
+        return
+      }
       const art = lastArt.current?.drawing === d && !lastArt.current.players ? lastArt.current.canvas : renderClassic(d, W, H)
       const blob = await classicBlob(art)
       // with secrets on it, the players get a picture of their own without them
@@ -769,7 +783,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const makePiece = (at: Point, { asset, size } = pickPiece()): Shape => {
     // a version picked in the panel belongs to the chosen piece; mixed-in pieces are always a surprise
     const pinned = piece.variant !== 'random' && asset === piece.asset
-    const variant = pinned ? (piece.variant as number) : Math.floor(Math.random() * 8)
+    const variant = pinned ? (piece.variant as number) : Math.floor(Math.random() * (Atlas.assets[asset]?.versions ?? 8))
     const turn = !canTurn(asset)
       ? 0
       : piece.turn === 'random'
@@ -787,6 +801,8 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       variant,
       ...(flips(asset) && Math.random() < 0.5 ? { flip: true } : {}),
       ...(turn ? { turn } : {}),
+      ...(piece.tint && isPackAsset(asset) ? { tint: true } : {}),
+      ...(piece.state && Atlas.assets[asset]?.states?.includes(piece.state) ? { state: piece.state } : {}),
     }
   }
 
@@ -1864,6 +1880,8 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
   const groups = city ? CITY_GROUPS : !battle ? ASSET_GROUPS : drawing.outside === 'rock' ? [...BATTLE_GROUPS.filter(dungeon), ...BATTLE_GROUPS.filter((g) => !dungeon(g))] : BATTLE_GROUPS
   const [query, setQuery] = useState('')
   const [mixing, setMixing] = useState(piece.mix.length > 0)
+  // the app's drawn pieces, or the GM's own map packs
+  const [from, setFrom] = useState<'drawn' | 'packs'>(isPackAsset(piece.asset) ? 'packs' : 'drawn')
   const pool = [piece.asset, ...piece.mix]
   const words = query
     .toLowerCase()
@@ -1879,7 +1897,7 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
       )
     : []
   const pick = (n: string) => {
-    if (!mixing) return setPiece(choose(n, W, H, drawing))
+    if (!mixing) return setPiece({ ...choose(n, W, H, drawing), ...(piece.tint ? { tint: true } : {}), ...(piece.state ? { state: piece.state } : {}) })
     if (n === piece.asset) {
       // taking out the main piece hands its place to the next one in the mix
       if (piece.mix.length) setPiece({ ...choose(piece.mix[0], W, H, drawing), turn: piece.turn, mix: piece.mix.slice(1) })
@@ -1898,8 +1916,21 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
   const shown = recent.filter((n) => Atlas.assets[n] && groups.some((g) => g.categories.includes(Atlas.assets[n].category)))
   return (
     <>
-      <input type="search" className="piece-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={battle ? 'Find a piece: tree, door, altar…' : city ? 'Find a piece: houses, castle, ship…' : 'Find a piece: mountain, ship, town…'} aria-label="Find a piece" />
-      {words.length ? (
+      <div className="piece-from">
+      <div className="segmented" role="tablist" aria-label="Which pieces">
+        <button type="button" role="tab" aria-selected={from === 'drawn'} className={from === 'drawn' ? 'on' : ''} onClick={() => setFrom('drawn')}>
+          Drawn by the app
+        </button>
+        <button type="button" role="tab" aria-selected={from === 'packs'} className={from === 'packs' ? 'on' : ''} onClick={() => setFrom('packs')}>
+          Your packs
+        </button>
+      </div>
+      <Help topic="packPicker" />
+      </div>
+      <input type="search" className="piece-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={from === 'packs' ? 'Find a piece in your packs' : battle ? 'Find a piece: tree, door, altar…' : city ? 'Find a piece: houses, castle, ship…' : 'Find a piece: mountain, ship, town…'} aria-label="Find a piece" />
+      {from === 'packs' ? (
+        <PackPicker drawing={drawing} words={words} pool={pool} state={piece.state} onPick={pick} />
+      ) : words.length ? (
         matches.length ? (
           grid(matches)
         ) : (
@@ -1935,6 +1966,12 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
         />{' '}
         Mix several pieces <Help topic="pieceMix" />
       </label>
+      {pool.some(isPackAsset) && (
+        <label className="check">
+          <input type="checkbox" checked={!!piece.tint} onChange={(e) => setPiece({ ...piece, tint: e.target.checked || undefined })} /> Tint your pieces to the map’s look <Help topic="packTint" />
+        </label>
+      )}
+      {def && pool.length === 1 && <ConditionPicker asset={piece.asset} drawing={drawing} value={piece.state} onPick={(state) => setPiece({ ...piece, state })} />}
       {mixing && (
         <p className="muted small">
           {pool.length > 1 ? `Mixing ${pool.map((n) => Atlas.assets[n]?.label ?? n).join(', ')}.` : `${def?.label ?? 'This piece'} so far.`} Click pieces above to add them or take them out; each
@@ -1972,6 +2009,8 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
 /** The 8 versions of a piece, drawn small so you can see each before choosing; "Any" mixes them. */
 function VersionPicker({ asset, drawing, value, any, onPick }: { asset: string; drawing: Drawing; value?: number | 'random'; any?: boolean; onPick: (v: number | 'random') => void }) {
   const recipe = Atlas.assets[asset]?.kind === 'recipe'
+  // the GM's own pack pieces have as many versions as pictures (up to 8)
+  const count = Atlas.assets[asset]?.versions ?? 8
   return (
     <div className="version-grid" role="radiogroup" aria-label="Version">
       {any && (
@@ -1982,7 +2021,7 @@ function VersionPicker({ asset, drawing, value, any, onPick }: { asset: string; 
           <span>Any</span>
         </button>
       )}
-      {Array.from({ length: 8 }, (_, i) => (
+      {Array.from({ length: count }, (_, i) => (
         <button key={i} type="button" role="radio" aria-checked={value === i} className={value === i ? 'on' : ''} title={`Version ${i + 1}`} onClick={() => onPick(i)}>
           <PieceThumb asset={asset} look={drawing.look} biome={drawing.biome} variant={i} seed={recipe ? versionSeed(i) : 7} px={40} />
           <span>{i + 1}</span>
@@ -2132,6 +2171,7 @@ function ShapeProps({ shape, drawing, pin, onLink, onChange, onReveal, onDelete,
             Size: {shape.size}px
             <input type="range" min={4} max={Math.max(400, shape.size)} value={shape.size} onChange={(e) => onChange({ size: Number(e.target.value) })} />
           </label>
+          <ConditionPicker asset={shape.asset} drawing={drawing} value={shape.state} onPick={(state) => onChange({ state })} />
           <div className="label">
             <span>Version</span>
             <VersionPicker
