@@ -243,7 +243,7 @@ test('the built-in pack picks the picture for the map’s look, and pieces come 
     expect(full.sort()).toEqual(['wa-test-tent/1-0-full.webp', 'wa-test-tent/1-1-full.webp'])
 
     // burned, then placed
-    await panel.getByLabel(/Condition/).selectOption('burned')
+    await panel.getByRole('combobox', { name: 'Condition' }).selectOption('burned')
     const svg = page.locator('svg.builder-canvas')
     const at = await svg.evaluate((s: SVGSVGElement) => {
       const pt = s.createSVGPoint()

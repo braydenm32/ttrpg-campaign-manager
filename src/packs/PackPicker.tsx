@@ -185,8 +185,11 @@ export function ConditionPicker({ asset, drawing, value, onPick }: { asset: stri
   const sorted = [...states].sort((a, b) => (CONDITION_ORDER.indexOf(a) + 99) % 99 - (CONDITION_ORDER.indexOf(b) + 99) % 99)
   return (
     <label>
-      Condition <Help topic="packCondition" />
+      <span>
+        Condition <Help topic="packCondition" />
+      </span>
       <select
+        aria-label="Condition"
         value={value ?? 'intact'}
         onChange={(e) => {
           const s = e.target.value === 'intact' ? undefined : e.target.value
