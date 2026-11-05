@@ -424,6 +424,7 @@ export const MORE_GROUPS: MoreGroup[] = [
         keywords: 'corkboards board pins strings',
       },
       { id: 'assets', label: 'Files', icon: Folder, to: (f) => w(f, 'assets'), paths: ['assets'], who: own, blurb: 'Pictures, maps and sounds you’ve uploaded.', keywords: 'assets images uploads pictures' },
+      { id: 'packs', label: 'Map packs', icon: Stack, to: (f) => w(f, 'packs'), paths: ['packs'], who: own, blurb: 'Your own pictures as map pieces, for any of your worlds.', keywords: 'map pieces assets pack tokens props stamps pictures upload zip' },
       { id: 'archivist', label: 'The Archivist', icon: Books, to: (f) => w(f, 'archivist'), paths: ['archivist'], who: own, blurb: 'Ask your world a question, or check it for contradictions.', keywords: 'ai claude ask question answer contradictions continuity check' },
       { id: 'templates', label: 'Templates', icon: Ruler, to: (f) => w(f, 'settings?at=templates'), who: own, blurb: 'Starting points for new pages (in World settings).', keywords: 'template starting point' },
     ],

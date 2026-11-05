@@ -1,6 +1,7 @@
 import { strFromU8, strToU8, unzipSync, Zip, ZipDeflate, ZipPassThrough } from 'fflate'
 import { loadInBackground } from './worldLoading'
 import { showBoardsOf } from './showBoards'
+import { packFilesFor, restorePacks, type PacksInBackup } from './packs/backup'
 import { db, newId, PARTY, repId, type Asset, type Board, type Campaign, type Entity, type Pin, type Reputation, type Session, type Sound, type World, type WorldMap } from './db'
 
 /**
@@ -27,6 +28,8 @@ interface WorldBackup {
   reputation?: Reputation[]
   /** Set when the session recordings' audio was left out on purpose. The sessions, bookmarks and transcripts are all still here. */
   recordingsLeftOut?: { count: number; bytes: number }
+  /** The GM's own map-pack pieces the maps are drawn with (their pictures are in the zip at packs/<key>). */
+  packs?: PacksInBackup
 }
 
 /** When this device last downloaded a backup of a world, and when a reminder was put off until (device-only). */
@@ -80,6 +83,7 @@ export async function exportWorld(worldId: string, onProgress?: (done: number, t
   const all = await db.assets.where({ worldId }).toArray()
   const left = recordings ? [] : all.filter((a) => recorded.has(a.id))
   const assets = recordings ? all : all.filter((a) => !recorded.has(a.id))
+  const packs = await packFilesFor(maps)
   const backup: WorldBackup = {
     format: 'campaign-codex-world',
     version: 2,
@@ -95,6 +99,7 @@ export async function exportWorld(worldId: string, onProgress?: (done: number, t
     reputation: await db.reputation.where({ worldId }).toArray(),
     assets: assets.map(({ blob: _blob, ...a }) => a),
     ...(left.length ? { recordingsLeftOut: { count: left.length, bytes: left.reduce((n, a) => n + a.size, 0) } } : {}),
+    ...(packs.pieces.length ? { packs: packs.meta } : {}),
   }
 
   // The zip comes out in pieces; every so often they're joined into one Blob, which the browser can
@@ -129,6 +134,11 @@ export async function exportWorld(worldId: string, onProgress?: (done: number, t
     if (!a.blob.size) entry.push(new Uint8Array(), true)
     for (let at = 0; at < a.blob.size; at += SLICE)
       entry.push(new Uint8Array(await a.blob.slice(at, at + SLICE).arrayBuffer()), at + SLICE >= a.blob.size)
+  }
+  for (const f of packs.files) {
+    const entry = new ZipPassThrough(`packs/${f.key}`)
+    zip.add(entry)
+    entry.push(new Uint8Array(await f.blob.arrayBuffer()), true)
   }
   zip.end()
   await finished
@@ -329,6 +339,7 @@ export async function importWorld(file: File): Promise<string> {
       }),
     )
   })
+  if (b.packs && isZip) await restorePacks(b.packs, (k) => entry(`packs/${k}`)).catch((e) => console.warn('Map pack pieces from the backup', e))
   unpackFiles(worldId, b.assets.filter((a) => !blobs.has(a.id)), id, isZip ? entry : () => undefined, b).catch((e: Error) =>
     alert(`The world was imported, but unpacking its files stopped: ${e.message}. Import the backup again to get them all.`),
   )

@@ -103,6 +103,14 @@ export const HELP = {
     'Paint land with the brush and the coastline draws itself, with ripple lines and stippled shallows. Switch to Water to carve out seas, bays and lakes. Bigger brush for continents, smaller for islands and inlets.',
   mapPieces:
     'Pick a piece and click the map to place it. Type in the search box to find one quickly (tree, tent, boat, church…). Each piece has 8 versions, drawn under Version so you can see them; pick one, or Any for a different one each time (best for ranges and forests). Click and hold to scatter lots at once. Click a placed piece with Select to resize, turn, mirror, swap its version or link it to a page.',
+  packPicker:
+    'Switch between the pieces drawn by the app and Your packs: your own pictures, uploaded once in Map packs and switched on for this world in World settings › Map pieces. Only small previews are kept on this device at first; a piece downloads the moment you pick it and stays on this device after that. A tick means it is here already; “Download the whole pack” gets them all, for playing without internet.',
+  packTint:
+    'Off, your pictures look exactly as you drew them. On, they take on the map’s look: a wash of the climate’s colours in colour, or inked in browns on parchment. See-through parts stay see-through.',
+  mapPacks:
+    'Your own map pieces: pictures you made or bought (PNG, WebP or JPG; see-through backgrounds work best). Drop in files, a folder or a ZIP. Each folder becomes a group; tree-1, tree-2, tree-3 become versions of one piece “Tree”; “2x3” in a name makes it 2 squares wide and 3 tall. Check what each piece is for and its size, then save. Pictures are kept at most 1024 px across and stored once in your account, however many worlds use them. Switch a pack on for a world in World settings › Map pieces. Players never get the pieces, only the finished map picture.',
+  worldPacks:
+    'Which of your map packs this world can use in the map builder. Switching one off only hides it from the picker: maps that already use its pieces keep them. When you give a piece new pictures, maps keep the old ones until you choose “Use the new pictures” here. Co-GMs of a synced world can draw with the packs that are on, but never change them.',
   pieceMix:
     'Tick this, then click several pieces (say trees, bushes and ferns) to put them all on the brush. Every click or scatter picks one of them at random, so a wood comes out mixed instead of all one kind. Click a piece again to take it out. The size slider scales them all together.',
   pieceTurn:

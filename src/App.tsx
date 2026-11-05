@@ -48,6 +48,7 @@ const PrintPage = lazy(() => import('./print'))
 import Boards from './pages/Boards'
 const BoardView = lazy(() => import('./pages/BoardView'))
 const Sounds = lazy(() => import('./pages/Sounds'))
+const MapPacks = lazy(() => import('./pages/MapPacks'))
 import Questions from './pages/Questions'
 const RelationWeb = lazy(() => import('./pages/RelationWeb'))
 import ClocksPage from './clocks'
@@ -122,6 +123,7 @@ export default function App() {
             <Route path="boards" element={<Boards />} />
             <Route path="boards/:boardId" element={<BoardView />} />
             <Route path="sounds" element={<Sounds />} />
+            <Route path="packs" element={<MapPacks />} />
             <Route path="questions" element={<Questions />} />
             <Route path="web" element={<RelationWeb />} />
             <Route path="clocks" element={<ClocksPage />} />

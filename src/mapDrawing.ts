@@ -93,7 +93,7 @@ export type Shape =
       gm?: boolean
     }
   /** Classic maps: a piece from the hand-inked library (src/mapArt). `seed` makes each copy its own. */
-  | { id: string; kind: 'asset'; asset: string; at: Point; size: number; seed: number; variant: number; flip?: boolean; turn?: number; gm?: boolean }
+  | { id: string; kind: 'asset'; asset: string; at: Point; size: number; seed: number; variant: number; flip?: boolean; turn?: number; gm?: boolean; tint?: boolean }
 
 export const BACKGROUNDS = {
   sea: { label: 'Open sea (draw land on it)', fill: 'url(#p-sea)' },
