@@ -54,7 +54,7 @@ export async function removePack(id: string) {
   void pushPacks()
 }
 
-export interface NewPicture extends Pick<PackVersion, 'd' | 'mode' | 'biome' | 'state'> {
+export interface NewPicture extends Pick<PackVersion, 'd' | 'mode' | 'biome' | 'state' | 'part'> {
   full: Blob
   thumb: Blob
   w: number
@@ -71,6 +71,8 @@ export interface NewPiece {
   light: boolean
   view?: 'top' | 'side'
   states?: string[]
+  /** A set of wall or fence tiles, or a floor texture. */
+  use?: PackPiece['use']
   pictures: NewPicture[]
 }
 
@@ -83,6 +85,7 @@ const versionOf = (x: NewPicture): PackVersion => ({
   ...(x.mode ? { mode: x.mode } : {}),
   ...(x.biome ? { biome: x.biome } : {}),
   ...(x.state ? { state: x.state } : {}),
+  ...(x.part ? { part: x.part } : {}),
 })
 
 /** Adds pieces (with their pictures) to a pack on this device, then sends them up if signed in. */
@@ -103,6 +106,7 @@ export async function addPieces(packId: string, pieces: NewPiece[]) {
       ...(p.light ? { light: true } : {}),
       ...(p.view ? { view: p.view } : {}),
       ...(p.states ? { states: p.states } : {}),
+      ...(p.use ? { use: p.use } : {}),
       versions: p.pictures.map(versionOf),
       rev: 1,
       updatedAt: now,

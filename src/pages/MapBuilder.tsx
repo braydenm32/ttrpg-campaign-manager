@@ -7,7 +7,7 @@ import { VisibilityControl } from '../reveal'
 import { toast } from '../undo'
 import { ExportMap } from '../ExportMap'
 import { keepBeforeChange, keepMapVersion, MapVersions, restorePiecePins } from '../mapVersions'
-import { blankEntity, db, ENTITY_LABELS, newId, type Entity, type Pin, type WorldMap } from '../db'
+import { blankEntity, db, ENTITY_LABELS, newId, type Entity, type PackPiece, type Pin, type WorldMap } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { renderPlayerFog } from '../fog'
 import {
@@ -17,6 +17,7 @@ import {
   gmOnly,
   GROUNDS,
   hasSecrets,
+  isPackGround,
   LAYERS,
   LINE_STYLES,
   pathFor,
@@ -43,14 +44,17 @@ import {
 import { ASSET_GROUPS, Atlas, assetNamesIn, BATTLE_GROUPS, CITY_GROUPS } from '../mapArt/atlas'
 import { ensurePackArt, isPackAsset } from '../packs/art'
 import { ConditionPicker, PackPicker } from '../packs/PackPicker'
+import { groundName, KitPicker, loadKit, useKits } from '../packs/Kits'
+import { laidGround, markFits, tileKey, tileMark, tileSet, tileValue, type TileMark } from '../packs/tiles'
+import { kitOf } from '../packs/art'
 import { canTurn, classicBlob, classicHitSvg, drawPiece, floorTest, FONTS, landTest, loadMapFonts, LOOKS, pieceOutline, playersCopy, renderClassic, riverWidth, roomTest, secretFloorTest, streetWidth, styleFor, townWallHalf } from '../mapArt/classic'
 import { groundColour } from '../mapArt/ground'
 import { useViewMode } from '../viewMode'
 import { worldPath } from '../paths'
 import { Ico } from '../icons'
-import { ClockCounterClockwise, Cursor, Eraser, Hand, House, Mountains, PaintBrush, PaintBrushBroad, PencilLine, TextT, Tree, Wall, Waves, type Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { CastleTurret, ClockCounterClockwise, Cursor, Eraser, Hand, House, Mountains, PaintBrush, PaintBrushBroad, PencilLine, TextT, Tree, Wall, Waves, type Icon as PhosphorIcon } from '@phosphor-icons/react'
 
-type Tool = 'select' | 'hand' | 'land' | 'coast' | 'room' | 'line' | 'stamp' | 'label' | 'erase'
+type Tool = 'select' | 'hand' | 'land' | 'coast' | 'room' | 'line' | 'tiles' | 'stamp' | 'label' | 'erase'
 
 interface ToolDef {
   id: Tool
@@ -59,7 +63,7 @@ interface ToolDef {
   hint: string
 }
 /** One key for each tool, as in other map and drawing programs (R is taken: it turns the selected piece). */
-const TOOL_KEYS: Record<Tool, string> = { select: 'V', hand: 'H', land: 'B', coast: 'C', room: 'D', line: 'L', stamp: 'P', label: 'T', erase: 'E' }
+const TOOL_KEYS: Record<Tool, string> = { select: 'V', hand: 'H', land: 'B', coast: 'C', room: 'D', line: 'L', tiles: 'W', stamp: 'P', label: 'T', erase: 'E' }
 
 const WORLD_TOOLS: ToolDef[] = [
   { id: 'select', icon: Cursor, label: 'Select', hint: 'Click a piece, line, label or painted stroke to edit it, drag to move it' },
@@ -77,6 +81,7 @@ const BATTLE_TOOLS: ToolDef[] = [
   { id: 'land', icon: PaintBrush, label: 'Ground', hint: 'Drag to paint grass, dirt, sand, stone, mud, snow, floors or water. Where two kinds meet they blend softly' },
   { id: 'room', icon: Wall, label: 'Rooms', hint: 'Drag to dig out a room, passage or cave. Rooms that touch join up, and the walls draw themselves' },
   { id: 'line', icon: PencilLine, label: 'Line', hint: 'Drag to draw fences, hedges, stone walls and cliff edges' },
+  { id: 'tiles', icon: CastleTurret, label: 'Walls', hint: 'Drag along the squares to build a wall or fence from a map pack. It joins up at corners and crossings by itself' },
   { id: 'stamp', icon: Tree, label: 'Place', hint: 'Click to place a piece. Click and hold, then drag, to scatter lots of them' },
   { id: 'label', icon: TextT, label: 'Label', hint: 'Click to place text, or drag to write it along a curve' },
   { id: 'erase', icon: Eraser, label: 'Erase', hint: 'Click a piece, line or label, a room’s edge or a painted stroke to delete it, or drag across several' },
@@ -116,7 +121,21 @@ type LineOpts = { ft: Record<Way, number>; towers: number }
 /** Laid floors stop at the walls unless you say otherwise; natural ground goes everywhere. */
 const FLOORS: GroundId[] = ['paving', 'floor', 'boards']
 /** The grounds a map offers: town maps are outdoors, so no floors or boards. */
-const groundsFor = (city: boolean) => (Object.keys(GROUNDS) as GroundId[]).filter((g) => !city || (g !== 'floor' && g !== 'boards'))
+const groundsFor = (city: boolean) => (Object.keys(GROUNDS) as (keyof typeof GROUNDS)[]).filter((g) => !city || (g !== 'floor' && g !== 'boards'))
+/** The Walls tool: the set it builds with (a pack asset name), and whether it builds, puts in doorways or broken stretches, or takes wall away. */
+type TileBrush = { set?: string; mode: 'build' | TileMark | 'remove' }
+/** The squares a drag from a to b passes over, in order. */
+function squaresAlong(a: Point, b: Point, g: number): [number, number][] {
+  const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / (g / 4)))
+  const out: [number, number][] = []
+  for (let i = 0; i <= n; i++) {
+    const c = Math.floor((a[0] + ((b[0] - a[0]) * i) / n) / g)
+    const r = Math.floor((a[1] + ((b[1] - a[1]) * i) / n) / g)
+    const last = out[out.length - 1]
+    if (!last || last[0] !== c || last[1] !== r) out.push([c, r])
+  }
+  return out
+}
 /** How the Rooms tool digs: its shape, digging out or filling in, passage width and cave brush size (px), and grid snapping. */
 type RoomBrush = { shape: RoomStroke['shape']; mode: RoomStroke['mode']; width: number; cave: number; snap: boolean; secret: boolean }
 const ROOM_SHAPES: { id: RoomStroke['shape']; icon: string; label: string; hint: string }[] = [
@@ -352,6 +371,8 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const [groundBrush, setGroundBrush] = useState<GroundBrush>(() => ({ ground: 'dirt', size: Math.round(groundStep(drawing) * 2), inside: false }))
   const [roomBrush, setRoomBrush] = useState<RoomBrush>(() => ({ shape: 'rect', mode: 'dig', width: drawing.gridSize || 70, cave: 2 * (drawing.gridSize || 70), snap: true, secret: false }))
   const [roomDraft, setRoomDraft] = useState<RoomStroke>()
+  const [tileBrush, setTileBrush] = useState<TileBrush>({ mode: 'build' })
+  const groundKits = useKits('ground')
   const [spray, setSpray] = useState(() => ({ spread: Math.round(Math.max(W, H) / 18), thickness: 3 }))
   const [labelText, setLabelText] = useState('')
   const [labelSize, setLabelSize] = useState(() => Math.round(Math.max(W, H) / 40))
@@ -371,6 +392,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     | { kind: 'scatter'; before: Drawing; placed: Shape[]; start: Point; at: Point; t0: number; moved: boolean; fits: (asset: string, p: Point) => boolean }
     | { kind: 'erase'; before: Drawing; ids: Set<string>; strokes: boolean }
     | { kind: 'pinch'; view: typeof view; mid: Point; dist: number }
+    | { kind: 'tiles'; before: Drawing; tiles: Record<string, string>; last: Point }
   >(undefined)
   // Fingers (and pens and mice) on the map, so a second finger zooms instead of breaking the stroke.
   const pointers = useRef(new Map<number, { at: Point; touch: boolean }>())
@@ -1038,7 +1060,26 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     window.clearInterval(scatterTimer.current)
     setDraft([])
     setRoomDraft(undefined)
-    if (g && (g.kind === 'scatter' || g.kind === 'erase' || g.kind === 'move')) setDrawing(g.before)
+    if (g && (g.kind === 'scatter' || g.kind === 'erase' || g.kind === 'move' || g.kind === 'tiles')) setDrawing(g.before)
+  }
+
+  /** The Walls tool: builds (or takes away) wall on these squares, and shows it straight away. */
+  const paintTiles = (g: { before: Drawing; tiles: Record<string, string> }, squares: [number, number][]) => {
+    let changed = false
+    for (const [c, r] of squares) {
+      if (c < 0 || r < 0 || c * gs >= W || r * gs >= H) continue
+      const key = tileKey(c, r)
+      if (tileBrush.mode === 'remove') {
+        if (g.tiles[key]) {
+          delete g.tiles[key]
+          changed = true
+        }
+      } else if (tileBrush.set && tileSet(g.tiles[key] ?? '') !== tileBrush.set) {
+        g.tiles[key] = tileBrush.set
+        changed = true
+      }
+    }
+    if (changed) setDrawing({ ...g.before, tiles: { ...g.tiles } })
   }
 
   const onPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
@@ -1066,6 +1107,24 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       if (tool === 'label' && locked('labels')) return
       gesture.current = { kind: 'draw', points: [p] }
       setDraft([p])
+    } else if (tool === 'tiles') {
+      if (locked('paths') || !onMap(p)) return
+      const tiles = drawing.tiles ?? {}
+      const c = Math.floor(p[0] / gs)
+      const r = Math.floor(p[1] / gs)
+      const here = tiles[tileKey(c, r)]
+      if (tileBrush.mode === 'door' || tileBrush.mode === 'broken') {
+        // a doorway or broken stretch goes into a straight run of wall that's already there; clicking one again takes it out
+        if (!here) return toast('Click a square of wall to put a doorway or a broken stretch in it.')
+        if (!markFits(tiles, c, r)) return toast('Doorways and broken stretches go in a straight run of wall, not at a corner or crossing.')
+        const mark = tileMark(here) === tileBrush.mode ? undefined : tileBrush.mode
+        commit({ ...drawing, tiles: { ...tiles, [tileKey(c, r)]: tileValue(tileSet(here), mark) } })
+        return
+      }
+      if (tileBrush.mode === 'build' && !tileBrush.set) return toast('Pick a wall or fence first.')
+      const g = { kind: 'tiles' as const, before: drawing, tiles: { ...tiles }, last: p }
+      gesture.current = g
+      paintTiles(g, [[c, r]])
     } else if (tool === 'room') {
       if (locked('paths')) return
       gesture.current = { kind: 'room', points: [p] }
@@ -1133,6 +1192,12 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       if (Math.hypot(g.at[0] - g.start[0], g.at[1] - g.start[1]) > 6 * unitsPerPixel()) g.moved = true
       return
     }
+    if (g.kind === 'tiles') {
+      const at = toMap(e)
+      paintTiles(g, squaresAlong(g.last, at, gs))
+      g.last = at
+      return
+    }
     if (g.kind === 'pan') {
       const k = g.view.w / canvas.w
       setView({ ...g.view, x: g.view.x - (e.clientX - g.client[0]) * k, y: g.view.y - (e.clientY - g.client[1]) * k })
@@ -1190,6 +1255,11 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     if (!g) return
     if (g.kind === 'scatter') {
       if (g.placed.length) commit({ ...g.before, shapes: [...g.before.shapes, ...g.placed] }, g.before)
+      return
+    }
+    if (g.kind === 'tiles') {
+      if (JSON.stringify(g.tiles) !== JSON.stringify(g.before.tiles ?? {})) commit({ ...g.before, tiles: g.tiles }, g.before)
+      else setDrawing(g.before)
       return
     }
     if (g.kind === 'erase') {
@@ -1448,7 +1518,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
               W={W}
               H={H}
               {...{ lineStyle, setLineStyle, lineOpts, setLineOpts, labelText, setLabelText, labelSize, setLabelSize }}
-              {...{ brush, setBrush, piece, setPiece, recent, spray, setSpray, labelFont, setLabelFont, groundBrush, setGroundBrush, roomBrush, setRoomBrush }}
+              {...{ brush, setBrush, piece, setPiece, recent, spray, setSpray, labelFont, setLabelFont, groundBrush, setGroundBrush, roomBrush, setRoomBrush, tileBrush, setTileBrush, groundKits }}
               setOutside={(outside) => commit({ ...drawing, outside })}
             />
           )}
@@ -1559,12 +1629,30 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
               {top && (
                 <label>
                   Ground to start on
-                  <select value={drawing.groundBase ?? 'grass'} onChange={(e) => commit({ ...drawing, groundBase: e.target.value as GroundId })}>
+                  <select
+                    value={drawing.groundBase ?? 'grass'}
+                    onChange={async (e) => {
+                      const groundBase = e.target.value as GroundId
+                      // a pack's floor texture needs its pictures first
+                      const kit = groundKits.find((k) => kitOf(groundBase)?.piece.id === k.id)
+                      if (kit && !(await loadKit(kit, drawing))) return toast(`Couldn’t download ${kit.label}. Are you online?`)
+                      commit({ ...drawing, groundBase })
+                    }}
+                  >
                     {groundsFor(city).map((g) => (
                       <option key={g} value={g}>
                         {GROUNDS[g]}
                       </option>
                     ))}
+                    {!!groundKits.length && (
+                      <optgroup label="Floor textures">
+                        {groundKits.map((k) => (
+                          <option key={k.id} value={`pack:${k.id}@${k.rev}`}>
+                            {k.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 </label>
               )}
@@ -1648,6 +1736,9 @@ function ToolOptions(p: {
   roomBrush: RoomBrush
   setRoomBrush: (b: RoomBrush) => void
   setOutside: (o: 'rock' | 'ground') => void
+  tileBrush: TileBrush
+  setTileBrush: (b: TileBrush) => void
+  groundKits: PackPiece[]
 }) {
   const battle = p.drawing.scene === 'battle'
   const city = p.drawing.scene === 'city'
@@ -1668,6 +1759,7 @@ function ToolOptions(p: {
         {p.tool === 'land' && <Help topic={top ? 'groundBrush' : 'landBrush'} />}
         {p.tool === 'coast' && <Help topic="coastBrush" />}
         {p.tool === 'room' && <Help topic="rooms" />}
+        {p.tool === 'tiles' && <Help topic="tileWalls" />}
         {p.tool === 'line' && city && <Help topic="cityLines" />}
         {p.tool === 'stamp' && <Help topic="mapPieces" />}
         {p.tool === 'label' && <Help topic="curvedLabels" />}
@@ -1685,6 +1777,13 @@ function ToolOptions(p: {
               </button>
             ))}
           </div>
+          <KitPicker
+            kits={p.groundKits}
+            drawing={p.drawing}
+            label="Floor textures"
+            value={p.groundBrush.ground}
+            onPick={(ground) => p.setGroundBrush({ ...p.groundBrush, ground: ground as GroundId, inside: laidGround(ground) })}
+          />
           <label>
             Brush size: {p.groundBrush.size}px ({Math.round((p.groundBrush.size / grid) * 5)} ft)
             <input type="range" min={Math.round(step / 4)} max={step * 8} value={p.groundBrush.size} onChange={(e) => p.setGroundBrush({ ...p.groundBrush, size: Number(e.target.value) })} />
@@ -1696,6 +1795,7 @@ function ToolOptions(p: {
           )}
         </>
       )}
+      {p.tool === 'tiles' && <WallOptions drawing={p.drawing} brush={p.tileBrush} setBrush={p.setTileBrush} />}
       {p.tool === 'room' && (
         <>
           <div className="swatch-grid">
@@ -1840,6 +1940,39 @@ function ToolOptions(p: {
 }
 
 /** The towers a town wall gets at its corners: one of the wall tower's versions, or none. */
+/** The Walls tool's options: the wall or fence to build with, and what a click or drag does. */
+function WallOptions({ drawing, brush, setBrush }: { drawing: Drawing; brush: TileBrush; setBrush: (b: TileBrush) => void }) {
+  const { worldId } = useWorld()
+  const kits = useKits('tiles')
+  const modes: { id: TileBrush['mode']; label: string; hint: string }[] = [
+    { id: 'build', label: 'Build', hint: 'Drag along the squares the wall runs through' },
+    { id: 'door', label: 'Doorway', hint: 'Click a square of straight wall to leave a doorway in it (click it again to wall it up)' },
+    { id: 'broken', label: 'Broken', hint: 'Click a square of straight wall to break it' },
+    { id: 'remove', label: 'Take away', hint: 'Drag across wall to take it away' },
+  ]
+  const mode = modes.find((m) => m.id === brush.mode)!
+  if (!kits.length)
+    return (
+      <p className="muted small">
+        Walls and fences come from map packs. Switch the Warded Atlas pack on for this world in <Link to={`${worldPath(worldId)}/settings?at=packs`}>World settings › Map pieces</Link>.
+      </p>
+    )
+  const set = brush.set && kitOf(brush.set) ? brush.set : undefined
+  return (
+    <>
+      <div className="row wrap" role="group" aria-label="What the Walls tool does">
+        {modes.map((m) => (
+          <button key={m.id} type="button" className={brush.mode === m.id ? 'primary' : ''} aria-pressed={brush.mode === m.id} onClick={() => setBrush({ ...brush, mode: m.id })}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+      <p className="muted small">{mode.hint}.</p>
+      <KitPicker kits={kits} drawing={drawing} label="Walls and fences" value={set} onPick={(name) => setBrush({ set: name, mode: 'build' })} />
+    </>
+  )
+}
+
 function TowerPicker({ drawing, value, onPick }: { drawing: Drawing; value: number; onPick: (v: number) => void }) {
   if (!Atlas.assets['ct-wall-tower']) return null
   return (
@@ -2256,7 +2389,7 @@ function StrokeProps({ stroke, drawing, onChange, onDelete, onClose }: {
   const room = 'shape' in stroke ? stroke : undefined
   const ground = 'ground' in stroke ? stroke : undefined
   const land = !room && !ground ? (stroke as LandStroke) : undefined
-  const title = room ? (ROOM_SHAPES.find((r) => r.id === room.shape)?.label ?? 'Room') : ground ? `${GROUNDS[ground.ground]} (painted)` : land?.mode === 'water' ? (city ? 'Sea (painted)' : 'Water (painted)') : 'Land (painted)'
+  const title = room ? (ROOM_SHAPES.find((r) => r.id === room.shape)?.label ?? 'Room') : ground ? `${groundName(ground.ground)} (painted)` : land?.mode === 'water' ? (city ? 'Sea (painted)' : 'Water (painted)') : 'Land (painted)'
   return (
     <div className="form">
       <header>
@@ -2286,9 +2419,9 @@ function StrokeProps({ stroke, drawing, onChange, onDelete, onClose }: {
         <label>
           Ground
           <select value={ground.ground} onChange={(e) => onChange({ ground: e.target.value as GroundId })}>
-            {groundsFor(city).map((g) => (
+            {[...groundsFor(city), ...(isPackGround(ground.ground) ? [ground.ground] : [])].map((g) => (
               <option key={g} value={g}>
-                {GROUNDS[g]}
+                {groundName(g)}
               </option>
             ))}
           </select>

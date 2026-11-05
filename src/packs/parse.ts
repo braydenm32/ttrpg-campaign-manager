@@ -106,9 +106,11 @@ export interface PieceDraft {
   tags?: PictureTag[]
   view?: 'top' | 'side'
   states?: string[]
+  /** A set of wall or fence tiles, or a floor texture, rather than a piece to place. */
+  use?: 'wall' | 'fence' | 'ground'
 }
 
-export type PictureTag = Pick<PackVersion, 'd' | 'mode' | 'biome' | 'state'>
+export type PictureTag = Pick<PackVersion, 'd' | 'mode' | 'biome' | 'state' | 'part'>
 
 /** Groups pictures into pieces (versions by trailing number), with guesses for each. */
 export function draftPieces(pictures: PictureFile[], fallbackScene: PackScene = 'battle'): PieceDraft[] {
@@ -199,7 +201,9 @@ function indexScene(view: string, group: string): PackScene {
 }
 
 /** Kinds in a pack index that aren't pieces to place (walls and fences, floor textures): left out for now. */
+/** Index rows that aren't pieces to place: wall and fence tiles (one set for each wall), and floor textures. */
 export const NOT_PIECES = new Set(['modular', 'texture'])
+const TILE_PART = /-(straight|corner|tee|cross|end|post|doorway|broken)$/
 
 /**
  * Pieces from a pack with an index (Asset_Index.csv: id, label, group, view, state, mode, biome,
@@ -226,22 +230,30 @@ export function draftFromIndex(pictures: PictureFile[], index: PackIndex): { dra
   const families = new Map<string, string[][]>()
   for (const r of rows) {
     const view = get(r, 'view')
-    if (NOT_PIECES.has(view)) {
-      const kind = view === 'modular' ? 'wall and fence tiles' : 'floor textures'
-      left.set(kind, (left.get(kind) ?? 0) + 1)
-      continue
-    }
     const id = get(r, 'id')
     if (!id) continue
-    families.set(id, [...(families.get(id) ?? []), r])
+    // wall-brick-straight, wall-brick-corner…: all one set, wall-brick
+    const key = view === 'modular' ? id.replace(TILE_PART, '') : id
+    if (view === 'modular' && key === id) {
+      left.set('wall and fence tiles', (left.get('wall and fence tiles') ?? 0) + 1)
+      continue
+    }
+    families.set(key, [...(families.get(key) ?? []), r])
   }
   const drafts: PieceDraft[] = []
   for (const [, rs] of families) {
-    const variants = [...new Set(rs.map((r) => Number(get(r, 'variant')) || 1))].sort((a, b) => a - b).slice(0, 8)
+    const r0 = rs[0]
+    const view = get(r0, 'view')
+    const tiles = view === 'modular'
+    const partOf = (r: string[]) => (tiles ? (TILE_PART.exec(get(r, 'id'))?.[1] ?? '') : '')
+    // designs are counted for each part of a wall on its own (it may have four broken tiles and one straight)
+    const variantsOf = new Map<string, number[]>()
+    for (const r of rs) variantsOf.set(partOf(r), [...(variantsOf.get(partOf(r)) ?? []), Number(get(r, 'variant')) || 1])
+    for (const [k, v] of variantsOf) variantsOf.set(k, [...new Set(v)].sort((a, b) => a - b).slice(0, 8))
     const files: PictureFile[] = []
     const tags: PictureTag[] = []
     for (const r of rs) {
-      const d = variants.indexOf(Number(get(r, 'variant')) || 1)
+      const d = variantsOf.get(partOf(r))!.indexOf(Number(get(r, 'variant')) || 1)
       if (d < 0) continue
       const file = byPath.get(get(r, 'file'))
       if (!file) {
@@ -250,17 +262,38 @@ export function draftFromIndex(pictures: PictureFile[], index: PackIndex): { dra
       }
       const mode = get(r, 'mode')
       files.push(file)
-      tags.push({ d, mode: mode === 'ink' ? 'ink' : mode === 'colour' ? 'colour' : undefined, biome: get(r, 'biome') || undefined, state: get(r, 'state') || 'intact' })
+      tags.push({
+        d,
+        mode: mode === 'ink' ? 'ink' : mode === 'colour' ? 'colour' : undefined,
+        biome: get(r, 'biome') || undefined,
+        state: get(r, 'state') || 'intact',
+        ...(tiles ? { part: partOf(r) } : {}),
+      })
     }
     if (!files.length) continue
-    const r0 = rs[0]
-    const view = get(r0, 'view')
     const grid = Number(get(r0, 'grid_px')) || 256
     // its size from the plain picture: the first design, intact, in colour
     const plain = rs.find((r) => get(r, 'state') === 'intact' && get(r, 'mode') === 'colour') ?? r0
     const quarter = (px: number) => Math.min(40, Math.max(0.25, Math.round((px / grid) * 4) / 4))
-    const label = get(r0, 'label') || tidyName(get(r0, 'id'))
     const group = get(r0, 'group')
+    if (NOT_PIECES.has(view)) {
+      const use = view === 'texture' ? 'ground' : /fence/i.test(`${group} ${get(r0, 'id')}`) ? 'fence' : 'wall'
+      const name = (get(r0, 'label') || tidyName(get(r0, 'id').replace(TILE_PART, ''))).replace(/\s+(straight|corner|tee|cross|end|post|doorway|broken)$/i, '')
+      drafts.push({
+        label: name[0].toUpperCase() + name.slice(1),
+        group: use === 'ground' ? 'Floors & ground' : use === 'fence' ? 'Fences' : 'Walls',
+        scene: 'battle',
+        view: 'top',
+        cols: tiles ? 1 : quarter(Number(get(r0, 'width')) || grid),
+        rows: tiles ? 1 : quarter(Number(get(r0, 'height')) || grid),
+        light: false,
+        files,
+        tags,
+        use,
+      })
+      continue
+    }
+    const label = get(r0, 'label') || tidyName(get(r0, 'id'))
     drafts.push({
       label,
       group: groupName(group),
@@ -327,5 +360,16 @@ export async function makePictures(files: PictureFile[]): Promise<NewPicture[]> 
 /** A draft with its pictures made, ready for addPieces. */
 export async function finishPiece(d: PieceDraft): Promise<NewPiece> {
   const pictures = (await makePictures(d.files)).map((p, i) => ({ ...p, ...(d.tags?.[i] ?? {}) }))
-  return { label: d.label, group: d.group, scene: d.scene, cols: d.cols, rows: d.rows, light: d.light, pictures, ...(d.view ? { view: d.view } : {}), ...(d.states && d.states.length > 1 ? { states: d.states } : {}) }
+  return {
+    label: d.label,
+    group: d.group,
+    scene: d.scene,
+    cols: d.cols,
+    rows: d.rows,
+    light: d.light,
+    pictures,
+    ...(d.view ? { view: d.view } : {}),
+    ...(d.states && d.states.length > 1 ? { states: d.states } : {}),
+    ...(d.use ? { use: d.use } : {}),
+  }
 }

@@ -92,7 +92,7 @@ hidden in the desktop app, which keeps to email sign-in for now.
 
 ## 5. The Warded Atlas pack (Cloudflare R2)
 
-The map pieces that come with the app (the "Warded Atlas pack" under "Your packs" in the map builder) are pictures in a Cloudflare R2 bucket, read by every copy of the app from `https://packs.wardedatlas.com` (`src/packs/builtin.ts`). They're made with `scripts/build-pack.py` from the pack's index and put there with `scripts/upload-pack.py`. Until the bucket has them, the pack simply doesn't show.
+The map pieces that come with the app (the "Warded Atlas pack" under "Your packs" in the map builder) are pictures in a Cloudflare R2 bucket, read by every copy of the app from `https://packs.wardedatlas.com` (`src/packs/builtin.ts`). Its wall and fence sets (the Walls tool) and floor textures (the Ground tool) are in the same bucket, listed under `extra` in `manifest.json` so that copies of the app from before them don't offer them as pieces. They're made with `scripts/build-pack.py` from the pack's index and put there with `scripts/upload-pack.py`, which only sends pictures that aren't there yet. Until the bucket has them, the pack simply doesn't show.
 
 The pack's pictures (about 145 MB once converted) will be kept in a Cloudflare R2 bucket. Anyone using the app can read them, and downloads are free. You set up the bucket once. After that I upload the pictures, and the app reads them from `https://packs.wardedatlas.com`.
 

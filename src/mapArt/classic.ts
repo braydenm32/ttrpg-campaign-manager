@@ -5,6 +5,7 @@
  */
 import { Atlas, type InkStyle, type Point, type Rng, type Tint } from './atlas'
 import { hashId, loopArea, makeNoise, roughen, scaleOf, smoothLine, traceLoops } from './geometry'
+import { drawTiles, groundsReady } from '../packs/tiles'
 import { buildGround, drawGround, freeGroundSheet, groundColour, type GroundMap } from './ground'
 import { buildRooms, doorGaps, drawRock, type RoomMap } from './rooms'
 import { drawUnit, forPlayers, fromAbove, gmOnly, LAYERS, layerOf, type Drawing, type GroundId, type LayerId, type LabelFont, type Look, type Shape, type StampKind, type Terrain } from '../mapDrawing'
@@ -1431,7 +1432,7 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
     const gm = groundFor(d, W, H)
     const coast = city ? landFor(d, W, H) : undefined
     if (coast?.loops.length) shore = coast.path
-    const baseKey = `${gm.key}|${coast?.key ?? ''}|${look}|${d.biome}|${scale}|${canvas.width}x${canvas.height}`
+    const baseKey = `${gm.key}|${coast?.key ?? ''}|${look}|${d.biome}|${scale}|${canvas.width}x${canvas.height}|${groundsReady(d)}`
     base = keep2(baseCache, baseKey, () => ({ key: baseKey, canvas: coast ? drawCityBase(gm, coast, d, W, H, scale, st, r) : drawGround(gm, d, W, H, scale, st, r) })).canvas
   }
   ctx.save()
@@ -1477,6 +1478,9 @@ export function renderClassic(d: Drawing, W: number, H: number, scale = 1): HTML
       ctx.restore()
     }
   }
+
+  // walls and fences built from a pack's tiles, square by square
+  if (battle && !hidden.has('paths')) drawTiles(ctx, d, st)
 
   // a bird's-eye town: walls, buildings and trees stand up, so they're drawn back to front
   const bird = city && !!d.birdsEye

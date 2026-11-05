@@ -43,7 +43,7 @@ export function PackPicker({ drawing, words, pool, state, onPick }: { drawing: D
   const packs = useLiveQuery(() => db.packs.bulkGet(on), [on.join()])?.filter((p) => p && !p.deleted) ?? []
   const allPacks = useLiveQuery(() => db.packs.filter((p) => !p.deleted && !p.borrowed && !p.builtin).count(), []) ?? 0
   const scenes = scenesFor(drawing)
-  const pieces = useLiveQuery(() => db.packPieces.where('packId').anyOf(on).filter((p) => !p.hidden).toArray(), [on.join()]) ?? []
+  const pieces = useLiveQuery(() => db.packPieces.where('packId').anyOf(on).filter((p) => !p.hidden && !p.use).toArray(), [on.join()]) ?? []
   const fitting = pieces.filter((p) => scenes.includes(p.scene))
   const ids = fitting.map((p) => p.id)
   const keys = new Set(useLiveQuery(() => (ids.length ? db.packFiles.where('pieceId').anyOf(ids).primaryKeys() : []), [ids.join()]) ?? [])

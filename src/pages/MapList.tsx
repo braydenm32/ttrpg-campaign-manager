@@ -213,7 +213,7 @@ function NewDrawnMap({ worldId, onClose, onCreated }: { worldId: string; onClose
             ) : (
               <>
                 <option value="rock">Solid rock (dig out a dungeon)</option>
-                {(Object.keys(GROUNDS) as GroundId[]).map((g) => (
+                {(Object.keys(GROUNDS) as (keyof typeof GROUNDS)[]).map((g) => (
                   <option key={g} value={g}>
                     {GROUNDS[g]} everywhere (paint the rest)
                   </option>
