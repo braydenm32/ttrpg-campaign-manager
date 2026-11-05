@@ -6,6 +6,7 @@
 import { db, type MapPack, type PackFile, type PackPiece, type WorldMap } from '../db'
 import { fileKey, packPiecesIn, parsePackAsset, versionsOf } from './art'
 import { fetchPackFile } from './store'
+import { BUILTIN_PACK } from './builtin'
 
 export interface PacksInBackup {
   packs: Pick<MapPack, 'id' | 'name' | 'owner'>[]
@@ -44,7 +45,7 @@ export async function packFilesFor(maps: WorldMap[]) {
 /** Puts a backup's pieces and pictures on this device, where it doesn't have them. */
 export async function restorePacks(b: PacksInBackup, file: (key: string) => Uint8Array<ArrayBuffer> | undefined) {
   const now = Date.now()
-  for (const p of b.packs) if (!(await db.packs.get(p.id))) await db.packs.put({ ...p, createdAt: now, updatedAt: now, borrowed: true })
+  for (const p of b.packs) if (!(await db.packs.get(p.id))) await db.packs.put({ ...p, createdAt: now, updatedAt: now, ...(p.id === BUILTIN_PACK ? { builtin: true } : { borrowed: true }) })
   for (const x of b.pieces) if (!(await db.packPieces.get(x.id))) await db.packPieces.put(x)
   for (const key of b.files) {
     if (await db.packFiles.get(key)) continue

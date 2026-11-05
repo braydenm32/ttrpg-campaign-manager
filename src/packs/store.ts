@@ -7,6 +7,8 @@
  * call quietly fails and packs simply stay on this device.
  */
 import { supabase } from '../cloud/client'
+import { BUILTIN_PACK, builtinFileUrl } from './builtin'
+import { designsOf, pictureFor, type PackLook } from './looks'
 import { db, newId, type MapPack, type PackFile, type PackPiece, type PackScene, type PackVersion, type World } from '../db'
 
 const BUCKET = 'map-packs'
@@ -52,7 +54,7 @@ export async function removePack(id: string) {
   void pushPacks()
 }
 
-export interface NewPicture {
+export interface NewPicture extends Pick<PackVersion, 'd' | 'mode' | 'biome' | 'state'> {
   full: Blob
   thumb: Blob
   w: number
@@ -67,8 +69,21 @@ export interface NewPiece {
   cols: number
   rows: number
   light: boolean
+  view?: 'top' | 'side'
+  states?: string[]
   pictures: NewPicture[]
 }
+
+const versionOf = (x: NewPicture): PackVersion => ({
+  w: x.w,
+  h: x.h,
+  ext: x.ext,
+  bytes: x.full.size + x.thumb.size,
+  ...(x.d !== undefined ? { d: x.d } : {}),
+  ...(x.mode ? { mode: x.mode } : {}),
+  ...(x.biome ? { biome: x.biome } : {}),
+  ...(x.state ? { state: x.state } : {}),
+})
 
 /** Adds pieces (with their pictures) to a pack on this device, then sends them up if signed in. */
 export async function addPieces(packId: string, pieces: NewPiece[]) {
@@ -86,7 +101,9 @@ export async function addPieces(packId: string, pieces: NewPiece[]) {
       cols: p.cols,
       rows: p.rows,
       ...(p.light ? { light: true } : {}),
-      versions: p.pictures.map((x) => ({ w: x.w, h: x.h, ext: x.ext, bytes: x.full.size + x.thumb.size })),
+      ...(p.view ? { view: p.view } : {}),
+      ...(p.states ? { states: p.states } : {}),
+      versions: p.pictures.map(versionOf),
       rev: 1,
       updatedAt: now,
       pending: true,
@@ -124,7 +141,7 @@ export async function replacePictures(id: string, pictures: NewPicture[]) {
     files.push({ key: key(id, rev, v, 'full'), pieceId: id, blob: x.full, unsent: true })
     files.push({ key: key(id, rev, v, 'thumb'), pieceId: id, blob: x.thumb, unsent: true })
   })
-  const versions: PackVersion[] = pictures.map((x) => ({ w: x.w, h: x.h, ext: x.ext, bytes: x.full.size + x.thumb.size }))
+  const versions: PackVersion[] = pictures.map(versionOf)
   await db.transaction('rw', [db.packPieces, db.packFiles], async () => {
     await db.packFiles.bulkPut(files)
     await db.packPieces.update(id, { rev, versions, older: { ...(piece.older ?? {}), [piece.rev]: piece.versions }, updatedAt: Date.now(), pending: true })
@@ -135,13 +152,19 @@ export async function replacePictures(id: string, pictures: NewPicture[]) {
 // ---------- the cloud ----------
 
 let pushing: Promise<void> | undefined
+let again = false
 
 /**
  * Sends everything made or changed on this device to the cloud, when signed in. Packs made while
  * signed out become the signed-in account's. Failures leave things marked to try again next time.
  */
 export function pushPacks(): Promise<void> {
-  pushing ??= (async () => {
+  if (pushing) {
+    // something changed while sending: go round once more when this one's done
+    again = true
+    return pushing
+  }
+  pushing = (async () => {
     try {
       const me = await packUser()
       if (!me) return
@@ -156,7 +179,7 @@ export function pushPacks(): Promise<void> {
       for (const x of pieces) {
         // the pictures first, so a piece is never online without them
         const files = await db.packFiles.where({ pieceId: x.id }).filter((f) => !!f.unsent).toArray()
-        for (const f of files) {
+        await inBatches(files, 6, async (f) => {
           const [, rest] = f.key.split('@')
           const [rev, version, kind] = rest.split('/')
           const vers = Number(rev) === x.rev ? x.versions : (x.older?.[Number(rev)] ?? x.versions)
@@ -166,7 +189,7 @@ export function pushPacks(): Promise<void> {
             .upload(pathOf(me, x.id, Number(rev), Number(version), kind as 'full' | 'thumb', ext), f.blob, { upsert: true, contentType: f.blob.type || `image/${ext}` })
           if (error) throw error
           await db.packFiles.update(f.key, { unsent: false })
-        }
+        })
         const { id, packId, rev, updatedAt, pending: _p, owner: _o, ...data } = x
         const { error } = await supabase.from('map_pack_pieces').upsert({ id, pack_id: packId, owner: me, rev, data, updated_at: new Date(updatedAt).toISOString() })
         if (error) throw error
@@ -176,9 +199,18 @@ export function pushPacks(): Promise<void> {
       console.info('Map packs stay on this device for now', e)
     } finally {
       pushing = undefined
+      if (again) {
+        again = false
+        void pushPacks()
+      }
     }
   })()
   return pushing
+}
+
+/** Runs a job for each item, a few at a time. */
+async function inBatches<T>(items: T[], size: number, job: (item: T) => Promise<void>) {
+  for (let i = 0; i < items.length; i += size) await Promise.all(items.slice(i, i + size).map(job))
 }
 
 type PieceRow = { id: string; pack_id: string; owner: string; rev: number; data: Omit<PackPiece, 'id' | 'packId' | 'rev' | 'updatedAt' | 'owner'>; updated_at: string }
@@ -234,7 +266,7 @@ export async function fetchPieceMeta(pieceId: string): Promise<PackPiece | undef
  */
 export async function pullWorldPacks(ids: string[]) {
   const missing = []
-  for (const id of ids) {
+  for (const id of ids.filter((x) => x !== BUILTIN_PACK)) {
     const here = await db.packs.get(id)
     if (!here || here.borrowed) missing.push(id)
   }
@@ -257,8 +289,15 @@ export async function fetchPackFile(piece: PackPiece, rev: number, version: numb
   const k = key(piece.id, rev, version, kind)
   const here = await db.packFiles.get(k)
   if (here) return here.blob
-  if (!piece.owner) return undefined
   const ext = (rev === piece.rev ? piece.versions : (piece.older?.[rev] ?? piece.versions))[version]?.ext ?? 'png'
+  if (piece.packId === BUILTIN_PACK) {
+    const res = await fetch(builtinFileUrl(piece.id, rev, version, kind, ext))
+    if (!res.ok) return undefined
+    const blob = await res.blob()
+    await db.packFiles.put({ key: k, pieceId: piece.id, blob })
+    return blob
+  }
+  if (!piece.owner) return undefined
   const { data, error } = await supabase.storage.from(BUCKET).download(pathOf(piece.owner, piece.id, rev, version, kind, ext))
   if (error || !data) return undefined
   await db.packFiles.put({ key: k, pieceId: piece.id, blob: data })
@@ -271,20 +310,29 @@ export async function isOnDevice(piece: PackPiece) {
   return (await db.packFiles.bulkGet(keys)).every(Boolean)
 }
 
-/** Downloads the previews of these pieces (all versions), for the picker. */
-export async function fetchThumbs(pieces: PackPiece[]) {
-  await Promise.all(pieces.flatMap((p) => p.versions.map((_, v) => fetchPackFile(p, p.rev, v, 'thumb').catch(() => undefined))))
-}
 
-/** Downloads every full picture of a pack, for playing with no internet. Reports how many are done. */
-export async function keepPackOnDevice(packId: string, onProgress?: (done: number, total: number) => void) {
+/**
+ * Downloads a pack's full pictures, for playing with no internet. With looks (the looks of the maps
+ * it's for), only the pictures those maps would draw: for a pack with every climate and condition,
+ * that's a small part of it. Reports how many are done.
+ */
+export async function keepPackOnDevice(packId: string, onProgress?: (done: number, total: number) => void, looks?: PackLook[]) {
   const pieces = (await db.packPieces.where({ packId }).toArray()).filter((p) => !p.hidden)
-  const jobs = pieces.flatMap((p) => p.versions.map((_, v) => () => fetchPackFile(p, p.rev, v, 'full')))
+  const wanted = (p: PackPiece) => {
+    if (!looks?.length) return p.versions.map((_, v) => v)
+    const out = new Set<number>()
+    for (const look of looks)
+      for (const state of p.states ?? [undefined]) for (let d = 0; d < designsOf(p.versions); d++) out.add(pictureFor(p.versions, d, look, state))
+    return [...out]
+  }
+  const jobs = pieces.flatMap((p) => wanted(p).map((v) => () => fetchPackFile(p, p.rev, v, 'full')))
   let done = 0
   let failed = 0
-  for (const job of jobs) {
-    if (!(await job().catch(() => undefined))) failed++
-    onProgress?.(++done, jobs.length)
+  for (let i = 0; i < jobs.length; i += 6) {
+    const got = await Promise.all(jobs.slice(i, i + 6).map((job) => job().catch(() => undefined)))
+    failed += got.filter((b) => !b).length
+    done += got.length
+    onProgress?.(done, jobs.length)
   }
   return { total: jobs.length, failed }
 }
@@ -298,14 +346,25 @@ export async function bytesOnDevice(packId: string) {
 }
 
 /** Which of this world's map packs are switched on. */
-export const worldPacks = (w: World | undefined) => w?.gmScreen?.mapPacks ?? []
+export const worldPacks = (w: World | undefined) => {
+  const own = w?.gmScreen?.mapPacks ?? []
+  // the built-in pack is on unless this world switched it off
+  return w && !w.gmScreen?.packsOff?.includes(BUILTIN_PACK) ? [...own.filter((id) => id !== BUILTIN_PACK), BUILTIN_PACK] : own
+}
 
 /**
  * Switches a pack on or off for a world. On a synced world the cloud is told too, so the world's
  * co-GMs can read the pack's pieces (and draw its maps); they can't change them.
  */
 export async function setWorldPack(world: World, packId: string, on: boolean) {
-  const now = new Set(worldPacks(world))
+  if (packId === BUILTIN_PACK) {
+    const off = new Set(world.gmScreen?.packsOff ?? [])
+    if (on) off.delete(packId)
+    else off.add(packId)
+    await db.worlds.update(world.id, { gmScreen: { pages: [], rolls: [], ...(world.gmScreen ?? {}), packsOff: [...off] }, updatedAt: Date.now() })
+    return
+  }
+  const now = new Set(world.gmScreen?.mapPacks ?? [])
   if (on) now.add(packId)
   else now.delete(packId)
   const gmScreen = { pages: [], rolls: [], ...(world.gmScreen ?? {}), mapPacks: [...now] }
@@ -328,7 +387,7 @@ export async function shareWorldPacks(world: World) {
   if (!world.cloud?.enabled) return
   for (const id of worldPacks(world)) {
     const pack = await db.packs.get(id)
-    if (pack && !pack.borrowed) await tellCloud(world.id, id, true)
+    if (pack && !pack.borrowed && !pack.builtin) await tellCloud(world.id, id, true)
   }
 }
 

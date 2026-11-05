@@ -875,11 +875,13 @@ export interface Piece {
   turn?: number
   /** A piece from the GM's own map pack that takes on the map's look and climate. */
   tint?: boolean
+  /** A pack piece's condition (damaged, burned…), when it comes in several. */
+  state?: string
 }
 
 const pieceOf = (s: Shape, battle = false): Piece | undefined =>
   s.kind === 'asset'
-    ? { id: s.id, asset: s.asset, at: s.at, size: s.size, seed: s.seed, variant: s.variant, flip: !!s.flip, turn: s.turn, ...(s.tint ? { tint: true } : {}) }
+    ? { id: s.id, asset: s.asset, at: s.at, size: s.size, seed: s.seed, variant: s.variant, flip: !!s.flip, turn: s.turn, ...(s.tint ? { tint: true } : {}), ...(s.state ? { state: s.state } : {}) }
     : s.kind === 'stamp'
       ? {
           id: s.id,
@@ -931,12 +933,14 @@ export function pieceOutline(p: Piece): Point[] {
 export function drawPiece(ctx: CanvasRenderingContext2D, p: Piece, st: InkStyle) {
   const def = Atlas.assets[p.asset]
   if (!def) return
-  if (!p.tint) return drawPieceAsIs(ctx, p, st, def)
-  Atlas.packTint = true
+  if (!p.tint && !p.state) return drawPieceAsIs(ctx, p, st, def)
+  Atlas.packTint = p.tint || undefined
+  Atlas.packState = p.state
   try {
     drawPieceAsIs(ctx, p, st, def)
   } finally {
     Atlas.packTint = undefined
+    Atlas.packState = undefined
   }
 }
 

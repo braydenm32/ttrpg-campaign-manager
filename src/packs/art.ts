@@ -10,6 +10,9 @@ import { Atlas, type InkStyle } from '../mapArt/atlas'
 import { db, type PackPiece, type PackVersion } from '../db'
 import type { Drawing } from '../mapDrawing'
 import { fetchPackFile, fetchPieceMeta } from './store'
+import { designsOf, lookOf, pictureFor, type PackLook } from './looks'
+
+export { designsOf, lookOf, pictureFor, type PackLook }
 
 export const PACK_PREFIX = 'pack:'
 export const isPackAsset = (name: string) => name.startsWith(PACK_PREFIX)
@@ -29,18 +32,23 @@ const tinted = new Map<string, HTMLCanvasElement>()
 export const versionsOf = (piece: PackPiece, rev = piece.rev): PackVersion[] => (rev === piece.rev ? piece.versions : (piece.older?.[rev] ?? piece.versions))
 
 /** A pack piece's starting size on a map, in map pixels across. */
-export function packPieceSize(piece: Pick<PackPiece, 'scene' | 'cols'>, gridSize: number, W: number, H: number) {
+export function packPieceSize(piece: Pick<PackPiece, 'scene' | 'cols' | 'rows' | 'view'>, gridSize: number, W: number, H: number) {
   const cols = Math.max(0.25, piece.cols || 1)
-  if (piece.scene === 'world') return Math.round(cols * 30 * Math.max(1, Math.max(W, H) / 1400))
-  return Math.round(cols * (gridSize || 70))
+  // side-on pieces are sized by their height
+  const side = (piece.view ?? (piece.scene === 'world' ? 'side' : 'top')) === 'side'
+  const n = side ? Math.max(0.25, piece.rows || 1) : cols
+  if (piece.scene === 'world') return Math.round(n * 30 * Math.max(1, Math.max(W, H) / 1400))
+  return Math.round(n * (gridSize || 70))
 }
 
 /** Puts a piece (one rev of it) in the map library, or refreshes it there. */
 export function registerPackPiece(piece: PackPiece, rev = piece.rev) {
   const name = packAssetName(piece.id, rev)
   const versions = versionsOf(piece, rev)
-  const n = Math.max(1, Math.min(8, versions.length))
-  const side = piece.scene === 'world'
+  const n = designsOf(versions)
+  const side = (piece.view ?? (piece.scene === 'world' ? 'side' : 'top')) === 'side'
+  // the plain look for sizes: the colour picture of each design, intact
+  const plain = (variant: number) => versions[pictureFor(versions, variant, { mode: 'colour', biome: 'temperate' })]
   Atlas.assets[name] = {
     label: piece.label || 'Piece',
     category: `${PACK_PREFIX}${piece.packId}`,
@@ -48,22 +56,26 @@ export function registerPackPiece(piece: PackPiece, rev = piece.rev) {
     view: side ? 'side' : 'top',
     versions: n,
     light: !!piece.light,
+    ...(piece.states && piece.states.length > 1 ? { states: piece.states } : {}),
     aspect: (variant) => {
-      const v = versions[((variant % n) + n) % n]
+      const v = plain(variant)
       return v && v.w ? v.h / v.w : piece.rows / Math.max(0.25, piece.cols || 1)
     },
     sizeFor: (gridSize, W, H) => packPieceSize(piece, gridSize, W, H),
     draw(ctx, x, y, s, _r, st, variant) {
-      const v = ((variant % n) + n) % n
-      const ver = versions[v]
-      const aspect = ver && ver.w ? ver.h / ver.w : 1
+      const look = { mode: st.mode, biome: st.tint.label.toLowerCase() }
+      const i = pictureFor(versions, variant, look, Atlas.packState)
+      const ver = versions[i]
+      // the size comes from the plain picture, so a piece keeps its place and size in every look and condition
+      const base = plain(variant) ?? ver
+      const aspect = base && base.w ? base.h / base.w : 1
       // side-on (world maps): s is the height and (x, y) the middle of the base; from above: s is the width, (x, y) the centre
       const w = side ? s / aspect : s
       const h = side ? s : s * aspect
       const left = x - w / 2
       const top = side ? y - h : y - h / 2
-      const key = fileKey(piece.id, rev, v, 'full')
-      const pic = pictures.get(key) ?? pictures.get(fileKey(piece.id, rev, v, 'thumb'))
+      const key = fileKey(piece.id, rev, i, 'full')
+      const pic = pictures.get(key) ?? pictures.get(fileKey(piece.id, rev, i, 'thumb'))
       if (!pic) return placeholder(ctx, left, top, w, h, piece.label, st)
       ctx.save()
       ctx.imageSmoothingQuality = 'high'
@@ -164,16 +176,26 @@ export function forgetPictures(pieceId: string) {
   for (const k of [...tinted.keys()]) if (k.startsWith(`${pieceId}@`)) tinted.delete(k)
 }
 
-/** The pack pieces a drawing uses, with the versions of each. */
-export function packPiecesIn(d: Drawing | undefined): Map<string, Set<number>> {
-  const used = new Map<string, Set<number>>()
+/** The pack pieces a drawing uses: for each, the designs and conditions placed. */
+export function packPiecesIn(d: Drawing | undefined): Map<string, { variant: number; state?: string }[]> {
+  const used = new Map<string, { variant: number; state?: string }[]>()
   for (const s of d?.shapes ?? []) {
     if (s.kind !== 'asset' || !isPackAsset(s.asset)) continue
-    if (!used.has(s.asset)) used.set(s.asset, new Set())
-    used.get(s.asset)!.add(s.variant)
+    const list = used.get(s.asset) ?? []
+    if (!list.some((u) => u.variant === s.variant && u.state === s.state)) list.push({ variant: s.variant, state: s.state })
+    used.set(s.asset, list)
   }
   return used
 }
+
+/** The pictures (by index) a piece needs for these designs and conditions on a map with this look. */
+export function picturesNeeded(versions: PackVersion[], uses: { variant: number; state?: string }[], look: PackLook) {
+  return [...new Set(uses.map((u) => pictureFor(versions, u.variant, look, u.state)))]
+}
+
+/** Every design of a piece, intact, in this look: what picking it in the picker downloads. */
+export const picturesToPick = (versions: PackVersion[], look: PackLook, state?: string) =>
+  picturesNeeded(versions, Array.from({ length: designsOf(versions) }, (_, variant) => ({ variant, state })), look)
 
 /**
  * Gets every pack piece a drawing uses ready to draw: in the library, with its pictures loaded.
@@ -182,9 +204,10 @@ export function packPiecesIn(d: Drawing | undefined): Map<string, Set<number>> {
 export async function ensurePackArt(d: Drawing | undefined): Promise<string[]> {
   const used = packPiecesIn(d)
   if (!used.size) return []
+  const look = lookOf(d)
   const missing: string[] = []
   await Promise.all(
-    [...used].map(async ([name, variants]) => {
+    [...used].map(async ([name, uses]) => {
       const ref = parsePackAsset(name)
       if (!ref) return
       const piece = (await db.packPieces.get(ref.pieceId)) ?? (await fetchPieceMeta(ref.pieceId).catch(() => undefined))
@@ -193,9 +216,8 @@ export async function ensurePackArt(d: Drawing | undefined): Promise<string[]> {
         return
       }
       registerPackPiece(piece, ref.rev)
-      const n = Math.max(1, Math.min(8, versionsOf(piece, ref.rev).length))
-      const vs = new Set([...variants].map((v) => ((v % n) + n) % n))
-      const got = await Promise.all([...vs].map((v) => loadPicture(piece, ref.rev, v, 'full').catch(() => false)))
+      const want = picturesNeeded(versionsOf(piece, ref.rev), uses, look)
+      const got = await Promise.all(want.map((v) => loadPicture(piece, ref.rev, v, 'full').catch(() => false)))
       if (got.some((ok) => !ok)) missing.push(piece.label)
     }),
   )
@@ -208,4 +230,13 @@ export async function registerPacks(packIds: string[]) {
   const pieces = await db.packPieces.where('packId').anyOf(packIds).toArray()
   for (const p of pieces) registerPackPiece(p)
   return pieces
+}
+
+/** Loads every design of a placed-or-chosen pack piece in a map's look and a condition. */
+export async function loadLook(asset: string, d: Pick<Drawing, 'look' | 'biome'>, state?: string) {
+  const ref = parsePackAsset(asset)
+  if (!ref) return
+  const piece = await db.packPieces.get(ref.pieceId)
+  if (!piece) return
+  await Promise.all(picturesToPick(versionsOf(piece, ref.rev), lookOf(d), state).map((v) => loadPicture(piece, ref.rev, v, 'full').catch(() => false)))
 }

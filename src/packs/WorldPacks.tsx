@@ -10,11 +10,15 @@ import { Help } from '../help'
 import { worldPath } from '../paths'
 import { toast } from '../undo'
 import { PackThumb } from './PackPicker'
+import { lookOf } from './looks'
 import { keepOldPictures, newerPictures, packUseIn, swapInNewPictures, type PieceUse } from './swap'
+import { loadBuiltinPack } from './builtin'
 import { keepPackOnDevice, setWorldPack, shareWorldPacks, worldPacks } from './store'
 
 export function WorldPacks({ world }: { world: World }) {
   const packs = useLiveQuery(() => db.packs.filter((p) => !p.deleted && !p.borrowed).toArray(), []) ?? []
+  const builtin = packs.filter((p) => p.builtin)
+  const own = packs.filter((p) => !p.builtin)
   const on = worldPacks(world)
   const borrowed = useLiveQuery(() => db.packs.bulkGet(on), [on.join()])?.filter((p) => p && p.borrowed && !p.deleted) ?? []
   const maps = useLiveQuery(() => db.maps.where({ worldId: world.id }).toArray(), [world.id])
@@ -24,15 +28,18 @@ export function WorldPacks({ world }: { world: World }) {
   useEffect(() => {
     void packUseIn(world.id).then(setUses)
   }, [world.id, maps])
+  useEffect(() => void loadBuiltinPack(), [])
   // a synced world tells the cloud its packs, so co-GMs can draw with them
   useEffect(() => void shareWorldPacks(world), [world.id, world.cloud?.enabled]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const newer = newerPictures(uses, world)
+  // the looks of this world's drawn maps (and the plain one), for keeping just the pictures they'd draw
+  const looks = [...new Map([lookOf(undefined), ...(maps ?? []).filter((m) => m.drawing).map((m) => lookOf(m.drawing))].map((l) => [`${l.mode}/${l.biome}`, l])).values()]
   const keepHere = async () => {
     let failed = 0
     for (const id of on) {
       setBusy(`Downloading ${packs.find((p) => p.id === id)?.name ?? 'a pack'}…`)
-      failed += (await keepPackOnDevice(id)).failed
+      failed += (await keepPackOnDevice(id, undefined, looks)).failed
     }
     setBusy(undefined)
     toast(failed ? `${failed} picture${failed === 1 ? '' : 's'} couldn’t be downloaded. Are you online?` : 'Every piece of this world’s packs is on this device.')
@@ -51,7 +58,14 @@ export function WorldPacks({ world }: { world: World }) {
         <>
           <p className="muted small">Packs switched on show under “Your packs” in the map builder’s Place tool.</p>
           <div>
-            {packs.map((p) => (
+            {builtin.map((p) => (
+              <div key={p.id} className="pack-switch">
+                <label>
+                  <input type="checkbox" checked={on.includes(p.id)} onChange={(e) => void setWorldPack(world, p.id, e.target.checked)} /> {p.name} <span className="muted small">(comes with the app)</span>
+                </label>
+              </div>
+            ))}
+            {own.map((p) => (
               <div key={p.id} className="pack-switch">
                 <label>
                   <input type="checkbox" checked={on.includes(p.id)} onChange={(e) => void setWorldPack(world, p.id, e.target.checked)} /> {p.name}

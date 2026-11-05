@@ -63,6 +63,8 @@ export interface AssetDef {
   sizeFor?: (gridSize: number, W: number, H: number) => number
   /** A pack piece: how many versions it has (1 to 8). */
   versions?: number
+  /** The conditions a GM's pack piece comes in (intact, damaged, burned…). */
+  states?: string[]
 }
 
 type Opts = Record<string, unknown>
@@ -97,6 +99,8 @@ export interface AtlasApi {
   wallHeight?: number
   /** Set while a pack piece the GM asked to tint draws: it takes on the map's look and climate. */
   packTint?: boolean
+  /** Set while a pack piece with a condition draws (damaged, burned…). */
+  packState?: string
 }
 
 export const Atlas = (window as unknown as { Atlas: AtlasApi }).Atlas

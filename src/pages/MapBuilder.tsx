@@ -42,7 +42,7 @@ import {
 } from '../mapDrawing'
 import { ASSET_GROUPS, Atlas, assetNamesIn, BATTLE_GROUPS, CITY_GROUPS } from '../mapArt/atlas'
 import { ensurePackArt, isPackAsset } from '../packs/art'
-import { PackPicker } from '../packs/PackPicker'
+import { ConditionPicker, PackPicker } from '../packs/PackPicker'
 import { canTurn, classicBlob, classicHitSvg, drawPiece, floorTest, FONTS, landTest, loadMapFonts, LOOKS, pieceOutline, playersCopy, renderClassic, riverWidth, roomTest, secretFloorTest, streetWidth, styleFor, townWallHalf } from '../mapArt/classic'
 import { groundColour } from '../mapArt/ground'
 import { useViewMode } from '../viewMode'
@@ -174,7 +174,7 @@ const randomSeed = () => 1 + Math.floor(Math.random() * 2 ** 30)
  */
 /** How a piece is turned: as drawn or by so many degrees, every which way, or (town maps) lined up with the nearest street. */
 type Turn = number | 'random' | 'street'
-type PieceChoice = { asset: string; size: number; variant: number | 'random'; turn: Turn; mix: string[]; tint?: boolean }
+type PieceChoice = { asset: string; size: number; variant: number | 'random'; turn: Turn; mix: string[]; tint?: boolean; state?: string }
 /** On town maps, buildings and fields line up with the streets and keep off them. */
 const LINES_UP = ['ct-houses', 'ct-castle', 'ct-fields', 'bm-buildings']
 const linesUp = (asset: string) => (LINES_UP.includes(Atlas.assets[asset]?.category ?? '') || LINES_UP.includes(asset)) && !WALL_PIECES.includes(asset)
@@ -802,6 +802,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
       ...(flips(asset) && Math.random() < 0.5 ? { flip: true } : {}),
       ...(turn ? { turn } : {}),
       ...(piece.tint && isPackAsset(asset) ? { tint: true } : {}),
+      ...(piece.state && Atlas.assets[asset]?.states?.includes(piece.state) ? { state: piece.state } : {}),
     }
   }
 
@@ -1896,7 +1897,7 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
       )
     : []
   const pick = (n: string) => {
-    if (!mixing) return setPiece({ ...choose(n, W, H, drawing), ...(piece.tint ? { tint: true } : {}) })
+    if (!mixing) return setPiece({ ...choose(n, W, H, drawing), ...(piece.tint ? { tint: true } : {}), ...(piece.state ? { state: piece.state } : {}) })
     if (n === piece.asset) {
       // taking out the main piece hands its place to the next one in the mix
       if (piece.mix.length) setPiece({ ...choose(piece.mix[0], W, H, drawing), turn: piece.turn, mix: piece.mix.slice(1) })
@@ -1928,7 +1929,7 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
       </div>
       <input type="search" className="piece-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={from === 'packs' ? 'Find a piece in your packs' : battle ? 'Find a piece: tree, door, altar…' : city ? 'Find a piece: houses, castle, ship…' : 'Find a piece: mountain, ship, town…'} aria-label="Find a piece" />
       {from === 'packs' ? (
-        <PackPicker drawing={drawing} words={words} pool={pool} onPick={pick} />
+        <PackPicker drawing={drawing} words={words} pool={pool} state={piece.state} onPick={pick} />
       ) : words.length ? (
         matches.length ? (
           grid(matches)
@@ -1970,6 +1971,7 @@ function PiecePicker({ drawing, W, H, piece, setPiece, recent }: { drawing: Draw
           <input type="checkbox" checked={!!piece.tint} onChange={(e) => setPiece({ ...piece, tint: e.target.checked || undefined })} /> Tint your pieces to the map’s look <Help topic="packTint" />
         </label>
       )}
+      {def && pool.length === 1 && <ConditionPicker asset={piece.asset} drawing={drawing} value={piece.state} onPick={(state) => setPiece({ ...piece, state })} />}
       {mixing && (
         <p className="muted small">
           {pool.length > 1 ? `Mixing ${pool.map((n) => Atlas.assets[n]?.label ?? n).join(', ')}.` : `${def?.label ?? 'This piece'} so far.`} Click pieces above to add them or take them out; each
@@ -2169,6 +2171,7 @@ function ShapeProps({ shape, drawing, pin, onLink, onChange, onReveal, onDelete,
             Size: {shape.size}px
             <input type="range" min={4} max={Math.max(400, shape.size)} value={shape.size} onChange={(e) => onChange({ size: Number(e.target.value) })} />
           </label>
+          <ConditionPicker asset={shape.asset} drawing={drawing} value={shape.state} onPick={(state) => onChange({ state })} />
           <div className="label">
             <span>Version</span>
             <VersionPicker

@@ -242,6 +242,8 @@ export interface GmScreen {
   board?: Omit<ShowBoard, 'id' | 'name'>
   /** The GM's own map packs switched on for this world (MapPack ids), for the map builder's "Your packs". */
   mapPacks?: string[]
+  /** Built-in packs (the Warded Atlas pack) switched off for this world; they're on unless listed here. */
+  packsOff?: string[]
   /**
    * Pieces whose pack has newer pictures that the GM chose not to use on this world's maps: piece id
    * to the newest picture (rev) they said no to, so they aren't asked again until it changes again.
@@ -1031,6 +1033,8 @@ export interface MapPack {
   pending?: boolean
   /** Came with a backup, or is another GM's pack used on a shared world: read-only here. */
   borrowed?: boolean
+  /** Comes with the app (the Warded Atlas pack), for everyone: read from its own web address, never changed here. */
+  builtin?: boolean
 }
 
 /** What kind of map a pack piece is for: battle maps and dungeons, town maps, or world and region maps. */
@@ -1045,6 +1049,15 @@ export interface PackVersion {
   ext: string
   /** Bytes, full picture plus preview. */
   bytes: number
+  /**
+   * For packs with a look for every map (imported from a pack index): which design this picture is
+   * (0-7, what the version picker shows), its look, climate and condition. The map picks the
+   * picture that matches it. Left out, each picture is a design of its own.
+   */
+  d?: number
+  mode?: 'colour' | 'ink'
+  biome?: string
+  state?: string
 }
 
 export interface PackPiece {
@@ -1058,6 +1071,10 @@ export interface PackPiece {
   rows: number
   /** Gives off light in a VTT export (torches, braziers, fires). */
   light?: boolean
+  /** How it's drawn: from above (centred), or side-on standing on its base (world maps' mountains and towns). Left out: side-on on world maps. */
+  view?: 'top' | 'side'
+  /** The conditions it comes in (intact, damaged, burned…), chosen when it's placed. */
+  states?: string[]
   versions: PackVersion[]
   /** Goes up each time the pictures change; maps keep the rev they were made with until the GM swaps. */
   rev: number

@@ -15,8 +15,8 @@ import { Help } from '../help'
 import { useWorld } from '../hooks'
 import { Ico } from '../icons'
 import '../more.css'
-import { forgetPictures } from '../packs/art'
-import { draftPieces, finishPiece, makePictures, picturesIn, type PictureFile, type PieceDraft } from '../packs/parse'
+import { designsOf, forgetPictures, pictureFor } from '../packs/art'
+import { draftFromIndex, draftPieces, finishPiece, makePictures, picturesIn, type PictureFile, type PieceDraft } from '../packs/parse'
 import { PackThumb } from '../packs/PackPicker'
 import { addPieces, bytesOnDevice, createPack, pullPacks, removePack, renamePack, replacePictures, setWorldPack, updatePiece, worldPacks } from '../packs/store'
 import { worldPath } from '../paths'
@@ -28,6 +28,8 @@ const SCENES: { id: PackScene; label: string }[] = [
   { id: 'city', label: 'Town maps' },
   { id: 'world', label: 'World maps' },
 ]
+/** The look pieces are shown in on this screen: in colour, temperate, intact. */
+const PLAIN = { mode: 'colour' as const, biome: 'temperate' }
 const sceneLabel = (s: PackScene) => SCENES.find((x) => x.id === s)?.label ?? s
 
 export const megabytes = (n: number) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toFixed(n < 10 * 1024 * 1024 ? 1 : 0)} MB`)
@@ -39,7 +41,7 @@ export default function MapPacks() {
   const { world } = useWorld()
   const { isGM } = useViewMode()
   const { user } = useAuthSession()
-  const packs = useLiveQuery(() => db.packs.filter((p) => !p.deleted && !p.borrowed).toArray(), []) ?? []
+  const packs = useLiveQuery(() => db.packs.filter((p) => !p.deleted && !p.borrowed && !p.builtin).toArray(), []) ?? []
   const pieces = useLiveQuery(() => db.packPieces.toArray(), []) ?? []
   const [into, setInto] = useState<string>('new')
   const uploadRef = useRef<HTMLElement>(null)
@@ -102,19 +104,28 @@ function Upload({ packs, into, setInto }: { packs: MapPack[]; into: string; setI
   const [busy, setBusy] = useState<string>()
   const [error, setError] = useState('')
   const [switchOn, setSwitchOn] = useState(true)
+  const [notes, setNotes] = useState<string[]>([])
 
   const read = async (files: File[]) => {
     setError('')
     if (!files.length) return
     setBusy('Opening…')
     try {
-      const pics = await picturesIn(files)
+      const { pictures: pics, index } = await picturesIn(files, setBusy)
       if (!pics.length) {
         setError('No pictures in that. Packs take PNG, WebP, JPG, GIF or AVIF files, or a ZIP of them.')
         return
       }
-      const found = draftPieces(pics)
-      setDrafts((d) => [...d, ...found])
+      if (index) {
+        // a pack with its own index: names, groups, sizes and looks come from that, not from guesses
+        const { drafts: found, leftOut, missing } = draftFromIndex(pics, index)
+        setDrafts((d) => [...d, ...found])
+        setNotes([
+          `This pack has its own index, so names, groups, sizes, looks, climates and conditions come from it.`,
+          ...leftOut.map((l) => `Left out for now: ${l.count} ${l.kind} (they need tools of their own).`),
+          ...(missing ? [`${missing} picture${missing === 1 ? '' : 's'} the index names ${missing === 1 ? 'isn’t' : 'aren’t'} in what you picked. If the pack comes in two ZIPs, pick both together.`] : []),
+        ])
+      } else setDrafts((d) => [...d, ...draftPieces(pics)])
       // a ZIP or folder gives the pack its name
       if (!name && into === 'new') {
         const zip = files.find((f) => /\.zip$/i.test(f.name))
@@ -143,17 +154,18 @@ function Upload({ packs, into, setInto }: { packs: MapPack[]; into: string; setI
     try {
       const pack = into === 'new' ? await createPack(name || 'My pack') : packs.find((p) => p.id === into)
       if (!pack) return
-      let done = 0
-      const ready = []
-      for (const d of drafts) {
-        setBusy(`Making pictures: ${++done} of ${drafts.length}…`)
-        ready.push(await finishPiece(d))
-      }
-      setBusy('Saving…')
-      await addPieces(pack.id, ready)
       if (into === 'new' && switchOn && world) await setWorldPack(world, pack.id, true)
-      toast(`${ready.length} piece${ready.length === 1 ? '' : 's'} added to ${pack.name}.`)
+      // one piece at a time, each saved as it's made: a big pack is safe if the page closes half-way
+      const total = drafts.reduce((n, d) => n + d.files.length, 0)
+      let made = 0
+      for (const [i, d] of drafts.entries()) {
+        setBusy(`Making pictures: ${made} of ${total} (piece ${i + 1} of ${drafts.length}, ${d.label})…`)
+        await addPieces(pack.id, [await finishPiece(d)])
+        made += d.files.length
+      }
+      toast(`${drafts.length} piece${drafts.length === 1 ? '' : 's'} added to ${pack.name}.`)
       setDrafts([])
+      setNotes([])
       setName('')
       setInto(pack.id)
     } catch (e) {
@@ -220,7 +232,15 @@ function Upload({ packs, into, setInto }: { packs: MapPack[]; into: string; setI
           <h3>
             Check the pieces: {drafts.length} piece{drafts.length === 1 ? '' : 's'}, {pictures} picture{pictures === 1 ? '' : 's'}
           </h3>
-          <p className="muted small">The app guessed these from the names. Fix anything that’s off; you can change them later too.</p>
+          {notes.length ? (
+            notes.map((n) => (
+              <p key={n} className="muted small">
+                {n}
+              </p>
+            ))
+          ) : (
+            <p className="muted small">The app guessed these from the names. Fix anything that’s off; you can change them later too.</p>
+          )}
           <div className="row wrap">
             <label>
               Set all to{' '}
@@ -296,7 +316,14 @@ function Upload({ packs, into, setInto }: { packs: MapPack[]; into: string; setI
             <button type="button" className="primary" disabled={!!busy} onClick={() => void save()}>
               {into === 'new' ? 'Save the pack' : 'Add to the pack'}
             </button>
-            <button type="button" disabled={!!busy} onClick={() => setDrafts([])}>
+            <button
+              type="button"
+              disabled={!!busy}
+              onClick={() => {
+                setDrafts([])
+                setNotes([])
+              }}
+            >
               Start again
             </button>
           </div>
@@ -357,7 +384,7 @@ function PackCard({ pack, pieces, onAddMore }: { pack: MapPack; pieces: PackPiec
       <div className="stamp-grid">
         {list.map((p) => (
           <button key={p.id} type="button" className={`pack-tile${p.id === editing ? ' on' : ''}${p.hidden ? ' hidden' : ''}`} aria-pressed={p.id === editing} title={p.label} onClick={() => setEditing(p.id === editing ? undefined : p.id)}>
-            <PackThumb piece={p} />
+            <PackThumb piece={p} version={pictureFor(p.versions, 0, PLAIN)} />
             <span>{p.label}</span>
           </button>
         ))}
@@ -405,6 +432,7 @@ function PieceEditor({ piece, onClose }: { piece: PackPiece; onClose: () => void
   const [group, setGroup] = useState(piece.group)
   const [busy, setBusy] = useState('')
   const set = (patch: Parameters<typeof updatePiece>[1]) => void updatePiece(piece.id, patch)
+  const designs = designsOf(piece.versions)
   return (
     <div className="form pack-edit">
       <div className="row wrap">
@@ -432,9 +460,10 @@ function PieceEditor({ piece, onClose }: { piece: PackPiece; onClose: () => void
         <input type="checkbox" checked={!!piece.light} onChange={(e) => set({ light: e.target.checked || undefined })} /> Gives off light (for battle maps sent to a VTT)
       </label>
       <p className="muted small">
-        {piece.versions.length} version{piece.versions.length === 1 ? '' : 's'}, for {sceneLabel(piece.scene).toLowerCase()}.{' '}
-        {piece.versions.map((_, v) => (
-          <PackThumb key={v} piece={piece} version={v} px={36} />
+        {designs} version{designs === 1 ? '' : 's'}
+        {piece.versions.length > designs && ` (${piece.versions.length} pictures, for each look, climate and condition)`}, for {sceneLabel(piece.scene).toLowerCase()}.{' '}
+        {Array.from({ length: designs }, (_, d) => (
+          <PackThumb key={d} piece={piece} version={pictureFor(piece.versions, d, PLAIN)} px={36} />
         ))}
       </p>
       {busy && <p className="muted" role="status">{busy}</p>}

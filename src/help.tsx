@@ -107,6 +107,8 @@ export const HELP = {
     'Switch between the pieces drawn by the app and Your packs: your own pictures, uploaded once in Map packs and switched on for this world in World settings › Map pieces. Only small previews are kept on this device at first; a piece downloads the moment you pick it and stays on this device after that. A tick means it is here already; “Download the whole pack” gets them all, for playing without internet.',
   packTint:
     'Off, your pictures look exactly as you drew them. On, they take on the map’s look: a wash of the climate’s colours in colour, or inked in browns on parchment. See-through parts stay see-through.',
+  packCondition:
+    'Pieces from an imported pack can come in several conditions: intact, damaged, broken, burned, ruined. Each condition fills exactly the same space, so you can change a piece already on the map and it stays where it is.',
   mapPacks:
     'Your own map pieces: pictures you made or bought (PNG, WebP or JPG; see-through backgrounds work best). Drop in files, a folder or a ZIP. Each folder becomes a group; tree-1, tree-2, tree-3 become versions of one piece “Tree”; “2x3” in a name makes it 2 squares wide and 3 tall. Check what each piece is for and its size, then save. Pictures are kept at most 1024 px across and stored once in your account, however many worlds use them. Switch a pack on for a world in World settings › Map pieces. Players never get the pieces, only the finished map picture.',
   worldPacks:

@@ -90,6 +90,51 @@ can be moved and old links keep working) and Cloudflare Pages at wardedatlas.com
 The buttons appear in the app's sign-in box by themselves once a provider is switched on. They are
 hidden in the desktop app, which keeps to email sign-in for now.
 
+## 5. The Warded Atlas pack (Cloudflare R2)
+
+The map pieces that come with the app (the "Warded Atlas pack" under "Your packs" in the map builder) are pictures in a Cloudflare R2 bucket, read by every copy of the app from `https://packs.wardedatlas.com` (`src/packs/builtin.ts`). They're made with `scripts/build-pack.py` from the pack's index and put there with `scripts/upload-pack.py`. Until the bucket has them, the pack simply doesn't show.
+
+The pack's pictures (about 145 MB once converted) will be kept in a Cloudflare R2 bucket. Anyone using the app can read them, and downloads are free. You set up the bucket once. After that I upload the pictures, and the app reads them from `https://packs.wardedatlas.com`.
+
+### 1. Make the bucket (Cloudflare dashboard)
+
+1. Open **R2 Object Storage** and choose **Create bucket**.
+2. Name it `warded-atlas-pack`. Leave the location on Automatic and the storage class on Standard.
+3. In the bucket, open **Settings › Custom Domains › Connect Domain** and enter `packs.wardedatlas.com`. Cloudflare adds the DNS record itself because wardedatlas.com is already there.
+4. Still in **Settings**, find **CORS Policy › Add CORS policy**, paste the following and save:
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://wardedatlas.com", "https://www.wardedatlas.com", "https://braydenm32.github.io", "http://localhost:5173", "http://localhost:4175"],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "MaxAgeSeconds": 86400
+  }
+]
+```
+
+### 2. Make a key for uploading
+
+1. On the R2 overview page, open **Manage API tokens** (also called "API Tokens") and choose **Create API token**.
+2. Set Permissions to **Object Read & Write** and apply it only to the `warded-atlas-pack` bucket.
+3. Create it. Cloudflare shows an **Access Key ID** and a **Secret Access Key** once, so keep that page open for the next step.
+4. Write down your **Account ID** too. It's shown on the right of the R2 overview page.
+
+Never paste these keys into the chat.
+
+### 3. Let a session reach Cloudflare (Claude project settings)
+
+This project runs on a built-in cloud setup with no settings, so it needs one of its own:
+
+1. Open **Project settings › Cloud environment**, open the menu and choose **Add cloud environment**.
+2. Under **Network access**, add `*.r2.cloudflarestorage.com` to the allowed domains. Leave "Allow package managers" ticked.
+3. Under **Environment variables**, add these three:
+   - `R2_ACCOUNT_ID`: your Account ID
+   - `R2_ACCESS_KEY_ID`: the Access Key ID
+   - `R2_SECRET_ACCESS_KEY`: the Secret Access Key
+4. Save it. Only sessions started after this can use it, so tell me in the chat when it's done and I'll do the upload in a fresh thread.
+
 ## What still says Supabase
 
 Google's sign-in screen shows "to continue to ysrxumagiiaoihlhofqt.supabase.co", and Facebook shows
