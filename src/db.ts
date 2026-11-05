@@ -1058,6 +1058,8 @@ export interface PackVersion {
   mode?: 'colour' | 'ink'
   biome?: string
   state?: string
+  /** A wall or fence set's tile: which part of the wall it is (see src/packs/tiles.ts). */
+  part?: string
 }
 
 export interface PackPiece {
@@ -1075,6 +1077,11 @@ export interface PackPiece {
   view?: 'top' | 'side'
   /** The conditions it comes in (intact, damaged, burned…), chosen when it's placed. */
   states?: string[]
+  /**
+   * Not a piece to place: a set of wall or fence tiles that join up square by square (the Walls
+   * tool), or a floor texture to paint ground with (the Ground tool). Left out: a piece.
+   */
+  use?: 'wall' | 'fence' | 'ground'
   versions: PackVersion[]
   /** Goes up each time the pictures change; maps keep the rev they were made with until the GM swaps. */
   rev: number

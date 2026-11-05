@@ -122,7 +122,9 @@ function Upload({ packs, into, setInto }: { packs: MapPack[]; into: string; setI
         setDrafts((d) => [...d, ...found])
         setNotes([
           `This pack has its own index, so names, groups, sizes, looks, climates and conditions come from it.`,
-          ...leftOut.map((l) => `Left out for now: ${l.count} ${l.kind} (they need tools of their own).`),
+          ...(found.some((d) => d.use && d.use !== 'ground') ? ['Its wall and fence tiles become one set for each wall, for the map builder’s Walls tool.'] : []),
+          ...(found.some((d) => d.use === 'ground') ? ['Its floor textures go in the Ground tool, to paint with.'] : []),
+          ...leftOut.map((l) => `Left out: ${l.count} ${l.kind} the index doesn’t say the part of (straight, corner, tee…).`),
           ...(missing ? [`${missing} picture${missing === 1 ? '' : 's'} the index names ${missing === 1 ? 'isn’t' : 'aren’t'} in what you picked. If the pack comes in two ZIPs, pick both together.`] : []),
         ])
       } else setDrafts((d) => [...d, ...draftPieces(pics)])

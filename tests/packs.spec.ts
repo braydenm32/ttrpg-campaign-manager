@@ -6,7 +6,8 @@ import { expect, open, test, type Page } from './fixtures'
  * packs screen become pieces, the pack is switched on for the world, and a piece is placed on a
  * new battle map from "Your packs". Packs stay on the device when signed out, so none of this
  * needs the cloud. The pack and the map are removed afterwards. The built-in Warded Atlas pack is
- * served by a pretend packs.wardedatlas.com.
+ * served by a pretend packs.wardedatlas.com, with a wall set and a floor texture for the Walls and
+ * Ground tools.
  */
 
 /** A small PNG of one colour with a see-through border, made here so the test needs no files. */
@@ -266,7 +267,7 @@ test('the built-in pack picks the picture for the map’s look, and pieces come 
     await page.evaluate(
       () =>
         new Promise<void>((resolve, reject) => {
-          localStorage.removeItem('packs.builtin.checked')
+          localStorage.removeItem('packs.builtin.checked.2')
           const req = indexedDB.open('ttrpg-campaign-manager')
           req.onerror = () => reject(req.error)
           req.onsuccess = () => {
@@ -282,5 +283,135 @@ test('the built-in pack picks the picture for the map’s look, and pieces come 
           }
         }),
     )
+  }
+})
+
+/** Takes the pretend built-in pack (and these pieces of it) off the device again. */
+function removeBuiltin(page: Page, pieces: string[]) {
+  return page.evaluate(
+    (ids) =>
+      new Promise<void>((resolve, reject) => {
+        localStorage.removeItem('packs.builtin.checked.2')
+        const req = indexedDB.open('ttrpg-campaign-manager')
+        req.onerror = () => reject(req.error)
+        req.onsuccess = () => {
+          const idb = req.result
+          const tx = idb.transaction(['packs', 'packPieces'], 'readwrite')
+          tx.objectStore('packs').delete('warded-atlas')
+          for (const id of ids) tx.objectStore('packPieces').delete(id)
+          tx.oncomplete = () => {
+            idb.close()
+            resolve()
+          }
+          tx.onerror = () => reject(tx.error)
+        }
+      }),
+    pieces,
+  )
+}
+
+test('walls join up square by square, and floor textures paint the ground', async ({ page, world }) => {
+  const mapName = 'Test keep (walls and floors)'
+  const parts = ['straight', 'corner', 'tee', 'cross', 'end', 'post', 'doorway', 'broken']
+  // a wall set: each part in colour then ink (so pictures 0-7 are colour, 8-15 ink)
+  const wall = ['colour', 'ink'].flatMap((mode) => parts.map((part) => ({ d: 0, mode, biome: 'neutral', state: part === 'broken' ? 'broken' : 'intact', part, w: 64, h: 64, ext: 'webp', bytes: 200 })))
+  const manifest = {
+    format: 'warded-atlas-pack',
+    id: 'warded-atlas',
+    name: 'Warded Atlas pack',
+    version: 2,
+    // nothing to place: walls and floors are in "extra", where older app versions don't look
+    pieces: [],
+    extra: [
+      { id: 'wa-test-wall', label: 'Test wall', group: 'Walls', scene: 'battle', view: 'top', use: 'wall', cols: 1, rows: 1, rev: 1, versions: wall },
+      { id: 'wa-test-cobbles', label: 'Test cobbles', group: 'Floors & ground', scene: 'battle', view: 'top', use: 'ground', cols: 2, rows: 2, rev: 1, versions: [{ d: 0, mode: 'colour', biome: 'neutral', state: 'intact', w: 64, h: 64, ext: 'webp', bytes: 200 }] },
+    ],
+  }
+  const asked: string[] = []
+  await page.route('https://packs.wardedatlas.com/**', (route) => {
+    const url = route.request().url()
+    asked.push(url.replace('https://packs.wardedatlas.com/', ''))
+    if (url.endsWith('/manifest.json')) return route.fulfill({ json: manifest })
+    return route.fulfill({ body: png(64, 64, [120, 110, 100]), contentType: 'image/png' })
+  })
+  try {
+    await open(page, `/w/${world.slug}/maps`)
+    await page.getByRole('button', { name: /Draw a new map/ }).click()
+    const dialog = page.getByRole('dialog')
+    await dialog.getByLabel('Name').fill(mapName)
+    await dialog.getByRole('radio', { name: /Battle map or dungeon/ }).click()
+    await dialog.getByRole('button', { name: 'Small', exact: true }).click()
+    // out in the open (not solid rock), so there's ground to paint
+    await dialog.getByLabel('Start with').selectOption('grass')
+    await dialog.getByRole('button', { name: 'Start drawing' }).click()
+    await page.waitForURL(/\/draw$/)
+    const svg = page.locator('svg.builder-canvas')
+    const panel = page.locator('.builder-panel')
+    /** Where a map point is on the screen. */
+    const screen = (x: number, y: number) =>
+      svg.evaluate((s: SVGSVGElement, [x, y]) => {
+        const pt = s.createSVGPoint()
+        pt.x = x
+        pt.y = y
+        const p = pt.matrixTransform(s.getScreenCTM()!)
+        return { x: p.x, y: p.y }
+      }, [x, y])
+    const mid = (c: number) => (c + 0.5) * 70
+
+    // the Walls tool: pick the set (only the colour pictures come down: a new battle map is in colour)
+    await page.locator('.builder-tools button', { hasText: 'Walls' }).click()
+    await panel.locator('.pack-tile', { hasText: 'Test wall' }).click()
+    await expect(panel.locator('.pack-tile.on', { hasText: 'Test wall' })).toBeVisible()
+    const full = asked.filter((u) => u.startsWith('wa-test-wall/') && u.includes('-full.'))
+    expect(full.sort()).toEqual(parts.map((_, i) => `wa-test-wall/1-${i}-full.webp`).sort())
+
+    // drag an L: along row 2 from column 2 to 6, then down column 6 to row 5
+    const a = await screen(mid(2), mid(2))
+    const b = await screen(mid(6), mid(2))
+    const c = await screen(mid(6), mid(5))
+    await page.mouse.move(a.x, a.y)
+    await page.mouse.down()
+    await page.mouse.move(b.x, b.y, { steps: 8 })
+    await page.mouse.move(c.x, c.y, { steps: 8 })
+    await page.mouse.up()
+    // a doorway in the straight run
+    await panel.getByRole('button', { name: 'Doorway', exact: true }).click()
+    const door = await screen(mid(4), mid(2))
+    await page.mouse.click(door.x, door.y)
+
+    // the Ground tool: paint with the floor texture
+    await page.locator('.builder-tools button', { hasText: 'Ground' }).click()
+    await panel.locator('.pack-tile', { hasText: 'Test cobbles' }).click()
+    await expect(panel.locator('.pack-tile.on', { hasText: 'Test cobbles' })).toBeVisible()
+    const g1 = await screen(mid(3), mid(8))
+    const g2 = await screen(mid(7), mid(8))
+    await page.mouse.move(g1.x, g1.y)
+    await page.mouse.down()
+    await page.mouse.move(g2.x, g2.y, { steps: 6 })
+    await page.mouse.up()
+
+    await expect(page.locator('.builder-bar')).toContainText('Saved', { timeout: 20_000 })
+    const maps = await table<{ name: string; drawing?: { tiles?: Record<string, string>; ground?: { ground: string }[] } }>(page, 'maps')
+    const drawing = maps.find((m) => m.name === mapName)?.drawing
+    const set = 'pack:wa-test-wall@1'
+    expect(drawing?.tiles).toEqual({
+      '2,2': set,
+      '3,2': set,
+      '4,2': `${set}|door`,
+      '5,2': set,
+      '6,2': set,
+      '6,3': set,
+      '6,4': set,
+      '6,5': set,
+    })
+    expect(drawing?.ground?.map((g) => g.ground)).toEqual(['pack:wa-test-cobbles@1'])
+    // never the ink pictures, and the walls never offered as pieces to place
+    expect(asked.some((u) => /wa-test-wall\/1-(8|9|1[0-5])-full/.test(u))).toBe(false)
+    await page.locator('.builder-tools button', { hasText: 'Place' }).click()
+    await panel.getByRole('tab', { name: 'Your packs' }).click()
+    await expect(panel.locator('.pack-tile', { hasText: 'Test wall' })).toHaveCount(0)
+  } finally {
+    await removeMap(page, mapName)
+    await removeBuiltin(page, ['wa-test-wall', 'wa-test-cobbles'])
   }
 })

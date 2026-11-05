@@ -5,12 +5,23 @@
  */
 import { Atlas, type InkStyle, type Point, type Rng, type Tint } from './atlas'
 import { loopArea, makeNoise, roughen, traceLoops } from './geometry'
-import { drawUnit, type Drawing, type GroundId, type Terrain } from '../mapDrawing'
+import { drawUnit, isPackGround, type Drawing, type GroundId, type Terrain } from '../mapDrawing'
+import { laidGround, packGroundColour, paintPackGround } from '../packs/tiles'
 
 /** Drawing order of the blended grounds; water is drawn on top with a crisp bank. */
 const BLEND: GroundId[] = ['dirt', 'sand', 'grass', 'stone', 'mud', 'snow', 'paving', 'floor', 'boards']
 /** Laid floors: crisp edges, and no pen line round them in ink (the joints already say where they stop). */
 const LAID: GroundId[] = ['paving', 'floor', 'boards']
+/** Whether a ground is a laid floor: one of the app's, or a pack texture of flagstones, boards and the like. */
+export const isLaid = (g: GroundId) => LAID.includes(g) || (isPackGround(g) && laidGround(g))
+/** A steady number for each ground (its noise and pen marks): its place in BLEND, or one made from a pack texture's name. */
+const numberOf = (g: GroundId) => {
+  const i = BLEND.indexOf(g)
+  if (i >= 0) return i
+  let h = 20
+  for (let k = 0; k < g.length; k++) h = (h * 31 + g.charCodeAt(k)) % 997
+  return 20 + h
+}
 
 /** Areas from a map first drawn in the simple style become the nearest ground. */
 const AREA_GROUND: Record<Terrain, GroundId> = {
@@ -30,6 +41,7 @@ const mix = (a: string, b: string, t: number) => {
 
 /** The watercolour each ground is painted in, for the coloured look. */
 export function groundColour(g: GroundId, t: Tint): string {
+  if (isPackGround(g)) return packGroundColour(g)
   switch (g) {
     case 'grass': return t.grass
     case 'dirt': return mix(t.land, '#94744a', 0.5)
@@ -42,6 +54,7 @@ export function groundColour(g: GroundId, t: Tint): string {
     case 'boards': return mix(t.sand, t.roof, 0.42)
     case 'water': return t.water
   }
+  return t.land
 }
 
 /* ---------------- masks ---------------- */
@@ -90,6 +103,8 @@ export interface GroundMap {
   mh: number
   /** The ground the map started with; it fills everything nobody painted over. */
   base: GroundId
+  /** The order the painted grounds are laid on: the app's (BLEND), then pack textures in the order first used. */
+  order: GroundId[]
   /** How much of each blended ground there is at each mask pixel (they add up to 1 on land). */
   weight: Map<GroundId, Float32Array>
   /** The mask pixels each painted ground can reach (the base reaches everywhere). */
@@ -115,7 +130,7 @@ function noiseField(mw: number, mh: number, ms: number, seed: number, wl: number
 }
 
 /** How soft each ground's edge is: blur radius (ft-scaled px), and how wide and uneven the blend is. */
-const EDGE = (g: GroundId) => (LAID.includes(g) ? { r: 3, half: 0.12, amp: 0.08 } : { r: 7, half: 0.2, amp: 0.3 })
+const EDGE = (g: GroundId) => (isLaid(g) ? { r: 3, half: 0.12, amp: 0.08 } : { r: 7, half: 0.2, amp: 0.3 })
 
 /**
  * Work out where each ground is. Only the painted grounds get masks, and only around their strokes
@@ -233,7 +248,7 @@ export function buildGround(d: Drawing, W: number, H: number, key: string, rooms
   const noise = noiseField(mw, mh, ms, (d.seed ?? 1) + 17, 26 * u)
   const sharpen = (g: GroundId, a: Float32Array, box: MBox, from = (i: number) => a[i]) => {
     const { half, amp } = EDGE(g)
-    const shift = BLEND.indexOf(g) * 977
+    const shift = numberOf(g) * 977
     for (let y = box[1]; y < box[3]; y++)
       for (let i = y * mw + box[0], end = y * mw + box[2]; i < end; i++) a[i] = smoothstep(0.5 - half, 0.5 + half, from(i) + noise[(i + shift) % n] * amp)
   }
@@ -256,7 +271,8 @@ export function buildGround(d: Drawing, W: number, H: number, key: string, rooms
     return s
   })
   weight.set(base, baseW)
-  for (const g of BLEND)
+  const order: GroundId[] = [...BLEND, ...new Set([...(d.ground ?? []).map((x) => x.ground), base].filter(isPackGround))]
+  for (const g of order)
     if (g !== base && soft.has(g)) {
       const a = new Float32Array(soft.get(g)!)
       sharpen(g, a, boxes.get(g)!)
@@ -323,7 +339,7 @@ export function buildGround(d: Drawing, W: number, H: number, key: string, rooms
       }
     return best
   }
-  return { key, ms, mw, mh, base, weight, boxes, water, at }
+  return { key, ms, mw, mh, base, order, weight, boxes, water, at }
 }
 
 /** A box-sized canvas whose alpha is the given values, to cut a texture down with destination-in. */
@@ -347,7 +363,7 @@ function layersOf(gm: GroundMap) {
   const { mw, base } = gm
   const cum = new Float32Array(gm.weight.get(base)!)
   gm.layers = []
-  for (const g of BLEND) {
+  for (const g of gm.order) {
     const w = gm.weight.get(g)
     const box = gm.boxes.get(g)
     if (g === base || !w || !box) continue
@@ -418,7 +434,13 @@ function texture(ctx: CanvasRenderingContext2D, g: GroundId, box: Box, st: InkSt
   ctx.save()
   ctx.fillStyle = fill
   ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
-  if (colour) mottle(ctx, box, fill, u, BLEND.indexOf(g) + 3)
+  // a pack's floor texture is its own picture, repeated
+  if (isPackGround(g)) {
+    paintPackGround(ctx, g, box, st, u)
+    ctx.restore()
+    return
+  }
+  if (colour) mottle(ctx, box, fill, u, numberOf(g) + 3)
   const pen = colour ? mix(fill, '#24180c', g === 'snow' ? 0.35 : 0.6) : st.ink
   const markAlpha = colour ? 0.55 : 0.6
   // in ink there's no colour to tell grounds apart, so the marks do it: more of them
@@ -711,7 +733,7 @@ function edgesOf(gm: GroundMap, g: GroundId, u: number): Point[][] {
   const w = gm.weight.get(g)!
   const rgba = new Uint8ClampedArray(w.length * 4)
   for (let i = 0; i < w.length; i++) rgba[i * 4 + 3] = w[i] * 255
-  const wobble = makeNoise(BLEND.indexOf(g) + 61)
+  const wobble = makeNoise(numberOf(g) + 61)
   loops = traceLoops(rgba, gm.mw, gm.mh, gm.ms, 3)
     .filter((l) => loopArea(l) > (12 * u) ** 2)
     .map((l) => roughen(l, u, wobble, { amp: 1.2, wavelength: 22 }))
@@ -817,17 +839,17 @@ export function drawGround(gm: GroundMap, d: Drawing, W: number, H: number, scal
   const worldBox = (b: MBox, pad: number): Box => [b[0] / ms - pad, b[1] / ms - pad, b[2] / ms + pad, b[3] / ms + pad]
 
   const baseAt = sample(gm.weight.get(gm.base)!)
-  texture(ctx, gm.base, [0, 0, W, H], st, Atlas.rng(seed + BLEND.indexOf(gm.base)), u, (x, y) => baseAt(x, y) > r() * 0.9)
+  texture(ctx, gm.base, [0, 0, W, H], st, Atlas.rng(seed + numberOf(gm.base)), u, (x, y) => baseAt(x, y) > r() * 0.9)
   for (const L of layersOf(gm)) {
     const weightAt = sample(gm.weight.get(L.g)!)
-    overlay(L.box, L.alpha, () => texture(sc, L.g, worldBox(L.box, 4), st, Atlas.rng(seed + BLEND.indexOf(L.g)), u, (x, y) => weightAt(x, y) > r() * 0.9))
+    overlay(L.box, L.alpha, () => texture(sc, L.g, worldBox(L.box, 4), st, Atlas.rng(seed + numberOf(L.g)), u, (x, y) => weightAt(x, y) > r() * 0.9))
   }
 
   // in ink there's no colour to show where a painted ground stops, so its edge gets a broken pen line
   if (st.mode !== 'colour') {
     ctx.save()
     ctx.globalAlpha = 0.7
-    for (const L of layersOf(gm)) if (!LAID.includes(L.g)) for (const loop of edgesOf(gm, L.g, u)) brokenEdge(ctx, loop, r, st, u)
+    for (const L of layersOf(gm)) if (!isLaid(L.g)) for (const loop of edgesOf(gm, L.g, u)) brokenEdge(ctx, loop, r, st, u)
     ctx.restore()
   }
 

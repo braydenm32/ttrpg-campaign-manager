@@ -159,7 +159,12 @@ export const GROUNDS = {
   boards: 'Wooden boards',
   water: 'Water',
 } as const
-export type GroundId = keyof typeof GROUNDS
+/**
+ * A ground: one the app paints (GROUNDS), or a floor texture from a map pack, named like a pack
+ * piece (`pack:texture-cobblestone@1`, see src/packs/art.ts).
+ */
+export type GroundId = keyof typeof GROUNDS | `pack:${string}`
+export const isPackGround = (g: GroundId): g is `pack:${string}` => g.startsWith('pack:')
 
 /** A soft-edged brush stroke of one kind of ground on a battle map; later strokes paint over earlier ones. */
 export interface GroundStroke {
@@ -216,6 +221,12 @@ export interface Drawing {
   /** Battle maps: rooms and passages, and whether what's outside them is solid rock (a dungeon) or the ground. */
   rooms?: RoomStroke[]
   outside?: 'rock' | 'ground'
+  /**
+   * Battle maps: walls and fences built from a map pack's tiles, one tile to a square, joining up
+   * with the squares next to them (src/packs/tiles.ts). Keyed by "column,row"; the value is the
+   * set (a pack asset name), with "|door" for a doorway or "|broken" for a broken stretch.
+   */
+  tiles?: Record<string, string>
   /** Town maps: buildings, walls and trees stand up off the plan, seen from above at an angle, instead of straight down. */
   birdsEye?: boolean
   hidden?: LayerId[]

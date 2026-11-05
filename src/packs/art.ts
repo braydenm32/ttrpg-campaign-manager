@@ -41,9 +41,23 @@ export function packPieceSize(piece: Pick<PackPiece, 'scene' | 'cols' | 'rows' |
   return Math.round(n * (gridSize || 70))
 }
 
+/** A picture in memory, by file key. */
+export const pictureOf = (key: string) => pictures.get(key)
+
+/**
+ * Walls, fences and floor textures from packs (pieces with a `use`): not pieces to place, so they
+ * stay out of the map library and are kept here, by asset name, for the Walls and Ground tools.
+ */
+const kits = new Map<string, { piece: PackPiece; rev: number }>()
+export const kitOf = (name: string) => kits.get(name)
+
 /** Puts a piece (one rev of it) in the map library, or refreshes it there. */
 export function registerPackPiece(piece: PackPiece, rev = piece.rev) {
   const name = packAssetName(piece.id, rev)
+  if (piece.use) {
+    kits.set(name, { piece, rev })
+    return name
+  }
   const versions = versionsOf(piece, rev)
   const n = designsOf(versions)
   const side = (piece.view ?? (piece.scene === 'world' ? 'side' : 'top')) === 'side'
@@ -176,9 +190,22 @@ export function forgetPictures(pieceId: string) {
   for (const k of [...tinted.keys()]) if (k.startsWith(`${pieceId}@`)) tinted.delete(k)
 }
 
-/** The pack pieces a drawing uses: for each, the designs and conditions placed. */
+/** The walls, fences and floor textures from packs a drawing uses, by asset name. */
+export function kitsIn(d: Drawing | undefined): Set<string> {
+  const used = new Set<string>()
+  for (const v of Object.values(d?.tiles ?? {})) used.add(v.split('|')[0])
+  if (d?.groundBase && isPackAsset(d.groundBase)) used.add(d.groundBase)
+  for (const g of d?.ground ?? []) if (isPackAsset(g.ground)) used.add(g.ground)
+  return used
+}
+
+/**
+ * The pack pieces a drawing uses: for each, the designs and conditions placed. Walls, fences and
+ * floor textures are in it too (with no designs listed: they use all of theirs).
+ */
 export function packPiecesIn(d: Drawing | undefined): Map<string, { variant: number; state?: string }[]> {
   const used = new Map<string, { variant: number; state?: string }[]>()
+  for (const name of kitsIn(d)) used.set(name, [])
   for (const s of d?.shapes ?? []) {
     if (s.kind !== 'asset' || !isPackAsset(s.asset)) continue
     const list = used.get(s.asset) ?? []
@@ -186,6 +213,16 @@ export function packPiecesIn(d: Drawing | undefined): Map<string, { variant: num
     used.set(s.asset, list)
   }
   return used
+}
+
+/**
+ * The pictures (by index) a wall, fence or floor set needs on a map with this look: every part and
+ * design (they're small) in the look's colour or ink, or all of them if it has only one look.
+ */
+export function kitPictures(versions: PackVersion[], look: PackLook) {
+  const all = versions.map((_, i) => i)
+  const inLook = all.filter((i) => !versions[i].mode || versions[i].mode === look.mode)
+  return inLook.length ? inLook : all
 }
 
 /** The pictures (by index) a piece needs for these designs and conditions on a map with this look. */
@@ -216,7 +253,7 @@ export async function ensurePackArt(d: Drawing | undefined): Promise<string[]> {
         return
       }
       registerPackPiece(piece, ref.rev)
-      const want = picturesNeeded(versionsOf(piece, ref.rev), uses, look)
+      const want = piece.use ? kitPictures(versionsOf(piece, ref.rev), look) : picturesNeeded(versionsOf(piece, ref.rev), uses, look)
       const got = await Promise.all(want.map((v) => loadPicture(piece, ref.rev, v, 'full').catch(() => false)))
       if (got.some((ok) => !ok)) missing.push(piece.label)
     }),

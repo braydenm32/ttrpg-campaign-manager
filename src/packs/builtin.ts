@@ -18,12 +18,18 @@ export interface PackManifest {
   /** Goes up whenever the pack changes. */
   version: number
   pieces: Omit<PackPiece, 'packId' | 'updatedAt' | 'owner' | 'pending'>[]
+  /**
+   * Walls, fences and floor textures (pieces with a `use`). Kept apart from `pieces` so app
+   * versions from before them, which would offer them as pieces to place, never see them.
+   */
+  extra?: Omit<PackPiece, 'packId' | 'updatedAt' | 'owner' | 'pending'>[]
 }
 
 /** Where one picture of a built-in piece is. */
 export const builtinFileUrl = (pieceId: string, rev: number, version: number, kind: 'full' | 'thumb', ext: string) => `${PACK_URL}/${pieceId}/${rev}-${version}-${kind}.${ext}`
 
-const CHECKED = 'packs.builtin.checked'
+// (".2": read again straight away once walls and floor textures came in)
+const CHECKED = 'packs.builtin.checked.2'
 let loading: Promise<boolean> | undefined
 
 /**
@@ -48,7 +54,7 @@ export function loadBuiltinPack(force = false): Promise<boolean> {
         const had = await db.packs.get(BUILTIN_PACK)
         await db.packs.put({ id: BUILTIN_PACK, name: m.name || 'Warded Atlas pack', builtin: true, createdAt: had?.createdAt ?? now, updatedAt: now })
         const before = new Map((await db.packPieces.where({ packId: BUILTIN_PACK }).toArray()).map((p) => [p.id, p]))
-        for (const x of m.pieces) {
+        for (const x of [...m.pieces, ...(Array.isArray(m.extra) ? m.extra.filter((x) => x.use) : [])]) {
           const old = before.get(x.id)
           before.delete(x.id)
           // a piece with new pictures keeps the old ones listed, for maps drawn with them

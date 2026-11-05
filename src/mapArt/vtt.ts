@@ -3,7 +3,8 @@
  * and lights, measured in grid squares, for Foundry (Universal Battlemap Importer), Roll20
  * (UniversalVTTImporter), Fantasy Grounds and others.
  *
- * Walls are the rooms' walls and any wall, inner wall or hedge lines, with a gap left at each door.
+ * Walls are the rooms' walls, any wall, inner wall or hedge lines, and walls built from a pack's
+ * tiles (with a door at each doorway), with a gap left at each door.
  * Doors become doors; bars you can see through (a portcullis, an iron gate) become windows, which
  * stop you but not your sight. Pillars and buildings block sight, and torches, braziers and
  * campfires give light.
@@ -12,6 +13,7 @@ import { Atlas, type Point } from './atlas'
 import { canTurn, roomWalls, styleFor } from './classic'
 import { loopArea, smoothLine, traceLoops } from './geometry'
 import type { Drawing, Shape } from '../mapDrawing'
+import { tileWalls } from '../packs/tiles'
 
 type Asset = Extract<Shape, { kind: 'asset' }>
 
@@ -225,6 +227,8 @@ export function vttParts(d: Drawing, W: number, H: number): VttParts {
         const pts = simplify(smoothLine(s.points, s.smooth && s.style === 'hedge', 0.2 * g), 0.04 * g)
         walls.push(...cut(pts, false, holes, used))
       }
+  const tiled = hidden.has('paths') ? { walls: [], doors: [] } : tileWalls(d)
+  for (const w of tiled.walls) walls.push(...cut(w, false, holes, used))
 
   const solid = pieces.filter((s) => SOLID.has(s.asset))
   const lights = pieces.flatMap((s) => {
@@ -235,7 +239,7 @@ export function vttParts(d: Drawing, W: number, H: number): VttParts {
     walls: walls.filter((w) => length(w) > 0.05 * g),
     objects: solid.flatMap((s) => silhouette(s, d, W, H)),
     solid: solid.length,
-    portals: portals.map(({ hole, ...p }) => ({ ...p, freestanding: !used.has(hole) })),
+    portals: [...portals.map(({ hole, ...p }) => ({ ...p, freestanding: !used.has(hole) })), ...tiled.doors.map((x) => ({ ...x, closed: true, freestanding: false }))],
     lights,
   }
 }
