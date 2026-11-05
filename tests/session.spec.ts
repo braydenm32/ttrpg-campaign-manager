@@ -337,3 +337,77 @@ test('on the Lectern: Wrap up sits at the foot on a phone, Record opens the cons
     await putBack(page, 'sessions', [[s1.id, before]])
   }
 })
+
+test('the Lectern’s party leaves out a dead character, with a way to show them', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  const pcs = world.dump.entities.filter((e) => {
+    const x = e as { status?: string; campaignId?: string }
+    return e.type === 'pc' && !e.template && (x.status ?? 'alive') === 'alive' && (!x.campaignId || x.campaignId === s1.campaignId)
+  })
+  const dead = pcs[0]
+  await open(page, `${w}/s/${s1.id}/lectern`)
+  const before = await getRecord(page, 'entities', dead.id)
+  try {
+    await patchRecord(page, 'entities', dead.id, { status: 'dead', statusKnown: true })
+    await open(page, `${w}/s/${s1.id}/lectern`)
+    const party = page.locator('#lectern-party')
+    const unfold = party.getByRole('button', { name: /^Open The party/ })
+    if (await unfold.count()) await unfold.click()
+    const rows = party.locator('tbody tr')
+    await expect(rows.first()).toBeVisible()
+    await expect(party.locator('tbody')).not.toContainText(dead.name)
+    const show = party.getByRole('button', { name: `Show 1 not playing (${dead.name}, dead)` })
+    await show.click()
+    await expect(party.locator('tbody')).toContainText(dead.name)
+    await party.getByRole('button', { name: 'Hide the 1 not playing' }).click()
+    await expect(party.locator('tbody')).not.toContainText(dead.name)
+    // The character's page still has them, as ever.
+    await open(page, `${w}/p/${world.pageSlug(dead.name)}`)
+    await expect(page.locator('h1')).toContainText(dead.name)
+  } finally {
+    await putBack(page, 'entities', [[dead.id, before]])
+  }
+})
+
+test('Show players at the Lectern: tabs, a picture search, what’s up with Stop, and boards in their own tab', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  await open(page, `${w}/s/${s1.id}/lectern`)
+  const before = await getRecord(page, 'worlds', world.id)
+  try {
+    const panel = page.locator('#lectern-show')
+    const unfold = panel.getByRole('button', { name: /^Open Show players/ })
+    if (await unfold.count()) await unfold.click()
+    await expect(panel.getByRole('status').first()).toHaveText('Nothing on screen')
+    await expect(panel.getByRole('link', { name: 'Open the players’ screen (for a TV)' })).toBeVisible()
+    const tabs = panel.getByRole('tablist', { name: 'What to show' })
+    await expect(tabs.getByRole('tab', { name: 'Pictures' })).toHaveAttribute('aria-selected', 'true')
+    // A few pictures to start with, the rest a tap away.
+    const thumbs = panel.locator('.show-pics').last().locator('.show-thumb')
+    expect(await thumbs.count()).toBeLessThanOrEqual(8)
+    const showAll = panel.getByRole('button', { name: /^Show all \d+$/ })
+    if (await showAll.count()) {
+      const n = await thumbs.count()
+      await showAll.click()
+      expect(await thumbs.count()).toBeGreaterThan(n)
+    }
+    // Searching finds a picture by the page it belongs to.
+    const person = world.dump.entities.find((e) => (e as { imageId?: string }).imageId && e.type === 'npc' && !e.template)!
+    await panel.getByRole('searchbox', { name: 'Find a picture' }).fill(person.name)
+    await panel.locator('.show-pics .show-thumb', { hasText: person.name }).first().click()
+    // What's up sits at the top with Stop.
+    const now = panel.locator('.now-showing')
+    await expect(now).toContainText(person.name)
+    await expect(panel.locator('.show-live')).toHaveText('Live')
+    await now.getByRole('button', { name: 'Stop' }).click()
+    await expect(now).toHaveCount(0)
+    await expect.poll(async () => (await getRecord(page, 'worlds', world.id))!.showing ?? null).toBeNull()
+    // Boards have a tab of their own.
+    await tabs.getByRole('tab', { name: 'Several' }).click()
+    await expect(panel.getByRole('button', { name: '+ New board' })).toBeVisible()
+    await expect(panel.locator('.show-pics')).toHaveCount(0)
+  } finally {
+    await putBack(page, 'worlds', [[world.id, before]])
+  }
+})

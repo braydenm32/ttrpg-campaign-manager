@@ -1627,9 +1627,29 @@ textarea.read-text:hover { border-color: var(--border); border-left-color: var(-
 .plan-list { gap: .1em; }
 .session-page .highlights, .session-page .recorder { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 1em; margin-top: 1em; }
 .session-page .highlights h2, .session-page .spotlight h2 { margin-top: 0; font-size: 1.1rem; }
-.show-status { min-height: 44px; }
-.show-status .grow-text-line { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.show-status.on { color: var(--secret-ink); }
+/* The Lectern's Show players: a live chip and the TV button in the heading, what's up with Stop, tabs. */
+.show-live { font-size: .85rem; color: var(--muted); white-space: nowrap; display: inline-flex; align-items: center; gap: .35em; }
+.show-live.on { color: var(--good); font-weight: 600; }
+.show-live.on::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
+.button.show-tv { min-width: 44px; min-height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.now-showing { display: flex; align-items: center; gap: .75em; padding: .6em; margin: .3em 0 .7em; background: var(--panel-2); border: 1px solid var(--accent); border-radius: 10px; }
+.now-showing-pic { flex: none; width: 56px; height: 56px; border-radius: 6px; overflow: hidden; background: var(--panel); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--muted); }
+.now-showing-pic img { width: 100%; height: 100%; object-fit: cover; }
+.now-showing-what { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .1em; }
+.now-showing-what strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.now-showing > button { flex: none; min-height: 44px; padding: 0 1.2em; }
+.show-tabs { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid var(--border); margin: .2em 0 .8em; }
+.show-tabs button { background: none; border: none; border-radius: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; color: var(--muted); min-height: 44px; padding: 0 .6em; }
+.show-tabs button:hover { color: var(--text); }
+.show-tabs button.on { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+.show-find { gap: .5em; flex-wrap: nowrap; }
+.show-find .search { flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; }
+.show-find .button { flex: none; min-height: 44px; display: inline-flex; align-items: center; }
+.show-group { font-family: var(--font-body); font-size: .75rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: .9em 0 .45em; }
+.show-thumbs.show-pics, .show-thumbs.show-pics:has(.named) { max-height: none; overflow: visible; }
+.show-all-pics, .show-several.new-board { width: 100%; min-height: 44px; margin-top: .7em; background: none; border: 1px dashed var(--border); color: var(--link); }
+.show-boards-tab > p { margin: 0 0 .7em; }
+.show-foot { display: flex; flex-wrap: wrap; align-items: center; gap: .3em 1em; margin-top: .9em; padding-top: .7em; border-top: 1px solid var(--border); }
 .show-thumbs:has(.named) { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: .5em; max-height: 280px; align-items: start; }
 .show-thumb.named { width: auto; height: auto; display: flex; flex-direction: column; align-items: stretch; gap: .2em; padding: .2em; background: none; border: 1px solid transparent; white-space: normal; }
 .show-thumb.named .thumb-img { display: block; aspect-ratio: 1; border-radius: 6px; overflow: hidden; background: var(--panel-2); }

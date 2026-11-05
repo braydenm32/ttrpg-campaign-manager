@@ -54,13 +54,26 @@ function nextSpot(items: BoardItem[]) {
 
 type Tray = 'image' | 'page' | 'text' | 'handouts'
 
-export default function ArrangeBoard({ world, onClose, sceneIds = [], boardId }: { world: World; onClose: () => void; sceneIds?: string[]; boardId?: string }) {
+export default function ArrangeBoard({
+  world,
+  onClose,
+  sceneIds = [],
+  boardId,
+  fresh,
+}: {
+  world: World
+  onClose: () => void
+  sceneIds?: string[]
+  boardId?: string
+  /** Open on a new, empty board (the Lectern's "+ New board"). */
+  fresh?: boolean
+}) {
   const ref = useDialog(onClose)
   const entities = useVisibleEntities(world.id)
   const pictures = useShowablePictures(world.id, entities, sceneIds)
   const saved = showBoardsOf(world)
   // The board open now: the one asked for, else the one in hand, else a new one (kept once something goes on it).
-  const [board, setBoard] = useState<ShowBoard>(() => saved.find((b) => b.id === boardId) ?? boardInHand(saved, world) ?? blankBoard(saved))
+  const [board, setBoard] = useState<ShowBoard>(() => (fresh ? blankBoard(saved) : (saved.find((b) => b.id === boardId) ?? boardInHand(saved, world) ?? blankBoard(saved))))
   const boards = saved.some((b) => b.id === board.id) ? saved.map((b) => (b.id === board.id ? board : b)) : [...saved, board]
   const nameBox = useRef<HTMLInputElement>(null)
   const [picked, setPicked] = useState<string>()

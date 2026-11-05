@@ -12,7 +12,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { partyOf, startPlaying } from '../sessions'
 import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
-import { ENTITY_LABELS, blankEntity, blankLectern, db, newId, type Combatant, type Entity, type LecternState, type Session, type World } from '../db'
+import { ENTITY_LABELS, LIFE_STATUS, blankEntity, blankLectern, db, newId, type Combatant, type Entity, type LecternState, type Session, type World } from '../db'
 import { modifierFrom, roll, rollDie } from '../dice'
 import { addCombatants, fieldOf, fromEntity, initiativeOrder, numberFrom } from '../encounters'
 import {
@@ -1144,8 +1144,14 @@ function CommonRoomPanel({ world, session, lectern, edit, live }: PanelProps & {
 
 /** The party at a glance (the details the GM picked), with inspiration to hand out. */
 function Party({ world, entities, campaignId }: { world: World; entities: Entity[]; campaignId: string }) {
-  const party = partyOf(entities, campaignId)
-  if (!party.length) return null
+  const everyone = partyOf(entities, campaignId)
+  // Characters who aren't playing (dead, missing, captured) fold away here, as in "Add the party";
+  // their pages, and the Atlas, are unchanged.
+  const playing = partyOf(entities, campaignId, { activeOnly: true })
+  const out = everyone.filter((e) => !playing.includes(e))
+  const [showOut, setShowOut] = useState(false)
+  const party = showOut ? everyone : playing
+  if (!everyone.length) return null
   const give = (e: Entity, n: number) => db.entities.update(e.id, { inspiration: Math.max(0, (e.inspiration ?? 0) + n) || undefined, updatedAt: Date.now() })
   return (
     <LecternPanel id="party" sectionId="lectern-party" name="The party" keywords="characters pcs inspiration players ac perception glance" title={<><Ico as={Shield} /> The party <Help topic="inspiration" /></>}>
@@ -1165,9 +1171,29 @@ function Party({ world, entities, campaignId }: { world: World; entities: Entity
             </button>
           </span>
         )}
+        footer={
+          out.length > 0 && (
+            <>
+              <span aria-hidden="true">·</span>
+              <button className="link" aria-expanded={showOut} onClick={() => setShowOut(!showOut)}>
+                {showOut ? `Hide the ${out.length} not playing` : `Show ${out.length} not playing (${notPlaying(out)})`}
+              </button>
+              <Help topic="partyNotPlaying" />
+            </>
+          )
+        }
       />
     </LecternPanel>
   )
+}
+
+/** "Bombus, dead" or "2 dead, 1 missing": who's folded away from the Lectern's party. */
+function notPlaying(out: Entity[]) {
+  const word = (e: Entity) => LIFE_STATUS[e.status ?? 'alive'].label.toLowerCase()
+  if (out.length === 1) return `${out[0].name}, ${word(out[0])}`
+  const n = new Map<string, number>()
+  for (const e of out) n.set(word(e), (n.get(word(e)) ?? 0) + 1)
+  return [...n].map(([k, v]) => `${v} ${k}`).join(', ')
 }
 
 const TIMER_MINUTES = [1, 3, 5, 10, 30]
