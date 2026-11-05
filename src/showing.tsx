@@ -9,7 +9,7 @@ import { saveFileAsAsset, useAssetUrl, useBlobUrl, useVisibleEntities } from './
 import { Markdown, stripSecrets } from './Markdown'
 import { schedule } from './cloud/sync'
 import { Ico } from './icons'
-import { SquaresFour, Television } from '@phosphor-icons/react'
+import { ArrowSquareOut, Scroll, SquaresFour, Television } from '@phosphor-icons/react'
 import { useDialog } from './components'
 import { worldPath } from './paths'
 import { askToReveal, useReview } from './reveal'
@@ -440,11 +440,12 @@ export async function putUpBoard(worldId: string, board: ShowBoard, entities: En
  * The GM's boards, each ready to go up with one tap, and the way to the arranging screen (to make
  * or change one). On the Lectern and in Handouts.
  */
-export function ShowBoards({ world, sceneIds }: { world: World; sceneIds?: string[] }) {
+export function ShowBoards({ world, sceneIds, newBoard }: { world: World; sceneIds?: string[]; /** "+ New board" opens an empty board (the Lectern's tab). */ newBoard?: boolean }) {
   const entities = useVisibleEntities(world.id)
   const { ask, dialog } = useReview()
   // Which board the arranging screen opens on: one picked here, or (null) the board in hand.
   const [open, setOpen] = useState<string | null>()
+  const [fresh, setFresh] = useState(false)
   const boards = showBoardsOf(world).filter((b) => b.items.length)
   return (
     <div className="show-boards">
@@ -472,12 +473,34 @@ export function ShowBoards({ world, sceneIds }: { world: World; sceneIds?: strin
           })}
         </ul>
       )}
-      <button type="button" className="show-several" onClick={() => setOpen(null)} title="Lay out several pictures, pages and texts, then show them all at once">
-        <Ico as={SquaresFour} /> {boards.length ? 'Boards for showing several…' : 'Show several at once…'}
-      </button>
+      {newBoard ? (
+        <button
+          type="button"
+          className="show-several new-board"
+          onClick={() => {
+            setFresh(true)
+            setOpen(null)
+          }}
+        >
+          + New board
+        </button>
+      ) : (
+        <button type="button" className="show-several" onClick={() => setOpen(null)} title="Lay out several pictures, pages and texts, then show them all at once">
+          <Ico as={SquaresFour} /> {boards.length ? 'Boards for showing several…' : 'Show several at once…'}
+        </button>
+      )}
       {open !== undefined && (
         <Suspense fallback={null}>
-          <ArrangeBoard world={world} sceneIds={sceneIds} boardId={open ?? undefined} onClose={() => setOpen(undefined)} />
+          <ArrangeBoard
+            world={world}
+            sceneIds={sceneIds}
+            boardId={open ?? undefined}
+            fresh={fresh && open === null}
+            onClose={() => {
+              setOpen(undefined)
+              setFresh(false)
+            }}
+          />
         </Suspense>
       )}
       {dialog}
@@ -499,13 +522,29 @@ export function ShowButton({ worldId, what, disabled }: { worldId: string; what:
   )
 }
 
-/** The Lectern's panel: pick a picture or a page (revealing it if need be), or type something, and show it. */
+type ShowTab = 'image' | 'page' | 'text' | 'boards'
+const SHOW_TABS: [ShowTab, string][] = [
+  ['image', 'Pictures'],
+  ['page', 'Pages'],
+  ['text', 'Text'],
+  ['boards', 'Several'],
+]
+/** Pictures listed before "Show all". */
+const FIRST_PICTURES = 8
+
+/**
+ * The Lectern's panel: what's on players' screens (with Stop) at the top, then tabs to pick a
+ * picture (this scene's first, with a search), a page (revealing it if need be), some text, or a
+ * board of several at once. The players' TV screen opens from the button in the heading.
+ */
 export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; sceneText?: string; sceneIds?: string[] }) {
   const entities = useVisibleEntities(world.id)
-  const shown = useShowablePictures(world.id, entities, sceneIds)
-  const [kind, setKind] = useState<'image' | 'page' | 'text'>('image')
+  const pictures = useShowablePictures(world.id, entities, sceneIds)
+  const [tab, setTab] = useState<ShowTab>('image')
   const [text, setText] = useState('')
   const [title, setTitle] = useState('')
+  const [find, setFind] = useState('')
+  const [all, setAll] = useState(false)
   const revealed = entities.filter((e) => e.visibility === 'players')
   const hidden = entities.filter((e) => e.visibility !== 'players' && !e.template)
   const { ask, dialog } = useReview()
@@ -517,60 +556,112 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
     const undo = await revealAndShow(world.id, p)
     toast(`“${p.name}” is revealed and on the players’ screens.`, undo, 'Hide it again')
   }
+  const live = !!(world.showing || world.spread)
+  const needle = find.trim().toLowerCase()
+  const found = needle ? pictures.filter(({ asset, name }) => [name, asset.name, ...asset.tags].some((x) => x.toLowerCase().includes(needle))) : pictures
+  const scene = needle ? [] : found.filter((p) => p.first)
+  const rest = needle ? found : found.filter((p) => !p.first)
+  const listed = all || needle ? rest : rest.slice(0, FIRST_PICTURES)
+  const thumb = ({ asset: a, name }: (typeof pictures)[number]) => (
+    <Thumb
+      key={a.id}
+      asset={a}
+      name={name}
+      on={world.showing?.kind === 'image' && world.showing.assetId === a.id}
+      onClick={() => showToPlayers(world.id, { kind: 'image', title: name, assetId: a.id })}
+    />
+  )
   return (
-    <LecternPanel id="show" sectionId="lectern-show" name="Show players" keywords="handout picture screen tv reveal" title={<><Ico as={Television} /> Show players <Help topic="showPlayers" /></>}>
-      {/* Always the same height, so the pictures below don't jump when something is shown. */}
-      <div className={`row small show-status ${world.showing || world.spread ? 'on' : ''}`} role="status">
-        {world.showing || world.spread ? (
-          <>
-            <span className="grow-text-line">
-              Showing <strong>{world.spread ? spreadTitle(world.spread, world.spread.items.length) : world.showing?.title}</strong>
-            </span>
-            <button onClick={() => stopShowing(world.id)}>Stop</button>
-          </>
-        ) : (
-          <span className="muted">Nothing on players’ screens.</span>
-        )}
-      </div>
-      <ShowBoards world={world} sceneIds={sceneIds} />
-      <div className="segmented">
-        {(['image', 'page', 'text'] as const).map((k) => (
-          <button key={k} className={kind === k ? 'on' : ''} onClick={() => setKind(k)}>
-            {{ image: '🖼️ Picture', page: '📄 Page', text: '📝 Text' }[k]}
+    <LecternPanel
+      id="show"
+      sectionId="lectern-show"
+      name="Show players"
+      keywords="handout picture screen tv reveal several board"
+      title={<><Ico as={Television} /> Show players <Help topic="showPlayers" /></>}
+      extra={
+        <>
+          {/* Nothing up needs no words on screen (no Stop strip says it); a screen reader still hears it. */}
+          <span className={live ? 'show-live on' : 'sr-only'} role="status">
+            {live ? 'Live' : 'Nothing on screen'}
+          </span>
+          <Link
+            className="button show-tv"
+            to={`/screen${worldPath(world.id).slice(2)}`}
+            target="_blank"
+            aria-label="Open the players’ screen (for a TV)"
+            title="Open the players’ screen, for a TV or second monitor at the table"
+          >
+            <Ico as={ArrowSquareOut} />
+          </Link>
+        </>
+      }
+    >
+      {live && <NowShowing world={world} />}
+      <div className="show-tabs" role="tablist" aria-label="What to show">
+        {SHOW_TABS.map(([k, label]) => (
+          <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} title={k === 'boards' ? 'Several at once: boards laid out ahead of time' : undefined} onClick={() => setTab(k)}>
+            {label}
           </button>
         ))}
       </div>
-      {kind === 'image' && (
-        <div className="show-thumbs">
-          <label className="button small">
-            + Upload
+      {tab === 'image' && (
+        <div className="show-pictures">
+          <div className="row show-find">
             <input
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={async (e) => {
-                const f = e.target.files?.[0]
-                if (!f) return
-                const id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
-                await showToPlayers(world.id, { kind: 'image', title: f.name.replace(/\.[^.]+$/, ''), assetId: id })
-                e.target.value = ''
-              }}
+              type="search"
+              className="search"
+              placeholder="Find a picture…"
+              aria-label="Find a picture"
+              value={find}
+              onChange={(e) => setFind(e.target.value)}
             />
-          </label>
-          {shown.slice(0, 30).map(({ asset: a, name }) => (
-            <Thumb
-              key={a.id}
-              asset={a}
-              name={name}
-              on={world.showing?.kind === 'image' && world.showing.assetId === a.id}
-              onClick={() => showToPlayers(world.id, { kind: 'image', title: name, assetId: a.id })}
-            />
-          ))}
+            <label className="button" title="Upload a picture and show it">
+              + Upload
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={async (e) => {
+                  const f = e.target.files?.[0]
+                  if (!f) return
+                  const id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
+                  await showToPlayers(world.id, { kind: 'image', title: pictureName(f.name), assetId: id })
+                  e.target.value = ''
+                }}
+              />
+            </label>
+          </div>
+          {pictures.length === 0 ? (
+            <p className="muted small">No pictures in this world yet. Upload one here, or in More › Files.</p>
+          ) : found.length === 0 ? (
+            <p className="muted small">No picture’s name or tag has “{find.trim()}” in it.</p>
+          ) : (
+            <>
+              {scene.length > 0 && (
+                <>
+                  <h3 className="show-group">This scene</h3>
+                  <div className="show-thumbs show-pics">{scene.map(thumb)}</div>
+                </>
+              )}
+              {rest.length > 0 && (
+                <>
+                  <h3 className="show-group">{needle ? `Found · ${rest.length}` : `${scene.length ? 'All pictures' : 'Pictures'} · ${rest.length}`}</h3>
+                  <div className="show-thumbs show-pics">{listed.map(thumb)}</div>
+                </>
+              )}
+              {listed.length < rest.length && (
+                <button type="button" className="show-all-pics" onClick={() => setAll(true)}>
+                  Show all {rest.length}
+                </button>
+              )}
+            </>
+          )}
         </div>
       )}
-      {kind === 'page' && (
+      {tab === 'page' && (
         <select
           value=""
+          aria-label="Pick a page to show"
           onChange={(e) => {
             const p = entities.find((x) => x.id === e.target.value)
             if (!p) return
@@ -598,7 +689,7 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
           )}
         </select>
       )}
-      {kind === 'text' && (
+      {tab === 'text' && (
         <form
           className="form"
           onSubmit={(e) => {
@@ -621,20 +712,45 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
           </div>
         </form>
       )}
-      <Link className="small" to={`/screen${worldPath(world.id).slice(2)}`} target="_blank">
-        Open the players’ screen (for a TV) ↗
-      </Link>{' '}
-      <Help topic="playersScreen" />
+      {tab === 'boards' && (
+        <div className="show-boards-tab">
+          <p className="muted small">
+            Lay out a few pictures, pages and notes ahead of time, then put the whole board up with one tap. <Help topic="showSeveral" />
+          </p>
+          <ShowBoards world={world} sceneIds={sceneIds} newBoard />
+        </div>
+      )}
       {dialog}
       {!!world.handouts?.length && (
-        <>
-          {' · '}
-          <Link className="small" to={`${worldPath(world.id)}/handouts`}>
-            Handouts ({world.handouts.length})
-          </Link>
-        </>
+        <div className="show-foot small">
+          <Link to={`${worldPath(world.id)}/handouts`}>Handouts ({world.handouts.length})</Link>
+          <span className="muted">Everything you’ve shown, to show again</span>
+        </div>
       )}
     </LecternPanel>
+  )
+}
+
+/** What's on players' screens now, with a big Stop: a picture's thumbnail, else an icon. */
+function NowShowing({ world }: { world: World }) {
+  const showing = world.spread ? undefined : world.showing
+  const entities = useVisibleEntities(world.id)
+  const page = showing?.kind === 'page' ? entities.find((e) => e.id === showing.entityId) : undefined
+  const picture = useAssetUrl(showing?.kind === 'image' ? showing.assetId : page?.imageId)
+  const what = world.spread ? spreadTitle(world.spread, world.spread.items.length) : showing?.title
+  return (
+    <div className="now-showing" role="status">
+      <span className="now-showing-pic" aria-hidden="true">
+        {picture ? <img src={picture} alt="" /> : <Ico as={world.spread ? SquaresFour : showing?.kind === 'text' ? Scroll : Television} />}
+      </span>
+      <span className="now-showing-what">
+        <span className="muted small">On players’ screens</span>
+        <strong>{what || 'Untitled'}</strong>
+      </span>
+      <button type="button" className="primary" onClick={() => stopShowing(world.id)}>
+        Stop
+      </button>
+    </div>
   )
 }
 
@@ -663,10 +779,10 @@ export function useShowablePictures(worldId: string, entities: Entity[], sceneId
  * What to call a picture: its page's name when a page uses it, else its file name without the
  * ending; a bare key from an older copy of the example world ("sil:npc-jeb-marrowick") reads as words.
  */
-function pictureName(fileName: string, pageName?: string) {
+export function pictureName(fileName: string, pageName?: string) {
   if (pageName) return pageName
   const key = fileName.match(/^[a-z]+:(.+)$/)
-  if (!key) return fileName.replace(/\.[^.]+$/, '')
+  if (!key) return fileName.replace(/\.[^.]+$/, '').replace(/_+/g, ' ').replace(/\s+/g, ' ').trim() || fileName
   const words = key[1].replace(/^(npc|loc|f|h|i|item)-/, '').replace(/[-_]+/g, ' ')
   return words.charAt(0).toUpperCase() + words.slice(1)
 }
