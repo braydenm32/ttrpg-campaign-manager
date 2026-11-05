@@ -46,7 +46,18 @@ export function glanceColumns(world: World, party: Entity[]) {
   return [...fromStats, ...picked].slice(0, 4)
 }
 
-export function PartyGlance({ world, party, extra }: { world: World; party: Entity[]; extra?: (e: Entity) => ReactNode }) {
+export function PartyGlance({
+  world,
+  party,
+  extra,
+  footer,
+}: {
+  world: World
+  party: Entity[]
+  extra?: (e: Entity) => ReactNode
+  /** More next to "Choose columns" (the Lectern's "Show 1 not playing"). */
+  footer?: ReactNode
+}) {
   const [choosing, setChoosing] = useState(false)
   const columns = glanceColumns(world, party)
   const keys = partyKeys(party)
@@ -92,6 +103,7 @@ export function PartyGlance({ world, party, extra }: { world: World; party: Enti
           {choosing ? 'Done' : 'Choose columns'}
         </button>
         <Help topic="partyGlance" />
+        {footer}
       </div>
       {choosing && (
         <div className="party-glance-choose small">

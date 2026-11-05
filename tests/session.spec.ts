@@ -337,3 +337,35 @@ test('on the Lectern: Wrap up sits at the foot on a phone, Record opens the cons
     await putBack(page, 'sessions', [[s1.id, before]])
   }
 })
+
+test('the Lectern’s party leaves out a dead character, with a way to show them', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  const pcs = world.dump.entities.filter((e) => {
+    const x = e as { status?: string; campaignId?: string }
+    return e.type === 'pc' && !e.template && (x.status ?? 'alive') === 'alive' && (!x.campaignId || x.campaignId === s1.campaignId)
+  })
+  const dead = pcs[0]
+  await open(page, `${w}/s/${s1.id}/lectern`)
+  const before = await getRecord(page, 'entities', dead.id)
+  try {
+    await patchRecord(page, 'entities', dead.id, { status: 'dead', statusKnown: true })
+    await open(page, `${w}/s/${s1.id}/lectern`)
+    const party = page.locator('#lectern-party')
+    const unfold = party.getByRole('button', { name: /^Open The party/ })
+    if (await unfold.count()) await unfold.click()
+    const rows = party.locator('tbody tr')
+    await expect(rows.first()).toBeVisible()
+    await expect(party.locator('tbody')).not.toContainText(dead.name)
+    const show = party.getByRole('button', { name: `Show 1 not playing (${dead.name}, dead)` })
+    await show.click()
+    await expect(party.locator('tbody')).toContainText(dead.name)
+    await party.getByRole('button', { name: 'Hide the 1 not playing' }).click()
+    await expect(party.locator('tbody')).not.toContainText(dead.name)
+    // The character's page still has them, as ever.
+    await open(page, `${w}/p/${world.pageSlug(dead.name)}`)
+    await expect(page.locator('h1')).toContainText(dead.name)
+  } finally {
+    await putBack(page, 'entities', [[dead.id, before]])
+  }
+})

@@ -268,6 +268,8 @@ export const HELP = {
   nextSession: 'The session in hand, with its stage (Planned, Preparing, Playing, Played), its date, how many scenes and clues you’ve written, and one main button for what comes next: prepare it, start playing, wrap it up, or plan the one after.',
   endSession:
     'What’s done and what’s left before you mark the session played: the recording transcribed, the recap written, your pages updated, the session shown to players, the world’s date moved on. “Mark as played” then gets the next session ready, carrying over the clues they didn’t find, the scenes they didn’t reach, and where the party is.',
+  partyNotPlaying:
+    'Characters marked dead, missing or captured on their page stay out of the Lectern’s party list and “Add the party”, so the table only shows who’s playing. Tap “Show” to see them for a moment. Their pages, the Atlas and what players see are unchanged.',
   partyCampaign: 'When a world has more than one group, pick which campaign this character plays in. The campaign page and the Lectern’s “Add the party” then only show that group.',
   trackAsThread: 'Quests are what the players know they’re doing. A thread is your own tracker for it: how pressing it is, and a warning when it goes cold.',
   claimRequests: 'A player asked to play one of your characters. Approve it and they can edit that character’s sheet and read passages written for them.',
