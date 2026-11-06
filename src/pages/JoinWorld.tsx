@@ -24,8 +24,12 @@ export default function JoinWorld() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  // Keep the invite if the player has to go off and confirm their email first.
-  useEffect(() => pendingInvite.set(token), [token])
+  // Keep the invite only while signed out, for coming back after signing in or confirming an email.
+  // Once someone signed in has seen it, it's forgotten, so leaving without joining doesn't bring
+  // them back here every time they open their worlds.
+  useEffect(() => {
+    if (!loading) pendingInvite.set(user ? null : token)
+  }, [token, user, loading])
 
   // Everyone in the world sees this name, so it's never the player's email, and it has to be filled
   // in: an empty box or the invite link pasted into it (an easy slip) can't join.
@@ -129,6 +133,13 @@ export default function JoinWorld() {
               </button>
             </div>
           </form>
+        )}
+        {!error && (
+          <p className="muted small join-not-now">
+            <Link to="/" onClick={() => pendingInvite.set(null)}>
+              Not now, go to your worlds
+            </Link>
+          </p>
         )}
         {error && (
           <div className="join-error" role="alert">

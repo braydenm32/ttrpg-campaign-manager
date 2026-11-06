@@ -11,6 +11,8 @@
 .join-card h2 { display: flex; align-items: center; gap: .4em; flex-wrap: wrap; font-size: 1.3rem; }
 .join-actions { display: flex; flex-wrap: wrap; gap: .5em; justify-content: flex-end; margin-top: .3em; }
 .join-error { display: flex; flex-direction: column; gap: .4em; border-top: 1px solid var(--border); padding-top: .8em; }
+.join-card p.join-not-now { text-align: center; }
+.join-not-now a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .5em; }
 .join-wait { display: block; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 35%, transparent); }
 @media (prefers-reduced-motion: no-preference) {
   .join-wait { animation: join-breathe 2.4s ease-in-out infinite; }
