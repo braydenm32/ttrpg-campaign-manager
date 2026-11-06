@@ -148,6 +148,35 @@ test.describe('invite and wiki links', () => {
     }
   })
 
+  test('an invite opened and left without joining never traps Back on the invite page', async ({ browser, device }) => {
+    const context = await freshContext(browser, device)
+    try {
+      const state = { worldId: '', world_members: [], player_questions: [], downtime_actions: [], character_claims: [], character_requests: [], writes: [] as string[] }
+      await fakeCloud(context, state)
+      const page = await context.newPage()
+      // An invite remembered by an older version (no date on it) is let go, not followed.
+      await page.goto('/')
+      await page.evaluate(() => localStorage.setItem('codex.pendingInvite', 'old-token'))
+      await page.goto('/')
+      await expect(page.getByRole('heading', { name: /Your worlds/ })).toBeVisible()
+      expect(page.url()).not.toContain('/join/')
+      // Signed in, looking at an invite and going back: the front page stays put, and so does Back.
+      await page.goto('/join/test-token')
+      await expect(page.getByLabel('What should the table call you?')).toBeVisible()
+      await page.goBack()
+      await expect(page.getByRole('heading', { name: /Your worlds/ })).toBeVisible()
+      await page.waitForTimeout(500)
+      expect(page.url()).not.toContain('/join/')
+      // There's always a way out that doesn't need Back.
+      await page.goto('/join/test-token')
+      await page.getByRole('link', { name: 'Not now, go to your worlds' }).click()
+      await expect(page.getByRole('heading', { name: /Your worlds/ })).toBeVisible()
+      expect(page.url()).not.toContain('/join/')
+    } finally {
+      await context.close()
+    }
+  })
+
   test('a wiki link that can’t be opened says so, with Try again and the way to your worlds', async ({ page, device }) => {
     await open(page, '/shared/test-token')
     await expect(page.getByRole('heading', { name: 'Couldn’t open this wiki' })).toBeVisible()

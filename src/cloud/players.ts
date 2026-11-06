@@ -395,18 +395,32 @@ export async function listMyMemberships(): Promise<{ cloudId: string; name: stri
 }
 
 /** Remembers an invite across signing up (the confirmation email opens the app without it). */
+/**
+ * An invite someone opened while signed out, so the app can bring them back to it after they sign in
+ * (Google sends them to the front page) or confirm their email. Kept for a day at most, and dropped as
+ * soon as a signed-in person sees the invite page: otherwise an invite opened once and left would send
+ * the front page back to it every time, and the Back button could never get past it.
+ */
+const INVITE_KEY = 'codex.pendingInvite'
+const INVITE_KEEP_MS = 24 * 3600 * 1000
 export const pendingInvite = {
-  get: () => {
+  get: (): string | null => {
     try {
-      return localStorage.getItem('codex.pendingInvite')
+      const raw = localStorage.getItem(INVITE_KEY)
+      if (!raw) return null
+      // Older versions kept the bare token with no date: treat it as stale.
+      const saved = raw.startsWith('{') ? (JSON.parse(raw) as { token?: string; at?: number }) : {}
+      if (saved.token && saved.at && Date.now() - saved.at < INVITE_KEEP_MS) return saved.token
+      localStorage.removeItem(INVITE_KEY)
+      return null
     } catch {
       return null
     }
   },
   set: (token: string | null) => {
     try {
-      if (token) localStorage.setItem('codex.pendingInvite', token)
-      else localStorage.removeItem('codex.pendingInvite')
+      if (token) localStorage.setItem(INVITE_KEY, JSON.stringify({ token, at: Date.now() }))
+      else localStorage.removeItem(INVITE_KEY)
     } catch {
       // Storage blocked; the player can open the invite link again.
     }
