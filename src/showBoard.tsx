@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowsOutSimple, Copy, Lock, Plus, SquaresFour, Television, Trash } from '@phosphor-icons/react'
+import { ArrowsOutSimple, Copy, FileText, Image as ImageIcon, Lock, Plus, Scroll, SquaresFour, Television, Trash } from '@phosphor-icons/react'
 import { newId, type BoardItem, type Entity, type ShowBoard, type Showing, type World } from './db'
 import { useDialog } from './components'
 import { Help } from './help'
@@ -9,7 +9,7 @@ import { Ico } from './icons'
 import { stripSecrets } from './Markdown'
 import { worldPath } from './paths'
 import { useReview } from './reveal'
-import { putUpBoard, sameHandout, SpreadPiece, stopShowing, Thumb, useShowablePictures } from './showing'
+import { PicturePicker, pictureName, putUpBoard, sameHandout, SpreadPiece, stopShowing, useShowablePictures } from './showing'
 import { blankBoard, boardInHand, deleteShowBoard, freeName, saveShowBoard, showBoardsOf } from './showBoards'
 import { toast } from './undo'
 
@@ -53,6 +53,13 @@ function nextSpot(items: BoardItem[]) {
 }
 
 type Tray = 'image' | 'page' | 'text' | 'handouts'
+/** The same tabs as the Lectern's Show players, with Handouts (shown before) in place of Several. */
+const TRAY_TABS: [Tray, string][] = [
+  ['image', 'Pictures'],
+  ['page', 'Pages'],
+  ['text', 'Text'],
+  ['handouts', 'Handouts'],
+]
 
 export default function ArrangeBoard({
   world,
@@ -343,97 +350,97 @@ export default function ArrangeBoard({
             </div>
           </div>
           <aside className="arrange-tray" aria-label="Add to the board">
-            <div className="segmented">
-              {(['image', 'page', 'text', 'handouts'] as const).map((k) => (
-                <button key={k} className={tray === k ? 'on' : ''} onClick={() => setTray(k)}>
-                  {{ image: '🖼️ Picture', page: '📄 Page', text: '📝 Text', handouts: '🗂️ Shown before' }[k]}
+            <div className="show-tabs" role="tablist" aria-label="What to add">
+              {TRAY_TABS.map(([k, label]) => (
+                <button key={k} type="button" role="tab" aria-selected={tray === k} className={tray === k ? 'on' : ''} title={k === 'handouts' ? 'Everything you’ve shown before, to add again' : undefined} onClick={() => setTray(k)}>
+                  {label}
                 </button>
               ))}
             </div>
-            {tray === 'image' && (
-              <div className="show-thumbs">
-                <label className="button small">
-                  + Upload
-                  <input
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={async (e) => {
-                      const f = e.target.files?.[0]
-                      if (!f) return
-                      const id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
-                      add({ kind: 'image', title: f.name.replace(/\.[^.]+$/, ''), assetId: id })
-                      e.target.value = ''
-                    }}
-                  />
-                </label>
-                {pictures.slice(0, 40).map(({ asset: a, name }) => (
-                  <Thumb key={a.id} asset={a} name={name} on={board.items.some((i) => i.kind === 'image' && i.assetId === a.id)} onClick={() => add({ kind: 'image', title: name, assetId: a.id })} />
+            <div className="arrange-tray-body" role="tabpanel">
+              {tray === 'image' && (
+                <PicturePicker
+                  pictures={pictures}
+                  verb="Add"
+                  isOn={(id) => board.items.some((i) => i.kind === 'image' && i.assetId === id)}
+                  onPick={(a, name) => add({ kind: 'image', title: name, assetId: a.id })}
+                  uploadTitle="Upload a picture and add it to the board"
+                  onUpload={async (f) => {
+                    const id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
+                    add({ kind: 'image', title: pictureName(f.name), assetId: id })
+                  }}
+                />
+              )}
+              {tray === 'page' && (
+                <select
+                  value=""
+                  aria-label="Add a page"
+                  onChange={(e) => {
+                    const p = entities.find((x) => x.id === e.target.value)
+                    if (p) add({ kind: 'page', title: p.name, entityId: p.id })
+                  }}
+                >
+                  <option value="">Pick a page…</option>
+                  {revealed.length > 0 && (
+                    <optgroup label="Revealed">
+                      {revealed.map((p: Entity) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {hidden.length > 0 && (
+                    <optgroup label="Not revealed yet (revealed when you show)">
+                      {hidden.map((p: Entity) => (
+                        <option key={p.id} value={p.id}>
+                          🔒 {p.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+              )}
+              {tray === 'text' && (
+                <form
+                  className="form"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    if (!text.trim()) return
+                    add({ kind: 'text', title: textTitle.trim() || 'From your GM', text: stripSecrets(text) })
+                    setText('')
+                    setTextTitle('')
+                  }}
+                >
+                  <input value={textTitle} onChange={(e) => setTextTitle(e.target.value)} placeholder="Title, e.g. The ransom note" aria-label="Title" />
+                  <textarea rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="What the players read. Links like [[Page name]] work." aria-label="Text" />
+                  <button className="primary" disabled={!text.trim()}>
+                    Add to the board
+                  </button>
+                </form>
+              )}
+              {tray === 'handouts' &&
+                (earlier.length ? (
+                  <>
+                    <h3 className="show-group">Shown before · {earlier.length}</h3>
+                    <ul className="arrange-earlier">
+                      {earlier.map((h) => {
+                        const on = board.items.some((i) => sameHandout(i, h))
+                        return (
+                          <li key={h.id}>
+                            <button type="button" className={on ? 'on' : ''} aria-pressed={on} title={`Add ${h.title}`} onClick={() => add({ kind: h.kind, title: h.title, assetId: h.assetId, entityId: h.entityId, text: h.text })}>
+                              <Ico as={{ image: ImageIcon, page: FileText, text: Scroll }[h.kind]} />
+                              <span>{h.title}</span>
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </>
+                ) : (
+                  <p className="muted small">Nothing shown yet. Everything you show players is kept here, to add again.</p>
                 ))}
-              </div>
-            )}
-            {tray === 'page' && (
-              <select
-                value=""
-                aria-label="Add a page"
-                onChange={(e) => {
-                  const p = entities.find((x) => x.id === e.target.value)
-                  if (p) add({ kind: 'page', title: p.name, entityId: p.id })
-                }}
-              >
-                <option value="">Pick a page…</option>
-                {revealed.length > 0 && (
-                  <optgroup label="Revealed">
-                    {revealed.map((p: Entity) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-                {hidden.length > 0 && (
-                  <optgroup label="Not revealed yet (revealed when you show)">
-                    {hidden.map((p: Entity) => (
-                      <option key={p.id} value={p.id}>
-                        🔒 {p.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
-            )}
-            {tray === 'text' && (
-              <form
-                className="form"
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  if (!text.trim()) return
-                  add({ kind: 'text', title: textTitle.trim() || 'From your GM', text: stripSecrets(text) })
-                  setText('')
-                  setTextTitle('')
-                }}
-              >
-                <input value={textTitle} onChange={(e) => setTextTitle(e.target.value)} placeholder="Title, e.g. The ransom note" aria-label="Title" />
-                <textarea rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="What the players read. Links like [[Page name]] work." aria-label="Text" />
-                <button className="primary" disabled={!text.trim()}>
-                  Add to the board
-                </button>
-              </form>
-            )}
-            {tray === 'handouts' &&
-              (earlier.length ? (
-                <ul className="arrange-earlier">
-                  {earlier.map((h) => (
-                    <li key={h.id}>
-                      <button className="link" onClick={() => add({ kind: h.kind, title: h.title, assetId: h.assetId, entityId: h.entityId, text: h.text })}>
-                        {{ image: '🖼️', page: '📄', text: '📝' }[h.kind]} {h.title}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="muted small">Nothing shown yet.</p>
-              ))}
+            </div>
           </aside>
         </div>
         <footer className="row wrap arrange-foot">
