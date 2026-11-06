@@ -58,6 +58,7 @@ import { InstallCard } from '../install'
 import { AddToCalendar } from '../addToCalendar'
 import { appLink } from '../cloud/client'
 import { setMyField } from '../cloud/players'
+import { MyTableName } from '../players/Rename'
 import { StarsAndWishesCard } from '../players/StarsWishes'
 import { MySessionNote } from '../players/SessionNote'
 import { PartyReputationCard, useCharacterFame } from '../reputation'
@@ -750,6 +751,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
             <MyNote world={world} entityId="" placeholder="Anything you want to remember. Only you can see this." />
           </section>
         )}
+        <MyTableName world={world} />
       </>
     )
   const revealed = entities.filter((e) => e.secretForYou)
@@ -841,6 +843,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
           <MyNewCharacters world={world} />
         </section>
       )}
+      <MyTableName world={world} />
       <p className="room-foot-note muted small">
         Group notes, questions for your GM and downtime are under <Link to={roomLink(worldId, 'notes')}>Notes</Link>.
       </p>

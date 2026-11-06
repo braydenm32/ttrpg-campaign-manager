@@ -267,7 +267,7 @@ export const HELP = {
   shareLink: 'A public, read-only wiki of everything you’ve revealed to the whole table. No account needed, so it suits people outside your group. GM-only things are removed before anything is sent. Players should join with the invite link instead.',
   wiki: 'A read-only wiki of this world, shared by its GM. It shows only what the GM has revealed to everyone, and updates as they add to it.',
   players:
-    'Invite your players with a link. They sign in, join, claim their character and keep notes. They only ever receive what you’ve revealed to them.',
+    'Invite your players with a link. They sign in, join, claim their character and keep notes. They only ever receive what you’ve revealed to them. Someone’s name came out wrong (or as the invite link)? “Rename” by their name fixes it for everyone; players can change their own name in the Common Room under Me.',
   playerNotes:
     '“My notes” are private to you. “Group notes” are shared with the whole party, and your GM can read them. “My notes” save when you click away. “Group notes” show as they will read: type a line in the box and press “Add a line”, or use “Edit the whole notebook” to rewrite them. If someone else changed the group notes while you were typing, nothing is lost: you choose to keep both, yours or theirs.',
   scratchpad:
@@ -296,7 +296,8 @@ export const HELP = {
   worldLoading: 'A world’s pictures and maps arrive after its pages: drawn (the example worlds), downloaded or unpacked from a backup. Look around meanwhile; each one appears as soon as it’s ready.',
   yourWorlds: 'Worlds you made, kept on this device (and in the cloud if you switch on sync). Worlds you play in and the example worlds have shelves of their own.',
   home: 'Each world is kept on this device. Sign in to sync your worlds across devices, invite players, or open worlds you play in.',
-  joining: 'An invite link from your GM lets you join their world as a player. Paste it here if it opened somewhere else, sign in, and you’re in.',
+  myName: 'The name the GM and the other players see you by: next to your character, in group notes and in the GM’s list of players. Typed it wrong when you joined? Change it here and everyone sees the new name. Your GM can rename you too.',
+  joining: 'An invite link from your GM lets you join their world as a player. Paste it here if it opened somewhere else, sign in, type the name the table should call you (your name, not the link), and you’re in. You can change the name later in the Common Room under Me.',
   questions:
     'Ask your GM something privately: about a page, or anything at all. Only your GM (and any co-GM) sees your question, and only you see the answer.',
   editCharacter:

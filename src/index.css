@@ -691,6 +691,14 @@ button.social.facebook .social-icon { background: #1877f2; }
 .choose-character { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: .8em 1em; margin-bottom: 1em; display: flex; flex-direction: column; gap: .5em; }
 .player-list { list-style: none; padding: 0; margin: .5em 0; display: flex; flex-direction: column; gap: .4em; }
 .player-list li { display: flex; justify-content: space-between; align-items: center; gap: .6em; border-bottom: 1px solid var(--border); padding: .35em 0; }
+.member-actions { gap: .4em; align-items: center; flex-wrap: wrap; }
+.member-name { overflow-wrap: anywhere; }
+.rename-form { display: flex; flex-wrap: wrap; gap: .4em; align-items: center; }
+.rename-form input { width: auto; flex: 1 1 10em; min-width: 8em; margin: 0; }
+.rename-form .error { flex-basis: 100%; margin: 0; }
+@media (max-width: 800px) {
+  :is(.member-actions, .rename-form) :is(button, input) { min-height: 44px; }
+}
 .mode-switch .button.block { text-align: center; }
 
 /* Player notes and the scratchpad */

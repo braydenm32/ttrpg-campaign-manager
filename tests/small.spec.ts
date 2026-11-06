@@ -121,16 +121,28 @@ test.describe('invite and wiki links', () => {
     await tidy(page, device)
   })
 
-  test('an invite link signed in: say what to call you, then join', async ({ browser, device }) => {
+  test('an invite link signed in: say what to call you (a real name, not the link), then join', async ({ browser, device }) => {
     const context = await freshContext(browser, device)
     try {
-      await fakeCloud(context, { worldId: '', world_members: [], player_questions: [], downtime_actions: [], character_claims: [], character_requests: [], writes: [] })
+      const state = { worldId: '', world_members: [], player_questions: [], downtime_actions: [], character_claims: [], character_requests: [], writes: [] as string[] }
+      await fakeCloud(context, state)
       const page = await context.newPage()
       await page.goto('/join/test-token')
-      await expect(page.getByLabel('What should the table call you?')).toBeVisible()
+      const box = page.getByLabel('What should the table call you?')
+      await expect(box).toBeVisible()
       await expect(page.getByRole('button', { name: 'Join the world' })).toBeVisible()
       await tidy(page, device)
       await shot(page, `join-signed-in-${device}`)
+      // A name is needed, and the invite link pasted into the box isn't one: nothing is sent.
+      await expect(box).toHaveAttribute('required', '')
+      await box.fill('https://wardedatlas.com/join/test-token')
+      await expect(page.getByRole('alert')).toContainText('looks like the invite link')
+      await page.getByRole('button', { name: 'Join the world' }).click()
+      expect(state.writes).toEqual([])
+      await box.fill('Sam')
+      await expect(page.getByText('Others in the world will see you as “Sam”')).toBeVisible()
+      await page.getByRole('button', { name: 'Join the world' }).click()
+      await expect.poll(() => state.writes).toContain('RPC join_world')
     } finally {
       await context.close()
     }
@@ -165,6 +177,35 @@ test.describe('a joined player and a wiki reader (pretend player copies)', () =>
       await shot(page, `questions-player-${device}`)
       await open(page, `/w/${copy.id}/no/such/place`)
       await expect(page.getByRole('link', { name: 'Back to the Common Room' })).toBeVisible()
+    } finally {
+      await copy.remove()
+    }
+  })
+
+  test('a joined player changes their own name from Me', async ({ page, world, device }) => {
+    await offline(page)
+    const sent: { uid: string; name: string }[] = []
+    await page.route('**/rest/v1/rpc/rename_member', async (route) => {
+      sent.push(route.request().postDataJSON())
+      await route.fulfill({ status: 204, body: '' })
+    })
+    await page.goto('/')
+    const copy = await makePlayerCopy(page, world, 'member')
+    try {
+      await open(page, `/w/${copy.id}?tab=me`)
+      await expect(page.getByText('Everyone here sees you as')).toContainText('Sam')
+      await page.getByRole('button', { name: 'Change my name' }).click()
+      const box = page.getByLabel('Your name')
+      await box.fill('https://wardedatlas.com/join/abc')
+      await page.getByRole('button', { name: 'Save' }).click()
+      await expect(page.getByRole('alert')).toContainText('looks like the invite link')
+      expect(sent).toEqual([])
+      await box.fill('Samwise')
+      await page.getByRole('button', { name: 'Save' }).click()
+      await expect(page.getByText('Everyone here sees you as')).toContainText('Samwise')
+      expect(sent).toEqual([expect.objectContaining({ uid: 'u-sam', name: 'Samwise' })])
+      // Big enough for a fingertip on a phone (the rest of Me is checked by the screens test).
+      if (device === 'phone') expect((await page.getByRole('button', { name: 'Change my name' }).boundingBox())!.height).toBeGreaterThanOrEqual(44)
     } finally {
       await copy.remove()
     }

@@ -12,8 +12,10 @@ import {
   gmInviteUrl,
   inviteUrl,
   listPlayers,
+  nameProblem,
   releaseCharacter,
   removePlayer,
+  renamePlayer,
   revokeGmInviteLink,
   revokeInviteLink,
   type Claim,
@@ -23,6 +25,7 @@ import { db, type World } from '../db'
 import { Ico } from '../icons'
 import { BookOpen, MaskHappy } from '@phosphor-icons/react'
 import { pagePath } from '../paths'
+import { RenameButton } from './Rename'
 
 /** World settings: invite players with a link, and see who has joined and which character each plays. */
 export function PlayersSettings({ world }: { world: World }) {
@@ -134,7 +137,8 @@ export function PlayersSettings({ world }: { world: World }) {
             return (
               <li key={m.userId}>
                 <div>
-                  <strong>{m.name}</strong>{' '}
+                  <strong className="member-name">{m.name}</strong>{' '}
+                  {nameProblem(m.name) && <span className="notice small">This looks like their invite link, not a name. Rename them.</span>}{' '}
                   <span className="muted small">
                     {mine.length
                       ? mine.map((c, i) => (
@@ -162,13 +166,16 @@ export function PlayersSettings({ world }: { world: World }) {
                       : 'hasn’t picked a character yet'}
                   </span>
                 </div>
-                <button
-                  className="ghost small"
-                  disabled={busy}
-                  onClick={() => confirm(`Remove ${m.name} from this world? They’ll lose access straight away.`) && run(() => removePlayer(world.id, m.userId))}
-                >
-                  Remove
-                </button>
+                <div className="row member-actions">
+                  <RenameButton current={m.name} onSave={async (name) => (await renamePlayer(world.id, m.userId, name), await load())} />
+                  <button
+                    className="ghost small"
+                    disabled={busy}
+                    onClick={() => confirm(`Remove ${m.name} from this world? They’ll lose access straight away.`) && run(() => removePlayer(world.id, m.userId))}
+                  >
+                    Remove
+                  </button>
+                </div>
               </li>
             )
           })}
@@ -260,17 +267,20 @@ export function CoGmSettings({ world }: { world: World }) {
         <ul className="player-list">
           {gms.map((m) => (
             <li key={m.userId}>
-              <strong>{m.name}</strong>
-              <button
-                className="ghost small"
-                disabled={busy}
-                onClick={() =>
-                  confirm(`Remove ${m.name} as co-GM? They lose access straight away, though the copy already on their device stays there.`) &&
-                  run(() => removePlayer(world.id, m.userId))
-                }
-              >
-                Remove
-              </button>
+              <strong className="member-name">{m.name}</strong>
+              <div className="row member-actions">
+                <RenameButton current={m.name} onSave={async (name) => (await renamePlayer(world.id, m.userId, name), await load())} />
+                <button
+                  className="ghost small"
+                  disabled={busy}
+                  onClick={() =>
+                    confirm(`Remove ${m.name} as co-GM? They lose access straight away, though the copy already on their device stays there.`) &&
+                    run(() => removePlayer(world.id, m.userId))
+                  }
+                >
+                  Remove
+                </button>
+              </div>
             </li>
           ))}
         </ul>

@@ -2,7 +2,7 @@ import logo from '../assets/logo.svg'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AccountModal, useAuthSession } from '../cloud/auth'
-import { joinWorld, loadMemberWorld, pendingInvite } from '../cloud/players'
+import { joinWorld, loadMemberWorld, nameProblem, pendingInvite } from '../cloud/players'
 import { downloadCloudWorld } from '../cloud/sync'
 import { cloudErrorMessage } from '../cloud/client'
 import { Help } from '../help'
@@ -19,17 +19,24 @@ export default function JoinWorld() {
   const { user, loading } = useAuthSession()
   const navigate = useNavigate()
   const [account, setAccount] = useState(false)
-  const [name, setName] = useState('')
+  // Starts with the name on their Google account, if any; null until they type.
+  const [typed, setTyped] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
   // Keep the invite if the player has to go off and confirm their email first.
   useEffect(() => pendingInvite.set(token), [token])
 
-  // Everyone in the world sees this name, so an empty box never falls back to the player's email.
-  const tableName = name.trim() || String(user?.user_metadata?.full_name ?? '').trim() || 'Player'
+  // Everyone in the world sees this name, so it's never the player's email, and it has to be filled
+  // in: an empty box or the invite link pasted into it (an easy slip) can't join.
+  const name = typed ?? String(user?.user_metadata?.full_name ?? '')
+  const tableName = name.trim()
+  const problem = nameProblem(name)
+  const [tried, setTried] = useState(false)
 
   const join = async () => {
+    setTried(true)
+    if (problem) return
     setBusy(true)
     setError('')
     try {
@@ -98,9 +105,23 @@ export default function JoinWorld() {
           >
             <label>
               What should the table call you?
-              <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Sam" maxLength={60} />
+              <input
+                autoFocus
+                required
+                value={name}
+                onChange={(e) => setTyped(e.target.value)}
+                placeholder="e.g. Sam"
+                maxLength={60}
+                aria-invalid={!!problem && (tried || !!name.trim())}
+              />
             </label>
-            <p className="muted small">Others in the world will see you as “{tableName}”.</p>
+            {problem && (tried || name.trim()) ? (
+              <p className="error small" role="alert">
+                {problem}
+              </p>
+            ) : (
+              <p className="muted small">{tableName && !problem ? `Others in the world will see you as “${tableName}”. You can change it later.` : 'Your first name or a nickname is fine. You can change it later.'}</p>
+            )}
             <p className="muted small">Signed in as {user.email || user.user_metadata?.full_name}.</p>
             <div className="join-actions">
               <button className="primary" disabled={busy}>
