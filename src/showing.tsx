@@ -543,8 +543,6 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
   const [tab, setTab] = useState<ShowTab>('image')
   const [text, setText] = useState('')
   const [title, setTitle] = useState('')
-  const [find, setFind] = useState('')
-  const [all, setAll] = useState(false)
   const revealed = entities.filter((e) => e.visibility === 'players')
   const hidden = entities.filter((e) => e.visibility !== 'players' && !e.template)
   const { ask, dialog } = useReview()
@@ -557,20 +555,6 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
     toast(`“${p.name}” is revealed and on the players’ screens.`, undo, 'Hide it again')
   }
   const live = !!(world.showing || world.spread)
-  const needle = find.trim().toLowerCase()
-  const found = needle ? pictures.filter(({ asset, name }) => [name, asset.name, ...asset.tags].some((x) => x.toLowerCase().includes(needle))) : pictures
-  const scene = needle ? [] : found.filter((p) => p.first)
-  const rest = needle ? found : found.filter((p) => !p.first)
-  const listed = all || needle ? rest : rest.slice(0, FIRST_PICTURES)
-  const thumb = ({ asset: a, name }: (typeof pictures)[number]) => (
-    <Thumb
-      key={a.id}
-      asset={a}
-      name={name}
-      on={world.showing?.kind === 'image' && world.showing.assetId === a.id}
-      onClick={() => showToPlayers(world.id, { kind: 'image', title: name, assetId: a.id })}
-    />
-  )
   return (
     <LecternPanel
       id="show"
@@ -605,58 +589,16 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
         ))}
       </div>
       {tab === 'image' && (
-        <div className="show-pictures">
-          <div className="row show-find">
-            <input
-              type="search"
-              className="search"
-              placeholder="Find a picture…"
-              aria-label="Find a picture"
-              value={find}
-              onChange={(e) => setFind(e.target.value)}
-            />
-            <label className="button" title="Upload a picture and show it">
-              + Upload
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={async (e) => {
-                  const f = e.target.files?.[0]
-                  if (!f) return
-                  const id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
-                  await showToPlayers(world.id, { kind: 'image', title: pictureName(f.name), assetId: id })
-                  e.target.value = ''
-                }}
-              />
-            </label>
-          </div>
-          {pictures.length === 0 ? (
-            <p className="muted small">No pictures in this world yet. Upload one here, or in More › Files.</p>
-          ) : found.length === 0 ? (
-            <p className="muted small">No picture’s name or tag has “{find.trim()}” in it.</p>
-          ) : (
-            <>
-              {scene.length > 0 && (
-                <>
-                  <h3 className="show-group">This scene</h3>
-                  <div className="show-thumbs show-pics">{scene.map(thumb)}</div>
-                </>
-              )}
-              {rest.length > 0 && (
-                <>
-                  <h3 className="show-group">{needle ? `Found · ${rest.length}` : `${scene.length ? 'All pictures' : 'Pictures'} · ${rest.length}`}</h3>
-                  <div className="show-thumbs show-pics">{listed.map(thumb)}</div>
-                </>
-              )}
-              {listed.length < rest.length && (
-                <button type="button" className="show-all-pics" onClick={() => setAll(true)}>
-                  Show all {rest.length}
-                </button>
-              )}
-            </>
-          )}
-        </div>
+        <PicturePicker
+          pictures={pictures}
+          isOn={(id) => world.showing?.kind === 'image' && world.showing.assetId === id}
+          onPick={(a, name) => showToPlayers(world.id, { kind: 'image', title: name, assetId: a.id })}
+          uploadTitle="Upload a picture and show it"
+          onUpload={async (f) => {
+            const id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
+            await showToPlayers(world.id, { kind: 'image', title: pictureName(f.name), assetId: id })
+          }}
+        />
       )}
       {tab === 'page' && (
         <select
@@ -728,6 +670,84 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
         </div>
       )}
     </LecternPanel>
+  )
+}
+
+type Showable = ReturnType<typeof useShowablePictures>[number]
+
+/**
+ * Picking a picture, the same in the Lectern's Show players and on the arranging board: a search and
+ * Upload, this scene's pictures first, then the first few of the rest with "Show all".
+ */
+export function PicturePicker({
+  pictures,
+  isOn,
+  onPick,
+  onUpload,
+  verb = 'Show',
+  uploadTitle,
+}: {
+  pictures: Showable[]
+  isOn: (assetId: string) => boolean
+  onPick: (asset: Showable['asset'], name: string) => void
+  onUpload: (file: File) => Promise<void>
+  /** What a tap does, for each picture's tip ("Show Jeb", "Add Jeb"). */
+  verb?: string
+  uploadTitle: string
+}) {
+  const [find, setFind] = useState('')
+  const [all, setAll] = useState(false)
+  const needle = find.trim().toLowerCase()
+  const found = needle ? pictures.filter(({ asset, name }) => [name, asset.name, ...asset.tags].some((x) => x.toLowerCase().includes(needle))) : pictures
+  const scene = needle ? [] : found.filter((p) => p.first)
+  const rest = needle ? found : found.filter((p) => !p.first)
+  const listed = all || needle ? rest : rest.slice(0, FIRST_PICTURES)
+  const thumb = ({ asset: a, name }: Showable) => <Thumb key={a.id} asset={a} name={name} verb={verb} on={isOn(a.id)} onClick={() => onPick(a, name)} />
+  return (
+    <div className="show-pictures">
+      <div className="row show-find">
+        <input type="search" className="search" placeholder="Find a picture…" aria-label="Find a picture" value={find} onChange={(e) => setFind(e.target.value)} />
+        <label className="button" title={uploadTitle}>
+          + Upload
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={async (e) => {
+              const f = e.target.files?.[0]
+              if (!f) return
+              await onUpload(f)
+              e.target.value = ''
+            }}
+          />
+        </label>
+      </div>
+      {pictures.length === 0 ? (
+        <p className="muted small">No pictures in this world yet. Upload one here, or in More › Files.</p>
+      ) : found.length === 0 ? (
+        <p className="muted small">No picture’s name or tag has “{find.trim()}” in it.</p>
+      ) : (
+        <>
+          {scene.length > 0 && (
+            <>
+              <h3 className="show-group">This scene</h3>
+              <div className="show-thumbs show-pics">{scene.map(thumb)}</div>
+            </>
+          )}
+          {rest.length > 0 && (
+            <>
+              <h3 className="show-group">{needle ? `Found · ${rest.length}` : `${scene.length ? 'All pictures' : 'Pictures'} · ${rest.length}`}</h3>
+              <div className="show-thumbs show-pics">{listed.map(thumb)}</div>
+            </>
+          )}
+          {listed.length < rest.length && (
+            <button type="button" className="show-all-pics" onClick={() => setAll(true)}>
+              Show all {rest.length}
+            </button>
+          )}
+        </>
+      )}
+    </div>
   )
 }
 

@@ -233,7 +233,7 @@ test.describe('before players see something', () => {
       const thumbs = board.locator('.show-thumb.named')
       await thumbs.nth(0).click()
       await thumbs.nth(1).click()
-      await board.getByRole('button', { name: '📄 Page' }).click()
+      await board.getByRole('tab', { name: 'Pages' }).click()
       await board.getByLabel('Add a page').selectOption(hidden.id)
       const items = board.locator('.spread-stage .spread-item')
       await expect(items).toHaveCount(3)
