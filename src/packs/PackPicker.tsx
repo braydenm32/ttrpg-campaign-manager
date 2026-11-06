@@ -124,8 +124,9 @@ export function PackPicker({ drawing, words, pool, state, onPick }: { drawing: D
       )}
       {!list.length && <p className="muted small">Nothing called that in your packs.</p>}
       {groups.map(([group, items]) => (
-        <div key={group} className="label">
-          <span>{group}</span>
+        // folded like the app's own groups: open while searching, or when it holds the piece in hand
+        <details key={group} className="piece-group" open={!!words.length || items.some((p) => pool.includes(packAssetName(p.id, p.rev))) || undefined}>
+          <summary>{group}</summary>
           <div className="stamp-grid">
             {items.map((p) => {
               const name = packAssetName(p.id, p.rev)
@@ -147,7 +148,7 @@ export function PackPicker({ drawing, words, pool, state, onPick }: { drawing: D
               )
             })}
           </div>
-        </div>
+        </details>
       ))}
       {failed && <p className="error small">{failed}</p>}
       {!words.length && (
