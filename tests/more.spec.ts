@@ -544,3 +544,59 @@ test('turning off a link or sync first says what stops working (a pretend cloud)
     await context.close()
   }
 })
+
+test('the GM renames a player whose name came out as the invite link (a pretend cloud)', async ({ browser, device }) => {
+  test.setTimeout(120_000)
+  const context = await freshContext(browser, device)
+  try {
+    const state: CloudState = {
+      worldId: '',
+      world_members: [],
+      player_questions: [],
+      downtime_actions: [],
+      character_claims: [],
+      character_requests: [],
+      writes: [],
+      links: { share_token: null, invite_token: 'invite-token' },
+      gm_invites: [],
+    }
+    await fakeCloud(context, state)
+    const page = await context.newPage()
+    await page.goto('/')
+    await page.getByRole('button', { name: /New world/ }).click()
+    await page.getByLabel('Name').fill('The Lantern Road')
+    await page.getByRole('button', { name: 'Create world' }).click()
+    await page.waitForURL(/\/w\/[^/]+/)
+    const worldRow = await page.evaluate(
+      () =>
+        new Promise<Record<string, unknown>>((resolve) => {
+          const req = indexedDB.open('ttrpg-campaign-manager')
+          req.onsuccess = () => {
+            const get = req.result.transaction('worlds').objectStore('worlds').getAll()
+            get.onsuccess = () => resolve(get.result[0])
+          }
+        }),
+    )
+    state.worldId = worldRow.id as string
+    state.world_members.push({ world_id: state.worldId, user_id: 'u-adrian', display_name: 'https://wardedatlas.com/join/FMzZUiSQvzm', role: 'player', created_at: '2026-11-01T00:00:00Z' })
+    await putRows(page, 'worlds', [{ ...worldRow, cloud: { enabled: true } }])
+    const w = here(page).split('?')[0]
+    await open(page, `${w}/settings?tab=players`)
+
+    const row = page.locator('.player-list li', { hasText: 'FMzZUiSQvzm' })
+    await expect(row).toContainText('This looks like their invite link')
+    await row.getByRole('button', { name: 'Rename' }).click()
+    // The box starts empty rather than holding the link.
+    const box = page.getByLabel('New name')
+    await expect(box).toHaveValue('')
+    await box.fill('Adrian')
+    await row.getByRole('button', { name: 'Save' }).click()
+    await expect(page.locator('.player-list li', { hasText: 'Adrian' })).toBeVisible()
+    await expect(page.getByText('This looks like their invite link')).toHaveCount(0)
+    expect(state.writes).toContain('RPC rename_member')
+    expect(state.world_members[0].display_name).toBe('Adrian')
+    await shot(page, `rename-player-${device}`)
+  } finally {
+    await context.close()
+  }
+})

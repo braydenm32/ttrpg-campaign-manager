@@ -111,12 +111,48 @@ export async function approveClaim(worldId: string, entityId: string) {
   await tellPlayers(worldId)
 }
 
+/**
+ * What's wrong with a name for the table, or '' if it's fine. Catches the usual slip: the invite
+ * link pasted into the name box. The server checks the same (public.member_name_ok).
+ */
+export function nameProblem(name: string, whose: 'your' | 'their' = 'your') {
+  const n = name.trim()
+  if (!n) return `Type the name the table should call ${whose === 'your' ? 'you' : 'them'}.`
+  if (/:\/\/|^www\.|\/join\//i.test(n)) return `That looks like the invite link. Type ${whose} name instead, e.g. Sam.`
+  return ''
+}
+
+/** The GM (or a co-GM) renames someone who joined: a typo, or a link where their name should be. */
+export async function renamePlayer(worldId: string, userId: string, name: string) {
+  const problem = nameProblem(name, 'their')
+  if (problem) throw new Error(problem)
+  const { error } = await supabase.rpc('rename_member', { wid: worldId, uid: userId, name: name.trim().slice(0, 60) })
+  if (error) throw error
+  await tellPlayers(worldId)
+}
+
 export async function removePlayer(worldId: string, userId: string) {
   const { error } = await supabase.from('world_members').delete().eq('world_id', worldId).eq('user_id', userId)
   if (error) throw error
 }
 
 // ---- Player side ----
+
+/** A player changes the name others in the world see them by. `me` is their user id (the world's shared.me); the server checks it's really them. */
+export async function renameMe(cloudId: string, me: string, name: string) {
+  const problem = nameProblem(name)
+  if (problem) throw new Error(problem)
+  const clean = name.trim().slice(0, 60)
+  const { error } = await supabase.rpc('rename_member', { wid: cloudId, uid: me, name: clean })
+  if (error) throw error
+  await db.worlds
+    .filter((w) => w.shared?.memberOf === cloudId)
+    .modify((w) => {
+      const m = w.shared?.members?.find((x) => x.userId === me)
+      if (m) m.name = clean
+    })
+  tellOtherPlayers(cloudId)
+}
 
 /** Joins with an invite link. Returns the cloud world id, and whether you're one of its GMs (its owner, or a co-GM link). */
 export async function joinWorld(token: string, name: string) {

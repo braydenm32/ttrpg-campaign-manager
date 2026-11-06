@@ -74,6 +74,7 @@ async function answer(route: Route, state: CloudState, session: object) {
     state.writes.push(`RPC ${path.slice('/rest/v1/rpc/'.length)}`)
     const body = req.postDataJSON?.() ?? {}
     if (path.endsWith('answer_character_request')) state.character_requests = state.character_requests.filter((r) => r.id !== body.rid)
+    if (path.endsWith('rename_member')) for (const m of state.world_members) if (m.user_id === body.uid) m.display_name = body.name
     if (path.endsWith('release_character')) state.character_claims = state.character_claims.filter((c) => !String(body.eid).endsWith(String(c.entity_id)))
     return json(route, null)
   }
