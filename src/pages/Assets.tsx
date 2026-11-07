@@ -6,7 +6,8 @@ import { useState } from 'react'
 import { Empty, Skeleton, TagInput } from '../components'
 import { VisibilityControl } from '../reveal'
 import { db, type Asset } from '../db'
-import { formatBytes, saveFileAsAsset, useBlobUrl, useWorld } from '../hooks'
+import { BIG_FILE, formatBytes, saveFileAsAsset, useBlobUrl, useWorld } from '../hooks'
+import { outOfRoom } from '../undo'
 import { ShowButton, unshowableImages } from '../showing'
 import { Ico } from '../icons'
 import { useViewMode } from '../viewMode'
@@ -21,6 +22,7 @@ export default function Assets() {
   const uses = useLiveQuery(() => assetUses(worldId), [worldId])
   const [filter, setFilter] = useState('')
   const [unused, setUnused] = useState(false)
+  const [uploadNote, setUploadNote] = useState('')
   const q = filter.trim().toLowerCase()
   const nameOf = (a: Asset) => friendlyName(a.name, uses?.get(a.id))
   const isUnused = (a: Asset) => !!uses && !uses.has(a.id)
@@ -51,12 +53,19 @@ export default function Assets() {
             multiple
             hidden
             onChange={async (e) => {
-              for (const f of Array.from(e.target.files ?? [])) await saveFileAsAsset(worldId, f, f.name)
+              const files = Array.from(e.target.files ?? [])
               e.target.value = ''
+              setUploadNote('')
+              setUploadNote(await upload(worldId, files))
             }}
           />
         </label>
       </header>
+      {uploadNote && (
+        <p className="error small" role="alert">
+          {uploadNote}
+        </p>
+      )}
       {assets.length > 0 && (
         <div className="row wrap">
           <input className="search" placeholder="Filter by name or tag…" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter files" />
@@ -81,6 +90,40 @@ export default function Assets() {
   )
 }
 
+/** "“a”", "“a” and “b”", "“a”, “b” and “c”". */
+const names = (list: string[]) => {
+  const q = list.map((n) => `“${n}”`)
+  return q.length > 1 ? `${q.slice(0, -1).join(', ')} and ${q.at(-1)}` : q.join('')
+}
+
+/**
+ * Adds the files picked, one at a time. A file over 50 MB is checked with the GM first, and one that
+ * doesn't fit on this device (or fails) doesn't stop the rest. Returns what to tell the GM, if anything.
+ */
+async function upload(worldId: string, files: File[]) {
+  const full: string[] = []
+  const failed: string[] = []
+  for (const f of files) {
+    if (
+      f.size > BIG_FILE &&
+      !confirm(`“${f.name}” is ${formatBytes(f.size)}. Files over 50 MB can’t go to the cloud, so they stay on this device only, and big files fill it up quickly. Upload it anyway?`)
+    )
+      continue
+    try {
+      await saveFileAsAsset(worldId, f, f.name)
+    } catch (err) {
+      console.warn('Upload failed', f.name, err)
+      ;(outOfRoom(err) ? full : failed).push(f.name)
+    }
+  }
+  return [
+    full.length ? `Not enough room on this device for ${names(full)}. Free some space (old recordings, big files, or Recently deleted in More), then upload ${full.length === 1 ? 'it' : 'them'} again.` : '',
+    failed.length ? `Couldn’t upload ${names(failed)}. Try again.` : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+}
+
 function AssetCard({ asset, unshowable, uses, known }: { asset: Asset; unshowable?: Map<string, string | undefined>; uses?: string[]; known: boolean }) {
   const url = useBlobUrl(asset)
   const update = (patch: Partial<Asset>) => db.assets.update(asset.id, patch)
@@ -88,7 +131,7 @@ function AssetCard({ asset, unshowable, uses, known }: { asset: Asset; unshowabl
   const recording = asset.tags.includes('recording')
   return (
     <div className="card asset-card">
-      {url && kind === 'image' && <img src={url} alt={asset.name} />}
+      {url && kind === 'image' && <img src={url} alt={asset.name} loading="lazy" decoding="async" />}
       {url && kind === 'audio' && <audio controls src={url} preload="none" />}
       {kind !== 'image' && kind !== 'audio' && <div className="file-icon"><Ico as={File} /></div>}
       {/* The example's pictures are stored under internal names: they show (and are saved, once edited) as what they're for. */}
