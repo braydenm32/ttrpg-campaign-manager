@@ -17,7 +17,7 @@ import { isPlayed, sessionFirstTab } from './sessions'
 import { usePlayingNow } from './stage'
 import { useHasReputation } from './reputation'
 import { pagePath, resolvePage, worldPath } from './paths'
-import { formatDate } from './calendar'
+import { cleanCalendar, formatDate } from './calendar'
 import { syncNow, syncStore, type SyncState } from './cloud/sync'
 import { leaveWorld } from './cloud/players'
 import { XCardButton } from './pages/Safety'
@@ -276,11 +276,12 @@ export function WorldTile({ world, frame, deep }: { world: World; frame: Frame; 
   )
 }
 
-/** Today's date in the world, if it keeps a calendar. */
+/** Today's date in the world, if it keeps a calendar (read as cleaned: one in the wrong shape mustn't stop the world opening). */
 export function WorldDate({ world }: { world: World }) {
-  const cal = world.calendar
-  if (!cal?.today) return null
-  return <span className="world-date">{formatDate(cal, cal.today)}</span>
+  const cal = cleanCalendar(world.calendar)
+  const date = cal?.today && formatDate(cal, cal.today)
+  if (!date) return null
+  return <span className="world-date">{date}</span>
 }
 
 /** Sync stopped (an error), or finished with a note worth reading (files that didn't upload, say). */
