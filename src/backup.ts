@@ -2,6 +2,7 @@ import { strFromU8, strToU8, unzipSync, Zip, ZipDeflate, ZipPassThrough } from '
 import { loadInBackground } from './worldLoading'
 import { showBoardsOf } from './showBoards'
 import { packFilesFor, restorePacks, type PacksInBackup } from './packs/backup'
+import { cleanMap, cleanWorld } from './incoming'
 import { db, newId, PARTY, repId, type Asset, type Board, type Campaign, type Entity, type Pin, type Reputation, type Session, type Sound, type World, type WorldMap } from './db'
 
 /**
@@ -201,6 +202,9 @@ export async function importWorld(file: File): Promise<string> {
     )
   }
   if (b.format !== 'campaign-codex-world') throw new Error('This file is not a Warded Atlas world backup.')
+  // A backup can come from anyone: its world and its maps' drawings are made safe to open first.
+  b.world = cleanWorld(b.world)
+  b.maps = b.maps.map(cleanMap)
   // Files written into the backup itself (older backups) are ready now; files in the zip are
   // unpacked after the world opens (see below), as they're the slow part.
   const blobs = new Map<string, Blob>()

@@ -7,6 +7,7 @@ import { binRemovedElsewhere } from '../bin'
 import { onToastChange, undoShowing } from '../undo'
 import { supabase, cloudErrorMessage } from './client'
 import { deleteMyPackFiles, shareWorldPacks } from '../packs/store'
+import { cleanMap, cleanWorld } from '../incoming'
 
 /**
  * Cloud sync for worlds the GM has opted in.
@@ -364,6 +365,29 @@ async function keepTheirs(worldId: string, table: SyncedTable, theirs: Record<st
 }
 
 /**
+ * Whether a row from the cloud is the row it arrived as, and of the world being pulled: its own id
+ * is the row's id, and it's the world itself or one of its things. Other devices write these rows
+ * (a co-GM's, say), so this is checked before anything is kept.
+ */
+const rowOf = (worldId: string, table: SyncedTable, id: string, data: Record<string, unknown> | null) =>
+  table === 'worlds' ? id === worldId && (!data || data.id === worldId) : !data || (data.id === id && data.worldId === worldId)
+
+/** A row from the cloud that isn't what it says it is: left alone (it could change another world here). */
+function leftOut(table: string, id: string) {
+  console.warn(`Sync left out a ${table} row (${id}): it isn’t the row it claims to be, or it belongs to another world.`)
+  return true
+}
+
+/** What another device sent, made safe to keep (see incoming.ts). A world's device-only parts never come from elsewhere. */
+function cleanRow(table: SyncedTable, data: Record<string, unknown>) {
+  if (table === 'worlds') {
+    const { cloud: _c, shared: _s, ...rest } = data
+    return cleanWorld(rest)
+  }
+  return table === 'maps' ? cleanMap(data) : data
+}
+
+/**
  * Applies one row from the cloud. Returns false when its file couldn't be downloaded (try again later).
  * Rows it removes because they were deleted elsewhere are added to `removed`, for the bin.
  */
@@ -380,6 +404,11 @@ async function applyRemote(
   const key = metaKey(table, id)
   const meta = await db.syncMeta.get(key)
   const local = await tableOf(table).get(id)
+  // A row that isn't the one it came as, or that has the id of another world's row on this device,
+  // could replace or delete that world's pages (or the world itself): it's left alone.
+  if (!rowOf(worldId, table, id, data) || (meta && meta.worldId !== worldId) || (local && table !== 'worlds' && local.worldId !== worldId)) return leftOut(table, id)
+  // Made safe before it's compared or kept, so a row in an odd shape can't stop a world opening.
+  if (data && !deleted) data = cleanRow(table, data)
   const localHash = local ? fingerprint(toData(table, local)) : undefined
   const remoteHash = deleted || !data ? undefined : fingerprint(data)
 
@@ -1168,6 +1197,8 @@ async function fetchLater(worldId: string, files: Pulled[]) {
     await loadInBackground(worldId, 'downloading', [...files].sort((a, b) => rank(a) - rank(b)), async (rec) => {
       const key = metaKey('assets', rec.id)
       try {
+        // As in applyRemote: a file row that isn't the file it came as is left alone.
+        if (!rowOf(worldId, 'assets', rec.id, rec.data)) return void leftOut('assets', rec.id)
         const { data: file, error } = await supabase.storage.from('assets').download(storagePath(worldId, rec.id))
         // One that fails is fetched again by the next sync.
         if (error || !file || !rec.data) return
