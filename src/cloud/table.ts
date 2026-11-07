@@ -5,7 +5,7 @@ import { initiativeOrder } from '../encounters'
 import { recordingStore } from '../recordingStore'
 import { supabase } from './client'
 import { joinRoom, JOINED, postOnce, sendOnce, type LiveRoom } from './live'
-import { listPlayers, memberWorldId } from './players'
+import { listPlayers, memberWorldId, soundsLikeGM } from './players'
 
 /**
  * The live link between the GM's Lectern and the players' Common Room. Nothing here is saved
@@ -341,7 +341,7 @@ function readRoll(cloudId: string, p: Record<string, unknown>, fromGM: boolean):
 }
 
 /** A name that reads as the GM's ("GM", "DM", "Game Master (Sam)"). From a player, it gets "(a player)" after it. */
-const posingAsGM = (who: string) => /^\s*(the\s+)?(gm|dm|game\s*master|dungeon\s*master)\b/i.test(who)
+const posingAsGM = soundsLikeGM
 
 function readPing(cloudId: string, p: Record<string, unknown>, fromGM: boolean): MapPing | null {
   const at = p.at as unknown[]

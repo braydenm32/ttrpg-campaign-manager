@@ -1,19 +1,35 @@
 import { useState } from 'react'
 import { cloudErrorMessage } from '../cloud/client'
-import { nameProblem, renameMe } from '../cloud/players'
+import { nameProblem, renameMe, sameName, UNNAMED } from '../cloud/players'
 import type { World } from '../db'
 import { Help } from '../help'
 
 /**
  * A "Rename" button that turns into a name box with Save and Cancel. `onSave` does the saving and
- * throws to show an error; `whose` words the hints for yourself or for someone else.
+ * throws to show an error; `whose` words the hints for yourself or for someone else. `taken` is
+ * everyone else's name in the world (two people can't share one), and `player` is set for a player
+ * naming themselves (who can't take a name that reads as the GM's).
  */
-export function RenameButton({ current, onSave, whose = 'their', label = 'Rename' }: { current: string; onSave: (name: string) => Promise<unknown>; whose?: 'your' | 'their'; label?: string }) {
+export function RenameButton({
+  current,
+  onSave,
+  whose = 'their',
+  label = 'Rename',
+  taken = [],
+  player = false,
+}: {
+  current: string
+  onSave: (name: string) => Promise<unknown>
+  whose?: 'your' | 'their'
+  label?: string
+  taken?: string[]
+  player?: boolean
+}) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const problem = nameProblem(name, whose)
+  const problem = nameProblem(name, whose, { taken, player })
 
   if (!editing)
     return (
@@ -21,8 +37,8 @@ export function RenameButton({ current, onSave, whose = 'their', label = 'Rename
         type="button"
         className="ghost small"
         onClick={() => {
-          // A pasted link starts empty rather than making them delete it.
-          setName(nameProblem(current) ? '' : current)
+          // A pasted link (or a name with hidden characters) starts empty rather than making them delete it.
+          setName(nameProblem(current) || current === UNNAMED ? '' : current)
           setError('')
           setEditing(true)
         }}
@@ -76,13 +92,23 @@ export function RenameButton({ current, onSave, whose = 'their', label = 'Rename
   )
 }
 
+/** What's wrong with someone's name as it is now, for a notice by it: a link, hidden characters, or someone else's name too. */
+export function nameNow(name: string, others: string[]) {
+  if (!name.trim() || name === UNNAMED) return undefined
+  if (/:\/\/|^www\.|\/join\//i.test(name)) return 'link'
+  if (nameProblem(name)) return 'hidden'
+  if (others.some((o) => o !== UNNAMED && sameName(o, name))) return 'taken'
+  return undefined
+}
+
 /** For a player in a joined world: the name everyone else sees them by, and a way to change it. */
 export function MyTableName({ world }: { world: World }) {
   const shared = world.shared
   if (!shared?.memberOf || !shared.me) return null
   const me = shared.members?.find((m) => m.userId === shared.me)
   const name = me?.name ?? ''
-  const wrong = !!nameProblem(name)
+  const others = (shared.members ?? []).filter((m) => m.userId !== shared.me).map((m) => m.name)
+  const wrong = nameNow(name, others)
   return (
     <section className="card room-card">
       <h2 className="room-card-title">
@@ -92,9 +118,11 @@ export function MyTableName({ world }: { world: World }) {
         <span>
           Everyone here sees you as <strong className="member-name">{name || 'Unnamed player'}</strong>.
         </span>
-        <RenameButton current={name} whose="your" label="Change my name" onSave={(n) => renameMe(shared.memberOf!, shared.me!, n)} />
+        <RenameButton current={name} whose="your" label="Change my name" taken={others} player onSave={(n) => renameMe(shared.memberOf!, shared.me!, n)} />
       </div>
-      {wrong && name && <p className="notice small">That’s the invite link, not a name. Change it so the table knows who you are.</p>}
+      {wrong === 'link' && <p className="notice small">That’s the invite link, not a name. Change it so the table knows who you are.</p>}
+      {wrong === 'hidden' && <p className="notice small">Your name has hidden characters in it. Change it so everyone sees the name you meant.</p>}
+      {wrong === 'taken' && <p className="notice small">Someone else here has this name too. Change yours a little so the table can tell you apart.</p>}
     </section>
   )
 }
