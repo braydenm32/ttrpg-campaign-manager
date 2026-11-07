@@ -56,7 +56,10 @@ export function finishSignInRedirect() {
   }
 }
 
-/** The kinds of email link the app's own templates send (supabase/templates): a link of any other kind is ignored. */
+/**
+ * The kinds of email link the app's own templates send (supabase/templates), and "signup", the older
+ * name for confirming an email: a link of any other kind (an invite, say) is ignored.
+ */
 const LINK_TYPES: readonly string[] = ['email', 'signup', 'magiclink', 'recovery', 'email_change'] satisfies EmailOtpType[]
 const LINK_USED = 'That link has expired or was already used. Sign in, or ask for a new email.'
 

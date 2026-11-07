@@ -146,7 +146,7 @@ export async function startScene(world: World, session: Session, scene: PrepScen
   if (scene.show?.kind === 'page' && shownPage) shown = await showToPlayers(world.id, { kind: 'page', title: shownPage.name, entityId: shownPage.id })
   else if (scene.show?.kind === 'image') {
     const a = await db.assets.get(scene.show.assetId)
-    // What the GM called it, else what players may know it as (its page's name, now that the scene's reveals are done, or "A picture"): never its file's name.
+    // What the GM called it, else what players may know it as: its page's name (now that the scene's reveals are done), or "A picture" when that page, or the page its file is named after, is still hidden.
     if (a) shown = await showToPlayers(world.id, { kind: 'image', title: scene.show.title?.trim() || (await pictureTitleOf(world.id, a.id)).title, assetId: a.id })
   }
   const shownId = shown ? (await db.worlds.get(world.id))?.showing?.id : undefined
@@ -242,7 +242,8 @@ export function SceneCardEditor({ scene, session, entities, onChange }: { scene:
     if (!picture) return undefined
     const [asset, pages, maps] = await Promise.all([
       db.assets.get(picture.assetId),
-      db.entities.where({ worldId: session.worldId }).filter((e) => e.imageId === picture.assetId).toArray(),
+      // Every page: a file named after one players can't see doesn't go by that name either.
+      db.entities.where({ worldId: session.worldId }).toArray(),
       db.maps.where({ worldId: session.worldId }).toArray(),
     ])
     const revealed = new Set(reveals.split(','))

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { cloudErrorMessage } from '../cloud/client'
-import { nameProblem, renameMe, sameName, UNNAMED } from '../cloud/players'
+import { nameNow, nameProblem, renameMe, UNNAMED } from '../cloud/players'
 import type { World } from '../db'
 import { Help } from '../help'
 
@@ -90,15 +90,6 @@ export function RenameButton({
       )}
     </form>
   )
-}
-
-/** What's wrong with someone's name as it is now, for a notice by it: a link, hidden characters, or someone else's name too. */
-export function nameNow(name: string, others: string[]) {
-  if (!name.trim() || name === UNNAMED) return undefined
-  if (/:\/\/|^www\.|\/join\//i.test(name)) return 'link'
-  if (nameProblem(name)) return 'hidden'
-  if (others.some((o) => o !== UNNAMED && sameName(o, name))) return 'taken'
-  return undefined
 }
 
 /** For a player in a joined world: the name everyone else sees them by, and a way to change it. */

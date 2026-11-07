@@ -9,7 +9,7 @@ import { Ico } from './icons'
 import { stripSecrets } from './Markdown'
 import { worldPath } from './paths'
 import { useReview } from './reveal'
-import { A_PICTURE, PicturePicker, pictureName, putUpBoard, sameHandout, SpreadPiece, stopShowing, useShowablePictures } from './showing'
+import { A_PICTURE, PicturePicker, pictureTitleOf, putUpBoard, sameHandout, SpreadPiece, stopShowing, useShowablePictures } from './showing'
 import { blankBoard, boardInHand, deleteShowBoard, freeName, saveShowBoard, showBoardsOf } from './showBoards'
 import { toast } from './undo'
 
@@ -392,7 +392,8 @@ export default function ArrangeBoard({
                   uploadTitle="Upload a picture and add it to the board"
                   onUpload={async (f) => {
                     const id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
-                    add({ kind: 'image', title: pictureName(f.name), assetId: id })
+                    // Its file's name, unless that's after a page players can't see ("A picture" then, to rename here).
+                    add({ kind: 'image', title: (await pictureTitleOf(world.id, id)).title, assetId: id })
                   }}
                 />
               )}

@@ -12,6 +12,7 @@ import {
   gmInviteUrl,
   inviteUrl,
   listPlayers,
+  nameNow,
   releaseCharacter,
   removePlayer,
   renamePlayer,
@@ -24,7 +25,7 @@ import { db, type World } from '../db'
 import { Ico } from '../icons'
 import { BookOpen, MaskHappy } from '@phosphor-icons/react'
 import { pagePath } from '../paths'
-import { nameNow, RenameButton } from './Rename'
+import { RenameButton } from './Rename'
 import { ClaimNameClash } from './NewCharacters'
 
 /** World settings: invite players with a link, and see who has joined and which character each plays. */

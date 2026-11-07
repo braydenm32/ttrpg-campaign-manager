@@ -67,53 +67,75 @@ export const A_PICTURE = 'A picture'
 export interface PictureTitle {
   title: string
   secret?: string
+  /** It belongs to no page players can't see, but its file is named after one ("sister-vey.png"). */
+  byFile?: boolean
 }
 
 const mapPictures = (m: Pick<WorldMap, 'imageId' | 'playerImageId' | 'fog'>) => [m.imageId, m.playerImageId, m.fog?.imageId]
+const seenByPlayers = (e: Entity) => e.visibility === 'players' && !e.template
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
+/** A name's words, any case, whatever is between them ("sister-vey_2.png": sister, vey, 2, png). */
+const wordsOf = (s: string) => s.normalize('NFKC').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean)
 
 /**
- * Names pictures for players. A picture is called after a page players can see that uses it; one
- * that belongs only to pages or maps players can't see is "A picture" (its file is usually named
- * after that page too, so neither name will do), for the GM to call something else before showing;
- * anything else goes by its file's name.
+ * Names pictures for players, given all of a world's pages and maps. A picture is called after a
+ * page players can see that uses it; one that belongs only to pages or maps players can't see is
+ * "A picture" (its file is usually named after that page too, so neither name will do), for the GM
+ * to call something else before showing. Anything else goes by its file's name, unless that name
+ * has a page's or map's name in it that players aren't told (an old portrait, "Sister Vey 2.png").
  */
 export function pictureTitles(pages: Entity[], maps: WorldMap[]) {
   const pagesOf = new Map<string, Entity[]>()
   for (const e of pages) if (e.imageId) pagesOf.set(e.imageId, [...(pagesOf.get(e.imageId) ?? []), e])
   const hiddenMap = new Map<string, string>()
   for (const m of maps) if (m.visibility !== 'players') for (const id of mapPictures(m)) if (id) hiddenMap.set(id, m.name)
+  // Names players aren't told: of pages and maps they can't see, unless something they can see is called that too.
+  const known = [...pages.filter(seenByPlayers).map((e) => e.name), ...maps.filter((m) => m.visibility === 'players').map((m) => m.name)]
+  const secrets = [...pages.filter((e) => !seenByPlayers(e)).map((e) => e.name), ...maps.filter((m) => m.visibility !== 'players').map((m) => m.name)]
+    .filter((n) => n.trim() && !known.some((k) => sameName(k, n)))
+    .map((name) => ({ name, words: wordsOf(name) }))
+  // A file "named after" one: its whole name, word for word (a short one like "Ash" only as the file's whole name, not in "ash-tree.png").
+  const namedAfter = (file: string) => {
+    const words = wordsOf(file)
+    return secrets.find((s) => sameName(file, s.name) || (s.name.trim().length >= 4 && s.words.length > 0 && words.some((_, i) => s.words.every((w, j) => words[i + j] === w))))?.name
+  }
   return (asset: Pick<Asset, 'id' | 'name'>): PictureTitle => {
     const users = pagesOf.get(asset.id) ?? []
-    const seen = users.find((e) => e.visibility === 'players' && !e.template)
+    const seen = users.find(seenByPlayers)
     if (seen) return { title: seen.name }
     const secret = users[0]?.name ?? hiddenMap.get(asset.id)
-    return secret !== undefined ? { title: A_PICTURE, secret } : { title: pictureName(asset.name) || A_PICTURE }
+    if (secret !== undefined) return { title: A_PICTURE, secret }
+    const file = pictureName(asset.name)
+    const after = file ? namedAfter(file) : undefined
+    return after !== undefined ? { title: A_PICTURE, secret: after, byFile: true } : { title: file || A_PICTURE }
   }
 }
 
 /** The same for one picture, read from this device's copy of the world. */
 export async function pictureTitleOf(worldId: string, assetId: string): Promise<PictureTitle> {
-  const [asset, pages, maps] = await Promise.all([db.assets.get(assetId), db.entities.where({ worldId }).filter((e) => e.imageId === assetId).toArray(), db.maps.where({ worldId }).toArray()])
+  const [asset, pages, maps] = await Promise.all([db.assets.get(assetId), db.entities.where({ worldId }).toArray(), db.maps.where({ worldId }).toArray()])
   return pictureTitles(pages, maps)(asset ?? { id: assetId, name: '' })
 }
 
-const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
-
 /**
  * A picture's heading as it goes out: never the name of a page or map players can't see that uses
- * the picture ("A picture" instead), whichever way it's shown (an older handout or board too). If
- * players should know that name, the GM reveals the page.
+ * the picture ("A picture" instead), nor a file name that's after one, whichever way it's shown (an
+ * older handout or board too). If players should know that name, the GM reveals the page.
  */
 async function headingForPlayers(worldId: string, assetIds: string[], title: string) {
   if (!title.trim()) return title
   const ids = new Set(assetIds)
-  const [pages, maps] = await Promise.all([db.entities.where({ worldId }).filter((e) => !!e.imageId && ids.has(e.imageId)).toArray(), db.maps.where({ worldId }).toArray()])
-  const known = pages.filter((e) => e.visibility === 'players' && !e.template).map((e) => e.name)
+  const [pages, maps, assets] = await Promise.all([db.entities.where({ worldId }).toArray(), db.maps.where({ worldId }).toArray(), db.assets.bulkGet([...ids])])
+  const users = pages.filter((e) => !!e.imageId && ids.has(e.imageId))
+  const known = users.filter(seenByPlayers).map((e) => e.name)
   const secret = [
-    ...pages.filter((e) => e.visibility !== 'players' || e.template).map((e) => e.name),
+    ...users.filter((e) => !seenByPlayers(e)).map((e) => e.name),
     ...maps.filter((m) => m.visibility !== 'players' && mapPictures(m).some((id) => !!id && ids.has(id))).map((m) => m.name),
   ]
-  return secret.some((n) => sameName(n, title)) && !known.some((n) => sameName(n, title)) ? A_PICTURE : title
+  if (secret.some((n) => sameName(n, title)) && !known.some((n) => sameName(n, title))) return A_PICTURE
+  // Still called by its file's name, and that's after a page or map players can't see.
+  const titleOf = pictureTitles(pages, maps)
+  return assets.some((a) => !!a && sameName(title, pictureName(a.name)) && titleOf(a).byFile) ? A_PICTURE : title
 }
 
 /**
@@ -629,7 +651,7 @@ function PictureTitleDialog({ pic, onDone }: { pic: PictureTitle; onDone: (title
         }}
       >
         <p className="small">
-          It’s the picture of “{pic.secret}”, which players can’t see, so they aren’t told that name. <Help topic="pictureTitle" />
+          {pic.byFile ? 'Its file is named after' : 'It’s the picture of'} “{pic.secret}”, which players can’t see, so they aren’t told that name. <Help topic="pictureTitle" />
         </p>
         <label>
           What players see it called
@@ -733,7 +755,9 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
           uploadTitle="Upload a picture and show it"
           onUpload={async (f) => {
             const id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
-            await showToPlayers(world.id, { kind: 'image', title: pictureName(f.name), assetId: id })
+            // Called by its file's name, unless that's after a page players can't see: then asked first.
+            const title = await askTitle(await pictureTitleOf(world.id, id))
+            if (title !== null) await showToPlayers(world.id, { kind: 'image', title, assetId: id })
           }}
         />
       )}
@@ -929,8 +953,8 @@ export function useShowablePictures(worldId: string, entities: Entity[], sceneId
         .filter((a) => a.mime.startsWith('image/') && !a.tags.includes('fog') && !fogged.has(a.id))
         .reverse()
         .sortBy('createdAt'),
-      // Every page with a picture, hidden and template ones too, so none of their names slips out.
-      db.entities.where({ worldId }).filter((e) => !!e.imageId).toArray(),
+      // Every page, hidden and template ones too, so none of their names slips out (by a picture, or a file named after one).
+      db.entities.where({ worldId }).toArray(),
     ])
     return { images, titleOf: pictureTitles(pages, maps) }
   }, [worldId])
