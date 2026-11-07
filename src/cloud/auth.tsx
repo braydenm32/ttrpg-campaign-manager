@@ -5,7 +5,7 @@ import { db, type World } from '../db'
 import { Help } from '../help'
 import { currentPath, goToPath, hashRouting } from '../paths'
 import { recordingStore } from '../recordingStore'
-import { appLink, appUrl, cloudErrorMessage, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
+import { appLink, appUrl, cloudErrorMessage, signInStarting, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
 import { joinedHere, pendingInvite, removeJoinedCopies } from './players'
 import { deleteMyAccount, stopSync, syncNow, syncStore } from './sync'
 
@@ -39,6 +39,7 @@ async function signInWith(provider: Provider) {
   } catch {
     // private window: we just land on the front page
   }
+  signInStarting()
   const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: appUrl() } })
   if (error) throw error
 }
@@ -63,15 +64,40 @@ export function finishSignInRedirect() {
 const LINK_TYPES: readonly string[] = ['email', 'signup', 'magiclink', 'recovery', 'email_change'] satisfies EmailOtpType[]
 const LINK_USED = 'That link has expired or was already used. Sign in, or ask for a new email.'
 
+/** The address this device last asked for an email for (signing up, or a new password), and when. */
+const ASKED = 'codex.emailAsked'
+/** How long a link from that email signs in without asking. */
+const ASKED_FOR = 2 * 24 * 60 * 60_000
+
+/** Remembers that this device asked for an email for this address, so its link signs in without asking. */
+function askedForEmail(email: string) {
+  try {
+    localStorage.setItem(ASKED, JSON.stringify({ email: email.trim().toLowerCase(), at: Date.now() }))
+  } catch {
+    // Storage blocked: the link asks first instead.
+  }
+}
+
+/** Whether this device asked for an email for this address lately. */
+function askedHere(email: string | undefined) {
+  try {
+    const asked = JSON.parse(localStorage.getItem(ASKED) ?? 'null') as { email?: unknown; at?: unknown } | null
+    return !!email && asked?.email === email.trim().toLowerCase() && typeof asked.at === 'number' && Date.now() - asked.at < ASKED_FOR
+  } catch {
+    return false
+  }
+}
+
 /**
  * Our own email templates link straight to the app (`?token_hash=…&type=…`) instead of a
- * supabase.co address. Finish that here: returns the link type on success.
+ * supabase.co address. Finish that here: returns the link type (and who it signed in) on success.
  *
  * Anyone can send someone a link like that for their own account (to have them work, and sync,
- * in it without noticing). So someone already signed in is asked before a link switches them to
- * another account: the link is checked on the side first, without touching who's signed in here.
+ * in it without noticing). So the link is checked on the side first, without touching who's signed
+ * in here, and the person is asked before it signs them in: always if they're signed in as someone
+ * else, and when signed out unless this device asked for that email itself.
  */
-export async function verifyEmailLink(): Promise<{ type?: EmailOtpType; error?: string } | null> {
+export async function verifyEmailLink(): Promise<{ type?: EmailOtpType; email?: string; error?: string } | null> {
   // Usually "?token_hash=…" on the address. A link that returns to an invite page carries it inside
   // the "#/join/…" part instead, so look there too.
   const { search, hash, pathname } = window.location
@@ -84,11 +110,7 @@ export async function verifyEmailLink(): Promise<{ type?: EmailOtpType; error?: 
   if (!LINK_TYPES.includes(type)) return { error: 'That link isn’t one the Warded Atlas sends, so nothing was changed.' }
   const otp = { token_hash, type: type as EmailOtpType }
   const now = (await supabase.auth.getSession()).data.session
-  if (!now) {
-    const { error } = await supabase.auth.verifyOtp(otp)
-    return error ? { error: LINK_USED } : { type: otp.type }
-  }
-  // Signed in already: whose link is it?
+  // Whose link is it?
   const side = new AuthClient({
     url: `${SUPABASE_URL}/auth/v1`,
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
@@ -102,9 +124,20 @@ export async function verifyEmailLink(): Promise<{ type?: EmailOtpType; error?: 
   const linked = data.session
   // Nothing to sign in with (one step of an email change, say): it's done.
   if (!linked) return { type: otp.type }
-  if (linked.user.id !== now.user.id) {
+  const them = linked.user.email || 'another account'
+  if (!now) {
+    // Signed out, and this device didn't ask for this email: someone may have sent their own.
+    const ok =
+      askedHere(linked.user.email) ||
+      confirm(
+        `This link signs you in as ${them}.\n\nOnly go ahead if you asked for this email yourself: someone could send you a link to their own account, to get your worlds and AI keys into it.`,
+      )
+    if (!ok) {
+      await side.signOut({ scope: 'local' }).catch(() => {})
+      return { error: `Nothing changed: you’re not signed in. If ${them} is yours, sign in with it from the account button.` }
+    }
+  } else if (linked.user.id !== now.user.id) {
     const me = now.user.email || 'your account'
-    const them = linked.user.email || 'another account'
     const ok = confirm(
       `This link signs in as ${them}, but you’re signed in as ${me}.\n\nSwitch to ${them}? You’ll be signed out of ${me} on this device.\n\nOnly switch if you asked for this email yourself: someone could send you a link to their account to get your worlds into it.`,
     )
@@ -114,8 +147,13 @@ export async function verifyEmailLink(): Promise<{ type?: EmailOtpType; error?: 
     }
     await supabase.auth.signOut({ scope: 'local' })
   }
+  try {
+    localStorage.removeItem(ASKED)
+  } catch {
+    // nothing to forget
+  }
   const { error: notSet } = await supabase.auth.setSession({ access_token: linked.access_token, refresh_token: linked.refresh_token })
-  return notSet ? { error: LINK_USED } : { type: otp.type }
+  return notSet ? { error: LINK_USED } : { type: otp.type, email: linked.user.email }
 }
 
 /** What "Sign out and remove everything" would take off this device, checked once the latest changes have synced. */
@@ -375,11 +413,13 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
       } else if (mode === 'signup') {
         // Someone signing up from an invite comes back to it from the email, even on another device.
         const invite = pendingInvite.get()
+        askedForEmail(email)
         const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: invite ? appLink(`/join/${invite}`) : appUrl() } })
         if (error) throw error
         if (data.session) onClose()
         else setMessage('Check your email and click the confirmation link, then sign in here.')
       } else {
+        askedForEmail(email)
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: appUrl() })
         if (error) throw error
         setMessage('If that email has an account, a reset link is on its way.')

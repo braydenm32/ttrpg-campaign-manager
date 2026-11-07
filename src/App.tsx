@@ -169,6 +169,7 @@ function CloudBoot() {
       else if (r.type === 'recovery') setRecovering(true)
       else if (r.type === 'signup' || r.type === 'email') setLinkNotice('Your email is confirmed and you’re signed in. Welcome to the Warded Atlas!')
       else if (r.type === 'email_change') setLinkNotice('Your email address has been updated.')
+      else if (r.type === 'magiclink') setLinkNotice(`You’re signed in${r.email ? ` as ${r.email}` : ''}.`)
     })
     return () => data.subscription.unsubscribe()
   }, [])

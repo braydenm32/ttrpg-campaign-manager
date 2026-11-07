@@ -7,8 +7,39 @@ import { createClient } from '@supabase/supabase-js'
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? 'https://ysrxumagiiaoihlhofqt.supabase.co'
 export const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY ?? 'sb_publishable_HsmvijuCGe53E9WU5N2ZQA_1EGPpGt1'
 
+/** When this tab set off a sign-in with Google, so the sign-in that comes back in the address counts. */
+const SIGN_IN_STARTED = 'codex.signInStarted'
+
+/** Just before leaving for Google's sign-in page. */
+export function signInStarting() {
+  try {
+    sessionStorage.setItem(SIGN_IN_STARTED, String(Date.now()))
+  } catch {
+    // Storage blocked: the sign-in can't be kept on this device anyway.
+  }
+}
+
+/**
+ * A sign-in that comes back in the address (from Google) counts only when this tab just set one
+ * off. Anyone can make a link with their own account's sign-in in it, to have someone work (and
+ * sync) in that account without noticing; a link like that is just taken off the address.
+ */
+function signInFromAddress(_url: URL, params: Record<string, string>) {
+  if (!params.access_token && !params.error && !params.error_description && !params.error_code) return false
+  let started = 0
+  try {
+    started = Number(sessionStorage.getItem(SIGN_IN_STARTED)) || 0
+    sessionStorage.removeItem(SIGN_IN_STARTED)
+  } catch {
+    // Storage blocked: nothing was started here.
+  }
+  if (started && Date.now() - started < 15 * 60_000) return true
+  if (params.access_token) window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+  return false
+}
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: signInFromAddress },
 })
 
 /** Where the public web app lives; used for share links made from the desktop app or a dev server. */

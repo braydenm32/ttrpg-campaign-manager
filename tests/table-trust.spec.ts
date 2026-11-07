@@ -19,8 +19,9 @@ import { PORT } from './lib/server'
  *    the page's name;
  *  - names: no hidden characters, no other member's name, nothing that reads as the GM's; joining
  *    suggests a first name only;
- *  - an email link for another account doesn't switch accounts unless the person says so, and a
- *    link of a kind the app never sends is ignored;
+ *  - an email link for another account doesn't switch accounts unless the person says so (signed
+ *    out too, unless this device asked for that email), a sign-in in the address counts only after
+ *    this tab went to Google, and a link of a kind the app never sends is ignored;
  *  - "Sign out and remove all worlds and keys from this device" says what goes, then removes it.
  * The cloud and its live rooms are pretend (lib/cloud.ts, and fakeRealtime below): nothing leaves
  * the machine. Each test puts back what it changed.
@@ -414,6 +415,62 @@ test('an email link for another account asks before switching, and a link of a k
     expect(await signedInAs()).toBe('gm@example.com')
     // The other account's sign-in that the check made is thrown away again.
     expect(loggedOut).toEqual([`Bearer ${theirs.access_token}`])
+  } finally {
+    await context.close()
+  }
+})
+
+test('signed out, a link to someone’s account asks first unless this device asked for that email, and a sign-in in the address counts only after this tab went to Google', async ({ browser, device }) => {
+  const context = await freshContext(browser, device)
+  try {
+    const other = { id: '00000000-0000-4000-8000-0000000000bb', aud: 'authenticated', role: 'authenticated', email: 'stranger@example.com', app_metadata: { provider: 'email' }, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' }
+    const theirs = { access_token: fakeJwt(other.id, other.email), token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: 'their-refresh', user: other }
+    await context.route('**/auth/v1/verify**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(theirs) }))
+    await context.route('**/auth/v1/user**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(other) }))
+    await context.route('**/auth/v1/logout**', (route) => route.fulfill({ status: 204, body: '' }))
+    const page = await context.newPage()
+    const asked: string[] = []
+    page.on('dialog', (d) => {
+      asked.push(d.message())
+      void d.dismiss()
+    })
+    const notice = page.getByRole('dialog', { name: 'The Warded Atlas account' })
+    const key = 'sb-ysrxumagiiaoihlhofqt-auth-token'
+    const token = () => page.evaluate((k) => (JSON.parse(localStorage.getItem(k) ?? '{}') as { access_token?: string }).access_token ?? null, key)
+    const signOutHere = () => page.evaluate((k) => localStorage.removeItem(k), key)
+
+    // A sign-in link nobody here asked for: asked first, and No leaves you signed out.
+    await page.goto('/?token_hash=abc&type=magiclink')
+    await expect.poll(() => asked.length).toBe(1)
+    expect(asked[0]).toContain('This link signs you in as stranger@example.com')
+    await expect(notice).toContainText('Nothing changed: you’re not signed in')
+    expect(await token()).toBeNull()
+
+    // Someone's sign-in put in the address: not taken, and taken off the address. (From a blank
+    // page, so the app opens afresh with it, the way a link does.)
+    const inAddress = `access_token=${theirs.access_token}&expires_in=3600&refresh_token=their-refresh&token_type=bearer&type=magiclink`
+    await page.goto('about:blank')
+    await page.goto(`/#${inAddress}`)
+    await expect.poll(() => page.url()).not.toContain('access_token')
+    await page.waitForTimeout(500)
+    expect(await token()).toBeNull()
+
+    // Back from a Google sign-in this tab set off: that one counts.
+    await page.evaluate(() => sessionStorage.setItem('codex.signInStarted', String(Date.now())))
+    await page.goto('about:blank')
+    await page.goto(`/#${inAddress}`)
+    await expect.poll(token).toBe(theirs.access_token)
+    await signOutHere()
+
+    // Signing up on this device, then opening the email's link here: signed in without asking.
+    await page.goto('/')
+    await page.evaluate(() => localStorage.setItem('codex.emailAsked', JSON.stringify({ email: 'stranger@example.com', at: Date.now() })))
+    await page.goto('/?token_hash=def&type=signup')
+    await expect(notice).toContainText('Your email is confirmed and you’re signed in')
+    expect(asked).toHaveLength(1)
+    await expect.poll(token).toBe(theirs.access_token)
+    // The note that this device asked is used up.
+    expect(await page.evaluate(() => localStorage.getItem('codex.emailAsked'))).toBeNull()
   } finally {
     await context.close()
   }
