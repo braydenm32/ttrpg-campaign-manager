@@ -23,7 +23,7 @@
     "dexie": "^4.4.6",
     "dexie-react-hooks": "^4.4.0",
     "dompurify": "^3.4.17",
-    "fflate": "^0.8.2",
+    "fflate": "^0.8.3",
     "leaflet": "^1.9.4",
     "marked": "^18.1.1",
     "mediabunny": "^1.62.0",
@@ -46,5 +46,11 @@
     "typescript": "~6.0.3",
     "vite": "^8.3.4",
     "vite-plugin-pwa": "^2.0.0"
+  },
+  "overrides": {
+    "workbox-build": {
+      "glob": "^14.0.4"
+    },
+    "serialize-javascript": "^7.1.4"
   }
 }
