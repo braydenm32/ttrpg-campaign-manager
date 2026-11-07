@@ -653,12 +653,12 @@ function Avatar({ e, size = 40 }: { e: Entity; size?: number }) {
 /**
  * Passages written just for this player (":::for" their character), wherever they are. A player's
  * copy has them already picked out by the server; the GM previewing as a player matches them here.
+ * Only the GM's own text counts: a player's words on their character's page can't make one.
  */
 function onlyYouKnow(entities: Entity[], previewNames: string[] = []) {
   const names = new Set(characterNames(previewNames))
   return entities.flatMap((e) =>
-    [e.body, e.playerBody ?? '']
-      .flatMap((t) => splitSecrets(t))
+    splitSecrets(e.body)
       .filter((seg) => (seg.kind === 'foryou' || (seg.kind === 'for' && seg.names.some((n) => names.has(n.toLowerCase())))) && seg.body.trim())
       .map((seg) => ({ page: e, text: stripSecrets(seg.body).trim() }))
       .filter((x) => x.text),

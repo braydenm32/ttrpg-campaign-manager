@@ -364,7 +364,7 @@ export const HELP = {
   claudeJobs:
     'Claude keeps writing when you go to another page: a note at the top says “Claude is writing…”, then “Claude finished”, and takes you back to it. If you leave the page while it writes, you choose to keep it writing or stop it. Closing the tab or the app stops it. Small jobs (flavour, NPC lines, Archivist questions) use Claude Sonnet 5.5, quicker and half the price; recaps, contradiction checks and prep use Claude Opus 5.5.',
   secretNames:
-    'Players can read this text, and it links to a GM-only page, so they would see that page’s name. Move the link into a GM-only passage, give it a label like [[Lord Vexis|the stranger]], or reveal the page. This is only a warning; nothing is blocked.',
+    'Players can read this text, and it links to a GM-only page, so that page’s name goes to them with it. A label like [[Lord Vexis|the stranger]] only changes the words on screen: the name still travels with the text. Move the link into a GM-only passage, or reveal the page. This is only a warning; nothing is blocked.',
   backupRecordings:
     'Recordings can be very large. Leave this unticked for a small backup that has everything except the audio; transcripts, bookmarks and the rest of each session are kept. Tick it to keep the audio too. Recordings are never sent to the cloud, so a backup is the only other copy.',
   lecternSearch:

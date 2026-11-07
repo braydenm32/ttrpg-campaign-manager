@@ -257,7 +257,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           {e.playerBody && (
             <section className="player-written">
               <h2><Ico as={PenNib} /> In the player’s words</h2>
-              <Markdown text={e.playerBody} entities={entities} worldId={worldId} showSecrets={false} />
+              <Markdown text={e.playerBody} entities={entities} worldId={worldId} showSecrets={false} playerWritten />
             </section>
           )}
           {gmNotes && (

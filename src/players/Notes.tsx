@@ -391,7 +391,9 @@ function GmReply({ worldId, entityId, onSent }: { worldId: string; entityId: str
 
 /**
  * The party's notes, with the GM's replies set apart. Only the GM can add a "- **GM:**" line: the
- * server relabels one a player types or changes (public.save_player_note).
+ * server relabels one a player types or changes (public.save_player_note). Players wrote the rest,
+ * so it all renders as player-written: HTML shows as typed and ":::" passages don't count, so a
+ * player can't make a box that looks like the GM's reply or a secret "just for you".
  */
 export function NotesText({ text, entities, worldId }: { text: string; entities: Entity[]; worldId: string }) {
   // Runs of ordinary lines render together (so lists and paragraphs hold); each GM line stands out.
@@ -407,10 +409,10 @@ export function NotesText({ text, entities, worldId }: { text: string; entities:
       {parts.map((p, i) =>
         p.gm ? (
           <div key={i} className="gm-line">
-            <b>GM:</b> <Markdown text={p.text} entities={entities} worldId={worldId} showSecrets={false} />
+            <b>GM:</b> <Markdown text={p.text} entities={entities} worldId={worldId} showSecrets={false} playerWritten />
           </div>
         ) : (
-          <Markdown key={i} text={p.text} entities={entities} worldId={worldId} showSecrets={false} />
+          <Markdown key={i} text={p.text} entities={entities} worldId={worldId} showSecrets={false} playerWritten />
         ),
       )}
     </>
