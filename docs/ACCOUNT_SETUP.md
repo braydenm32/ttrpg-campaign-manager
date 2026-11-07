@@ -159,6 +159,19 @@ This project runs on a built-in cloud setup with no settings, so it needs one of
    - `R2_SECRET_ACCESS_KEY`: the Secret Access Key
 4. Save it. Only sessions started after this can use it, so tell me in the chat when it's done and I'll do the upload in a fresh thread.
 
+## 6. Password rules (Supabase)
+
+Supabase → **Authentication → Sign In / Providers → Email** (the password settings under it):
+
+- **Minimum password length**: 10. Anything under 8 is easy to guess.
+- **Password requirements**: letters and digits (or stronger).
+- **Prevent use of leaked passwords** turns away passwords that are in known leaks (it asks
+  HaveIBeenPwned, without sending the password itself). Supabase only offers it on the Pro plan, so
+  switch it on if the project ever moves to Pro.
+
+People who already have a weaker password can still sign in; the app shows Supabase's message
+asking them to pick a stronger one when they next change it. Google sign-in isn't affected.
+
 ## What still says Supabase
 
 Google's sign-in screen shows "to continue to ysrxumagiiaoihlhofqt.supabase.co", and Facebook shows

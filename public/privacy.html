@@ -27,42 +27,58 @@
   <header><img src="icon-512.png" alt=""><a href="./">The Warded Atlas</a></header>
   <article>
     <h1>Privacy policy</h1>
-    <p class="muted">Last updated 29 October 2026</p>
-    <p>The Warded Atlas is a tool for running tabletop roleplaying games, made by Brayden (“we”, “us”) in Australia. This policy explains what information the app handles, where it goes, and the choices you have. We have tried to keep it short and plain.</p>
+    <p class="muted">Last updated 7 November 2026</p>
+    <p>The Warded Atlas is a tool for running tabletop roleplaying games, made by Brayden (“we”, “us”) in Australia. This policy explains what information the app handles, where it goes, how long it’s kept and the choices you have. We have tried to keep it short and plain.</p>
 
     <h2>The short version</h2>
     <ul>
       <li>Without an account, everything you make stays on your own device. We never see it.</li>
-      <li>With an account, the worlds you choose to sync are stored in our cloud database so they can reach your other devices and your players.</li>
+      <li>With an account, the worlds you choose to sync are stored in our cloud database (in Sydney) so they can reach your other devices and your players.</li>
+      <li>Nothing goes to an AI company unless a game master adds their own key and presses the button for it. Then what that job needs goes to Anthropic (Claude) or AssemblyAI, both in the United States.</li>
       <li>We don’t sell your information, show ads, or use tracking or analytics.</li>
       <li>You can delete your account and cloud data at any time.</li>
     </ul>
 
     <h2>What we collect</h2>
-    <p><strong>Account details.</strong> If you make an account we store your email address and a securely hashed password. If you sign in with Google or Facebook, we receive your name, email address and profile picture link from them. We don’t receive your Google or Facebook password, contacts or posts.</p>
-    <p><strong>Content you sync.</strong> When you turn on sync for a world, its pages, maps, images, sessions, notes and settings are stored in the cloud. If you join someone else’s world as a player, your display name, the characters you claim, the notes, questions and party items you write, and your answers to session scheduling polls are stored with that world. When someone uses the X-card safety tool, we only record that it was tapped and when, not who tapped it.</p>
-    <p><strong>Session recordings and transcripts.</strong> Recordings capture the voices of everyone at the table, so game masters must ask everyone before recording (see our <a href="terms.html">terms</a>). Recordings are kept on the device that made them. Transcripts and recap drafts are only visible to the game masters of that world, and sync with the world if sync is turned on. (Recordings made before 26 October 2026 in a synced world may also be in the cloud; deleting them in the app removes them.)</p>
-    <p><strong>AI keys, if you choose to save them.</strong> If you tick “Save my keys to my account”, your AssemblyAI and Anthropic API keys are stored in the cloud database with your account so your other devices can use them. Only you can read them; they are never part of a world, a backup or anything shared with players or co-GMs. Untick it, or delete your account, to remove them.</p>
+    <p><strong>Account details.</strong> If you make an account we store your email address and a securely hashed password. If you sign in with Google or Facebook, we receive your name, email address and profile picture link from them. We don’t receive your Google or Facebook password, contacts or posts. For each device you’re signed in on, our database keeps a sign-in record (when, your IP address and your browser) until you sign out or delete your account.</p>
+    <p><strong>Content you sync.</strong> When you turn on sync for a world, its pages, maps, images, sessions, notes and settings are stored in the cloud, and so are any map packs you upload.</p>
+    <p><strong>What players add to a world.</strong> If you join someone else’s world, we store your display name with it, and what you add there: the characters you claim and what you write on them (their summary, details and your own description), your notes, the questions you ask, group notes and party items, your answers to scheduling polls, your stars and wishes about a session (with your name), your downtime plans and any new-character requests. The game masters of that world can read all of it except your own notes (“My notes”), which only you can see. When someone uses the X-card safety tool, we only record that it was tapped and when, not who tapped it.</p>
+    <p><strong>Session recordings and transcripts.</strong> Recordings capture the voices of everyone at the table, so game masters must ask everyone before recording, and get a parent’s OK for anyone under 18 (see our <a href="terms.html">terms</a>). New recordings stay on the device that made them. (Recordings made before 26 October 2026 in a synced world may also be in the cloud; deleting them in the app removes them.) A transcript names who said what. Like recap drafts, it syncs with the world if sync is on, and every game master of that world can read it, but players can’t. If the game master uses cloud transcription or asks Claude for a recap, the recording or transcript goes to AssemblyAI or Anthropic (see <a href="#ai">AI features</a>).</p>
+    <p><strong>AI keys, if you choose to save them.</strong> If you tick “Save my keys to my account”, your AssemblyAI and Anthropic API keys are stored in our cloud database with your account so your other devices can use them. The database’s rules stop every other user from reaching them, and they are never part of a world, a backup or anything shared with players or co-GMs. They are stored as plain text, though, so Brayden (who looks after the database) and our database provider could technically read them. We never do, but please set a monthly spending limit with Anthropic and AssemblyAI so a lost key can’t cost you much. Untick it, or delete your account, to remove them.</p>
     <p><strong>Information about real people in your notes.</strong> If you write about real people in your world (for example players’ names or how to reach them), you’re responsible for having their OK, and you can delete it at any time.</p>
-    <p><strong>Basic technical records.</strong> Our hosting providers keep standard logs (such as IP address, browser type and time of request) for security and to keep the service running. We don’t use these to profile you.</p>
-    <p><strong>Things that stay on your device.</strong> Worlds you don’t sync, session recordings, and any API keys, tokens or webhook links you enter (for AssemblyAI, Anthropic, Syrinscape or Discord) are kept only in your browser or desktop app, unless you choose to save your AI keys to your account (above). Keys are never included in backups. Anyone who uses your device and browser profile can see what’s stored there, so use a device only you use, or sign out and clear the site’s data on a shared one.</p>
+    <p><strong>Basic technical records.</strong> Our hosting providers (Supabase and Cloudflare) keep standard logs of requests, such as IP address, browser type and time, for security and to keep the service running. They keep them for a limited time set by their own policies, and we don’t use them to profile you.</p>
+    <p><strong>Things that stay on your device.</strong> Worlds you don’t sync, new session recordings, and any API keys, tokens or webhook links you enter (for AssemblyAI, Anthropic, Syrinscape or Discord) are kept only in your browser or desktop app, unless you choose to save your AI keys to your account (above). Keys are never included in backups. On a shared device the app keeps each person’s AI keys apart: signing in only adds keys to your account that you typed or say are yours, and signing out puts back the keys the device had before. Still, anyone who uses your device and browser profile can see what’s stored there, so use a device only you use, or sign out and clear the site’s data on a shared one.</p>
+
+    <h2 id="ai">AI features</h2>
+    <p>Some tools use Claude, an AI from Anthropic, and cloud transcription uses AssemblyAI. Both companies are in the United States. Nothing is sent to them unless a game master adds their own API key and presses the button for that tool. It then goes straight from the game master’s device to that company, using the game master’s own account and under that company’s terms and privacy policy. We never see it.</p>
+    <ul>
+      <li><strong>AssemblyAI</strong> gets the whole recording when the game master chooses “Transcribe in the cloud”. The first time on a device, the app asks whether everyone recorded agreed. Once the transcript is saved, the app deletes AssemblyAI’s copy (unless the game master chooses to keep one there), and keeps trying if that fails.</li>
+      <li><strong>Claude</strong> gets what the chosen tool needs: the pages it’s about, including the game master’s secret notes; character pages, including what players wrote on them; session notes, bookmarks and transcripts (everyone’s words, with who said what) for recaps and highlights; photos or text of notes and character sheets the game master imports; and players’ stars and wishes, but only if the game master ticks “Include players’ feedback” when planning a session. Players’ own notes, questions and downtime plans are never sent.</li>
+      <li><strong>“Copy for Claude”</strong> copies the same text instead, for the game master to paste into claude.ai themselves, under their own Claude account and its settings.</li>
+    </ul>
+    <p>Claude’s answers are only drafts. Nothing in a world, or about a person, changes unless a game master reads it and chooses to keep it, so no decisions about anyone are made automatically. Players: the stars-and-wishes form tells you that your game master may share it with Claude. If you’d rather your words stayed out, tell your game master.</p>
+    <p>Transcribing on the device instead keeps the audio there. The first time, the app downloads the speech model and the software that runs it (about 80 to 250 MB) from Hugging Face and jsDelivr. They see your IP address, but your audio never leaves the device.</p>
 
     <h2>How we use it</h2>
-    <p>Only to run the app: signing you in, syncing your worlds between your devices, showing players what the game master has chosen to share with them, sending account emails (like confirming your address or resetting your password), and keeping the service secure. We don’t send marketing emails.</p>
+    <p>Only to run the app: signing you in, syncing your worlds between your devices, showing players what the game master has chosen to share with them, sending account emails (like confirming your address or resetting your password), and keeping the service secure. We handle your account and synced worlds because you asked us to provide this service, and keep basic logs because we need them to keep it safe. We don’t send marketing emails, and we don’t use your worlds to train AI.</p>
 
     <h2>Who can see your content</h2>
-    <p>Your synced worlds are private to you and anyone you invite. Co-GMs you invite can see and edit the whole world. Players you invite only see what you reveal to them. Anyone with a share link you create can see what you’ve revealed through that link, until you turn it off.</p>
+    <p>Your synced worlds are private to you and anyone you invite. Co-GMs you invite can see and edit the whole world, including GM notes and transcripts. Players you invite only see what you reveal to them. Anyone with a share link you create can see what you’ve revealed through that link, until you turn it off.</p>
 
     <h2>Services we rely on</h2>
     <ul>
-      <li><strong>Supabase</strong> stores accounts and synced data (servers in Sydney, Australia).</li>
-      <li><strong>Cloudflare</strong> serves the website at wardedatlas.com. <strong>GitHub Pages</strong> serves the old address, which forwards there.</li>
+      <li><strong>Supabase</strong> stores accounts and synced data. The Warded Atlas’s servers there are in Sydney, Australia, but Supabase is a US company and its staff may access the service to support it.</li>
+      <li><strong>Cloudflare</strong> serves the website at wardedatlas.com and the map pieces that come with the app. <strong>GitHub Pages</strong> serves the old address, braydenm32.github.io, which forwards there. The app’s fonts are part of it, so opening the app doesn’t contact Google.</li>
       <li><strong>Google</strong> and <strong>Facebook</strong>, only if you choose to sign in with them.</li>
       <li><strong>Resend</strong>, our email provider, sends account emails.</li>
+      <li><strong>Anthropic</strong> and <strong>AssemblyAI</strong>, only as described under <a href="#ai">AI features</a>.</li>
+      <li><strong>Hugging Face</strong> and <strong>jsDelivr</strong>, only the first time someone transcribes on a device, to supply the speech model and its software. Your IP address reaches them; your audio never does.</li>
       <li><strong>Discord</strong>, only if a game master adds a Discord webhook and chooses to post something (like a recap) to their own server.</li>
-      <li><strong>AssemblyAI</strong> and <strong>Anthropic</strong>, only if you add your own API key and choose to send a recording for transcription or a transcript for a recap. That data goes directly from your device to them under their own privacy policies, using your own account with them.</li>
+      <li><strong>Syrinscape</strong>, only if you add your Syrinscape token on the Soundboard. The app sends it to Syrinscape to play your sounds.</li>
+      <li><strong>D&amp;D Beyond</strong> and <strong>Pathbuilder</strong>, only if you import a character from a link. The app asks them for that character.</li>
+      <li><strong>Google Calendar</strong>, only if you press “Add to Google Calendar”. The session’s name, time and details go to Google in that link.</li>
     </ul>
-    <p>Your account and synced worlds are stored in Australia. Cloudflare, GitHub, Google, Facebook, Discord, AssemblyAI, Anthropic and Resend are based in the United States and may process the data they handle there or in other countries. We choose providers with strong security practices, but overseas laws may give different protections from Australian law.</p>
+    <p>Your account and synced worlds are stored in Australia. Most of these companies are based in the United States or elsewhere overseas, and may process the data they handle there or in other countries. We choose providers with strong security practices, but overseas laws may give different protections from Australian law.</p>
 
     <h2>How we keep it safe</h2>
     <ul>
@@ -70,20 +86,23 @@
       <li>Passwords are stored only as secure hashes. We never see them.</li>
       <li>Database rules check every request, so people can only reach worlds they own or were invited to, and players only ever receive what the game master has revealed to them. Game master notes and secret passages are removed on our server before anything is sent to players.</li>
       <li>Uploaded files are private, and are only handed out after a check that the person asking is allowed to see them.</li>
-      <li>Only Brayden has administrator access to the database, and we don’t look at your worlds unless you ask us to help with a problem.</li>
+      <li>Only Brayden has administrator access to the database, and we don’t look at your worlds or saved keys unless you ask us to help with a problem.</li>
     </ul>
 
     <h2>If something goes wrong</h2>
     <p>If we learn of a data breach that could seriously harm you, we’ll tell you by email as soon as we can, explain what happened and what to do, and notify the Office of the Australian Information Commissioner (OAIC) where the law requires it.</p>
 
     <h2>How long we keep it</h2>
-    <p>We keep your account and synced worlds until you delete them. Deleting a cloud copy of a world removes it from our database. Deleting your account removes your account, the worlds you own and their files, and your notes, questions and characters in other people’s worlds. Group notes you helped write in someone else’s world stay with that world. Backups held by our providers are cleared on their normal schedule.</p>
+    <p>We keep your account and synced worlds until you delete them. Deleting a cloud copy of a world removes it and its files from our database. Sign-in records last until you sign out or delete your account. Backups held by our providers are cleared on their normal schedule.</p>
+    <p>Deleting your account removes your account, your saved AI keys, the worlds you own and their files, and what you added to other people’s worlds: your notes, questions, stars and wishes, downtime plans, poll answers, new-character requests and your claim on characters. Some things stay in the game master’s world because they’ve become part of it: group notes you helped write, a character you asked for that the game master added, and what you wrote on a character’s page (its summary, details and your own description). Clear what you can yourself before you delete your account, or ask the game master. Your name may also stay in the game master’s own pages, transcripts and recaps, and in copies or backups they’ve saved on their devices, which we can’t reach; ask them to remove it.</p>
 
     <h2>Your choices and rights</h2>
-    <p>You can use the app without an account, turn sync off for any world, delete cloud copies, and export your data as a backup file at any time. You can delete your account yourself in the app (☁️ your account → Delete my account), or ask us for a copy of your information, to correct it, or to delete it. We’ll reply within 30 days. See <a href="data-deletion.html">how to delete your data</a>. If you’re in Australia, the EU or the UK you have rights under the Privacy Act 1988 (Cth) or the GDPR, and you may complain to the OAIC or your local regulator.</p>
+    <p>You can use the app without an account, turn sync off for any world, delete cloud copies, and export your data as a backup file at any time. You can delete your account yourself in the app (☁️ your account → Delete my account). See <a href="data-deletion.html">how to delete your data</a>.</p>
+    <p>To ask for a copy of your information, to correct it, or to complain about how we’ve handled it, email us from the address on your account. Within 7 days we’ll reply to that address to say we have your request and to check it’s really you, and we’ll give you a full answer within 30 days. A copy comes as files you can open, such as the app’s backup file or plain text. If you’re not happy with our answer, you can complain to the Office of the Australian Information Commissioner (<a href="https://www.oaic.gov.au/">oaic.gov.au</a>) or, if you live elsewhere (for example in the EU or the UK), to your local privacy regulator.</p>
+    <p>Brayden, in Australia, is responsible for your information under this policy (the “controller”, in the words of the GDPR).</p>
 
     <h2>Children</h2>
-    <p>The Warded Atlas isn’t meant for children under 13, and we don’t knowingly collect their information. If you think a child has made an account, contact us and we’ll delete it.</p>
+    <p>The Warded Atlas is for people aged 13 and up. If you’re under 18, check with a parent or guardian before you make an account or join a world. Game masters must get a parent’s OK before recording anyone under 18. We don’t knowingly collect information from children under 13. If you think a child under 13 has made an account, contact us and we’ll delete it.</p>
 
     <h2>Changes</h2>
     <p>If we change this policy we’ll update the date above, and for big changes we’ll let account holders know.</p>

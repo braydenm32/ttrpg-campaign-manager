@@ -82,10 +82,11 @@ Under the two keys in **World settings → This device → AI tools**, tick **Sa
 
 - Any computer, phone or the desktop app you sign in on gets both keys by itself, the next time it opens the app. No more pasting.
 - Change or remove a key on one device and the others follow the next time they open the app.
-- Signing out takes the keys off that device. Sign back in and they come back.
+- Signing out takes the keys off that device (and puts back any keys the device had of its own). Sign back in and they come back.
+- On a shared computer, keys someone else typed stay theirs: signing in never adds them to your account, and a key typed while nobody was signed in is only added if you say it's yours.
 - Untick it to take the keys out of your account. Each device keeps the copy it already has until you remove it there.
 
-Only your login can read them. They never go into a world, a backup, a share link or anything players or co-GMs receive, and deleting your account deletes them too. The one thing to know: anyone who gets into your Warded Atlas account could use your keys, so keep a monthly limit and auto-reload off in the Anthropic Console (steps 3 and 4 above), and use a password you don't use anywhere else (or Google sign-in).
+No other user can read them. They never go into a world, a backup, a share link or anything players or co-GMs receive, and deleting your account deletes them too. Two things to know: they're stored as plain text in the app's database, which only Brayden looks after (so he, or the database company, could technically read them, though nobody does), and anyone who gets into your Warded Atlas account could use them. So keep a monthly limit and auto-reload off in the Anthropic Console (steps 3 and 4 above), and use a password you don't use anywhere else (or Google sign-in).
 
 ---
 

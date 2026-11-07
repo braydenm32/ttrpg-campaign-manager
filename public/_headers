@@ -22,7 +22,7 @@
 #                and D&D Beyond and Pathbuilder for character sheets and portraits. data: and blob:
 #                are copies already on this device.
 #   img-src      https: because a GM's own text may show pictures from the web.
-#   style-src, font-src  Google Fonts. Those two can go once the fonts are kept with the app.
+#   style-src, font-src  the app's own (its fonts are in public/fonts, so Google isn't contacted).
 #                'unsafe-inline' is needed for styles the app and its maps set on the page.
 #   object-src, base-uri, form-action  no plugins, and links and forms stay on this site.
 #   frame-ancestors  no other site may show the app inside a frame (stops click-jacking).
@@ -31,7 +31,7 @@
 # Permissions-Policy: the microphone and screen sharing are for recording the table (screen
 # sharing brings in an online call's sound). Nothing uses the camera, location or the other ones.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/; worker-src 'self' blob:; connect-src 'self' data: blob: https://ysrxumagiiaoihlhofqt.supabase.co wss://ysrxumagiiaoihlhofqt.supabase.co https://api.anthropic.com https://api.assemblyai.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/ https://packs.wardedatlas.com https://discord.com https://*.discord.com https://discordapp.com https://*.discordapp.com https://syrinscape.com https://dndbeyond.com https://*.dndbeyond.com https://media-waterdeep.cursecdn.com https://forge-vtt.com https://*.forge-vtt.com https://pathbuilder2e.com; img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/; worker-src 'self' blob:; connect-src 'self' data: blob: https://ysrxumagiiaoihlhofqt.supabase.co wss://ysrxumagiiaoihlhofqt.supabase.co https://api.anthropic.com https://api.assemblyai.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/ https://packs.wardedatlas.com https://discord.com https://*.discord.com https://discordapp.com https://*.discordapp.com https://syrinscape.com https://dndbeyond.com https://*.dndbeyond.com https://media-waterdeep.cursecdn.com https://forge-vtt.com https://*.forge-vtt.com https://pathbuilder2e.com; img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
