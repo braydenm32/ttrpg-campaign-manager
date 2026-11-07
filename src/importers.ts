@@ -2,7 +2,7 @@ import { strToU8, zipSync } from 'fflate'
 import { blankEntity, db, ENTITY_LABELS, newId, typeLabel, type Entity, type EntityType } from './db'
 import { saveFileAsAsset } from './hooks'
 import { stripSecrets } from './Markdown'
-import { IMPORT_ZIP, openZip, ZipError } from './zipSafe'
+import { IMPORT_ZIP, openZip } from './zipSafe'
 
 /**
  * Bringing pages in from other tools, and out again as Markdown.
@@ -48,7 +48,7 @@ export async function readFiles(list: File[]): Promise<Map<string, Blob>> {
   for (const f of list) {
     const path = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name
     if (/\.zip$/i.test(f.name)) {
-      if (f.size > IMPORT_ZIP.total) throw new ZipError(`${f.name} is ${f.size} bytes, more than an import can hold`)
+      if (f.size > IMPORT_ZIP.total) throw new Error(`${f.name} is too big to open here (over 1 GB). Unzip it, then pick the files or the folder inside instead.`)
       const zip = openZip(new Uint8Array(await f.arrayBuffer()), IMPORT_ZIP)
       for (const e of zip.entries) if (!e.name.endsWith('/')) out.set(e.name, UNPACKED.test(e.name) ? new Blob([zip.read(e)], { type: mimeOf(e.name) }) : new Blob())
     } else out.set(path, f)
