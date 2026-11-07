@@ -284,10 +284,10 @@ function SkipLink() {
  * A part of the world's frame (the top bar's pieces, the sidebar, a banner): if it crashes on something
  * odd in the world's data it's left out until the next screen, so the rest of the world still opens.
  */
-function Part({ children }: { children: ReactNode }) {
+function Part({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
   const { pathname } = useLocation()
   return (
-    <ErrorBoundary quiet resetKey={pathname}>
+    <ErrorBoundary quiet fallback={fallback} resetKey={pathname}>
       {children}
     </ErrorBoundary>
   )
@@ -418,7 +418,14 @@ function WorldShell() {
             </Part>
           )}
           {!shared && (
-            <Part>
+            // A table's safety signal mustn't vanish unnoticed: if it ever breaks, say so.
+            <Part
+              fallback={
+                <div className="xcard-alert" role="alert">
+                  The X-card alert stopped working. Reload the page to bring it back, and ask the table to tap it again if they need to.
+                </div>
+              }
+            >
               <XCardAlert world={world} />
             </Part>
           )}

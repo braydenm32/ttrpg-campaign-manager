@@ -119,8 +119,9 @@ const localHost = (host: string) => !host.includes('.') || /^[\d.]+$|^\[|\.(loca
 /**
  * A portrait from the web. The address comes from a file someone else may have made, and fetching
  * it tells that website the GM's internet address, so the app only fetches from the sites sheets
- * come from, or asks first. Never from this computer or its network, never more than 10 MB, and
- * only an ordinary picture. A picture written into the file itself needs no fetching.
+ * come from (the same sites the Content-Security-Policy in public/_headers lets the app reach; any
+ * other site would be blocked there anyway). Never from this computer or its network, never more
+ * than 10 MB, and only an ordinary picture. A picture written into the file itself needs no fetching.
  */
 async function fetchPortrait(worldId: string, url: string, name: string) {
   let target: URL
@@ -133,12 +134,7 @@ async function fetchPortrait(worldId: string, url: string, name: string) {
   // ("localhost." is localhost too.)
   const host = target.hostname.replace(/\.+$/, '')
   if (!embedded) {
-    if (target.protocol !== 'https:' || localHost(host)) return undefined
-    if (
-      !knownHost(host) &&
-      !confirm(`Get ${name}’s portrait from ${host}? The sheet keeps it on that website, which will see your internet address when the app fetches it. Cancel adds the character without it.`)
-    )
-      return undefined
+    if (target.protocol !== 'https:' || localHost(host) || !knownHost(host)) return undefined
   }
   const stop = new AbortController()
   const timer = setTimeout(() => stop.abort(), 20_000)

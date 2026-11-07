@@ -40,8 +40,12 @@ export interface ZipLimits {
 }
 
 const MB = 1024 * 1024
-/** World backups: world.json (the world's text, packed) and every picture, recording and map piece (stored as they are). */
-export const BACKUP_ZIP: ZipLimits = { file: 512 * MB, total: 4096 * MB, ratio: 200, count: 200_000 }
+/**
+ * World backups: world.json (the world's text, packed) and every picture, recording and map piece (stored as they are).
+ * A backup that won't open is the worst kind of failure, so its ratio only refuses what deflate can't really do
+ * (about 1,000 times); the size limits are what stop a ZIP made to fill the device.
+ */
+export const BACKUP_ZIP: ZipLimits = { file: 512 * MB, total: 4096 * MB, ratio: 1000, count: 200_000 }
 /** Obsidian, Kanka and World Anvil exports: notes, JSON and pictures. */
 export const IMPORT_ZIP: ZipLimits = { file: 100 * MB, total: 1024 * MB, ratio: 200, count: 100_000 }
 /** Map packs: pictures (already compressed, so they hardly shrink in a ZIP) and the pack's index. */

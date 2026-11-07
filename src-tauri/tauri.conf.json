@@ -46,8 +46,11 @@
           "https://discordapp.com",
           "https://*.discordapp.com",
           "https://syrinscape.com",
-          "https://character-service.dndbeyond.com",
-          "https://www.dndbeyond.com",
+          "https://dndbeyond.com",
+          "https://*.dndbeyond.com",
+          "https://media-waterdeep.cursecdn.com",
+          "https://forge-vtt.com",
+          "https://*.forge-vtt.com",
           "https://pathbuilder2e.com"
         ],
         "img-src": ["'self'", "data:", "blob:", "https:"],

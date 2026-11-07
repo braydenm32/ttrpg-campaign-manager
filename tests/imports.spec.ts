@@ -10,7 +10,7 @@ import { getRecord, putBack } from './lib/records'
  * an import that runs out of room adds nothing and says so; the Files page says when the device is
  * full and carries on with the rest; a backup can't file map-pack pictures under a made-up account
  * or as another kind of file; and a character sheet's portrait is only fetched from the sites sheets
- * come from, or after asking. Each test puts back what it changed.
+ * come from. Each test puts back what it changed.
  */
 
 // ---------- ZIPs, written by hand so a test can make one say what it likes ----------
@@ -362,7 +362,7 @@ test('a backup can’t file map-pack pictures under a made-up account, or as ano
   }
 })
 
-test('a character sheet’s portrait is only fetched from the sites sheets come from, or after asking', async ({ page, world }) => {
+test('a character sheet’s portrait is only fetched from the sites sheets come from', async ({ page, world }) => {
   const requested: string[] = []
   page.on('request', (r) => requested.push(r.url()))
   const asked: string[] = []
@@ -386,9 +386,8 @@ test('a character sheet’s portrait is only fetched from the sites sheets come 
       await page.getByRole('button', { name: 'Add the character' }).click()
       await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible()
     }
-    // Only the unknown website was asked about, and saying no meant no request at all.
-    expect(asked).toHaveLength(1)
-    expect(asked[0]).toContain('Get Import Test Tracked’s portrait from tracker.example?')
+    // Another website is never asked about or fetched from (the site's security policy would block it anyway).
+    expect(asked).toHaveLength(0)
     expect(requested.some((u) => u.includes('tracker.example'))).toBe(false)
     // Never this computer's network, and never asked about.
     expect(requested.some((u) => u.includes('192.168.1.10') || u.includes('printer.local'))).toBe(false)
