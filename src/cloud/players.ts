@@ -115,15 +115,21 @@ export async function approveClaim(worldId: string, entityId: string) {
 export const UNNAMED = 'Unnamed player'
 
 /**
- * Characters a name could hide another name with: control characters, ones that don't show
- * (zero-width spaces and joiners, a soft hyphen) and ones that turn text around (a right-to-left
- * override makes "Sam" show as something else). The combining grapheme joiner (U+034F) is outside
- * the brackets only because a combining mark inside them reads as joined to the one before.
+ * Characters a name could hide another name with, refused: control characters, ones that don't
+ * show (a zero-width space, a soft hyphen, fillers, unused format characters) and ones that turn
+ * text around (a right-to-left override makes "Sam" show as something else). The same list as
+ * public.member_name_ok (supabase/migrations/20261107000000_security_audit.sql): keep them in step.
  */
-const HIDDEN_CHARS = /[\p{Cc}\u00ad\u061c\u180e\u200b-\u200f\u2028-\u202e\u2060-\u2064\u2066-\u2069\ufeff]|\u034f/u
+const HIDDEN_CHARS =
+  /[\p{Cc}\u00ad\u061c\u115f\u1160\u17b4\u17b5\u180e\u200b\u200e\u200f\u2028-\u202e\u2060-\u206f\u3164\ufeff\uffa0\ufff0-\ufffb\u{1bca0}-\u{1bca3}\u{1d173}-\u{1d17a}\u{e0000}-\u{e001f}\u{e0080}-\u{e00ff}\u{e01f0}-\u{e0fff}]/u
+/** A joiner belongs between other letters (in Persian, emoji, Indian scripts), not at either end or next to an A-Z letter, digit or sign. */
+const STRAY_JOINER = /(^|[\u0001-\u007f])[\u200c\u200d]|[\u200c\u200d]([\u0001-\u007f]|$)/u
+/** Characters that don't show and only change how the letter before looks: left out when names are compared (as in public.member_name_key). */
+const IGNORED_CHARS = /[\u034f\u180b-\u180d\u180f\u200c\u200d\ufe00-\ufe0f\u{e0000}-\u{e007f}\u{e0100}-\u{e01ef}]/gu
 
-/** A name as the table tells names apart: letter case, spacing and look-alike letters ("Ｓａｍ") don't count. */
-const foldName = (n: string) => n.normalize('NFKC').replace(new RegExp(HIDDEN_CHARS.source, 'gu'), '').replace(/\s+/g, ' ').trim().toLowerCase()
+/** A name as the table tells names apart: letter case, spacing, look-alike letters ("Ｓａｍ") and characters that don't show don't count. */
+const foldName = (n: string) =>
+  n.normalize('NFKC').replace(new RegExp(HIDDEN_CHARS.source, 'gu'), '').replace(IGNORED_CHARS, '').replace(/\s+/g, ' ').trim().toLowerCase()
 export const sameName = (a: string, b: string) => foldName(a) === foldName(b)
 
 /** A name that reads as the GM's: "GM", "DM Sam", "The Game Master". */
@@ -139,7 +145,7 @@ export function nameProblem(name: string, whose: 'your' | 'their' = 'your', { ta
   const n = name.trim()
   if (!n) return `Type the name the table should call ${whose === 'your' ? 'you' : 'them'}.`
   if (/:\/\/|^www\.|\/join\//i.test(n)) return `That looks like the invite link. Type ${whose} name instead, e.g. Sam.`
-  if (HIDDEN_CHARS.test(n)) return `That name has hidden characters in it (ones that don’t show, or that turn the text around). Type ${whose === 'your' ? 'your' : 'the'} name again by hand.`
+  if (HIDDEN_CHARS.test(n) || STRAY_JOINER.test(n) || !foldName(n)) return `That name has hidden characters in it (ones that don’t show, or that turn the text around). Type ${whose === 'your' ? 'your' : 'the'} name again by hand.`
   if (taken.some((t) => t !== UNNAMED && sameName(t, n))) return `Someone in this world is already called “${n}”. Pick a name the table can tell apart, e.g. ${n.split(/\s+/)[0]} B.`
   if (player && soundsLikeGM(n)) return `That reads like the GM’s name. Pick ${whose} own, so nobody takes ${whose === 'your' ? 'you' : 'them'} for the GM.`
   return ''

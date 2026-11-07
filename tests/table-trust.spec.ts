@@ -332,11 +332,16 @@ test('names: no hidden characters, nothing that reads as the GM, and joining sug
     await expect(box).toHaveValue('Samantha')
     await expect(page.getByText('you don’t have to use your real name')).toBeVisible()
     await expect(page.getByText('Others in the world will see you as “Samantha”')).toBeVisible()
-    // A right-to-left override (or a zero-width space) can make a name look like another: not allowed.
-    for (const bad of ['Sam‮yrrah', 'Sa​m']) {
+    // A right-to-left override (or a zero-width space, or a joiner beside plain letters) can make a name look like another: not allowed.
+    for (const bad of ['Sam\u202eyrrah', 'Sa\u200bm', 'Sa\u200dm', '\u034f']) {
       await box.fill(bad)
       await expect(page.getByRole('alert')).toContainText('hidden characters')
       await page.getByRole('button', { name: 'Join the world' }).click()
+    }
+    // A Persian name, or an emoji, that needs a joiner is fine (as the server says too).
+    for (const good of ['\u0645\u06cc\u200c\u062e\u0648\u0627\u0647\u0645', '\u{1f9d9}\u200d\u2642\ufe0f Merlin']) {
+      await box.fill(good)
+      await expect(page.getByRole('alert')).toHaveCount(0)
     }
     // A player can't go by the GM's name.
     await box.fill('GM Brayden')
@@ -365,10 +370,12 @@ test('a player can’t take a name someone else in the world has', async ({ page
     await open(page, `/w/${copy.id}?tab=me`)
     await page.getByRole('button', { name: 'Change my name' }).click()
     const box = page.getByLabel('Your name')
-    // Ash is in the world already (any capitals, any spacing).
-    await box.fill('  ASH ')
-    await page.getByRole('button', { name: 'Save' }).click()
-    await expect(page.getByRole('alert')).toContainText('already called')
+    // Ash is in the world already (any capitals, any spacing, any characters that don't show).
+    for (const same of ['  ASH ', 'As\u034fh', 'Ash\u{e0100}']) {
+      await box.fill(same)
+      await page.getByRole('button', { name: 'Save' }).click()
+      await expect(page.getByRole('alert')).toContainText('already called')
+    }
     await box.fill('Dm Sam')
     await page.getByRole('button', { name: 'Save' }).click()
     await expect(page.getByRole('alert')).toContainText('reads like the GM’s name')

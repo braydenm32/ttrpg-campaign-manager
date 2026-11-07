@@ -327,14 +327,19 @@ select t.check('FILE-2: the check runs for callers who can''t call it themselves
 
 select t.check('NAME-1: a fine name: ' || to_jsonb(n)::text, public.member_name_ok(n)) from (values
   ('Sam'), ('Zo' || chr(235)), ('Mary-Jane O''Neil'), (chr(129497) || chr(8205) || chr(9794) || chr(65039) || ' Merlin'),
-  (chr(1605) || chr(1740) || chr(8204) || chr(1582) || chr(1608) || chr(1575) || chr(1607) || chr(1605)), (chr(65319) || chr(65325)), ('Dana 2')) v(n);
+  (chr(1605) || chr(1740) || chr(8204) || chr(1582) || chr(1608) || chr(1575) || chr(1607) || chr(1605)), (chr(65319) || chr(65325)), ('Dana 2'),
+  (chr(33883) || chr(917760) || ' Ren')) v(n);
 select t.check('NAME-1: refused: ' || what, not public.member_name_ok(n)) from (values
   ('a joiner between letters', 'G' || chr(8205) || 'M'), ('right-to-left override', chr(8238) || 'evil'), ('a bell character', 'Bob' || chr(7)),
   ('a zero-width space', 'G' || chr(8203) || 'M'), ('only a no-break space', chr(160)), ('only a variation selector', chr(65039)),
   ('a Hangul filler', chr(12644)), ('a soft hyphen', 'Al' || chr(173) || 'ice'), ('a left-to-right mark', 'Bob' || chr(8206)),
-  ('a direction isolate', 'x' || chr(8294) || 'y'), ('a link', 'www.example.com'), ('an invite link', 'https://x.test/join/abc'), ('nothing', '')) v(what, n);
+  ('a direction isolate', 'x' || chr(8294) || 'y'), ('a link', 'www.example.com'), ('an invite link', 'https://x.test/join/abc'), ('nothing', ''),
+  ('a Khmer letter that doesn''t show', 'Bo' || chr(6068) || 'b'), ('an unused format character', 'Bo' || chr(8293) || 'b'),
+  ('a musical format character', 'Bob' || chr(119155)), ('a language tag', chr(917505) || 'Bob'), ('a shorthand format character', 'Bo' || chr(113824) || 'b'),
+  ('only a grapheme joiner', chr(847))) v(what, n);
 select t.check('NAME-1: these count as the same name as "Alice": ' || to_jsonb(n)::text, public.member_name_key(n) = 'alice') from (values
-  ('ALICE'), (' alice '), (chr(65313) || chr(65356) || chr(65353) || chr(65347) || chr(65349)), ('Al' || chr(8204) || 'ice'), ('Alice' || chr(160))) v(n);
+  ('ALICE'), (' alice '), (chr(65313) || chr(65356) || chr(65353) || chr(65347) || chr(65349)), ('Al' || chr(8204) || 'ice'), ('Alice' || chr(160)),
+  ('Ali' || chr(847) || 'ce'), ('Alice' || chr(917760)), ('Alic' || chr(6155) || 'e')) v(n);
 select t.check('NAME-1 rename: ' || what, case when expect is null then r is null else strpos(coalesce(r, ''), expect) > 0 end, coalesce(r, '(went through)'))
 from (values
   ('a player can''t take another player''s name', 'bob', 'alice', 'already goes by that name'),

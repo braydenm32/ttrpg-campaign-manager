@@ -76,11 +76,12 @@ begin
   return result;
 end $$;
 
--- How names are compared: "Sam", "SAM" and "Sam " (or a "Sam" with a hidden joiner in it) are one name.
+-- How names are compared: "Sam", "SAM" and "Sam " (or a "Sam" with a hidden joiner, variation
+-- selector or grapheme joiner in it) are one name. Keep in step with foldName in src/cloud/players.ts.
 create or replace function public.member_name_key(name text) returns text
 language sql immutable set search_path = '' as $$
   select btrim(lower(regexp_replace(regexp_replace(normalize(coalesce(name, ''), nfkc),
-    '[\u200c\u200d\ufe00-\ufe0f]|[\U000e0000-\U000e007f]', '', 'g'),
+    '[\u034f\u180b-\u180d\u180f\u200c\u200d\ufe00-\ufe0f]|[\U000e0000-\U000e007f\U000e0100-\U000e01ef]', '', 'g'),
     '[\u0009-\u000d \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+', ' ', 'g')))
 $$;
 
@@ -453,7 +454,7 @@ revoke execute on function public.player_view(uuid, uuid) from public, anon, aut
 create or replace function public.member_name_ok(name text) returns boolean
 language sql immutable set search_path = '' as $$
   select coalesce(trim(name), '') <> '' and coalesce(name, '') !~* '(://|^www\.|/join/)'
-    and coalesce(name, '') !~ '[\u0001-\u001f\u007f-\u009f\u00ad\u061c\u115f\u1160\u180e\u200b\u200e\u200f\u2028-\u202e\u2060-\u2064\u2066-\u206f\u3164\ufeff\uffa0\ufff9-\ufffb]'
+    and coalesce(name, '') !~ '[\u0001-\u001f\u007f-\u009f\u00ad\u061c\u115f\u1160\u17b4\u17b5\u180e\u200b\u200e\u200f\u2028-\u202e\u2060-\u206f\u3164\ufeff\uffa0\ufff0-\ufffb\U0001bca0-\U0001bca3\U0001d173-\U0001d17a\U000e0000-\U000e001f\U000e0080-\U000e00ff\U000e01f0-\U000e0fff]'
     and coalesce(name, '') !~ '(^|[\u0001-\u007f])[\u200c\u200d]|[\u200c\u200d]([\u0001-\u007f]|$)'
     and public.member_name_key(name) <> ''
 $$;
