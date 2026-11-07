@@ -27,7 +27,8 @@ export function AiSettingsSection() {
         <KeyField
           label="Anthropic API key (for one-click recaps, the Archivist and other Claude tools)"
           value={s.anthropicKey}
-          onChange={(v) => setAiSettings({ anthropicKey: v })}
+          // Noted as the signed-in person's key ('' for no one), so it never lands in someone else's account.
+          onChange={(v) => setAiSettings({ anthropicKey: v, anthropicBy: user?.id ?? '' })}
           stops="one-click recaps, the Archivist and the other Claude tools stop until you add it again"
           placeholder="sk-ant-…"
           help={
@@ -43,7 +44,7 @@ export function AiSettingsSection() {
         <KeyField
           label="AssemblyAI API key (for cloud transcription)"
           value={s.assemblyKey}
-          onChange={(v) => setAiSettings({ assemblyKey: v })}
+          onChange={(v) => setAiSettings({ assemblyKey: v, assemblyBy: user?.id ?? '' })}
           stops="cloud transcription stops (on-device transcription still works)"
           placeholder="Paste your key"
           help={
@@ -77,8 +78,8 @@ export function AiSettingsSection() {
                   : account.status === 'saving'
                     ? 'Saving…'
                     : account.status === 'saved' && s.keysInAccount
-                      ? 'Saved. Any device you sign in on gets them, and signing out takes them off that device.'
-                      : 'Only you can read them. They never go into worlds, backups or anything players see.'}
+                      ? 'Saved. Any device you sign in on gets them, and signing out takes them off that device again (putting back any keys it had of its own).'
+                      : 'No other user can read them, and they never go into worlds, backups or anything players see. They’re stored as plain text in the app’s database, which only Brayden (who makes the app) looks after, so set a spending limit with Anthropic.'}
             </span>
           </span>
         </label>

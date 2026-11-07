@@ -19,7 +19,8 @@ import { describeStep, MARKUP_NOTE, pageByName, pageText, sessionIndex, sessionT
 /**
  * The prep helper: Claude reads the last sessions, the open threads and the party, then suggests a
  * strong start, scenes, secrets and clues, and who to have ready. The GM ticks what they want and it
- * goes onto the prep sheet.
+ * goes onto the prep sheet. Players' stars and wishes go along only if the GM ticks "Include players'
+ * feedback" (off to begin with), since they're the players' own words.
  */
 
 interface Suggestion {
@@ -56,7 +57,9 @@ export function parsePrep(text: string): Suggestion {
 export function PrepHelper({ world, session, entities }: { world: World; session: Session; entities: Entity[] }) {
   const sessions = useLiveQuery(() => db.sessions.where({ worldId: world.id }).toArray(), [world.id]) ?? []
   // Stars and wishes players sent about the last sessions: what to keep doing, and what they'd like more of.
+  // They're the players' own words, so they only go to Claude when the GM ticks "Include players' feedback".
   const feedback = useFeedback(world)
+  const [withFeedback, setWithFeedback] = useKept(`prep:${session.id}:feedback`, false)
   const { nameOf } = useInbox()
   // Kept outside the panel, so the suggestion is still here after a look at another page (see kept.ts).
   const kept = `prep:${session.id}`
@@ -65,18 +68,17 @@ export function PrepHelper({ world, session, entities }: { world: World; session
   const skip = new Set(skipped)
   const [added, setAdded] = useState(false)
 
+  const earlier = sessions
+    .filter((s) => s.campaignId === session.campaignId && s.number < session.number)
+    .sort((a, b) => b.number - a.number)
+    .slice(0, 2)
+    .reverse()
+  const said = feedback.list.filter((f) => earlier.some((s) => s.id === f.sessionId) && (f.star.trim() || f.wish.trim()))
+  const senders = new Set(said.map((f) => f.userId)).size
+
   const build = () => {
-    const earlier = sessions
-      .filter((s) => s.campaignId === session.campaignId && s.number < session.number)
-      .sort((a, b) => b.number - a.number)
-      .slice(0, 2)
-      .reverse()
     const party = partyOf(entities, session.campaignId, { activeOnly: true })
-    const asked = feedbackLines(
-      feedback.list.filter((f) => earlier.some((s) => s.id === f.sessionId)),
-      earlier,
-      nameOf,
-    )
+    const asked = withFeedback ? feedbackLines(said, earlier, nameOf) : ''
     const open = entities.filter((e) => isOpenThread(e) || isOpenQuest(e))
     const clocks = tickingClocks(entities).map(({ clock: c, owner: e }) => `- ${c.name} (on [[${e.name}]]): ${c.filled} of ${c.segments}`)
     const prep = { ...blankPrep(), ...session.prep }
@@ -171,7 +173,17 @@ ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${pl
             jobTitle={`Prep ideas for session ${session.number}`}
             label="Suggest prep"
             build={build}
-            priceKey={`${session.id}:${sessions.length}:${entities.length}`}
+            priceKey={`${session.id}:${sessions.length}:${entities.length}:${withFeedback ? said.length : 0}`}
+            extra={
+              said.length > 0 && (
+                <label className="check small">
+                  <input type="checkbox" checked={withFeedback} onChange={(e) => setWithFeedback(e.target.checked)} />
+                  <span>
+                    Include players’ feedback (from {senders === 1 ? '1 player' : `${senders} players`}) <Help topic="prepFeedback" />
+                  </span>
+                </label>
+              )
+            }
             onResult={(text) => {
               setSuggestion(parsePrep(text))
               setSkipped([])

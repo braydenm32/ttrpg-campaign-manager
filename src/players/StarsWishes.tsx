@@ -15,8 +15,9 @@ const sessionName = (s: { number: number; title: string }) => (!s.title.trim() |
 /**
  * Stars and wishes: for a few days after a game night, each player can say one thing they loved
  * (a star) and one thing they'd like more of (a wish). They're signed, not anonymous: the GM sees who
- * sent each one, under the session, in the Inbox, and the prep helper reads them when planning the
- * next one. Kept on the server like downtime (public.session_feedback), never in the world itself.
+ * sent each one, under the session, in the Inbox, and the prep helper sends them to Claude only if the
+ * GM ticks "Include players' feedback" (the form tells players so). Kept on the server like downtime
+ * (public.session_feedback), never in the world itself.
  */
 
 export interface Feedback {
@@ -178,7 +179,8 @@ export function StarsAndWishesCard({ world, session, mine, stage }: { world: Wor
           }}
         >
           <p className="muted small">
-            About {sessionName(session)}: one thing you loved, and one thing you’d like more of. Only your GM (and any co-GM) reads it, with your name.
+            About {sessionName(session)}: one thing you loved, and one thing you’d like more of. Your GM (and any co-GM) reads it, with your name, and
+            may share it with Claude, an AI from Anthropic in the US, to help plan the next session.
           </p>
           {mine.length > 1 && (
             <select value={character} onChange={(e) => setWho(e.target.value)} aria-label="Which character">

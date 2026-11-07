@@ -8,7 +8,7 @@ import { PrepHelper } from '../ai/PrepHelper'
 import { RecapPanel } from '../ai/RecapPanel'
 import { Highlights } from '../highlights'
 import { SpotlightPanel } from '../ai/Spotlight'
-import { TranscriptPanel } from '../ai/TranscriptPanel'
+import { dropCloudTranscripts, TranscriptPanel } from '../ai/TranscriptPanel'
 import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { db, ENTITY_LABELS, THREAD_STATUS, type Campaign, type Entity, type Recording, type Session, type World } from '../db'
@@ -443,6 +443,7 @@ function SessionDetails({ session, campaign, world, entities }: Omit<ViewProps, 
           title={live?.sessionId === session.id ? 'Stop the recording first' : undefined}
           onClick={async () => {
             if (!confirm('Delete this session and its recordings? You can restore it from World settings for a month.')) return
+            await dropCloudTranscripts(session)
             await binSession(session.id)
             navigate(campaign ? `${w}/c/${campaign.id}` : w)
           }}
@@ -635,8 +636,10 @@ export function Recorder({ session }: { session: Session }) {
       ) : (
         <div className="row wrap">
           <p className="notice small">
-            Ask everyone at the table before you record, and record only if they agree. In several Australian states it’s an offence to
-            record a private conversation without everyone’s consent.
+            Ask everyone at the table before you record, and record only if they all agree (anyone under 18 needs a parent’s OK too). Tell them
+            where it goes: the audio stays on this device unless you send it to AssemblyAI (a US company) for a transcript; the transcript, with
+            who said what, syncs with the world, so any co-GM can read it; and Claude (Anthropic, also in the US) reads it if you ask for a recap.
+            In several Australian states it’s an offence to record a private conversation without everyone’s consent.
           </p>
           <span className="muted small">Keeps recording while you use the rest of the app, and saves as it goes.</span>
           <select value={source} onChange={(e) => setSource(e.target.value as RecordSource)} aria-label="What to record">
