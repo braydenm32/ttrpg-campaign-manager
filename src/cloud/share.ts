@@ -81,10 +81,16 @@ export async function downloadFiles(from: { token: string } | { world: string },
   } catch {
     // Older server or a blip: fetch one at a time below.
   }
-  const query = 'token' in from ? `token=${encodeURIComponent(from.token)}` : `world=${encodeURIComponent(from.world)}`
   await Promise.all(
     ids.map(async (id) => {
-      const one = () => fetch(`${endpoint}?${query}&id=${encodeURIComponent(id)}`, { headers })
+      // The share link (or world) goes in the body, never in the address, so it stays out of logs. The
+      // file's id is in the address too, for the older shared-asset function, which reads it from there.
+      const one = () =>
+        fetch(`${endpoint}?id=${encodeURIComponent(id)}`, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...from, id }),
+        })
       try {
         // A link that didn't come back or doesn't work falls back to asking for the file itself.
         let res = urls?.[id] ? await fetch(urls[id]).catch(() => undefined) : undefined
