@@ -6,7 +6,8 @@ import { Ico } from './icons'
 import { Folder } from '@phosphor-icons/react'
 import { ImportSheetButton } from './sheets/ImportSheet'
 import { ImportNotesButton } from './notes/ImportNotes'
-import { toast } from './undo'
+import { outOfRoom, toast } from './undo'
+import { ZipError } from './zipSafe'
 
 const SOURCES: { id: ImportSource; label: string; hint: string; accept: string; folder?: boolean }[] = [
   { id: 'markdown', label: '📝 Obsidian or Markdown', hint: 'Pick your vault folder, a .zip of it, or some .md files.', accept: '.md,.markdown,.zip', folder: true },
@@ -36,6 +37,7 @@ export function ImportPages({ worldId, system, compact }: { worldId: string; sys
       if (!p.pages.length) setError(`Couldn’t find any pages in those files. Check you picked the ${SOURCES.find((s) => s.id === source)!.label.slice(3)} export.`)
       else setPlan(p)
     } catch (e) {
+      if (e instanceof ZipError) console.warn('Reading the import:', e.reason)
       setError((e as Error).message)
     } finally {
       setBusy('')
@@ -111,7 +113,12 @@ export function ImportPages({ worldId, system, compact }: { worldId: string; sys
                   if (compact) toast(`Added ${n} page${n === 1 ? '' : 's'}. They’re GM only until you reveal them.`)
                   setPlan(undefined)
                 } catch (e) {
-                  setError((e as Error).message)
+                  console.warn('Import failed', e)
+                  setError(
+                    outOfRoom(e)
+                      ? 'Not enough room on this device for these pages and their pictures, so nothing was added. Free some space (old recordings, big files, or Recently deleted in More), then try again.'
+                      : `Couldn’t add the pages, so nothing was added: ${(e as Error).message}`,
+                  )
                 } finally {
                   setBusy('')
                 }
