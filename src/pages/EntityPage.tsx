@@ -986,7 +986,12 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
                   hidden
                   onChange={async (ev) => {
                     const f = ev.target.files?.[0]
-                    if (f) set('imageId', await saveFileAsAsset(worldId, f, f.name, [d.name]))
+                    if (!f) return
+                    try {
+                      set('imageId', await saveFileAsAsset(worldId, f, f.name, [d.name]))
+                    } catch (err) {
+                      saveFailed(`“${f.name}”`, err)
+                    }
                   }}
                 />
               </label>

@@ -11,7 +11,7 @@ import { worldPath } from './paths'
 import { useReview } from './reveal'
 import { A_PICTURE, PicturePicker, pictureTitleOf, putUpBoard, sameHandout, SpreadPiece, stopShowing, useShowablePictures } from './showing'
 import { blankBoard, boardInHand, deleteShowBoard, freeName, saveShowBoard, showBoardsOf } from './showBoards'
-import { toast } from './undo'
+import { saveFailed, toast } from './undo'
 
 /**
  * Show several at once: the GM's arranging board. A 16:9 preview of the players' screen where
@@ -391,7 +391,12 @@ export default function ArrangeBoard({
                   onPick={(p) => add({ kind: 'image', title: p.title, assetId: p.asset.id })}
                   uploadTitle="Upload a picture and add it to the board"
                   onUpload={async (f) => {
-                    const id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
+                    let id: string
+                    try {
+                      id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
+                    } catch (err) {
+                      return saveFailed(`“${f.name}”`, err)
+                    }
                     // Its file's name, unless that's after a page players can't see ("A picture" then, to rename here).
                     add({ kind: 'image', title: (await pictureTitleOf(world.id, id)).title, assetId: id })
                   }}

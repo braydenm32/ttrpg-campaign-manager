@@ -9,7 +9,7 @@ import { AiSettingsSection } from '../ai/AiSettingsSection'
 import { BackupButton } from '../BackupReminder'
 import { DeviceStorage } from '../deviceStorage'
 import { backupStore } from '../backup'
-import { toast } from '../undo'
+import { saveFailed, toast } from '../undo'
 import { deleteCloudCopy } from '../cloud/sync'
 import { myRole } from '../cloud/players'
 import { db, deleteWorld, GAME_SYSTEMS, newId, typeLabel, WORLD_COLORS, worldColor, type Asset, type CustomType, type World } from '../db'
@@ -398,7 +398,12 @@ function WorldLook({ world, update }: { world: World; update: (patch: Partial<Wo
             hidden
             onChange={async (e) => {
               const f = e.target.files?.[0]
-              if (f) choose(await saveFileAsAsset(world.id, f, f.name, ['cover']))
+              if (!f) return
+              try {
+                choose(await saveFileAsAsset(world.id, f, f.name, ['cover']))
+              } catch (err) {
+                saveFailed(`“${f.name}”`, err)
+              }
             }}
           />
         </label>

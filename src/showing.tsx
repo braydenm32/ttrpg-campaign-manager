@@ -14,7 +14,7 @@ import { ArrowSquareOut, Lock, Scroll, SquaresFour, Television } from '@phosphor
 import { Modal, useDialog } from './components'
 import { worldPath } from './paths'
 import { askToReveal, useReview } from './reveal'
-import { toast } from './undo'
+import { saveFailed, toast } from './undo'
 import { offerGroupPost } from './groupPost'
 import { saveShowBoard, showBoardsOf } from './showBoards'
 import { visibleHandouts } from './counts'
@@ -754,7 +754,12 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
           onPick={(p) => void showPicture(p)}
           uploadTitle="Upload a picture and show it"
           onUpload={async (f) => {
-            const id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
+            let id: string
+            try {
+              id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
+            } catch (err) {
+              return saveFailed(`“${f.name}”`, err)
+            }
             // Called by its file's name, unless that's after a page players can't see: then asked first.
             const title = await askTitle(await pictureTitleOf(world.id, id))
             if (title !== null) await showToPlayers(world.id, { kind: 'image', title, assetId: id })
