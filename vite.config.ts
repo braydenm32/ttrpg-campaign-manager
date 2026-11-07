@@ -1,7 +1,8 @@
+import { randomBytes } from 'node:crypto'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import react from '@vitejs/plugin-react'
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, type Connect, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { MAPS } from './src/example/maps/index.ts'
 import { describeProblems, parseExampleFiles } from './src/example/parse.ts'
@@ -43,6 +44,47 @@ function checkExampleWorld(): Plugin {
   }
 }
 
+/**
+ * The security headers in public/_headers, which Cloudflare Pages sends with every file of the live
+ * site, are sent by `npm run dev` and `vite preview` too. So the app, and the browser tests, run
+ * under the same Content-Security-Policy as wardedatlas.com, and anything it would block shows up
+ * here first. Under the desktop app (`npm run desktop`) the dev server sends the desktop app's
+ * policy (src-tauri/tauri.conf.json) instead. The dev server adds one thing: a nonce, so the small
+ * script it puts in the page for instant reloads may run (the built app has no scripts in its pages).
+ */
+function securityHeaders(): Plugin {
+  const headers = (devNonce?: string) => {
+    const out: [string, string][] = []
+    let rule = ''
+    for (const line of readFileSync(join(import.meta.dirname, 'public/_headers'), 'utf8').split(/\r?\n/)) {
+      if (!line.trim() || line.trim().startsWith('#')) continue
+      if (!/^\s/.test(line)) rule = line.trim()
+      else if (rule === '/*') out.push([line.slice(0, line.indexOf(':')).trim(), line.slice(line.indexOf(':') + 1).trim()])
+    }
+    if (process.env.TAURI_ENV_PLATFORM) {
+      const csp = JSON.parse(readFileSync(join(import.meta.dirname, 'src-tauri/tauri.conf.json'), 'utf8')).app.security.csp as Record<string, string | string[]>
+      const policy = Object.entries(csp).map(([name, sources]) => [name, ...[sources].flat()].join(' ')).join('; ')
+      for (const h of out) if (h[0] === 'Content-Security-Policy') h[1] = policy
+    }
+    if (devNonce) for (const h of out) if (h[0] === 'Content-Security-Policy') h[1] = h[1].replace(/script-src [^;]*/, (s) => `${s} 'nonce-${devNonce}'`)
+    return out
+  }
+  const send =
+    (devNonce?: string): Connect.NextHandleFunction =>
+    (_req, res, next) => {
+      for (const [name, value] of headers(devNonce)) res.setHeader(name, value)
+      next()
+    }
+  const nonce = randomBytes(16).toString('base64')
+  return {
+    name: 'security-headers',
+    // Vite then marks the dev server's own scripts with the nonce.
+    config: (_, { command, isPreview }) => (command === 'serve' && !isPreview ? { html: { cspNonce: nonce } } : undefined),
+    configureServer: (server) => void server.middlewares.use(send(nonce)),
+    configurePreviewServer: (server) => void server.middlewares.use(send()),
+  }
+}
+
 // Addresses like wardedatlas.com/w/eldoria/locations need files loaded from the site's root, so the base is "/".
 // The old GitHub Pages copy lives in a folder, so its build passes --base ./ (see .github/workflows/web.yml).
 export default defineConfig({
@@ -50,6 +92,7 @@ export default defineConfig({
   plugins: [
     react(),
     checkExampleWorld(),
+    securityHeaders(),
     // The speech engine's own copy of its 26 MB runtime is never loaded: transformers.js fetches the
     // runtime from jsDelivr at run time. Leaving it out keeps every file under Cloudflare Pages' 25 MB limit.
     {

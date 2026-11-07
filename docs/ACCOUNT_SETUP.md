@@ -60,6 +60,30 @@ can be moved and old links keep working) and Cloudflare Pages at wardedatlas.com
 4. Supabase → **Authentication → URL Configuration**: Site URL `https://wardedatlas.com`, and add
    `https://wardedatlas.com/**` to Redirect URLs (keep the old address there too).
 
+### Checking the security headers
+
+Cloudflare sends a few security headers with every file of the site, from `public/_headers`. The main
+one, the Content-Security-Policy, lists where the app may load code and pictures from and which
+servers it may talk to. That way a mistake in how text is shown can't run someone else's code or send
+your keys and worlds anywhere else. The desktop app has its own copy of the policy in
+`src-tauri/tauri.conf.json`. Nothing needs setting up in the dashboard. To check that the live site
+sends the headers, after a deploy run this in a terminal (on Windows, type `curl.exe` instead of `curl`):
+
+```
+curl -I https://wardedatlas.com
+```
+
+The answer should have lines starting `content-security-policy:`, `strict-transport-security:`,
+`x-content-type-options: nosniff`, `x-frame-options: DENY`, `referrer-policy:` and
+`permissions-policy:`. If they're missing, check that the latest deploy finished (**Workers & Pages →
+the project → Deployments**). If you ever added headers by hand under **Rules → Transform Rules**,
+take those out so the two sets don't clash.
+
+If a feature stops working after the app starts using a new outside service, the browser's console
+(F12) says "violates the following Content Security Policy directive". The service's address then
+needs adding to `public/_headers` and to `src-tauri/tauri.conf.json`. The browser tests
+(`tests/csp.spec.ts`) check that the two still agree.
+
 ## 3. Google sign-in
 
 1. Go to <https://console.cloud.google.com>, make a project called The Warded Atlas.
