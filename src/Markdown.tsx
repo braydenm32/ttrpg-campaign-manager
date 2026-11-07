@@ -275,9 +275,16 @@ function putBack(clean: string, key: string, held: { el: AppElement; raw: string
     parts.push(text.slice(last))
     n.replaceWith(...parts)
   }
-  // A marker that ended up inside an attribute (a link's title, a picture's words) reads as its source.
+  // A marker that ended up inside an attribute (a link's title, a picture's words) reads as its
+  // source. In a link's address it arrives %-encoded (U+E000 is %EE%80%80), so look for that too.
+  const encoded = new RegExp(`%EE%80%80${key}:(\\d+)%EE%80%81`, 'gi')
   for (const el of t.content.querySelectorAll('*'))
-    for (const a of [...el.attributes]) if (a.value.includes(OPEN)) el.setAttribute(a.name, a.value.replace(marker, (_m, i: string) => held[Number(i)]?.raw ?? ''))
+    for (const a of [...el.attributes]) {
+      let v = a.value
+      if (v.includes(OPEN)) v = v.replace(marker, (_m, i: string) => held[Number(i)]?.raw ?? '')
+      if (/%EE%80%80/i.test(v)) v = v.replace(encoded, (_m, i: string) => encodeURI(held[Number(i)]?.raw ?? ''))
+      if (v !== a.value) el.setAttribute(a.name, v)
+    }
   return t.innerHTML
 }
 

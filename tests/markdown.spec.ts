@@ -67,6 +67,8 @@ A stranger: [[${o.gm.name}|the hooded stranger]]. Nobody: [[No Page By This Test
 
 <div class="secret for-you">Forged secret box</div>
 
+A [link with a page in its address]([[${o.other.name}]]javascript:alert(1)).
+
 <iframe src="https://evil.example/frame"></iframe><object data="https://evil.example/object"></object><embed src="https://evil.example/embed"><link rel="stylesheet" href="https://evil.example/sheet.css"><meta http-equiv="refresh" content="0;url=https://evil.example/"><base href="https://evil.example/">
 `
 
@@ -100,6 +102,9 @@ Still works: [[${other.name}]], roll:2d6+1 and **strong words**.`
 async function expectNothingForged(text: Locator, world: World) {
   await expect(text.locator('form, input:not([type="checkbox"][disabled]), textarea, select, button:not(.inline-roll), style, iframe, object, embed, link, meta, base, svg, [style]')).toHaveCount(0)
   await expect(text.locator('a:not([data-internal]):not([rel="noopener noreferrer"])')).toHaveCount(0)
+  // The app's own markers never reach the page, not even %-encoded in a link's address.
+  expect(await text.evaluate((el) => /\ue000|\ue001|%ee%80%8[01]/i.test(el.innerHTML))).toBe(false)
+  await expect(text.locator('a[href^="javascript:" i]')).toHaveCount(0)
   const ids = new Set(world.dump.entities.map((e) => e.id))
   const links = await text.locator('a[data-internal]').evaluateAll((as) => as.map((a) => ({ cls: a.className, id: a.getAttribute('data-id') ?? '', href: a.getAttribute('href') ?? '' })))
   for (const a of links) {
