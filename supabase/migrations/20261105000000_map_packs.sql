@@ -88,18 +88,25 @@ create policy "world gms switch packs off" on public.world_packs for delete to a
 insert into storage.buckets (id, name, public) values ('map-packs', 'map-packs', false)
   on conflict (id) do nothing;
 
+-- The second folder is always a piece id: uploads must have one there, and anything else (a file put
+-- there some other way) is never read as one, so one odd file name can't make other people's listings
+-- fail with "invalid input syntax for type uuid".
 drop policy if exists "pack owners and world gms read pack pictures" on storage.objects;
 create policy "pack owners and world gms read pack pictures" on storage.objects for select to authenticated
   using (bucket_id = 'map-packs' and (
     (storage.foldername(name))[1] = (select auth.uid())::text
-    or public.can_read_pack_piece(((storage.foldername(name))[2])::uuid)
+    or case when (storage.foldername(name))[2] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      then public.can_read_pack_piece(((storage.foldername(name))[2])::uuid) else false end
   ));
 drop policy if exists "pack owners upload pack pictures" on storage.objects;
 create policy "pack owners upload pack pictures" on storage.objects for insert to authenticated
-  with check (bucket_id = 'map-packs' and (storage.foldername(name))[1] = (select auth.uid())::text);
+  with check (bucket_id = 'map-packs' and (storage.foldername(name))[1] = (select auth.uid())::text
+    and coalesce((storage.foldername(name))[2], '') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$');
 drop policy if exists "pack owners replace pack pictures" on storage.objects;
 create policy "pack owners replace pack pictures" on storage.objects for update to authenticated
-  using (bucket_id = 'map-packs' and (storage.foldername(name))[1] = (select auth.uid())::text);
+  using (bucket_id = 'map-packs' and (storage.foldername(name))[1] = (select auth.uid())::text)
+  with check (bucket_id = 'map-packs' and (storage.foldername(name))[1] = (select auth.uid())::text
+    and coalesce((storage.foldername(name))[2], '') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$');
 drop policy if exists "pack owners delete pack pictures" on storage.objects;
 create policy "pack owners delete pack pictures" on storage.objects for delete to authenticated
   using (bucket_id = 'map-packs' and (storage.foldername(name))[1] = (select auth.uid())::text);
