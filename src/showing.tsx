@@ -4,13 +4,14 @@ import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Help } from './help'
 import { LecternPanel } from './lecternPanel'
-import { db, newId, saveEntity, type Entity, type ShowBoard, type Showing, type Spot, type Spread, type World } from './db'
+import { db, newId, saveEntity, type Asset, type Entity, type ShowBoard, type Showing, type Spot, type Spread, type World, type WorldMap } from './db'
 import { saveFileAsAsset, useAssetUrl, useBlobUrl, useVisibleEntities } from './hooks'
 import { Markdown, stripSecrets } from './Markdown'
 import { schedule } from './cloud/sync'
+import { useRecordingOnThisDevice } from './cloud/table'
 import { Ico } from './icons'
-import { ArrowSquareOut, Scroll, SquaresFour, Television } from '@phosphor-icons/react'
-import { useDialog } from './components'
+import { ArrowSquareOut, Lock, Scroll, SquaresFour, Television } from '@phosphor-icons/react'
+import { Modal, useDialog } from './components'
 import { worldPath } from './paths'
 import { askToReveal, useReview } from './reveal'
 import { toast } from './undo'
@@ -45,14 +46,96 @@ export const sameHandout = (a: Omit<Showing, 'id' | 'at'>, b: Omit<Showing, 'id'
  * "fogged" in public.player_view, which never sends these.
  */
 export async function unshowableImages(worldId: string) {
+  return unshowableIn(await db.maps.where({ worldId }).toArray())
+}
+
+function unshowableIn(maps: WorldMap[]) {
   const instead = new Map<string, string | undefined>()
-  for (const m of await db.maps.where({ worldId }).toArray()) {
+  for (const m of maps) {
     if (m.fog?.on) {
       instead.set(m.imageId, m.fog.imageId)
       if (m.playerImageId) instead.set(m.playerImageId, m.fog.imageId)
     } else if (m.playerImageId) instead.set(m.imageId, m.playerImageId)
   }
   return instead
+}
+
+/** What a shown picture is called when it belongs to a page or map players can't see. */
+export const A_PICTURE = 'A picture'
+
+/** What players would see a picture called, and the name of the GM-only page or map it belongs to, if any (that name they mustn't see). */
+export interface PictureTitle {
+  title: string
+  secret?: string
+  /** It belongs to no page players can't see, but its file is named after one ("sister-vey.png"). */
+  byFile?: boolean
+}
+
+const mapPictures = (m: Pick<WorldMap, 'imageId' | 'playerImageId' | 'fog'>) => [m.imageId, m.playerImageId, m.fog?.imageId]
+const seenByPlayers = (e: Entity) => e.visibility === 'players' && !e.template
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
+/** A name's words, any case, whatever is between them ("sister-vey_2.png": sister, vey, 2, png). */
+const wordsOf = (s: string) => s.normalize('NFKC').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean)
+
+/**
+ * Names pictures for players, given all of a world's pages and maps. A picture is called after a
+ * page players can see that uses it; one that belongs only to pages or maps players can't see is
+ * "A picture" (its file is usually named after that page too, so neither name will do), for the GM
+ * to call something else before showing. Anything else goes by its file's name, unless that name
+ * has a page's or map's name in it that players aren't told (an old portrait, "Sister Vey 2.png").
+ */
+export function pictureTitles(pages: Entity[], maps: WorldMap[]) {
+  const pagesOf = new Map<string, Entity[]>()
+  for (const e of pages) if (e.imageId) pagesOf.set(e.imageId, [...(pagesOf.get(e.imageId) ?? []), e])
+  const hiddenMap = new Map<string, string>()
+  for (const m of maps) if (m.visibility !== 'players') for (const id of mapPictures(m)) if (id) hiddenMap.set(id, m.name)
+  // Names players aren't told: of pages and maps they can't see, unless something they can see is called that too.
+  const known = [...pages.filter(seenByPlayers).map((e) => e.name), ...maps.filter((m) => m.visibility === 'players').map((m) => m.name)]
+  const secrets = [...pages.filter((e) => !seenByPlayers(e)).map((e) => e.name), ...maps.filter((m) => m.visibility !== 'players').map((m) => m.name)]
+    .filter((n) => n.trim() && !known.some((k) => sameName(k, n)))
+    .map((name) => ({ name, words: wordsOf(name) }))
+  // A file "named after" one: its whole name, word for word (a short one like "Ash" only as the file's whole name, not in "ash-tree.png").
+  const namedAfter = (file: string) => {
+    const words = wordsOf(file)
+    return secrets.find((s) => sameName(file, s.name) || (s.name.trim().length >= 4 && s.words.length > 0 && words.some((_, i) => s.words.every((w, j) => words[i + j] === w))))?.name
+  }
+  return (asset: Pick<Asset, 'id' | 'name'>): PictureTitle => {
+    const users = pagesOf.get(asset.id) ?? []
+    const seen = users.find(seenByPlayers)
+    if (seen) return { title: seen.name }
+    const secret = users[0]?.name ?? hiddenMap.get(asset.id)
+    if (secret !== undefined) return { title: A_PICTURE, secret }
+    const file = pictureName(asset.name)
+    const after = file ? namedAfter(file) : undefined
+    return after !== undefined ? { title: A_PICTURE, secret: after, byFile: true } : { title: file || A_PICTURE }
+  }
+}
+
+/** The same for one picture, read from this device's copy of the world. */
+export async function pictureTitleOf(worldId: string, assetId: string): Promise<PictureTitle> {
+  const [asset, pages, maps] = await Promise.all([db.assets.get(assetId), db.entities.where({ worldId }).toArray(), db.maps.where({ worldId }).toArray()])
+  return pictureTitles(pages, maps)(asset ?? { id: assetId, name: '' })
+}
+
+/**
+ * A picture's heading as it goes out: never the name of a page or map players can't see that uses
+ * the picture ("A picture" instead), nor a file name that's after one, whichever way it's shown (an
+ * older handout or board too). If players should know that name, the GM reveals the page.
+ */
+async function headingForPlayers(worldId: string, assetIds: string[], title: string) {
+  if (!title.trim()) return title
+  const ids = new Set(assetIds)
+  const [pages, maps, assets] = await Promise.all([db.entities.where({ worldId }).toArray(), db.maps.where({ worldId }).toArray(), db.assets.bulkGet([...ids])])
+  const users = pages.filter((e) => !!e.imageId && ids.has(e.imageId))
+  const known = users.filter(seenByPlayers).map((e) => e.name)
+  const secret = [
+    ...users.filter((e) => !seenByPlayers(e)).map((e) => e.name),
+    ...maps.filter((m) => m.visibility !== 'players' && mapPictures(m).some((id) => !!id && ids.has(id))).map((m) => m.name),
+  ]
+  if (secret.some((n) => sameName(n, title)) && !known.some((n) => sameName(n, title))) return A_PICTURE
+  // Still called by its file's name, and that's after a page or map players can't see.
+  const titleOf = pictureTitles(pages, maps)
+  return assets.some((a) => !!a && sameName(title, pictureName(a.name)) && titleOf(a).byFile) ? A_PICTURE : title
 }
 
 /**
@@ -70,6 +153,7 @@ export async function showToPlayers(worldId: string, what: Omit<Showing, 'id' | 
     }
     s = { ...s, assetId: safe }
   }
+  if (s.kind === 'image' && what.assetId) s = { ...s, title: await headingForPlayers(worldId, [what.assetId, s.assetId!], s.title) }
   const shown = { ...s, id: newId(), at: Date.now() }
   await db.worlds
     .where('id')
@@ -183,6 +267,7 @@ export async function showSpread(worldId: string, board: ShowBoard, reveal: Enti
       }
       what.assetId = safe
     }
+    if (what.kind === 'image' && it.assetId) what.title = await headingForPlayers(worldId, [it.assetId, what.assetId!], what.title)
     if (what.kind === 'page' && !(what.entityId && (await db.entities.get(what.entityId)))) continue
     items.push({ what, spot: { x: it.x, y: it.y, w: it.w, h: it.h, ...(it.noTitle ? { noTitle: true } : {}) } })
   }
@@ -508,17 +593,85 @@ export function ShowBoards({ world, sceneIds, newBoard }: { world: World; sceneI
   )
 }
 
-/** A one-click "show this" button, for pages and pictures. */
+/**
+ * A one-click "show this" button, for pages and pictures. A picture goes out called what players
+ * may know it as (pictureTitles), asking first when it belongs to a page or map they can't see.
+ */
 export function ShowButton({ worldId, what, disabled }: { worldId: string; what: Omit<Showing, 'id' | 'at'>; disabled?: string }) {
+  const { askTitle, dialog } = usePictureTitle()
+  const show = async () => {
+    if (what.kind !== 'image' || !what.assetId) return void showToPlayers(worldId, what)
+    const title = await askTitle(await pictureTitleOf(worldId, what.assetId))
+    if (title !== null) await showToPlayers(worldId, { ...what, title })
+  }
   return (
-    <button
-      type="button"
-      title={disabled || 'Put this on every player’s screen'}
-      disabled={!!disabled}
-      onClick={() => showToPlayers(worldId, what)}
-    >
-      <Ico as={Television} /> Show players
-    </button>
+    <>
+      <button type="button" title={disabled || 'Put this on every player’s screen'} disabled={!!disabled} onClick={show}>
+        <Ico as={Television} /> Show players
+      </button>
+      {dialog}
+    </>
+  )
+}
+
+/**
+ * Before showing the picture of a page or map players can't see: asks what players should see it
+ * called ("A picture" to start with), since its own name would give the secret away. `askTitle`
+ * answers with the title, or null for Cancel; any other picture's title comes straight back.
+ */
+export function usePictureTitle() {
+  const [open, setOpen] = useState<{ pic: PictureTitle; done: (title: string | null) => void }>()
+  const askTitle = (pic: PictureTitle) =>
+    pic.secret === undefined
+      ? Promise.resolve(pic.title)
+      : new Promise<string | null>((resolve) =>
+          setOpen({
+            pic,
+            done: (title) => {
+              setOpen(undefined)
+              resolve(title)
+            },
+          }),
+        )
+  const dialog = open ? <PictureTitleDialog pic={open.pic} onDone={open.done} /> : null
+  return { askTitle, dialog }
+}
+
+function PictureTitleDialog({ pic, onDone }: { pic: PictureTitle; onDone: (title: string | null) => void }) {
+  const [title, setTitle] = useState(pic.title)
+  // Its own name would give it away: reveal the page for that.
+  const givesAway = !!pic.secret && sameName(title, pic.secret)
+  return (
+    <Modal title="Show this picture?" onClose={() => onDone(null)}>
+      <form
+        className="form review-step"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (!givesAway) onDone(title.trim() || A_PICTURE)
+        }}
+      >
+        <p className="small">
+          {pic.byFile ? 'Its file is named after' : 'It’s the picture of'} “{pic.secret}”, which players can’t see, so they aren’t told that name. <Help topic="pictureTitle" />
+        </p>
+        <label>
+          What players see it called
+          <input autoFocus value={title} maxLength={120} onChange={(e) => setTitle(e.target.value)} onFocus={(e) => e.target.select()} aria-invalid={givesAway} />
+        </label>
+        {givesAway && (
+          <p className="error small" role="alert">
+            That’s the name players don’t know yet. To show it, reveal the page first.
+          </p>
+        )}
+        <div className="row end wrap review-step-buttons">
+          <button type="button" onClick={() => onDone(null)}>
+            Cancel
+          </button>
+          <button className="primary" disabled={givesAway}>
+            <Ico as={Television} /> Show players
+          </button>
+        </div>
+      </form>
+    </Modal>
   )
 }
 
@@ -546,6 +699,12 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
   const revealed = entities.filter((e) => e.visibility === 'players')
   const hidden = entities.filter((e) => e.visibility !== 'players' && !e.template)
   const { ask, dialog } = useReview()
+  const { askTitle, dialog: titleDialog } = usePictureTitle()
+  // The picture of a page players can't see goes out under a name they may know (asked first).
+  const showPicture = async (p: Showable) => {
+    const title = await askTitle(p)
+    if (title !== null) await showToPlayers(world.id, { kind: 'image', title, assetId: p.asset.id })
+  }
   // A page players can't see yet gets the same review as on the page itself, then is revealed and shown (with Undo).
   const showPage = async (p: Entity) => {
     if (p.visibility === 'players') return void showToPlayers(world.id, { kind: 'page', title: p.name, entityId: p.id })
@@ -592,11 +751,13 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
         <PicturePicker
           pictures={pictures}
           isOn={(id) => world.showing?.kind === 'image' && world.showing.assetId === id}
-          onPick={(a, name) => showToPlayers(world.id, { kind: 'image', title: name, assetId: a.id })}
+          onPick={(p) => void showPicture(p)}
           uploadTitle="Upload a picture and show it"
           onUpload={async (f) => {
             const id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
-            await showToPlayers(world.id, { kind: 'image', title: pictureName(f.name), assetId: id })
+            // Called by its file's name, unless that's after a page players can't see: then asked first.
+            const title = await askTitle(await pictureTitleOf(world.id, id))
+            if (title !== null) await showToPlayers(world.id, { kind: 'image', title, assetId: id })
           }}
         />
       )}
@@ -663,6 +824,7 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
         </div>
       )}
       {dialog}
+      {titleDialog}
       {!!world.handouts?.length && (
         <div className="show-foot small">
           <Link to={`${worldPath(world.id)}/handouts`}>Handouts ({world.handouts.length})</Link>
@@ -689,7 +851,8 @@ export function PicturePicker({
 }: {
   pictures: Showable[]
   isOn: (assetId: string) => boolean
-  onPick: (asset: Showable['asset'], name: string) => void
+  /** The picture picked, with what players would see it called (title) and the name they mustn't (secret). */
+  onPick: (picture: Showable) => void
   onUpload: (file: File) => Promise<void>
   /** What a tap does, for each picture's tip ("Show Jeb", "Add Jeb"). */
   verb?: string
@@ -702,7 +865,7 @@ export function PicturePicker({
   const scene = needle ? [] : found.filter((p) => p.first)
   const rest = needle ? found : found.filter((p) => !p.first)
   const listed = all || needle ? rest : rest.slice(0, FIRST_PICTURES)
-  const thumb = ({ asset: a, name }: Showable) => <Thumb key={a.id} asset={a} name={name} verb={verb} on={isOn(a.id)} onClick={() => onPick(a, name)} />
+  const thumb = (p: Showable) => <Thumb key={p.asset.id} asset={p.asset} name={p.name} verb={verb} on={isOn(p.asset.id)} secret={p.secret !== undefined} onClick={() => onPick(p)} />
   return (
     <div className="show-pictures">
       <div className="row show-find">
@@ -777,21 +940,29 @@ function NowShowing({ world }: { world: World }) {
 /**
  * The pictures the GM can show, named, newest first, with pictures of this scene's pages first.
  * Never a map picture players mustn't see (their own copy is in the list anyway) or a fog layer.
+ * Each has the GM's name for it (name), what players would see it called (title) and, for the
+ * picture of a page or map players can't see, that page's or map's name (secret).
  */
 export function useShowablePictures(worldId: string, entities: Entity[], sceneIds: string[] = []) {
-  const images = useLiveQuery(async () => {
-    const fogged = await unshowableImages(worldId)
-    return db.assets
-      .where({ worldId })
-      .filter((a) => a.mime.startsWith('image/') && !a.tags.includes('fog') && !fogged.has(a.id))
-      .reverse()
-      .sortBy('createdAt')
+  const found = useLiveQuery(async () => {
+    const maps = await db.maps.where({ worldId }).toArray()
+    const fogged = unshowableIn(maps)
+    const [images, pages] = await Promise.all([
+      db.assets
+        .where({ worldId })
+        .filter((a) => a.mime.startsWith('image/') && !a.tags.includes('fog') && !fogged.has(a.id))
+        .reverse()
+        .sortBy('createdAt'),
+      // Every page, hidden and template ones too, so none of their names slips out (by a picture, or a file named after one).
+      db.entities.where({ worldId }).toArray(),
+    ])
+    return { images, titleOf: pictureTitles(pages, maps) }
   }, [worldId])
   // A picture is named for the page it belongs to ("Jeb Marrowick"), not its file key ("sil:npc-jeb-marrowick").
   const pageOf = new Map(entities.filter((e) => e.imageId).map((e) => [e.imageId!, e]))
   const inScene = new Set(sceneIds)
-  return (images ?? [])
-    .map((a) => ({ asset: a, name: pictureName(a.name, pageOf.get(a.id)?.name), first: inScene.has(pageOf.get(a.id)?.id ?? '') }))
+  return (found?.images ?? [])
+    .map((a) => ({ asset: a, name: pictureName(a.name, pageOf.get(a.id)?.name), ...found!.titleOf(a), first: inScene.has(pageOf.get(a.id)?.id ?? '') }))
     .sort((a, b) => Number(b.first) - Number(a.first))
 }
 
@@ -814,6 +985,7 @@ export function Thumb({
   onClick,
   on,
   verb = 'Show',
+  secret,
 }: {
   asset: Parameters<typeof useBlobUrl>[0]
   name: string
@@ -821,13 +993,28 @@ export function Thumb({
   on?: boolean
   /** What a tap does, for its tip ("Show Jeb", "Use Jeb"). */
   verb?: string
+  /** The picture of a page or map players can't see: marked with a lock, as players aren't told its name. */
+  secret?: boolean
 }) {
   const url = useBlobUrl(asset)
   return (
-    <button type="button" className={`show-thumb named ${on ? 'on' : ''}`} title={`${verb} ${name}`} aria-pressed={on} onClick={onClick}>
+    <button type="button" className={`show-thumb named ${on ? 'on' : ''}`} title={`${verb} ${name}${secret ? ' (players aren’t told its name)' : ''}`} aria-pressed={on} onClick={onClick}>
       <span className="thumb-img">{url && <img src={url} alt="" loading="lazy" />}</span>
-      <span className="thumb-name">{name}</span>
+      <span className="thumb-name">
+        {secret && <Ico as={Lock} />}
+        {secret && <span className="sr-only">Hidden from players: </span>}
+        {name}
+      </span>
     </button>
+  )
+}
+
+/** "This session is being recorded", for players: on the players' screen and in the Common Room while the GM's app records. */
+export function BeingRecorded({ help }: { help?: boolean }) {
+  return (
+    <p className="recording-bar being-recorded" role="status">
+      <span className="rec-dot" aria-hidden="true" /> This session is being recorded {help && <Help topic="beingRecorded" />}
+    </p>
   )
 }
 
@@ -838,6 +1025,8 @@ export function PlayersScreen({ world }: { world: World }) {
   const items = useSpreadItems(world)
   // A page hidden again since it was shown keeps its name to itself too.
   const hiddenPage = showing?.kind === 'page' && !entities.some((e) => e.id === showing.entityId && e.visibility === 'players')
+  // The table is told while this device records the session (the GM's own windows don't say it).
+  const recording = useRecordingOnThisDevice(world.id)
   // Keep the screen awake while it's up, where the browser allows it.
   useEffect(() => {
     let lock: { release: () => Promise<void> } | undefined
@@ -847,6 +1036,7 @@ export function PlayersScreen({ world }: { world: World }) {
   }, [])
   return (
     <div className={`players-screen world-bare ${items.length ? 'with-spread' : ''}`}>
+      {recording && <BeingRecorded />}
       {items.length ? (
         <>
           {world.spread?.title && <h1>{world.spread.title}</h1>}

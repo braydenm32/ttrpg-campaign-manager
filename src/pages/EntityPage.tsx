@@ -18,6 +18,7 @@ import { findBacklinks, Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
 import { SecretNamesWarning } from '../SecretNamesWarning'
 import { CharacterOwnerBox } from '../players/Characters'
+import { NameClashNotice, nameClashes } from '../players/NewCharacters'
 import { PlayerNotesBox } from '../players/Notes'
 import { RevealedToBadge, RevealToPicker } from '../players/Secrets'
 import { useViewMode } from '../viewMode'
@@ -645,6 +646,8 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
               </span>
               <TagInput tags={d.aliases ?? []} onChange={(t) => set('aliases', t.length ? t : undefined)} placeholder="Add a nickname…" />
             </div>
+            {/* A player character's new name that another's shares: secret passages "for" either would reach both players. */}
+            {d.type === 'pc' && !d.template && d.name.trim() !== opened.name.trim() && <NameClashNotice clashes={nameClashes(d.name, entities, d.id)} />}
           </div>
         </header>
         {kept && !dirty && (

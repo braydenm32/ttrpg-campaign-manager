@@ -9,7 +9,7 @@ import { Ico } from './icons'
 import { stripSecrets } from './Markdown'
 import { worldPath } from './paths'
 import { useReview } from './reveal'
-import { PicturePicker, pictureName, putUpBoard, sameHandout, SpreadPiece, stopShowing, useShowablePictures } from './showing'
+import { A_PICTURE, PicturePicker, pictureTitleOf, putUpBoard, sameHandout, SpreadPiece, stopShowing, useShowablePictures } from './showing'
 import { blankBoard, boardInHand, deleteShowBoard, freeName, saveShowBoard, showBoardsOf } from './showBoards'
 import { toast } from './undo'
 
@@ -140,6 +140,8 @@ export default function ArrangeBoard({
   // Neither moves anything, so a tidy board stays tidy.
   const toFront = (key: string) => commit({ ...board, items: [...board.items.filter((i) => i.key !== key), ...board.items.filter((i) => i.key === key)] })
   const toggleName = (key: string) => commit({ ...board, items: board.items.map((i) => (i.key === key ? { ...i, noTitle: !i.noTitle || undefined } : i)) })
+  // A picture's name on the players' screen, typed in place (kept when the box is left).
+  const retitle = (key: string, title: string) => setBoard({ ...board, items: board.items.map((i) => (i.key === key ? { ...i, title } : i)) })
   const clear = () => {
     const before = latest.current
     commit({ ...board, items: [], auto: true })
@@ -244,6 +246,9 @@ export default function ArrangeBoard({
   const keepName = () => commit({ ...board, name: board.name.trim() || freeName(boards.filter((b) => b.id !== board.id), 'Board') })
 
   const sel = items.find((i) => i.key === picked)
+  // The selected picture belongs to a page or map players can't see: that name doesn't go out (showSpread).
+  const selSecret = sel?.kind === 'image' ? pictures.find((p) => p.asset.id === sel.assetId)?.secret : undefined
+  const givesAway = !!sel && selSecret !== undefined && sel.title.trim().toLowerCase() === selSecret.trim().toLowerCase()
   const revealed = entities.filter((e) => e.visibility === 'players' && !e.template)
   const hidden = entities.filter((e) => e.visibility !== 'players' && !e.template)
   const earlier = (world.handouts ?? []).filter((h, i, all) => all.findIndex((x) => sameHandout(x, h)) === i)
@@ -323,7 +328,26 @@ export default function ArrangeBoard({
             <div className="row wrap arrange-tools">
               {sel ? (
                 <>
-                  <strong className="grow-text-line">{sel.title}</strong>
+                  {sel.kind === 'image' ? (
+                    <input
+                      className="grow-text-line"
+                      value={sel.title}
+                      maxLength={120}
+                      onChange={(e) => retitle(sel.key, e.target.value)}
+                      onBlur={() => commit(board)}
+                      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                      aria-label="What players see this picture called"
+                      title={givesAway ? `Players aren’t told that name: it goes out as “${A_PICTURE}” unless you reveal the page first` : 'What players see this picture called'}
+                      aria-invalid={givesAway || undefined}
+                    />
+                  ) : (
+                    <strong className="grow-text-line">{sel.title}</strong>
+                  )}
+                  {givesAway && (
+                    <span className="small error" role="status">
+                      Players aren’t told that name, so it goes out as “{A_PICTURE}”.
+                    </span>
+                  )}
                   <button className="small" onClick={() => toFront(sel.key)} disabled={items[items.length - 1]?.key === sel.key}>
                     Bring to front
                   </button>
@@ -363,11 +387,13 @@ export default function ArrangeBoard({
                   pictures={pictures}
                   verb="Add"
                   isOn={(id) => board.items.some((i) => i.kind === 'image' && i.assetId === id)}
-                  onPick={(a, name) => add({ kind: 'image', title: name, assetId: a.id })}
+                  // Called what players may know it as: "A picture" for one whose page or map they can't see.
+                  onPick={(p) => add({ kind: 'image', title: p.title, assetId: p.asset.id })}
                   uploadTitle="Upload a picture and add it to the board"
                   onUpload={async (f) => {
                     const id = await saveFileAsAsset(world.id, f, f.name, ['handout'])
-                    add({ kind: 'image', title: pictureName(f.name), assetId: id })
+                    // Its file's name, unless that's after a page players can't see ("A picture" then, to rename here).
+                    add({ kind: 'image', title: (await pictureTitleOf(world.id, id)).title, assetId: id })
                   }}
                 />
               )}

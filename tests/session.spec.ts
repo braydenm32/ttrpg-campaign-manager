@@ -392,8 +392,9 @@ test('Show players at the Lectern: tabs, a picture search, what’s up with Stop
       await showAll.click()
       expect(await thumbs.count()).toBeGreaterThan(n)
     }
-    // Searching finds a picture by the page it belongs to.
-    const person = world.dump.entities.find((e) => (e as { imageId?: string }).imageId && e.type === 'npc' && !e.template)!
+    // Searching finds a picture by the page it belongs to. (One players can see, so it goes up at once:
+    // a hidden page's picture asks what to call it first, see table-trust.spec.ts.)
+    const person = world.dump.entities.find((e) => (e as { imageId?: string }).imageId && e.type === 'npc' && e.visibility === 'players' && !e.template)!
     await panel.getByRole('searchbox', { name: 'Find a picture' }).fill(person.name)
     await panel.locator('.show-pics .show-thumb', { hasText: person.name }).first().click()
     // What's up sits at the top with Stop.

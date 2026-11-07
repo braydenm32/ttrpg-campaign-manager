@@ -99,7 +99,7 @@ export async function listPlayers(worldId: string): Promise<{ members: Member[];
   if (m.error) throw m.error
   if (c.error) throw c.error
   return {
-    members: m.data.map((r) => ({ userId: r.user_id, name: r.display_name || 'Unnamed player', role: r.role, joinedAt: r.created_at })),
+    members: m.data.map((r) => ({ userId: r.user_id, name: r.display_name || UNNAMED, role: r.role, joinedAt: r.created_at })),
     claims: c.data.map((r) => ({ entityId: r.entity_id, userId: r.user_id, notes: r.player_notes, approved: r.approved !== false, createdAt: r.claimed_at ?? '' })),
   }
 }
@@ -111,15 +111,48 @@ export async function approveClaim(worldId: string, entityId: string) {
   await tellPlayers(worldId)
 }
 
+/** What someone who joined with no name (or only a link) is listed as. */
+export const UNNAMED = 'Unnamed player'
+
 /**
- * What's wrong with a name for the table, or '' if it's fine. Catches the usual slip: the invite
- * link pasted into the name box. The server checks the same (public.member_name_ok).
+ * Characters a name could hide another name with: control characters, ones that don't show
+ * (zero-width spaces and joiners, a soft hyphen) and ones that turn text around (a right-to-left
+ * override makes "Sam" show as something else). The combining grapheme joiner (U+034F) is outside
+ * the brackets only because a combining mark inside them reads as joined to the one before.
  */
-export function nameProblem(name: string, whose: 'your' | 'their' = 'your') {
+const HIDDEN_CHARS = /[\p{Cc}\u00ad\u061c\u180e\u200b-\u200f\u2028-\u202e\u2060-\u2064\u2066-\u2069\ufeff]|\u034f/u
+
+/** A name as the table tells names apart: letter case, spacing and look-alike letters ("Ｓａｍ") don't count. */
+const foldName = (n: string) => n.normalize('NFKC').replace(new RegExp(HIDDEN_CHARS.source, 'gu'), '').replace(/\s+/g, ' ').trim().toLowerCase()
+export const sameName = (a: string, b: string) => foldName(a) === foldName(b)
+
+/** A name that reads as the GM's: "GM", "DM Sam", "The Game Master". */
+export const soundsLikeGM = (n: string) => /^\s*(the\s+)?(gm|dm|game\s*master|dungeon\s*master)\b/i.test(n.normalize('NFKC'))
+
+/**
+ * What's wrong with a name for the table, or '' if it's fine: empty, the invite link pasted into
+ * the name box (the usual slip), hidden characters, a name someone else in the world already has
+ * (`taken`: the others' names), or, for a player naming themselves (`player`), one that reads as
+ * the GM's. The server checks the first two (public.member_name_ok); the rest need it to as well.
+ */
+export function nameProblem(name: string, whose: 'your' | 'their' = 'your', { taken = [], player = false }: { taken?: string[]; player?: boolean } = {}) {
   const n = name.trim()
   if (!n) return `Type the name the table should call ${whose === 'your' ? 'you' : 'them'}.`
   if (/:\/\/|^www\.|\/join\//i.test(n)) return `That looks like the invite link. Type ${whose} name instead, e.g. Sam.`
+  if (HIDDEN_CHARS.test(n)) return `That name has hidden characters in it (ones that don’t show, or that turn the text around). Type ${whose === 'your' ? 'your' : 'the'} name again by hand.`
+  if (taken.some((t) => t !== UNNAMED && sameName(t, n))) return `Someone in this world is already called “${n}”. Pick a name the table can tell apart, e.g. ${n.split(/\s+/)[0]} B.`
+  if (player && soundsLikeGM(n)) return `That reads like the GM’s name. Pick ${whose} own, so nobody takes ${whose === 'your' ? 'you' : 'them'} for the GM.`
   return ''
+}
+
+/** What's wrong with someone's name as it is now, for a notice by it: a link, hidden characters, or someone else's name too. */
+export function nameNow(name: string, others: string[]) {
+  const n = name.trim()
+  if (!n || name === UNNAMED) return undefined
+  if (/:\/\/|^www\.|\/join\//i.test(n)) return 'link'
+  if (nameProblem(n)) return 'hidden'
+  if (others.some((o) => o !== UNNAMED && sameName(o, n))) return 'taken'
+  return undefined
 }
 
 /** The GM (or a co-GM) renames someone who joined: a typo, or a link where their name should be. */
@@ -140,7 +173,10 @@ export async function removePlayer(worldId: string, userId: string) {
 
 /** A player changes the name others in the world see them by. `me` is their user id (the world's shared.me); the server checks it's really them. */
 export async function renameMe(cloudId: string, me: string, name: string) {
-  const problem = nameProblem(name)
+  // The others in the world, as their copy of it last heard: two people with one name can't be told apart.
+  const copy = await db.worlds.filter((w) => w.shared?.memberOf === cloudId).first()
+  const taken = (copy?.shared?.members ?? []).filter((m) => m.userId !== me).map((m) => m.name)
+  const problem = nameProblem(name, 'your', { taken, player: true })
   if (problem) throw new Error(problem)
   const clean = name.trim().slice(0, 60)
   const { error } = await supabase.rpc('rename_member', { wid: cloudId, uid: me, name: clean })

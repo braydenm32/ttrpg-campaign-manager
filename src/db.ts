@@ -871,7 +871,7 @@ export interface PrepScene extends CheckItem {
   /** Where it happens on a map: a pin, whose popup then offers to start this scene. */
   pinId?: string
   /** Put on players' screens when it starts: a page (revealed first) or a picture from the world's files. */
-  show?: { kind: 'page'; entityId: string } | { kind: 'image'; assetId: string }
+  show?: { kind: 'page'; entityId: string } | { kind: 'image'; assetId: string; /** What players see it called (blank: its page's name if they can see it, else "A picture"). */ title?: string }
   /** GM-only pages revealed to everyone when it starts. */
   revealIds?: string[]
 }

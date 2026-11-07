@@ -12,7 +12,7 @@ import {
   gmInviteUrl,
   inviteUrl,
   listPlayers,
-  nameProblem,
+  nameNow,
   releaseCharacter,
   removePlayer,
   renamePlayer,
@@ -26,11 +26,14 @@ import { Ico } from '../icons'
 import { BookOpen, MaskHappy } from '@phosphor-icons/react'
 import { pagePath } from '../paths'
 import { RenameButton } from './Rename'
+import { ClaimNameClash } from './NewCharacters'
 
 /** World settings: invite players with a link, and see who has joined and which character each plays. */
 export function PlayersSettings({ world }: { world: World }) {
   const [token, setToken] = useState<string | null>(null)
   const [members, setMembers] = useState<Member[]>([])
+  // Everyone who joined (co-GMs too): a new name can't be one of theirs.
+  const [everyone, setEveryone] = useState<Member[]>([])
   const [claims, setClaims] = useState<Claim[]>([])
   const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -43,6 +46,7 @@ export function PlayersSettings({ world }: { world: World }) {
       const [t, p] = await Promise.all([getInviteToken(world.id), listPlayers(world.id)])
       setToken(t)
       setMembers(p.members.filter((m) => m.role === 'player'))
+      setEveryone(p.members)
       setClaims(p.claims)
     } catch (e) {
       setError(cloudErrorMessage(e))
@@ -134,11 +138,15 @@ export function PlayersSettings({ world }: { world: World }) {
         <ul className="player-list">
           {members.map((m) => {
             const mine = claims.filter((c) => c.userId === m.userId)
+            const others = everyone.filter((x) => x.userId !== m.userId).map((x) => x.name)
+            const wrong = nameNow(m.name, others)
             return (
               <li key={m.userId}>
                 <div>
                   <strong className="member-name">{m.name}</strong>{' '}
-                  {nameProblem(m.name) && <span className="notice small">This looks like their invite link, not a name. Rename them.</span>}{' '}
+                  {wrong === 'link' && <span className="notice small">This looks like their invite link, not a name. Rename them.</span>}
+                  {wrong === 'hidden' && <span className="notice small">This name has hidden characters in it (they can make it look like someone else’s). Rename them.</span>}
+                  {wrong === 'taken' && <span className="notice small">Someone else in this world has this name too. Rename one of them so the table can tell them apart.</span>}{' '}
                   <span className="muted small">
                     {mine.length
                       ? mine.map((c, i) => (
@@ -151,6 +159,7 @@ export function PlayersSettings({ world }: { world: World }) {
                                 (approve)
                               </button>
                             )}{' '}
+                            {!c.approved && <ClaimNameClash worldId={world.id} entityId={c.entityId} player={m.name} inline />}{' '}
                             <button
                               className="link"
                               title="Free this character for someone else"
@@ -167,7 +176,7 @@ export function PlayersSettings({ world }: { world: World }) {
                   </span>
                 </div>
                 <div className="row member-actions">
-                  <RenameButton current={m.name} onSave={async (name) => (await renamePlayer(world.id, m.userId, name), await load())} />
+                  <RenameButton current={m.name} taken={others} onSave={async (name) => (await renamePlayer(world.id, m.userId, name), await load())} />
                   <button
                     className="ghost small"
                     disabled={busy}
@@ -190,6 +199,7 @@ export function PlayersSettings({ world }: { world: World }) {
 export function CoGmSettings({ world }: { world: World }) {
   const [token, setToken] = useState<string | null>(null)
   const [gms, setGms] = useState<Member[]>([])
+  const [everyone, setEveryone] = useState<Member[]>([])
   const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -199,6 +209,7 @@ export function CoGmSettings({ world }: { world: World }) {
       const [t, p] = await Promise.all([getGmInviteToken(world.id), listPlayers(world.id)])
       setToken(t)
       setGms(p.members.filter((m) => m.role === 'gm'))
+      setEveryone(p.members)
     } catch (e) {
       setError(cloudErrorMessage(e))
     }
@@ -269,7 +280,7 @@ export function CoGmSettings({ world }: { world: World }) {
             <li key={m.userId}>
               <strong className="member-name">{m.name}</strong>
               <div className="row member-actions">
-                <RenameButton current={m.name} onSave={async (name) => (await renamePlayer(world.id, m.userId, name), await load())} />
+                <RenameButton current={m.name} taken={everyone.filter((x) => x.userId !== m.userId).map((x) => x.name)} onSave={async (name) => (await renamePlayer(world.id, m.userId, name), await load())} />
                 <button
                   className="ghost small"
                   disabled={busy}

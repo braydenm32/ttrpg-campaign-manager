@@ -9,7 +9,7 @@ import { addCombatants, encounterCombatants } from './encounters'
 import { play } from './sound/player'
 import { schedule } from './cloud/sync'
 import { askToReveal, type Review } from './reveal'
-import { showToPlayers } from './showing'
+import { A_PICTURE, pictureTitleOf, pictureTitles, showToPlayers } from './showing'
 import { dismissToast, toast } from './undo'
 
 /**
@@ -146,7 +146,8 @@ export async function startScene(world: World, session: Session, scene: PrepScen
   if (scene.show?.kind === 'page' && shownPage) shown = await showToPlayers(world.id, { kind: 'page', title: shownPage.name, entityId: shownPage.id })
   else if (scene.show?.kind === 'image') {
     const a = await db.assets.get(scene.show.assetId)
-    if (a) shown = await showToPlayers(world.id, { kind: 'image', title: a.name, assetId: a.id })
+    // What the GM called it, else what players may know it as: its page's name (now that the scene's reveals are done), or "A picture" when that page, or the page its file is named after, is still hidden.
+    if (a) shown = await showToPlayers(world.id, { kind: 'image', title: scene.show.title?.trim() || (await pictureTitleOf(world.id, a.id)).title, assetId: a.id })
   }
   const shownId = shown ? (await db.worlds.get(world.id))?.showing?.id : undefined
   return async () => {
@@ -234,6 +235,20 @@ export function SceneCardEditor({ scene, session, entities, onChange }: { scene:
       const pins = await db.pins.where({ worldId: session.worldId }).toArray()
       return maps.map((m) => ({ map: m, pins: pins.filter((p) => p.mapId === m.id).sort((a, b) => (a.number ?? 0) - (b.number ?? 0) || a.label.localeCompare(b.label)) })).filter((g) => g.pins.length)
     }, [session.worldId]) ?? []
+  // What players see the picture called if the GM leaves it blank: as at Start, after this scene's reveals.
+  const picture = scene.show?.kind === 'image' ? scene.show : undefined
+  const reveals = (scene.revealIds ?? []).join(',')
+  const pictureTitle = useLiveQuery(async () => {
+    if (!picture) return undefined
+    const [asset, pages, maps] = await Promise.all([
+      db.assets.get(picture.assetId),
+      // Every page: a file named after one players can't see doesn't go by that name either.
+      db.entities.where({ worldId: session.worldId }).toArray(),
+      db.maps.where({ worldId: session.worldId }).toArray(),
+    ])
+    const revealed = new Set(reveals.split(','))
+    return pictureTitles(pages.map((e) => (revealed.has(e.id) ? { ...e, visibility: 'players' as const } : e)), maps)(asset ?? { id: picture.assetId, name: '' })
+  }, [picture?.assetId, session.worldId, reveals])
   const byId = new Map(entities.map((e) => [e.id, e]))
   const places = entities.filter((e) => e.type === 'location' || e.type === 'shop')
   const people = entities.filter((e) => ['npc', 'pc', 'faction', 'deity'].includes(e.type))
@@ -359,6 +374,19 @@ export function SceneCardEditor({ scene, session, entities, onChange }: { scene:
             </button>
           )}
         </div>
+        {picture && (
+          <label className="small">
+            <span>
+              Players see it called <Help topic="pictureTitle" />
+            </span>
+            <DraftText
+              value={picture.title ?? ''}
+              maxLength={120}
+              placeholder={pictureTitle?.title ?? A_PICTURE}
+              onCommit={(v) => onChange((s) => void (s.show?.kind === 'image' && (s.show.title = v.trim() || undefined)))}
+            />
+          </label>
+        )}
       </div>
       <div>
         <span className="small muted">Reveal to everyone</span>

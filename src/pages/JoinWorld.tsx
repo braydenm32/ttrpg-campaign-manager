@@ -19,7 +19,7 @@ export default function JoinWorld() {
   const { user, loading } = useAuthSession()
   const navigate = useNavigate()
   const [account, setAccount] = useState(false)
-  // Starts with the name on their Google account, if any; null until they type.
+  // Starts with the first name on their Google account, if any (never their full name: everyone in the world sees it); null until they type.
   const [typed, setTyped] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -31,11 +31,12 @@ export default function JoinWorld() {
     if (!loading) pendingInvite.set(user ? null : token)
   }, [token, user, loading])
 
-  // Everyone in the world sees this name, so it's never the player's email, and it has to be filled
-  // in: an empty box or the invite link pasted into it (an easy slip) can't join.
-  const name = typed ?? String(user?.user_metadata?.full_name ?? '')
+  // Everyone in the world sees this name, so it's never the player's email or full name, and it has to
+  // be filled in: an empty box, the invite link pasted into it (an easy slip), hidden characters or
+  // (for a player) a name that reads as the GM's can't join.
+  const name = typed ?? String(user?.user_metadata?.full_name ?? '').trim().split(/\s+/)[0]
   const tableName = name.trim()
-  const problem = nameProblem(name)
+  const problem = nameProblem(name, 'your', { player: !asGM })
   const [tried, setTried] = useState(false)
 
   const join = async () => {
@@ -119,13 +120,14 @@ export default function JoinWorld() {
                 aria-invalid={!!problem && (tried || !!name.trim())}
               />
             </label>
-            {problem && (tried || name.trim()) ? (
+            {problem && (tried || name.trim()) && (
               <p className="error small" role="alert">
                 {problem}
               </p>
-            ) : (
-              <p className="muted small">{tableName && !problem ? `Others in the world will see you as “${tableName}”. You can change it later.` : 'Your first name or a nickname is fine. You can change it later.'}</p>
             )}
+            <p className="muted small">
+              {tableName && !problem ? `Others in the world will see you as “${tableName}”. ` : ''}Your first name or a nickname is fine; you don’t have to use your real name. You can change it later.
+            </p>
             <p className="muted small">Signed in as {user.email || user.user_metadata?.full_name}.</p>
             <div className="join-actions">
               <button className="primary" disabled={busy}>

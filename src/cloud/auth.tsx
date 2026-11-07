@@ -1,11 +1,13 @@
-import type { EmailOtpType, Session } from '@supabase/supabase-js'
+import { AuthClient, type EmailOtpType, type Session } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
 import { Modal } from '../components'
+import { db, type World } from '../db'
 import { Help } from '../help'
-import { currentPath, goToPath } from '../paths'
+import { currentPath, goToPath, hashRouting } from '../paths'
+import { recordingStore } from '../recordingStore'
 import { appLink, appUrl, cloudErrorMessage, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
 import { joinedHere, pendingInvite, removeJoinedCopies } from './players'
-import { deleteMyAccount } from './sync'
+import { deleteMyAccount, stopSync, syncNow, syncStore } from './sync'
 
 type Provider = 'google' | 'facebook'
 const PROVIDERS: { id: Provider; label: string }[] = [
@@ -55,8 +57,19 @@ export function finishSignInRedirect() {
 }
 
 /**
+ * The kinds of email link the app's own templates send (supabase/templates), and "signup", the older
+ * name for confirming an email: a link of any other kind (an invite, say) is ignored.
+ */
+const LINK_TYPES: readonly string[] = ['email', 'signup', 'magiclink', 'recovery', 'email_change'] satisfies EmailOtpType[]
+const LINK_USED = 'That link has expired or was already used. Sign in, or ask for a new email.'
+
+/**
  * Our own email templates link straight to the app (`?token_hash=…&type=…`) instead of a
  * supabase.co address. Finish that here: returns the link type on success.
+ *
+ * Anyone can send someone a link like that for their own account (to have them work, and sync,
+ * in it without noticing). So someone already signed in is asked before a link switches them to
+ * another account: the link is checked on the side first, without touching who's signed in here.
  */
 export async function verifyEmailLink(): Promise<{ type?: EmailOtpType; error?: string } | null> {
   // Usually "?token_hash=…" on the address. A link that returns to an invite page carries it inside
@@ -65,12 +78,181 @@ export async function verifyEmailLink(): Promise<{ type?: EmailOtpType; error?: 
   const inHash = hash.includes('?') ? hash.slice(hash.indexOf('?')) : ''
   const params = new URLSearchParams(search.includes('token_hash') ? search : inHash)
   const token_hash = params.get('token_hash')
-  const type = params.get('type') as EmailOtpType | null
+  const type = params.get('type')
   if (!token_hash || !type) return null
   window.history.replaceState(null, '', pathname + (search.includes('token_hash') ? hash : hash.slice(0, hash.indexOf('?'))))
-  const { error } = await supabase.auth.verifyOtp({ token_hash, type })
-  if (error) return { error: 'That link has expired or was already used. Sign in, or ask for a new email.' }
-  return { type }
+  if (!LINK_TYPES.includes(type)) return { error: 'That link isn’t one the Warded Atlas sends, so nothing was changed.' }
+  const otp = { token_hash, type: type as EmailOtpType }
+  const now = (await supabase.auth.getSession()).data.session
+  if (!now) {
+    const { error } = await supabase.auth.verifyOtp(otp)
+    return error ? { error: LINK_USED } : { type: otp.type }
+  }
+  // Signed in already: whose link is it?
+  const side = new AuthClient({
+    url: `${SUPABASE_URL}/auth/v1`,
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+    storageKey: 'codex.emailLinkCheck',
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  })
+  const { data, error } = await side.verifyOtp(otp)
+  if (error) return { error: LINK_USED }
+  const linked = data.session
+  // Nothing to sign in with (one step of an email change, say): it's done.
+  if (!linked) return { type: otp.type }
+  if (linked.user.id !== now.user.id) {
+    const me = now.user.email || 'your account'
+    const them = linked.user.email || 'another account'
+    const ok = confirm(
+      `This link signs in as ${them}, but you’re signed in as ${me}.\n\nSwitch to ${them}? You’ll be signed out of ${me} on this device.\n\nOnly switch if you asked for this email yourself: someone could send you a link to their account to get your worlds into it.`,
+    )
+    if (!ok) {
+      await side.signOut({ scope: 'local' }).catch(() => {})
+      return { error: `Nothing changed: you’re still signed in as ${me}. If ${them} is yours too, sign out first, then sign in with it.` }
+    }
+    await supabase.auth.signOut({ scope: 'local' })
+  }
+  const { error: notSet } = await supabase.auth.setSession({ access_token: linked.access_token, refresh_token: linked.refresh_token })
+  return notSet ? { error: LINK_USED } : { type: otp.type }
+}
+
+/** What "Sign out and remove everything" would take off this device, checked once the latest changes have synced. */
+interface LeaveCheck {
+  /** Why it can't go ahead yet. */
+  blocked?: string
+  /** The GM's own worlds only on this device: gone for good. */
+  lost: string[]
+  /** The GM's own worlds backed up to this account: they come back on sign-in. */
+  kept: string[]
+  /** Copies of worlds joined as a player or opened from a wiki link. */
+  copies: number
+  /** Session recordings in the GM's own worlds (new ones never leave the device that made them). */
+  recordings: number
+  /** Sync couldn't finish, so the newest changes may not have reached the account. */
+  unsynced?: string
+}
+
+async function checkBeforeLeaving(userId: string): Promise<LeaveCheck> {
+  if (recordingStore.get()) return { blocked: 'A session is being recorded on this device. Stop and save the recording first, or it’s lost.', lost: [], kept: [], copies: 0, recordings: 0 }
+  // Send what's waiting first, so the account has the latest of every world it backs up.
+  await syncNow().catch(() => {})
+  const sync = syncStore.get()
+  const worlds = await db.worlds.toArray()
+  const own = worlds.filter((w) => !w.shared)
+  const backedUp = (w: World) => !!w.cloud?.enabled && !w.cloud.gone && (!w.cloud.by || w.cloud.by === userId)
+  const ownIds = new Set(own.map((w) => w.id))
+  const recordings = (await db.sessions.toArray()).filter((x) => ownIds.has(x.worldId)).reduce((n, x) => n + (x.recordings?.length ?? 0), 0)
+  return {
+    lost: own.filter((w) => !backedUp(w)).map((w) => w.name),
+    kept: own.filter(backedUp).map((w) => w.name),
+    copies: worlds.length - own.length,
+    recordings,
+    unsynced: sync.status === 'offline' ? 'this device is offline.' : sync.status === 'error' ? sync.message || 'sync hit a problem.' : undefined,
+  }
+}
+
+/** Takes everything the app keeps off this device: every world and copy, recordings, AI keys and settings. Then starts afresh. */
+async function removeEverythingHere() {
+  await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
+  stopSync()
+  await db.delete()
+  for (const store of [localStorage, sessionStorage])
+    try {
+      store.clear()
+    } catch {
+      // Storage blocked: nothing was kept there.
+    }
+  // Back to the front page of this copy of the app (a fresh start, with nothing of anyone's).
+  window.location.replace(hashRouting ? `${window.location.pathname}#/` : '/')
+}
+
+/**
+ * The second way to sign out, for a computer that isn't yours: says plainly what goes (worlds only
+ * on this device are gone for good) once the others are checked as saved to the account.
+ */
+function SignOutEverything({ userId, onCancel }: { userId: string; onCancel: () => void }) {
+  const [check, setCheck] = useState<LeaveCheck>()
+  const [sure, setSure] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    let on = true
+    void checkBeforeLeaving(userId).then((c) => on && setCheck(c))
+    return () => {
+      on = false
+    }
+  }, [userId])
+  const list = (names: string[]) => names.map((n) => `“${n}”`).join(', ')
+  if (!check)
+    return (
+      <p className="muted" role="status">
+        Saving your latest changes to your account first…
+      </p>
+    )
+  if (check.blocked)
+    return (
+      <div className="form">
+        <p className="notice">{check.blocked}</p>
+        <div className="row end">
+          <button onClick={onCancel}>Back</button>
+        </div>
+      </div>
+    )
+  const mustTick = check.lost.length > 0 || !!check.unsynced
+  const also = [
+    check.recordings > 0 && `${check.recordings === 1 ? 'a session recording' : `${check.recordings} session recordings`} (recordings stay on the device that made them)`,
+    check.copies > 0 && `your copies of ${check.copies === 1 ? 'a world' : `${check.copies} worlds`} you joined or opened from a link (you stay in them)`,
+    'the AI keys saved here',
+    'this device’s settings',
+  ].filter((x): x is string => !!x)
+  return (
+    <div className="form sign-out-everything">
+      <p>
+        <strong>Remove everything from this device and sign out?</strong> For a computer that isn’t yours. <Help topic="signOut" />
+      </p>
+      {check.unsynced && (
+        <p className="notice small" role="alert">
+          Couldn’t check that your latest changes reached your account: {check.unsynced} Anything changed since the last sync would be lost.
+        </p>
+      )}
+      {check.lost.length > 0 && (
+        <p className="error small">
+          Gone for good, as {check.lost.length === 1 ? 'it’s' : 'they’re'} only on this device and not backed up to your account: {list(check.lost)}.
+        </p>
+      )}
+      <p className="small">Also removed from this device: {`${also.slice(0, -1).join(', ')} and ${also[also.length - 1]}`}.</p>
+      {check.kept.length > 0 && <p className="muted small">Saved in your account, so they come back when you sign in again: {list(check.kept)}.</p>}
+      {mustTick && (
+        <label className="row small">
+          <input type="checkbox" checked={sure} onChange={(e) => setSure(e.target.checked)} /> I understand {check.lost.length ? (check.lost.length === 1 ? 'that world is' : 'those worlds are') : 'those changes are'} gone for good
+        </label>
+      )}
+      {error && <p className="error small">{error}</p>}
+      <div className="row end wrap">
+        <button disabled={busy} onClick={onCancel}>
+          Cancel
+        </button>
+        <button
+          className="danger"
+          disabled={busy || (mustTick && !sure)}
+          onClick={async () => {
+            setBusy(true)
+            setError('')
+            try {
+              await removeEverythingHere()
+            } catch (err) {
+              setError(cloudErrorMessage(err))
+              setBusy(false)
+            }
+          }}
+        >
+          {busy ? 'Removing…' : 'Remove everything and sign out'}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export function useAuthSession() {
@@ -90,6 +272,8 @@ export function useAuthSession() {
 export function AccountModal({ onClose }: { onClose: () => void }) {
   const { user } = useAuthSession()
   const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin')
+  // The second way to sign out: everything off this device.
+  const [leaving, setLeaving] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -101,6 +285,13 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     if (!desktop) enabledProviders().then(setProviders)
   }, [desktop])
+
+  if (user && leaving)
+    return (
+      <Modal title="Your account" onClose={onClose}>
+        <SignOutEverything userId={user.id} onCancel={() => setLeaving(false)} />
+      </Modal>
+    )
 
   if (user)
     return (
@@ -163,6 +354,11 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
               <Help topic="signOut" />
             </span>
           </div>
+          <p className="small">
+            <button className="link" onClick={() => setLeaving(true)}>
+              Sign out and remove all worlds and keys from this device…
+            </button>
+          </p>
         </div>
       </Modal>
     )
