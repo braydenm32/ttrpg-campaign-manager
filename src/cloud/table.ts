@@ -17,8 +17,11 @@ import { listPlayers, memberWorldId, soundsLikeGM } from './players'
  *    - "downtime" (player → GM): a player sent downtime, so the GM's list reloads.
  *    - "signal" and "call-answer", but only from a server without the GM's inbox yet (see below).
  *    A roll or a ping carries its sender's user id, and shows under that member's name from the
- *    world's member list (their characters' first names, or the name they joined with). The name
- *    it says it's from counts only for an older app that sends no id, and never reads as the GM's.
+ *    world's member list (their characters' first names, or the name they joined with); the name
+ *    it's signed with counts only for an older app that sends no id. Realtime doesn't say who really
+ *    sent a message, so the id is only what the sender's app says: a player's app could put another
+ *    player's on. Never a GM's: a GM's app doesn't send here, so one that says it's from a GM, or
+ *    goes by a GM's name (or one like "GM"), shows as "(a player)".
  *  - "table:<world>", where only a GM can send (public.channel_allowed), so players can trust it:
  *    - "table" (GM → players): the session being played, the scene, whose turn it is, the music.
  *      Only the app that's running the session says it ("off" once it stops), so another of the
@@ -226,27 +229,51 @@ const KINDS: SignalKind[] = ['act', 'break', 'inspiration']
 
 // ---------- who's who: names come from the world's member list, not from what a message says ----------
 
-/** Per world: each member's user id, and the name their rolls and pings go by. */
-const rosters = new Map<string, Map<string, string>>()
+/** Per world: each member's user id and the name their rolls and pings go by, and who the GMs are. */
+interface Roster {
+  names: Map<string, string>
+  /** The GMs' user ids (the owner and co-GMs). */
+  gms: Set<string>
+  /** The GMs' names, in small letters. */
+  gmNames: Set<string>
+}
+const rosters = new Map<string, Roster>()
 
 /** A member's name at the table: their characters' first names ("Wren & Bram"), else the name they joined with. Like useMe's. */
 const tableName = (joinedAs: string, characters: string[]) =>
   characters.map((n) => n.trim().split(/\s+/)[0]).filter(Boolean).join(' & ') || joinedAs.trim() || 'A player'
 
-function rosterOf(members: { userId: string; name: string }[], claims: { entityId: string; userId: string; approved?: boolean }[], pages: (Entity | undefined)[]) {
-  const names = new Map(pages.flatMap((e) => (e ? [[e.id, e.name] as const] : [])))
-  return new Map(
-    members.map((m) => [m.userId, tableName(m.name, claims.filter((c) => c.userId === m.userId && c.approved !== false).map((c) => names.get(c.entityId) ?? ''))]),
+const isGM = (role: string | undefined) => role === 'owner' || role === 'gm'
+
+function rosterOf(
+  members: { userId: string; name: string; role?: string }[],
+  claims: { entityId: string; userId: string; approved?: boolean }[],
+  pages: (Entity | undefined)[],
+  me?: { id?: string; gm: boolean },
+): Roster {
+  const pageNames = new Map(pages.flatMap((e) => (e ? [[e.id, e.name] as const] : [])))
+  const names = new Map(
+    members.map((m) => [m.userId, tableName(m.name, claims.filter((c) => c.userId === m.userId && c.approved !== false).map((c) => pageNames.get(c.entityId) ?? ''))]),
   )
+  const gms = new Set(members.filter((m) => isGM(m.role)).map((m) => m.userId))
+  // The GM's own app: the owner isn't always on the member list.
+  if (me?.gm && me.id) gms.add(me.id)
+  const gmNames = new Set(members.filter((m) => gms.has(m.userId)).map((m) => m.name.trim().toLowerCase()).filter(Boolean))
+  return { names, gms, gmNames }
 }
 
-/** The name a player's roll or ping shows: theirs from the member list, else (an older app) what it was signed with, never as the GM. */
+/**
+ * The name a player's roll or ping shows: theirs from the member list, else (an older app) what it
+ * was signed with. Never as a GM's: nothing in the members' room is (a GM's app doesn't send there).
+ */
 function senderName(cloudId: string, { uid, said }: Sender) {
-  const name = (uid && rosters.get(cloudId)?.get(uid)) || said.trim() || 'A player'
-  return posingAsGM(name) ? `${name} (a player)` : name
+  const r = rosters.get(cloudId)
+  const saysGM = !!uid && !!r?.gms.has(uid)
+  const name = (!saysGM && uid && r?.names.get(uid)) || said.trim() || 'A player'
+  return saysGM || posingAsGM(name) || r?.gmNames.has(name.toLowerCase()) ? `${name} (a player)` : name
 }
 
-function setRoster(cloudId: string, roster: Map<string, string>) {
+function setRoster(cloudId: string, roster: Roster) {
   rosters.set(cloudId, roster)
   // Whatever arrived before the list did gets its proper name now.
   const named = <T extends { who: string; from?: Sender }>(x: T) => (x.from ? { ...x, who: senderName(cloudId, x.from) } : x)
@@ -267,10 +294,11 @@ function watchRoster(cloudId: string) {
 function rosterFetcher(cloudId: string) {
   let asked = 0
   return (uid?: string) => {
-    if (uid !== undefined && (!uid || rosters.get(cloudId)?.has(uid) || Date.now() - asked < 60_000)) return
+    if (uid !== undefined && (!uid || rosters.get(cloudId)?.names.has(uid) || Date.now() - asked < 60_000)) return
     asked = Date.now()
     listPlayers(cloudId).then(
-      async ({ members, claims }) => setRoster(cloudId, rosterOf(members, claims, await db.entities.bulkGet(claims.map((c) => c.entityId)))),
+      async ({ members, claims }) =>
+        setRoster(cloudId, rosterOf(members, claims, await db.entities.bulkGet(claims.map((c) => c.entityId)), { id: await myUserId(), gm: true })),
       () => {
         // Offline: names stay as they came for now.
       },

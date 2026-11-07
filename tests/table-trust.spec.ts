@@ -82,6 +82,9 @@ test('a player’s app believes only the GM’s room: a player passing for the G
   const rt = await fakeRealtime(page)
   await page.goto('/')
   const copy = await makePlayerCopy(page, world, 'member')
+  // The GM is on the member list too.
+  const shared = ((await getRecord(page, 'worlds', copy.id)) as { shared: { members: object[] } }).shared
+  await patchRecord(page, 'worlds', copy.id, { shared: { ...shared, members: [...shared.members, { userId: 'u-gm', name: 'Morgan', role: 'owner' }] } })
   // The player's character, so the session being played is their campaign's.
   const pc = world.dump.entities.find((e) => e.visibility === 'players' && e.type === 'pc' && (e as { template?: boolean }).template !== true) as { campaignId?: string } | undefined
   const live = { session: { id: 's-live', number: 7, title: 'The Drowned Bell', campaignId: pc?.campaignId ?? '' } }
@@ -122,10 +125,15 @@ test('a player’s app believes only the GM’s room: a player passing for the G
     rt.say('members:testcopy', 'dice', { id: 'r-1', who: 'GM', uid: 'u-ash', expr: 'd20', total: 17, detail: '17' })
     rt.say('members:testcopy', 'dice', { id: 'r-2', who: 'GM', expr: 'd20', total: 3, detail: '3' })
     rt.say('table:testcopy', 'dice', { id: 'r-3', who: 'GM', expr: 'd20', total: 12, detail: '12' })
+    // In the members' room, one saying it's from the GM's account, or signed with the GM's name, is a player's.
+    rt.say('members:testcopy', 'dice', { id: 'r-4', who: 'Wren', uid: 'u-gm', expr: 'd20', total: 5, detail: '5' })
+    rt.say('members:testcopy', 'dice', { id: 'r-5', who: 'morgan', expr: 'd20', total: 6, detail: '6' })
     const roll = (total: number) => page.locator('.table-rolls li', { has: page.locator('b', { hasText: new RegExp(`^${total}$`) }) }).locator('span').first()
     await expect(roll(17)).toHaveText('Ash')
     await expect(roll(3)).toHaveText('GM (a player)')
     await expect(roll(12)).toHaveText('GM')
+    await expect(roll(5)).toHaveText('Wren (a player)')
+    await expect(roll(6)).toHaveText('morgan (a player)')
 
     // The GM's app stops recording: the note goes, and the session is still on.
     rt.say('table:testcopy', 'recording', { recording: false, by: 'gm-laptop' })
