@@ -194,7 +194,7 @@ export async function renameMe(cloudId: string, me: string, name: string) {
 export async function joinWorld(token: string, name: string) {
   const { data, error } = await supabase.rpc('join_world', { token, name })
   if (error) throw error
-  if (!data) throw new Error('This invite link has been turned off or replaced. Ask your GM for a new one.')
+  if (!data) throw new Error('This invite link has been used, turned off or replaced. Ask your GM for a new one.')
   const cloudId = data as string
   const role = await myRole(cloudId)
   const isGM = role === 'owner' || role === 'gm'

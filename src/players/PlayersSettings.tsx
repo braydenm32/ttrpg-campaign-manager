@@ -238,7 +238,7 @@ export function CoGmSettings({ world }: { world: World }) {
         <Ico as={BookOpen} /> Co-GMs <Help topic="coGM" />
       </h3>
       <p className="muted">
-        A co-GM sees and edits everything, secrets included. Only send this link to someone you’d trust with your GM notes.
+        A co-GM sees and edits everything, secrets included. Only send this link to someone you’d trust with your GM notes. Each co-GM link works once: when someone joins with it, it’s turned off, so make a new one for the next co-GM.
       </p>
       {token ? (
         <>
