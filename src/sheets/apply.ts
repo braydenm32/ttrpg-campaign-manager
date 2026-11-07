@@ -1,5 +1,6 @@
 import { blankEntity, db, saveEntity, type Entity } from '../db'
 import { saveFileAsAsset } from '../hooks'
+import { outOfRoom } from '../undo'
 import type { Gear, Sheet } from './parse'
 
 /**
@@ -104,16 +105,72 @@ async function applyGear(character: Entity, sheet: Sheet) {
   if (added.length) await db.entities.bulkAdd(added)
 }
 
-/** A portrait from the web, when the other site lets the app fetch it. */
+/** Where character sheets keep their portraits (and anywhere under them): the app fetches these without asking. */
+const PORTRAIT_HOSTS = ['dndbeyond.com', 'media-waterdeep.cursecdn.com', 'forge-vtt.com']
+/** The biggest portrait the app takes. */
+const PORTRAIT_MAX = 10 * 1024 * 1024
+/** The kinds of picture a portrait can be (not SVG, which is a document more than a picture). */
+const PORTRAIT_TYPE = /^image\/(png|jpeg|webp|gif|avif)$/
+
+const knownHost = (host: string) => PORTRAIT_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))
+/** An address on this computer or its network (or one written as numbers), which a sheet has no business sending the app to. */
+const localHost = (host: string) => !host.includes('.') || /^[\d.]+$|^\[|\.(local|localhost|internal|lan|home|arpa)$/i.test(host)
+
+/**
+ * A portrait from the web. The address comes from a file someone else may have made, and fetching
+ * it tells that website the GM's internet address, so the app only fetches from the sites sheets
+ * come from, or asks first. Never from this computer or its network, never more than 10 MB, and
+ * only an ordinary picture. A picture written into the file itself needs no fetching.
+ */
 async function fetchPortrait(worldId: string, url: string, name: string) {
+  let target: URL
   try {
-    const res = await fetch(url)
-    if (!res.ok) return undefined
-    const blob = await res.blob()
-    if (!blob.type.startsWith('image/')) return undefined
-    return await saveFileAsAsset(worldId, blob, `${name} portrait`, [name])
+    target = new URL(url)
   } catch {
     return undefined
+  }
+  const embedded = target.protocol === 'data:'
+  // ("localhost." is localhost too.)
+  const host = target.hostname.replace(/\.+$/, '')
+  if (!embedded) {
+    if (target.protocol !== 'https:' || localHost(host)) return undefined
+    if (
+      !knownHost(host) &&
+      !confirm(`Get ${name}’s portrait from ${host}? The sheet keeps it on that website, which will see your internet address when the app fetches it. Cancel adds the character without it.`)
+    )
+      return undefined
+  }
+  const stop = new AbortController()
+  const timer = setTimeout(() => stop.abort(), 20_000)
+  try {
+    const res = await fetch(target, {
+      signal: stop.signal,
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+      // Only a site sheets come from may send the app on somewhere else.
+      redirect: embedded || knownHost(host) ? 'follow' : 'error',
+    })
+    const type = (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase()
+    if (!res.ok || !PORTRAIT_TYPE.test(type) || Number(res.headers.get('content-length')) > PORTRAIT_MAX) return undefined
+    if (res.redirected && !embedded && !knownHost(new URL(res.url).hostname.replace(/\.+$/, ''))) return undefined
+    // Read a piece at a time, stopping past the limit (a site can leave out its size, or get it wrong).
+    const parts: Uint8Array<ArrayBuffer>[] = []
+    let size = 0
+    const reader = res.body?.getReader()
+    if (!reader) return undefined
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      if ((size += value.length) > PORTRAIT_MAX) return void stop.abort()
+      parts.push(value)
+    }
+    return await saveFileAsAsset(worldId, new Blob(parts, { type }), `${name} portrait`, [name])
+  } catch (err) {
+    // A full device is worth saying; anything else just means no portrait.
+    if (outOfRoom(err)) throw err
+    return undefined
+  } finally {
+    clearTimeout(timer)
   }
 }
 
