@@ -1132,9 +1132,13 @@ export async function deleteMyAccount() {
   if (!auth.user) throw new Error('Not signed in')
   const { data: owned, error } = await supabase.from('cloud_worlds').select('id').eq('owner', auth.user.id)
   if (error) throw error
+  // The pictures of their map packs first (the packs' rows go with the account): if they can't all be
+  // removed, nothing else is, so none are left online that nobody could remove afterwards.
+  await deleteMyPackFiles().catch((e) => {
+    console.warn('Map pack pictures', e)
+    throw new Error('Your map pack pictures couldn’t all be removed from the cloud, so your account hasn’t been deleted. Nothing else was changed. Try again in a minute.')
+  })
   for (const w of owned ?? []) await deleteCloudCopy(w.id)
-  // the pictures of their map packs (the packs' rows go with the account)
-  await deleteMyPackFiles().catch((e) => console.warn('Map pack pictures', e))
   const { error: deleteError } = await supabase.rpc('delete_my_account')
   if (deleteError) throw deleteError
   await supabase.auth.signOut({ scope: 'local' })
