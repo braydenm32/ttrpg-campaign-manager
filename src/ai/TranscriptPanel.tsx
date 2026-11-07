@@ -15,29 +15,34 @@ type Engine = 'device' | 'cloud'
 
 const TRIES_AGAIN = 'The app tries again each time you open a session’s recordings on this device, or you can delete it in your AssemblyAI account.'
 
-/** The AssemblyAI jobs of transcripts still being made, which must not be deleted there. */
-const jobsInUse = (sessions: Session[]) =>
-  new Set(sessions.flatMap((s) => s.recordings.flatMap((r) => (r.transcript?.engine === 'cloud' && r.transcript.pending?.jobId ? [r.transcript.pending.jobId] : []))))
-
 /** Deletes AssemblyAI's copy of every job sent from this device that nothing here waits on any more. */
 async function deleteAssemblyLeftovers(key: string) {
-  const { cloudJobsLeft, deleteCloudLeftovers } = await import('./cloud')
-  if (cloudJobsLeft().length) await deleteCloudLeftovers(key, jobsInUse(await db.sessions.toArray()))
+  const { deleteCloudLeftovers } = await import('./cloud')
+  await deleteCloudLeftovers(key)
 }
 
 /**
- * Before a session is deleted: a cloud transcript AssemblyAI is still making is deleted there first
- * (unless the GM keeps copies there) and taken off the session, so a restored session doesn't wait on it.
- * If the delete fails it's tried again later (see cloud.ts).
+ * When sessions go for good (a whole world deleted): AssemblyAI's copies of transcripts they're still
+ * waiting on are deleted there too, unless the GM keeps copies there. If a delete fails it's tried
+ * again later (see cloud.ts). Returns the jobs it let go of.
  */
-export async function dropCloudTranscripts(session: Session) {
+export async function forgetCloudTranscripts(sessions: Session[]) {
   const { assemblyKey, keepAtAssembly } = getAiSettings()
-  const ids = [...jobsInUse([session])]
-  if (keepAtAssembly || !ids.length) return
-  const { forgetCloudJob } = await import('./cloud')
-  for (const r of session.recordings) if (r.transcript?.pending?.jobId && ids.includes(r.transcript.pending.jobId)) await saveTranscript(session.id, r.assetId, undefined)
-  // Without a key here, the device that sent it deletes it once the session is gone.
-  if (assemblyKey.trim()) for (const id of ids) void forgetCloudJob(id, assemblyKey.trim())
+  if (keepAtAssembly) return []
+  const { forgetCloudJob, jobsInUse } = await import('./cloud')
+  const ids = [...jobsInUse(sessions)]
+  for (const id of ids) void forgetCloudJob(id, assemblyKey.trim())
+  return ids
+}
+
+/**
+ * Before sessions are deleted to the bin (a session, or a campaign with its sessions): the same, and
+ * the transcripts still being made are taken off them, so a restored session doesn't wait on a job
+ * that's gone.
+ */
+export async function dropCloudTranscripts(sessions: Session[]) {
+  const ids = await forgetCloudTranscripts(sessions)
+  for (const s of sessions) for (const r of s.recordings) if (r.transcript?.pending?.jobId && ids.includes(r.transcript.pending.jobId)) await saveTranscript(s.id, r.assetId, undefined)
 }
 
 /**
@@ -143,6 +148,8 @@ export function TranscriptPanel({
       if (!blob) throw new Error('The audio file for this recording is missing.')
       progress(`Uploading ${Math.round(blob.size / 1e6)} MB to AssemblyAI…`)
       jobId = await startCloudJob(blob, key, settings.language, signal)
+      // Noted on this device until AssemblyAI's copy is deleted, whatever happens to the transcript here.
+      noteCloudJob(jobId, key, worldId)
       await saveTranscript(sessionId, recording.assetId, {
         engine: 'cloud',
         lines: [],
@@ -150,8 +157,6 @@ export function TranscriptPanel({
         pending: { jobId },
         createdAt: Date.now(),
       })
-      // Noted on this device until AssemblyAI's copy is deleted, whatever happens to the transcript here.
-      noteCloudJob(jobId)
     }
     progress('AssemblyAI is transcribing. This usually takes a few minutes; you can leave this page and come back.', 0.5)
     const lines = await waitForCloudJob(jobId, key, signal)

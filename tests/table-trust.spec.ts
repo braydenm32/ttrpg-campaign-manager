@@ -1,5 +1,6 @@
 import type { Browser, Page, WebSocketRoute } from '@playwright/test'
 import { expect, open, test, type Device } from './fixtures'
+import { keyMark } from './lib/assembly'
 import { fakeCloud, putRows, type CloudState } from './lib/cloud'
 import { makePlayerCopy, offline } from './lib/playerCopy'
 import { getRecord, patchRecord, putBack } from './lib/records'
@@ -82,8 +83,8 @@ test('a player’s app believes only the GM’s room: a player passing for the G
   const rt = await fakeRealtime(page)
   await page.goto('/')
   const copy = await makePlayerCopy(page, world, 'member')
-  // The GM is on the member list too.
-  const shared = ((await getRecord(page, 'worlds', copy.id)) as { shared: { members: object[] } }).shared
+  // Say the GM were on the member list too (players' copies leave the owner out, so this checks a co-GM's name).
+  const shared = ((await getRecord(page, 'worlds', copy.id)) as unknown as { shared: { members: object[] } }).shared
   await patchRecord(page, 'worlds', copy.id, { shared: { ...shared, members: [...shared.members, { userId: 'u-gm', name: 'Morgan', role: 'owner' }] } })
   // The player's character, so the session being played is their campaign's.
   const pc = world.dump.entities.find((e) => e.visibility === 'players' && e.type === 'pc' && (e as { template?: boolean }).template !== true) as { campaignId?: string } | undefined
@@ -469,9 +470,40 @@ test('signed out, a link to someone’s account asks first unless this device as
     await expect.poll(() => page.url()).not.toContain('access_token')
     await page.waitForTimeout(500)
     expect(await token()).toBeNull()
+    // The same after "?" instead of "#": not taken, and the rest of the address stays.
+    await page.goto('about:blank')
+    await page.goto(`/?keep=1&${inAddress}`)
+    await expect.poll(() => page.url()).not.toContain('access_token')
+    expect(page.url()).toContain('keep=1')
+    expect(page.url()).not.toContain('refresh_token')
+    await page.waitForTimeout(500)
+    expect(await token()).toBeNull()
+
+    const startGoogle = (ago = 0) => page.evaluate((at) => sessionStorage.setItem('codex.signInStarted', String(at)), Date.now() - ago)
+    const linkInAddress = async () => {
+      await page.goto('about:blank')
+      await page.goto(`/#${inAddress}`)
+      await expect.poll(() => page.url()).not.toContain('access_token')
+      await page.waitForTimeout(500)
+    }
+    // A trip to Google that was given up (Back from Google's page, or the app opened again): it no longer counts.
+    await startGoogle()
+    await page.goto('about:blank')
+    await page.goBack()
+    await expect.poll(() => page.evaluate(() => sessionStorage.getItem('codex.signInStarted'))).toBeNull()
+    await linkInAddress()
+    expect(await token()).toBeNull()
+    await startGoogle()
+    await page.goto('/')
+    await linkInAddress()
+    expect(await token()).toBeNull()
+    // Nor one set off too long ago.
+    await startGoogle(6 * 60_000)
+    await linkInAddress()
+    expect(await token()).toBeNull()
 
     // Back from a Google sign-in this tab set off: that one counts.
-    await page.evaluate(() => sessionStorage.setItem('codex.signInStarted', String(Date.now())))
+    await startGoogle()
     await page.goto('about:blank')
     await page.goto(`/#${inAddress}`)
     await expect.poll(token).toBe(theirs.access_token)
@@ -531,19 +563,41 @@ test('“Sign out and remove all worlds and keys” says what goes, then leaves 
     // A second world, backed up to the account.
     state.worldId = 'synced-world'
     await putRows(page, 'worlds', [{ ...local, id: 'synced-world', name: 'The Glass Coast', cloud: { enabled: true } }])
-    // A session recorded on this device: recordings never go to the account.
+    // A session recorded on this device (new recordings never go to the account), and once on another device (not here to lose).
     await putRows(page, 'sessions', [
-      { id: 'recorded-session', worldId: 'synced-world', campaignId: '', number: 1, title: 'The Salt Road', date: '', notes: '', recap: '', visibility: 'gm', entityIds: [], recordings: [{ assetId: 'rec-audio', startedAt: 1, bookmarks: [] }] },
+      {
+        id: 'recorded-session',
+        worldId: 'synced-world',
+        campaignId: '',
+        number: 1,
+        title: 'The Salt Road',
+        date: '',
+        notes: '',
+        recap: '',
+        visibility: 'gm',
+        entityIds: [],
+        recordings: [
+          { assetId: 'rec-audio', startedAt: 1, bookmarks: [] },
+          { assetId: 'rec-elsewhere', startedAt: 2, bookmarks: [] },
+        ],
+      },
     ])
+    await putRows(page, 'assets', [{ id: 'rec-audio', worldId: 'synced-world', name: 'The Salt Road.webm', mime: 'audio/webm', size: 4_000_000, tags: ['recording'], visibility: 'gm', createdAt: 1 }])
     await page.evaluate(() => localStorage.setItem('codex.test.marker', 'mine'))
+    // An AssemblyAI copy this device hasn't managed to delete (AssemblyAI can't be reached here).
+    await page.evaluate((mark) => {
+      localStorage.setItem('codex.ai', JSON.stringify({ assemblyKey: 'key-a' }))
+      localStorage.setItem('codex.assemblyLeft', JSON.stringify([{ id: 'job-1', at: Date.now(), key: mark, world: 'synced-world', done: true }]))
+    }, keyMark('key-a'))
     await open(page, '/')
     await page.getByRole('button', { name: /gm@example\.com/ }).click()
     const account = page.getByRole('dialog', { name: 'Your account' })
     await account.getByRole('button', { name: 'Sign out and remove all worlds and keys from this device…' }).click()
     await expect(account).toContainText('Gone for good')
-    await expect(account.locator('.error', { hasText: 'only on this device' })).toContainText('“The Lantern Road”')
+    await expect(account.locator('.error', { hasText: 'not backed up to your account' })).toContainText('“The Lantern Road”')
     await expect(account).toContainText('Saved in your account, so they come back when you sign in again: “The Glass Coast”')
-    await expect(account).toContainText('Also gone for good: a session recording')
+    await expect(account).toContainText('Also gone for good: a session recording only on this device')
+    await expect(account).toContainText('AssemblyAI hasn’t deleted a transcript sent from here yet')
     await expect(account).toContainText('the AI keys saved here')
     // Not before saying so.
     const remove = account.getByRole('button', { name: 'Remove everything and sign out' })

@@ -5,7 +5,9 @@ import { db, type World } from '../db'
 import { Help } from '../help'
 import { currentPath, goToPath, hashRouting } from '../paths'
 import { recordingStore } from '../recordingStore'
-import { appLink, appUrl, cloudErrorMessage, signInStarting, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
+import { recordingsOnlyHere } from '../backup'
+import { getAiSettings } from '../ai/settings'
+import { appLink, appUrl, cloudErrorMessage, signInAbandoned, signInStarting, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
 import { joinedHere, pendingInvite, removeJoinedCopies } from './players'
 import { deleteMyAccount, stopSync, syncEverythingNow, syncStore } from './sync'
 
@@ -41,7 +43,10 @@ async function signInWith(provider: Provider) {
   }
   signInStarting()
   const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: appUrl() } })
-  if (error) throw error
+  if (error) {
+    signInAbandoned()
+    throw error
+  }
 }
 
 export function finishSignInRedirect() {
@@ -134,7 +139,7 @@ export async function verifyEmailLink(): Promise<{ type?: EmailOtpType; email?: 
       )
     if (!ok) {
       await side.signOut({ scope: 'local' }).catch(() => {})
-      return { error: `Nothing changed: you’re not signed in. If ${them} is yours, sign in with it from the account button.` }
+      return { error: `Nothing changed: you’re not signed in, and that link won’t work again. If ${them} is yours, sign in with it from the account button.` }
     }
   } else if (linked.user.id !== now.user.id) {
     const me = now.user.email || 'your account'
@@ -143,7 +148,7 @@ export async function verifyEmailLink(): Promise<{ type?: EmailOtpType; email?: 
     )
     if (!ok) {
       await side.signOut({ scope: 'local' }).catch(() => {})
-      return { error: `Nothing changed: you’re still signed in as ${me}. If ${them} is yours too, sign out first, then sign in with it.` }
+      return { error: `Nothing changed: you’re still signed in as ${me}, and that link won’t work again. If ${them} is yours too, sign out first, then sign in with it.` }
     }
     await supabase.auth.signOut({ scope: 'local' })
   }
@@ -166,8 +171,10 @@ interface LeaveCheck {
   kept: string[]
   /** Copies of worlds joined as a player or opened from a wiki link. */
   copies: number
-  /** Session recordings in the GM's own worlds (they never leave the device that made them, so they go for good). */
+  /** Session recordings in the GM's own worlds that are only on this device (in no backup, not in the cloud): they go for good. */
   recordings: number
+  /** AssemblyAI copies this device still had to delete, which nothing will try again once it's cleared. */
+  assemblyLeft?: number
   /** Sync couldn't finish, so the newest changes may not have reached the account. */
   unsynced?: string
 }
@@ -181,13 +188,21 @@ async function checkBeforeLeaving(userId: string): Promise<LeaveCheck> {
   const worlds = await db.worlds.toArray()
   const own = worlds.filter((w) => !w.shared)
   const backedUp = (w: World) => !!w.cloud?.enabled && !w.cloud.gone && (!w.cloud.by || w.cloud.by === userId)
-  const ownIds = new Set(own.map((w) => w.id))
-  const recordings = (await db.sessions.toArray()).filter((x) => ownIds.has(x.worldId)).reduce((n, x) => n + (x.recordings?.length ?? 0), 0)
+  // New recordings stay on the device that made them (older ones may be in the account, or in a backup from here).
+  let recordings = 0
+  for (const w of own) recordings += (await recordingsOnlyHere(w.id)).count
+  // Once this device is cleared nothing tries again, so have one more go now.
+  const { assemblyKey, keepAtAssembly } = getAiSettings()
+  const assemblyLeft =
+    assemblyKey.trim() && !keepAtAssembly
+      ? await Promise.race([import('../ai/cloud').then((c) => c.deleteCloudLeftovers(assemblyKey.trim())), new Promise<number>((done) => setTimeout(() => done(0), 8000))]).catch(() => 0)
+      : 0
   return {
     lost: own.filter((w) => !backedUp(w)).map((w) => w.name),
     kept: own.filter(backedUp).map((w) => w.name),
     copies: worlds.length - own.length,
     recordings,
+    assemblyLeft,
     unsynced:
       sync.status === 'offline'
         ? 'this device is offline.'
@@ -272,8 +287,14 @@ function SignOutEverything({ userId, onCancel }: { userId: string; onCancel: () 
       )}
       {check.recordings > 0 && (
         <p className="error small">
-          Also gone for good: {recordings}. Recordings are never saved to your account, so one made on this device is only here. To keep {check.recordings === 1 ? 'it' : 'them'}, cancel and
+          Also gone for good: {recordings} only on this device, as new recordings aren’t saved to your account. To keep {check.recordings === 1 ? 'it' : 'them'}, cancel and
           download a backup of {check.recordings === 1 ? 'its world' : 'their worlds'} with “Include session recordings” ticked first.
+        </p>
+      )}
+      {!!check.assemblyLeft && (
+        <p className="notice small">
+          AssemblyAI hasn’t deleted {check.assemblyLeft === 1 ? 'a transcript' : `${check.assemblyLeft} transcripts`} sent from here yet, and this device won’t try again once it’s cleared: delete{' '}
+          {check.assemblyLeft === 1 ? 'it' : 'them'} in your AssemblyAI account.
         </p>
       )}
       <p className="small">Also removed from this device: {`${also.slice(0, -1).join(', ')} and ${also[also.length - 1]}`}.</p>

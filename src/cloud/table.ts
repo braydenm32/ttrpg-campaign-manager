@@ -232,7 +232,7 @@ const KINDS: SignalKind[] = ['act', 'break', 'inspiration']
 /** Per world: each member's user id and the name their rolls and pings go by, and who the GMs are. */
 interface Roster {
   names: Map<string, string>
-  /** The GMs' user ids (the owner and co-GMs). */
+  /** The GMs' user ids: the co-GMs, and in a GM's own app that GM. (Players' member list leaves the owner out.) */
   gms: Set<string>
   /** The GMs' names, in small letters. */
   gmNames: Set<string>
@@ -269,7 +269,8 @@ function rosterOf(
 function senderName(cloudId: string, { uid, said }: Sender) {
   const r = rosters.get(cloudId)
   const saysGM = !!uid && !!r?.gms.has(uid)
-  const name = (!saysGM && uid && r?.names.get(uid)) || said.trim() || 'A player'
+  const name = (!saysGM && uid && r?.names.get(uid)) || said.trim()
+  if (!name) return 'A player'
   return saysGM || posingAsGM(name) || r?.gmNames.has(name.toLowerCase()) ? `${name} (a player)` : name
 }
 

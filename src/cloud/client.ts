@@ -9,6 +9,10 @@ export const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY ?? 'sb_publishable
 
 /** When this tab set off a sign-in with Google, so the sign-in that comes back in the address counts. */
 const SIGN_IN_STARTED = 'codex.signInStarted'
+/** A trip to Google and back takes seconds; this leaves time for a second sign-in step there. */
+const SIGN_IN_TRIP = 5 * 60_000
+/** What a sign-in in the address is made of (Supabase puts these after "#" on the way back from Google). */
+const ADDRESS_SIGN_IN = ['access_token', 'refresh_token', 'expires_in', 'expires_at', 'token_type', 'provider_token', 'provider_refresh_token']
 
 /** Just before leaving for Google's sign-in page. */
 export function signInStarting() {
@@ -19,22 +23,43 @@ export function signInStarting() {
   }
 }
 
+/** The trip to Google didn't happen, or the app was opened again without coming back from it. */
+export function signInAbandoned() {
+  try {
+    sessionStorage.removeItem(SIGN_IN_STARTED)
+  } catch {
+    // Storage blocked: nothing was noted.
+  }
+}
+
+// Back from Google's page with the browser's Back button: the app carries on as it was, so the trip is over.
+if (typeof window !== 'undefined') window.addEventListener('pageshow', (e) => e.persisted && signInAbandoned())
+
+/** Takes a sign-in that wasn't asked for off the address, so it isn't left in the address bar or history. */
+function dropSignInFromAddress() {
+  const url = new URL(window.location.href)
+  for (const key of ADDRESS_SIGN_IN) url.searchParams.delete(key)
+  if (url.hash.includes('access_token=')) url.hash = ''
+  window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash)
+}
+
 /**
  * A sign-in that comes back in the address (from Google) counts only when this tab just set one
  * off. Anyone can make a link with their own account's sign-in in it, to have someone work (and
  * sync) in that account without noticing; a link like that is just taken off the address.
  */
 function signInFromAddress(_url: URL, params: Record<string, string>) {
-  if (!params.access_token && !params.error && !params.error_description && !params.error_code) return false
   let started = 0
   try {
     started = Number(sessionStorage.getItem(SIGN_IN_STARTED)) || 0
-    sessionStorage.removeItem(SIGN_IN_STARTED)
   } catch {
     // Storage blocked: nothing was started here.
   }
-  if (started && Date.now() - started < 15 * 60_000) return true
-  if (params.access_token) window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+  // Whatever this address is, the trip to Google is over: a later sign-in in an address needs a new one.
+  signInAbandoned()
+  if (!params.access_token && !params.error && !params.error_description && !params.error_code) return false
+  if (started && Date.now() - started < SIGN_IN_TRIP) return true
+  if (params.access_token) dropSignInFromAddress()
   return false
 }
 

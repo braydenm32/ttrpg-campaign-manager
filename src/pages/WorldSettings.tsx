@@ -6,6 +6,7 @@ import '../more.css'
 import { ThemePicker } from '../theme'
 import { RecentlyDeleted } from '../History'
 import { AiSettingsSection } from '../ai/AiSettingsSection'
+import { forgetCloudTranscripts } from '../ai/TranscriptPanel'
 import { BackupButton } from '../BackupReminder'
 import { DeviceStorage } from '../deviceStorage'
 import { backupStore } from '../backup'
@@ -222,16 +223,21 @@ export default function WorldSettings() {
                 const warning = inCloud ? ' This also deletes the cloud copy, so your players, share link and other devices lose it too.' : ''
                 if (prompt(`Type the world's name to delete it forever: ${world.name}.${warning}`) !== world.name) return
                 // Only the owner can delete the cloud copy; a co-GM just removes it from this device.
+                let forGood = !inCloud
                 if (inCloud) {
                   const role = await myRole(worldId).catch(() => null)
                   if (role === 'owner') {
                     try {
                       await deleteCloudCopy(worldId)
+                      forGood = true
                     } catch (e) {
                       if (!confirm(`Couldn't delete the cloud copy (${(e as Error).message}). Delete it from this device only?`)) return
                     }
                   } else if (!role && !confirm('You’re offline or signed out, so the cloud copy stays. Delete it from this device only?')) return
                 }
+                // Gone everywhere, so AssemblyAI's copies of transcripts still being made go too. (A world
+                // only taken off this device keeps them, as another device may still pick them up.)
+                if (forGood) await forgetCloudTranscripts(await db.sessions.where({ worldId }).toArray())
                 await deleteWorld(worldId)
                 navigate('/')
               }}

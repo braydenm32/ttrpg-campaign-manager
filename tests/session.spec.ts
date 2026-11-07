@@ -1,6 +1,7 @@
 import { expect, go, here, open, test, type Page } from './fixtures'
 import { readDatabase } from './lib/world'
 import { getRecord, patchRecord, putBack } from './lib/records'
+import { keyMark } from './lib/assembly'
 
 /**
  * The GM's Session area (Prepare → Play → Wrap up), on a laptop and a phone: a session moves
@@ -410,5 +411,111 @@ test('Show players at the Lectern: tabs, a picture search, what’s up with Stop
     await expect(panel.locator('.show-pics')).toHaveCount(0)
   } finally {
     await putBack(page, 'worlds', [[world.id, before]])
+  }
+})
+
+test('AssemblyAI’s copies go once nothing waits on them, only with the key that sent them, and with the session', async ({ page, world, device }) => {
+  test.skip(device === 'phone', 'not about the screen')
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  await open(page, w)
+  const copy = await getRecord(page, 'sessions', s1.id)
+  const id = 'assembly-clean-up'
+  const hour = 60 * 60_000
+  const now = Date.now()
+  const mine = keyMark('key-a')
+  // Jobs this device sent, as the app notes them.
+  const left = [
+    { id: 'job-waiting', at: now - 2 * hour, key: mine, world: world.id },
+    { id: 'job-done', at: now, key: mine, world: world.id, done: true },
+    { id: 'job-young', at: now, key: mine, world: world.id },
+    { id: 'job-old', at: now - 2 * hour, key: mine, world: world.id },
+    { id: 'job-away', at: now - 2 * hour, key: mine, world: 'a-world-not-here' },
+    { id: 'job-away-long', at: now - 31 * 24 * hour, key: mine, world: 'a-world-not-here' },
+    { id: 'job-other-key', at: now - 2 * hour, key: keyMark('key-b'), world: world.id, done: true },
+    { id: 'job-missing', at: now, key: mine, world: world.id, done: true },
+    { id: 'job-fails', at: now, key: mine, world: world.id, done: true },
+  ]
+  const deleted: string[] = []
+  const keys = new Set<string>()
+  await page.route('https://api.assemblyai.com/**', (route) => {
+    const job = decodeURIComponent(new URL(route.request().url()).pathname.split('/').pop() ?? '')
+    if (route.request().method() !== 'DELETE') return route.fulfill({ status: 500, body: '{}' })
+    deleted.push(job)
+    keys.add(route.request().headers().authorization ?? '')
+    return route.fulfill({ status: job === 'job-missing' ? 404 : job === 'job-fails' ? 500 : 200, contentType: 'application/json', body: '{}' })
+  })
+  const noted = () => page.evaluate(() => (JSON.parse(localStorage.getItem('codex.assemblyLeft') ?? '[]') as { id: string }[]).map((j) => j.id).sort())
+  try {
+    // A session whose cloud transcript AssemblyAI is still making (the audio is on another device).
+    await putBack(page, 'sessions', [
+      [
+        id,
+        {
+          ...copy!,
+          id,
+          number: 98,
+          title: 'Clean-up test',
+          recordings: [{ assetId: 'rec-elsewhere', startedAt: now, bookmarks: [], transcript: { engine: 'cloud', lines: [], pending: { jobId: 'job-waiting' }, createdAt: now } }],
+        },
+      ],
+    ])
+    await page.evaluate((left) => {
+      localStorage.setItem('codex.ai', JSON.stringify({ ...JSON.parse(localStorage.getItem('codex.ai') ?? '{}'), assemblyKey: 'key-a', keepAtAssembly: false }))
+      localStorage.setItem('codex.assemblyLeft', JSON.stringify(left))
+    }, left)
+
+    // Opening its recordings tries again: what's finished with, or left over in a world on this device.
+    await open(page, `${w}/s/${id}?tab=notes`)
+    await expect.poll(() => [...new Set(deleted)].sort()).toEqual(['job-away-long', 'job-done', 'job-fails', 'job-missing', 'job-old'])
+    expect([...keys]).toEqual(['key-a'])
+    // Kept: the one still being made, one only just sent, one whose world is elsewhere, someone else's, and the failed delete.
+    await expect.poll(noted).toEqual(['job-away', 'job-fails', 'job-other-key', 'job-waiting', 'job-young'])
+
+    // Deleting the session deletes the copy it was waiting on, and the bin's copy no longer waits on it.
+    await open(page, `${w}/s/${id}?tab=prep`)
+    page.once('dialog', (d) => void d.accept())
+    await page.getByRole('button', { name: 'Delete session' }).click()
+    await expect.poll(() => deleted.includes('job-waiting')).toBe(true)
+    await expect.poll(noted).not.toContain('job-waiting')
+    const binned = await page.evaluate(
+      (id) =>
+        new Promise<unknown[]>((resolve) => {
+          const req = indexedDB.open('ttrpg-campaign-manager')
+          req.onsuccess = () => {
+            const get = req.result.transaction('bin').objectStore('bin').getAll()
+            get.onsuccess = () => {
+              req.result.close()
+              const rows = (get.result as { rows: { table: string; rows: { id: string; recordings: unknown[] }[] }[] }[]).flatMap((b) => b.rows.filter((r) => r.table === 'sessions').flatMap((r) => r.rows))
+              resolve(rows.filter((r) => r.id === id).flatMap((r) => r.recordings))
+            }
+          }
+        }),
+      id,
+    )
+    expect(binned).toEqual([expect.not.objectContaining({ transcript: expect.anything() })])
+  } finally {
+    await putBack(page, 'sessions', [[id, null]])
+    await page.evaluate((id) => {
+      localStorage.removeItem('codex.assemblyLeft')
+      const ai = JSON.parse(localStorage.getItem('codex.ai') ?? '{}')
+      delete ai.assemblyKey
+      localStorage.setItem('codex.ai', JSON.stringify(ai))
+      return new Promise<void>((resolve) => {
+        const req = indexedDB.open('ttrpg-campaign-manager')
+        req.onsuccess = () => {
+          const tx = req.result.transaction('bin', 'readwrite')
+          const store = tx.objectStore('bin')
+          const all = store.getAll()
+          all.onsuccess = () => {
+            for (const b of all.result as { id: string; rows: { table: string; rows: { id: string }[] }[] }[]) if (b.rows.some((r) => r.rows.some((x) => x.id === id))) store.delete(b.id)
+          }
+          tx.oncomplete = () => {
+            req.result.close()
+            resolve()
+          }
+        }
+      })
+    }, id)
   }
 })

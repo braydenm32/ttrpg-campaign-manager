@@ -333,7 +333,7 @@ export const HELP = {
   prepHelper:
     'Claude reads the last two sessions, the party, open threads and running clocks, and suggests a strong start, likely scenes, secrets and clues, and who to have ready. Untick what you don’t want; the rest goes onto your prep sheet, and the people to have ready are linked to the session so they’re at hand in the Lectern.',
   prepFeedback:
-    'Players’ stars and wishes about the last two sessions are their own words, so they go to Claude only when you tick this. Off to begin with, each time. Players are told on the form that their GM may share them with Claude.',
+    'Players’ stars and wishes about the last two sessions are their own words, so they go to Claude only when you tick this. It starts unticked for each session, and stays as you left it until you close this tab. Players are told on the form that their GM may share them with Claude.',
   flavour:
     'Claude dresses up what you rolled so it fits your world: a short read-aloud description, rumours tied to people and places you already have, and one secret (kept GM only when you save).',
   npcLines:
@@ -362,7 +362,7 @@ export const HELP = {
   keysInAccount:
     'Keeps your AssemblyAI and Anthropic keys in your Warded Atlas account, so any device you sign in on gets them without pasting, and signing out takes them off that device again. No other user can read them, and they never go into worlds, backups, share links or anything players or co-GMs receive. They are stored as plain text in the app’s database, which only Brayden (who makes the app) looks after, so set a monthly spending limit in the Anthropic Console. On a shared computer, keys someone else typed in stay theirs: they never go into your account, and come back when you sign out. Untick to take them out of your account.',
   keepAtAssembly:
-    'Once a cloud transcript is saved in your world, the app deletes it from AssemblyAI, so your table’s talk isn’t kept by another company. A transcript you start over, or one still being made when you delete its session, is deleted there too; if a delete doesn’t go through, the app tries again each time you open a session’s recordings on this device. Tick this to leave a copy in your AssemblyAI account instead (for example, to look at it on their website). Applies on this device only.',
+    'Once a cloud transcript is saved in your world, the app deletes it from AssemblyAI, so your table’s talk isn’t kept by another company. A transcript you start over, or one still being made when you delete its session (or its campaign, or the whole world), is deleted there too; if a delete doesn’t go through, the app tries again each time you open a session’s recordings on this device. Tick this to leave a copy in your AssemblyAI account instead (for example, to look at it on their website). Applies on this device only.',
   claudeJobs:
     'Claude keeps writing when you go to another page: a note at the top says “Claude is writing…”, then “Claude finished”, and takes you back to it. If you leave the page while it writes, you choose to keep it writing or stop it. Closing the tab or the app stops it. Small jobs (flavour, NPC lines, Archivist questions) use Claude Sonnet 5.5, quicker and half the price; recaps, contradiction checks and prep use Claude Opus 5.5.',
   secretNames:

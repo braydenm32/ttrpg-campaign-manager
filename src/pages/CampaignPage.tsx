@@ -1,4 +1,5 @@
 import { binCampaign } from '../bin'
+import { dropCloudTranscripts } from '../ai/TranscriptPanel'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -203,6 +204,8 @@ export default function CampaignPage() {
                 if (!confirm(`Delete campaign "${campaign.name}" and its sessions? World content is kept.`)) return
                 // Characters who played only in this campaign go back to "any campaign", so they don't vanish from every party.
                 await db.entities.where({ worldId }).filter((e) => e.campaignId === campaignId).modify({ campaignId: undefined })
+                // As for one session: AssemblyAI's copies of transcripts still being made go too.
+                await dropCloudTranscripts(await db.sessions.where({ campaignId }).toArray())
                 await binCampaign(campaignId)
                 navigate(`${worldPath(worldId)}`)
               }}

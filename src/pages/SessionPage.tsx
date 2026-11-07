@@ -443,7 +443,7 @@ function SessionDetails({ session, campaign, world, entities }: Omit<ViewProps, 
           title={live?.sessionId === session.id ? 'Stop the recording first' : undefined}
           onClick={async () => {
             if (!confirm('Delete this session and its recordings? You can restore it from World settings for a month.')) return
-            await dropCloudTranscripts(session)
+            await dropCloudTranscripts([session])
             await binSession(session.id)
             navigate(campaign ? `${w}/c/${campaign.id}` : w)
           }}

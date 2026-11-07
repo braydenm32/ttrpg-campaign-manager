@@ -46,16 +46,25 @@ const keysNow = () => {
   return JSON.stringify([s.anthropicKey.trim(), s.assemblyKey.trim()])
 }
 
-async function save() {
-  clearTimeout(timer)
-  if (!userId || !getAiSettings().keysInAccount) return
+/** Puts this device's keys in the person's row. False (with the reason shown) if that failed. */
+async function upload(id: string) {
   const s = getAiSettings()
   const keys = keysNow()
   setState({ status: 'saving' })
-  const { error } = await supabase.from('ai_keys').upsert({ user_id: userId, anthropic_key: s.anthropicKey.trim(), assembly_key: s.assemblyKey.trim() })
-  if (error) return setState({ status: 'error', error: cloudErrorMessage(error) })
+  const { error } = await supabase.from('ai_keys').upsert({ user_id: id, anthropic_key: s.anthropicKey.trim(), assembly_key: s.assemblyKey.trim() })
+  if (userId !== id) return false
+  if (error) {
+    setState({ status: 'error', error: cloudErrorMessage(error) })
+    return false
+  }
   inAccount = keys
   setState({ status: 'saved' })
+  return true
+}
+
+async function save() {
+  clearTimeout(timer)
+  if (userId && getAiSettings().keysInAccount) await upload(userId)
 }
 
 // A key typed or removed on this device goes up shortly after, once the device is in step.
@@ -150,8 +159,11 @@ export async function saveKeysToAccount(on: boolean) {
       )
     )
       return
-    setAiSettings({ keysInAccount: true, anthropicBy: userId, assemblyBy: userId })
-    return save()
+    const id = userId
+    setAiSettings({ anthropicBy: id, assemblyBy: id })
+    // In step only once the account has them: if that fails (offline, say), the tick stays off and says why.
+    if (await upload(id)) setAiSettings({ keysInAccount: true })
+    return
   }
   clearTimeout(timer)
   setState({ status: 'saving' })

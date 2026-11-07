@@ -1,4 +1,4 @@
-import type { TranscriptLine } from '../db'
+import type { Session, TranscriptLine } from '../db'
 
 const API = 'https://api.assemblyai.com/v2'
 
@@ -72,7 +72,7 @@ interface Utterance {
 export async function waitForCloudJob(id: string, key: string, signal: AbortSignal): Promise<TranscriptLine[]> {
   for (;;) {
     const job = await call<{ status: string; error?: string; utterances?: Utterance[] | null; text?: string }>(
-      `${API}/transcript/${id}`,
+      `${API}/transcript/${encodeURIComponent(id)}`,
       key,
       {},
       signal,
@@ -87,14 +87,15 @@ export async function waitForCloudJob(id: string, key: string, signal: AbortSign
 
 /**
  * Deletes a finished transcript from AssemblyAI once it's saved here, so the table's talk doesn't sit
- * in another company's storage. True when it worked; a failure never undoes the saved transcript.
+ * in another company's storage. "missing" when AssemblyAI has no such job for this key (already
+ * deleted, say). A failure never undoes the saved transcript.
  */
-export async function deleteCloudJob(id: string, key: string) {
+export async function deleteCloudJob(id: string, key: string): Promise<'deleted' | 'missing' | 'failed'> {
   try {
-    const res = await fetch(`${API}/transcript/${id}`, { method: 'DELETE', headers: { authorization: key } })
-    return res.ok
+    const res = await fetch(`${API}/transcript/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { authorization: key } })
+    return res.ok ? 'deleted' : res.status === 404 ? 'missing' : 'failed'
   } catch {
-    return false
+    return 'failed'
   }
 }
 
@@ -102,58 +103,102 @@ export async function deleteCloudJob(id: string, key: string) {
  * Every job this device sends to AssemblyAI is noted here (in this browser only) until AssemblyAI's
  * copy is deleted, so nothing is left there by accident: a transcript started over, a session deleted
  * while AssemblyAI was still working, a delete that failed, or the app closing before it got to it.
- * Each time a session's recordings are opened, jobs no longer waited on are deleted (see TranscriptPanel).
+ * Each time a session's recordings are opened, jobs no longer waited on are deleted (deleteCloudLeftovers).
  */
 const LEFT = 'codex.assemblyLeft'
+const HOUR = 60 * 60_000
+const MONTH = 30 * 24 * HOUR
 
-function readLeft(): string[] {
+interface Left {
+  id: string
+  /** When it was noted. */
+  at: number
+  /** Which key sent it (a fingerprint, not the key): on a shared computer, only that key deletes it. */
+  key: string
+  /** The world its session is in. */
+  world?: string
+  /** No transcript waits on it any more (saved, started over, or its session deleted): delete it whenever possible. */
+  done?: boolean
+}
+
+/** A short fingerprint of a key, to tell keys apart without keeping a second copy of one. */
+function keyMark(key: string) {
+  let h = 0x811c9dc5
+  for (let i = 0; i < key.length; i++) h = Math.imul(h ^ key.charCodeAt(i), 0x01000193)
+  return (h >>> 0).toString(36)
+}
+
+function readLeft(): Left[] {
   try {
-    const ids = JSON.parse(localStorage.getItem(LEFT) ?? '[]')
-    return Array.isArray(ids) ? ids.filter((x): x is string => typeof x === 'string') : []
+    const list: unknown = JSON.parse(localStorage.getItem(LEFT) ?? '[]')
+    return Array.isArray(list) ? list.filter((x): x is Left => !!x && typeof x.id === 'string' && typeof x.key === 'string' && typeof x.at === 'number') : []
   } catch {
     return []
   }
 }
 
-function writeLeft(ids: string[]) {
+function writeLeft(list: Left[]) {
   try {
-    if (ids.length) localStorage.setItem(LEFT, JSON.stringify([...new Set(ids)]))
+    if (list.length) localStorage.setItem(LEFT, JSON.stringify(list))
     else localStorage.removeItem(LEFT)
   } catch {
     // Storage blocked: the job is just deleted now, or not at all.
   }
 }
 
-/** Jobs sent from this device whose copy may still be at AssemblyAI. */
-export const cloudJobsLeft = readLeft
-
 /** Notes a job sent from this device, until its copy at AssemblyAI is deleted (or kept on purpose). */
-export function noteCloudJob(id: string) {
-  writeLeft([...readLeft(), id])
+export function noteCloudJob(id: string, key: string, world: string) {
+  writeLeft([...readLeft().filter((j) => j.id !== id), { id, at: Date.now(), key: keyMark(key), world }])
 }
 
 /** Stops tracking a job without deleting it: the GM keeps a copy at AssemblyAI. */
 export function keepCloudJob(id: string) {
-  writeLeft(readLeft().filter((x) => x !== id))
+  writeLeft(readLeft().filter((j) => j.id !== id))
 }
 
-/** Deletes a job's copy at AssemblyAI; until that works, it stays noted and is tried again later. */
+/** Deletes a job's copy at AssemblyAI now nothing waits on it; until that works, it stays noted and is tried again later. */
 export async function forgetCloudJob(id: string, key: string) {
-  noteCloudJob(id)
-  if (!key || !(await deleteCloudJob(id, key))) return false
-  keepCloudJob(id)
-  return true
+  const left = readLeft()
+  const was = left.find((j) => j.id === id)
+  // Without a key here, the device that sent it deletes it later (it's noted there).
+  if (!key) {
+    if (was) writeLeft(left.map((j) => (j.id === id ? { ...j, done: true } : j)))
+    return false
+  }
+  writeLeft([...left.filter((j) => j.id !== id), { ...(was ?? { id, at: Date.now(), key: keyMark(key) }), done: true }])
+  const result = await deleteCloudJob(id, key)
+  // "Not found" only proves it's gone when asked with the key that sent it.
+  if (result === 'deleted' || (result === 'missing' && (!was || was.key === keyMark(key)))) {
+    keepCloudJob(id)
+    return true
+  }
+  return false
 }
+
+/** The AssemblyAI jobs of transcripts still being made in these sessions, which must not be deleted there. */
+export const jobsInUse = (sessions: Session[]) =>
+  new Set(sessions.flatMap((s) => s.recordings.flatMap((r) => (r.transcript?.engine === 'cloud' && r.transcript.pending?.jobId ? [r.transcript.pending.jobId] : []))))
 
 let sweeping: Promise<number> | undefined
 /**
- * Tries again to delete every noted job nothing here waits on any more (`wanted` is the jobs of
- * transcripts still being made). Returns how many are still left at AssemblyAI.
+ * Tries again to delete, with this key, every job it sent that nothing on this device waits on any
+ * more: one finished with (saved, started over, its session deleted) at once, any other after an
+ * hour (its transcript saved or started over on another device, say). One whose world isn't on this
+ * device (taken off it, but maybe still in the cloud) waits a month, as another device may still pick
+ * its transcript up. Returns how many copies this key still has at AssemblyAI that nothing here waits on.
  */
-export function deleteCloudLeftovers(key: string, wanted: Set<string>) {
+export function deleteCloudLeftovers(key: string) {
   sweeping ??= (async () => {
-    for (const id of readLeft()) if (!wanted.has(id)) await forgetCloudJob(id, key)
-    return readLeft().filter((id) => !wanted.has(id)).length
+    const mark = keyMark(key)
+    const mine = () => readLeft().filter((j) => j.key === mark)
+    if (!key || !mine().length) return 0
+    const { db } = await import('../db')
+    const waiting = jobsInUse(await db.sessions.toArray())
+    const worlds = new Set(await db.worlds.toCollection().primaryKeys())
+    const age = (j: Left) => Date.now() - j.at
+    const due = (j: Left) => j.done || (age(j) > HOUR && ((!!j.world && worlds.has(j.world)) || age(j) > MONTH))
+    for (const j of mine()) if (!waiting.has(j.id) && due(j)) await forgetCloudJob(j.id, key)
+    return mine().filter((j) => !waiting.has(j.id)).length
   })().finally(() => (sweeping = undefined))
   return sweeping
 }
