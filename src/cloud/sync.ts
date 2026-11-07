@@ -41,7 +41,13 @@ interface Row {
   blob?: Blob
 }
 
-export type SyncState = { status: 'off' | 'idle' | 'syncing' | 'offline' | 'error'; lastSync?: number; message?: string }
+export type SyncState = {
+  status: 'off' | 'idle' | 'syncing' | 'offline' | 'error'
+  lastSync?: number
+  message?: string
+  /** The worlds whose last sync left files that couldn't upload (so the account doesn't have them). */
+  unsent?: string[]
+}
 
 // ---------- status store (read by React with useSyncExternalStore) ----------
 
@@ -792,6 +798,8 @@ async function pushWorld(worldId: string): Promise<{ sent: number; forPlayers: b
 /** The sync in progress, if any: one at a time, and a world download waits its turn too. */
 let running: Promise<void> | undefined
 let again = false
+/** Something changed, or asked for a sync, since the last run started. */
+let wanted = false
 let timer: ReturnType<typeof setTimeout> | undefined
 let poll: ReturnType<typeof setInterval> | undefined
 const channels = new Map<string, RealtimeChannel>()
@@ -884,6 +892,7 @@ export function syncNow(): Promise<void> {
     again = true
     return running
   }
+  wanted = false
   running = oneTabAtATime(syncAll).finally(() => {
     running = undefined
     if (again) {
@@ -892,6 +901,19 @@ export function syncNow(): Promise<void> {
     }
   })
   return running
+}
+
+/**
+ * Syncs until the account has everything changed up to now: a sync that was already running when
+ * asked, or an edit made while one ran, gets one more run (a few at most, so edits that keep
+ * coming can't hold it up for ever).
+ */
+export async function syncEverythingNow() {
+  for (let runs = 0; runs < 3; runs++) {
+    const fresh = !running
+    await syncNow()
+    if (fresh && !wanted) return
+  }
 }
 
 async function syncAll() {
@@ -916,6 +938,7 @@ async function syncAll() {
     // One world failing doesn't stop the others.
     const problems: string[] = []
     const notes: string[] = []
+    const unsent: string[] = []
     for (const id of ids) {
       const name = (await db.worlds.get(id))?.name ?? 'A world'
       try {
@@ -927,7 +950,10 @@ async function syncAll() {
         const { forPlayers, failed, missing } = await pushWorld(id)
         // Players only refresh when something they can see changed. Telling them doesn't hold up the next world.
         if (forPlayers) void notifyShareViewers(id).catch(() => {})
-        if (failed.length) notes.push(`“${name}”: some files couldn’t upload, so other devices and players don’t get them: ${failed.join('; ')}.`)
+        if (failed.length) {
+          notes.push(`“${name}”: some files couldn’t upload, so other devices and players don’t get them: ${failed.join('; ')}.`)
+          unsent.push(name)
+        }
         const clashes = keptTheirs.get(id)
         keptTheirs.delete(id)
         if (clashes?.length)
@@ -946,7 +972,7 @@ async function syncAll() {
     if (problems.length) throw new Error(problems.join(' '))
     retries = 0
     // Problems that don't stop syncing stay on show until they're sorted, rather than "Synced" hiding them.
-    setState({ status: 'idle', lastSync: Date.now(), message: notes.length ? notes.join(' ') : undefined })
+    setState({ status: 'idle', lastSync: Date.now(), message: notes.length ? notes.join(' ') : undefined, unsent: unsent.length ? unsent : undefined })
   } catch (err) {
     const online = navigator.onLine
     setState({ status: online ? 'error' : 'offline', message: cloudErrorMessage(err) })
@@ -956,6 +982,7 @@ async function syncAll() {
 }
 
 export function schedule(delay = EDIT_DELAY) {
+  wanted = true
   clearTimeout(timer)
   timer = setTimeout(syncNow, delay)
 }

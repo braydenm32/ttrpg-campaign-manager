@@ -524,14 +524,19 @@ test('“Sign out and remove all worlds and keys” says what goes, then leaves 
     // A second world, backed up to the account.
     state.worldId = 'synced-world'
     await putRows(page, 'worlds', [{ ...local, id: 'synced-world', name: 'The Glass Coast', cloud: { enabled: true } }])
+    // A session recorded on this device: recordings never go to the account.
+    await putRows(page, 'sessions', [
+      { id: 'recorded-session', worldId: 'synced-world', campaignId: '', number: 1, title: 'The Salt Road', date: '', notes: '', recap: '', visibility: 'gm', entityIds: [], recordings: [{ assetId: 'rec-audio', startedAt: 1, bookmarks: [] }] },
+    ])
     await page.evaluate(() => localStorage.setItem('codex.test.marker', 'mine'))
     await open(page, '/')
     await page.getByRole('button', { name: /gm@example\.com/ }).click()
     const account = page.getByRole('dialog', { name: 'Your account' })
     await account.getByRole('button', { name: 'Sign out and remove all worlds and keys from this device…' }).click()
     await expect(account).toContainText('Gone for good')
-    await expect(account.locator('.error')).toContainText('“The Lantern Road”')
+    await expect(account.locator('.error', { hasText: 'only on this device' })).toContainText('“The Lantern Road”')
     await expect(account).toContainText('Saved in your account, so they come back when you sign in again: “The Glass Coast”')
+    await expect(account).toContainText('Also gone for good: a session recording')
     await expect(account).toContainText('the AI keys saved here')
     // Not before saying so.
     const remove = account.getByRole('button', { name: 'Remove everything and sign out' })
@@ -542,7 +547,7 @@ test('“Sign out and remove all worlds and keys” says what goes, then leaves 
     expect((await worlds()).map((x) => x.name).sort()).toEqual(['The Glass Coast', 'The Lantern Road'])
     // Now for real.
     await account.getByRole('button', { name: 'Sign out and remove all worlds and keys from this device…' }).click()
-    await account.getByLabel(/I understand that world is gone for good/).check()
+    await account.getByLabel(/I understand that world and that recording are gone for good/).check()
     // It starts the app afresh once everything is gone.
     const reloaded = page.waitForEvent('load')
     await remove.click()

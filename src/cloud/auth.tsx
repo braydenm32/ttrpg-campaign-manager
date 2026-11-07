@@ -7,7 +7,7 @@ import { currentPath, goToPath, hashRouting } from '../paths'
 import { recordingStore } from '../recordingStore'
 import { appLink, appUrl, cloudErrorMessage, signInStarting, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
 import { joinedHere, pendingInvite, removeJoinedCopies } from './players'
-import { deleteMyAccount, stopSync, syncNow, syncStore } from './sync'
+import { deleteMyAccount, stopSync, syncEverythingNow, syncStore } from './sync'
 
 type Provider = 'google' | 'facebook'
 const PROVIDERS: { id: Provider; label: string }[] = [
@@ -166,7 +166,7 @@ interface LeaveCheck {
   kept: string[]
   /** Copies of worlds joined as a player or opened from a wiki link. */
   copies: number
-  /** Session recordings in the GM's own worlds (new ones never leave the device that made them). */
+  /** Session recordings in the GM's own worlds (they never leave the device that made them, so they go for good). */
   recordings: number
   /** Sync couldn't finish, so the newest changes may not have reached the account. */
   unsynced?: string
@@ -174,8 +174,9 @@ interface LeaveCheck {
 
 async function checkBeforeLeaving(userId: string): Promise<LeaveCheck> {
   if (recordingStore.get()) return { blocked: 'A session is being recorded on this device. Stop and save the recording first, or it’s lost.', lost: [], kept: [], copies: 0, recordings: 0 }
-  // Send what's waiting first, so the account has the latest of every world it backs up.
-  await syncNow().catch(() => {})
+  // Send what's waiting first (and wait for a sync already under way, and one more for what changed
+  // meanwhile), so the account has the latest of every world it backs up.
+  await syncEverythingNow().catch(() => {})
   const sync = syncStore.get()
   const worlds = await db.worlds.toArray()
   const own = worlds.filter((w) => !w.shared)
@@ -187,7 +188,16 @@ async function checkBeforeLeaving(userId: string): Promise<LeaveCheck> {
     kept: own.filter(backedUp).map((w) => w.name),
     copies: worlds.length - own.length,
     recordings,
-    unsynced: sync.status === 'offline' ? 'this device is offline.' : sync.status === 'error' ? sync.message || 'sync hit a problem.' : undefined,
+    unsynced:
+      sync.status === 'offline'
+        ? 'this device is offline.'
+        : sync.status === 'error'
+          ? sync.message || 'sync hit a problem.'
+          : sync.status !== 'idle'
+            ? 'sync didn’t finish.'
+            : sync.unsent?.length
+              ? `some files in ${sync.unsent.map((n) => `“${n}”`).join(', ')} couldn’t upload, so your account doesn’t have them.`
+              : undefined,
   }
 }
 
@@ -238,9 +248,9 @@ function SignOutEverything({ userId, onCancel }: { userId: string; onCancel: () 
         </div>
       </div>
     )
-  const mustTick = check.lost.length > 0 || !!check.unsynced
+  const mustTick = check.lost.length > 0 || check.recordings > 0 || !!check.unsynced
+  const recordings = check.recordings === 1 ? 'a session recording' : `${check.recordings} session recordings`
   const also = [
-    check.recordings > 0 && `${check.recordings === 1 ? 'a session recording' : `${check.recordings} session recordings`} (recordings stay on the device that made them)`,
     check.copies > 0 && `your copies of ${check.copies === 1 ? 'a world' : `${check.copies} worlds`} you joined or opened from a link (you stay in them)`,
     'the AI keys saved here',
     'this device’s settings',
@@ -260,11 +270,25 @@ function SignOutEverything({ userId, onCancel }: { userId: string; onCancel: () 
           Gone for good, as {check.lost.length === 1 ? 'it’s' : 'they’re'} only on this device and not backed up to your account: {list(check.lost)}.
         </p>
       )}
+      {check.recordings > 0 && (
+        <p className="error small">
+          Also gone for good: {recordings}. Recordings are never saved to your account, so one made on this device is only here. To keep {check.recordings === 1 ? 'it' : 'them'}, cancel and
+          download a backup of {check.recordings === 1 ? 'its world' : 'their worlds'} with “Include session recordings” ticked first.
+        </p>
+      )}
       <p className="small">Also removed from this device: {`${also.slice(0, -1).join(', ')} and ${also[also.length - 1]}`}.</p>
       {check.kept.length > 0 && <p className="muted small">Saved in your account, so they come back when you sign in again: {list(check.kept)}.</p>}
       {mustTick && (
         <label className="row small">
-          <input type="checkbox" checked={sure} onChange={(e) => setSure(e.target.checked)} /> I understand {check.lost.length ? (check.lost.length === 1 ? 'that world is' : 'those worlds are') : 'those changes are'} gone for good
+          <input type="checkbox" checked={sure} onChange={(e) => setSure(e.target.checked)} /> I understand{' '}
+          {[
+            check.lost.length > 0 && (check.lost.length === 1 ? 'that world' : 'those worlds'),
+            check.recordings > 0 && (check.recordings === 1 ? 'that recording' : 'those recordings'),
+            !!check.unsynced && 'any changes not yet in my account',
+          ]
+            .filter(Boolean)
+            .join(' and ')}{' '}
+          {check.lost.length + check.recordings === 1 && !check.unsynced ? 'is' : 'are'} gone for good
         </label>
       )}
       {error && <p className="error small">{error}</p>}
