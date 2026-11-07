@@ -14,7 +14,8 @@ import { Ico } from './icons'
  *  - Once moved, or if the old address never had anything saved (no worlds, and no keys or other
  *    device settings), it just forwards to the new
  *    address, keeping the rest of the link (invites and share links keep working).
- * Nothing on the old address is deleted, so a failed move can be tried again.
+ * The worlds on the old address aren't deleted, so a failed move can be tried again. Once the new
+ * address has confirmed the move, the old one forgets its keys, tokens and sign-in (see forgetSecrets).
  */
 
 const OLD_HOST = 'braydenm32.github.io'
@@ -74,6 +75,24 @@ function readLocal() {
   }
 }
 
+/** AI keys, the Syrinscape token, Discord webhooks, a waiting invite and the sign-in (Supabase's session). */
+const SECRETS = /^(codex\.(ai|syrinscapeToken|pendingInvite)$|codex\.discord\.|sb-.+-auth-token)/
+
+/**
+ * Once the move is done: the old address forgets its copies of keys, tokens and the sign-in. The app
+ * never starts there again, so signing out, removing a key or deleting the account (all done at the
+ * new address) could never clear them, and every other github.io page of the same account can read
+ * that storage.
+ */
+function forgetSecrets() {
+  try {
+    const keys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i) ?? '')
+    for (const k of keys) if (SECRETS.test(k)) localStorage.removeItem(k)
+  } catch {
+    // Storage blocked: nothing was kept here to forget.
+  }
+}
+
 /**
  * Runs before the app starts. Returns false when the page is leaving (forwarded to the new address,
  * or the new address is taking in a move), so the app shouldn't start.
@@ -81,6 +100,8 @@ function readLocal() {
 export async function startMove(): Promise<boolean> {
   if (isOldHome()) {
     if (readLocal()) {
+      // Moved already (perhaps before the app forgot secrets on the way out): forget them now.
+      forgetSecrets()
       window.location.replace(newHome())
       return false
     }
@@ -221,6 +242,8 @@ export function MoveBanner() {
       } catch {
         // Storage blocked: the banner just shows again here.
       }
+      // The new address has them now (it said so), so this one forgets its copies before leaving.
+      forgetSecrets()
       window.location.replace(newHome('#/'))
     } catch (e) {
       setError((e as Error).message)

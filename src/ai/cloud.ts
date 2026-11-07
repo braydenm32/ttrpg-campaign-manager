@@ -97,3 +97,63 @@ export async function deleteCloudJob(id: string, key: string) {
     return false
   }
 }
+
+/*
+ * Every job this device sends to AssemblyAI is noted here (in this browser only) until AssemblyAI's
+ * copy is deleted, so nothing is left there by accident: a transcript started over, a session deleted
+ * while AssemblyAI was still working, a delete that failed, or the app closing before it got to it.
+ * Each time a session's recordings are opened, jobs no longer waited on are deleted (see TranscriptPanel).
+ */
+const LEFT = 'codex.assemblyLeft'
+
+function readLeft(): string[] {
+  try {
+    const ids = JSON.parse(localStorage.getItem(LEFT) ?? '[]')
+    return Array.isArray(ids) ? ids.filter((x): x is string => typeof x === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function writeLeft(ids: string[]) {
+  try {
+    if (ids.length) localStorage.setItem(LEFT, JSON.stringify([...new Set(ids)]))
+    else localStorage.removeItem(LEFT)
+  } catch {
+    // Storage blocked: the job is just deleted now, or not at all.
+  }
+}
+
+/** Jobs sent from this device whose copy may still be at AssemblyAI. */
+export const cloudJobsLeft = readLeft
+
+/** Notes a job sent from this device, until its copy at AssemblyAI is deleted (or kept on purpose). */
+export function noteCloudJob(id: string) {
+  writeLeft([...readLeft(), id])
+}
+
+/** Stops tracking a job without deleting it: the GM keeps a copy at AssemblyAI. */
+export function keepCloudJob(id: string) {
+  writeLeft(readLeft().filter((x) => x !== id))
+}
+
+/** Deletes a job's copy at AssemblyAI; until that works, it stays noted and is tried again later. */
+export async function forgetCloudJob(id: string, key: string) {
+  noteCloudJob(id)
+  if (!key || !(await deleteCloudJob(id, key))) return false
+  keepCloudJob(id)
+  return true
+}
+
+let sweeping: Promise<number> | undefined
+/**
+ * Tries again to delete every noted job nothing here waits on any more (`wanted` is the jobs of
+ * transcripts still being made). Returns how many are still left at AssemblyAI.
+ */
+export function deleteCloudLeftovers(key: string, wanted: Set<string>) {
+  sweeping ??= (async () => {
+    for (const id of readLeft()) if (!wanted.has(id)) await forgetCloudJob(id, key)
+    return readLeft().filter((id) => !wanted.has(id)).length
+  })().finally(() => (sweeping = undefined))
+  return sweeping
+}
