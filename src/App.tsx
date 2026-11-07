@@ -9,7 +9,7 @@ import { db } from './db'
 import { ForcePlayerView, useViewMode, ViewModeProvider, WorldViewMode } from './viewMode'
 import { finishSignInRedirect, useAuthSession, verifyEmailLink } from './cloud/auth'
 import { startAccountKeys, stopAccountKeys } from './ai/accountKeys'
-import { cloudErrorMessage, supabase } from './cloud/client'
+import { cloudErrorMessage, PASSWORD_MIN, PASSWORD_RULE, passwordProblem, supabase } from './cloud/client'
 import { watchPlayerCopy } from './cloud/share'
 import { startSync, stopSync } from './cloud/sync'
 import { Modal, Skeleton } from './components'
@@ -193,14 +193,17 @@ function CloudBoot() {
         className="form"
         onSubmit={async (e) => {
           e.preventDefault()
+          const problem = passwordProblem(password)
+          if (problem) return setError(problem)
           const { error } = await supabase.auth.updateUser({ password })
-          if (error) setError(error.message)
+          if (error) setError(cloudErrorMessage(error))
           else setRecovering(false)
         }}
       >
         <label>
           New password
-          <input type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input type="password" autoComplete="new-password" minLength={PASSWORD_MIN} required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <small>{PASSWORD_RULE}</small>
         </label>
         {error && <p className="error">{error}</p>}
         <div className="row end">

@@ -161,16 +161,23 @@ This project runs on a built-in cloud setup with no settings, so it needs one of
 
 ## 6. Password rules (Supabase)
 
-Supabase → **Authentication → Sign In / Providers → Email** (the password settings under it):
+Supabase → **Authentication → Sign In / Providers → Email** (the password settings under it), or
+straight there: <https://supabase.com/dashboard/project/ysrxumagiiaoihlhofqt/auth/providers?provider=Email>.
+Press **Save** at the bottom when done.
 
 - **Minimum password length**: 10. Anything under 8 is easy to guess.
-- **Password requirements**: letters and digits (or stronger).
+- **Password requirements**: letters and digits.
 - **Prevent use of leaked passwords** turns away passwords that are in known leaks (it asks
   HaveIBeenPwned, without sending the password itself). Supabase only offers it on the Pro plan, so
   switch it on if the project ever moves to Pro.
 
-People who already have a weaker password can still sign in; the app shows Supabase's message
-asking them to pick a stronger one when they next change it. Google sign-in isn't affected.
+The app asks for the same when someone signs up or picks a new password: "At least 10 characters,
+with letters and numbers" sits under the password box, and it's checked before anything is sent
+(`PASSWORD_RULE` in `src/cloud/client.ts`). If you change the numbers here, the app's wording has
+to change with them, so say so in the chat.
+
+People who already have a weaker password can still sign in; they're asked for a stronger one only
+when they next pick a new password. Google sign-in isn't affected.
 
 ## What still says Supabase
 

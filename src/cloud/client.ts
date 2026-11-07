@@ -87,12 +87,28 @@ export function appLink(path: string) {
 }
 
 /**
+ * What a new password needs. Supabase checks the same on its side (docs/ACCOUNT_SETUP.md, section
+ * 6), so change the two together. Signing in never checks it, so older, shorter passwords still work.
+ */
+export const PASSWORD_MIN = 10
+export const PASSWORD_RULE = 'At least 10 characters, with letters and numbers.'
+
+/** Why a new password won't do, in plain words, or '' when it's fine. */
+export function passwordProblem(password: string) {
+  return password.length >= PASSWORD_MIN && /[A-Za-z]/.test(password) && /[0-9]/.test(password) ? '' : PASSWORD_RULE
+}
+
+/**
  * A plain-words message for a failed cloud call. The free server falls asleep after about a week
  * with nobody using it (a weekly keep-alive normally stops that), and then every call fails the same
  * way, so that case gets its own explanation.
  */
 export function cloudErrorMessage(e: unknown) {
   const msg = (e as Error)?.message ?? String(e)
+  if ((e as { code?: string })?.code === 'weak_password')
+    return (e as { reasons?: string[] }).reasons?.includes('pwned')
+      ? 'That password has turned up in a known data leak, so it isn’t safe to use. Please pick another.'
+      : `That password is too easy to guess. ${PASSWORD_RULE}`
   if (typeof navigator !== 'undefined' && !navigator.onLine) return 'You’re offline. Your copy on this device still works, and it will catch up when you’re back online.'
   if (/failed to fetch|networkerror|load failed|network request failed|paused|status of 54\d|fetch/i.test(msg))
     return 'Can’t reach the Warded Atlas server right now. If nobody has used it for about a week it may be asleep: the GM can wake it by opening their Supabase dashboard (it takes a minute). Your copy on this device still works.'

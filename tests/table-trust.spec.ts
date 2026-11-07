@@ -1,4 +1,4 @@
-import type { Browser, Page, WebSocketRoute } from '@playwright/test'
+import type { Browser, Page, Route, WebSocketRoute } from '@playwright/test'
 import { expect, open, test, type Device } from './fixtures'
 import { keyMark } from './lib/assembly'
 import { fakeCloud, putRows, type CloudState } from './lib/cloud'
@@ -23,6 +23,9 @@ import { PORT } from './lib/server'
  *  - an email link for another account doesn't switch accounts unless the person says so (signed
  *    out too, unless this device asked for that email), a sign-in in the address counts only after
  *    this tab went to Google, and a link of a kind the app never sends is ignored;
+ *  - a new password (signing up, or after a reset email) needs 10 characters with letters and
+ *    numbers: said under the box, checked before anything is sent, and the server's no comes out
+ *    in plain words; signing in doesn't ask, so older passwords still work;
  *  - "Sign out and remove all worlds and keys from this device" says what goes, then removes it.
  * The cloud and its live rooms are pretend (lib/cloud.ts, and fakeRealtime below): nothing leaves
  * the machine. Each test puts back what it changed.
@@ -518,6 +521,71 @@ test('signed out, a link to someone’s account asks first unless this device as
     await expect.poll(token).toBe(theirs.access_token)
     // The note that this device asked is used up.
     expect(await page.evaluate(() => localStorage.getItem('codex.emailAsked'))).toBeNull()
+  } finally {
+    await context.close()
+  }
+})
+
+test('a new password needs 10 characters with letters and numbers, said under the box and checked first, and the server’s no comes out in plain words', async ({ browser, device }) => {
+  const context = await freshContext(browser, device)
+  try {
+    const user = { id: '00000000-0000-4000-8000-0000000000cc', aud: 'authenticated', role: 'authenticated', email: 'new@example.com', app_metadata: { provider: 'email' }, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' }
+    const session = { access_token: fakeJwt(user.id, user.email), token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: 'new-refresh', user }
+    // What Supabase says when its password rules (or its leak check) turn one down.
+    const weak = (reasons: string[]) => ({ status: 422, contentType: 'application/json', body: JSON.stringify({ error_code: 'weak_password', msg: 'Password is too weak.', weak_password: { reasons } }) })
+    const sent: string[] = []
+    const password = (route: Route) => sent.push((route.request().postDataJSON() as { password: string }).password)
+    await context.route('**/auth/v1/signup**', (route) => {
+      password(route)
+      return route.fulfill(weak(['pwned']))
+    })
+    await context.route('**/auth/v1/verify**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(session) }))
+    await context.route('**/auth/v1/user**', (route) => {
+      if (route.request().method() === 'GET') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) })
+      password(route)
+      return route.fulfill(weak(['length', 'characters']))
+    })
+    const page = await context.newPage()
+    await open(page, '/')
+    await page.getByRole('button', { name: '☁️ Sign in to sync' }).click()
+    // Signing in doesn't ask for it, so older, shorter passwords still work.
+    const signIn = page.getByRole('dialog', { name: 'Sign in' })
+    await expect(signIn.getByLabel('Password')).toHaveAttribute('minlength', '8')
+    await expect(signIn).not.toContainText('At least 10 characters')
+
+    await signIn.getByRole('button', { name: 'Create account' }).click()
+    const signUp = page.getByRole('dialog', { name: 'Create an account' })
+    const box = signUp.getByLabel('Password')
+    await expect(signUp).toContainText('At least 10 characters, with letters and numbers.')
+    await expect(box).toHaveAttribute('minlength', '10')
+    await signUp.getByLabel('Email').fill('new@example.com')
+    // Long enough, but no numbers: said here, and nothing is sent.
+    await box.fill('onlyletterslong')
+    await signUp.getByRole('button', { name: 'Create account' }).click()
+    await expect(signUp.locator('.error')).toHaveText('At least 10 characters, with letters and numbers.')
+    expect(sent).toEqual([])
+    // One Supabase turns down (found in a leak) is said in plain words.
+    await box.fill('dragon12345')
+    await signUp.getByRole('button', { name: 'Create account' }).click()
+    await expect(signUp.locator('.error')).toHaveText('That password has turned up in a known data leak, so it isn’t safe to use. Please pick another.')
+    expect(sent).toEqual(['dragon12345'])
+
+    // The new password after a reset email (asked for on this device): the same rule.
+    await page.evaluate(() => localStorage.setItem('codex.emailAsked', JSON.stringify({ email: 'new@example.com', at: Date.now() })))
+    await page.goto('/?token_hash=abc&type=recovery')
+    const choose = page.getByRole('dialog', { name: 'Choose a new password' })
+    await expect(choose).toContainText('At least 10 characters, with letters and numbers.')
+    const fresh = choose.getByLabel('New password')
+    await expect(fresh).toHaveAttribute('minlength', '10')
+    await fresh.fill('1234567890')
+    await choose.getByRole('button', { name: 'Save password' }).click()
+    await expect(choose.locator('.error')).toHaveText('At least 10 characters, with letters and numbers.')
+    expect(sent).toEqual(['dragon12345'])
+    // Supabase set to something stricter turns this one down: said in plain words, not its own.
+    await fresh.fill('lantern2026')
+    await choose.getByRole('button', { name: 'Save password' }).click()
+    await expect(choose.locator('.error')).toHaveText('That password is too easy to guess. At least 10 characters, with letters and numbers.')
+    expect(sent).toEqual(['dragon12345', 'lantern2026'])
   } finally {
     await context.close()
   }

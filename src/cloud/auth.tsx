@@ -7,7 +7,7 @@ import { currentPath, goToPath, hashRouting } from '../paths'
 import { recordingStore } from '../recordingStore'
 import { recordingsOnlyHere } from '../backup'
 import { getAiSettings } from '../ai/settings'
-import { appLink, appUrl, cloudErrorMessage, signInAbandoned, signInStarting, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
+import { appLink, appUrl, cloudErrorMessage, PASSWORD_MIN, PASSWORD_RULE, passwordProblem, signInAbandoned, signInStarting, SUPABASE_KEY, SUPABASE_URL, supabase } from './client'
 import { joinedHere, pendingInvite, removeJoinedCopies } from './players'
 import { deleteMyAccount, stopSync, syncEverythingNow, syncStore } from './sync'
 
@@ -467,6 +467,8 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
         if (error) throw error
         onClose()
       } else if (mode === 'signup') {
+        const problem = passwordProblem(password)
+        if (problem) return setError(problem)
         // Someone signing up from an invite comes back to it from the email, even on another device.
         const invite = pendingInvite.get()
         askedForEmail(email)
@@ -543,10 +545,11 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
               type="password"
               autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
               required
-              minLength={8}
+              minLength={mode === 'signup' ? PASSWORD_MIN : 8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            {mode === 'signup' && <small>{PASSWORD_RULE}</small>}
           </label>
         )}
         {error && <p className="error">{error}</p>}
