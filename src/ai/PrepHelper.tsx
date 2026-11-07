@@ -14,7 +14,7 @@ import { useKept } from './kept'
 import { toast } from '../undo'
 import { feedbackLines, useFeedback } from '../players/StarsWishes'
 import { useInbox } from '../Sidebar'
-import { describeStep, MARKUP_NOTE, pageByName, pageText, sessionIndex, sessionText, worldHeader, worldIndex, worldTools } from './worldText'
+import { describeStep, MARKUP_NOTE, pageByName, pageText, sessionIndex, sessionText, untrusted, worldHeader, worldIndex, worldTools } from './worldText'
 
 /**
  * The prep helper: Claude reads the last sessions, the open threads and the party, then suggests a
@@ -119,7 +119,7 @@ ${open.length ? `Open quests and loose threads:\n${open.map((e) => `- [[${e.name
 
 ${clocks.length ? `Clocks still running:\n${clocks.join('\n')}` : ''}
 
-${asked ? `What the players said about the last sessions (stars: what they loved; wishes: what they'd like more of). Give them more of what they wished for where it fits:\n${asked}` : ''}
+${asked ? `What the players said about the last sessions (stars: what they loved; wishes: what they'd like more of). Give them more of what they wished for where it fits:\n${untrusted('player_written', asked)}` : ''}
 
 ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${planned.join('\n')}` : ''}`.replace(/\n{3,}/g, '\n\n')
     // Planning a session from what's happened is a bigger job, so it gets the most capable model.
