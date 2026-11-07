@@ -14,6 +14,7 @@ import { worldPath } from '../paths'
 import type { Drawing } from '../mapDrawing'
 import { fileKey, loadLook, loadPicture, lookOf, packAssetName, pictureFor, picturesToPick, registerPackPiece } from './art'
 import { loadBuiltinPack } from './builtin'
+import { sectionOf, sectionOrder } from './sections'
 import { fetchPackFile, keepPackOnDevice, pullPacks, pullWorldPacks, worldPacks } from './store'
 
 /** Which packs' pieces suit a map: battle pieces on battle maps, town (and battle) pieces on town maps, world pieces on world maps. */
@@ -63,12 +64,15 @@ export function PackPicker({ drawing, words, pool, state, onPick }: { drawing: D
 
   const packId = shown && packs.some((p) => p!.id === shown) ? shown : (packs.find((p) => fitting.some((x) => x.packId === p!.id))?.id ?? packs[0]?.id)
   const ready = (p: PackPiece) => picturesToPick(p.versions, look, state).every((v) => keys.has(fileKey(p.id, p.rev, v, 'full')))
-  const matches = (p: PackPiece) => !words.length || words.every((w) => `${p.label} ${p.group}`.toLowerCase().includes(w))
+  const matches = (p: PackPiece) => !words.length || words.every((w) => `${p.label} ${p.group} ${sectionOf(p)}`.toLowerCase().includes(w))
   // searching looks through every pack; otherwise one pack at a time
   const list = fitting.filter((p) => (words.length ? true : p.packId === packId) && matches(p))
-  const byGroup = new Map<string, PackPiece[]>()
-  for (const p of list) byGroup.set(p.group || 'Pieces', [...(byGroup.get(p.group || 'Pieces') ?? []), p])
-  const groups = [...byGroup]
+  // under a dozen or so broad headings (guessed from each piece's name), not the pack's many small groups
+  const bySection = new Map<string, PackPiece[]>()
+  for (const p of list) bySection.set(sectionOf(p), [...(bySection.get(sectionOf(p)) ?? []), p])
+  const groups = [...bySection]
+    .sort(([a], [b]) => sectionOrder(a, b))
+    .map(([section, items]) => [section, items.sort((a, b) => (a.group || '').localeCompare(b.group || '') || a.label.localeCompare(b.label))] as const)
 
   const pick = async (p: PackPiece) => {
     setFailed('')
