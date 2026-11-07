@@ -117,6 +117,8 @@ test('pictures uploaded as a pack can be placed on a map, and the map keeps them
     // each group is folded away, as the app's own groups are: open it first
     const group = panel.locator('details.piece-group', { has: page.locator('.pack-tile', { hasText: 'Tent' }) }).first()
     await expect(group).not.toHaveAttribute('open')
+    // under a broad heading guessed from its name, not its own small group
+    await expect(group.locator('summary')).toHaveText('Camp, farm & village')
     await group.locator('summary').click()
     await panel.locator('.pack-tile', { hasText: 'Tent' }).first().click()
     await expect(panel.locator('.pack-tile.on', { hasText: 'Tent' })).toBeVisible()
@@ -239,7 +241,7 @@ test('the built-in pack picks the picture for the map’s look, and pieces come 
     await page.locator('.builder-tools button', { hasText: 'Place' }).click()
     const panel = page.locator('.builder-panel')
     await panel.getByRole('tab', { name: 'Your packs' }).click()
-    await panel.locator('summary', { hasText: 'Camp' }).click()
+    await panel.locator('summary', { hasText: 'Camp, farm & village' }).click()
     await panel.locator('.pack-tile', { hasText: 'Test tent' }).click()
     await expect(panel.locator('.pack-tile.on', { hasText: 'Test tent' })).toBeVisible()
     // two designs (and Any), whatever the number of pictures
