@@ -20,8 +20,12 @@ import { listPlayers, memberWorldId, soundsLikeGM } from './players'
  *    world's member list (their characters' first names, or the name they joined with). The name
  *    it says it's from counts only for an older app that sends no id, and never reads as the GM's.
  *  - "table:<world>", where only a GM can send (public.channel_allowed), so players can trust it:
- *    - "table" (GM → players): the session being played, the scene, whose turn it is, the music,
- *      and whether the GM's app is recording (players see "This session is being recorded").
+ *    - "table" (GM → players): the session being played, the scene, whose turn it is, the music.
+ *      Only the app that's running the session says it ("off" once it stops), so another of the
+ *      GM's apps with the world open never takes it off players' screens.
+ *    - "recording" (GM → players): the GM's app that records says so every minute while it does,
+ *      and once more when it stops (players see "This session is being recorded"). Each app says
+ *      it under its own made-up id, so one app stopping doesn't hide another that's still recording.
  *    - "dice" and "ping" (GM): the GM's own rolls and pings.
  *    - "downtime" (GM → players): the GM answered downtime.
  *    - "signal-seen" (GM → players): the GM saw a signal.
@@ -119,8 +123,8 @@ interface TableStore {
   answered: Record<string, number>
   /** When the last "table" message arrived (this device's clock). */
   heard: number
-  /** For a player: when the GM's app last said it's recording (it says so every minute while it is; 0 once it says it stopped). */
-  recordingAt: number
+  /** For a player: each of the GM's apps that says it's recording (by its made-up id), and when it last said so. */
+  recorders: Record<string, number>
   /** When someone last said downtime changed (a player sent one, or the GM answered), so lists reload at once. */
   downtime: number
   rolls: TableRoll[]
@@ -130,7 +134,7 @@ interface TableStore {
   sent: Record<string, 'sent' | 'seen'>
 }
 
-const empty: TableStore = { table: null, pings: [], heard: 0, recordingAt: 0, downtime: 0, rolls: [], signals: [], sent: {}, answers: [], answered: {} }
+const empty: TableStore = { table: null, pings: [], heard: 0, recorders: {}, downtime: 0, rolls: [], signals: [], sent: {}, answers: [], answered: {} }
 const stores = new Map<string, TableStore>()
 const listeners = new Map<string, Set<() => void>>()
 const links = new Map<string, { members: LiveRoom; table: LiveRoom; host: boolean }>()
@@ -161,7 +165,8 @@ export function useTable(cloudId: string | undefined) {
   }, [])
   const fresh = now - store.heard < STALE_AFTER
   // "Being recorded" fades the same way, so a GM's app that closed mid-recording doesn't leave it up.
-  return { ...store, table: fresh && store.table ? store.table : null, recording: now - store.recordingAt < STALE_AFTER }
+  const recording = Object.values(store.recorders).some((at) => now - at < STALE_AFTER)
+  return { ...store, table: fresh && store.table ? store.table : null, recording }
 }
 
 const HEARTBEAT = 60_000
@@ -397,11 +402,17 @@ export function linkAsPlayer(cloudId: string) {
   if (members.connected()) void hello()
   // What the GM says counts only from the GM's room, where nobody else can send. The same thing
   // in the members' room is a player passing for the GM (or an older GM app), and is ignored.
-  // "recording" is said by the GM's app that records (every minute while it does, and false once it
-  // stops); another of the GM's apps says nothing about it, so it can't switch it off by mistake.
-  table.on('table', (p) =>
-    update(cloudId, (s) => ({ ...s, table: readTable(p), heard: Date.now(), recordingAt: p.recording === true ? Date.now() : p.recording === false ? 0 : s.recordingAt })),
-  )
+  table.on('table', (p) => update(cloudId, (s) => ({ ...s, table: readTable(p), heard: Date.now() })))
+  // Each of the GM's apps that records says so under its own id, so one stopping leaves another's word standing.
+  table.on('recording', (p) => {
+    if (typeof p.recording !== 'boolean') return
+    const by = text(p.by, 40)
+    update(cloudId, (s) => {
+      const { [by]: _was, ...others } = s.recorders
+      const recorders = p.recording ? Object.fromEntries([...Object.entries(others).slice(-9), [by, Date.now()]]) : others
+      return { ...s, recorders }
+    })
+  })
   table.on('downtime', () => update(cloudId, (s) => ({ ...s, downtime: Date.now() })))
   table.on<{ id?: unknown }>('signal-seen', (p) => {
     const id = text(p.id)
@@ -480,20 +491,24 @@ export function linkAsHost(cloudId: string, current: () => TableState | null) {
   // Who's who, for players' rolls and pings: asked now, and again when someone new turns up.
   const learn = rosterFetcher(cloudId)
   learn()
-  const tell = (stopped = false) => void sendAsGM(cloudId, 'table', wire(cloudId, current(), stopped))
+  // Players start from nothing, so an app that isn't running a session or recording one says
+  // nothing (an "off" from it would take another of the GM's apps' live session off their screens).
+  const remind = () => {
+    const now = current()
+    if (now) void sendAsGM(cloudId, 'table', wire(now))
+    if (recordingHere(cloudId)) sayRecording(cloudId, true)
+  }
   members.on('hello', (p) => {
-    tell()
+    remind()
     learn(text(p.uid, 64))
   })
-  // Nothing to say while no session is being run or recorded: players start from nothing anyway.
-  const remind = () => (current() || recordingHere(cloudId)) && tell()
   table.on(JOINED, remind)
   // Players hear at once when a recording starts or stops.
   let recording = recordingHere(cloudId)
   const unwatch = recordingStore.subscribe(() => {
     if (recordingHere(cloudId) === recording) return
     recording = !recording
-    tell(!recording)
+    sayRecording(cloudId, recording)
   })
   // Players' rolls and pings from the members' room, and a co-GM's from the GM's room.
   for (const [r, fromGM] of [
@@ -552,23 +567,22 @@ export function publishTable(cloudId: string, state: TableState | null) {
   if (JSON.stringify(before) === JSON.stringify(state)) return
   // The GM's own copy, so previewing the Common Room shows it too.
   update(cloudId, (s) => ({ ...s, table: state, heard: Date.now() }))
-  void sendAsGM(cloudId, 'table', wire(cloudId, state))
+  void sendAsGM(cloudId, 'table', wire(state))
 }
 
-/**
- * A table state as sent: with the sender's clock (so timers can be shifted onto each player's), and
- * whether this app is recording a session of the world, so players are told (even with no session
- * live). Only the app that records says either way (stopped: it just stopped).
- */
-function wire(cloudId: string, state: TableState | null, stopped = false) {
-  const recording = recordingHere(cloudId) ? { recording: true } : stopped ? { recording: false } : {}
-  return state ? { ...state, ...recording, sentAt: Date.now() } : { off: true, ...recording }
-}
+/** A table state as sent, with the sender's clock (so timers can be shifted onto each player's). */
+const wire = (state: TableState | null) => (state ? { ...state, sentAt: Date.now() } : { off: true })
 
 // ---------- "This session is being recorded" ----------
 
 /** Whether this device's app is recording a session of this world right now. */
 const recordingHere = (worldId: string) => recordingStore.get()?.worldId === worldId
+
+/** This app's made-up id for "recording" messages (a new one each time the app opens). */
+const thisApp = newId()
+
+/** Tells players whether this app is recording the world (with no session live too). */
+const sayRecording = (worldId: string, on: boolean) => void sendAsGM(worldId, 'recording', { recording: on, by: thisApp })
 
 /**
  * A recording carries on while the GM looks at another world or the list of worlds, where the
@@ -589,7 +603,7 @@ recordingStore.subscribe(() => {
 async function sayUnlinked(worldId: string, stopped: boolean) {
   if (links.get(worldId)?.host) return
   const w = await db.worlds.get(worldId)
-  if (w?.cloud?.enabled && !w.shared) void sendOnce(gmRoom(worldId), 'table', wire(worldId, get(worldId).table, stopped))
+  if (w?.cloud?.enabled && !w.shared) sayRecording(worldId, !stopped)
 }
 
 /**

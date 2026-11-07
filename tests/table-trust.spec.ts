@@ -12,8 +12,9 @@ import { PORT } from './lib/server'
  *    rolls show the name from the member list (by user id), and a name that only claims to be the
  *    GM says "(a player)"; the GM's app sends only to its own room, and a saved roll's name stays
  *    on the GM screen;
- *  - "This session is being recorded" in the Common Room and on the players' screen while the GM's
- *    app records, gone once it stops;
+ *  - "This session is being recorded" in the Common Room and on the players' screen while one of
+ *    the GM's apps records, gone once every one that said so has stopped; a GM app that isn't live
+ *    says nothing to players arriving;
  *  - the picture of a GM-only page goes out as "A picture" (or what the GM calls it), never under
  *    the page's name;
  *  - names: no hidden characters, no other member's name, nothing that reads as the GM's; joining
@@ -93,7 +94,8 @@ test('a player’s app believes only the GM’s room: a player passing for the G
     const recorded = page.getByText('This session is being recorded')
 
     // In the room every player can post in, a "GM" message is a player's: nothing changes.
-    rt.say('members:testcopy', 'table', { ...live, recording: true, sentAt: Date.now() })
+    rt.say('members:testcopy', 'table', { ...live, sentAt: Date.now() })
+    rt.say('members:testcopy', 'recording', { recording: true, by: 'gm-laptop' })
     await page.waitForTimeout(1000)
     await expect(heading).not.toContainText('Playing now')
     await expect(recorded).toHaveCount(0)
@@ -102,13 +104,17 @@ test('a player’s app believes only the GM’s room: a player passing for the G
     rt.refuse.clear()
     await expect.poll(() => [...rt.joined], { timeout: 30_000 }).toContain('realtime:table:testcopy')
     // Now in it, still nothing from the members' room counts.
-    rt.say('members:testcopy', 'table', { ...live, recording: true, sentAt: Date.now() })
+    rt.say('members:testcopy', 'table', { ...live, sentAt: Date.now() })
+    rt.say('members:testcopy', 'recording', { recording: true, by: 'gm-laptop' })
     await page.waitForTimeout(500)
     await expect(heading).not.toContainText('Playing now')
+    await expect(recorded).toHaveCount(0)
 
     // From the GM's own room: playing now, and being recorded.
-    rt.say('table:testcopy', 'table', { ...live, recording: true, sentAt: Date.now() })
+    rt.say('table:testcopy', 'table', { ...live, sentAt: Date.now() })
     await expect(heading).toContainText('Playing now')
+    await expect(recorded).toHaveCount(0)
+    rt.say('table:testcopy', 'recording', { recording: true, by: 'gm-laptop' })
     await expect(recorded).toBeVisible()
 
     // Rolls: Ash's, signed "GM", shows as Ash's; an old app's "GM" says "(a player)"; the GM's own is the GM's.
@@ -121,15 +127,22 @@ test('a player’s app believes only the GM’s room: a player passing for the G
     await expect(roll(12)).toHaveText('GM')
 
     // The GM's app stops recording: the note goes, and the session is still on.
-    rt.say('table:testcopy', 'table', { ...live, recording: false, sentAt: Date.now() })
+    rt.say('table:testcopy', 'recording', { recording: false, by: 'gm-laptop' })
     await expect(recorded).toHaveCount(0)
     await expect(heading).toContainText('Playing now')
-    // Another of the GM's apps, not recording, says nothing either way: the note stays as it was.
-    rt.say('table:testcopy', 'table', { ...live, recording: true, sentAt: Date.now() })
+    // Two of the GM's apps record (a co-GM's phone, say): one stopping leaves the note up.
+    rt.say('table:testcopy', 'recording', { recording: true, by: 'gm-laptop' })
+    rt.say('table:testcopy', 'recording', { recording: true, by: 'co-gm-phone' })
     await expect(recorded).toBeVisible()
+    rt.say('table:testcopy', 'recording', { recording: false, by: 'gm-laptop' })
+    await page.waitForTimeout(500)
+    await expect(recorded).toBeVisible()
+    // The session going on doesn't change it either way.
     rt.say('table:testcopy', 'table', { ...live, sentAt: Date.now() })
     await page.waitForTimeout(500)
     await expect(recorded).toBeVisible()
+    rt.say('table:testcopy', 'recording', { recording: false, by: 'co-gm-phone' })
+    await expect(recorded).toHaveCount(0)
   } finally {
     await page.evaluate((id) => localStorage.removeItem(`codex.room.liveSeen.${id}`), copy.id)
     await copy.remove()
@@ -145,8 +158,15 @@ test('the GM’s app talks only in the GM’s room, and a saved roll’s name st
   const screen = ((await getRecord(page, 'worlds', world.id))!.gmScreen ?? { pages: [] }) as object
   const was = await patchRecord(page, 'worlds', world.id, { cloud: { enabled: true }, gmScreen: { ...screen, rolls: [{ id: 'roll-secret', name: 'Assassin in the choir', expr: 'd20+5' }] } })
   await patchRecord(page, 'sessions', s1.id, { lectern: { ...(session.lectern as object), share: { rolls: true } } })
-  await page.evaluate(([id, sid]) => sessionStorage.setItem(`codex.liveSession.${id}`, sid), [world.id, s1.id])
   try {
+    // Not live here: a player arriving hears nothing from this app (an "off" from it would take
+    // another of the GM's apps' live session off their screens).
+    await open(page, w)
+    await expect.poll(() => [...rt.joined]).toContain(`realtime:members:${world.id}`)
+    rt.say(`members:${world.id}`, 'hello', { uid: 'u-ash' })
+    await page.waitForTimeout(1000)
+    expect(rt.sent.filter((m) => m.event === 'table')).toEqual([])
+    await page.evaluate(([id, sid]) => sessionStorage.setItem(`codex.liveSession.${id}`, sid), [world.id, s1.id])
     await open(page, `${w}/s/${s1.id}/lectern`)
     // The live session goes out, from the GM's room.
     await expect.poll(() => rt.sent.filter((m) => m.event === 'table').map((m) => m.topic)).toContain(`realtime:table:${world.id}`)
