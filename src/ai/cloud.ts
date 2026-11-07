@@ -85,15 +85,22 @@ export async function waitForCloudJob(id: string, key: string, signal: AbortSign
   }
 }
 
+/** How long one delete may take before it counts as failed (and is tried again later). */
+const DELETE_WAIT = 8000
+
 /**
  * Deletes a finished transcript from AssemblyAI once it's saved here, so the table's talk doesn't sit
  * in another company's storage. "missing" when AssemblyAI has no such job for this key (already
- * deleted, say). A failure never undoes the saved transcript.
+ * deleted, say), "refused" when it won't delete it with this key (another account's, or a job still
+ * being made), "failed" when it couldn't be asked. A failure never undoes the saved transcript.
  */
-export async function deleteCloudJob(id: string, key: string): Promise<'deleted' | 'missing' | 'failed'> {
+export async function deleteCloudJob(id: string, key: string): Promise<'deleted' | 'missing' | 'refused' | 'failed'> {
   try {
-    const res = await fetch(`${API}/transcript/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { authorization: key } })
-    return res.ok ? 'deleted' : res.status === 404 ? 'missing' : 'failed'
+    const signal = typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(DELETE_WAIT) : undefined
+    const res = await fetch(`${API}/transcript/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { authorization: key }, signal })
+    if (res.ok) return 'deleted'
+    if (res.status === 404) return 'missing'
+    return res.status >= 400 && res.status < 500 && res.status !== 429 ? 'refused' : 'failed'
   } catch {
     return 'failed'
   }
@@ -119,6 +126,8 @@ interface Left {
   world?: string
   /** No transcript waits on it any more (saved, started over, or its session deleted): delete it whenever possible. */
   done?: boolean
+  /** Other keys AssemblyAI wouldn't delete it with (someone else's account, say): not tried with them again. */
+  missedBy?: string[]
 }
 
 /** A short fingerprint of a key, to tell keys apart without keeping a second copy of one. */
@@ -165,13 +174,18 @@ export async function forgetCloudJob(id: string, key: string) {
     if (was) writeLeft(left.map((j) => (j.id === id ? { ...j, done: true } : j)))
     return false
   }
-  writeLeft([...left.filter((j) => j.id !== id), { ...(was ?? { id, at: Date.now(), key: keyMark(key) }), done: true }])
+  const mark = keyMark(key)
+  writeLeft([...left.filter((j) => j.id !== id), { ...(was ?? { id, at: Date.now(), key: mark }), done: true }])
   const result = await deleteCloudJob(id, key)
+  const sender = !was || was.key === mark
   // "Not found" only proves it's gone when asked with the key that sent it.
-  if (result === 'deleted' || (result === 'missing' && (!was || was.key === keyMark(key)))) {
+  if (result === 'deleted' || (result === 'missing' && sender)) {
     keepCloudJob(id)
     return true
   }
+  // Another key that can't delete it (another account's) isn't tried on it again; the key that sent it still is.
+  if (!sender && result !== 'failed')
+    writeLeft(readLeft().map((j) => (j.id === id ? { ...j, missedBy: [...new Set([...(j.missedBy ?? []), mark])] } : j)))
   return false
 }
 
@@ -181,24 +195,28 @@ export const jobsInUse = (sessions: Session[]) =>
 
 let sweeping: Promise<number> | undefined
 /**
- * Tries again to delete, with this key, every job it sent that nothing on this device waits on any
- * more: one finished with (saved, started over, its session deleted) at once, any other after an
- * hour (its transcript saved or started over on another device, say). One whose world isn't on this
- * device (taken off it, but maybe still in the cloud) waits a month, as another device may still pick
- * its transcript up. Returns how many copies this key still has at AssemblyAI that nothing here waits on.
+ * Tries again to delete every job sent from this device that nothing here waits on any more: one
+ * finished with (saved, started over, its session deleted) at once, any other after an hour (its
+ * transcript saved or started over on another device, say). One whose world isn't on this device
+ * (taken off it, but maybe still in the cloud) waits a month, as another device may still pick its
+ * transcript up. A job another key sent is tried with this one too (the same account's new key, say)
+ * until AssemblyAI says this key can't delete it. Nothing new is tried after `deadline`. Returns how
+ * many copies are still at AssemblyAI that nothing here waits on.
  */
-export function deleteCloudLeftovers(key: string) {
+export function deleteCloudLeftovers(key: string, deadline = Infinity) {
   sweeping ??= (async () => {
+    if (!key || !readLeft().length) return 0
     const mark = keyMark(key)
-    const mine = () => readLeft().filter((j) => j.key === mark)
-    if (!key || !mine().length) return 0
     const { db } = await import('../db')
     const waiting = jobsInUse(await db.sessions.toArray())
     const worlds = new Set(await db.worlds.toCollection().primaryKeys())
     const age = (j: Left) => Date.now() - j.at
     const due = (j: Left) => j.done || (age(j) > HOUR && ((!!j.world && worlds.has(j.world)) || age(j) > MONTH))
-    for (const j of mine()) if (!waiting.has(j.id) && due(j)) await forgetCloudJob(j.id, key)
-    return mine().filter((j) => !waiting.has(j.id)).length
+    for (const j of readLeft()) {
+      if (Date.now() > deadline) break
+      if (!waiting.has(j.id) && due(j) && !j.missedBy?.includes(mark)) await forgetCloudJob(j.id, key)
+    }
+    return readLeft().filter((j) => !waiting.has(j.id)).length
   })().finally(() => (sweeping = undefined))
   return sweeping
 }

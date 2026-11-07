@@ -414,7 +414,7 @@ test('Show players at the Lectern: tabs, a picture search, what’s up with Stop
   }
 })
 
-test('AssemblyAI’s copies go once nothing waits on them, only with the key that sent them, and with the session', async ({ page, world, device }) => {
+test('AssemblyAI’s copies go once nothing waits on them, “not found” counts only for the key that sent them, and they go with the session', async ({ page, world, device }) => {
   test.skip(device === 'phone', 'not about the screen')
   const w = `/w/${world.slug}`
   const s1 = world.session(1)
@@ -443,7 +443,7 @@ test('AssemblyAI’s copies go once nothing waits on them, only with the key tha
     if (route.request().method() !== 'DELETE') return route.fulfill({ status: 500, body: '{}' })
     deleted.push(job)
     keys.add(route.request().headers().authorization ?? '')
-    return route.fulfill({ status: job === 'job-missing' ? 404 : job === 'job-fails' ? 500 : 200, contentType: 'application/json', body: '{}' })
+    return route.fulfill({ status: job === 'job-missing' || job === 'job-other-key' ? 404 : job === 'job-fails' ? 500 : 200, contentType: 'application/json', body: '{}' })
   })
   const noted = () => page.evaluate(() => (JSON.parse(localStorage.getItem('codex.assemblyLeft') ?? '[]') as { id: string }[]).map((j) => j.id).sort())
   try {
@@ -467,10 +467,15 @@ test('AssemblyAI’s copies go once nothing waits on them, only with the key tha
 
     // Opening its recordings tries again: what's finished with, or left over in a world on this device.
     await open(page, `${w}/s/${id}?tab=notes`)
-    await expect.poll(() => [...new Set(deleted)].sort()).toEqual(['job-away-long', 'job-done', 'job-fails', 'job-missing', 'job-old'])
+    await expect.poll(() => [...new Set(deleted)].sort()).toEqual(['job-away-long', 'job-done', 'job-fails', 'job-missing', 'job-old', 'job-other-key'])
     expect([...keys]).toEqual(['key-a'])
-    // Kept: the one still being made, one only just sent, one whose world is elsewhere, someone else's, and the failed delete.
+    // Kept: the one still being made, one only just sent, one whose world is elsewhere, the failed delete, and another key's
+    // (this key not finding it doesn't mean it's gone).
     await expect.poll(noted).toEqual(['job-away', 'job-fails', 'job-other-key', 'job-waiting', 'job-young'])
+    // Next time: the failed delete is tried again, but another key's job isn't tried with this key again.
+    await open(page, `${w}/s/${id}?tab=notes`)
+    await expect.poll(() => deleted.filter((j) => j === 'job-fails').length).toBe(2)
+    expect(deleted.filter((j) => j === 'job-other-key')).toHaveLength(1)
 
     // Deleting the session deletes the copy it was waiting on, and the bin's copy no longer waits on it.
     await open(page, `${w}/s/${id}?tab=prep`)

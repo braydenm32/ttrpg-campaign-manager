@@ -167,6 +167,7 @@ interface LeaveCheck {
   blocked?: string
   /** The GM's own worlds only on this device: gone for good. */
   lost: string[]
+  lostIds: string[]
   /** The GM's own worlds backed up to this account: they come back on sign-in. */
   kept: string[]
   /** Copies of worlds joined as a player or opened from a wiki link. */
@@ -180,7 +181,7 @@ interface LeaveCheck {
 }
 
 async function checkBeforeLeaving(userId: string): Promise<LeaveCheck> {
-  if (recordingStore.get()) return { blocked: 'A session is being recorded on this device. Stop and save the recording first, or it’s lost.', lost: [], kept: [], copies: 0, recordings: 0 }
+  if (recordingStore.get()) return { blocked: 'A session is being recorded on this device. Stop and save the recording first, or it’s lost.', lost: [], lostIds: [], kept: [], copies: 0, recordings: 0 }
   // Send what's waiting first (and wait for a sync already under way, and one more for what changed
   // meanwhile), so the account has the latest of every world it backs up.
   await syncEverythingNow().catch(() => {})
@@ -191,14 +192,17 @@ async function checkBeforeLeaving(userId: string): Promise<LeaveCheck> {
   // New recordings stay on the device that made them (older ones may be in the account, or in a backup from here).
   let recordings = 0
   for (const w of own) recordings += (await recordingsOnlyHere(w.id)).count
-  // Once this device is cleared nothing tries again, so have one more go now.
+  // Once this device is cleared nothing tries again, so have one more go now (for up to about 8 seconds).
   const { assemblyKey, keepAtAssembly } = getAiSettings()
   const assemblyLeft =
     assemblyKey.trim() && !keepAtAssembly
-      ? await Promise.race([import('../ai/cloud').then((c) => c.deleteCloudLeftovers(assemblyKey.trim())), new Promise<number>((done) => setTimeout(() => done(0), 8000))]).catch(() => 0)
+      ? await import('../ai/cloud')
+          .then((c) => c.deleteCloudLeftovers(assemblyKey.trim(), Date.now() + 8000))
+          .catch(() => 0)
       : 0
   return {
     lost: own.filter((w) => !backedUp(w)).map((w) => w.name),
+    lostIds: own.filter((w) => !backedUp(w)).map((w) => w.id),
     kept: own.filter(backedUp).map((w) => w.name),
     copies: worlds.length - own.length,
     recordings,
@@ -217,7 +221,14 @@ async function checkBeforeLeaving(userId: string): Promise<LeaveCheck> {
 }
 
 /** Takes everything the app keeps off this device: every world and copy, recordings, AI keys and settings. Then starts afresh. */
-async function removeEverythingHere() {
+async function removeEverythingHere(check: LeaveCheck) {
+  // A transcript AssemblyAI is still making for a world that goes for good: nothing will pick it up now, so its copy goes too.
+  const { assemblyKey, keepAtAssembly } = getAiSettings()
+  if (assemblyKey.trim() && !keepAtAssembly && check.lostIds.length) {
+    const { forgetCloudJob, jobsInUse } = await import('../ai/cloud')
+    const jobs = jobsInUse(await db.sessions.where('worldId').anyOf(check.lostIds).toArray())
+    await Promise.all([...jobs].map((id) => forgetCloudJob(id, assemblyKey.trim())))
+  }
   await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
   stopSync()
   await db.delete()
@@ -324,7 +335,7 @@ function SignOutEverything({ userId, onCancel }: { userId: string; onCancel: () 
             setBusy(true)
             setError('')
             try {
-              await removeEverythingHere()
+              await removeEverythingHere(check)
             } catch (err) {
               setError(cloudErrorMessage(err))
               setBusy(false)

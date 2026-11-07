@@ -583,12 +583,43 @@ test('“Sign out and remove all worlds and keys” says what goes, then leaves 
       },
     ])
     await putRows(page, 'assets', [{ id: 'rec-audio', worldId: 'synced-world', name: 'The Salt Road.webm', mime: 'audio/webm', size: 4_000_000, tags: ['recording'], visibility: 'gm', createdAt: 1 }])
+    // In the world that goes for good, a transcript AssemblyAI is still making.
+    await putRows(page, 'sessions', [
+      {
+        id: 'lost-session',
+        worldId: local.id,
+        campaignId: '',
+        number: 1,
+        title: 'The Fog Gate',
+        date: '',
+        notes: '',
+        recap: '',
+        visibility: 'gm',
+        entityIds: [],
+        recordings: [{ assetId: 'rec-gone', startedAt: 3, bookmarks: [], transcript: { engine: 'cloud', lines: [], pending: { jobId: 'job-lost' }, createdAt: 3 } }],
+      },
+    ])
     await page.evaluate(() => localStorage.setItem('codex.test.marker', 'mine'))
-    // An AssemblyAI copy this device hasn't managed to delete (AssemblyAI can't be reached here).
-    await page.evaluate((mark) => {
-      localStorage.setItem('codex.ai', JSON.stringify({ assemblyKey: 'key-a' }))
-      localStorage.setItem('codex.assemblyLeft', JSON.stringify([{ id: 'job-1', at: Date.now(), key: mark, world: 'synced-world', done: true }]))
-    }, keyMark('key-a'))
+    // An AssemblyAI copy this device hasn't managed to delete (AssemblyAI won't delete it right now).
+    await page.evaluate(
+      ({ mark, lost }) => {
+        localStorage.setItem('codex.ai', JSON.stringify({ assemblyKey: 'key-a' }))
+        localStorage.setItem(
+          'codex.assemblyLeft',
+          JSON.stringify([
+            { id: 'job-1', at: Date.now(), key: mark, world: 'synced-world', done: true },
+            { id: 'job-lost', at: Date.now(), key: mark, world: lost },
+          ]),
+        )
+      },
+      { mark: keyMark('key-a'), lost: local.id },
+    )
+    const deletedAtAssembly: string[] = []
+    await context.route('https://api.assemblyai.com/**', (route) => {
+      const job = new URL(route.request().url()).pathname.split('/').pop() ?? ''
+      if (route.request().method() === 'DELETE') deletedAtAssembly.push(job)
+      return route.fulfill({ status: job === 'job-1' ? 500 : 200, contentType: 'application/json', body: '{}' })
+    })
     await open(page, '/')
     await page.getByRole('button', { name: /gm@example\.com/ }).click()
     const account = page.getByRole('dialog', { name: 'Your account' })
@@ -598,6 +629,8 @@ test('“Sign out and remove all worlds and keys” says what goes, then leaves 
     await expect(account).toContainText('Saved in your account, so they come back when you sign in again: “The Glass Coast”')
     await expect(account).toContainText('Also gone for good: a session recording only on this device')
     await expect(account).toContainText('AssemblyAI hasn’t deleted a transcript sent from here yet')
+    // The one still being made isn't touched before you say yes.
+    expect(deletedAtAssembly).toEqual(['job-1'])
     await expect(account).toContainText('the AI keys saved here')
     // Not before saying so.
     const remove = account.getByRole('button', { name: 'Remove everything and sign out' })
@@ -613,6 +646,8 @@ test('“Sign out and remove all worlds and keys” says what goes, then leaves 
     const reloaded = page.waitForEvent('load')
     await remove.click()
     await reloaded
+    // Its world went for good, so its copy at AssemblyAI went first.
+    expect(deletedAtAssembly).toContain('job-lost')
     expect(new URL(page.url()).pathname).toBe('/')
     await expect(page.getByRole('heading', { name: /Your worlds/ })).toBeVisible()
     await expect.poll(async () => (await worlds()).map((x) => x.name)).toEqual([])
