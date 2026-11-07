@@ -275,6 +275,70 @@ export function toClassic(d: Drawing): Drawing {
   }
 }
 
+/** What the id of a piece, room or stroke may look like (the app's own are all like this). */
+export const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/
+
+type Loose = Record<string, unknown>
+const isLoose = (v: unknown): v is Loose => !!v && typeof v === 'object' && !Array.isArray(v)
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
+const isPoint = (p: unknown): p is Point => Array.isArray(p) && isNum(p[0]) && isNum(p[1])
+const pointList = (v: unknown) => (Array.isArray(v) ? v.filter(isPoint) : [])
+const word = (v: unknown) => (typeof v === 'string' ? v : isNum(v) ? String(v) : '')
+
+/**
+ * A drawing from outside this device (someone else's backup, or another device through sync) made
+ * safe to open. A piece, room or stroke whose id isn't plain letters and digits gets a new one (made
+ * from where it sits, so every device makes the same one), and parts of the wrong kind are put right:
+ * points that aren't numbers are left out, a list that isn't one is emptied, text becomes text.
+ * Kinds of things this version doesn't know are kept as they are, and a drawing the app made comes
+ * back the same. Something that isn't a drawing at all gives undefined.
+ */
+export function cleanDrawing(d: unknown): Drawing | undefined {
+  if (!isLoose(d)) return undefined
+  const out: Loose = { ...d, shapes: [] }
+  const list = (key: 'shapes' | 'rooms' | 'land' | 'ground', fix: (x: Loose) => void) => {
+    const was = d[key]
+    if (key !== 'shapes' && was === undefined) return
+    out[key] = (Array.isArray(was) ? was : []).flatMap((x: unknown, i: number) => {
+      if (!isLoose(x)) return []
+      const y = { ...x }
+      if (isNum(y.id)) y.id = String(y.id)
+      if (typeof y.id !== 'string' || !SAFE_ID.test(y.id)) y.id = `fixed-${key}-${i}`
+      fix(y)
+      return [y]
+    })
+  }
+  list('shapes', (s) => {
+    if (s.kind === 'area' || s.kind === 'line' || s.points !== undefined) s.points = pointList(s.points)
+    if (s.kind === 'stamp' || s.kind === 'label' || s.kind === 'asset') {
+      if (!isPoint(s.at)) s.at = [0, 0]
+      if (!isNum(s.size)) s.size = 32
+    }
+    if (s.kind === 'label') s.text = word(s.text)
+    if (s.kind === 'asset') s.asset = word(s.asset)
+    if (s.kind === 'stamp') s.stamp = word(s.stamp)
+    if (s.curve != null) s.curve = pointList(s.curve)
+  })
+  const stroke = (s: Loose) => {
+    s.points = pointList(s.points)
+    if (s.size != null && !isNum(s.size)) s.size = 40
+  }
+  list('rooms', stroke)
+  list('land', stroke)
+  list('ground', (s) => {
+    stroke(s)
+    if (typeof s.ground !== 'string') s.ground = 'grass'
+  })
+  for (const key of ['hidden', 'locked'] as const) {
+    const was = d[key]
+    if (was !== undefined) out[key] = Array.isArray(was) ? was.filter((x) => typeof x === 'string') : []
+  }
+  if (!isNum(d.gridSize)) out.gridSize = 70
+  if (d.groundBase !== undefined && typeof d.groundBase !== 'string') delete out.groundBase
+  if (d.tiles !== undefined) out.tiles = isLoose(d.tiles) ? Object.fromEntries(Object.entries(d.tiles).filter(([, v]) => typeof v === 'string')) : {}
+  return out as unknown as Drawing
+}
+
 /** Smooth closed or open path through the points (Catmull-Rom converted to Béziers). */
 export function pathFor(points: Point[], closed: boolean, smooth: boolean) {
   if (points.length < 2) return ''
