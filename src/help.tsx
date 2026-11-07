@@ -424,6 +424,8 @@ export const HELP = {
   exampleStartHere: 'Vael Ardith comes with four guides written for new GMs: Start Here, the GM’s chapter for the campaign, the clocks and a Player’s Guide. They’re ordinary pages, so you can read them as players would too.',
   recentPages: 'The pages you opened lately on this device, newest first. They’re also the first thing in the search box (Ctrl+K) before you type.',
   duplicate: 'Make a new page that starts as a copy of this one, with “(copy)” after the name. It starts GM only, and who the original was revealed to doesn’t come along.',
+  pictureTitle: 'Players aren’t told the name of a page or map they can’t see, so its picture goes out as “A picture”, or whatever you call it here (“A hooded stranger”). Want them to know who it is? Reveal the page, then show it. In the list of pictures, a lock marks one whose page or map players can’t see. The same goes for scene cards and boards: what players see a picture called is under it.',
+  beingRecorded: 'Your GM’s app is recording the sound of this session, usually to write up notes afterwards. It says so here for as long as it records. The recording is for your GM: players can’t play it back or read what was said. Not happy being recorded? Say so to your GM.',
 } as const
 
 export type HelpTopic = keyof typeof HELP

@@ -882,12 +882,14 @@ function Initiative({ lectern, edit, entities, campaignId }: PanelProps & { enti
 
 const QUICK_DICE = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100']
 
-/** Rolls dice on the Lectern (and for players to see, if the GM chose that). Throws on dice it can't read. */
+/**
+ * Rolls dice on the Lectern (and for players to see, if the GM chose that). Throws on dice it can't
+ * read. A saved roll's name ("Assassin in the choir") stays in the GM's own list: players only get the dice.
+ */
 function rollOnLectern(edit: Edit, text: string, shareTo?: string, label?: string) {
   const r = roll(text)
-  const expr = label ? `${label}: ${r.expr}` : r.expr
-  edit((l) => void (l.rolls = [{ ...r, expr, id: newId(), at: Date.now() }, ...l.rolls].slice(0, 30)))
-  if (shareTo) void shareRoll(shareTo, { who: 'GM', expr, total: r.total, detail: r.detail, crit: r.crit })
+  edit((l) => void (l.rolls = [{ ...r, expr: label ? `${label}: ${r.expr}` : r.expr, id: newId(), at: Date.now() }, ...l.rolls].slice(0, 30)))
+  if (shareTo) void shareRoll(shareTo, { who: 'GM', expr: r.expr, total: r.total, detail: r.detail, crit: r.crit })
   return r
 }
 
