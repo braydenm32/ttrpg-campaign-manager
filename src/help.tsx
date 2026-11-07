@@ -149,7 +149,7 @@ export const HELP = {
     'Your world’s own calendar: month and day names, the year’s name (like DR) moons, leap years, festivals and holidays. Pick a ready-made one (Forgotten Realms, Golarion, Eberron, Greyhawk, Exandria) or make your own. Events can then have real dates.',
   worldToday: 'Today’s date in your world. Move it on as time passes in the game; each session remembers the date it started on.',
   relations:
-    'How this page connects to others: family, friends, enemies, who serves whom. Players only see a link (and its note) when you tick “Players know”. Every link shows up on both pages.',
+    'How this page connects to others: family, friends, enemies, who serves whom. In the Relationship box, type any words you like (“sworn to”, “owes a life debt to”) and pick from the suggestions that pop up, or press the arrow for the common ones. Players only see a link (and its note) when you tick “Players know”. Every link shows up on both pages.',
   relationWeb:
     'Everyone and how they’re connected, drawn as a web. It opens on one person and everyone within two links of them: your own character for a player, otherwise the best-connected player character. Click someone to move to them (Back goes back), pick Everyone to see the whole web, or switch to the family tree. In a big world it shows just people, factions and gods; switch to every kind of page to see places and items too. Add links from any page’s Relationships box; removing one offers Undo.',
   clocks:
