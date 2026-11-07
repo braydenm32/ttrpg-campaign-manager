@@ -7,11 +7,13 @@ import { MaskHappy } from '@phosphor-icons/react'
 import { pagePath } from '../paths'
 import { useInbox } from '../Sidebar'
 import { approveClaimLater, declineClaimLater } from './inboxActions'
+import { ClaimNameClash } from './NewCharacters'
 
 /**
  * For the GM: a banner when a player asks to play a character, with Approve and Decline right
  * there (each with Undo for a few seconds). It reads the same inbox as the Desk and the Inbox,
- * where the same requests are listed, so it isn't shown on the Desk.
+ * where the same requests are listed, so it isn't shown on the Desk. A character sharing a name
+ * with another says so first (secret passages for the other would reach this player too).
  */
 export function ClaimRequestsBanner({ world }: { world: World }) {
   const { claims, reload } = useInbox()
@@ -32,6 +34,7 @@ export function ClaimRequestsBanner({ world }: { world: World }) {
             <button className="small" onClick={() => declineClaimLater(world.id, c, name, reload)}>
               Decline
             </button>
+            <ClaimNameClash worldId={world.id} entityId={c.entityId} player={c.who} inline />
           </div>
         )
       })}

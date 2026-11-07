@@ -26,6 +26,7 @@ import { Ico } from '../icons'
 import { BookOpen, MaskHappy } from '@phosphor-icons/react'
 import { pagePath } from '../paths'
 import { RenameButton } from './Rename'
+import { ClaimNameClash } from './NewCharacters'
 
 /** World settings: invite players with a link, and see who has joined and which character each plays. */
 export function PlayersSettings({ world }: { world: World }) {
@@ -151,6 +152,7 @@ export function PlayersSettings({ world }: { world: World }) {
                                 (approve)
                               </button>
                             )}{' '}
+                            {!c.approved && <ClaimNameClash worldId={world.id} entityId={c.entityId} player={m.name} inline />}{' '}
                             <button
                               className="link"
                               title="Free this character for someone else"

@@ -10,7 +10,7 @@ import { useWorld } from '../hooks'
 import { AskForm, pageLink, QuestionList } from '../players/Questions'
 import { useViewMode } from '../viewMode'
 import { DowntimeItem } from '../players/Downtime'
-import { ReviewCharacter } from '../players/NewCharacters'
+import { ClaimNameClash, ReviewCharacter } from '../players/NewCharacters'
 import { approveClaimLater, declineClaimLater, deleteDowntimeLater, deleteQuestionLater } from '../players/inboxActions'
 import { useInbox } from '../Sidebar'
 import { Ico } from '../icons'
@@ -141,6 +141,7 @@ function GmInbox({ world }: { world: World }) {
           <p>
             Asked to play <Link to={pagePath(world.id, c.entityId)}>{name(c.entityId)}</Link>. Approving lets them edit that character’s sheet and read the passages written for them.
           </p>
+          <ClaimNameClash worldId={world.id} entityId={c.entityId} player={c.who} />
           <div className="row wrap">
             <button className="primary" onClick={() => approveClaimLater(world.id, c, name(c.entityId), inbox.reload)}>
               ✓ Approve

@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { MyNewCharacters } from './NewCharacters'
+import { ClaimNameClash, MyNewCharacters } from './NewCharacters'
 import { cloudErrorMessage } from '../cloud/client'
 import { Help } from '../help'
 import { useState } from 'react'
@@ -70,9 +70,12 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
       )}
 
       {owner?.pending && !memberOf && (
-        <button className="primary" disabled={busy} onClick={() => run(() => approveClaim(world.id, entity.id))}>
-          ✓ Approve
-        </button>
+        <>
+          <ClaimNameClash worldId={world.id} entityId={entity.id} player={owner.name} />
+          <button className="primary" disabled={busy} onClick={() => run(() => approveClaim(world.id, entity.id))}>
+            ✓ Approve
+          </button>
+        </>
       )}
 
       {owner?.mine && !owner.pending && memberOf && <EditMyCharacter entity={entity} cloudId={memberOf} system={world.system} />}
