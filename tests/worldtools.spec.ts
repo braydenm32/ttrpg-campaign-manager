@@ -12,7 +12,7 @@ import type { World } from './lib/world'
 
 const toast = (page: Page) => page.locator('.undo-toast')
 
-test('a relationship’s “Who?” and the editor’s “Inside” find a page by typing', async ({ page, world }) => {
+test('a relationship’s type and “Who?”, and the editor’s “Inside” find a page by typing', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   const gerda = world.page('Gerda Hollin')
   await open(page, `${w}/p/${world.pageSlug('Gerda Hollin')}`)
@@ -21,6 +21,17 @@ test('a relationship’s “Who?” and the editor’s “Inside” find a page 
     const add = page.getByRole('button', { name: 'Add a relationship' })
     if (await add.count()) await add.click()
     else await page.locator('.relations').getByRole('button', { name: '+ Link' }).click()
+    // The Relationship box: the arrow lists the common ones, typing suggests matches, and any words work.
+    const kind = page.getByRole('combobox', { name: 'Relationship' })
+    await page.getByRole('button', { name: 'Show common relationships' }).click()
+    for (const k of ['friend of', 'ally of', 'enemy of', 'lover of']) await expect(page.locator('.kind-picker-list button', { hasText: k }).first()).toBeVisible()
+    await kind.fill('ene')
+    await expect(page.locator('.kind-picker-list button').first()).toHaveText('enemy of')
+    await kind.fill('keeps bees for')
+    await expect(page.locator('.kind-picker-list')).toHaveCount(0)
+    await kind.fill('fri')
+    await page.locator('.kind-picker-list').getByRole('button', { name: 'friend of', exact: true }).click()
+    await expect(kind).toHaveValue('friend of')
     const who = page.getByRole('combobox', { name: 'Who' })
     await who.click()
     // An empty box offers pages straight away (the ones changed most recently first), never all of them at once.
@@ -29,7 +40,7 @@ test('a relationship’s “Who?” and the editor’s “Inside” find a page 
     await page.locator('.page-picker-list button', { hasText: 'Fennick Bottlebrook' }).click()
     await expect(who).toHaveValue('Fennick Bottlebrook')
     await page.locator('.add-relation').getByRole('button', { name: 'Add' }).click()
-    await expect(page.locator('.relations')).toContainText('Fennick Bottlebrook')
+    await expect(page.locator('.relations')).toContainText('friend of Fennick Bottlebrook')
   } finally {
     await putBack(page, 'entities', [[gerda.id, before]])
   }
