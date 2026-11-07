@@ -1,5 +1,6 @@
 import { blankEntity, db, ENTITY_TYPES, LIFE_STATUS, newId, saveEntity, THREAD_STATUS, type Entity, type EntityType, type LedgerEntry, type LifeStatus, type Session, type World, type WorldUpdate } from '../db'
 import { nameIndex } from '../links'
+import { gmBlock } from '../Markdown'
 import { RELATION_KINDS } from '../relations'
 import { moveReputation, type Move } from '../reputation'
 
@@ -219,12 +220,17 @@ export function describe(u: WorldUpdate): string {
 /** "party" or "the party", in any case. */
 export const isParty = (who: string) => /^(the )?party$/i.test(who.trim())
 
-/** Adds lines under a "Session log" heading at the end of a page. GM-only lines go in a :::gm block. */
+/**
+ * Adds lines under a "Session log" heading at the end of a page. GM-only lines go in a :::gm block.
+ * Each line stays one line, whatever Claude (or the GM) wrote, so none can end the block early or
+ * start a heading of its own.
+ */
 export function addToSessionLog(body: string, lines: { text: string; players?: boolean }[]) {
   if (!lines.length) return body
-  const open = lines.filter((l) => l.players).map((l) => `- ${l.text}`)
-  const secret = lines.filter((l) => !l.players).map((l) => `- ${l.text}`)
-  const chunk = [...open, ...(secret.length ? [':::gm', ...secret, ':::'] : [])].join('\n')
+  const item = (l: { text: string }) => `- ${l.text.replace(/\s*[\r\n]+\s*/g, ' ').trim()}`
+  const open = lines.filter((l) => l.players).map(item)
+  const secret = lines.filter((l) => !l.players).map(item)
+  const chunk = [...open, ...(secret.length ? [gmBlock(secret.join('\n'))] : [])].join('\n')
   const head = body.search(/^##\s*Session log\s*$/im)
   if (head < 0) return `${body.trimEnd()}${body.trim() ? '\n\n' : ''}## Session log\n\n${chunk}\n`
   // The section runs to the next heading of the same or a higher level.
