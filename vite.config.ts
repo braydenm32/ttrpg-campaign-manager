@@ -137,7 +137,8 @@ export default defineConfig({
       // The legal pages are their own pages, not routes inside the app, so the offline cache must not swap them for the app.
       // The on-device transcription engine is big and needs the internet for its model anyway, so it isn't kept for offline.
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
+        // rules/*.json: the rules that come with the app (Look it up), so they work offline too.
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}', 'rules/*.json'],
         // Pictures only for link previews and the install sheet aren't needed offline.
         globIgnores: ['**/whisper.worker-*.js', 'social.png', 'screenshot-*.png'],
         navigateFallbackDenylist: [/\.html$/],

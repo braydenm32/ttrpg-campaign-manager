@@ -8,7 +8,15 @@ import { putBack } from './lib/records'
  * sites answer. Each test removes the pages it made.
  */
 
-type Stored = { id: string; worldId?: string; name?: string; type?: string; body?: string; fields?: { key: string; value: string }[]; customType?: string }
+type Stored = {
+  id: string
+  worldId?: string
+  name?: string
+  type?: string
+  body?: string
+  fields?: { key: string; value: string }[]
+  customType?: string
+}
 
 function rows(page: Page, table: string) {
   return page.evaluate(
@@ -31,10 +39,20 @@ const made = async (page: Page, worldId: string, before: Set<string>, name: stri
 const pagesNow = async (page: Page) => new Set((await rows(page, 'entities')).map((e) => e.id))
 const forget = async (page: Page, worldId: string, before: Set<string>) => {
   const ids = (await rows(page, 'entities')).filter((e) => e.worldId === worldId && !before.has(e.id)).map((e) => e.id)
-  if (ids.length) await putBack(page, 'entities', ids.map((id): [string, null] => [id, null]))
+  if (ids.length)
+    await putBack(
+      page,
+      'entities',
+      ids.map((id): [string, null] => [id, null]),
+    )
 }
 
-const json = (body: unknown) => ({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(body) })
+const json = (body: unknown) => ({
+  status: 200,
+  contentType: 'application/json',
+  headers: { 'access-control-allow-origin': '*' },
+  body: JSON.stringify(body),
+})
 
 test('Look it up finds a spell in the D&D SRD and keeps it as a page with its credit', async ({ page, world }) => {
   const asked: string[] = []
@@ -49,7 +67,10 @@ test('Look it up finds a spell in the D&D SRD and keeps it as a page with its cr
             {
               key: 'srd-2024_fireball',
               name: 'Fireball',
-              document: { key: 'srd-2024', name: 'System Reference Document 5.2' },
+              document: {
+                key: 'srd-2024',
+                name: 'System Reference Document 5.2',
+              },
               desc: 'A bright streak flashes from you to a point you choose within range and then blossoms into an explosion of flame.',
               higher_level: 'The damage increases by 1d6 for each spell slot level above 3.',
               level: 3,
@@ -59,7 +80,12 @@ test('Look it up finds a spell in the D&D SRD and keeps it as a page with its cr
               classes: [{ name: 'Sorcerer' }, { name: 'Wizard' }],
             },
             // Another book's spell, which this source leaves out.
-            { key: 'other_fireball', name: 'Fireball of Elsewhere', document: { key: 'tob' }, desc: 'Not this one.' },
+            {
+              key: 'other_fireball',
+              name: 'Fireball of Elsewhere',
+              document: { key: 'tob' },
+              desc: 'Not this one.',
+            },
           ],
         }),
       )
@@ -88,7 +114,13 @@ test('Look it up finds a spell in the D&D SRD and keeps it as a page with its cr
     expect(spell.type).toBe('lore')
     expect(spell.body).toContain('### At higher levels')
     expect(spell.body).toContain('Creative Commons Attribution 4.0')
-    expect(spell.fields).toEqual(expect.arrayContaining([{ key: 'Level', value: '3' }, { key: 'School', value: 'Evocation' }, { key: 'Classes', value: 'Sorcerer, Wizard' }]))
+    expect(spell.fields).toEqual(
+      expect.arrayContaining([
+        { key: 'Level', value: '3' },
+        { key: 'School', value: 'Evocation' },
+        { key: 'Classes', value: 'Sorcerer, Wizard' },
+      ]),
+    )
   } finally {
     await forget(page, world.id, before)
   }
@@ -102,13 +134,30 @@ test('Look it up reads a wiki article, its infobox and licence, and says when a 
       return route.fulfill(
         json({
           query: {
-            general: { server: 'https://forgottenrealms.fandom.com', articlepath: '/wiki/$1' },
-            rightsinfo: { url: 'https://www.fandom.com/licensing', text: 'CC-BY-SA' },
+            general: {
+              server: 'https://forgottenrealms.fandom.com',
+              articlepath: '/wiki/$1',
+            },
+            rightsinfo: {
+              url: 'https://www.fandom.com/licensing',
+              text: 'CC-BY-SA',
+            },
           },
         }),
       )
     if (p.get('list') === 'search')
-      return route.fulfill(json({ query: { search: [{ title: 'Phandalin', snippet: 'A <span class="searchmatch">town</span> on the Triboar Trail.' }] } }))
+      return route.fulfill(
+        json({
+          query: {
+            search: [
+              {
+                title: 'Phandalin',
+                snippet: 'A <span class="searchmatch">town</span> on the Triboar Trail.',
+              },
+            ],
+          },
+        }),
+      )
     if (p.get('action') === 'parse')
       return route.fulfill(
         json({
@@ -169,7 +218,20 @@ test('character sheets from Hero Lab, Fantasy Grounds and Shadowdarklings come i
     `<character name="${name}" role="pc"><race racetext="Half-Elf"/><alignment name="Neutral Good"/><classes level="5" summary="Bard 5"><class name="Bard" level="5"/></classes><attributes><attribute name="Strength"><attrvalue modified="10"/><attrbonus text="+0"/></attribute><attribute name="Charisma"><attrvalue modified="18"/><attrbonus text="+4"/></attribute></attributes><health hitpoints="33"/><armorclass ac="15"/><feats><feat name="Lingering Performance"><description>Songs last longer.</description></feat></feats><gear><item name="Lute" quantity="1"/></gear><melee><weapon name="Rapier" quantity="1"/></melee></character>`
   const portfolio = `<?xml version="1.0"?><document signature="Hero Lab Statblock"><public>${heroLab('Sheet Test Lyra')}</public></document>`
   const fg = `<?xml version="1.0" encoding="utf-8"?><root version="4.1"><character><name type="string">Sheet Test Brom</name><race type="string">Dwarf</race><classes><id-00001><name type="string">Fighter</name><level type="number">3</level></id-00001></classes><abilities><strength><score type="number">16</score><bonus type="number">3</bonus></strength></abilities><hp><total type="number">28</total></hp><defenses><ac><total type="number">18</total></ac></defenses><inventorylist><id-00001><name type="string">Warhammer</name><count type="number">1</count><carried type="number">2</carried></id-00001><id-00002><name type="string">Spare boots</name><count type="number">1</count><carried type="number">0</carried></id-00002></inventorylist></character></root>`
-  const sd = { name: 'Sheet Test Wren', ancestry: 'Halfling', class: 'Thief', level: 2, title: 'Footpad', alignment: 'Neutral', stats: { STR: 8, DEX: 16, CON: 12, INT: 10, WIS: 11, CHA: 13 }, maxHitPoints: 7, armorClass: 14, gear: [{ name: 'Thieves’ tools', quantity: 1 }], bonuses: [{ name: 'Backstab' }], goldRemaining: 12 }
+  const sd = {
+    name: 'Sheet Test Wren',
+    ancestry: 'Halfling',
+    class: 'Thief',
+    level: 2,
+    title: 'Footpad',
+    alignment: 'Neutral',
+    stats: { STR: 8, DEX: 16, CON: 12, INT: 10, WIS: 11, CHA: 13 },
+    maxHitPoints: 7,
+    armorClass: 14,
+    gear: [{ name: 'Thieves’ tools', quantity: 1 }],
+    bonuses: [{ name: 'Backstab' }],
+    goldRemaining: 12,
+  }
   const importFile = async (name: string, mimeType: string, body: string) => {
     await open(page, `/w/${world.slug}/settings?tab=data`)
     await page.getByRole('button', { name: 'Import character sheet' }).click()
@@ -197,7 +259,12 @@ test('character sheets from Hero Lab, Fantasy Grounds and Shadowdarklings come i
 
     const pages = (await rows(page, 'entities')).filter((e) => e.worldId === world.id && !before.has(e.id))
     const lyra = pages.find((e) => e.name === 'Sheet Test Lyra')!
-    expect(lyra.fields).toEqual(expect.arrayContaining([{ key: 'HP', value: '33' }, { key: 'AC', value: '15' }]))
+    expect(lyra.fields).toEqual(
+      expect.arrayContaining([
+        { key: 'HP', value: '33' },
+        { key: 'AC', value: '15' },
+      ]),
+    )
     expect(lyra.body).toContain('Lingering Performance')
     // Gear comes in as item pages; Fantasy Grounds' "not carried" things stay at home.
     expect(pages.map((e) => e.name)).toEqual(expect.arrayContaining(['Lute', 'Rapier', 'Warhammer', 'Thieves’ tools']))
@@ -221,7 +288,16 @@ async function beyondPdf(boxes: [string, string][]) {
     return PDFHexString.of(`${all.slice(0, 101)}\n${all.slice(101)}`)
   }
   const refs = boxes.map(([name, value]) =>
-    doc.context.register(doc.context.obj({ Type: 'Annot', Subtype: 'Widget', FT: 'Tx', Rect: [0, 0, 10, 10], T: PDFString.of(name), V: value.length > 30 ? hex(value) : PDFString.of(value) })),
+    doc.context.register(
+      doc.context.obj({
+        Type: 'Annot',
+        Subtype: 'Widget',
+        FT: 'Tx',
+        Rect: [0, 0, 10, 10],
+        T: PDFString.of(name),
+        V: value.length > 30 ? hex(value) : PDFString.of(value),
+      }),
+    ),
   )
   page.node.set(PDFName.of('Annots'), doc.context.obj(refs))
   return Buffer.from(await doc.save())
@@ -256,14 +332,24 @@ test('a D&D Beyond PDF, whose boxes aren’t in the PDF’s form, comes in whole
   ])
   try {
     await page.getByRole('button', { name: 'Import character sheet' }).click()
-    await page.locator('.sheet-way input[type=file]').setInputFiles({ name: 'player_161676672.pdf', mimeType: 'application/pdf', buffer: pdf })
+    await page.locator('.sheet-way input[type=file]').setInputFiles({
+      name: 'player_161676672.pdf',
+      mimeType: 'application/pdf',
+      buffer: pdf,
+    })
     await expect(page.getByText('from PDF sheet')).toBeVisible()
     await expect(page.locator('.sheet-fields')).toContainText('20 (+5)')
     await page.getByRole('button', { name: 'Add the character' }).click()
     await expect(page.getByRole('heading', { name: 'Sheet Test Vhorand', level: 1 })).toBeVisible()
     const made = (await rows(page, 'entities')).filter((e) => e.worldId === world.id && !before.has(e.id))
     const pc = made.find((e) => e.name === 'Sheet Test Vhorand')!
-    expect(pc.fields).toEqual(expect.arrayContaining([{ key: 'Str', value: '20 (+5)' }, { key: 'Saves', value: 'Str +9' }, { key: 'Species', value: 'Mountain Dwarf' }]))
+    expect(pc.fields).toEqual(
+      expect.arrayContaining([
+        { key: 'Str', value: '20 (+5)' },
+        { key: 'Saves', value: 'Str +9' },
+        { key: 'Species', value: 'Mountain Dwarf' },
+      ]),
+    )
     expect(pc.body).toContain('pool of healing power that replenishes when you finish a Long Rest.')
     expect(pc.body).toContain('Athletics +8 (proficient)')
     expect(pc.body).toContain('**Maul** +8 to hit, 2d6+5 Bludgeoning')
@@ -273,4 +359,53 @@ test('a D&D Beyond PDF, whose boxes aren’t in the PDF’s form, comes in whole
   } finally {
     await forget(page, world.id, before)
   }
+})
+
+test('the Daggerheart rules come with the app: found, read and kept without asking another site', async ({ page, world }) => {
+  const elsewhere: string[] = []
+  page.on('request', (r) => {
+    if (!r.url().startsWith('http://localhost')) elsewhere.push(r.url())
+  })
+  await open(page, `/w/${world.slug}/lookup`)
+  const before = await pagesNow(page)
+  try {
+    await page.getByRole('combobox', { name: 'Game' }).selectOption('Daggerheart')
+    await page.getByRole('searchbox', { name: 'Look up' }).fill('acid burrower')
+    await page.locator('.lookup-search').getByRole('button', { name: 'Search' }).click()
+    const results = page.getByRole('list', { name: 'Results' })
+    await expect(results.getByRole('button', { name: 'Acid Burrower', exact: true })).toBeVisible()
+    await results.getByRole('button', { name: 'Acid Burrower', exact: true }).click()
+    const result = page.locator('.lookup-result')
+    await expect(result).toContainText('Spit Acid')
+    await expect(result).toContainText('Darrington Press Community Gaming')
+    await page.getByRole('button', { name: 'Make the page' }).click()
+    await expect(page.getByRole('heading', { name: 'Acid Burrower', level: 1 })).toBeVisible()
+    const [burrower] = await made(page, world.id, before, 'Acid Burrower')
+    expect(burrower.type).toBe('npc')
+    expect(burrower.fields).toEqual(expect.arrayContaining([{ key: 'Difficulty', value: '14' }, { key: 'HP', value: '8' }]))
+    // Words from the rules text find the rules too.
+    await open(page, `/w/${world.slug}/lookup`)
+    await page.getByRole('combobox', { name: 'Game' }).selectOption('Daggerheart')
+    await page.getByRole('searchbox', { name: 'Look up' }).fill('vulnerable')
+    await page.locator('.lookup-search').getByRole('button', { name: 'Search' }).click()
+    await expect(page.getByRole('list', { name: 'Results' }).getByRole('button', { name: 'Conditions', exact: true })).toBeVisible()
+    expect(elsewhere).toEqual([])
+  } finally {
+    await forget(page, world.id, before)
+  }
+})
+
+test.describe('players', () => {
+  test.use({ view: 'player' })
+  test('players can look up the rules, but nothing they find is kept', async ({ page, world }) => {
+    await open(page, `/w/${world.slug}/lookup`)
+    await expect(page.getByRole('heading', { name: 'Look it up', level: 1 })).toBeVisible()
+    await page.getByRole('combobox', { name: 'Game' }).selectOption('Daggerheart')
+    await page.getByRole('searchbox', { name: 'Look up' }).fill('stress')
+    await page.locator('.lookup-search').getByRole('button', { name: 'Search' }).click()
+    await page.getByRole('list', { name: 'Results' }).getByRole('button', { name: 'Stress', exact: true }).click()
+    await expect(page.locator('.lookup-result')).toContainText('Darrington Press')
+    await expect(page.getByRole('button', { name: 'Make the page' })).toHaveCount(0)
+    await expect(page.getByText('Keep it as')).toHaveCount(0)
+  })
 })

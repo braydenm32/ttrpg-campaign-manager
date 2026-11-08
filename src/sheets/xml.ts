@@ -19,7 +19,8 @@ const n = (s: string) => (s && isFinite(+s) ? +s : undefined)
 /** Reads an XML file the user picked: Hero Lab (one or more characters) or Fantasy Grounds. */
 export function parseSheetXml(xml: string): Sheet[] {
   const doc = new DOMParser().parseFromString(xml, 'application/xml')
-  if (doc.querySelector('parsererror')) throw new Error('That XML file is damaged or isn’t a character. Save it again from the other tool and pick the new file.')
+  if (doc.querySelector('parsererror'))
+    throw new Error('That XML file is damaged or isn’t a character. Save it again from the other tool and pick the new file.')
   const root = doc.documentElement
   if (root.tagName === 'document' || root.querySelector('public > character')) {
     const sheets = kids(kid(root, 'public'), 'character').map(heroLab)
@@ -67,7 +68,11 @@ const short = (name: string) => name.slice(0, 3).replace(/^./, (c) => c.toUpperC
 function heroLab(c: Element): Sheet {
   const race = attr(kid(c, 'race'), 'racetext') || attr(kid(c, 'race'), 'name')
   const classesEl = kid(c, 'classes')
-  const classes = attr(classesEl, 'summary') || kids(classesEl, 'class').map((k) => `${attr(k, 'name')} ${attr(k, 'level')}`.trim()).join(' / ')
+  const classes =
+    attr(classesEl, 'summary') ||
+    kids(classesEl, 'class')
+      .map((k) => `${attr(k, 'name')} ${attr(k, 'level')}`.trim())
+      .join(' / ')
   const level = attr(classesEl, 'level')
   // Pathfinder and Starfinder write <attributes><attribute>; D&D 5e writes <abilityscores><abilityscore>.
   const abilities = [...kids(kid(c, 'attributes'), 'attribute'), ...kids(kid(c, 'abilityscores'), 'abilityscore')].map((a) => {
@@ -75,14 +80,20 @@ function heroLab(c: Element): Sheet {
     const bonus = kid(a, 'attrbonus') ?? kid(a, 'abilbonus')
     const v = attr(value, 'modified') || attr(value, 'text') || attr(value, 'base')
     const b = attr(bonus, 'text') || attr(bonus, 'modified') || (n(v) !== undefined ? signed(mod(n(v)!)) : '')
-    return { key: short(attr(a, 'name')), value: v ? `${v}${b ? ` (${b.startsWith('-') || b.startsWith('+') ? b : `+${b}`})` : ''}` : '' }
+    return {
+      key: short(attr(a, 'name')),
+      value: v ? `${v}${b ? ` (${b.startsWith('-') || b.startsWith('+') ? b : `+${b}`})` : ''}` : '',
+    }
   })
   const saves = kids(kid(c, 'saves'), 'save')
     .map((s) => `${attr(s, 'abbr') || attr(s, 'name').replace(/ save$/i, '')} ${attr(s, 'save') || attr(s, 'value')}`.trim())
     .join(', ')
   const health = kid(c, 'health')
   const speed = attr(kid(kid(c, 'movement'), 'speed'), 'text') || attr(kid(kid(c, 'movement'), 'speed'), 'value')
-  const named = (parent: string, child: string) => kids(kid(c, parent), child).map((x) => attr(x, 'name')).filter(Boolean)
+  const named = (parent: string, child: string) =>
+    kids(kid(c, parent), child)
+      .map((x) => attr(x, 'name'))
+      .filter(Boolean)
   const described = (parent: string, child: string) =>
     kids(kid(c, parent), child).map((x) => {
       const d = text(kid(x, 'description'))
@@ -92,7 +103,10 @@ function heroLab(c: Element): Sheet {
     .filter((s) => (n(attr(s, 'ranks')) ?? 1) > 0 || attr(s, 'proficient') === 'yes')
     .map((s) => `${attr(s, 'name')} ${attr(s, 'value')}`.trim())
   const spells = ['spellsknown', 'spellsmemorized', 'spellbook', 'spellsprepared'].flatMap((p) =>
-    kids(kid(c, p), 'spell').map((s) => ({ name: attr(s, 'name'), level: n(attr(s, 'level')) ?? 0 })),
+    kids(kid(c, p), 'spell').map((s) => ({
+      name: attr(s, 'name'),
+      level: n(attr(s, 'level')) ?? 0,
+    })),
   )
   const gearOf = (parent: string, child: string, equipped = false): Gear[] =>
     kids(kid(c, parent), child).map((g) => ({
@@ -120,7 +134,10 @@ function heroLab(c: Element): Sheet {
       { key: 'Deity', value: attr(kid(c, 'deity'), 'name') },
       ...abilities,
       { key: 'HP', value: attr(health, 'hitpoints') || attr(health, 'hp') },
-      { key: 'AC', value: attr(kid(c, 'armorclass'), 'ac') || attr(kid(c, 'armorclass'), 'value') },
+      {
+        key: 'AC',
+        value: attr(kid(c, 'armorclass'), 'ac') || attr(kid(c, 'armorclass'), 'value'),
+      },
       { key: 'Initiative', value: attr(kid(c, 'initiative'), 'total') },
       { key: 'Speed', value: speed },
       { key: 'Saves', value: saves },
@@ -188,7 +205,10 @@ function fantasyGrounds(c: Element): Sheet {
       ...ABILS.map(([k, label]) => {
         const score = val(c, `abilities.${k}.score`)
         const bonus = val(c, `abilities.${k}.bonus`)
-        return { key: label, value: score ? `${score} (${bonus ? signed(+bonus) : signed(mod(+score))})` : '' }
+        return {
+          key: label,
+          value: score ? `${score} (${bonus ? signed(+bonus) : signed(mod(+score))})` : '',
+        }
       }),
       { key: 'HP', value: val(c, 'hp.total') },
       { key: 'AC', value: val(c, 'defenses.ac.total') },
@@ -197,11 +217,26 @@ function fantasyGrounds(c: Element): Sheet {
       { key: 'XP', value: val(c, 'exp') },
     ]),
     body: sections(
-      section('Skills', list(c, 'skilllist').filter((x) => (n(val(x, 'prof')) ?? 0) > 0).map((x) => val(x, 'name'))),
+      section(
+        'Skills',
+        list(c, 'skilllist')
+          .filter((x) => (n(val(x, 'prof')) ?? 0) > 0)
+          .map((x) => val(x, 'name')),
+      ),
       section('Features', described('featurelist')),
       section('Traits', described('traitlist')),
       section('Feats', described('featlist')),
-      section('Spells and powers', spellList(list(c, 'powers').map((x) => ({ name: val(x, 'name'), level: n(val(x, 'level')) ?? 0 })).filter((s) => s.name))),
+      section(
+        'Spells and powers',
+        spellList(
+          list(c, 'powers')
+            .map((x) => ({
+              name: val(x, 'name'),
+              level: n(val(x, 'level')) ?? 0,
+            }))
+            .filter((s) => s.name),
+        ),
+      ),
       section('Money', coins),
       section('Personality', [val(c, 'personalitytraits'), val(c, 'ideals'), val(c, 'bonds'), val(c, 'flaws')].filter(Boolean)),
       section('Appearance', val(c, 'appearance')),

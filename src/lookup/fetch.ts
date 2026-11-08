@@ -4,7 +4,7 @@ import type { LookupSource } from './sources'
 
 /**
  * Asking the sources in sources.ts, straight from the browser (each allows it: Open5e for everyone,
- * MediaWiki when asked with origin=*). Nothing here is saved; the Look it up screen turns what's
+ * MediaWiki when asked with origin=*), or reading the rules that come with the app. Nothing here is saved; the Look it up screen turns what's
  * found into a page only when the GM says so.
  */
 
@@ -16,8 +16,9 @@ export interface Hit {
   kind: string
   /** A line of the text, to tell results apart. */
   snippet: string
-  /** Open5e sends everything with the search, so there's nothing more to fetch. */
+  /** Open5e sends everything with the search (and the app's own rules are all here), so there's nothing more to fetch. */
   raw?: Record<string, unknown>
+  bundled?: BundledEntry
   /** The page type it most likely becomes. */
   type: EntityType
 }
@@ -43,7 +44,10 @@ const TIMEOUT = 15_000
 async function getJson(url: string): Promise<unknown> {
   let res: Response
   try {
-    res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT), credentials: 'omit' })
+    res = await fetch(url, {
+      signal: AbortSignal.timeout(TIMEOUT),
+      credentials: 'omit',
+    })
   } catch {
     throw new LookupError('offline')
   }
@@ -59,11 +63,7 @@ async function getJson(url: string): Promise<unknown> {
 type Obj = Record<string, unknown>
 const isObj = (v: unknown): v is Obj => !!v && typeof v === 'object' && !Array.isArray(v)
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '')
-const plain = (html: string) =>
-  new DOMParser()
-    .parseFromString(html, 'text/html')
-    .body.textContent?.replace(/\s+/g, ' ')
-    .trim() ?? ''
+const plain = (html: string) => new DOMParser().parseFromString(html, 'text/html').body.textContent?.replace(/\s+/g, ' ').trim() ?? ''
 /** The opening sentence or so, for a page's one-line summary. */
 const firstLine = (md: string) => {
   const text = md
@@ -118,7 +118,14 @@ async function searchOpen5e(source: LookupSource, words: string): Promise<Hit[]>
         const results = isObj(data) && Array.isArray(data.results) ? data.results.filter(isObj) : []
         return results
           .filter((o) => str(o.name).toLowerCase().includes(lower) && (!o.document || !docKey(o) || docKey(o) === doc))
-          .map<Hit>((o) => ({ source, title: str(o.name), kind: k.kind, snippet: firstLine(str(o.desc)), raw: o, type: k.type }))
+          .map<Hit>((o) => ({
+            source,
+            title: str(o.name),
+            kind: k.kind,
+            snippet: firstLine(str(o.desc)),
+            raw: o,
+            type: k.type,
+          }))
       } catch (e) {
         // A kind this version of the API doesn't have is fine; every kind failing means it's unreachable.
         if (!(e instanceof LookupError && e.message === 'missing')) failures++
@@ -143,7 +150,22 @@ const human = (key: string) =>
     .replace(/\bAc\b/, 'AC')
     .replace(/\bHp\b/, 'HP')
 /** Parts of an Open5e entry that are about the API, not the thing itself. */
-const OPEN5E_SKIP = new Set(['key', 'url', 'name', 'desc', 'document', 'slug', 'page', 'page_no', 'highlighted', 'parent', 'children', 'ruleset', 'illustration', 'v2_converted_path'])
+const OPEN5E_SKIP = new Set([
+  'key',
+  'url',
+  'name',
+  'desc',
+  'document',
+  'slug',
+  'page',
+  'page_no',
+  'highlighted',
+  'parent',
+  'children',
+  'ruleset',
+  'illustration',
+  'v2_converted_path',
+])
 /** Text that reads as part of the description however short it is, with the heading it gets. */
 const PROSE = new Map([
   ['higher_level', 'At higher levels'],
@@ -182,7 +204,11 @@ function readOpen5e(hit: Hit): Found {
       else {
         // A set of numbers, like ability scores or speeds: "Strength 10, Dexterity 14".
         const pairs = Object.entries(v).filter(([, x]) => typeof x === 'number' || (typeof x === 'string' && x && x.length < 40))
-        if (pairs.length && pairs.length <= 12) fields.push({ key, value: pairs.map(([a, b]) => `${human(a)} ${b}`).join(', ') })
+        if (pairs.length && pairs.length <= 12)
+          fields.push({
+            key,
+            value: pairs.map(([a, b]) => `${human(a)} ${b}`).join(', '),
+          })
       }
     }
   }
@@ -224,7 +250,12 @@ function infoFor(source: LookupSource): Promise<WikiInfo> {
         return {
           api,
           articles: server && str(general.articlepath) ? server + str(general.articlepath) : '',
-          licence: str(rights.text) ? { name: str(rights.text), url: str(rights.url).replace(/^\/\//, 'https://') } : undefined,
+          licence: str(rights.text)
+            ? {
+                name: str(rights.text),
+                url: str(rights.url).replace(/^\/\//, 'https://'),
+              }
+            : undefined,
         }
       } catch (e) {
         lastError = e
@@ -239,9 +270,17 @@ function infoFor(source: LookupSource): Promise<WikiInfo> {
 
 async function searchWiki(source: LookupSource, words: string): Promise<Hit[]> {
   const { api } = await infoFor(source)
-  const data = await getJson(`${api}?action=query&list=search&srsearch=${encodeURIComponent(words)}&srlimit=12&srprop=snippet&format=json&formatversion=2&origin=*`)
+  const data = await getJson(
+    `${api}?action=query&list=search&srsearch=${encodeURIComponent(words)}&srlimit=12&srprop=snippet&format=json&formatversion=2&origin=*`,
+  )
   const results = isObj(data) && isObj(data.query) && Array.isArray(data.query.search) ? data.query.search.filter(isObj) : []
-  return results.map((r) => ({ source, title: str(r.title), kind: 'Wiki article', snippet: plain(str(r.snippet)), type: 'lore' as EntityType }))
+  return results.map((r) => ({
+    source,
+    title: str(r.title),
+    kind: 'Wiki article',
+    snippet: plain(str(r.snippet)),
+    type: 'lore' as EntityType,
+  }))
 }
 
 /** Bits of a wiki page that don't belong in a GM's notes: boxes, navigation, references, pictures, tables. */
@@ -283,7 +322,11 @@ function infoboxFields(root: Element) {
     const valueEl = row.querySelector('.pi-data-value')
     valueEl?.querySelectorAll('sup, .reference').forEach((x) => x.remove())
     valueEl?.querySelectorAll('br, li').forEach((x) => x.after(', '))
-    const value = valueEl?.textContent?.replace(/\s+/g, ' ').replace(/(,\s*)+$/, '').replace(/\s+,/g, ',').trim()
+    const value = valueEl?.textContent
+      ?.replace(/\s+/g, ' ')
+      .replace(/(,\s*)+$/, '')
+      .replace(/\s+,/g, ',')
+      .trim()
     if (key && value && value.length <= 160) out.push({ key, value })
   }
   for (const row of root.querySelectorAll('table.infobox tr')) {
@@ -350,18 +393,120 @@ async function readWiki(hit: Hit, whole: boolean): Promise<Found> {
   }
 }
 
+// ---------- rules that come with the app ----------
+
+/** One entry of a rules file in public/rules/ (see scripts/build-daggerheart.mjs). */
+interface BundledEntry {
+  /** Title, kind ("Adversary"), page type, Markdown, details. */
+  t: string
+  k: string
+  y: EntityType
+  b: string
+  f: Found['fields']
+}
+interface BundledRules {
+  name: string
+  credit: string
+  entries: BundledEntry[]
+}
+const bundled = new Map<string, Promise<BundledRules>>()
+
+function rulesFor(source: LookupSource) {
+  const known = bundled.get(source.id)
+  if (known) return known
+  const p = (getJson(`${import.meta.env.BASE_URL}${source.data}`) as Promise<BundledRules>).then((r) => {
+    if (!Array.isArray(r?.entries)) throw new LookupError('missing')
+    return r
+  })
+  bundled.set(source.id, p)
+  p.catch(() => bundled.delete(source.id))
+  return p
+}
+
+/** Words as they're compared: lower case, without accents or punctuation. */
+const fold = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9+]+/g, ' ')
+    .trim()
+
+const headingCache = new WeakMap<BundledEntry, string>()
+const headings = (e: BundledEntry) => {
+  let h = headingCache.get(e)
+  if (h === undefined) {
+    h = fold(
+      e.b
+        .split('\n')
+        .filter((l) => l.startsWith('#'))
+        .join(' '),
+    )
+    headingCache.set(e, h)
+  }
+  return h
+}
+
+/** Names first (exact, then starting with the words, then containing them all), then a heading inside, then text that has every word. */
+async function searchBundled(source: LookupSource, words: string): Promise<Hit[]> {
+  const rules = await rulesFor(source)
+  const q = fold(words)
+  const terms = q.split(' ').filter(Boolean)
+  if (!terms.length) return []
+  const scored: [number, BundledEntry][] = []
+  for (const e of rules.entries) {
+    const title = fold(e.t)
+    let score = 0
+    if (title === q) score = 100
+    else if (title.startsWith(q)) score = 80
+    else if (terms.every((t) => title.includes(t))) score = 60
+    // A rule that has the words as one of its own headings ("Vulnerable" under Conditions) comes next.
+    else if (terms.every((t) => headings(e).includes(t))) score = 50
+    else if (terms.every((t) => fold(`${e.k} ${e.b}`).includes(t))) score = 20 - Math.min(10, e.b.length / 2000)
+    if (score) scored.push([score, e])
+  }
+  return scored
+    .sort((a, b) => b[0] - a[0] || a[1].t.localeCompare(b[1].t))
+    .slice(0, 40)
+    .map(([, e]) => ({
+      source,
+      title: e.t,
+      kind: e.k,
+      snippet: firstLine(e.b),
+      bundled: e,
+      type: e.y,
+    }))
+}
+
+async function readBundled(hit: Hit): Promise<Found> {
+  const rules = await rulesFor(hit.source)
+  const e = hit.bundled!
+  return {
+    title: e.t,
+    summary: firstLine(e.b),
+    body: e.b,
+    fields: e.f,
+    type: e.y,
+    credit: `*${e.k} from the ${rules.name}. ${rules.credit}*`,
+    url: hit.source.site,
+  }
+}
+
 // ---------- either ----------
 
 /** Searches one source. Throws LookupError('offline') when it can't be reached. */
 export function search(source: LookupSource, words: string): Promise<Hit[]> {
   if (source.kind === 'open5e') return searchOpen5e(source, words)
   if (source.kind === 'wiki') return searchWiki(source, words)
+  if (source.kind === 'bundled') return searchBundled(source, words)
   return Promise.resolve([])
 }
 
 /** Everything about one result, ready to show and save. Wikis give their opening part unless `whole`. */
 export async function read(hit: Hit, whole = false): Promise<Found> {
-  return hit.source.kind === 'open5e' ? readOpen5e(hit) : readWiki(hit, whole)
+  if (hit.source.kind === 'open5e') return readOpen5e(hit)
+  if (hit.source.kind === 'bundled') return readBundled(hit)
+  return readWiki(hit, whole)
 }
 
 /** The text a page gets: what was found, then the credit line. */

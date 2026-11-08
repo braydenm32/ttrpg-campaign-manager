@@ -16,9 +16,10 @@ import { LOOKUP_SYSTEMS, sourcesFor } from '../lookup/sources'
 import '../more.css'
 
 /**
- * Look it up: search the open rules (the D&D SRDs) and the fan wikis for the world's game, read what
- * comes back, and keep it as a page with a line saying where it came from. GM only. Games whose rules
- * aren't free to copy get links that open the right site instead.
+ * Look it up: search the open rules (the D&D SRDs, the Daggerheart SRD that comes with the app) and the
+ * fan wikis for the world's game, read what comes back, and (the GM) keep it as a page with a line
+ * saying where it came from. Players can search and read too, but nothing they find is saved. Games
+ * whose rules aren't free to copy get links that open the right site instead.
  */
 export default function Lookup() {
   const { worldId, world } = useWorld()
@@ -47,7 +48,6 @@ export default function Lookup() {
   }
 
   if (!world) return <Skeleton />
-  if (!isGM) return <Empty>Look it up is a GM tool. Switch back to the GM view to use it.</Empty>
 
   const go = async () => {
     const w = words.trim()
@@ -72,7 +72,9 @@ export default function Lookup() {
           <h1>
             <Ico as={BookOpenText} /> Look it up <Help topic="lookup" />
           </h1>
-          <p className="lead">Search the rules and the wikis for your game, and keep what you find as a page.</p>
+          <p className="lead">
+            {isGM ? 'Search the rules and the wikis for your game, and keep what you find as a page.' : 'Search the rules and the wikis for your game.'}
+          </p>
         </div>
       </header>
 
@@ -109,7 +111,15 @@ export default function Lookup() {
             type="search"
             value={words}
             onChange={(e) => setWords(e.target.value)}
-            placeholder={source ? (source.kind === 'open5e' ? 'A spell, monster, item or rule: “fireball”, “goblin”' : 'A place, person, god or anything else') : 'What are you looking for?'}
+            placeholder={
+              !source
+                ? 'What are you looking for?'
+                : source.kind === 'open5e'
+                  ? 'A spell, monster, item or rule: “fireball”, “goblin”'
+                  : source.kind === 'bundled'
+                    ? 'An adversary, card, weapon or rule: “acid burrower”, “stress”'
+                    : 'A place, person, god or anything else'
+            }
             aria-label="Look up"
             disabled={!source}
           />
@@ -151,11 +161,15 @@ export default function Lookup() {
               ))}
             </ul>
           ) : (
-            <Empty>Nothing on {source?.name} matches “{words.trim()}”. Try fewer words, or another spelling.</Empty>
+            <Empty>
+              Nothing on {source?.name} matches “{words.trim()}”. Try fewer words, or another spelling.
+            </Empty>
           )}
         </section>
       )}
-      {open && <Result key={`${open.source.id}:${open.title}`} hit={open} worldId={worldId} entities={entities} onBack={() => setOpen(undefined)} />}
+      {open && (
+        <Result key={`${open.source.id}:${open.title}`} hit={open} worldId={worldId} entities={entities} isGM={isGM} onBack={() => setOpen(undefined)} />
+      )}
     </div>
   )
 }
@@ -166,11 +180,15 @@ function unreachable(name: string, e: unknown) {
 }
 
 /** One result, read in full: a preview, and where it goes. */
-function Result({ hit, worldId, entities, onBack }: { hit: Hit; worldId: string; entities: Entity[]; onBack: () => void }) {
+function Result({ hit, worldId, entities, isGM, onBack }: { hit: Hit; worldId: string; entities: Entity[]; isGM: boolean; onBack: () => void }) {
   const navigate = useNavigate()
   const { world } = useWorld()
   const [whole, setWhole] = useState(false)
-  const [got, setGot] = useState<{ whole: boolean; found?: Found; error?: string }>()
+  const [got, setGot] = useState<{
+    whole: boolean
+    found?: Found
+    error?: string
+  }>()
   const current = got?.whole === whole ? got : undefined
   const found = current?.found
   const [error, setError] = useState('')
@@ -234,7 +252,7 @@ function Result({ hit, worldId, entities, onBack }: { hit: Hit; worldId: string;
           ← Back to the results
         </button>
         <span className="grow" />
-        {found && (
+        {found && hit.source.kind !== 'bundled' && (
           <a className="button" href={found.url} target="_blank" rel="noreferrer">
             Open on {hit.source.kind === 'open5e' ? 'Open5e' : 'the wiki'} <Ico as={ArrowSquareOut} />
           </a>
@@ -256,46 +274,48 @@ function Result({ hit, worldId, entities, onBack }: { hit: Hit; worldId: string;
             </dl>
           )}
           <div className="lookup-preview">
-            <Markdown text={pageBody(found)} entities={entities} worldId={worldId} showSecrets />
+            <Markdown text={pageBody(found)} entities={entities} worldId={worldId} showSecrets={isGM} />
           </div>
           {hit.source.kind === 'wiki' && (
             <label className="small">
               <input type="checkbox" checked={whole} onChange={(e) => setWhole(e.target.checked)} /> The whole article (not just the opening)
             </label>
           )}
-          <div className="form lookup-keep">
-            <label>
-              Keep it as
-              <select value={target} onChange={(e) => setInto(e.target.value)}>
-                <option value="">A new page (🔒 GM only until you reveal it)</option>
-                {same && <option value={same.id}>Added to your page {same.name}</option>}
-              </select>
-            </label>
-            {!target && (
+          {isGM && (
+            <div className="form lookup-keep">
               <label>
-                Type
-                <select value={pickedType} onChange={(e) => setType(e.target.value)}>
-                  {PICKER_TYPES.filter((t) => t !== 'pc' && t !== 'thread' && t !== 'table').map((t) => (
-                    <option key={t} value={t}>
-                      {ENTITY_LABELS[t].icon} {ENTITY_LABELS[t].one}
-                    </option>
-                  ))}
-                  {(world?.customTypes ?? []).map((c) => (
-                    <option key={c.id} value={`custom:${c.id}`}>
-                      {c.icon} {c.one}
-                    </option>
-                  ))}
+                Keep it as
+                <select value={target} onChange={(e) => setInto(e.target.value)}>
+                  <option value="">A new page (🔒 GM only until you reveal it)</option>
+                  {same && <option value={same.id}>Added to your page {same.name}</option>}
                 </select>
               </label>
-            )}
-            <p className="muted small">The line saying where it came from stays at the bottom: the licence asks for it if you share the page.</p>
-            {error && <p className="error small">{error}</p>}
-            <div className="row end">
-              <button className="primary" disabled={saving} onClick={save}>
-                {target ? 'Add it to the page' : 'Make the page'}
-              </button>
+              {!target && (
+                <label>
+                  Type
+                  <select value={pickedType} onChange={(e) => setType(e.target.value)}>
+                    {PICKER_TYPES.filter((t) => t !== 'pc' && t !== 'thread' && t !== 'table').map((t) => (
+                      <option key={t} value={t}>
+                        {ENTITY_LABELS[t].icon} {ENTITY_LABELS[t].one}
+                      </option>
+                    ))}
+                    {(world?.customTypes ?? []).map((c) => (
+                      <option key={c.id} value={`custom:${c.id}`}>
+                        {c.icon} {c.one}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <p className="muted small">The line saying where it came from stays at the bottom: the licence asks for it if you share the page.</p>
+              {error && <p className="error small">{error}</p>}
+              <div className="row end">
+                <button className="primary" disabled={saving} onClick={save}>
+                  {target ? 'Add it to the page' : 'Make the page'}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
     </section>

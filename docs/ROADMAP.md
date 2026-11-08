@@ -65,6 +65,7 @@ Checked in the November review and still unbuilt. None of them should jump the q
 - **Events that last** (a war, a reign) drawn as bars on named tracks of the timeline.
 - **Copying pages between worlds** (and a shareable "pack").
 - **Faster drawing on huge maps.**
+- **Pathfinder and Starfinder rules built into Look it up** (parked by Brayden, November 2026). Archives of Nethys has no open API, so today Look it up links to it. Paizo's remastered rules text is free under the ORC licence and Foundry's pf2e and sf2e systems publish it as data, so it could come with the app the way the Daggerheart SRD does (`scripts/build-daggerheart.mjs` is the pattern). Large: tens of megabytes to trim and a lot of formats.
 
 ## Game systems (later)
 
