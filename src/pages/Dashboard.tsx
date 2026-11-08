@@ -17,7 +17,7 @@ import CommonRoom, { ago } from './CommonRoom'
 import { showDate, upcoming } from '../players/Schedule'
 import { ClockFace } from '../clocks'
 import { approveClaimLater } from '../players/inboxActions'
-import { ReviewCharacter } from '../players/NewCharacters'
+import { ClaimNameClash, ReviewCharacter } from '../players/NewCharacters'
 import type { CharacterRequest } from '../cloud/players'
 import { syncProblem, useInbox } from '../Sidebar'
 import { syncNow, syncStore } from '../cloud/sync'
@@ -379,7 +379,7 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
       icon: MaskHappy,
       text: (
         <>
-          <b>{c.who}</b> asked to play <Link to={pagePath(world.id, c.entityId)}>{nameOf(c.entityId)}</Link>
+          <b>{c.who}</b> asked to play <Link to={pagePath(world.id, c.entityId)}>{nameOf(c.entityId)}</Link> <ClaimNameClash worldId={world.id} entityId={c.entityId} player={c.who} inline />
         </>
       ),
       action: (

@@ -5,8 +5,8 @@
  * city, world or region), its size on the grid ("2x3" in the name) and whether it gives off light.
  * Every picture is kept at most 1024 px across, plus a small preview for the picker.
  */
-import { Unzip, UnzipInflate } from 'fflate'
 import type { PackScene, PackVersion } from '../db'
+import { PACK_ZIP, unzipBlobs } from '../zipSafe'
 import type { NewPicture, NewPiece } from './store'
 
 export interface PictureFile {
@@ -50,31 +50,14 @@ export async function picturesIn(files: File[], onProgress?: (note: string) => v
   return { pictures: out, index }
 }
 
-/** The pictures and index files in a ZIP, read from the file a slice at a time. */
-async function unzipped(f: File): Promise<[string, Blob][]> {
-  const entries: [string, Blob][] = []
-  let failed: unknown
-  const un = new Unzip((file) => {
-    if (hiddenFile(file.name) || !(PICTURE.test(file.name) || INDEX.test(file.name))) return
-    const chunks: Uint8Array<ArrayBuffer>[] = []
-    file.ondata = (err, chunk, final) => {
-      if (err) failed = err
-      else chunks.push(chunk as Uint8Array<ArrayBuffer>)
-      if (final && !err) entries.push([file.name, new Blob(chunks, { type: MIME[file.name.split('.').pop()!.toLowerCase()] ?? 'text/plain' })])
-    }
-    file.start()
-  })
-  un.register(UnzipInflate)
-  const reader = f.stream().getReader()
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (failed) throw failed
-    if (done) break
-    un.push(value)
-  }
-  un.push(new Uint8Array(0), true)
-  if (failed) throw failed
-  return entries
+/** The pictures and index files in a ZIP, read from the file a slice at a time (within the limits in zipSafe.ts). */
+function unzipped(f: File): Promise<[string, Blob][]> {
+  return unzipBlobs(
+    f,
+    (name) => !hiddenFile(name) && (PICTURE.test(name) || INDEX.test(name)),
+    (name) => MIME[name.split('.').pop()!.toLowerCase()] ?? 'text/plain',
+    PACK_ZIP,
+  )
 }
 
 /** "dark_oak-tree_03" → "Dark oak tree". */

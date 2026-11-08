@@ -99,7 +99,7 @@ export async function listPlayers(worldId: string): Promise<{ members: Member[];
   if (m.error) throw m.error
   if (c.error) throw c.error
   return {
-    members: m.data.map((r) => ({ userId: r.user_id, name: r.display_name || 'Unnamed player', role: r.role, joinedAt: r.created_at })),
+    members: m.data.map((r) => ({ userId: r.user_id, name: r.display_name || UNNAMED, role: r.role, joinedAt: r.created_at })),
     claims: c.data.map((r) => ({ entityId: r.entity_id, userId: r.user_id, notes: r.player_notes, approved: r.approved !== false, createdAt: r.claimed_at ?? '' })),
   }
 }
@@ -111,15 +111,54 @@ export async function approveClaim(worldId: string, entityId: string) {
   await tellPlayers(worldId)
 }
 
+/** What someone who joined with no name (or only a link) is listed as. */
+export const UNNAMED = 'Unnamed player'
+
 /**
- * What's wrong with a name for the table, or '' if it's fine. Catches the usual slip: the invite
- * link pasted into the name box. The server checks the same (public.member_name_ok).
+ * Characters a name could hide another name with, refused: control characters, ones that don't
+ * show (a zero-width space, a soft hyphen, fillers, unused format characters) and ones that turn
+ * text around (a right-to-left override makes "Sam" show as something else). The same list as
+ * public.member_name_ok (supabase/migrations/20261107000000_security_audit.sql): keep them in step.
  */
-export function nameProblem(name: string, whose: 'your' | 'their' = 'your') {
+const HIDDEN_CHARS =
+  /[\p{Cc}\u00ad\u061c\u115f\u1160\u17b4\u17b5\u180e\u200b\u200e\u200f\u2028-\u202e\u2060-\u206f\u3164\ufeff\uffa0\ufff0-\ufffb\u{1bca0}-\u{1bca3}\u{1d173}-\u{1d17a}\u{e0000}-\u{e001f}\u{e0080}-\u{e00ff}\u{e01f0}-\u{e0fff}]/u
+/** A joiner belongs between other letters (in Persian, emoji, Indian scripts), not at either end or next to an A-Z letter, digit or sign. */
+const STRAY_JOINER = /(^|[\u0001-\u007f])[\u200c\u200d]|[\u200c\u200d]([\u0001-\u007f]|$)/u
+/** Characters that don't show and only change how the letter before looks: left out when names are compared (as in public.member_name_key). */
+const IGNORED_CHARS = /[\u034f\u180b-\u180d\u180f\u200c\u200d\ufe00-\ufe0f\u{e0000}-\u{e007f}\u{e0100}-\u{e01ef}]/gu
+
+/** A name as the table tells names apart: letter case, spacing, look-alike letters ("Ｓａｍ") and characters that don't show don't count. */
+const foldName = (n: string) =>
+  n.normalize('NFKC').replace(new RegExp(HIDDEN_CHARS.source, 'gu'), '').replace(IGNORED_CHARS, '').replace(/\s+/g, ' ').trim().toLowerCase()
+export const sameName = (a: string, b: string) => foldName(a) === foldName(b)
+
+/** A name that reads as the GM's: "GM", "DM Sam", "The Game Master". */
+export const soundsLikeGM = (n: string) => /^\s*(the\s+)?(gm|dm|game\s*master|dungeon\s*master)\b/i.test(n.normalize('NFKC'))
+
+/**
+ * What's wrong with a name for the table, or '' if it's fine: empty, the invite link pasted into
+ * the name box (the usual slip), hidden characters, a name someone else in the world already has
+ * (`taken`: the others' names), or, for a player naming themselves (`player`), one that reads as
+ * the GM's. The server checks the first two (public.member_name_ok); the rest need it to as well.
+ */
+export function nameProblem(name: string, whose: 'your' | 'their' = 'your', { taken = [], player = false }: { taken?: string[]; player?: boolean } = {}) {
   const n = name.trim()
   if (!n) return `Type the name the table should call ${whose === 'your' ? 'you' : 'them'}.`
   if (/:\/\/|^www\.|\/join\//i.test(n)) return `That looks like the invite link. Type ${whose} name instead, e.g. Sam.`
+  if (HIDDEN_CHARS.test(n) || STRAY_JOINER.test(n) || !foldName(n)) return `That name has hidden characters in it (ones that don’t show, or that turn the text around). Type ${whose === 'your' ? 'your' : 'the'} name again by hand.`
+  if (taken.some((t) => t !== UNNAMED && sameName(t, n))) return `Someone in this world is already called “${n}”. Pick a name the table can tell apart, e.g. ${n.split(/\s+/)[0]} B.`
+  if (player && soundsLikeGM(n)) return `That reads like the GM’s name. Pick ${whose} own, so nobody takes ${whose === 'your' ? 'you' : 'them'} for the GM.`
   return ''
+}
+
+/** What's wrong with someone's name as it is now, for a notice by it: a link, hidden characters, or someone else's name too. */
+export function nameNow(name: string, others: string[]) {
+  const n = name.trim()
+  if (!n || name === UNNAMED) return undefined
+  if (/:\/\/|^www\.|\/join\//i.test(n)) return 'link'
+  if (nameProblem(n)) return 'hidden'
+  if (others.some((o) => o !== UNNAMED && sameName(o, n))) return 'taken'
+  return undefined
 }
 
 /** The GM (or a co-GM) renames someone who joined: a typo, or a link where their name should be. */
@@ -140,7 +179,10 @@ export async function removePlayer(worldId: string, userId: string) {
 
 /** A player changes the name others in the world see them by. `me` is their user id (the world's shared.me); the server checks it's really them. */
 export async function renameMe(cloudId: string, me: string, name: string) {
-  const problem = nameProblem(name)
+  // The others in the world, as their copy of it last heard: two people with one name can't be told apart.
+  const copy = await db.worlds.filter((w) => w.shared?.memberOf === cloudId).first()
+  const taken = (copy?.shared?.members ?? []).filter((m) => m.userId !== me).map((m) => m.name)
+  const problem = nameProblem(name, 'your', { taken, player: true })
   if (problem) throw new Error(problem)
   const clean = name.trim().slice(0, 60)
   const { error } = await supabase.rpc('rename_member', { wid: cloudId, uid: me, name: clean })
@@ -158,7 +200,7 @@ export async function renameMe(cloudId: string, me: string, name: string) {
 export async function joinWorld(token: string, name: string) {
   const { data, error } = await supabase.rpc('join_world', { token, name })
   if (error) throw error
-  if (!data) throw new Error('This invite link has been turned off or replaced. Ask your GM for a new one.')
+  if (!data) throw new Error('This invite link has been used, turned off or replaced. Ask your GM for a new one.')
   const cloudId = data as string
   const role = await myRole(cloudId)
   const isGM = role === 'owner' || role === 'gm'

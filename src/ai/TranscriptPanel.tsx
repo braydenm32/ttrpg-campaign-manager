@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Help } from '../help'
 import { Link } from 'react-router-dom'
-import { db, type Recording, type Transcript, type TranscriptLine } from '../db'
+import { db, type Recording, type Session, type Transcript, type TranscriptLine } from '../db'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { formatTime } from '../recorder'
-import { DEVICE_MODELS, useAiSettings } from './settings'
+import { DEVICE_MODELS, getAiSettings, setAiSettings, useAiSettings } from './settings'
 import { saveTranscript, speakerLabels, speakerName } from './transcript'
 import { Ico } from '../icons'
 import { Cloud, Desktop, Scroll } from '@phosphor-icons/react'
@@ -12,6 +12,38 @@ import { worldPath } from '../paths'
 import { removeWithUndo } from '../undo'
 
 type Engine = 'device' | 'cloud'
+
+const TRIES_AGAIN = 'The app tries again each time you open a session’s recordings on this device, or you can delete it in your AssemblyAI account.'
+
+/** Deletes AssemblyAI's copy of every job sent from this device that nothing here waits on any more. */
+async function deleteAssemblyLeftovers(key: string) {
+  const { deleteCloudLeftovers } = await import('./cloud')
+  await deleteCloudLeftovers(key)
+}
+
+/**
+ * When sessions go for good (a whole world deleted): AssemblyAI's copies of transcripts they're still
+ * waiting on are deleted there too, unless the GM keeps copies there. If a delete fails it's tried
+ * again later (see cloud.ts). Returns the jobs it let go of.
+ */
+export async function forgetCloudTranscripts(sessions: Session[]) {
+  const { assemblyKey, keepAtAssembly } = getAiSettings()
+  if (keepAtAssembly) return []
+  const { forgetCloudJob, jobsInUse } = await import('./cloud')
+  const ids = [...jobsInUse(sessions)]
+  for (const id of ids) void forgetCloudJob(id, assemblyKey.trim())
+  return ids
+}
+
+/**
+ * Before sessions are deleted to the bin (a session, or a campaign with its sessions): the same, and
+ * the transcripts still being made are taken off them, so a restored session doesn't wait on a job
+ * that's gone.
+ */
+export async function dropCloudTranscripts(sessions: Session[]) {
+  const ids = await forgetCloudTranscripts(sessions)
+  for (const s of sessions) for (const r of s.recordings) if (r.transcript?.pending?.jobId && ids.includes(r.transcript.pending.jobId)) await saveTranscript(s.id, r.assetId, undefined)
+}
 
 /**
  * Under each recording: turn it into text (on this device, or in the cloud with speaker labels),
@@ -50,19 +82,31 @@ export function TranscriptPanel({
   }, [busy])
   // Moving to another page in the app stops the job too; progress so far is already saved.
   useEffect(() => () => running.current?.abort(), [])
+  // Copies left at AssemblyAI (a transcript started over, a session deleted, a delete that failed): try again.
+  const assemblyKey = settings.assemblyKey.trim()
+  useEffect(() => {
+    if (assemblyKey && !settings.keepAtAssembly) void deleteAssemblyLeftovers(assemblyKey)
+  }, [assemblyKey, settings.keepAtAssembly])
 
   const run = async (engine: Engine) => {
     setError('')
     setNote('')
-    const asset = await db.assets.get(recording.assetId)
-    if (!asset) return setError('The audio file for this recording is missing.')
+    // Checking on a cloud transcript already under way needs no audio: AssemblyAI has it.
+    const resuming = engine === 'cloud' && t?.engine === 'cloud' && !!t.pending?.jobId
+    const asset = resuming ? undefined : await db.assets.get(recording.assetId)
+    if (!resuming && !asset) return setError('The audio file for this recording is missing.')
+    // The first time on this device, check the table agreed to their voices going to a US company.
+    if (engine === 'cloud' && !resuming && !getAiSettings().assemblyAgreed) {
+      if (!confirm('“Transcribe in the cloud” uploads the whole recording to AssemblyAI, a company in the United States, to be turned into text.\n\nDid everyone who was recorded agree to sending it to AssemblyAI (US)?')) return
+      setAiSettings({ assemblyAgreed: true })
+    }
     const abort = new AbortController()
     running.current = abort
     const progress = (detail: string, fraction = 0) => setJob({ engine, detail, fraction, abort })
     progress('Starting…')
     try {
-      if (engine === 'device') await runDevice(asset.blob, abort.signal, progress)
-      else await runCloud(asset.blob, abort.signal, progress)
+      if (engine === 'device') await runDevice(asset!.blob, abort.signal, progress)
+      else await runCloud(asset?.blob, abort.signal, progress)
     } catch (err) {
       if ((err as Error).name !== 'AbortError') setError((err as Error).message || 'Transcription failed.')
     } finally {
@@ -95,14 +139,17 @@ export function TranscriptPanel({
     await saveTranscript(sessionId, recording.assetId, { ...base, lines })
   }
 
-  const runCloud = async (blob: Blob, signal: AbortSignal, progress: (d: string, f?: number) => void) => {
-    const { deleteCloudJob, startCloudJob, waitForCloudJob } = await import('./cloud')
+  const runCloud = async (blob: Blob | undefined, signal: AbortSignal, progress: (d: string, f?: number) => void) => {
+    const { forgetCloudJob, keepCloudJob, noteCloudJob, startCloudJob, waitForCloudJob } = await import('./cloud')
     const key = settings.assemblyKey.trim()
     // A job started earlier may still be running at AssemblyAI; pick it up instead of paying twice.
     let jobId = t?.engine === 'cloud' ? t.pending?.jobId : undefined
     if (!jobId) {
+      if (!blob) throw new Error('The audio file for this recording is missing.')
       progress(`Uploading ${Math.round(blob.size / 1e6)} MB to AssemblyAI…`)
       jobId = await startCloudJob(blob, key, settings.language, signal)
+      // Noted on this device until AssemblyAI's copy is deleted, whatever happens to the transcript here.
+      noteCloudJob(jobId, key, worldId)
       await saveTranscript(sessionId, recording.assetId, {
         engine: 'cloud',
         lines: [],
@@ -115,8 +162,24 @@ export function TranscriptPanel({
     const lines = await waitForCloudJob(jobId, key, signal)
     await saveTranscript(sessionId, recording.assetId, { engine: 'cloud', model: 'AssemblyAI', lines, speakers: t?.speakers, createdAt: Date.now() })
     // Saved here, so AssemblyAI's copy can go (unless the GM chose to keep one there).
-    if (!settings.keepAtAssembly && !(await deleteCloudJob(jobId, key)))
-      setNote('The transcript is saved here, but AssemblyAI didn’t delete its copy, so it’s still in your AssemblyAI account. You can delete it there.')
+    if (settings.keepAtAssembly) keepCloudJob(jobId)
+    else if (!(await forgetCloudJob(jobId, key))) setNote(`The transcript is saved here, but AssemblyAI didn’t delete its copy yet. ${TRIES_AGAIN}`)
+  }
+
+  const startOver = async (was: Transcript) => {
+    const jobId = was.engine === 'cloud' ? was.pending?.jobId : undefined
+    if (!jobId || settings.keepAtAssembly)
+      return removeWithUndo(
+        'Transcript started over.',
+        () => saveTranscript(sessionId, recording.assetId, undefined),
+        () => saveTranscript(sessionId, recording.assetId, was),
+      )
+    // AssemblyAI's copy goes first, so the table's talk isn't left there; it can't be picked up again afterwards.
+    if (!confirm('Start over? The cloud transcript is deleted from AssemblyAI too, so it can’t be picked up again.')) return
+    setNote('')
+    await saveTranscript(sessionId, recording.assetId, undefined)
+    const { forgetCloudJob } = await import('./cloud')
+    if (!(await forgetCloudJob(jobId, settings.assemblyKey.trim()))) setNote(`Started over. AssemblyAI didn’t delete its copy yet (it may still be working on it). ${TRIES_AGAIN}`)
   }
 
   if (job)
@@ -160,16 +223,7 @@ export function TranscriptPanel({
           </button>
           <Help topic="transcript" />
           {t?.pending && (
-            <button
-              className="ghost small"
-              onClick={() =>
-                removeWithUndo(
-                  'Transcript started over.',
-                  () => saveTranscript(sessionId, recording.assetId, undefined),
-                  () => saveTranscript(sessionId, recording.assetId, t),
-                )
-              }
-            >
+            <button className="ghost small" onClick={() => startOver(t)}>
               Start over
             </button>
           )}
@@ -177,8 +231,9 @@ export function TranscriptPanel({
         <p className="muted small">
           On this device: free and private, but slow (roughly real time) and doesn’t tell voices apart. In the cloud: a few
           minutes, names each speaker, and costs well under a dollar for a long session on your own{' '}
-          <Link to={`${worldPath(worldId)}/settings?tab=device`}>AssemblyAI key</Link>.
+          <Link to={`${worldPath(worldId)}/settings?tab=device`}>AssemblyAI key</Link> (AssemblyAI is in the United States).
         </p>
+        {note && <p className="notice small">{note}</p>}
         {error && <p className="error small">{error}</p>}
       </div>
     )

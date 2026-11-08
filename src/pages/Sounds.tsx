@@ -11,7 +11,7 @@ import { parseSyrinscape, syrinscape, useSyrinscapeToken } from '../sound/syrins
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
 import { MusicNotes, SpeakerHigh } from '@phosphor-icons/react'
-import { toast } from '../undo'
+import { saveFailed, toast } from '../undo'
 
 const GROUPS = ['Ambience', 'Music', 'Effects']
 
@@ -83,6 +83,8 @@ export default function Sounds() {
                       createdAt: Date.now(),
                     })
                   }
+                } catch (err) {
+                  saveFailed('that sound', err)
                 } finally {
                   setBusy(false)
                 }

@@ -60,6 +60,30 @@ can be moved and old links keep working) and Cloudflare Pages at wardedatlas.com
 4. Supabase → **Authentication → URL Configuration**: Site URL `https://wardedatlas.com`, and add
    `https://wardedatlas.com/**` to Redirect URLs (keep the old address there too).
 
+### Checking the security headers
+
+Cloudflare sends a few security headers with every file of the site, from `public/_headers`. The main
+one, the Content-Security-Policy, lists where the app may load code and pictures from and which
+servers it may talk to. That way a mistake in how text is shown can't run someone else's code or send
+your keys and worlds anywhere else. The desktop app has its own copy of the policy in
+`src-tauri/tauri.conf.json`. Nothing needs setting up in the dashboard. To check that the live site
+sends the headers, after a deploy run this in a terminal (on Windows, type `curl.exe` instead of `curl`):
+
+```
+curl -I https://wardedatlas.com
+```
+
+The answer should have lines starting `content-security-policy:`, `strict-transport-security:`,
+`x-content-type-options: nosniff`, `x-frame-options: DENY`, `referrer-policy:` and
+`permissions-policy:`. If they're missing, check that the latest deploy finished (**Workers & Pages →
+the project → Deployments**). If you ever added headers by hand under **Rules → Transform Rules**,
+take those out so the two sets don't clash.
+
+If a feature stops working after the app starts using a new outside service, the browser's console
+(F12) says "violates the following Content Security Policy directive". The service's address then
+needs adding to `public/_headers` and to `src-tauri/tauri.conf.json`. The browser tests
+(`tests/csp.spec.ts`) check that the two still agree.
+
 ## 3. Google sign-in
 
 1. Go to <https://console.cloud.google.com>, make a project called The Warded Atlas.
@@ -134,6 +158,26 @@ This project runs on a built-in cloud setup with no settings, so it needs one of
    - `R2_ACCESS_KEY_ID`: the Access Key ID
    - `R2_SECRET_ACCESS_KEY`: the Secret Access Key
 4. Save it. Only sessions started after this can use it, so tell me in the chat when it's done and I'll do the upload in a fresh thread.
+
+## 6. Password rules (Supabase)
+
+Supabase → **Authentication → Sign In / Providers → Email** (the password settings under it), or
+straight there: <https://supabase.com/dashboard/project/ysrxumagiiaoihlhofqt/auth/providers?provider=Email>.
+Press **Save** at the bottom when done.
+
+- **Minimum password length**: 10. Anything under 8 is easy to guess.
+- **Password requirements**: letters and digits.
+- **Prevent use of leaked passwords** turns away passwords that are in known leaks (it asks
+  HaveIBeenPwned, without sending the password itself). Supabase only offers it on the Pro plan, so
+  switch it on if the project ever moves to Pro.
+
+The app asks for the same when someone signs up or picks a new password: "At least 10 characters,
+with letters and numbers" sits under the password box, and it's checked before anything is sent
+(`PASSWORD_RULE` in `src/cloud/client.ts`). If you change the numbers here, the app's wording has
+to change with them, so say so in the chat.
+
+People who already have a weaker password can still sign in; they're asked for a stronger one only
+when they next pick a new password. Google sign-in isn't affected.
 
 ## What still says Supabase
 

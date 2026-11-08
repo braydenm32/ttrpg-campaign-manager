@@ -1,27 +1,44 @@
+import { liveQuery } from 'dexie'
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import { blankLectern, newId, type Campaign, type Entity, type Session, type Sound } from '../db'
+import { blankLectern, db, newId, type Campaign, type Entity, type Session, type Sound } from '../db'
 import { initiativeOrder } from '../encounters'
+import { recordingStore } from '../recordingStore'
+import { supabase } from './client'
 import { joinRoom, JOINED, postOnce, sendOnce, type LiveRoom } from './live'
+import { listPlayers, memberWorldId, soundsLikeGM } from './players'
 
 /**
  * The live link between the GM's Lectern and the players' Common Room. Nothing here is saved
- * anywhere: it's what's happening at the table right now. Two rooms per world:
- *  - "members:<world>", where anyone in the world can send:
+ * anywhere: it's what's happening at the table right now. Three rooms per world:
+ *  - "members:<world>", where anyone in the world can send, so nothing from it counts as the GM's:
  *    - "hello" (player → GM): a player just opened the app; the GM's app answers with "table".
  *    - "dice" (players): a roll the whole table sees.
+ *    - "ping" (players): "look here", a spot on a map everyone looking at that map sees for a moment.
+ *    - "downtime" (player → GM): a player sent downtime, so the GM's list reloads.
  *    - "signal" and "call-answer", but only from a server without the GM's inbox yet (see below).
- *    - "ping" (anyone): "look here", a spot on a map everyone looking at that map sees for a moment.
+ *    A roll or a ping carries its sender's user id, and shows under that member's name from the
+ *    world's member list (their characters' first names, or the name they joined with); the name
+ *    it's signed with counts only for an older app that sends no id. Realtime doesn't say who really
+ *    sent a message, so the id is only what the sender's app says: a player's app could put another
+ *    player's on. Never a GM's: a GM's app doesn't send here, so one that says it's from a GM, or
+ *    goes by a GM's name (or one like "GM"), shows as "(a player)".
  *  - "table:<world>", where only a GM can send (public.channel_allowed), so players can trust it:
  *    - "table" (GM → players): the session being played, the scene, whose turn it is, the music.
- *    - "dice" (GM): the GM's own rolls.
+ *      Only the app that's running the session says it ("off" once it stops), so another of the
+ *      GM's apps with the world open never takes it off players' screens.
+ *    - "recording" (GM → players): the GM's app that records says so every minute while it does,
+ *      and once more when it stops (players see "This session is being recorded"). Each app says
+ *      it under its own made-up id, so one app stopping doesn't hide another that's still recording.
+ *    - "dice" and "ping" (GM): the GM's own rolls and pings.
+ *    - "downtime" (GM → players): the GM answered downtime.
  *    - "signal-seen" (GM → players): the GM saw a signal.
  *  - "gm:<world>", the GM's inbox: anyone in the world can post, only a GM can listen, so a secret
  *    roll's result isn't in a room every player's app hears:
  *    - "signal" (player → GM): "I'd like to do something", "I need a break" or "I'll use inspiration".
  *    - "call-answer" (player → GM): a player's result for the roll the GM called for.
  *    A server without this room refuses the post, and the player's app sends to the members' room instead.
- * The GM's messages go to the members' room too, for a server that doesn't have the GM's room yet.
- * Once a player's app gets into the GM's room it stops believing GM messages from the members' room.
+ * The GM's messages go only to the GM's room (every server has it since 20261029010000_review_fixes.sql),
+ * and players' apps only believe GM messages from there: one in the members' room is a player's.
  * Only what the GM's own filters let through is ever sent: never HP, conditions, scene notes or
  * a page players can't see.
  */
@@ -53,6 +70,14 @@ export interface TableRoll {
   detail: string
   crit?: 'high' | 'low'
   at: number
+  /** A player's roll, from the members' room: who sent it, so its name can be looked up again. */
+  from?: Sender
+}
+
+/** Who a message in the members' room came from: their user id (an older app sends none) and the name it was signed with. */
+interface Sender {
+  uid?: string
+  said: string
 }
 
 export type SignalKind = 'act' | 'break' | 'inspiration'
@@ -88,6 +113,8 @@ export interface MapPing {
   gm?: boolean
   /** When it arrived, on this device's clock. */
   time: number
+  /** A player's ping: who sent it, so its name can be looked up again. */
+  from?: Sender
 }
 
 interface TableStore {
@@ -99,6 +126,8 @@ interface TableStore {
   answered: Record<string, number>
   /** When the last "table" message arrived (this device's clock). */
   heard: number
+  /** For a player: each of the GM's apps that says it's recording (by its made-up id), and when it last said so. */
+  recorders: Record<string, number>
   /** When someone last said downtime changed (a player sent one, or the GM answered), so lists reload at once. */
   downtime: number
   rolls: TableRoll[]
@@ -108,7 +137,7 @@ interface TableStore {
   sent: Record<string, 'sent' | 'seen'>
 }
 
-const empty: TableStore = { table: null, pings: [], heard: 0, downtime: 0, rolls: [], signals: [], sent: {}, answers: [], answered: {} }
+const empty: TableStore = { table: null, pings: [], heard: 0, recorders: {}, downtime: 0, rolls: [], signals: [], sent: {}, answers: [], answered: {} }
 const stores = new Map<string, TableStore>()
 const listeners = new Map<string, Set<() => void>>()
 const links = new Map<string, { members: LiveRoom; table: LiveRoom; host: boolean }>()
@@ -137,8 +166,10 @@ export function useTable(cloudId: string | undefined) {
     const t = setInterval(() => setNow(Date.now()), 30_000)
     return () => clearInterval(t)
   }, [])
-  const live = !!store.table && now - store.heard < STALE_AFTER
-  return { ...store, table: live ? store.table : null }
+  const fresh = now - store.heard < STALE_AFTER
+  // "Being recorded" fades the same way, so a GM's app that closed mid-recording doesn't leave it up.
+  const recording = Object.values(store.recorders).some((at) => now - at < STALE_AFTER)
+  return { ...store, table: fresh && store.table ? store.table : null, recording }
 }
 
 const HEARTBEAT = 60_000
@@ -171,14 +202,22 @@ const send = (cloudId: string, event: string, payload: object) => {
   return link ? link.members.send(event, payload) : sendOnce(room(cloudId), event, payload)
 }
 
-/** The GM's message: to the GM's room, and to the members' room for a server without the GM's room yet. */
-async function sendAsGM(cloudId: string, event: string, payload: object) {
+/**
+ * The GM's message: to the GM's room only, where nobody else can send. (It once went to the members'
+ * room too, for a server without the GM's room; players can post there, so they could pass for the GM.)
+ */
+function sendAsGM(cloudId: string, event: string, payload: object) {
   const link = links.get(cloudId)
-  const sent = await Promise.all([
-    link ? link.table.send(event, payload) : sendOnce(gmRoom(cloudId), event, payload),
-    link ? link.members.send(event, payload) : sendOnce(room(cloudId), event, payload),
-  ])
-  return sent.some(Boolean)
+  return link ? link.table.send(event, payload) : sendOnce(gmRoom(cloudId), event, payload)
+}
+
+/** Who's signed in here: rolls and pings carry it, so other apps show them under that member's name. */
+async function myUserId() {
+  try {
+    return (await supabase.auth.getSession()).data.session?.user.id
+  } catch {
+    return undefined
+  }
 }
 
 // ---------- reading what arrives (nothing is taken on trust, not even from the GM's room) ----------
@@ -187,6 +226,86 @@ const text = (x: unknown, max = 80) => (typeof x === 'string' ? x.slice(0, max) 
 const num = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : 0)
 const SIDES = ['pc', 'ally', 'foe'] as const
 const KINDS: SignalKind[] = ['act', 'break', 'inspiration']
+
+// ---------- who's who: names come from the world's member list, not from what a message says ----------
+
+/** Per world: each member's user id and the name their rolls and pings go by, and who the GMs are. */
+interface Roster {
+  names: Map<string, string>
+  /** The GMs' user ids: the co-GMs, and in a GM's own app that GM. (Players' member list leaves the owner out.) */
+  gms: Set<string>
+  /** The GMs' names, in small letters. */
+  gmNames: Set<string>
+}
+const rosters = new Map<string, Roster>()
+
+/** A member's name at the table: their characters' first names ("Wren & Bram"), else the name they joined with. Like useMe's. */
+const tableName = (joinedAs: string, characters: string[]) =>
+  characters.map((n) => n.trim().split(/\s+/)[0]).filter(Boolean).join(' & ') || joinedAs.trim() || 'A player'
+
+const isGM = (role: string | undefined) => role === 'owner' || role === 'gm'
+
+function rosterOf(
+  members: { userId: string; name: string; role?: string }[],
+  claims: { entityId: string; userId: string; approved?: boolean }[],
+  pages: (Entity | undefined)[],
+  me?: { id?: string; gm: boolean },
+): Roster {
+  const pageNames = new Map(pages.flatMap((e) => (e ? [[e.id, e.name] as const] : [])))
+  const names = new Map(
+    members.map((m) => [m.userId, tableName(m.name, claims.filter((c) => c.userId === m.userId && c.approved !== false).map((c) => pageNames.get(c.entityId) ?? ''))]),
+  )
+  const gms = new Set(members.filter((m) => isGM(m.role)).map((m) => m.userId))
+  // The GM's own app: the owner isn't always on the member list.
+  if (me?.gm && me.id) gms.add(me.id)
+  const gmNames = new Set(members.filter((m) => gms.has(m.userId)).map((m) => m.name.trim().toLowerCase()).filter(Boolean))
+  return { names, gms, gmNames }
+}
+
+/**
+ * The name a player's roll or ping shows: theirs from the member list, else (an older app) what it
+ * was signed with. Never as a GM's: nothing in the members' room is (a GM's app doesn't send there).
+ */
+function senderName(cloudId: string, { uid, said }: Sender) {
+  const r = rosters.get(cloudId)
+  const saysGM = !!uid && !!r?.gms.has(uid)
+  const name = (!saysGM && uid && r?.names.get(uid)) || said.trim()
+  if (!name) return 'A player'
+  return saysGM || posingAsGM(name) || r?.gmNames.has(name.toLowerCase()) ? `${name} (a player)` : name
+}
+
+function setRoster(cloudId: string, roster: Roster) {
+  rosters.set(cloudId, roster)
+  // Whatever arrived before the list did gets its proper name now.
+  const named = <T extends { who: string; from?: Sender }>(x: T) => (x.from ? { ...x, who: senderName(cloudId, x.from) } : x)
+  update(cloudId, (s) => ({ ...s, rolls: s.rolls.map(named), pings: s.pings.map(named) }))
+}
+
+/** A player's app: the member list and who plays whom come with the joined world, so the names follow it. */
+function watchRoster(cloudId: string) {
+  const sub = liveQuery(async () => {
+    const s = (await db.worlds.get(memberWorldId(cloudId)))?.shared
+    const claims = s?.claims ?? []
+    return rosterOf(s?.members ?? [], claims, await db.entities.bulkGet(claims.map((c) => c.entityId)))
+  }).subscribe({ next: (r) => setRoster(cloudId, r), error: () => {} })
+  return () => sub.unsubscribe()
+}
+
+/** The GM's app: asks the cloud who has joined, and asks again (at most once a minute) when someone it doesn't know turns up. */
+function rosterFetcher(cloudId: string) {
+  let asked = 0
+  return (uid?: string) => {
+    if (uid !== undefined && (!uid || rosters.get(cloudId)?.names.has(uid) || Date.now() - asked < 60_000)) return
+    asked = Date.now()
+    listPlayers(cloudId).then(
+      async ({ members, claims }) =>
+        setRoster(cloudId, rosterOf(members, claims, await db.entities.bulkGet(claims.map((c) => c.entityId)), { id: await myUserId(), gm: true })),
+      () => {
+        // Offline: names stay as they came for now.
+      },
+    )
+  }
+}
 
 function readTable(p: Record<string, unknown>): TableState | null {
   const s = p.session as Record<string, unknown> | undefined
@@ -236,41 +355,65 @@ function readTable(p: Record<string, unknown>): TableState | null {
   }
 }
 
-function readRoll(p: Record<string, unknown>): TableRoll | null {
+/** Who sent something to the members' room, as it says (only the user id is looked up). */
+const senderOf = (p: Record<string, unknown>): Sender => ({ uid: text(p.uid, 64) || undefined, said: text(p.who, 40) })
+
+/** A roll as it arrived: from the GM's room it's the GM's (or a co-GM's), from the members' room a player's. */
+function readRoll(cloudId: string, p: Record<string, unknown>, fromGM: boolean): TableRoll | null {
   if (!text(p.id) || !text(p.expr)) return null
+  const from = fromGM ? undefined : senderOf(p)
   return {
     id: text(p.id),
-    who: text(p.who) || 'Someone',
+    who: from ? senderName(cloudId, from) : text(p.who) || 'GM',
     expr: text(p.expr, 60),
     total: num(p.total),
     detail: text(p.detail, 300),
     crit: p.crit === 'high' || p.crit === 'low' ? p.crit : undefined,
     at: Date.now(),
+    from,
   }
 }
 
-/** Signed "GM". From the members' room, where any player can send, that's a player posing as the GM once the GM's room works. */
-const posingAsGM = (p: Record<string, unknown>) => /^\s*gm\s*$/i.test(text(p.who))
+/** A name that reads as the GM's ("GM", "DM", "Game Master (Sam)"). From a player, it gets "(a player)" after it. */
+const posingAsGM = soundsLikeGM
 
-function readPing(p: Record<string, unknown>, fromGM: boolean): MapPing | null {
+function readPing(cloudId: string, p: Record<string, unknown>, fromGM: boolean): MapPing | null {
   const at = p.at as unknown[]
   if (!text(p.id) || !text(p.mapId) || !Array.isArray(at) || at.length !== 2) return null
-  return { id: text(p.id), mapId: text(p.mapId), at: [num(at[0]), num(at[1])], who: text(p.who, 40) || 'Someone', gm: fromGM && p.gm === true, time: Date.now() }
+  const from = fromGM ? undefined : senderOf(p)
+  return { id: text(p.id), mapId: text(p.mapId), at: [num(at[0]), num(at[1])], who: from ? senderName(cloudId, from) : text(p.who, 40) || 'GM', gm: fromGM, time: Date.now(), from }
+}
+
+/**
+ * Keeps a roll or ping once (each has its own id). The GM's room's copy wins over a members' room
+ * one: an older GM app still sends its own to both rooms, and the members' room copy reads as a player's.
+ */
+function withOne<T extends { id: string; from?: Sender }>(list: T[], x: T, add: (list: T[]) => T[]) {
+  const had = list.find((y) => y.id === x.id)
+  if (!had) return add(list)
+  return had.from && !x.from ? list.map((y) => (y.id === x.id ? x : y)) : list
 }
 
 const addPing = (cloudId: string, ping: MapPing) =>
-  update(cloudId, (s) => (s.pings.some((x) => x.id === ping.id) ? s : { ...s, pings: [...s.pings.filter((x) => Date.now() - x.time < 10_000), ping].slice(-20) }))
+  update(cloudId, (s) => {
+    const pings = withOne(s.pings, ping, (l) => [...l.filter((x) => Date.now() - x.time < 10_000), ping].slice(-20))
+    return pings === s.pings ? s : { ...s, pings }
+  })
 
 /** Points at a spot on a map for everyone looking at it. */
-export function sendPing(cloudId: string, mapId: string, at: [number, number], who: string) {
+export async function sendPing(cloudId: string, mapId: string, at: [number, number], who: string) {
   const link = links.get(cloudId)
   const ping = { id: newId(), mapId, at, who, gm: !!link?.host }
   addPing(cloudId, { ...ping, time: Date.now() })
-  return link?.host ? sendAsGM(cloudId, 'ping', ping) : send(cloudId, 'ping', ping)
+  const out = { ...ping, uid: await myUserId() }
+  return link?.host ? sendAsGM(cloudId, 'ping', out) : send(cloudId, 'ping', out)
 }
 
 const addRoll = (cloudId: string, r: TableRoll) =>
-  update(cloudId, (s) => (s.rolls.some((x) => x.id === r.id) ? s : { ...s, rolls: [r, ...s.rolls].slice(0, 30) }))
+  update(cloudId, (s) => {
+    const rolls = withOne(s.rolls, r, (l) => [r, ...l].slice(0, 30))
+    return rolls === s.rolls ? s : { ...s, rolls }
+  })
 
 // ---------- players ----------
 
@@ -280,39 +423,47 @@ export function linkAsPlayer(cloudId: string) {
   const table = joinRoom(gmRoom(cloudId))
   const link = { members, table, host: false }
   links.set(cloudId, link)
-  // Set once the GM's room works: from then on the GM's messages count only from there.
-  let gmRoomWorks = table.connected()
-  const hello = () => void members.send('hello')
+  const stopRoster = watchRoster(cloudId)
+  const hello = async () => void members.send('hello', { uid: await myUserId() })
   members.on(JOINED, hello)
-  table.on(JOINED, () => {
-    gmRoomWorks = true
-    hello()
+  // The GM answers in the GM's room, so say hello again once we're in it too.
+  table.on(JOINED, hello)
+  if (members.connected()) void hello()
+  // What the GM says counts only from the GM's room, where nobody else can send. The same thing
+  // in the members' room is a player passing for the GM (or an older GM app), and is ignored.
+  table.on('table', (p) => update(cloudId, (s) => ({ ...s, table: readTable(p), heard: Date.now() })))
+  // Each of the GM's apps that records says so under its own id, so one stopping leaves another's word standing.
+  table.on('recording', (p) => {
+    if (typeof p.recording !== 'boolean') return
+    const by = text(p.by, 40)
+    update(cloudId, (s) => {
+      const { [by]: _was, ...others } = s.recorders
+      const recorders = p.recording ? Object.fromEntries([...Object.entries(others).slice(-9), [by, Date.now()]]) : others
+      return { ...s, recorders }
+    })
   })
-  if (members.connected()) hello()
+  table.on('downtime', () => update(cloudId, (s) => ({ ...s, downtime: Date.now() })))
+  table.on<{ id?: unknown }>('signal-seen', (p) => {
+    const id = text(p.id)
+    update(cloudId, (s) => (s.sent[id] ? { ...s, sent: { ...s.sent, [id]: 'seen' } } : s))
+  })
+  // Rolls and pings: the GM's from the GM's room, the other players' from the members' room.
   for (const [r, fromGM] of [
     [table, true],
     [members, false],
   ] as const) {
-    r.on('table', (p) => (fromGM || !gmRoomWorks) && update(cloudId, (s) => ({ ...s, table: readTable(p), heard: Date.now() })))
     r.on('dice', (p) => {
-      if (!fromGM && gmRoomWorks && posingAsGM(p)) return
-      const roll = readRoll(p)
+      const roll = readRoll(cloudId, p, fromGM)
       if (roll) addRoll(cloudId, roll)
     })
     r.on('ping', (p) => {
-      const ping = readPing(p, fromGM || !gmRoomWorks)
+      const ping = readPing(cloudId, p, fromGM)
       if (ping) addPing(cloudId, ping)
-    })
-    // Only the GM answers downtime, so only the GM's word counts.
-    r.on('downtime', () => (fromGM || !gmRoomWorks) && update(cloudId, (s) => ({ ...s, downtime: Date.now() })))
-    r.on<{ id?: unknown }>('signal-seen', (p) => {
-      if (!fromGM && gmRoomWorks) return
-      const id = text(p.id)
-      update(cloudId, (s) => (s.sent[id] ? { ...s, sent: { ...s.sent, [id]: 'seen' } } : s))
     })
   }
   return () => {
     if (links.get(cloudId) === link) links.delete(cloudId)
+    stopRoster()
     members.leave()
     table.leave()
   }
@@ -346,13 +497,14 @@ export async function answerCall(cloudId: string, a: Omit<CallAnswer, 'id'>, sec
 }
 
 /** Shows a roll to everyone at the table (and here). */
-export async function shareRoll(cloudId: string, r: Omit<TableRoll, 'id' | 'at'>) {
+export async function shareRoll(cloudId: string, r: Omit<TableRoll, 'id' | 'at' | 'from'>) {
   const link = links.get(cloudId)
   // A player whose name happens to be "GM" still reads as a player.
-  const who = link && !link.host && posingAsGM(r) ? `${r.who.trim()} (a player)` : r.who
+  const who = link && !link.host && posingAsGM(r.who) ? `${r.who.trim()} (a player)` : r.who
   const roll = { ...r, who, id: newId(), at: Date.now() }
   addRoll(cloudId, roll)
-  return link?.host ? sendAsGM(cloudId, 'dice', roll) : send(cloudId, 'dice', roll)
+  const out = { ...roll, uid: await myUserId() }
+  return link?.host ? sendAsGM(cloudId, 'dice', out) : send(cloudId, 'dice', out)
 }
 
 // ---------- the GM ----------
@@ -365,31 +517,47 @@ export function linkAsHost(cloudId: string, current: () => TableState | null) {
   const gmInbox = joinRoom(inbox(cloudId))
   const link = { members, table, host: true }
   links.set(cloudId, link)
-  let gmRoomWorks = table.connected()
-  const tell = () => void sendAsGM(cloudId, 'table', wire(current()))
-  members.on('hello', tell)
-  // Nothing to say while no session is being run: players start from nothing anyway.
-  const remind = () => current() && tell()
-  members.on(JOINED, remind)
-  table.on(JOINED, () => {
-    gmRoomWorks = true
+  // Who's who, for players' rolls and pings: asked now, and again when someone new turns up.
+  const learn = rosterFetcher(cloudId)
+  learn()
+  // Players start from nothing, so an app that isn't running a session or recording one says
+  // nothing (an "off" from it would take another of the GM's apps' live session off their screens).
+  const remind = () => {
+    const now = current()
+    if (now) void sendAsGM(cloudId, 'table', wire(now))
+    if (recordingHere(cloudId)) sayRecording(cloudId, true)
+  }
+  members.on('hello', (p) => {
     remind()
+    learn(text(p.uid, 64))
   })
-  // Players' rolls, and a co-GM's from the GM's room.
+  table.on(JOINED, remind)
+  // Players hear at once when a recording starts or stops.
+  let recording = recordingHere(cloudId)
+  const unwatch = recordingStore.subscribe(() => {
+    if (recordingHere(cloudId) === recording) return
+    recording = !recording
+    sayRecording(cloudId, recording)
+  })
+  // Players' rolls and pings from the members' room, and a co-GM's from the GM's room.
   for (const [r, fromGM] of [
     [table, true],
     [members, false],
-  ] as const)
+  ] as const) {
     r.on('dice', (p) => {
-      if (!fromGM && gmRoomWorks && posingAsGM(p)) return
-      const roll = readRoll(p)
-      if (roll) addRoll(cloudId, roll)
+      const roll = readRoll(cloudId, p, fromGM)
+      if (!roll) return
+      addRoll(cloudId, roll)
+      learn(roll.from?.uid ?? '')
     })
+    r.on('ping', (p) => {
+      const ping = readPing(cloudId, p, fromGM)
+      if (!ping) return
+      addPing(cloudId, ping)
+      learn(ping.from?.uid ?? '')
+    })
+  }
   members.on('downtime', () => update(cloudId, (s) => ({ ...s, downtime: Date.now() })))
-  members.on('ping', (p) => {
-    const ping = readPing(p, false)
-    if (ping) addPing(cloudId, ping)
-  })
   const onAnswer = (p: Record<string, unknown>) => {
     const callId = text(p.callId)
     const call = current()?.call
@@ -410,10 +578,11 @@ export function linkAsHost(cloudId: string, current: () => TableState | null) {
     r.on('call-answer', onAnswer)
     r.on('signal', onSignal)
   }
-  // Players stop showing "playing now" if they hear nothing for a few minutes, so say it again now and then (only while live).
+  // Players stop showing "playing now" (and "being recorded") if they hear nothing for a few minutes, so say it again now and then (only while live or recording).
   const beat = setInterval(remind, HEARTBEAT)
   return () => {
     clearInterval(beat)
+    unwatch()
     if (links.get(cloudId) === link) links.delete(cloudId)
     members.leave()
     table.leave()
@@ -430,8 +599,85 @@ export function publishTable(cloudId: string, state: TableState | null) {
   void sendAsGM(cloudId, 'table', wire(state))
 }
 
-/** A table state as sent: with the sender's clock, so timers can be shifted onto each player's. */
+/** A table state as sent, with the sender's clock (so timers can be shifted onto each player's). */
 const wire = (state: TableState | null) => (state ? { ...state, sentAt: Date.now() } : { off: true })
+
+// ---------- "This session is being recorded" ----------
+
+/** Whether this device's app is recording a session of this world right now. */
+const recordingHere = (worldId: string) => recordingStore.get()?.worldId === worldId
+
+/** This app's made-up id for "recording" messages (a new one each time the app opens). */
+const thisApp = newId()
+
+/** Tells players whether this app is recording the world (with no session live too). */
+const sayRecording = (worldId: string, on: boolean) => void sendAsGM(worldId, 'recording', { recording: on, by: thisApp })
+
+/**
+ * A recording carries on while the GM looks at another world or the list of worlds, where the
+ * world's own link (linkAsHost) isn't open to say so: then this does, once a minute, and once more
+ * when it stops, so players are never recorded without being told.
+ */
+let recordingWorld: string | undefined
+let unlinkedBeat: ReturnType<typeof setInterval> | undefined
+recordingStore.subscribe(() => {
+  const now = recordingStore.get()?.worldId
+  if (now === recordingWorld) return
+  const was = recordingWorld
+  recordingWorld = now
+  clearInterval(unlinkedBeat)
+  unlinkedBeat = now ? setInterval(() => void sayUnlinked(now, false), HEARTBEAT) : undefined
+  if (was) void sayUnlinked(was, true)
+})
+async function sayUnlinked(worldId: string, stopped: boolean) {
+  if (links.get(worldId)?.host) return
+  const w = await db.worlds.get(worldId)
+  if (w?.cloud?.enabled && !w.shared) sayRecording(worldId, !stopped)
+}
+
+/**
+ * The players' screen is a window of its own (for a TV), so it can't see a recording another window
+ * on the device is making. The window that records says so on a channel between the device's windows,
+ * when it starts and stops and every few seconds in between (so a closed window's word runs out).
+ */
+const RECORDING_CHANNEL = 'codex.recording'
+const RECORDING_BEAT = 5_000
+if (typeof BroadcastChannel === 'function') {
+  const out = new BroadcastChannel(RECORDING_CHANNEL)
+  const say = () => out.postMessage({ recording: recordingStore.get()?.worldId ?? null })
+  // A players' screen that just opened asks straight away.
+  out.onmessage = (e) => e.data === 'ask' && recordingStore.get() && say()
+  let beat: ReturnType<typeof setInterval> | undefined
+  recordingStore.subscribe(() => {
+    const on = !!recordingStore.get()
+    if (on === !!beat) return
+    clearInterval(beat)
+    beat = on ? setInterval(say, RECORDING_BEAT) : undefined
+    say()
+  })
+}
+
+/** For the players' screen: whether this device is recording a session of this world, in this window or another. */
+export function useRecordingOnThisDevice(worldId: string) {
+  const here = useSyncExternalStore(recordingStore.subscribe, () => recordingHere(worldId))
+  const [heard, setHeard] = useState(0)
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (typeof BroadcastChannel !== 'function') return
+    const ch = new BroadcastChannel(RECORDING_CHANNEL)
+    ch.onmessage = (e) => {
+      const said = (e.data as { recording?: unknown } | null)?.recording
+      if (said !== undefined) setHeard(said === worldId ? Date.now() : 0)
+    }
+    ch.postMessage('ask')
+    const t = setInterval(() => setNow(Date.now()), RECORDING_BEAT)
+    return () => {
+      ch.close()
+      clearInterval(t)
+    }
+  }, [worldId])
+  return here || (heard > 0 && now - heard < 3 * RECORDING_BEAT)
+}
 
 /** The GM has dealt with a signal: it goes away, and the player sees that it was seen. */
 export function answerSignal(cloudId: string, id: string) {

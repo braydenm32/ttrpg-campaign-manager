@@ -1,5 +1,6 @@
 import { blankEntity, db, newId, saveEntity, type Entity, type Session } from '../db'
 import { nameIndex } from '../links'
+import { gmBlock } from '../Markdown'
 import type { NotePage, NoteSession } from './claude'
 
 /** Where each page from the notes goes: a new page, or added to one already in the world. */
@@ -19,10 +20,11 @@ const seen = (page: Entity) => page.visibility !== 'gm' || !!page.revealedTo?.le
 
 /**
  * Text from the notes added to a page players can already see goes inside a GM-only block, unless
- * the GM left it ticked for players, so nothing else from the notebook reaches them.
+ * the GM left it ticked for players, so nothing else from the notebook reaches them (a ":::" line
+ * in the notes can't end the block early: see gmBlock).
  */
 const addedText = (page: Entity, text: string, show: boolean) =>
-  seen(page) && !show ? `### From my notes\n\n:::gm\n${text}\n:::` : `### From my notes\n\n${text}`
+  seen(page) && !show ? `### From my notes\n\n${gmBlock(text)}` : `### From my notes\n\n${text}`
 
 const joinText = (a: string, b: string) => (a.trim() ? `${a.trimEnd()}\n\n${b}` : b)
 

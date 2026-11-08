@@ -197,7 +197,53 @@ export function moonPhase(moon: WorldCalendar['moons'][number], days: number) {
   return PHASES[Math.round(((t + 0.5) % 1) * 8) % 8]
 }
 
+type Loose = Record<string, unknown>
+const isLoose = (v: unknown): v is Loose => !!v && typeof v === 'object' && !Array.isArray(v)
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
+const word = (v: unknown, or = '') => (typeof v === 'string' ? v : isNum(v) ? String(v) : or)
+const isDate = (d: unknown): d is CalDate => isLoose(d) && isNum(d.year) && isNum(d.month) && isNum(d.day)
+/** Named days and seasons: the ones with a month and day, each with a name. */
+const datedList = (v: unknown) => (Array.isArray(v) ? v.flatMap((x: unknown) => (isLoose(x) && isNum(x.month) && isNum(x.day) ? [{ ...x, name: word(x.name) }] : [])) : [])
+
+/**
+ * A calendar from outside this device (someone else's backup, another device through sync, or a world
+ * saved before this was checked) in a shape the app can read: months, day names and moons are lists,
+ * names are words and numbers are numbers. A month that isn't one keeps its place (dates count months
+ * by place) as a plain 30-day month, and anything else that can't be read is left out. A calendar
+ * without months can't date anything, so it's dropped (undefined). One the app made comes back the same.
+ */
+export function cleanCalendar(c: unknown): WorldCalendar | undefined {
+  if (!isLoose(c) || !Array.isArray(c.months) || !c.months.length) return undefined
+  const out: Loose = {
+    ...c,
+    months: c.months.map((m: unknown, i: number) => {
+      if (!isLoose(m)) return { name: word(m, `Month ${i + 1}`), days: 30 }
+      const month: Loose = { ...m, name: word(m.name, `Month ${i + 1}`), days: isNum(m.days) ? m.days : 30 }
+      if (m.leapDays !== undefined && !isNum(m.leapDays)) delete month.leapDays
+      if (m.festival !== undefined && typeof m.festival !== 'boolean') month.festival = !!m.festival
+      return month
+    }),
+    weekdays: Array.isArray(c.weekdays) ? c.weekdays.flatMap((w: unknown) => (typeof w === 'string' || isNum(w) ? [String(w)] : [])) : [],
+    era: word(c.era),
+    moons: Array.isArray(c.moons)
+      ? c.moons.flatMap((m: unknown) => (isLoose(m) ? [{ ...m, name: word(m.name, 'Moon'), cycle: isNum(m.cycle) ? m.cycle : 30, offset: isNum(m.offset) ? m.offset : 0 }] : []))
+      : [],
+  }
+  if (c.preset !== undefined && typeof c.preset !== 'string') delete out.preset
+  if (c.leapEvery !== undefined && !isNum(c.leapEvery)) delete out.leapEvery
+  if (c.weekdayOffset !== undefined && !isNum(c.weekdayOffset)) delete out.weekdayOffset
+  if (c.today !== undefined && !isDate(c.today)) delete out.today
+  if (c.holidays !== undefined) out.holidays = datedList(c.holidays)
+  if (c.seasons !== undefined) out.seasons = datedList(c.seasons)
+  return out as unknown as WorldCalendar
+}
+
+/** Whether a calendar is the shape dates are read with (cheap, so most calendars needn't be cleaned). */
+const readable = (c: WorldCalendar) => Array.isArray(c.months) && c.months.every(isLoose) && Array.isArray(c.weekdays)
+
 export function formatDate(c: WorldCalendar | undefined, d: CalDate | undefined, withWeekday = true) {
+  // A calendar that came from elsewhere can be the wrong shape: it's read as cleaned rather than failing.
+  if (c && !readable(c)) c = cleanCalendar(c)
   if (!c || !d) return ''
   const m = c.months[d.month]
   if (!m) return `${d.year}`
@@ -295,7 +341,8 @@ async function removeMonth(world: World, c: WorldCalendar, i: number) {
 
 /** World settings: choose or build the calendar. */
 export function CalendarEditor({ world }: { world: World }) {
-  const c = world.calendar
+  // Read as cleaned, so a calendar that came in the wrong shape can still be seen to and put right here.
+  const c = cleanCalendar(world.calendar)
   const set = (next: WorldCalendar | undefined) => db.worlds.update(world.id, { calendar: next, updatedAt: Date.now() })
   const change = (patch: Partial<WorldCalendar>) => c && set({ ...c, ...patch })
   /** Removes a holiday, season or moon at once, with Undo putting it back in its place. */
@@ -606,7 +653,7 @@ function daysToNextMonth(c: WorldCalendar, d: CalDate) {
  * `folded` shows just the date, opening to the rest: for screens where the date is a side note.
  */
 export function WorldToday({ world, isGM, folded }: { world: World; isGM: boolean; folded?: boolean }) {
-  const c = world.calendar
+  const c = cleanCalendar(world.calendar)
   if (!c?.today) return null
   if (folded)
     return (

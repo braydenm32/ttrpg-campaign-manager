@@ -1,7 +1,9 @@
-import { strFromU8, strToU8, unzipSync, Zip, ZipDeflate, ZipPassThrough } from 'fflate'
+import { strFromU8, strToU8, Zip, ZipDeflate, ZipPassThrough } from 'fflate'
+import { BACKUP_ZIP, openZip, ZipError, type Zip as OpenZip } from './zipSafe'
 import { loadInBackground } from './worldLoading'
 import { showBoardsOf } from './showBoards'
 import { packFilesFor, restorePacks, type PacksInBackup } from './packs/backup'
+import { cleanMap, cleanWorld } from './incoming'
 import { db, newId, PARTY, repId, type Asset, type Board, type Campaign, type Entity, type Pin, type Reputation, type Session, type Sound, type World, type WorldMap } from './db'
 
 /**
@@ -189,18 +191,26 @@ export async function importWorld(file: File): Promise<string> {
   }
   // A zip starts with "PK".
   const isZip = bytes[0] === 0x50 && bytes[1] === 0x4b
-  // One file at a time out of the zip, so a big backup isn't unpacked into memory all at once.
-  const entry = (name: string) => unzipSync(bytes, { filter: (f) => f.name === name })[name] as Uint8Array<ArrayBuffer> | undefined
+  // The zip's list of files is read once (and checked, so a damaged or hostile file can't freeze the
+  // tab); files come out one at a time, so a big backup isn't unpacked into memory all at once.
+  let zip: OpenZip | undefined
+  const entry = (name: string) => (zip ??= openZip(bytes, BACKUP_ZIP)).file(name)
   let b: WorldBackup
   try {
     b = JSON.parse(isZip ? strFromU8(entry('world.json') ?? new Uint8Array()) : strFromU8(bytes)) as WorldBackup
   } catch (err) {
-    if (err instanceof RangeError || /memory|allocation/i.test(String((err as Error)?.message))) throw new Error(tooBigToOpen(file))
+    if (err instanceof ZipError) console.warn('Opening the backup:', err.reason)
+    else if (err instanceof RangeError || /memory|allocation/i.test(String((err as Error)?.message))) throw new Error(tooBigToOpen(file))
     throw new Error(
-      isZip ? 'This backup file is damaged or incomplete (it may not have finished downloading). Try another copy.' : 'This file is not a Warded Atlas world backup.',
+      isZip
+        ? 'This backup file is damaged or incomplete (it may not have finished downloading), or too big to open. Try another copy.'
+        : 'This file is not a Warded Atlas world backup.',
     )
   }
   if (b.format !== 'campaign-codex-world') throw new Error('This file is not a Warded Atlas world backup.')
+  // A backup can come from anyone: its world and its maps' drawings are made safe to open first.
+  b.world = cleanWorld(b.world)
+  b.maps = b.maps.map(cleanMap)
   // Files written into the backup itself (older backups) are ready now; files in the zip are
   // unpacked after the world opens (see below), as they're the slow part.
   const blobs = new Map<string, Blob>()
@@ -211,8 +221,10 @@ export async function importWorld(file: File): Promise<string> {
     return ids.get(old)!
   }
   const opt = (old?: string) => (old ? id(old) : undefined)
-  // Pictures in text point at files by id, and the files get new ids.
-  const pics = <T extends string | undefined>(t: T): T => (t ? (t.replace(/asset:([0-9a-fA-F-]{36})/g, (m, old: string) => (ids.has(old) ? `asset:${ids.get(old)}` : m)) as T) : t)
+  // Pictures in text point at files by id, and the files get new ids. Line endings come in as plain
+  // \n, so a stray \r can't end a secret passage for the server and not for the app.
+  const pics = <T extends string | undefined>(t: T): T =>
+    t ? (t.replace(/\r\n?/g, '\n').replace(/asset:([0-9a-fA-F-]{36})/g, (m, old: string) => (ids.has(old) ? `asset:${ids.get(old)}` : m)) as T) : t
   // Every file gets its new id now, so pictures in text find theirs even before the file is unpacked.
   for (const a of b.assets) id(a.id)
   const worldId = id(b.world.id)
@@ -365,7 +377,8 @@ async function unpackFiles(
     let data: Uint8Array<ArrayBuffer> | undefined
     try {
       data = entry(`files/${a.id}`)
-    } catch {
+    } catch (err) {
+      console.warn(`Unpacking ${a.name}:`, err instanceof ZipError ? err.reason : err)
       data = undefined
     }
     if (!data && a.size) missing.push(a.name)

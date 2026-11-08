@@ -20,7 +20,7 @@ import { partyOf } from '../sessions'
 import { StatusBadge } from '../status'
 import { formatDate } from '../calendar'
 import { hasSafety, openLeads, partyLoot, quantityLabel, useVisibleHandouts } from '../counts'
-import { ShowingView, spreadTitle, SpreadView, useSpreadItems } from '../showing'
+import { BeingRecorded, ShowingView, spreadTitle, SpreadView, useSpreadItems } from '../showing'
 import { XCardButton } from './Safety'
 import { SignalButtons, TableDice, TimerList, TurnOrder, useMe } from '../atTheTable'
 import { gmIdOf, localIdOf, sendSignal, useTable, type TableState } from '../cloud/table'
@@ -83,7 +83,7 @@ export default function CommonRoom({ world }: { world: World }) {
   // The GM previewing their own synced world sees the live table their Lectern is sending.
   const cloudId = memberOf ?? (!world.shared && world.cloud?.enabled ? world.id : undefined)
   const { previewAs } = useViewMode()
-  const { table: anyTable } = useTable(cloudId)
+  const { table: anyTable, recording } = useTable(cloudId)
   const entities = useVisibleEntities(worldId)
   const sessions = useWorldSessions(worldId)
   const allCampaigns = useCampaigns(worldId)
@@ -128,6 +128,8 @@ export default function CommonRoom({ world }: { world: World }) {
 
   return (
     <div className={`page common-room stage-${stage}`}>
+      {/* The GM's app is recording (not shown for another group's session being played). */}
+      {memberOf && recording && (!anyTable || table) && <BeingRecorded help />}
       {tab === 'now' && <NowTab ctx={ctx} />}
       {tab === 'me' && <MeTab ctx={ctx} />}
       {tab === 'party' && <PartyTab ctx={ctx} />}
@@ -653,12 +655,12 @@ function Avatar({ e, size = 40 }: { e: Entity; size?: number }) {
 /**
  * Passages written just for this player (":::for" their character), wherever they are. A player's
  * copy has them already picked out by the server; the GM previewing as a player matches them here.
+ * Only the GM's own text counts: a player's words on their character's page can't make one.
  */
 function onlyYouKnow(entities: Entity[], previewNames: string[] = []) {
   const names = new Set(characterNames(previewNames))
   return entities.flatMap((e) =>
-    [e.body, e.playerBody ?? '']
-      .flatMap((t) => splitSecrets(t))
+    splitSecrets(e.body)
       .filter((seg) => (seg.kind === 'foryou' || (seg.kind === 'for' && seg.names.some((n) => names.has(n.toLowerCase())))) && seg.body.trim())
       .map((seg) => ({ page: e, text: stripSecrets(seg.body).trim() }))
       .filter((x) => x.text),

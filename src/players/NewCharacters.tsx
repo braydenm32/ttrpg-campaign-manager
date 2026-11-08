@@ -1,3 +1,4 @@
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { cloudErrorMessage } from '../cloud/client'
@@ -14,7 +15,7 @@ import { Modal } from '../components'
 import { toast } from '../undo'
 import { useInbox } from '../Sidebar'
 import { turnDownCharacterLater } from './inboxActions'
-import { blankEntity, db, type World } from '../db'
+import { blankEntity, db, type Entity, type World } from '../db'
 import { Help } from '../help'
 import { useVisibleEntities } from '../hooks'
 import { useCampaigns } from '../threads'
@@ -30,6 +31,41 @@ import { pagePath } from '../paths'
 
 const STARTER_FIELDS = ['Ancestry', 'Class', 'Level']
 const EXAMPLES: Record<string, string> = { Ancestry: 'e.g. Half-elf', Class: 'e.g. Ranger', Level: 'e.g. 1' }
+
+/** ":::for" secrets match a character's full name or first name (public.viewer_names): the words a name answers to. */
+const nameKeys = (n: string) => [n.trim().toLowerCase(), n.trim().split(/\s+/)[0].toLowerCase()].filter(Boolean)
+
+/**
+ * The world's other player characters sharing a full name or first name with this name: secret
+ * passages written for them would reach this character's player too (and the other way round).
+ */
+export function nameClashes(name: string, pages: Entity[], self?: string) {
+  const mine = nameKeys(name)
+  return pages.filter((e) => e.type === 'pc' && !e.template && e.id !== self && nameKeys(e.name).some((k) => mine.includes(k)))
+}
+
+/** The warning, wherever a character gets a player or a new name: a new character, a claim to approve, a rename. */
+export function NameClashNotice({ clashes, player, inline }: { clashes: Pick<Entity, 'id' | 'name'>[]; player?: string; inline?: boolean }) {
+  if (!clashes.length) return null
+  const Tag = inline ? 'span' : 'p'
+  return (
+    <Tag className="notice small name-clash">
+      Shares a name with {clashes.map((e) => e.name).join(', ')}. Secret passages written for {clashes.length > 1 ? 'those characters' : 'that character'} would reach{' '}
+      {player ?? 'this character’s player'} too, so you may want to give one of them a different name. <Help topic="newCharacterName" />
+    </Tag>
+  )
+}
+
+/** For the GM, by a player's request to play a character: the same warning, against the world's other player characters. */
+export function ClaimNameClash({ worldId, entityId, player, inline }: { worldId: string; entityId: string; player: string; inline?: boolean }) {
+  const clashes =
+    useLiveQuery(async () => {
+      const pcs = await db.entities.where({ worldId }).filter((e) => e.type === 'pc' && !e.template).toArray()
+      const me = pcs.find((e) => e.id === entityId)
+      return me ? nameClashes(me.name, pcs, me.id) : []
+    }, [worldId, entityId]) ?? []
+  return <NameClashNotice clashes={clashes} player={player} inline={inline} />
+}
 
 /** For a player: the form to write up a new character. */
 export function NewCharacterForm({ cloudId, onClose, onSent }: { cloudId: string; onClose: () => void; onSent: () => void }) {
@@ -191,9 +227,8 @@ export function ReviewCharacter({ world, request, player, onClose, onDone }: { w
   const [made, setMade] = useState<string>()
   const s = request.sheet
   const [name, setName] = useState(s.name.trim())
-  // ":::for" secrets match a character's full name or first name, so a new character sharing either with another would get theirs.
-  const keys = (n: string) => [n.trim().toLowerCase(), n.trim().split(/\s+/)[0].toLowerCase()].filter(Boolean)
-  const clashes = useVisibleEntities(world.id).filter((e) => e.type === 'pc' && !e.template && keys(e.name).some((k) => keys(name).includes(k)))
+  // A new character sharing a full name or first name with another would get the passages written for them.
+  const clashes = nameClashes(name, useVisibleEntities(world.id))
   const run = async (approve: boolean) => {
     setBusy(true)
     setError('')
@@ -248,12 +283,7 @@ export function ReviewCharacter({ world, request, player, onClose, onDone }: { w
           Name on their page
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
         </label>
-        {clashes.length > 0 && (
-          <p className="notice small">
-            Shares a name with {clashes.map((e) => e.name).join(', ')}. Secret passages written for {clashes.length > 1 ? 'those characters' : 'that character'} would reach{' '}
-            {player} too, so you may want to give one of them a different name. <Help topic="newCharacterName" />
-          </p>
-        )}
+        <NameClashNotice clashes={clashes} player={player} />
         {campaigns.length > 1 && (
           <label className="form">
             Plays in

@@ -9,16 +9,16 @@ import { Warning } from '@phosphor-icons/react'
 /**
  * The names a player would read in [[links]] that point at pages they can't see. Only text outside
  * secret passages counts, since that is all they receive. A link with its own label ([[Name|label]])
- * shows only the label, so it gives nothing away. Pages are matched by any of their names.
+ * counts too: the screen shows only the label, but the page's name still goes to players inside the
+ * text. Pages are matched by any of their names.
  */
 export function secretNames(texts: (string | undefined)[], pages: Entity[]) {
   const byName = nameIndex(pages)
   const found = new Map<string, string>()
   for (const t of texts) {
     if (!t) continue
-    for (const m of stripSecrets(t).matchAll(/\[\[([^\]|]+)(\|[^\]]*)?\]\]/g)) {
+    for (const m of stripSecrets(t).matchAll(/\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/g)) {
       const name = m[1].trim()
-      if (m[2] !== undefined && m[2].length > 1) continue
       const page = byName.get(name.toLowerCase())
       if (page?.visibility === 'gm' && !found.has(name.toLowerCase())) found.set(name.toLowerCase(), name)
     }

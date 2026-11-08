@@ -3,6 +3,7 @@ import { useLayoutEffect, useRef, useState, type TextareaHTMLAttributes } from '
 import { db } from './db'
 import { Help } from './help'
 import { saveFileAsAsset } from './hooks'
+import { saveFailed } from './undo'
 import { forNames } from './Markdown'
 import { Ico, TypeIcon } from './icons'
 import { EyeClosed, Image, Lock, Shield } from '@phosphor-icons/react'
@@ -137,8 +138,13 @@ export function SecretTextarea({
     const parts: string[] = []
     for (const f of images) {
       const name = f.name && f.name !== 'image.png' ? f.name.replace(/\.[^.]+$/, '') : 'Picture'
-      parts.push(`![${name.replace(/[[\]]/g, '')}](asset:${await saveFileAsAsset(worldId, f, f.name || 'Pasted picture.png', ['in text'])})`)
+      try {
+        parts.push(`![${name.replace(/[[\]]/g, '')}](asset:${await saveFileAsAsset(worldId, f, f.name || 'Pasted picture.png', ['in text'])})`)
+      } catch (err) {
+        saveFailed(`the picture “${name}”`, err)
+      }
     }
+    if (!parts.length) return true
     const lead = at > 0 && value[at - 1] !== '\n' ? '\n' : ''
     edit(at, end, `${lead}${parts.join('\n')}\n`)
     return true

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { BrowserRouter, HashRouter, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useWorld } from './hooks'
 import { AreaSidebar, AreaTabs, BottomBar, FrameProvider, frameLinks, isDeep, phoneTabIds, useFrame, useRouteFocus, useScreenTitle, WorldDate, WorldTile } from './Sidebar'
@@ -9,7 +9,7 @@ import { db } from './db'
 import { ForcePlayerView, useViewMode, ViewModeProvider, WorldViewMode } from './viewMode'
 import { finishSignInRedirect, useAuthSession, verifyEmailLink } from './cloud/auth'
 import { startAccountKeys, stopAccountKeys } from './ai/accountKeys'
-import { cloudErrorMessage, supabase } from './cloud/client'
+import { cloudErrorMessage, PASSWORD_MIN, PASSWORD_RULE, passwordProblem, supabase } from './cloud/client'
 import { watchPlayerCopy } from './cloud/share'
 import { startSync, stopSync } from './cloud/sync'
 import { Modal, Skeleton } from './components'
@@ -169,6 +169,7 @@ function CloudBoot() {
       else if (r.type === 'recovery') setRecovering(true)
       else if (r.type === 'signup' || r.type === 'email') setLinkNotice('Your email is confirmed and you’re signed in. Welcome to the Warded Atlas!')
       else if (r.type === 'email_change') setLinkNotice('Your email address has been updated.')
+      else if (r.type === 'magiclink') setLinkNotice(`You’re signed in${r.email ? ` as ${r.email}` : ''}.`)
     })
     return () => data.subscription.unsubscribe()
   }, [])
@@ -192,14 +193,17 @@ function CloudBoot() {
         className="form"
         onSubmit={async (e) => {
           e.preventDefault()
+          const problem = passwordProblem(password)
+          if (problem) return setError(problem)
           const { error } = await supabase.auth.updateUser({ password })
-          if (error) setError(error.message)
+          if (error) setError(cloudErrorMessage(error))
           else setRecovering(false)
         }}
       >
         <label>
           New password
-          <input type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input type="password" autoComplete="new-password" minLength={PASSWORD_MIN} required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <small>{PASSWORD_RULE}</small>
         </label>
         {error && <p className="error">{error}</p>}
         <div className="row end">
@@ -280,6 +284,19 @@ function SkipLink() {
   )
 }
 
+/**
+ * A part of the world's frame (the top bar's pieces, the sidebar, a banner): if it crashes on something
+ * odd in the world's data it's left out until the next screen, so the rest of the world still opens.
+ */
+function Part({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
+  const { pathname } = useLocation()
+  return (
+    <ErrorBoundary quiet fallback={fallback} resetKey={pathname}>
+      {children}
+    </ErrorBoundary>
+  )
+}
+
 function WorldShell() {
   const { worldId, world } = useWorld()
   const { isGM, setMode, previewAs } = useViewMode()
@@ -335,38 +352,115 @@ function WorldShell() {
       <SkipLink />
       <LeaveGuard />
       <header className="topbar">
-        <WorldTile world={world} frame={frame} deep={deep} />
-        <AreaTabs frame={frame} phoneTabs={phoneTabs} />
-        <WorldDate world={world} />
-        <WorldLoadingNote worldId={worldId} />
-        <SearchButton worldId={worldId} world={world} />
-        {ownWorld && world.cloud?.enabled && <LiveBadge world={world} />}
-        {isGM && ownWorld && <ClaudeJobChips worldId={worldId} />}
+        <Part>
+          <WorldTile world={world} frame={frame} deep={deep} />
+        </Part>
+        <Part>
+          <AreaTabs frame={frame} phoneTabs={phoneTabs} />
+        </Part>
+        <Part>
+          <WorldDate world={world} />
+        </Part>
+        <Part>
+          <WorldLoadingNote worldId={worldId} />
+        </Part>
+        <Part>
+          <SearchButton worldId={worldId} world={world} />
+        </Part>
+        {ownWorld && world.cloud?.enabled && (
+          <Part>
+            <LiveBadge world={world} />
+          </Part>
+        )}
+        {isGM && ownWorld && (
+          <Part>
+            <ClaudeJobChips worldId={worldId} />
+          </Part>
+        )}
       </header>
       <div className="layout-body">
-        <AreaSidebar world={world} frame={frame} links={links} />
+        <Part>
+          <AreaSidebar world={world} frame={frame} links={links} />
+        </Part>
         <main className="content" id="main-content" tabIndex={-1}>
           {shareError && <div className="player-banner">Couldn’t refresh: {shareError}</div>}
-          {isGM && !shared && <RecordingBar />}
-          {memberOf && <ChooseCharacterBanner world={world} />}
-          {shared && <NewsBanner world={world} />}
+          {isGM && !shared && (
+            <Part>
+              <RecordingBar />
+            </Part>
+          )}
+          {memberOf && (
+            <Part>
+              <ChooseCharacterBanner world={world} />
+            </Part>
+          )}
+          {shared && (
+            <Part>
+              <NewsBanner world={world} />
+            </Part>
+          )}
           {/* What the GM shows is for the table; a public wiki link never pops it up. */}
-          {memberOf && <ShowingPopup world={world} />}
-          {isGM && !shared && <ShowingBanner world={world} />}
+          {memberOf && (
+            <Part>
+              <ShowingPopup world={world} />
+            </Part>
+          )}
+          {isGM && !shared && (
+            <Part>
+              <ShowingBanner world={world} />
+            </Part>
+          )}
           {/* The Desk lists claims and new characters itself (Needs you, Inbox). */}
-          {isGM && !shared && world.cloud?.enabled && spot?.area.id !== 'desk' && <ClaimRequestsBanner world={world} />}
-          {isGM && !shared && world.cloud?.enabled && spot?.area.id !== 'desk' && <NewCharacterRequestsBanner world={world} />}
-          {!shared && <XCardAlert world={world} />}
-          {!shared && world.cloud?.enabled && <TableHost world={world} />}
-          {isGM && !shared && world.cloud?.enabled && <TableSignals world={world} />}
-          {isGM && !shared && world.cloud?.enabled && <DowntimeToast world={world} />}
-          {memberOf && <PlayerTableLink world={world} />}
+          {isGM && !shared && world.cloud?.enabled && spot?.area.id !== 'desk' && (
+            <Part>
+              <ClaimRequestsBanner world={world} />
+            </Part>
+          )}
+          {isGM && !shared && world.cloud?.enabled && spot?.area.id !== 'desk' && (
+            <Part>
+              <NewCharacterRequestsBanner world={world} />
+            </Part>
+          )}
+          {!shared && (
+            // A table's safety signal mustn't vanish unnoticed: if it ever breaks, say so.
+            <Part
+              fallback={
+                <div className="xcard-alert" role="alert">
+                  The X-card alert stopped working. Reload the page to bring it back, and ask the table to tap it again if they need to.
+                </div>
+              }
+            >
+              <XCardAlert world={world} />
+            </Part>
+          )}
+          {!shared && world.cloud?.enabled && (
+            <Part>
+              <TableHost world={world} />
+            </Part>
+          )}
+          {isGM && !shared && world.cloud?.enabled && (
+            <Part>
+              <TableSignals world={world} />
+            </Part>
+          )}
+          {isGM && !shared && world.cloud?.enabled && (
+            <Part>
+              <DowntimeToast world={world} />
+            </Part>
+          )}
+          {memberOf && (
+            <Part>
+              <PlayerTableLink world={world} />
+            </Part>
+          )}
           {!isGM && !shared && (
             <div className="player-banner">
               {previewAs
                 ? `Player view as ${previewAs.name}: what's revealed to everyone, plus what's just for ${previewAs.characterNames.join(' and ') || previewAs.name}.`
                 : "Player view: you're seeing only what's been revealed to players."}
-              <PreviewAsPicker world={world} />
+              <Part>
+                <PreviewAsPicker world={world} />
+              </Part>
               <button onClick={() => setMode('gm')}>Back to GM view</button>
             </div>
           )}
@@ -378,9 +472,15 @@ function WorldShell() {
           </ErrorBoundary>
         </main>
       </div>
-      <BottomBar frame={frame} links={links} />
+      <Part>
+        <BottomBar frame={frame} links={links} />
+      </Part>
       <ToastHost />
-      {isGM && !shared && <GroupPostOffer />}
+      {isGM && !shared && (
+        <Part>
+          <GroupPostOffer />
+        </Part>
+      )}
     </div>
     </FrameProvider>
   )

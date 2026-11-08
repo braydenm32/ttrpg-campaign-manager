@@ -3,6 +3,7 @@ import { Help } from '../help'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Empty } from '../components'
 import { PagePicker } from '../PagePicker'
+import { gmBlock } from '../Markdown'
 import { db, THREAD_STATUS, type Entity, type Session, type ThreadStatus } from '../db'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { ThreadCard } from '../ThreadCard'
@@ -100,7 +101,7 @@ function ThreadBoard() {
     if (target?.type === 'location') t.parentId = target.id
     // A page the players can't see is named only in a secret passage, so revealing the thread doesn't give it away.
     else if (target?.visibility === 'players') t.summary = `Involves [[${target.name}]].`
-    else if (target) t.body = `:::gm\nInvolves [[${target.name}]].\n:::`
+    else if (target) t.body = gmBlock(`Involves [[${target.name.replace(/\s+/g, ' ')}]].`)
     await db.entities.add(t)
     setName('')
   }

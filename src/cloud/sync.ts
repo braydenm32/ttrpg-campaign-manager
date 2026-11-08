@@ -7,6 +7,7 @@ import { binRemovedElsewhere } from '../bin'
 import { onToastChange, undoShowing } from '../undo'
 import { supabase, cloudErrorMessage } from './client'
 import { deleteMyPackFiles, shareWorldPacks } from '../packs/store'
+import { cleanMap, cleanWorld } from '../incoming'
 
 /**
  * Cloud sync for worlds the GM has opted in.
@@ -40,7 +41,13 @@ interface Row {
   blob?: Blob
 }
 
-export type SyncState = { status: 'off' | 'idle' | 'syncing' | 'offline' | 'error'; lastSync?: number; message?: string }
+export type SyncState = {
+  status: 'off' | 'idle' | 'syncing' | 'offline' | 'error'
+  lastSync?: number
+  message?: string
+  /** The worlds whose last sync left files that couldn't upload (so the account doesn't have them). */
+  unsent?: string[]
+}
 
 // ---------- status store (read by React with useSyncExternalStore) ----------
 
@@ -364,6 +371,29 @@ async function keepTheirs(worldId: string, table: SyncedTable, theirs: Record<st
 }
 
 /**
+ * Whether a row from the cloud is the row it arrived as, and of the world being pulled: its own id
+ * is the row's id, and it's the world itself or one of its things. Other devices write these rows
+ * (a co-GM's, say), so this is checked before anything is kept.
+ */
+const rowOf = (worldId: string, table: SyncedTable, id: string, data: Record<string, unknown> | null) =>
+  table === 'worlds' ? id === worldId && (!data || data.id === worldId) : !data || (data.id === id && data.worldId === worldId)
+
+/** A row from the cloud that isn't what it says it is: left alone (it could change another world here). */
+function leftOut(table: string, id: string) {
+  console.warn(`Sync left out a ${table} row (${id}): it isn’t the row it claims to be, or it belongs to another world.`)
+  return true
+}
+
+/** What another device sent, made safe to keep (see incoming.ts). A world's device-only parts never come from elsewhere. */
+function cleanRow(table: SyncedTable, data: Record<string, unknown>) {
+  if (table === 'worlds') {
+    const { cloud: _c, shared: _s, ...rest } = data
+    return cleanWorld(rest)
+  }
+  return table === 'maps' ? cleanMap(data) : data
+}
+
+/**
  * Applies one row from the cloud. Returns false when its file couldn't be downloaded (try again later).
  * Rows it removes because they were deleted elsewhere are added to `removed`, for the bin.
  */
@@ -380,6 +410,11 @@ async function applyRemote(
   const key = metaKey(table, id)
   const meta = await db.syncMeta.get(key)
   const local = await tableOf(table).get(id)
+  // A row that isn't the one it came as, or that has the id of another world's row on this device,
+  // could replace or delete that world's pages (or the world itself): it's left alone.
+  if (!rowOf(worldId, table, id, data) || (meta && meta.worldId !== worldId) || (local && table !== 'worlds' && local.worldId !== worldId)) return leftOut(table, id)
+  // Made safe before it's compared or kept, so a row in an odd shape can't stop a world opening.
+  if (data && !deleted) data = cleanRow(table, data)
   const localHash = local ? fingerprint(toData(table, local)) : undefined
   const remoteHash = deleted || !data ? undefined : fingerprint(data)
 
@@ -763,6 +798,8 @@ async function pushWorld(worldId: string): Promise<{ sent: number; forPlayers: b
 /** The sync in progress, if any: one at a time, and a world download waits its turn too. */
 let running: Promise<void> | undefined
 let again = false
+/** Something changed, or asked for a sync, since the last run started. */
+let wanted = false
 let timer: ReturnType<typeof setTimeout> | undefined
 let poll: ReturnType<typeof setInterval> | undefined
 const channels = new Map<string, RealtimeChannel>()
@@ -855,6 +892,7 @@ export function syncNow(): Promise<void> {
     again = true
     return running
   }
+  wanted = false
   running = oneTabAtATime(syncAll).finally(() => {
     running = undefined
     if (again) {
@@ -863,6 +901,19 @@ export function syncNow(): Promise<void> {
     }
   })
   return running
+}
+
+/**
+ * Syncs until the account has everything changed up to now: a sync that was already running when
+ * asked, or an edit made while one ran, gets one more run (a few at most, so edits that keep
+ * coming can't hold it up for ever).
+ */
+export async function syncEverythingNow() {
+  for (let runs = 0; runs < 3; runs++) {
+    const fresh = !running
+    await syncNow()
+    if (fresh && !wanted) return
+  }
 }
 
 async function syncAll() {
@@ -887,6 +938,7 @@ async function syncAll() {
     // One world failing doesn't stop the others.
     const problems: string[] = []
     const notes: string[] = []
+    const unsent: string[] = []
     for (const id of ids) {
       const name = (await db.worlds.get(id))?.name ?? 'A world'
       try {
@@ -898,7 +950,10 @@ async function syncAll() {
         const { forPlayers, failed, missing } = await pushWorld(id)
         // Players only refresh when something they can see changed. Telling them doesn't hold up the next world.
         if (forPlayers) void notifyShareViewers(id).catch(() => {})
-        if (failed.length) notes.push(`“${name}”: some files couldn’t upload, so other devices and players don’t get them: ${failed.join('; ')}.`)
+        if (failed.length) {
+          notes.push(`“${name}”: some files couldn’t upload, so other devices and players don’t get them: ${failed.join('; ')}.`)
+          unsent.push(name)
+        }
         const clashes = keptTheirs.get(id)
         keptTheirs.delete(id)
         if (clashes?.length)
@@ -917,7 +972,7 @@ async function syncAll() {
     if (problems.length) throw new Error(problems.join(' '))
     retries = 0
     // Problems that don't stop syncing stay on show until they're sorted, rather than "Synced" hiding them.
-    setState({ status: 'idle', lastSync: Date.now(), message: notes.length ? notes.join(' ') : undefined })
+    setState({ status: 'idle', lastSync: Date.now(), message: notes.length ? notes.join(' ') : undefined, unsent: unsent.length ? unsent : undefined })
   } catch (err) {
     const online = navigator.onLine
     setState({ status: online ? 'error' : 'offline', message: cloudErrorMessage(err) })
@@ -927,6 +982,7 @@ async function syncAll() {
 }
 
 export function schedule(delay = EDIT_DELAY) {
+  wanted = true
   clearTimeout(timer)
   timer = setTimeout(syncNow, delay)
 }
@@ -1103,9 +1159,13 @@ export async function deleteMyAccount() {
   if (!auth.user) throw new Error('Not signed in')
   const { data: owned, error } = await supabase.from('cloud_worlds').select('id').eq('owner', auth.user.id)
   if (error) throw error
+  // The pictures of their map packs first (the packs' rows go with the account): if they can't all be
+  // removed, nothing else is, so none are left online that nobody could remove afterwards.
+  await deleteMyPackFiles().catch((e) => {
+    console.warn('Map pack pictures', e)
+    throw new Error('Your map pack pictures couldn’t all be removed from the cloud, so your account hasn’t been deleted. Nothing else was changed. Try again in a minute.')
+  })
   for (const w of owned ?? []) await deleteCloudCopy(w.id)
-  // the pictures of their map packs (the packs' rows go with the account)
-  await deleteMyPackFiles().catch((e) => console.warn('Map pack pictures', e))
   const { error: deleteError } = await supabase.rpc('delete_my_account')
   if (deleteError) throw deleteError
   await supabase.auth.signOut({ scope: 'local' })
@@ -1168,6 +1228,8 @@ async function fetchLater(worldId: string, files: Pulled[]) {
     await loadInBackground(worldId, 'downloading', [...files].sort((a, b) => rank(a) - rank(b)), async (rec) => {
       const key = metaKey('assets', rec.id)
       try {
+        // As in applyRemote: a file row that isn't the file it came as is left alone.
+        if (!rowOf(worldId, 'assets', rec.id, rec.data)) return void leftOut('assets', rec.id)
         const { data: file, error } = await supabase.storage.from('assets').download(storagePath(worldId, rec.id))
         // One that fails is fetched again by the next sync.
         if (error || !file || !rec.data) return

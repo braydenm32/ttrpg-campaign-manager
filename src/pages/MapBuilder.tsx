@@ -1336,8 +1336,10 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
     const list = drawing[key] ?? []
     commit({ ...drawing, [key]: list.includes(id) ? list.filter((l) => l !== id) : [...list, id] })
   }
+  // The id is escaped for CSS: it comes from the drawing, which may have come from someone else.
+  const sel = selectedId ? CSS.escape(selectedId) : ''
   const selectionStyle = selectedId
-    ? `[data-id="${selectedId}"] { stroke: #ffd36b; stroke-opacity: .5; } rect.hit-box[data-id="${selectedId}"] { stroke-opacity: 1; stroke-width: ${2 * upp}; stroke-dasharray: ${6 * upp} ${4 * upp}; fill: rgba(255,211,107,.08); } .hit-room:is(rect, ellipse)[data-id="${selectedId}"] { stroke-opacity: 1; stroke-width: 3px; stroke-dasharray: 8 5; fill: rgba(255,211,107,.12); }`
+    ? `[data-id="${sel}"] { stroke: #ffd36b; stroke-opacity: .5; } rect.hit-box[data-id="${sel}"] { stroke-opacity: 1; stroke-width: ${2 * upp}; stroke-dasharray: ${6 * upp} ${4 * upp}; fill: rgba(255,211,107,.08); } .hit-room:is(rect, ellipse)[data-id="${sel}"] { stroke-opacity: 1; stroke-width: 3px; stroke-dasharray: 8 5; fill: rgba(255,211,107,.12); }`
     : ''
 
   return (

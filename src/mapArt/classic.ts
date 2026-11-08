@@ -1595,9 +1595,13 @@ export async function classicBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   throw new Error('Could not save the map picture')
 }
 
+/** A value written into markup: quotes and brackets in it can't end the attribute or start a tag. */
+const esc = (v: unknown) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
+
 /**
  * Invisible click targets for the editor (the picture itself is a bitmap). Locked and hidden
- * layers get none, so they can't be picked, moved or erased.
+ * layers get none, so they can't be picked, moved or erased. Ids come from the drawing, which can
+ * come from someone else's backup or another device, so they're escaped; everything else is a number.
  */
 export function classicHitSvg(d: Drawing): string {
   const off = new Set<LayerId>([...(d.hidden ?? []), ...(d.locked ?? [])])
@@ -1607,18 +1611,18 @@ export function classicHitSvg(d: Drawing): string {
   // areas first, so pieces, lines and labels sit on top of them
   for (const s of d.shapes)
     if (s.kind === 'area' && !off.has('land') && marked(s))
-      out.push(`<path data-id="${s.id}" class="hit-area" d="M${s.points.map(([x, y]) => `${f(x)} ${f(y)}`).join(' L')} Z" fill="transparent"/>`)
+      out.push(`<path data-id="${esc(s.id)}" class="hit-area" d="M${s.points.map(([x, y]) => `${f(x)} ${f(y)}`).join(' L')} Z" fill="transparent"/>`)
   // brush strokes of land and ground are picked along the middle of the stroke, where the brush went
   const run = (pts: Point[]) => (pts.length > 1 ? `M${pts.map(([x, y]) => `${f(x)} ${f(y)}`).join(' L')}` : `M${f(pts[0][0])} ${f(pts[0][1])} l0.01 0`)
   if (!off.has('land'))
     for (const s of [...(d.land ?? []), ...(d.ground ?? [])])
       if (s.points.length)
-        out.push(`<path data-id="${s.id}" data-stroke="1" class="hit-stroke" d="${run(s.points)}" fill="none" stroke="transparent" stroke-width="16" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="stroke"/>`)
+        out.push(`<path data-id="${esc(s.id)}" data-stroke="1" class="hit-stroke" d="${run(s.points)}" fill="none" stroke="transparent" stroke-width="16" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="stroke"/>`)
   // rooms by their outline (inside them you pick what stands there); passages and caves anywhere along them
   if (d.scene === 'battle' && !off.has('paths'))
     for (const r of d.rooms ?? []) {
       if (!r.points.length) continue
-      const attrs = `data-id="${r.id}" data-stroke="1" class="hit-room" fill="none" stroke="transparent" pointer-events="stroke"`
+      const attrs = `data-id="${esc(r.id)}" data-stroke="1" class="hit-room" fill="none" stroke="transparent" pointer-events="stroke"`
       const [[ax, ay], [bx, by]] = [r.points[0], r.points[r.points.length - 1]]
       if (r.shape === 'rect')
         out.push(`<rect ${attrs} x="${f(Math.min(ax, bx))}" y="${f(Math.min(ay, by))}" width="${f(Math.abs(bx - ax))}" height="${f(Math.abs(by - ay))}" stroke-width="14" vector-effect="non-scaling-stroke"/>`)
@@ -1631,13 +1635,13 @@ export function classicHitSvg(d: Drawing): string {
     if (s.kind === 'area' || off.has(layerOf(s))) continue
     if (s.kind === 'line') {
       const w = s.style === 'wall' ? 20 : 16
-      out.push(`<path data-id="${s.id}" class="hit-line" d="M${s.points.map(([x, y]) => `${f(x)} ${f(y)}`).join(' L')}" fill="none" stroke="transparent" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`)
+      out.push(`<path data-id="${esc(s.id)}" class="hit-line" d="M${s.points.map(([x, y]) => `${f(x)} ${f(y)}`).join(' L')}" fill="none" stroke="transparent" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`)
       continue
     }
     const p = pieceOf(s)
     const box = p ? pieceBox(p) : s.kind === 'label' ? labelBox(measure, s) : undefined
     const turn = p && turnOf(p) ? ` transform="rotate(${f(p.turn!)} ${f(box![0] + box![2] / 2)} ${f(box![1] + box![3] / 2)})"` : ''
-    if (box) out.push(`<rect data-id="${s.id}" class="hit-box" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}" fill="transparent"${turn}/>`)
+    if (box) out.push(`<rect data-id="${esc(s.id)}" class="hit-box" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}" fill="transparent"${turn}/>`)
   }
   return out.join('')
 }

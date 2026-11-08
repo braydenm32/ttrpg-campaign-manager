@@ -1,6 +1,8 @@
-import { strToU8, unzipSync, zipSync } from 'fflate'
+import { strToU8, zipSync } from 'fflate'
 import { blankEntity, db, ENTITY_LABELS, newId, typeLabel, type Entity, type EntityType } from './db'
 import { saveFileAsAsset } from './hooks'
+import { stripSecrets } from './Markdown'
+import { IMPORT_ZIP, openZip } from './zipSafe'
 
 /**
  * Bringing pages in from other tools, and out again as Markdown.
@@ -37,18 +39,38 @@ export interface ImportPlan {
 
 export type ImportSource = 'markdown' | 'kanka' | 'worldanvil'
 
-/** Every file picked (folders keep their paths), with .zip files opened up. */
+/** What an import takes out of a .zip: notes, JSON and pictures. Anything else is only counted as skipped. */
+const UNPACKED = /\.(md|markdown|json|png|jpe?g|gif|webp|svg)$/i
+
+/** Every file picked (folders keep their paths), with .zip files opened up (within the limits in zipSafe.ts). */
 export async function readFiles(list: File[]): Promise<Map<string, Blob>> {
   const out = new Map<string, Blob>()
   for (const f of list) {
     const path = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name
     if (/\.zip$/i.test(f.name)) {
-      const files = unzipSync(new Uint8Array(await f.arrayBuffer()))
-      for (const [p, data] of Object.entries(files)) if (!p.endsWith('/')) out.set(p, new Blob([data as BlobPart], { type: mimeOf(p) }))
+      if (f.size > IMPORT_ZIP.total) throw new Error(`${f.name} is too big to open here (over 1 GB). Unzip it, then pick the files or the folder inside instead.`)
+      const zip = openZip(new Uint8Array(await f.arrayBuffer()), IMPORT_ZIP)
+      for (const e of zip.entries) if (!e.name.endsWith('/')) out.set(e.name, UNPACKED.test(e.name) ? new Blob([zip.read(e)], { type: mimeOf(e.name) }) : new Blob())
     } else out.set(path, f)
   }
   return out
 }
+
+/** Windows (\r\n) and old Mac (\r) line endings as plain \n, so a stray \r can't end a secret passage for the server and not for the app. */
+const plainNewlines = (s: string) => s.replace(/\r\n?/g, '\n')
+
+/**
+ * Text as a GM-only passage. A line in it that starts ":::" would end the passage early (or start
+ * another), and what follows would reach players once the page is revealed, so such a line gets a
+ * backslash in front. Markdown still shows it as it was ("\:" reads as ":").
+ */
+export function gmOnly(text: string) {
+  return `:::gm\n${plainNewlines(text).replace(/^([ \t]*):::/gm, '$1\\:::')}\n:::`
+}
+
+/** Stands in for a piece of text while the text around it is worked on; never left in what's imported. */
+const MARK = '\uE000'
+const MARKS = /\uE000/g
 
 function mimeOf(path: string) {
   const ext = path.split('.').pop()?.toLowerCase() ?? ''
@@ -132,13 +154,41 @@ const GM_TAGS_KEY = 'gm-tags'
 
 /** Obsidian's extras turned into ours: tidy [[links]], %%comments%% as GM-only, embedded pictures pulled out. */
 function convertObsidian(body: string, images: string[]) {
-  return body
-    .replace(/%%([\s\S]*?)%%/g, (_m, inner: string) => `\n:::gm\n${inner.trim()}\n:::\n`)
-    .replace(/!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/g, (_m, file: string) => (isImage(file) ? (images.push(file.trim()), '') : ''))
-    .replace(/!\[[^\]]*\]\(([^)]+)\)/g, (m, file: string) => (/^https?:/.test(file) ? m : (images.push(decodeURIComponent(file.trim())), '')))
+  // Comments are found in the text as written, before anything else changes it. A comment never
+  // closed hides the rest of the note, as it does in Obsidian.
+  const text = body
+    .replace(MARKS, '')
+    .split('%%')
+    .map((part, i) => (i % 2 ? `\n${gmOnly(part.trim())}\n` : part))
+    .join('')
+  // Embeds come out of the text (the first picture can become the page's picture), but only where
+  // players could see them: one inside a secret passage stays put, so a secret picture never ends up
+  // as the picture on the page.
+  const embeds: string[] = []
+  const marked = text.replace(/!\[\[[^\]|]+(?:\|[^\]]*)?\]\]|!\[[^\]]*\]\([^)]+\)/g, (m) => `${MARK}${embeds.push(m) - 1}${MARK}`)
+  const shown = new Set(stripSecrets(marked).match(/\uE000\d+\uE000/g))
+  return marked
+    .replace(/\uE000(\d+)\uE000/g, (t, i: string) => (shown.has(t) ? pullPicture(embeds[Number(i)], images) : embeds[Number(i)]))
     .replace(/\[\[([^\]|#]*)(#[^\]|]*)?(\|[^\]]*)?\]\]/g, (_m, name: string, _h, alias?: string) => `[[${name.split('/').pop()!.trim()}${alias ?? ''}]]`)
     .replace(/\n{3,}/g, '\n\n')
     .trim()
+}
+
+/** An embed taken out of the text, noting its file if it's a picture in the vault. A web picture stays as it is. */
+function pullPicture(embed: string, images: string[]) {
+  const wiki = embed.match(/^!\[\[([^\]|]+)/)
+  if (wiki) {
+    if (isImage(wiki[1])) images.push(wiki[1].trim())
+    return ''
+  }
+  const file = embed.match(/\]\(([^)]+)\)$/)![1].trim()
+  if (/^https?:/.test(file)) return embed
+  try {
+    images.push(decodeURIComponent(file))
+  } catch {
+    images.push(file)
+  }
+  return ''
 }
 
 const SKIP_KEYS = new Set(['title', 'name', 'tags', 'tag', 'type', 'aliases', 'alias', 'summary', 'description', 'cssclass', 'cssclasses', 'publish', 'location', 'parent', 'located in', 'image', 'status', 'visibility', GM_TAGS_KEY])
@@ -154,7 +204,7 @@ export async function planMarkdown(files: Map<string, Blob>): Promise<ImportPlan
       if (!isImage(path)) skipped++
       continue
     }
-    const { data, body } = frontmatter(await blob.text())
+    const { data, body } = frontmatter(plainNewlines(await blob.text()))
     const images: string[] = []
     const text = convertObsidian(body, images)
     const folders = path.split('/').slice(0, -1).reverse()
@@ -282,7 +332,7 @@ const KANKA_TYPES: Record<string, EntityType> = {
 }
 
 type Json = Record<string, unknown>
-const str = (v: unknown) => (typeof v === 'string' ? v : typeof v === 'number' ? String(v) : '')
+const str = (v: unknown) => (typeof v === 'string' ? plainNewlines(v) : typeof v === 'number' ? String(v) : '')
 
 export async function planKanka(files: Map<string, Blob>): Promise<ImportPlan> {
   const raw: { folder: string; o: Json }[] = []
@@ -310,7 +360,7 @@ export async function planKanka(files: Map<string, Blob>): Promise<ImportPlan> {
     if (ent?.id != null) names.set(str(ent.id), str(o.name))
     if (o.entity_id != null) names.set(str(o.entity_id), str(o.name))
   }
-  const pages = raw.map(({ folder, o }) => {
+  const pages = raw.map(({ folder, o }, i) => {
     const ent = (o.entity as Json | undefined) ?? {}
     const entry = str(o.entry) || str(ent.entry)
     const body = htmlToMarkdown(
@@ -319,7 +369,7 @@ export async function planKanka(files: Map<string, Blob>): Promise<ImportPlan> {
         return name ? (text && text !== name ? `[[${name}|${text}]]` : `[[${name}]]`) : (text ?? '')
       }),
     )
-    const tags = ((ent.tags ?? o.tags ?? []) as unknown[]).map((t) => (typeof t === 'string' ? t : str((t as Json)?.name))).filter(Boolean)
+    const tags = ((ent.tags ?? o.tags ?? []) as unknown[]).map((t) => str(typeof t === 'string' ? t : (t as Json)?.name)).filter(Boolean)
     const fields = [
       ['Kind', o.type],
       ['Title', o.title],
@@ -333,7 +383,8 @@ export async function planKanka(files: Map<string, Blob>): Promise<ImportPlan> {
     const parentFolder = o.parent_location_id != null || o.location_id != null ? 'locations' : folder
     const type = KANKA_TYPES[folder.toLowerCase()] ?? guessType(folder)
     return {
-      key: `${folder}:${str(o.id)}`,
+      // Something without an id of its own still gets a key of its own.
+      key: `${folder}:${str(o.id) || `#${i}`}`,
       name: str(o.name).trim(),
       type,
       summary: '',
@@ -349,13 +400,44 @@ export async function planKanka(files: Map<string, Blob>): Promise<ImportPlan> {
 
 // ---------- World Anvil ----------
 
+/**
+ * World Anvil's secret passages: [spoiler], [gm], and [sec:…] (only for some subscribers there).
+ * Each becomes GM only.
+ */
+const WA_SECRET = /(\[\/?(?:spoiler|gm|sec)(?![\w-])[^\]]*\])/i
+
 /** World Anvil's BBCode to Markdown: headings, bold, links, lists, quotes; mentions become [[links]], secrets GM-only. */
 export function bbcodeToMarkdown(text: string): string {
+  // Secrets are found from the tags as written, and each part is converted on its own, so nothing in
+  // the conversion can move text out of a secret. A secret inside another is part of it, a closing tag
+  // with nothing open is dropped, and a secret never closed keeps the rest of the text secret.
+  let out = ''
+  let secret = ''
+  let depth = 0
+  const keep = () => {
+    if (secret.trim()) out += `\n${gmOnly(bbcodePart(secret).trim())}\n`
+    secret = ''
+  }
+  for (const [i, part] of plainNewlines(text).split(WA_SECRET).entries()) {
+    if (i % 2 === 0) {
+      if (depth) secret += part
+      else out += bbcodePart(part)
+    } else if (part[1] !== '/') depth++
+    else if (depth && !--depth) keep()
+  }
+  keep()
+  return out
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+function bbcodePart(text: string): string {
   // Mentions become links, held aside as placeholders so the tag clean-up at the end can't touch them.
   const links: string[] = []
-  let s = text.replace(/\r\n/g, '\n')
-  s = s
-    .replace(/@\[([^\]]+)\]\([^)]*\)/g, (_m, name: string) => `\uE000${links.push(name) - 1}\uE000`)
+  return text
+    .replace(MARKS, '')
+    .replace(/@\[([^\]]+)\]\([^)]*\)/g, (_m, name: string) => `${MARK}${links.push(name) - 1}${MARK}`)
     .replace(/\[h(\d)\]([\s\S]*?)\[\/h\d\]/gi, (_m, n: string, t: string) => `\n\n${'#'.repeat(Math.min(6, Number(n) + 1))} ${t.trim()}\n\n`)
     .replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '**$1**')
     .replace(/\[i\]([\s\S]*?)\[\/i\]/gi, '*$1*')
@@ -365,7 +447,6 @@ export function bbcodeToMarkdown(text: string): string {
     .replace(/\[url\]([\s\S]*?)\[\/url\]/gi, '$1')
     .replace(/\[img[^\]]*\][\s\S]*?\[\/img\]/gi, '')
     .replace(/\[(?:quote|aloud)[^\]]*\]([\s\S]*?)\[\/(?:quote|aloud)\]/gi, (_m, t: string) => `\n\n${t.trim().split('\n').map((l) => `> ${l}`).join('\n')}\n\n`)
-    .replace(/\[(?:spoiler|gm)[^\]]*\]([\s\S]*?)\[\/(?:spoiler|gm)\]/gi, (_m, t: string) => `\n:::gm\n${t.trim()}\n:::\n`)
     .replace(/\[secret:[^\]]*\]/gi, '')
     .replace(/\[li\]([\s\S]*?)(?:\[\/li\]|(?=\[li\])|(?=\[\/[uo]l\]))/gi, (_m, t: string) => `\n- ${t.trim()}`)
     .replace(/\[\/?(?:ul|ol|list)\]/gi, '\n')
@@ -373,10 +454,6 @@ export function bbcodeToMarkdown(text: string): string {
     .replace(/\[\/?p\]/gi, '\n\n')
     .replace(/\[\/?[a-z][\w-]*(?:[:=][^\]]*)?\]/gi, '')
     .replace(/\uE000(\d+)\uE000/g, (_m, i: string) => `[[${links[Number(i)]}]]`)
-  return s
-    .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
 }
 
 const WA_FIELDS: [string, string][] = [
@@ -415,7 +492,7 @@ export async function planWorldAnvil(files: Map<string, Blob>): Promise<ImportPl
       continue
     }
     const list = Array.isArray(parsed) ? parsed : [parsed]
-    for (const item of list) {
+    for (const [index, item] of list.entries()) {
       const o = item as Json
       const title = str(o?.title) || str(o?.name)
       if (!title || !WA_BODY.some((k) => str(o[k]))) {
@@ -432,13 +509,20 @@ export async function planWorldAnvil(files: Map<string, Blob>): Promise<ImportPl
         .map((t) => t.trim())
         .filter(Boolean)
       pages.push({
-        key: str(o.id) || path,
+        // Something without an id of its own still gets a key of its own.
+        key: str(o.id) || `${path}#${index}`,
         name: title.trim(),
         type: guessType(template, ...path.split('/').slice(0, -1).reverse()),
-        summary: bbcodeToMarkdown(str(o.excerpt)).replace(/\s+/g, ' ').slice(0, 300),
+        // The summary and details are plain text that players see once the page is shown to them, so
+        // a secret in the summary is left out, and a detail with a secret in it is GM only.
+        summary: stripSecrets(bbcodeToMarkdown(str(o.excerpt))).replace(/\s+/g, ' ').trim().slice(0, 300),
         body,
         tags,
-        fields: WA_FIELDS.filter(([k]) => str(o[k]).trim()).map(([k, label]) => ({ key: label, value: bbcodeToMarkdown(str(o[k])) })),
+        fields: WA_FIELDS.filter(([k]) => str(o[k]).trim()).map(([k, label]) => {
+          const value = str(o[k])
+          const open = value.replace(new RegExp(WA_SECRET.source, 'gi'), '')
+          return open === value ? { key: label, value: bbcodeToMarkdown(value) } : { key: label, value: bbcodeToMarkdown(open), gm: true }
+        }),
       })
     }
   }
@@ -456,33 +540,37 @@ export async function applyImport(worldId: string, plan: ImportPlan, skipExistin
   const existing = await db.entities.where({ worldId }).toArray()
   const taken = new Set(existing.map((e) => e.name.trim().toLowerCase()))
   const pages = skipExisting ? plan.pages.filter((p) => !taken.has(p.name.toLowerCase())) : plan.pages
+  // Every page gets an id of its own, even when two share a key (a link to that key finds the first).
+  const ids = pages.map(() => newId())
   const idByKey = new Map<string, string>()
   const idByName = new Map(existing.map((e) => [e.name.trim().toLowerCase(), e.id]))
-  for (const p of pages) {
-    const id = newId()
-    idByKey.set(p.key, id)
-    if (!idByName.has(p.name.toLowerCase())) idByName.set(p.name.toLowerCase(), id)
-  }
+  pages.forEach((p, i) => {
+    if (!idByKey.has(p.key)) idByKey.set(p.key, ids[i])
+    if (!idByName.has(p.name.toLowerCase())) idByName.set(p.name.toLowerCase(), ids[i])
+  })
   const now = Date.now()
-  const rows: Entity[] = []
-  for (const [i, p] of pages.entries()) {
-    const e = blankEntity(worldId, p.type, p.name || 'Untitled')
-    e.id = idByKey.get(p.key)!
-    e.summary = p.summary
-    e.body = p.body
-    e.tags = [...new Set(p.tags)]
-    e.fields = p.fields
-    if (p.aliases) e.aliases = [...new Set(p.aliases)]
-    if (p.gmTags) e.gmTags = [...new Set(p.gmTags)]
-    if (p.status) e.status = p.status
-    if (p.type === 'event') e.eventOrder = now + i
-    const parent = p.parent && (idByKey.get(p.parent) ?? idByName.get(p.parent.toLowerCase()))
-    if (parent && parent !== e.id) e.parentId = parent
-    if (p.image) e.imageId = await saveFileAsAsset(worldId, p.image.blob, p.image.name, [p.name])
-    rows.push(e)
-  }
-  await db.entities.bulkAdd(rows)
-  return rows.length
+  // Pictures and pages go in together, so if anything fails (a full device, say) nothing is left half done.
+  return db.transaction('rw', [db.entities, db.assets], async () => {
+    const rows: Entity[] = []
+    for (const [i, p] of pages.entries()) {
+      const e = blankEntity(worldId, p.type, p.name || 'Untitled')
+      e.id = ids[i]
+      e.summary = p.summary
+      e.body = p.body
+      e.tags = [...new Set(p.tags)]
+      e.fields = p.fields
+      if (p.aliases) e.aliases = [...new Set(p.aliases)]
+      if (p.gmTags) e.gmTags = [...new Set(p.gmTags)]
+      if (p.status) e.status = p.status
+      if (p.type === 'event') e.eventOrder = now + i
+      const parent = p.parent && (idByKey.get(p.parent) ?? idByName.get(p.parent.toLowerCase()))
+      if (parent && parent !== e.id) e.parentId = parent
+      if (p.image) e.imageId = await saveFileAsAsset(worldId, p.image.blob, p.image.name, [p.name])
+      rows.push(e)
+    }
+    await db.entities.bulkAdd(rows)
+    return rows.length
+  })
 }
 
 // ---------- export ----------
@@ -535,7 +623,7 @@ export async function exportMarkdown(worldId: string) {
     const rels = (e.relations ?? []).filter((r) => byId.has(r.to))
     if (rels.length) parts.push(`\n\n## Relationships\n\n${rels.map((r) => `- ${r.kind} [[${byId.get(r.to)!.name}]]${r.note ? ` (${r.note})` : ''}`).join('\n')}`)
     // Inside a :::gm block, so importing the export back in never turns GM notes into page text players can see.
-    if (e.gmNotes) parts.push(`\n\n## GM notes\n\n:::gm\n${e.gmNotes}\n:::`)
+    if (e.gmNotes) parts.push(`\n\n## GM notes\n\n${gmOnly(e.gmNotes)}`)
     files[file] = strToU8(parts.join(''))
   }
   const zip = zipSync(files, { level: 6 })

@@ -1,5 +1,6 @@
 import { db, type Entity } from './db'
 import { roll } from './dice'
+import type { AppElement } from './Markdown'
 import { sessionStage } from './sessions'
 import { listedEntries, rollOnTable } from './tables'
 
@@ -16,8 +17,21 @@ const TABLE = /\{\{([^{}\n]{1,80})\}\}/g
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
 
-/** Turns the roll and table marks in Markdown source into buttons (code blocks are left alone). */
-export function inlineRolls(src: string, tables: Entity[], still?: boolean): string {
+/** A roll button, with the box its result goes in. */
+const rollButton = (what: { 'data-roll': string } | { 'data-table': string }, title: string, text: string): AppElement => ({
+  tag: 'span',
+  attrs: { class: 'inline-roll-wrap' },
+  children: [
+    { tag: 'button', attrs: { type: 'button', class: 'inline-roll', ...what, title }, text },
+    { tag: 'output', attrs: { class: 'inline-roll-out', 'aria-live': 'polite' } },
+  ],
+})
+
+/**
+ * Turns the roll and table marks in Markdown source into buttons (code blocks are left alone).
+ * `put` holds each button back and gives the marker that stands in for it (see renderMarkdown).
+ */
+export function inlineRolls(src: string, tables: Entity[], still: boolean | undefined, put: (el: AppElement, raw: string) => string): string {
   const byName = new Map(tables.map((t) => [t.name.trim().toLowerCase(), t]))
   return src
     .split(/(```[\s\S]*?```)/)
@@ -31,18 +45,21 @@ export function inlineRolls(src: string, tables: Entity[], still?: boolean): str
           } catch {
             return whole
           }
-          if (still) return `<span class="inline-roll still">🎲 ${esc(expr)}</span>`
-          return `<span class="inline-roll-wrap"><button type="button" class="inline-roll" data-roll="${esc(expr)}" title="Roll ${esc(expr)}">🎲 ${esc(expr)}</button><output class="inline-roll-out" aria-live="polite"></output></span>`
+          if (still) return put({ tag: 'span', attrs: { class: 'inline-roll still' }, text: `🎲 ${expr}` }, whole)
+          return put(rollButton({ 'data-roll': expr }, `Roll ${expr}`, `🎲 ${expr}`), whole)
         })
         .replace(TABLE, (whole, name: string) => {
           const t = byName.get(name.trim().toLowerCase())
           if (!t || t.type !== 'table') return whole
-          if (still) return `<span class="inline-roll still">🎲 ${esc(t.name)}</span>`
-          return `<span class="inline-roll-wrap"><button type="button" class="inline-roll" data-table="${esc(t.id)}" title="Roll on ${esc(t.name)}">🎲 ${esc(t.name)}</button><output class="inline-roll-out" aria-live="polite"></output></span>`
+          if (still) return put({ tag: 'span', attrs: { class: 'inline-roll still' }, text: `🎲 ${t.name}` }, whole)
+          return put(rollButton({ 'data-table': t.id }, `Roll on ${t.name}`, `🎲 ${t.name}`), whole)
         })
     })
     .join('')
 }
+
+/** The "Add to notes" buttons made after a roll, with the session and the line each one adds. */
+const toNotesButtons = new WeakMap<HTMLButtonElement, { session: string; line: string }>()
 
 /** The session being played in this world right now, if any (for "add to notes"). */
 async function openSession(worldId: string) {
@@ -57,13 +74,16 @@ async function openSession(worldId: string) {
 export function clickInlineRoll(target: HTMLElement, { tables, showSecrets, isGM, worldId }: { tables: Entity[]; showSecrets: boolean; isGM: boolean; worldId: string }) {
   const toNotes = target.closest<HTMLButtonElement>('button.roll-to-notes')
   if (toNotes) {
-    const sessionId = toNotes.dataset.session!
+    // Only a button made here after a roll, for the GM, and only once. One that merely looks like
+    // it (typed into a page or the party's notes) does nothing.
+    const made = toNotesButtons.get(toNotes)
+    if (!made || !isGM) return true
+    toNotesButtons.delete(toNotes)
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    const line = toNotes.dataset.line!
     db.sessions
       .where('id')
-      .equals(sessionId)
-      .modify((s) => void (s.notes = `${s.notes.trimEnd()}${s.notes.trim() ? '\n' : ''}- ${time} ${line}`))
+      .equals(made.session)
+      .modify((s) => void (s.notes = `${s.notes.trimEnd()}${s.notes.trim() ? '\n' : ''}- ${time} ${made.line}`))
       .then(() => {
         toNotes.textContent = '✓ In the notes'
         toNotes.disabled = true
@@ -93,9 +113,8 @@ export function clickInlineRoll(target: HTMLElement, { tables, showSecrets, isGM
       const b = document.createElement('button')
       b.type = 'button'
       b.className = 'link small roll-to-notes'
-      b.dataset.session = s.id
-      b.dataset.line = line
       b.textContent = `Add to #${s.number}’s notes`
+      toNotesButtons.set(b, { session: s.id, line })
       out.append(' ', b)
     })
   return true

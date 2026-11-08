@@ -1,0 +1,39 @@
+# Security headers for the web app. Cloudflare Pages sends them with every file of wardedatlas.com.
+# `npm run dev`, `vite preview` and the browser tests send the same ones, read from this file by
+# vite.config.ts, so a change here is tried out before it goes live. The desktop app keeps its own
+# copy of the policy in src-tauri/tauri.conf.json (app > security > csp); tests/csp.spec.ts checks
+# the two still agree. To see what the live site sends: curl -I https://wardedatlas.com
+# (more in docs/ACCOUNT_SETUP.md).
+#
+# Content-Security-Policy says where the app may load code, pictures and fonts from, and which
+# servers it may talk to, so a slip in how text is shown can't run someone else's code or send
+# keys and worlds anywhere else. What each part is for:
+#   script-src   the app's own code. The jsDelivr folder, blob: and 'wasm-unsafe-eval' are for
+#                on-device transcription: transformers.js downloads the speech engine
+#                (onnxruntime-web) from jsDelivr, runs it from a blob: copy and starts its
+#                WebAssembly. The folder names the exact version in package-lock.json; when an
+#                update changes it, change it here and in tauri.conf.json (tests/csp.spec.ts says so).
+#   worker-src   the transcription worker, and the small helpers some libraries start from blob:.
+#   connect-src  the servers the app talks to: the Warded Atlas cloud (Supabase, also its live
+#                updates over wss:), Anthropic (Claude), AssemblyAI, Hugging Face (the speech model,
+#                which comes from its download servers on *.hf.co and *.huggingface.co), jsDelivr
+#                (the speech engine), the Warded Atlas pack (packs.wardedatlas.com), Discord
+#                webhooks (discord.com, discordapp.com and their ptb./canary. copies), Syrinscape,
+#                and D&D Beyond and Pathbuilder for character sheets and portraits. data: and blob:
+#                are copies already on this device.
+#   img-src      https: because a GM's own text may show pictures from the web.
+#   style-src, font-src  the app's own (its fonts are in public/fonts, so Google isn't contacted).
+#                'unsafe-inline' is needed for styles the app and its maps set on the page.
+#   object-src, base-uri, form-action  no plugins, and links and forms stay on this site.
+#   frame-ancestors  no other site may show the app inside a frame (stops click-jacking).
+#                The move from the old GitHub address uses a new tab, not a frame.
+#
+# Permissions-Policy: the microphone and screen sharing are for recording the table (screen
+# sharing brings in an online call's sound). Nothing uses the camera, location or the other ones.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/; worker-src 'self' blob:; connect-src 'self' data: blob: https://ysrxumagiiaoihlhofqt.supabase.co wss://ysrxumagiiaoihlhofqt.supabase.co https://api.anthropic.com https://api.assemblyai.com https://huggingface.co https://*.huggingface.co https://*.hf.co https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/ https://packs.wardedatlas.com https://discord.com https://*.discord.com https://discordapp.com https://*.discordapp.com https://syrinscape.com https://dndbeyond.com https://*.dndbeyond.com https://media-waterdeep.cursecdn.com https://forge-vtt.com https://*.forge-vtt.com https://pathbuilder2e.com; img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: camera=(), microphone=(self), display-capture=(self), geolocation=(), payment=(), usb=(), serial=(), hid=(), midi=()

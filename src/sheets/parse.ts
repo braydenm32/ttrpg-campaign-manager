@@ -45,6 +45,11 @@ const isObj = (v: unknown): v is Obj => !!v && typeof v === 'object' && !Array.i
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
 const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '')
 const num = (v: unknown): number | undefined => (typeof v === 'number' && isFinite(v) ? v : typeof v === 'string' && v.trim() && isFinite(+v) ? +v : undefined)
+/** A portrait's address: a secure web address, or a picture written into the file itself. */
+const picture = (v: unknown) => {
+  const u = str(v)
+  return /^(https:\/\/|data:image\/)/i.test(u) ? u : undefined
+}
 const get = (o: unknown, path: string): unknown => path.split('.').reduce<unknown>((x, k) => (isObj(x) ? x[k] : undefined), o)
 const signed = (n: number) => (n >= 0 ? `+${n}` : String(n))
 const mod = (score: number) => Math.floor((score - 10) / 2)
@@ -161,12 +166,11 @@ export function fromFoundry(actor: Obj): Sheet {
   const items = arr(actor.items).filter(isObj)
   const read = systemId === 'dnd5e' ? foundry5e : systemId === 'pf2e' ? foundryPf2e : systemId === 'CoC7' ? foundryCoc : foundryGeneral
   const sheet = read(actor, sys, items)
-  const img = str(actor.img)
   return {
     ...sheet,
     source: `Foundry VTT${systemId ? ` (${FOUNDRY_SYSTEMS[systemId] ?? systemId})` : ''}`,
     name: str(actor.name) || 'Unnamed character',
-    portraitUrl: /^(https?:|data:image\/)/.test(img) ? img : undefined,
+    portraitUrl: picture(actor.img),
   }
 }
 
@@ -564,7 +568,7 @@ export function fromDdb(c: Obj): Sheet {
         description: prose(get(i, 'definition.description')) || undefined,
       }))
       .filter((g) => g.name),
-    portraitUrl: str(get(c, 'decorations.avatarUrl')) || str(c.avatarUrl) || undefined,
+    portraitUrl: picture(get(c, 'decorations.avatarUrl')) ?? picture(c.avatarUrl),
     worked: ['HP', 'AC'],
   }
 }

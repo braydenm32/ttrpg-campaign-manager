@@ -5,6 +5,7 @@ import { db, type Asset, type Entity } from './db'
 import { resolveWorld, usePathsVersion } from './paths'
 import { useViewMode } from './viewMode'
 import { revealDue } from './revealDue'
+import { outOfRoom } from './undo'
 
 /** Object URL for a stored asset, revoked automatically. */
 export function useAssetUrl(assetId: string | undefined) {
@@ -109,19 +110,32 @@ export function useTemplates(worldId: string) {
   return useLiveQuery(() => db.entities.where({ worldId }).filter((e) => !!e.template).sortBy('name'), [worldId]) ?? []
 }
 
+/** Files bigger than this can't go to the cloud (the free plan's limit per file), so they stay on this device only. The Files page checks first. */
+export const BIG_FILE = 50 * 1024 * 1024
+
+/** Says plainly that the device is full, for whoever shows the error (outOfRoom still knows it for one). */
+export const noRoomFor = (what: string) =>
+  Object.assign(new Error(`Not enough room on this device for ${what}. Free some space (old recordings, big files, or Recently deleted in More), then try again.`), {
+    name: 'QuotaExceededError',
+  })
+
 export async function saveFileAsAsset(worldId: string, file: File | Blob, name: string, tags: string[] = []) {
   const id = crypto.randomUUID()
-  await db.assets.add({
-    id,
-    worldId,
-    name,
-    mime: file.type || 'application/octet-stream',
-    size: file.size,
-    blob: file,
-    tags,
-    visibility: 'gm',
-    createdAt: Date.now(),
-  })
+  try {
+    await db.assets.add({
+      id,
+      worldId,
+      name,
+      mime: file.type || 'application/octet-stream',
+      size: file.size,
+      blob: file,
+      tags,
+      visibility: 'gm',
+      createdAt: Date.now(),
+    })
+  } catch (err) {
+    throw outOfRoom(err) ? noRoomFor(`“${name}”`) : err
+  }
   return id
 }
 

@@ -395,13 +395,44 @@ export async function shareWorldPacks(world: World) {
   }
 }
 
-/** Removes every pack picture the signed-in GM has online (for deleting their account). */
+/**
+ * Removes every pack picture the signed-in GM has online (for deleting their account). Folders are
+ * listed a thousand at a time, again and again until nothing is left, and anything that fails stops
+ * it with the error: an account must never be deleted with pictures left online that nobody could
+ * then remove.
+ */
 export async function deleteMyPackFiles() {
   const me = await packUser()
   if (!me) return
-  const { data: folders } = await supabase.storage.from(BUCKET).list(me, { limit: 1000 })
-  for (const f of folders ?? []) {
-    const { data: files } = await supabase.storage.from(BUCKET).list(`${me}/${f.name}`, { limit: 1000 })
-    if (files?.length) await supabase.storage.from(BUCKET).remove(files.map((x) => `${me}/${f.name}/${x.name}`))
+  const bucket = supabase.storage.from(BUCKET)
+  const list = async (folder: string) => {
+    const { data, error } = await bucket.list(folder, { limit: 1000 })
+    if (error) throw error
+    return data ?? []
+  }
+  /** Empties a folder: its pictures, and the folders in it (each piece is a folder of pictures). */
+  const empty = async (folder: string, depth: number): Promise<void> => {
+    for (let round = 0; round < 100; round++) {
+      const items = await list(folder)
+      if (!items.length) return
+      // Folders are listed without an id; each goes once everything in it has.
+      const folders = items.filter((x) => !x.id)
+      if (folders.length && depth >= 8) break
+      for (const sub of folders) await empty(`${folder}/${sub.name}`, depth + 1)
+      const files = items.filter((x) => x.id).map((x) => `${folder}/${x.name}`)
+      if (!files.length) continue
+      const { data: removed, error } = await bucket.remove(files)
+      if (error) throw error
+      // Nothing went (not allowed, say): stop, rather than list the same pictures again and again.
+      if (!removed?.length) break
+    }
+    throw new Error('Some map pack pictures could not be removed')
+  }
+  try {
+    await empty(me, 0)
+  } catch (e) {
+    // Before the cloud has map packs there's no place for them yet, so nothing to remove.
+    if (/bucket not found/i.test((e as Error)?.message ?? '')) return
+    throw e
   }
 }
