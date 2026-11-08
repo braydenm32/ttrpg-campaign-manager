@@ -1,3 +1,4 @@
+import { PDFDocument, PDFHexString, PDFName, PDFString } from 'pdf-lib'
 import { expect, open, test, type Page } from './fixtures'
 import { putBack } from './lib/records'
 
@@ -201,6 +202,74 @@ test('character sheets from Hero Lab, Fantasy Grounds and Shadowdarklings come i
     // Gear comes in as item pages; Fantasy Grounds' "not carried" things stay at home.
     expect(pages.map((e) => e.name)).toEqual(expect.arrayContaining(['Lute', 'Rapier', 'Warhammer', 'Thieves’ tools']))
     expect(pages.some((e) => e.name === 'Spare boots')).toBe(false)
+  } finally {
+    await forget(page, world.id, before)
+  }
+})
+
+/**
+ * A PDF made the way D&D Beyond makes its sheets now: the boxes sit on the page but aren't listed in
+ * the PDF's form, and long text is written as hex broken over lines.
+ */
+async function beyondPdf(boxes: [string, string][]) {
+  const doc = await PDFDocument.create()
+  const page = doc.addPage()
+  const hex = (text: string) => {
+    const units = [...text].map((c) => c.charCodeAt(0).toString(16).padStart(4, '0')).join('')
+    const all = `FEFF${units}`.toUpperCase()
+    // A line break after an odd number of hex digits, as D&D Beyond writes them.
+    return PDFHexString.of(`${all.slice(0, 101)}\n${all.slice(101)}`)
+  }
+  const refs = boxes.map(([name, value]) =>
+    doc.context.register(doc.context.obj({ Type: 'Annot', Subtype: 'Widget', FT: 'Tx', Rect: [0, 0, 10, 10], T: PDFString.of(name), V: value.length > 30 ? hex(value) : PDFString.of(value) })),
+  )
+  page.node.set(PDFName.of('Annots'), doc.context.obj(refs))
+  return Buffer.from(await doc.save())
+}
+
+test('a D&D Beyond PDF, whose boxes aren’t in the PDF’s form, comes in whole', async ({ page, world }) => {
+  await open(page, `/w/${world.slug}/settings?tab=data`)
+  const before = await pagesNow(page)
+  const pdf = await beyondPdf([
+    ['CharacterName', 'Sheet Test Vhorand'],
+    ['CLASS  LEVEL', 'Paladin 7'],
+    ['RACE', 'Mountain Dwarf'],
+    ['STR', '20'],
+    ['STRmod', '+5'],
+    ['ST Strength', '+9'],
+    ['AthleticsProf', 'P'],
+    ['Athletics', '+8'],
+    ['AthleticsMod', 'STR'],
+    ['Wpn Name', 'Maul'],
+    ['Wpn1 AtkBonus', '+8'],
+    ['Wpn1 Damage', '2d6+5 Bludgeoning'],
+    ['FeaturesTraits1', '=== PALADIN FEATURES ===\nLay On Hands. You have a pool of healing power that replenishes when you'],
+    ['FeaturesTraits2', 'finish a Long Rest.'],
+    ['Eq Name0', 'Sheet Test Tower Shield'],
+    ['Eq Qty0', '1'],
+    ['Eq Weight0', '6 lb.'],
+    ['spellHeader0', '=== 1st LEVEL ==='],
+    ['spellName0', 'Bless'],
+    ['spellSource0', 'Paladin'],
+    ['GP', '233'],
+    ['CharacterName2', 'Sheet Test Vhorand'],
+  ])
+  try {
+    await page.getByRole('button', { name: 'Import character sheet' }).click()
+    await page.locator('.sheet-way input[type=file]').setInputFiles({ name: 'player_161676672.pdf', mimeType: 'application/pdf', buffer: pdf })
+    await expect(page.getByText('from PDF sheet')).toBeVisible()
+    await expect(page.locator('.sheet-fields')).toContainText('20 (+5)')
+    await page.getByRole('button', { name: 'Add the character' }).click()
+    await expect(page.getByRole('heading', { name: 'Sheet Test Vhorand', level: 1 })).toBeVisible()
+    const made = (await rows(page, 'entities')).filter((e) => e.worldId === world.id && !before.has(e.id))
+    const pc = made.find((e) => e.name === 'Sheet Test Vhorand')!
+    expect(pc.fields).toEqual(expect.arrayContaining([{ key: 'Str', value: '20 (+5)' }, { key: 'Saves', value: 'Str +9' }, { key: 'Species', value: 'Mountain Dwarf' }]))
+    expect(pc.body).toContain('pool of healing power that replenishes when you finish a Long Rest.')
+    expect(pc.body).toContain('Athletics +8 (proficient)')
+    expect(pc.body).toContain('**Maul** +8 to hit, 2d6+5 Bludgeoning')
+    expect(pc.body).toContain('**1st level:** Bless')
+    expect(pc.body).not.toContain('Eq Weight')
+    expect(made.map((e) => e.name)).toContain('Sheet Test Tower Shield')
   } finally {
     await forget(page, world.id, before)
   }
