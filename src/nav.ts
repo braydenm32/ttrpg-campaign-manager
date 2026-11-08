@@ -423,6 +423,16 @@ export const MORE_GROUPS: MoreGroup[] = [
         blurb: 'Corkboards are retired. Copy each one into a page so nothing on it is lost.',
         keywords: 'corkboards board pins strings',
       },
+      {
+        id: 'lookup',
+        label: 'Look it up',
+        icon: BookOpenText,
+        to: (f) => w(f, 'lookup'),
+        paths: ['lookup'],
+        who: own,
+        blurb: 'Search the rules and wikis for your game (D&D and Daggerheart SRDs, Forgotten Realms, PathfinderWiki…) and keep what you find as a page.',
+        keywords: 'wiki srd rules compendium spell monster creature item search open5e forgotten realms pathfinder archives of nethys lore',
+      },
       { id: 'assets', label: 'Files', icon: Folder, to: (f) => w(f, 'assets'), paths: ['assets'], who: own, blurb: 'Pictures, maps and sounds you’ve uploaded.', keywords: 'assets images uploads pictures' },
       { id: 'packs', label: 'Map packs', icon: Stack, to: (f) => w(f, 'packs'), paths: ['packs'], who: own, blurb: 'Your own pictures as map pieces, for any of your worlds.', keywords: 'map pieces assets pack tokens props stamps pictures upload zip' },
       { id: 'archivist', label: 'The Archivist', icon: Books, to: (f) => w(f, 'archivist'), paths: ['archivist'], who: own, blurb: 'Ask your world a question, or check it for contradictions.', keywords: 'ai claude ask question answer contradictions continuity check' },
@@ -462,6 +472,16 @@ export const PLAYER_MORE_GROUPS: MoreGroup[] = [
     items: [
       { id: 'rules', label: 'Table rules', icon: HandPalm, to: (f) => w(f, 'safety'), who: players, when: (f) => !!f.safety, blurb: 'Lines, veils and the X-card your table agreed on.' },
       { id: 'handouts', label: 'Handouts', icon: Newspaper, to: (f) => w(f, 'handouts'), who: readers, when: (f) => !!f.handouts, blurb: 'What your GM has shown you.', keywords: 'shown' },
+      {
+        id: 'lookup',
+        label: 'Look up rules',
+        icon: BookOpenText,
+        to: (f) => w(f, 'lookup'),
+        paths: ['lookup'],
+        who: players,
+        blurb: 'Search the rules and wikis for your game: spells, monsters, cards, conditions, lore.',
+        keywords: 'wiki srd rules compendium spell monster item search lore look it up',
+      },
     ],
   },
   {

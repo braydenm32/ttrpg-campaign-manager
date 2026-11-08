@@ -13,7 +13,7 @@ import { expect, go, open, test, type Page, type View } from './fixtures'
  *    policy (src-tauri/tauri.conf.json) is the same, plus the desktop app's own messaging (ipc);
  *  - the speech engine's download folder on jsDelivr names the version the app really uses;
  *  - code slipped into a page doesn't run, and nothing can be sent to another site, while every
- *    service the app uses (the cloud, Claude, AssemblyAI, Hugging Face, Discord…) stays reachable;
+ *    service the app uses (the cloud, Claude, AssemblyAI, Hugging Face, Discord, the wikis…) stays reachable;
  *  - no other site can show the app inside a frame;
  *  - every screen in routes.ts opens, for the GM and for players, without breaking the policy.
  */
@@ -190,6 +190,11 @@ test('every service the app talks to is still allowed', async ({ browser }) => {
       'd&d beyond': await get('https://character-service.dndbeyond.com/character/v5/character/123'),
       'd&d beyond portrait': await get('https://www.dndbeyond.com/avatars/1/2/portrait.jpeg'),
       pathbuilder: await get('https://pathbuilder2e.com/json.php?id=123'),
+      dicecloud: await get('https://dicecloud.com/api/creature/abcdefghijklmnop'),
+      open5e: await get('https://api.open5e.com/v2/spells/?name__icontains=fire'),
+      'fandom wiki': await get('https://forgottenrealms.fandom.com/api.php?action=query&format=json&origin=*'),
+      pathfinderwiki: await get('https://pathfinderwiki.com/mediawiki/api.php?action=query&format=json&origin=*'),
+      'starfinder wiki': await get('https://starfinderwiki.com/mediawiki/api.php?action=query&format=json&origin=*'),
       'portrait from a file': await get('data:image/png;base64,iVBORw0KGgo='),
     }
     // The speech engine runs from jsDelivr, or from a blob: copy of it, and starts its WebAssembly.
@@ -230,6 +235,11 @@ test('every service the app talks to is still allowed', async ({ browser }) => {
     'd&d beyond': 200,
     'd&d beyond portrait': 200,
     pathbuilder: 200,
+    dicecloud: 200,
+    open5e: 200,
+    'fandom wiki': 200,
+    pathfinderwiki: 200,
+    'starfinder wiki': 200,
     'portrait from a file': 200,
     'speech engine code': 'speech engine',
     'speech engine copy': 'copy',

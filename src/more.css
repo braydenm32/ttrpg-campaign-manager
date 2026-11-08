@@ -54,3 +54,19 @@
   .safety-list li > button, .custom-types button, .calendar-editor .field-row > button.ghost { min-width: 44px; min-height: 44px; }
   .players-review .row > button { min-height: 44px; }
 }
+
+/* ——— Look it up ——— */
+.lookup-search { max-width: 52rem; }
+.lookup-search form input[type='search'] { flex: 1; min-width: 0; }
+.lookup-search .segmented { flex-wrap: wrap; }
+.lookup-links a { white-space: nowrap; }
+.lookup-hits { grid-template-columns: 1fr; margin-top: 1em; }
+.lookup-hits li { flex-direction: column; align-items: flex-start; gap: .1em; }
+.lookup-hits li > .muted { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.lookup-result { margin-top: 1em; max-width: 52rem; }
+.lookup-result > h2 { margin: .6em 0 .4em; }
+.lookup-preview { margin: 1em 0; padding: .4em 1em; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); max-height: 60vh; overflow: auto; }
+.lookup-keep { margin-top: 1em; }
+@media (pointer: coarse) {
+  .lookup-links a { display: inline-flex; align-items: center; gap: .25em; min-height: 44px; }
+}

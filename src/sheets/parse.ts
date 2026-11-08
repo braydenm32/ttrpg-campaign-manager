@@ -40,23 +40,23 @@ export interface Gear {
   description?: string
 }
 
-type Obj = Record<string, unknown>
-const isObj = (v: unknown): v is Obj => !!v && typeof v === 'object' && !Array.isArray(v)
-const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
-const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '')
-const num = (v: unknown): number | undefined => (typeof v === 'number' && isFinite(v) ? v : typeof v === 'string' && v.trim() && isFinite(+v) ? +v : undefined)
+export type Obj = Record<string, unknown>
+export const isObj = (v: unknown): v is Obj => !!v && typeof v === 'object' && !Array.isArray(v)
+export const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
+export const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '')
+export const num = (v: unknown): number | undefined => (typeof v === 'number' && isFinite(v) ? v : typeof v === 'string' && v.trim() && isFinite(+v) ? +v : undefined)
 /** A portrait's address: a secure web address, or a picture written into the file itself. */
-const picture = (v: unknown) => {
+export const picture = (v: unknown) => {
   const u = str(v)
   return /^(https:\/\/|data:image\/)/i.test(u) ? u : undefined
 }
-const get = (o: unknown, path: string): unknown => path.split('.').reduce<unknown>((x, k) => (isObj(x) ? x[k] : undefined), o)
-const signed = (n: number) => (n >= 0 ? `+${n}` : String(n))
-const mod = (score: number) => Math.floor((score - 10) / 2)
-const uniq = (xs: string[]) => [...new Set(xs.filter(Boolean))]
+export const get = (o: unknown, path: string): unknown => path.split('.').reduce<unknown>((x, k) => (isObj(x) ? x[k] : undefined), o)
+export const signed = (n: number) => (n >= 0 ? `+${n}` : String(n))
+export const mod = (score: number) => Math.floor((score - 10) / 2)
+export const uniq = (xs: string[]) => [...new Set(xs.filter(Boolean))]
 
 /** Removes empty values and keeps the first of any repeated key. */
-function cleanFields(fields: { key: string; value: string }[]) {
+export function cleanFields(fields: { key: string; value: string }[]) {
   const seen = new Set<string>()
   return fields.filter((f) => {
     const k = f.key.toLowerCase()
@@ -67,7 +67,7 @@ function cleanFields(fields: { key: string; value: string }[]) {
 }
 
 /** One Markdown section, left out when there's nothing in it. */
-function section(title: string, content: string | string[]) {
+export function section(title: string, content: string | string[]) {
   const text = Array.isArray(content)
     ? uniq(content)
         .map((x) => `- ${x}`)
@@ -75,7 +75,7 @@ function section(title: string, content: string | string[]) {
     : lines(content)
   return text ? `### ${title}\n\n${text}` : ''
 }
-const sections = (...parts: string[]) => parts.filter(Boolean).join('\n\n')
+export const sections = (...parts: string[]) => parts.filter(Boolean).join('\n\n')
 
 /** A PDF box's text keeps its line breaks: short lines as a list, longer ones as paragraphs. */
 function lines(text: string) {
@@ -97,7 +97,7 @@ const ancestryOf = (heritage: string, ancestry: string) =>
   heritage.toLowerCase().includes(ancestry.toLowerCase()) && ancestry ? heritage : [heritage, ancestry].filter(Boolean).join(' ')
 
 /** Text that may be HTML (Foundry and D&D Beyond both write HTML) as Markdown. */
-const prose = (v: unknown) => {
+export const prose = (v: unknown) => {
   const s = str(v)
   return /<[a-z][\s\S]*>/i.test(s) ? htmlToMarkdown(s) : s
 }
@@ -131,8 +131,10 @@ export function parseSheetJson(text: string): Sheet {
   if (json.success === false) throw new Error('That export is empty. In Pathbuilder or D&D Beyond, check the character is shared publicly, then try again.')
   if (typeof json.name === 'string' && (isObj(json.system) || isObj(json.data)) && Array.isArray(json.items)) return fromFoundry(json)
   if (typeof json.name === 'string' && Array.isArray(json.fields)) return fromOurs(json)
+  if (isObj(json.stats) && 'STR' in json.stats && ('ancestry' in json || 'class' in json)) return fromShadowdarklings(json)
+  if (Array.isArray(json.creatures) && Array.isArray(json.creatureProperties)) return fromDicecloud(json)
   throw new Error(
-    'The app doesn’t recognise that file. It reads Foundry VTT, D&D Beyond and Pathbuilder exports; for anything else use “Paste the sheet’s text”.',
+    'The app doesn’t recognise that file. It reads Foundry VTT, D&D Beyond, Pathbuilder, Shadowdarklings, DiceCloud, Hero Lab and Fantasy Grounds exports; for anything else use “Paste the sheet’s text”.',
   )
 }
 
@@ -226,7 +228,7 @@ const coins = (c: unknown, order = ['pp', 'gp', 'ep', 'sp', 'cp']) =>
     : ''
 
 /** Spells grouped by level, cantrips first. */
-function spellList(spells: { name: string; level: number }[]) {
+export function spellList(spells: { name: string; level: number }[]) {
   const byLevel = new Map<number, string[]>()
   for (const s of spells) byLevel.set(s.level, [...(byLevel.get(s.level) ?? []), s.name])
   return [...byLevel.entries()]
@@ -634,6 +636,123 @@ export function fromPathbuilder(b: Obj): Sheet {
   }
 }
 
+// ---------- Shadowdarklings ----------
+
+/** Shadowdarklings (the Shadowdark character builder): its “Export JSON” file. */
+export function fromShadowdarklings(c: Obj): Sheet {
+  const stats = isObj(c.stats) ? c.stats : {}
+  const level = num(c.level)
+  const cls = str(c.class)
+  const ancestry = str(c.ancestry)
+  // Talents and bonuses come as one list; the readable name is in "name" or "bonusName".
+  const talents = arr(c.bonuses)
+    .filter(isObj)
+    .map((b) => {
+      const n = str(b.name) || str(b.bonusName)
+      const to = str(b.bonusTo)
+      return n && to && !n.toLowerCase().includes(to.toLowerCase()) ? `${n} (${to})` : n
+    })
+  const money = [
+    [num(c.goldRemaining), 'gp'],
+    [num(c.silverRemaining), 'sp'],
+    [num(c.copperRemaining), 'cp'],
+  ]
+    .filter(([v]) => v)
+    .map(([v, k]) => `${v} ${k}`)
+    .join(', ')
+  const spells = typeof c.spellsKnown === 'string' ? str(c.spellsKnown) : arr(c.spellsKnown).map((x) => (isObj(x) ? str(x.name) : str(x))).join(', ')
+  return {
+    source: 'Shadowdarklings',
+    name: str(c.name) || 'Unnamed character',
+    summary: [level ? `Level ${level}` : '', ancestry, cls].filter(Boolean).join(' '),
+    fields: cleanFields([
+      { key: 'Class', value: cls },
+      { key: 'Level', value: level ? String(level) : '' },
+      { key: 'Title', value: str(c.title) },
+      { key: 'Ancestry', value: ancestry },
+      { key: 'Background', value: str(c.background) },
+      { key: 'Alignment', value: str(c.alignment) },
+      { key: 'Deity', value: str(c.deity) },
+      ...['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map((k) => {
+        const v = num(stats[k])
+        return { key: k[0] + k.slice(1).toLowerCase(), value: v === undefined ? '' : `${v} (${signed(mod(v))})` }
+      }),
+      { key: 'HP', value: str(c.maxHitPoints) },
+      { key: 'AC', value: str(c.armorClass) },
+      { key: 'Languages', value: Array.isArray(c.languages) ? arr(c.languages).map(str).join(', ') : str(c.languages) },
+    ]),
+    body: sections(section('Talents', talents), section('Spells', spells), section('Money', money), section('Notes', str(c.notes))),
+    gear: arr(c.gear)
+      .filter(isObj)
+      .map((g) => ({ name: str(g.name), quantity: num(g.quantity) ?? 1 }))
+      .filter((g) => g.name),
+  }
+}
+
+// ---------- DiceCloud ----------
+
+/** DiceCloud's address for a character, as the address its data is read from. */
+export function dicecloudDataUrl(link: string) {
+  const id = link.match(/dicecloud\.com\/character\/([A-Za-z0-9]{10,})/i)?.[1]
+  return id ? `https://dicecloud.com/api/creature/${id}` : ''
+}
+
+/**
+ * DiceCloud (version 2): the character, everything on it (classes, items, features, spells) as a
+ * flat list of properties, and its worked-out numbers as variables.
+ */
+export function fromDicecloud(json: Obj): Sheet {
+  const c = arr(json.creatures).filter(isObj)[0] ?? {}
+  const vars = arr(json.creatureVariables).filter(isObj)[0] ?? {}
+  const v = (k: string, part = 'value') => num(get(vars, `${k}.${part}`)) ?? num(get(vars, `${k}.total`))
+  const props = arr(json.creatureProperties)
+    .filter(isObj)
+    .filter((p) => !p.removed && !p.inactive && !p.deactivatedByAncestor)
+  const ofType = (t: string) => props.filter((p) => p.type === t)
+  const text = (p: Obj) => str(get(p, 'summary.value')) || str(get(p, 'summary.text')) || str(get(p, 'description.value')) || str(get(p, 'description.text'))
+  const classes = ofType('class').map((p) => `${str(p.name)}${num(p.level) ? ` ${num(p.level)}` : ''}`)
+  const level = v('level')
+  const abilities: [string, string][] = [
+    ['strength', 'Str'],
+    ['dexterity', 'Dex'],
+    ['constitution', 'Con'],
+    ['intelligence', 'Int'],
+    ['wisdom', 'Wis'],
+    ['charisma', 'Cha'],
+  ]
+  return {
+    source: 'DiceCloud',
+    name: str(c.name) || 'Unnamed character',
+    summary: [level ? `Level ${level}` : '', str(c.race), classes.join(' / ')].filter(Boolean).join(' '),
+    fields: cleanFields([
+      { key: 'Class', value: classes.join(' / ') },
+      { key: 'Level', value: level ? String(level) : '' },
+      { key: 'Alignment', value: str(c.alignment) },
+      ...abilities.map(([k, label]) => {
+        const score = v(k)
+        const m = v(k, 'modifier') ?? (score !== undefined ? mod(score) : undefined)
+        return { key: label, value: score === undefined ? '' : `${score} (${signed(m ?? 0)})` }
+      }),
+      { key: 'HP', value: str(v('hitPoints', 'total') ?? v('hitPoints')) },
+      { key: 'AC', value: str(v('armor')) },
+      { key: 'Speed', value: v('speed') ? `${v('speed')} ft` : '' },
+      { key: 'Proficiency bonus', value: v('proficiencyBonus') ? signed(v('proficiencyBonus')!) : '' },
+    ]),
+    body: sections(
+      section(
+        'Features',
+        ofType('feature').map((p) => (text(p) ? `**${str(p.name)}.** ${text(p).replace(/\s*\n+\s*/g, ' ')}` : str(p.name))),
+      ),
+      section('Spells', spellList(ofType('spell').map((p) => ({ name: str(p.name), level: num(p.level) ?? 0 })))),
+      section('Notes', ofType('note').map((p) => [str(p.name), text(p)].filter(Boolean).join(': '))),
+    ),
+    gear: ofType('item')
+      .map((p) => ({ name: str(p.name), quantity: num(p.quantity) ?? 1, equipped: p.equipped === true || undefined, description: text(p) || undefined }))
+      .filter((g) => g.name),
+    portraitUrl: picture(c.picture) || picture(c.avatarPicture),
+  }
+}
+
 // ---------- fillable PDFs ----------
 
 /** What a form box is usually called on a sheet, as a field on the page (names squashed to letters and digits). */
@@ -655,36 +774,128 @@ const PDF_FIELDS: [RegExp, string][] = [
   [/^speed$/, 'Speed'],
   [/^(initiative|init)$/, 'Initiative'],
   [/^(profbonus|proficiencybonus)$/, 'Proficiency bonus'],
+  [/^(hdtotal|hitdice)$/, 'Hit dice'],
+  [/^(passive|passive1|passiveperception)$/, 'Passive Perception'],
+  [/^(additionalsenses|senses)$/, 'Senses'],
+  [/^defenses$/, 'Defences'],
+  [/^(faith|deity)$/, 'Deity'],
+  [/^gender$/, 'Gender'],
+  [/^age$/, 'Age'],
+  [/^size$/, 'Size'],
+  [/^height$/, 'Height'],
+  [/^weight$/, 'Weight'],
+  [/^playername$/, 'Player'],
+  [/^(experiencepoints|xp)$/, 'XP'],
+  [/^spellcastingclass0?$/, 'Spellcasting'],
+  [/^spellsavedc0?$/, 'Spell save DC'],
+  [/^spellatkbonus0?$/, 'Spell attack'],
   [/^(occupation)$/, 'Occupation'],
   [/^(san|sanity)$/, 'Sanity'],
   [/^(luck)$/, 'Luck'],
 ]
 const PDF_TEXT: [RegExp, string][] = [
   [/^(featuresandtraits|features|featurestraits|classfeatures)\d*$/, 'Features'],
+  [/^actions\d*$/, 'Actions'],
   [/^(equipment|gear|inventory|treasure)\d*$/, 'Gear'],
   [/^(proficiencieslang|otherproficiencieslanguages|languages)$/, 'Proficiencies and languages'],
   [/^(personalitytraits|ideals|bonds|flaws)$/, 'Personality'],
   [/^(backstory|characterbackstory)$/, 'Backstory'],
   [/^(allies|alliesorganizations)$/, 'Allies and organisations'],
+  [/^savemodifiers$/, 'Saving throw notes'],
+  [/^(additionalnotes|notes)\d*$/, 'Notes'],
 ]
 const PDF_NAME = /^(charactername|name|charname|investigatorname)\d*$/
+/** Skill boxes on D&D sheets (squashed), as they're shown. */
+const PDF_SKILLS: Record<string, string> = Object.fromEntries(
+  ['Acrobatics', 'Animal Handling', 'Arcana', 'Athletics', 'Deception', 'History', 'Insight', 'Intimidation', 'Investigation', 'Medicine', 'Nature', 'Perception', 'Performance', 'Persuasion', 'Religion', 'Sleight of Hand', 'Stealth', 'Survival'].map((n) => [
+    n === 'Animal Handling' ? 'animal' : n.toLowerCase().replace(/ /g, ''),
+    n,
+  ]),
+)
+const PDF_ABILITY_MODS: Record<string, string> = { strmod: 'Str', dexmod: 'Dex', conmod: 'Con', intmod: 'Int', wismod: 'Wis', chamod: 'Cha' }
+/** Boxes that are only working-out or layout (weights, which ability a skill uses, the details of each spell). */
+const PDF_NOISE =
+  /^(eqweight\d+|weightcarried|encumbered|pushdraglift|passive[23]|tempHP|temphp|currenthp|spell(prepared|source|savehit|castingtime|range|components|duration|page|notes|slotheader|castingability)\d+|.*(mod|prof))$/
 
-/** A sheet from a PDF's filled-in form boxes (pdf.ts reads them). Boxes we don't know go in a list at the end. */
+/**
+ * A long box's text: a sheet that runs out of room carries on in the next box ("Features 1", "Features
+ * 2"), sometimes mid-sentence, so those pieces are joined back up. D&D Beyond's "=== FEATS ===" headings
+ * become bold lines.
+ */
+function pdfProse(parts: string[]) {
+  return parts
+    .reduce((all, p) => (!all ? p : /[.!?:)\]]\s*$/.test(all) ? `${all}\n\n${p}` : `${all} ${p}`), '')
+    .replace(/^\s*===\s*(.+?)\s*===\s*$/gm, (_, h: string) => `\n**${h.charAt(0) + h.slice(1).toLowerCase()}**\n`)
+    .replace(/[ \t]+$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+/**
+ * A sheet from a PDF's filled-in form boxes (pdf.ts reads them). Knows the official D&D sheet and
+ * D&D Beyond's PDF (its gear list, attacks, spells by level, saves and skills); boxes it doesn't
+ * know go in a list at the end.
+ */
 export function fromPdfFields(boxes: { name: string; value: string }[], fileName: string): Sheet {
-  const filled = boxes.filter((b) => b.value.trim() && b.value !== 'Off')
+  const filled = boxes.filter((b) => b.value.trim() && b.value !== 'Off' && b.value.trim() !== '--')
   if (!filled.length)
     throw new Error('That PDF has no filled-in boxes the app can read (it may be printed or scanned). Copy its text and use “Paste the sheet’s text” instead.')
   const squash = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const value = new Map<string, string>()
+  for (const b of filled) {
+    const k = squash(b.name.split('.').pop() ?? b.name)
+    if (!value.has(k)) value.set(k, b.value.trim())
+  }
   let name = ''
   const fields: { key: string; value: string }[] = []
   const text = new Map<string, string[]>()
   const other: string[] = []
+  const saves: string[] = []
+  const skills: string[] = []
+  const attacks: string[] = []
+  const gear: Gear[] = []
+  const spells: { header: string; names: string[] }[] = []
+  const seen = new Map<string, string>()
   for (const b of filled) {
     const k = squash(b.name.split('.').pop() ?? b.name)
     const v = b.value.trim()
-    if (!name && PDF_NAME.test(k)) name = v
-    else if (PDF_NAME.test(k)) continue
-    else {
+    // Sheets repeat the name, class and so on at the top of every page ("CharacterName2").
+    const base = k.replace(/\d+$/, '')
+    if (base !== k && seen.get(base) === v) continue
+    if (!seen.has(k)) seen.set(k, v)
+    let m: RegExpMatchArray | null
+    if (PDF_NAME.test(k)) {
+      if (!name) name = v
+    } else if ((m = k.match(/^eqname(\d+)$/))) {
+      gear.push({ name: v, quantity: num(value.get(`eqqty${m[1]}`)) ?? 1 })
+    } else if (/^eqqty\d+$/.test(k)) {
+      continue
+    } else if ((m = k.match(/^wpnname(\d*)$/))) {
+      const i = m[1] || '1'
+      const bonus = value.get(`wpn${i}atkbonus`)
+      const damage = value.get(`wpn${i}damage`)
+      const notes = value.get(`wpnnotes${i}`)
+      attacks.push(`**${v}**${bonus ? ` ${bonus} to hit` : ''}${damage ? `, ${damage}` : ''}${notes ? ` (${notes})` : ''}`)
+    } else if (/^wpn(\d+(atkbonus|damage)|notes\d+)$/.test(k)) {
+      continue
+    } else if ((m = k.match(/^st(strength|dexterity|constitution|intelligence|wisdom|charisma)$/))) {
+      saves.push(`${m[1][0].toUpperCase()}${m[1].slice(1, 3)} ${v}`)
+    } else if (PDF_SKILLS[k]) {
+      const prof = value.get(`${k}prof`)
+      skills.push(`${PDF_SKILLS[k]} ${v}${prof === 'E' ? ' (expertise)' : prof ? ' (proficient)' : ''}`)
+    } else if (/^spellheader\d+$/.test(k)) {
+      spells.push({ header: v.replace(/=/g, '').trim(), names: [] })
+    } else if (/^spellname\d+$/.test(k)) {
+      if (!spells.length) spells.push({ header: 'Spells', names: [] })
+      spells[spells.length - 1].names.push(v)
+    } else if (k === 'total') {
+      // D&D Beyond's hit dice ("7d10"); anything else called Total is a sum on the sheet.
+      if (/\d+d\d+/.test(v)) fields.push({ key: 'Hit dice', value: v })
+    } else if (/^(cp|sp|ep|gp|pp)$/.test(k)) {
+      if (v !== '0') text.set('Money', [...(text.get('Money') ?? []), `${v} ${k}`])
+    } else if (PDF_ABILITY_MODS[k] || PDF_NOISE.test(k)) {
+      continue
+    } else {
       const f = PDF_FIELDS.find(([re]) => re.test(k))
       const t = PDF_TEXT.find(([re]) => re.test(k))
       if (f) fields.push({ key: f[1], value: v })
@@ -692,16 +903,36 @@ export function fromPdfFields(boxes: { name: string; value: string }[], fileName
       else if (b.value !== 'Yes' && b.value !== 'On' && !/^(check|box|button)/i.test(b.name)) other.push(`**${b.name.trim()}:** ${v.replace(/\n+/g, ' ')}`)
     }
   }
+  // "20 (+5)" when the sheet has both the score and the bonus.
+  for (const [k, label] of Object.entries(PDF_ABILITY_MODS)) {
+    const f = fields.find((x) => x.key === label)
+    const bonus = value.get(k)
+    if (f && bonus && !f.value.includes('(')) f.value = `${f.value} (${bonus})`
+  }
+  if (saves.length) fields.push({ key: 'Saves', value: saves.join(', ') })
   const cl = fields.find((f) => f.key === 'Class and level')?.value
   const sp = fields.find((f) => f.key === 'Species')?.value
+  const money = text.get('Money')
+  text.delete('Money')
   return {
     source: 'PDF sheet',
     name: name || fileName.replace(/\.pdf$/i, ''),
     summary: [sp, cl].filter(Boolean).join(' '),
     fields: cleanFields(fields),
     body: sections(
-      ...[...text.entries()].map(([title, parts]) => section(title, parts.join('\n\n'))),
+      section('Attacks', attacks),
+      section('Skills', skills.join(', ')),
+      ...[...text.entries()].map(([title, parts]) => section(title, pdfProse(parts))),
+      section(
+        'Spells',
+        spells
+          .filter((g) => g.names.length)
+          .map((g) => `**${g.header.replace(/^(\w)(.*)$/, (_, a: string, r: string) => a.toUpperCase() + r.toLowerCase())}:** ${uniq(g.names).join(', ')}`)
+          .join('\n\n'),
+      ),
+      section('Money', money ?? []),
       other.length ? section('Everything else on the sheet', other.join('\n\n')) : '',
     ),
+    gear: gear.length ? gear : undefined,
   }
 }

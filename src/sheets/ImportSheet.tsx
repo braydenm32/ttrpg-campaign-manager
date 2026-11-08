@@ -10,11 +10,12 @@ import { Ico } from '../icons'
 import { pagePath } from '../paths'
 import { applySheet, gearLine, gearOf } from './apply'
 import { sheetFromReply, sheetRequest } from './claude'
-import { ddbDataUrl, parseSheetJson, pathbuilderDataUrl, type Sheet } from './parse'
+import { ddbDataUrl, dicecloudDataUrl, parseSheetJson, pathbuilderDataUrl, type Sheet } from './parse'
 
 /**
- * "Import character sheet": a file (Foundry VTT, D&D Beyond, Pathbuilder or a fillable PDF), a share
- * link (D&D Beyond, Pathbuilder) or a sheet's text for Claude to sort. Shows what it found before
+ * "Import character sheet": a file (Foundry VTT, D&D Beyond, Pathbuilder, Hero Lab, Fantasy Grounds,
+ * Shadowdarklings, DiceCloud or a fillable PDF), a share link (D&D Beyond, Pathbuilder, DiceCloud) or
+ * a sheet's text for Claude to sort. Shows what it found before
  * anything changes. The GM makes a new character or updates one; a player gets it in their own editor.
  */
 export function ImportSheet({
@@ -34,18 +35,23 @@ export function ImportSheet({
   onClose: () => void
 }) {
   const [sheet, setSheet] = useState<Sheet>()
+  /** A file with several characters in it (a Hero Lab portfolio): which one. */
+  const [several, setSeveral] = useState<Sheet[]>()
   const [link, setLink] = useState('')
   const [text, setText] = useState('')
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [blocked, setBlocked] = useState('')
 
-  const attempt = async (what: string, fn: () => Promise<Sheet> | Sheet) => {
+  const attempt = async (what: string, fn: () => Promise<Sheet | Sheet[]> | Sheet | Sheet[]) => {
     setBusy(what)
     setError('')
     setBlocked('')
     try {
-      setSheet(await fn())
+      const found = await fn()
+      if (!Array.isArray(found)) setSheet(found)
+      else if (found.length === 1) setSheet(found[0])
+      else setSeveral(found)
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -56,12 +62,15 @@ export function ImportSheet({
   const readFile = (f: File) =>
     attempt('Reading the sheet…', async () => {
       if (/\.pdf$/i.test(f.name) || f.type === 'application/pdf') return (await import('./pdf')).readPdfSheet(f, f.name)
-      return parseSheetJson(await f.text())
+      if (/\.por$/i.test(f.name)) return (await import('./xml')).readHeroLabPortfolio(f)
+      const content = await f.text()
+      if (/\.xml$/i.test(f.name) || content.trimStart().startsWith('<?xml') || /^\s*<(document|root)\b/.test(content)) return (await import('./xml')).parseSheetXml(content)
+      return parseSheetJson(content)
     })
 
   const readLink = () => {
-    const url = ddbDataUrl(link) || pathbuilderDataUrl(link)
-    if (!url) return setError('That isn’t a D&D Beyond or Pathbuilder link. For Foundry, Roll20 and others, use a file or paste the sheet’s text.')
+    const url = ddbDataUrl(link) || pathbuilderDataUrl(link) || dicecloudDataUrl(link)
+    if (!url) return setError('That isn’t a D&D Beyond, Pathbuilder or DiceCloud link. For Foundry, Hero Lab, Roll20 and others, use a file or paste the sheet’s text.')
     attempt('Fetching the character…', async () => {
       let res: Response
       try {
@@ -80,7 +89,26 @@ export function ImportSheet({
 
   return (
     <Modal title={into ? `Import a sheet for ${into.name}` : 'Import a character sheet'} onClose={onClose}>
-      {!sheet ? (
+      {several && !sheet ? (
+        <div className="form">
+          <p>That file has {several.length} characters in it. Which one?</p>
+          <ul>
+            {several.map((s, i) => (
+              <li key={i}>
+                <button className="link" onClick={() => setSheet(s)}>
+                  <strong>{s.name}</strong>
+                </button>
+                {s.summary && <span className="muted small"> · {s.summary}</span>}
+              </li>
+            ))}
+          </ul>
+          <div className="row end">
+            <button type="button" onClick={() => setSeveral(undefined)}>
+              Back
+            </button>
+          </div>
+        </div>
+      ) : !sheet ? (
         <div className="form sheet-import">
           <p className="muted small">
             <Help topic="importSheet" /> Nothing changes until you’ve looked over what was found.
@@ -95,7 +123,7 @@ export function ImportSheet({
               <input
                 type="file"
                 hidden
-                accept=".json,.pdf,.txt,.htm,.html,application/json,application/pdf"
+                accept=".json,.pdf,.xml,.por,.txt,.htm,.html,application/json,application/pdf,application/xml,text/xml"
                 onChange={(e) => (e.target.files?.[0] && readFile(e.target.files[0]), (e.target.value = ''))}
               />
             </label>
@@ -107,7 +135,16 @@ export function ImportSheet({
                 <strong>Fillable PDF</strong>: the official D&D sheet, D&D Beyond’s “Export to PDF”, and most publishers’ sheets.
               </li>
               <li>
-                <strong>D&D Beyond</strong> or <strong>Pathbuilder</strong> data saved from the link below.
+                <strong>Hero Lab Classic</strong> (Pathfinder, Starfinder, D&D 5e and more): the portfolio file (.por), or File, Save Custom Output as XML.
+              </li>
+              <li>
+                <strong>Fantasy Grounds</strong>: on the character selection screen, Export the character (.xml).
+              </li>
+              <li>
+                <strong>Shadowdarklings</strong> (Shadowdark): Export JSON.
+              </li>
+              <li>
+                <strong>D&D Beyond</strong>, <strong>Pathbuilder</strong> or <strong>DiceCloud</strong> data saved from the link below.
               </li>
             </ul>
           </div>
@@ -123,11 +160,12 @@ export function ImportSheet({
                 readLink()
               }}
             >
-              <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="dndbeyond.com/characters/… or Pathbuilder’s JSON link" />
+              <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="dndbeyond.com/characters/…, Pathbuilder’s JSON link or dicecloud.com/character/…" />
               <button disabled={!link.trim() || !!busy}>Fetch</button>
             </form>
             <p className="muted small">
-              D&D Beyond: the character must be public (its sharing setting). Pathbuilder: Menu, Export JSON, then copy the link it gives.
+              D&D Beyond: the character must be public (its sharing setting). Pathbuilder: Menu, Export JSON, then copy the link it gives. DiceCloud: the
+              character’s address, with its sharing set so anyone with the link can view it.
             </p>
             {blocked && (
               <p className="notice small">
@@ -148,10 +186,15 @@ export function ImportSheet({
               rows={5}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Paste the sheet’s text: from Roll20, Demiplane, a PDF, a website or your own notes. Claude sorts it into the page. Pasted D&D Beyond, Pathbuilder or Foundry data is read here, free."
+              placeholder="Paste the sheet’s text: from Hero Lab Online (its statblock), Demiplane, Roll20, Wanderer’s Guide, a PDF, a website or your own notes. Claude sorts it into the page. Pasted data from the tools above is read here, free."
             />
-            {text.trim().startsWith('{') ? (
-              <button className="primary" onClick={() => attempt('Reading the sheet…', () => parseSheetJson(text))}>
+            {text.trim().startsWith('{') || text.trim().startsWith('<') ? (
+              <button
+                className="primary"
+                onClick={() =>
+                  attempt('Reading the sheet…', async () => (text.trim().startsWith('<') ? (await import('./xml')).parseSheetXml(text) : parseSheetJson(text)))
+                }
+              >
                 Read it
               </button>
             ) : (
@@ -315,7 +358,7 @@ export function ImportSheetButton({
       <button
         className={className}
         onClick={() => setOpen(true)}
-        title="Bring in a character from D&D Beyond, Foundry VTT, Pathbuilder, a PDF or any sheet’s text"
+        title="Bring in a character from D&D Beyond, Hero Lab, Foundry VTT, Pathbuilder, Fantasy Grounds, a PDF or any sheet’s text"
       >
         <Ico as={FileArrowUp} /> {label}
       </button>
