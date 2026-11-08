@@ -183,6 +183,7 @@ export const ROUTES: RouteEntry[] = [
   { path: '/w/:worldId/s/:sessionId/lectern', screen: 'The Lectern (run a session)', who: 'gm', kind: 'screen', samples: [{ url: `${W}/s/{session:1}/lectern` }] },
   { path: '/w/:worldId/assets', screen: 'Files', who: 'gm', kind: 'screen', samples: [{ url: `${W}/assets` }], note: 'No GM check on the page itself (route map, orphans).' },
   { path: '/w/:worldId/generators', screen: 'Generators', who: 'gm', kind: 'screen', samples: [{ url: `${W}/generators` }], note: 'No GM check on the page itself (route map, orphans).' },
+  { path: '/w/:worldId/lookup', screen: 'Look it up', who: 'gm', kind: 'screen', samples: [{ url: `${W}/lookup` }] },
   {
     path: '/w/:worldId/archivist',
     screen: 'The Archivist',

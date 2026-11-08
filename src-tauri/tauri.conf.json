@@ -51,7 +51,12 @@
           "https://media-waterdeep.cursecdn.com",
           "https://forge-vtt.com",
           "https://*.forge-vtt.com",
-          "https://pathbuilder2e.com"
+          "https://pathbuilder2e.com",
+          "https://api.open5e.com",
+          "https://*.fandom.com",
+          "https://pathfinderwiki.com",
+          "https://starfinderwiki.com",
+          "https://dicecloud.com"
         ],
         "img-src": ["'self'", "data:", "blob:", "https:"],
         "media-src": ["'self'", "blob:"],
