@@ -119,7 +119,7 @@ export default function EntityList() {
       ) : t === 'quest' ? (
         <QuestGroups worldId={worldId} entities={filtered} isGM={isGM} />
       ) : (
-        <div className="card-grid">
+        <div className="card-grid entity-cards">
           {filtered.map((e) => (
             <EntityCard key={e.id} worldId={worldId} entity={e} isGM={isGM} />
           ))}

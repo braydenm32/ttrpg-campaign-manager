@@ -1,0 +1,111 @@
+/*
+ * Phones: scrolling that never gets stuck, and as much screen as possible for what you're reading.
+ *
+ *  - The top bar (and the area's tabs) slide away while you scroll down a screen and come back the
+ *    moment you scroll up (src/phoneFrame.ts). The bottom bar stays: it's the way around.
+ *  - Nothing that scrolls sits inside something else that scrolls up and down: boxes grow to their
+ *    text, lists of pictures scroll sideways, and maps and the relationship web fill a fixed screen
+ *    (or let one finger scroll the page past them).
+ *  - The map builder takes the whole screen: a slim bar on top, the tools along the bottom, and the
+ *    tool's options in a sheet that folds to one line over the foot of the map.
+ */
+@media (max-width: 800px) {
+  /* What sticks under the top bar (jump rows, the fight bar, name suggestions) moves up when it hides. */
+  .app-shell { --stick-top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px)); }
+  body.bar-tucked .app-shell { --stick-top: env(safe-area-inset-top, 0px); }
+  .app-shell .topbar { transition: transform .22s ease; }
+  body.bar-tucked .app-shell .topbar { transform: translateY(calc(-100% + env(safe-area-inset-top, 0px))); }
+  .app-shell :is(.jump-row, .fight-bar) { transition: top .22s ease; }
+
+  /* A map fills the screen between the top bar and the bottom bar, whatever banners sit above it; its
+     area's tabs step aside (Back is in the corner). */
+  .app-shell.with-phone-tabs:has(.map-page) { --topbar-h: 52px; }
+  .app-shell:has(.map-page) :is(.area-tabs, .tabs-more) { display: none; }
+  .content:has(.map-page) { display: flex; flex-direction: column; height: calc(100dvh - var(--topbar-h) - env(safe-area-inset-top, 0px) - var(--bottombar-h, 0px)); padding-bottom: 0; }
+  .content:has(.map-page) > * { flex: none; }
+  .content > .map-page { flex: 1 1 auto; height: auto; min-height: 0; }
+  body.bar-tucked .app-shell:has(.map-page) .topbar { transform: none; }
+
+  /* The map's own bar is one line: its name, then Names, where the party is and Tools as icons (Back is in the corner). */
+  .map-page > .map-toolbar:first-child { flex-wrap: wrap; }
+  .map-page > .map-toolbar:first-child > .map-back { display: none; }
+  .map-page > .map-toolbar:first-child > .map-title { flex: 1 1 0; padding-left: .3em; font-family: var(--font-display); }
+  .map-page > .map-toolbar:first-child > .map-quick { width: auto; flex: none; margin-left: auto; gap: 4px; }
+  .map-quick > :is(.names-toggle, .where-we-are, .key-toggle) { font-size: 0; min-width: 44px; padding: 0; justify-content: center; }
+  .map-quick > :is(.names-toggle, .where-we-are, .key-toggle) .icon { font-size: 1.25rem; }
+  .map-quick > .where-we-are { flex: none; }
+  .map-quick > .help-button { display: none; }
+  .map-quick > .tools-toggle { margin-left: 0; }
+
+  /* The GM's "Player view" bar: one line on a phone. */
+  .player-banner.preview-bar { flex-wrap: nowrap; padding: .3em .6em; gap: .5em; }
+  .player-banner.preview-bar > .preview-words { flex: none; font-weight: 600; }
+  .player-banner.preview-bar .preview-as { flex: 1 1 auto; min-width: 0; }
+  .player-banner.preview-bar .preview-as > :not(select) { display: none; }
+  .player-banner.preview-bar > button { flex: none; padding: 0 .7em; }
+
+  /* ---------- The map builder: the whole screen is the drawing ---------- */
+  .app-shell:has(.map-page.builder) { --topbar-h: 0px; --bottombar-h: 0px; --stick-top: 0px; }
+  .app-shell:has(.map-page.builder) :is(.topbar, .bottom-bar) { display: none; }
+  .content:has(.map-page.builder) { height: 100dvh; padding-top: env(safe-area-inset-top, 0px); box-sizing: border-box; }
+  .builder { --dock-h: calc(58px + env(safe-area-inset-bottom, 0px)); }
+
+  /* The slim bar: Done, the map's name, Undo, Redo and ⋯ for the rest. */
+  .builder .builder-bar { flex-wrap: nowrap; gap: .35em; padding: 4px max(6px, env(safe-area-inset-right)) 4px max(6px, env(safe-area-inset-left)); min-height: 52px; box-sizing: border-box; }
+  .builder .builder-bar > a:first-child { flex: none; padding: 0 .3em; }
+  .builder .builder-bar > strong { flex: 1 1 auto; min-width: 0; font-family: var(--font-display); }
+  .builder .builder-bar > span.small { flex: none; }
+  .builder .builder-bar > .row.builder-actions { position: relative; width: auto; margin-left: auto; flex: none; flex-wrap: nowrap; gap: 4px; }
+  .builder .builder-bar > .row.builder-actions > button { flex: none; min-width: 44px; min-height: 44px; padding: 0; justify-content: center; font-size: 1.2rem; }
+  .builder-actions .action-word { display: none; }
+  .builder-menu { display: none; }
+  .builder-actions.menu-open .builder-menu { display: flex; flex-direction: column; position: absolute; right: 0; top: calc(100% + 8px); z-index: 1200; min-width: 15em; padding: .35em; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); }
+  .builder-menu > button { justify-content: flex-start; gap: .5em; min-height: 44px; background: none; border-color: transparent; color: var(--text); text-align: left; }
+  .builder-menu > button:hover { background: var(--panel-2); }
+
+  /* The drawing in the middle, the tools in thumb reach along the bottom. */
+  .builder .map-body { flex-direction: column; position: relative; }
+  .builder .builder-stage { flex: 1 1 auto; min-height: 0; }
+  .builder .builder-canvas { min-height: 0; }
+  .builder .builder-tools { order: 3; flex: none; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; height: var(--dock-h); box-sizing: border-box; gap: 0; justify-content: flex-start; padding: 3px max(4px, env(safe-area-inset-right)) calc(3px + env(safe-area-inset-bottom, 0px)) max(4px, env(safe-area-inset-left)); border-bottom: none; border-top: 1px solid var(--border); }
+  .builder .builder-tools::-webkit-scrollbar { display: none; }
+  .builder .builder-tools > button { flex: 1 0 48px; min-width: 48px; min-height: 52px; border-radius: 10px; }
+
+  /* The tool's options: a sheet over the foot of the map, one line until it's opened. It scrolls inside
+     itself and never moves the map or the page. */
+  .builder .builder-panel { position: absolute; left: 0; right: 0; bottom: var(--dock-h); z-index: 1000; width: auto; max-height: 58%; box-sizing: border-box; padding: 0 1em 1em; border: 1px solid var(--border); border-bottom: none; border-radius: 16px 16px 0 0; box-shadow: 0 -8px 24px rgb(0 0 0 / .35); overflow-y: auto; overscroll-behavior: contain; }
+  .builder .builder-panel:not(.sheet-open) { overflow: hidden; padding-bottom: 0; }
+  .builder .builder-panel:not(.sheet-open) > :not(.sheet-handle) { display: none; }
+  .sheet-handle { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: flex-start; gap: .5em; width: calc(100% + 2em); min-height: 50px; margin: 0 -1em .3em; padding: 12px 1em 0; background: var(--panel); border: none; border-radius: 16px 16px 0 0; color: var(--text); font-weight: 600; }
+  .sheet-handle::before { content: ''; position: absolute; top: 6px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 2px; background: var(--border); }
+  .sheet-handle > :nth-child(2) { margin-left: auto; font-weight: 400; }
+  .builder .builder-panel > .sheet-handle + .small.muted { display: none; }
+  .builder .builder-panel.sheet-open > .sheet-handle > :first-child { visibility: hidden; }
+  .builder .builder-panel .map-settings:not([open]) { padding-bottom: .5em; }
+
+  /* Editing a page: Save and Cancel take the bottom bar's place (Back still leaves, and keeps what you typed). */
+  .app-shell:has(.editor-bar) { --bottombar-h: 0px; }
+  .app-shell:has(.editor-bar) .bottom-bar { display: none; }
+  .editor-bar { padding-bottom: calc(.6em + env(safe-area-inset-bottom, 0px)); }
+
+  /* ---------- No scroll boxes inside the scrolling page ---------- */
+  /* Text boxes are as tall as their text (where the phone can), so the page is the only thing that scrolls. */
+  .content textarea { field-sizing: content; min-height: 4.5em; max-height: none; }
+  /* The Lectern's notes: the latest lines, with the rest one tap away, rather than a box of their own to scroll. */
+  .lectern-notes { max-height: 16em; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; -webkit-mask-image: linear-gradient(transparent, #000 4em); mask-image: linear-gradient(transparent, #000 4em); }
+  .lectern-notes.all { max-height: none; -webkit-mask-image: none; mask-image: none; }
+  /* Strips that scroll sideways (tabs, jump buttons) never wobble up and down too. */
+  :is(.jump-row, .area-tabs, .builder-tools) { overflow-y: hidden; }
+  /* Rows of pictures to pick from scroll sideways, not up and down inside the page. */
+  .show-thumbs.cover-thumbs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; max-height: none; overscroll-behavior-x: contain; padding-bottom: .3em; }
+  .show-thumbs.cover-thumbs > * { flex: none; }
+  /* The relationship web: one finger up or down scrolls the page past it; drag sideways or use + and − to move around it. */
+  .web-graph:not(.family) { touch-action: pan-y; height: min(60vh, 520px); }
+
+  /* Lists of pages: slimmer cards (name, two lines of summary, any status), so a long list is a short scroll. Tags stay on the page itself. */
+  .entity-cards { gap: .5em; }
+  .entity-cards > .card { padding: .65em .9em; gap: .2em; }
+  .entity-cards > .card > p { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .entity-cards > .card > .tags > .tag:not([class*='status-']) { display: none; }
+  .entity-cards > .card > .tags:not(:has([class*='status-'])) { display: none; }
+}

@@ -463,8 +463,6 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
 @media (max-width: 520px) { .map-kinds { grid-template-columns: 1fr; } }
 .version-any { font-size: 1.5rem; height: 40px; display: grid; place-items: center; }
 .scatter-ring { display: none; }
-.builder-phone-note { display: none; margin: 0; padding: .4em 1em; border-bottom: 1px solid var(--border); background: var(--panel); }
-@media (max-width: 800px) { .builder-phone-note { display: block; } }
 .builder-canvas.tool-hand, .builder-canvas.tool-select { cursor: grab; }
 .builder-canvas.tool-erase { cursor: not-allowed; }
 .builder-panel h2 { margin: 0; }
@@ -597,7 +595,7 @@ button.social.facebook .social-icon { background: #1877f2; }
 #lectern-initiative { scroll-margin-top: calc(var(--topbar-h) + 4em); }
 @media (max-width: 800px) {
   .topbar .live-badge-session { display: none; }
-  .fight-bar { display: flex; align-items: center; gap: .4em; position: sticky; top: calc(var(--topbar-h) + env(safe-area-inset-top)); z-index: 800; margin: -1.25em -1em 1em; padding: .45em max(1em, env(safe-area-inset-right)) .45em max(1em, env(safe-area-inset-left)); background: var(--panel); border-bottom: 1px solid var(--border); box-shadow: 0 4px 10px rgb(0 0 0 / .2); }
+  .fight-bar { display: flex; align-items: center; gap: .4em; position: sticky; top: var(--stick-top, calc(var(--topbar-h) + env(safe-area-inset-top))); z-index: 800; margin: -1.25em -1em 1em; padding: .45em max(1em, env(safe-area-inset-right)) .45em max(1em, env(safe-area-inset-left)); background: var(--panel); border-bottom: 1px solid var(--border); box-shadow: 0 4px 10px rgb(0 0 0 / .2); }
   .fight-bar-turn { flex: 1; min-width: 0; text-align: left; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .fight-bar .primary { flex: none; }
 }
@@ -720,7 +718,7 @@ button.social.facebook .social-icon { background: #1877f2; }
 .data-heading { margin-top: 1.6em; }
 /* On a phone the keyboard hides what sits under the box, so the link suggestions sit above it and stay in view while you type. */
 @media (max-width: 800px) {
-  .secret-textarea > .name-suggestions { order: -1; position: sticky; top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px) + 4px); z-index: 20; box-shadow: var(--shadow); }
+  .secret-textarea > .name-suggestions { order: -1; position: sticky; top: calc(var(--stick-top, calc(var(--topbar-h) + env(safe-area-inset-top, 0px))) + 4px); z-index: 20; box-shadow: var(--shadow); }
 }
 .name-suggestions { display: flex; flex-wrap: wrap; gap: .35em; align-items: center; padding: .4em .5em; border: 1px dashed color-mix(in srgb, var(--accent) 50%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
 .name-suggestions .chip { font-size: .85em; padding: .2em .6em; border-radius: 999px; }
@@ -1610,7 +1608,7 @@ textarea.read-text:hover { border-color: var(--border); border-left-color: var(-
 .end-session h2 { margin-top: 0; }
 
 /* The jump row: buttons that scroll to each part of a long screen, held under the top bar. */
-.jump-row { display: flex; gap: .4em; overflow-x: auto; scrollbar-width: none; position: sticky; top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px)); z-index: 700; margin: 0 0 1em; padding: .4em 0; background: var(--bg); }
+.jump-row { display: flex; gap: .4em; overflow-x: auto; scrollbar-width: none; position: sticky; top: var(--stick-top, calc(var(--topbar-h) + env(safe-area-inset-top, 0px))); z-index: 700; margin: 0 0 1em; padding: .4em 0; background: var(--bg); }
 .jump-row::-webkit-scrollbar { display: none; }
 .jump-row button { flex: none; min-height: 44px; border-radius: 999px; padding: 0 1em; background: var(--panel-2); border-color: transparent; font-weight: 500; }
 .jump-row button.on { background: var(--accent); color: var(--accent-ink); }

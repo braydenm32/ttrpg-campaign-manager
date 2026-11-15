@@ -52,7 +52,7 @@ import { groundColour } from '../mapArt/ground'
 import { useViewMode } from '../viewMode'
 import { worldPath } from '../paths'
 import { Ico } from '../icons'
-import { CastleTurret, ClockCounterClockwise, Cursor, Eraser, Hand, House, Mountains, PaintBrush, PaintBrushBroad, PencilLine, TextT, Tree, Wall, Waves, type Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { CaretDown, CaretUp, CastleTurret, ClockCounterClockwise, Cursor, DotsThreeOutline, StackSimple, Eraser, Hand, House, Mountains, PaintBrush, PaintBrushBroad, PencilLine, TextT, Tree, Wall, Waves, type Icon as PhosphorIcon } from '@phosphor-icons/react'
 
 type Tool = 'select' | 'hand' | 'land' | 'coast' | 'room' | 'line' | 'tiles' | 'stamp' | 'label' | 'erase'
 
@@ -337,6 +337,9 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
   const [past, setPast] = useState<Drawing[]>(kept.past)
   const [exporting, setExporting] = useState(false)
   const [versions, setVersions] = useState(false)
+  // On a phone: the tool's options sit in a sheet over the foot of the map (folded to one line until opened), and the rarer buttons in a ⋯ menu.
+  const [sheet, setSheet] = useState(false)
+  const [menu, setMenu] = useState(false)
   // see the map as players get it, without the secrets
   const [seePlayers, setSeePlayers] = useState(false)
   const playersView = useRef(false)
@@ -1357,18 +1360,22 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
         ) : (
           <span className="muted small">{saved ? 'Saved' : 'Saving…'}</span>
         )}
-        <div className="row">
-          <button onClick={undo} disabled={!past.length} title="Undo (Ctrl+Z)">
-            ↶ Undo
+        <div className={`row builder-actions ${menu ? 'menu-open' : ''}`}>
+          <button onClick={undo} disabled={!past.length} title="Undo (Ctrl+Z)" aria-label="Undo">
+            ↶ <span className="action-word">Undo</span>
           </button>
-          <button onClick={redo} disabled={!future.length} title="Redo (Ctrl+Shift+Z)">
-            ↷ Redo
+          <button onClick={redo} disabled={!future.length} title="Redo (Ctrl+Shift+Z)" aria-label="Redo">
+            ↷ <span className="action-word">Redo</span>
           </button>
+          <button className="phone-only builder-menu-button" aria-expanded={menu} aria-label="More: zoom, fit, export, versions" onClick={() => setMenu(!menu)}>
+            <Ico as={DotsThreeOutline} size="1.3em" />
+          </button>
+          <div className="builder-menu" onClick={() => setMenu(false)}>
           <button onClick={() => zoomBy(0.8)} title="Zoom in (you can also scroll, or pinch with two fingers)" aria-label="Zoom in">
-            +
+            +<span className="phone-only"> Zoom in</span>
           </button>
           <button onClick={() => zoomBy(1.25)} title="Zoom out" aria-label="Zoom out">
-            −
+            −<span className="phone-only"> Zoom out</span>
           </button>
           <button onClick={fit}>⤢ Fit</button>
           <button onClick={() => setExporting(true)} title="Download as a picture or a virtual tabletop file">
@@ -1377,6 +1384,16 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
           <button onClick={() => setVersions(true)} title="Earlier versions of this map, to name or restore">
             <Ico as={ClockCounterClockwise} /> Versions
           </button>
+          <button
+            className="phone-only"
+            onClick={() => {
+              setSheet(true)
+              window.setTimeout(() => document.querySelector('.builder-panel .map-layers')?.scrollIntoView({ block: 'start' }), 50)
+            }}
+          >
+            <Ico as={StackSimple} /> Layers and map settings
+          </button>
+          </div>
         </div>
       </div>
       {versions && (
@@ -1393,7 +1410,6 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
           }}
         />
       )}
-      <p className="builder-phone-note muted small">Maps are best drawn on a computer; small changes work here.</p>
       {exporting && <ExportMap mapId={map.id} fog={map.fog?.on ? map.fog : undefined} name={map.name} drawing={drawing} width={W} height={H} onClose={() => setExporting(false)} />}
       <div className="map-body">
         <div className="builder-tools">
@@ -1474,7 +1490,12 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
               ))}
           </svg>
         </div>
-        <aside className="map-panel builder-panel">
+        <aside className={`map-panel builder-panel ${sheet ? 'sheet-open' : ''}`}>
+          <button className="phone-only sheet-handle" aria-expanded={sheet} onClick={() => setSheet(!sheet)}>
+            <span>{selected || selectedStroke ? 'The piece you picked' : (TOOLS.find((t) => t.id === tool)?.label ?? 'Tool')}</span>
+            <span className="muted small">{sheet ? 'Hide' : 'Options'}</span>
+            <Ico as={sheet ? CaretDown : CaretUp} />
+          </button>
           <div className="small muted">
             Map builder <Help topic="mapBuilder" />
           </div>

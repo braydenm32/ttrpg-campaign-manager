@@ -1,8 +1,9 @@
-import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { BrowserRouter, HashRouter, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useWorld } from './hooks'
 import { AreaSidebar, AreaTabs, BottomBar, FrameProvider, frameLinks, isDeep, phoneTabIds, useFrame, useRouteFocus, useScreenTitle, WorldDate, WorldTile } from './Sidebar'
 import { ToastHost } from './undo'
+import { useTuckingTopBar } from './phoneFrame'
 import type { AreaId } from './nav'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db'
@@ -317,6 +318,8 @@ function WorldShell() {
   const { facts, spot } = frame
   useScreenTitle(world, frame)
   useRouteFocus()
+  const shell = useRef<HTMLDivElement>(null)
+  useTuckingTopBar(shell, !!world)
   // Each area goes back to the address you last had open in it (forgotten when you switch GM / Player view).
   const here = pathname + search
   const [memory, setMemory] = useState<{ viewer: string; paths: Partial<Record<AreaId, string>> }>({ viewer: facts.viewer, paths: {} })
@@ -350,7 +353,7 @@ function WorldShell() {
 
   return (
     <FrameProvider value={frame}>
-    <div className={`layout app-shell viewer-${facts.viewer} ${isGM ? '' : 'player-mode'} ${phoneTabs.size > 1 ? 'with-phone-tabs' : ''} ${facts.viewer === 'wiki' ? '' : 'with-bottom-bar'}`}>
+    <div ref={shell} className={`layout app-shell viewer-${facts.viewer} ${isGM ? '' : 'player-mode'} ${phoneTabs.size > 1 ? 'with-phone-tabs' : ''} ${facts.viewer === 'wiki' ? '' : 'with-bottom-bar'}`}>
       <SkipLink />
       <LeaveGuard />
       <header className="topbar">
@@ -456,10 +459,13 @@ function WorldShell() {
             </Part>
           )}
           {!isGM && !shared && (
-            <div className="player-banner">
-              {previewAs
-                ? `Player view as ${previewAs.name}: what's revealed to everyone, plus what's just for ${previewAs.characterNames.join(' and ') || previewAs.name}.`
-                : "Player view: you're seeing only what's been revealed to players."}
+            <div className="player-banner preview-bar">
+              <span className="not-phone">
+                {previewAs
+                  ? `Player view as ${previewAs.name}: what's revealed to everyone, plus what's just for ${previewAs.characterNames.join(' and ') || previewAs.name}.`
+                  : "Player view: you're seeing only what's been revealed to players."}
+              </span>
+              <span className="phone-only preview-words">Player view</span>
               <Part>
                 <PreviewAsPicker world={world} />
               </Part>

@@ -970,6 +970,8 @@ function Dice({ lectern, edit, shareTo }: PanelProps & { shareTo?: string }) {
  */
 function SessionNotes({ session, entities, worldId }: { session: Session; entities: Entity[]; worldId: string }) {
   const [editing, setEditing] = useState(false)
+  // On a phone the notes show their newest lines, with the rest one tap away (no box to scroll inside the page).
+  const [all, setAll] = useState(false)
   const box = useRef<HTMLDivElement>(null)
   // Keep the newest lines in view as they're added.
   useEffect(() => {
@@ -996,9 +998,16 @@ function SessionNotes({ session, entities, worldId }: { session: Session; entiti
       {editing ? (
         <DraftText multiline grow value={session.notes} onCommit={(v) => setNotes(() => v)} placeholder="Your notes for this session…" aria-label="GM notes" />
       ) : session.notes.trim() ? (
-        <div className="lectern-notes" ref={box}>
-          <Markdown text={session.notes} entities={entities} worldId={worldId} showSecrets />
-        </div>
+        <>
+          <div className={`lectern-notes ${all ? 'all' : ''}`} ref={box}>
+            <Markdown text={session.notes} entities={entities} worldId={worldId} showSecrets />
+          </div>
+          {session.notes.split('\n').length > 8 && (
+            <button className="link small phone-only notes-all" onClick={() => setAll(!all)}>
+              {all ? 'Show only the newest' : 'Show all the notes'}
+            </button>
+          )}
+        </>
       ) : (
         <p className="muted small">No notes for this session yet. Lines from the quick note at the top land here, and on Wrap up.</p>
       )}
