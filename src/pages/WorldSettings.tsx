@@ -389,7 +389,7 @@ function WorldLook({ world, update }: { world: World; update: (patch: Partial<Wo
         ))}
       </div>
       <p className="muted small">Cover picture (players see it too):</p>
-      <div className="show-thumbs">
+      <div className="show-thumbs cover-thumbs">
         <button type="button" className={`show-thumb no-cover ${world.coverId ? '' : 'on'}`} onClick={() => choose(undefined)}>
           None
         </button>

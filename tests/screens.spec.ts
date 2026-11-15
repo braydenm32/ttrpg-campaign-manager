@@ -24,7 +24,9 @@ for (const route of ROUTES)
           info.annotations.push({ type: 'address', description: url })
           await open(page, url)
           // The world's own screens must show the world, not bounce somewhere else.
-          if (route.path.startsWith('/w/') && !route.path.includes('/print/')) await expect(page.locator('.topbar')).toBeVisible()
+          // (On a phone the map builder takes the whole screen, with its own bar and Done instead of the world's top bar.)
+          if (route.path.startsWith('/w/') && !route.path.includes('/print/'))
+            await expect(page.locator(device === 'phone' && route.path.endsWith('/draw') ? '.app-shell .builder-bar' : '.topbar')).toBeVisible()
           const found = await checkScreen(page, { phone: device === 'phone', notFound: want === 'not-found', errors: pageErrors })
           // On a tablet (820 px) only one thing is checked, with no allowance: the page must not scroll sideways.
           if (device === 'tablet') {
