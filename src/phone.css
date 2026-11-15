@@ -94,6 +94,8 @@
   /* The Lectern's notes: the latest lines, with the rest one tap away, rather than a box of their own to scroll. */
   .lectern-notes { max-height: 16em; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; -webkit-mask-image: linear-gradient(transparent, #000 4em); mask-image: linear-gradient(transparent, #000 4em); }
   .lectern-notes.all { max-height: none; -webkit-mask-image: none; mask-image: none; }
+  /* Strips that scroll sideways (tabs, jump buttons) never wobble up and down too. */
+  :is(.jump-row, .area-tabs, .builder-tools) { overflow-y: hidden; }
   /* Rows of pictures to pick from scroll sideways, not up and down inside the page. */
   .show-thumbs.cover-thumbs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; max-height: none; overscroll-behavior-x: contain; padding-bottom: .3em; }
   .show-thumbs.cover-thumbs > * { flex: none; }
