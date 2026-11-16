@@ -202,6 +202,42 @@ test('Undo brings back a scene removed on Prepare, in its place', async ({ page,
   }
 })
 
+test('the GM’s own ideas on Prepare are saved with the session and go to Claude with the prep request', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  await open(page, `${w}/s/${s1.id}?tab=prep`)
+  const before = await getRecord(page, 'sessions', s1.id)
+  try {
+    const heading = page.getByRole('textbox', { name: 'Where the party is heading next' })
+    const ideas = page.getByRole('textbox', { name: 'Your ideas for this session' })
+    await heading.scrollIntoViewIfNeeded()
+    await heading.fill('North to the Glass Barrow')
+    await ideas.fill('A rival crew wants the same relic\nThe ferryman lied about the bell')
+    await expect
+      .poll(async () => ((await getRecord(page, 'sessions', s1.id))?.prep as { heading?: string; ideas?: string } | undefined)?.ideas)
+      .toBe('A rival crew wants the same relic\nThe ferryman lied about the bell')
+    expect(((await getRecord(page, 'sessions', s1.id))?.prep as { heading?: string }).heading).toBe('North to the Glass Barrow')
+
+    // Still there after leaving and coming back.
+    await open(page, w)
+    await open(page, `${w}/s/${s1.id}?tab=prep`)
+    await expect(heading).toHaveValue('North to the Glass Barrow')
+
+    // “Copy for Claude” carries them, as the GM’s plan.
+    await page.evaluate(() => {
+      const box = window as unknown as { copied?: string }
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t: string) => void (box.copied = t) } })
+    })
+    await page.locator('.prep-helper').getByRole('button', { name: 'Copy for Claude' }).click()
+    const copied = await page.evaluate(() => (window as unknown as { copied?: string }).copied ?? '')
+    expect(copied).toContain('Where I want the party heading next:\nNorth to the Glass Barrow')
+    expect(copied).toContain('My own ideas for this session')
+    expect(copied).toContain('The ferryman lied about the bell')
+  } finally {
+    await putBack(page, 'sessions', [[s1.id, before]])
+  }
+})
+
 test('nothing typed in the page editor is lost by leaving, and an untouched new page leaves nothing', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   const npc = world.page('Ilse Marrow')

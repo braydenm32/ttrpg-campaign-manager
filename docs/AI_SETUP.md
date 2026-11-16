@@ -146,7 +146,7 @@ New pages start GM only; lines on existing pages go under a "Session log" headin
 
 ### 5e. Prep helper (a session's Prep tab)
 
-Under **Prep with Claude**, press **Suggest prep**. Claude reads the last two sessions, the party, open threads and running clocks, and suggests a strong start, scenes, secrets and clues, and who to have ready. Untick what you don't want; the rest goes onto your prep sheet.
+Under **Prep with Claude**, first write your own plans if you have any: **Where the party is heading next**, and the threads, quests, clues or people you want in (one per line). They're saved with the session, and Claude builds its suggestions around them. Then press **Suggest prep**. Claude reads the last two sessions, the party, open threads and running clocks, and suggests a strong start, scenes, secrets and clues, and who to have ready. Untick what you don't want; the rest goes onto your prep sheet.
 
 ### 5f. Flavour for generators (More › Workshop › Generators)
 

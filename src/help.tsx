@@ -334,6 +334,8 @@ export const HELP = {
     'Claude reads your pages and sessions and lists where they disagree: someone dead on one page and alive on another, dates that don’t add up, names spelled two ways. Each comes with a suggested fix. Tick “Done” once you’ve dealt with one. Checking the whole world reads everything, so it costs more than checking one page and its neighbours.',
   prepHelper:
     'Claude reads the last two sessions, the party, open threads and running clocks, and suggests a strong start, likely scenes, secrets and clues, and who to have ready. Untick what you don’t want; the rest goes onto your prep sheet, and the people to have ready are linked to the session so they’re at hand in the Lectern.',
+  prepIdeas:
+    'Your own plans, before Claude’s: where the party is heading next, and any new threads, quests, clues or people you want in. Claude builds its suggestions around them instead of guessing. They’re saved with this session (GM only, never shown to players), so they’re still here next time you ask.',
   prepFeedback:
     'Players’ stars and wishes about the last two sessions are their own words, so they go to Claude only when you tick this. It starts unticked for each session, and stays as you left it until you close this tab. Players are told on the form that their GM may share them with Claude.',
   flavour:

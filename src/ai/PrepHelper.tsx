@@ -5,6 +5,7 @@ import { blankPrep, db, newId, type Entity, type Session, type World } from '../
 import { Help } from '../help'
 import { Ico } from '../icons'
 import { Markdown } from '../Markdown'
+import { DraftText } from '../components'
 import { editPrep } from '../prep'
 import { partyOf } from '../sessions'
 import { isOpenQuest, isOpenThread, tickingClocks } from '../counts'
@@ -19,7 +20,9 @@ import { describeStep, MARKUP_NOTE, pageByName, pageText, sessionIndex, sessionT
 /**
  * The prep helper: Claude reads the last sessions, the open threads and the party, then suggests a
  * strong start, scenes, secrets and clues, and who to have ready. The GM ticks what they want and it
- * goes onto the prep sheet. Players' stars and wishes go along only if the GM ticks "Include players'
+ * goes onto the prep sheet. Before asking, the GM can write where the party is heading next and their
+ * own ideas (new threads, quests, clues); they're saved with the session's prep and Claude builds the
+ * suggestions around them. Players' stars and wishes go along only if the GM ticks "Include players'
  * feedback" (off to begin with), since they're the players' own words.
  */
 
@@ -67,6 +70,9 @@ export function PrepHelper({ world, session, entities }: { world: World; session
   const [skipped, setSkipped] = useKept<string[]>(`${kept}:skip`, [])
   const skip = new Set(skipped)
   const [added, setAdded] = useState(false)
+  const saved = { ...blankPrep(), ...session.prep }
+  const heading = saved.heading ?? ''
+  const ideas = saved.ideas ?? ''
 
   const earlier = sessions
     .filter((s) => s.campaignId === session.campaignId && s.number < session.number)
@@ -88,6 +94,8 @@ export function PrepHelper({ world, session, entities }: { world: World; session
       ...prep.clues.map((x) => `- Clue: ${x.text}`),
     ].filter(Boolean)
     const system = `You help a tabletop roleplaying game master prepare their next session, in the style of "Return of the Lazy Dungeon Master": a strong start, a few likely scenes, secrets and clues that could be found in many ways, and the people to have ready.
+
+If the GM says where the party is heading next or gives their own ideas, those come first: they're the GM's plan, so build the strong start, the scenes, the clues and the people around them, and turn any new thread, quest or clue they name into scenes and clues that lead to it. Keep what they wrote as they meant it; don't change it into something else. Their ideas may be new to the world, so you don't need a page for them.
 
 Build on what has actually happened and on threads that are open. Prefer what's already in the world over inventing; when you do invent, keep it small and say so. Read any page you need with read_pages.
 
@@ -120,6 +128,10 @@ ${party.length ? `The party:\n\n${party.map((e) => pageText(e, world, entities))
 ${open.length ? `Open quests and loose threads:\n${open.map((e) => `- [[${e.name}]]${e.summary ? `: ${e.summary}` : ''}`).join('\n')}` : ''}
 
 ${clocks.length ? `Clocks still running:\n${clocks.join('\n')}` : ''}
+
+${heading.trim() ? `Where I want the party heading next:\n${heading.trim()}` : ''}
+
+${ideas.trim() ? `My own ideas for this session (new threads, quests, clues and the like). Build your suggestions around these:\n${ideas.trim()}` : ''}
 
 ${asked ? `What the players said about the last sessions (stars: what they loved; wishes: what they'd like more of). Give them more of what they wished for where it fits:\n${untrusted('player_written', asked)}` : ''}
 
@@ -167,13 +179,39 @@ ${planned.length ? `What I've planned so far (add to it, don't repeat it):\n${pl
               ? '✓ Added to your prep sheet. Ask again for more ideas.'
               : 'Claude reads the last two sessions, the party, open threads and clocks, and suggests a strong start, scenes, secrets and clues, and who to have ready.'}
           </p>
+          <div className="prep-ideas">
+            <h4>
+              Your ideas first <Help topic="prepIdeas" />
+            </h4>
+            <label className="prep-idea">
+              <span className="small">Where the party is heading next</span>
+              <DraftText
+                value={heading}
+                aria-label="Where the party is heading next"
+                placeholder="e.g. Up the river to Saltmere, to find the missing ferryman"
+                onCommit={(v) => editPrep(session.id, (p) => void (p.heading = v))}
+              />
+            </label>
+            <label className="prep-idea">
+              <span className="small">Threads, quests, clues and other ideas you want in</span>
+              <DraftText
+                multiline
+                grow
+                rows={3}
+                value={ideas}
+                aria-label="Your ideas for this session"
+                placeholder={'One idea per line, e.g.\nA rival party is after the same map\nThe innkeeper knows more than she lets on\nStart a quest to find the lost bell'}
+                onCommit={(v) => editPrep(session.id, (p) => void (p.ideas = v))}
+              />
+            </label>
+          </div>
           <ClaudeJob
             worldId={world.id}
             jobId={kept}
             jobTitle={`Prep ideas for session ${session.number}`}
             label="Suggest prep"
             build={build}
-            priceKey={`${session.id}:${sessions.length}:${entities.length}:${withFeedback ? said.length : 0}`}
+            priceKey={`${session.id}:${sessions.length}:${entities.length}:${withFeedback ? said.length : 0}:${Math.round((heading.length + ideas.length) / 200)}`}
             extra={
               said.length > 0 && (
                 <label className="check small">
