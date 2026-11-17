@@ -483,7 +483,7 @@ export function Help({ topic, text }: { topic?: HelpTopic; text?: string }) {
     if (!ref.current) return
     const r = ref.current.getBoundingClientRect()
     const width = Math.min(300, window.innerWidth - 24)
-    const left = Math.max(12, Math.min(r.left + r.width / 2 - width / 2, window.innerWidth - width - 12))
+    const left = Math.max(8, Math.min(r.left + r.width / 2 - width / 2, window.innerWidth - width - 12))
     // Below the "?" when there's room, otherwise above it (the sidebar's "Viewing as" sits at the bottom).
     const below = window.innerHeight - r.bottom > 180 || r.top < 180
     setPlace(below ? { left, width, top: r.bottom + 6 } : { left, width, bottom: window.innerHeight - r.top + 6 })
