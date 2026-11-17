@@ -223,13 +223,12 @@ test('the GM’s own ideas on Prepare are saved with the session and go to Claud
     await open(page, `${w}/s/${s1.id}?tab=prep`)
     await expect(heading).toHaveValue('North to the Glass Barrow')
 
-    // “Copy for Claude” carries them, as the GM’s plan.
-    await page.evaluate(() => {
-      const box = window as unknown as { copied?: string }
-      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t: string) => void (box.copied = t) } })
-    })
-    await page.locator('.prep-helper').getByRole('button', { name: 'Copy for Claude' }).click()
-    const copied = await page.evaluate(() => (window as unknown as { copied?: string }).copied ?? '')
+    // “Copy” (and Open in Claude or ChatGPT) carries them, as the GM’s plan.
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(page.url()).origin })
+    await page.evaluate(() => navigator.clipboard.writeText(''))
+    await page.locator('.prep-helper').getByRole('button', { name: 'Copy', exact: true }).click()
+    await expect(page.locator('.prep-helper')).toContainText('Paste it into Claude, ChatGPT or another AI chat')
+    const copied = await page.evaluate(() => navigator.clipboard.readText())
     expect(copied).toContain('Where I want the party heading next:\nNorth to the Glass Barrow')
     expect(copied).toContain('My own ideas for this session')
     expect(copied).toContain('The ferryman lied about the bell')
