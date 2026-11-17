@@ -883,6 +883,13 @@ export interface SessionPrep {
   /** Secrets and clues the players might find this session; ticked once they do. */
   clues: CheckItem[]
   encounters: Encounter[]
+  /**
+   * The GM's own plans, typed into "Prep with Claude" before asking for suggestions: where the party
+   * is heading next, and ideas they want in (new threads, quests, clues). Claude builds around them.
+   * GM-only, like the rest of the prep (player_view sends sessions from a list of player-safe fields).
+   */
+  heading?: string
+  ideas?: string
 }
 
 export const blankPrep = (): SessionPrep => ({ strongStart: '', scenes: [], clues: [], encounters: [] })

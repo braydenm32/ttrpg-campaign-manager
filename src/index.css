@@ -1340,6 +1340,10 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .prep-helper { margin: .75em 0 1.25em; }
 .prep-helper h3 { margin-top: 0; }
 .prep-suggestion h4 { margin: .75em 0 .25em; }
+.prep-ideas { margin: .5em 0 1em; }
+.prep-ideas h4 { margin: 0 0 .35em; }
+.prep-idea { display: flex; flex-direction: column; gap: .2em; margin-bottom: .6em; }
+.prep-idea input, .prep-idea textarea { width: 100%; box-sizing: border-box; min-height: 44px; }
 .suggest-item { display: flex; gap: .5em; align-items: flex-start; margin: .3em 0; cursor: pointer; }
 .suggest-item input { margin-top: .3em; flex: none; width: auto; }
 .suggest-item .markdown, .suggest-item .markdown p { display: inline; margin: 0; }
