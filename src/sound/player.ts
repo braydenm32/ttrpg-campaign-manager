@@ -10,6 +10,7 @@ import { syrinscape } from './syrinscape'
 interface Playing {
   audio?: HTMLAudioElement
   url?: string
+  sound?: Sound
 }
 
 const playing = new Map<string, Playing>()
@@ -44,7 +45,7 @@ export async function play(sound: Sound) {
       for (const id of moods) playing.delete(id)
       moods.clear()
       moods.add(sound.id)
-      playing.set(sound.id, {})
+      playing.set(sound.id, { sound })
       changed()
     }
     return
@@ -56,7 +57,7 @@ export async function play(sound: Sound) {
   audio.loop = sound.loop
   audio.volume = Math.max(0, Math.min(1, sound.volume))
   audio.onended = () => stopLocal(sound.id)
-  playing.set(sound.id, { audio, url })
+  playing.set(sound.id, { audio, url, sound })
   changed()
   try {
     await audio.play()
@@ -82,6 +83,15 @@ export async function stop(sound: Sound) {
 }
 
 export const toggle = (sound: Sound) => (playing.has(sound.id) ? stop(sound) : play(sound))
+
+/**
+ * What's playing now that isn't one of the world's saved buttons: a mood started straight from a
+ * Syrinscape soundset. Players' "now playing" lists these too.
+ */
+export const playingUnsaved = (ids: string[], saved: Sound[]) => {
+  const have = new Set(saved.map((s) => s.id))
+  return ids.filter((id) => !have.has(id)).flatMap((id) => playing.get(id)?.sound ?? [])
+}
 
 /** Changes the volume of a file that's playing now. */
 export function setLiveVolume(id: string, volume: number) {

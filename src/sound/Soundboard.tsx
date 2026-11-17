@@ -8,6 +8,8 @@ import { setLiveVolume, stopAll, toggle, usePlaying } from './player'
 import { Ico } from '../icons'
 import { MusicNotes } from '@phosphor-icons/react'
 import { worldPath } from '../paths'
+import { SyrinscapeSets } from './SyrinscapeSets'
+import { useSyrinscapeToken } from './syrinscape'
 
 export const soundGroups = (sounds: Sound[]) => {
   const groups = new Map<string, Sound[]>()
@@ -23,6 +25,7 @@ export function useSounds(worldId: string) {
 export function Soundboard({ worldId, compact }: { worldId: string; compact?: boolean }) {
   const sounds = useSounds(worldId)
   const playing = usePlaying()
+  const token = useSyrinscapeToken()
   const [error, setError] = useState('')
   const run = (p: Promise<unknown>) => {
     setError('')
@@ -30,7 +33,7 @@ export function Soundboard({ worldId, compact }: { worldId: string; compact?: bo
   }
   const body = (
     <>
-      {sounds.length === 0 && (
+      {sounds.length === 0 && !(compact && token) && (
         <p className="muted small">
           No sounds yet. <Link to={`${worldPath(worldId)}/sounds`}>Add your own files or Syrinscape moods</Link>.
         </p>
@@ -64,6 +67,7 @@ export function Soundboard({ worldId, compact }: { worldId: string; compact?: bo
         </div>
       ))}
       {error && <p className="error small">{error}</p>}
+      {compact && <SyrinscapeSets worldId={worldId} compact />}
     </>
   )
   if (!compact) return body

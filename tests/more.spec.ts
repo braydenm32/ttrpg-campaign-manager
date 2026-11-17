@@ -179,6 +179,73 @@ test.describe('Undo on the More area’s quick removes', () => {
     await expect(page.getByText('Your Syrinscape token is saved on this device')).toBeVisible()
     await page.getByRole('button', { name: 'Remove it' }).click()
   })
+
+  test('a soundset from the GM’s Syrinscape library plays its moods, here and at the Lectern', async ({ page, world }) => {
+    // A pretend Syrinscape, answering the way the real one does (nothing leaves the machine).
+    const sent: string[] = []
+    await page.route('https://syrinscape.com/**', (route) => {
+      const url = new URL(route.request().url())
+      expect(url.searchParams.get('auth_token')).toBe('test-token')
+      const reply = (body: unknown) => route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(body) })
+      if (route.request().method() === 'POST') {
+        sent.push(url.pathname.replace('/online/frontend-api/', ''))
+        return reply({})
+      }
+      if (url.pathname.endsWith('/soundsets/'))
+        return reply([
+          { id: 1, name: 'Location: Tavern', uuid: 'tavern-uuid', category: 'fantasy' },
+          { id: 2, name: 'Shipboard', uuid: 'ship-uuid', category: 'sci-fi' },
+        ])
+      if (url.pathname.endsWith('/moods/') && url.searchParams.get('soundset__uuid') === 'tavern-uuid')
+        return reply([
+          { pk: 12, name: 'Quiet evening', order: 1, soundset_uuid: 'tavern-uuid' },
+          { pk: 11, name: 'Bar fight', order: 2, soundset_uuid: 'tavern-uuid' },
+        ])
+      return route.fulfill({ status: 404, body: '' })
+    })
+    await open(page, `/w/${world.slug}/sounds`)
+    await expect(page.getByText('Save your Syrinscape token below')).toBeVisible()
+    await page.locator('summary', { hasText: 'Syrinscape' }).click()
+    await page.getByPlaceholder('Syrinscape auth token').fill('test-token')
+    await page.getByRole('button', { name: 'Save token' }).click()
+    const picker = page.getByLabel('Syrinscape soundset')
+    const moodButton = (name: string) => page.locator('.syrinscape-sets .sound-button button', { hasText: name })
+    try {
+      await expect(picker.locator('optgroup')).toHaveCount(2)
+      await picker.selectOption({ label: 'Location: Tavern' })
+      // Moods in Syrinscape's order.
+      await expect(page.locator('.syrinscape-sets .sound-button')).toHaveText([/Quiet evening/, /Bar fight/])
+      await moodButton('Quiet evening').click()
+      await shot(page, 'soundboard-syrinscape-soundset')
+      await expect.poll(() => sent).toEqual(['moods/12/play/'])
+      await expect(moodButton('Quiet evening')).toContainText('■')
+      // Starting another mood replaces the first, as it does in Syrinscape.
+      await moodButton('Bar fight').click()
+      await expect(moodButton('Bar fight')).toContainText('■')
+      await expect(moodButton('Quiet evening')).not.toContainText('■')
+      await moodButton('Bar fight').click()
+      await expect.poll(() => sent).toEqual(['moods/12/play/', 'moods/11/play/', 'moods/11/stop/'])
+
+      // Kept as buttons, grouped under the soundset; Undo takes them away again.
+      await page.getByRole('button', { name: 'Keep these moods as buttons' }).click()
+      const rows = page.locator('.sound-table tbody tr', { hasText: 'Syrinscape mood' }).filter({ has: page.locator('input[value="Location: Tavern"]') })
+      await expect(rows).toHaveCount(2)
+      await undo(page).click()
+      await expect(rows).toHaveCount(0)
+
+      // The soundset stays picked in this world, so it's ready at the Lectern.
+      await open(page, `/w/${world.slug}/s/${world.session(1).id}/lectern`)
+      await expect(page.getByLabel('Syrinscape soundset')).toHaveValue('tavern-uuid')
+      await expect(moodButton('Bar fight')).toBeVisible()
+      await page.locator('.lectern-panel, section', { has: moodButton('Bar fight') }).last().scrollIntoViewIfNeeded()
+      await shot(page, 'lectern-syrinscape-soundset')
+    } finally {
+      await page.evaluate((id) => {
+        localStorage.removeItem('codex.syrinscapeToken')
+        localStorage.removeItem(`codex.syrinscapeSoundset.${id}`)
+      }, world.id)
+    }
+  })
 })
 
 test.describe('before players see something', () => {
