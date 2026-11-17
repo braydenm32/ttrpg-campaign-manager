@@ -354,10 +354,10 @@ test('hand-written notes: Claude’s pasted reply becomes pages to look over, pl
     await page.getByRole('button', { name: 'Import hand-written notes' }).click()
     const dialog = page.getByRole('dialog', { name: 'Import hand-written notes' })
     // Nothing to read yet, so no Claude buttons.
-    await expect(dialog.getByRole('button', { name: 'Copy for Claude' })).toHaveCount(0)
+    await expect(dialog.getByRole('link', { name: 'Open in Claude' })).toHaveCount(0)
     await dialog.getByPlaceholder('Paste notes from your phone').fill('Hermit under the bridge, feeds crows. SECRET: Lantern deserter.')
     await dialog.getByRole('button', { name: 'Paste a reply' }).click()
-    await dialog.getByPlaceholder('Paste Claude’s reply here').fill(`Here you go:\n${reply}`)
+    await dialog.getByPlaceholder('Paste the reply here').fill(`Here you go:\n${reply}`)
     await dialog.getByRole('button', { name: 'Use this reply' }).click()
 
     // Questions and unclear words, each with an answer box; answers go back for another read.
@@ -367,7 +367,7 @@ test('hand-written notes: Claude’s pasted reply becomes pages to look over, pl
     await dialog.getByRole('button', { name: 'Read again with my answers' }).click()
     await expect(dialog.getByPlaceholder(/Bram, Ysolde/)).toHaveValue(/frog in a crown.*Just a joke, leave it out/s)
     await dialog.getByRole('button', { name: 'Paste a reply' }).click()
-    await dialog.getByPlaceholder('Paste Claude’s reply here').fill(reply)
+    await dialog.getByPlaceholder('Paste the reply here').fill(reply)
     await dialog.getByRole('button', { name: 'Use this reply' }).click()
 
     // The review: Cinderford going onto the page the world has; the toll gate players know ticked for them.

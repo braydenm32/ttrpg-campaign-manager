@@ -26,18 +26,18 @@ A few words you'll see:
 - **API key:** a long password that lets the app use a service on your account, so the service can bill you. You paste it into the app once, and either save it to your Warded Atlas account (so every device you sign in on has it) or paste it again on each device.
 - **AssemblyAI:** a company that turns speech into text. It's what "Transcribe in the cloud" uses.
 - **Anthropic Console:** where you buy Claude by the job for apps like this one (the "API"). It is **separate from your Claude subscription** on claude.ai: a different bill, with its own prepaid credit.
-- **Copy for Claude:** the free way. The app copies everything Claude needs; you paste it into claude.ai (using your subscription) and paste the answer back.
+- **Open in Claude / Open in ChatGPT:** the free way. The app opens a new chat with everything already typed in (using your own Claude or ChatGPT account), and you paste the answer back.
 
 | Feature | Free way | One-click way | Rough cost of the one-click way |
 | --- | --- | --- | --- |
 | Recording → transcript | **On this device** (Whisper): free, private, slow, no speaker names | **AssemblyAI** key: fast, labels who's speaking | About US$0.23 an hour of audio, so about 90 US cents for a 4-hour session. New accounts get US$50 free (about 200 hours) |
-| Recap + world updates | Copy for Claude | **Write it now** with an Anthropic key | About 20 to 50 US cents a session |
-| The Archivist: ask your world | Copy for Claude | **Ask** with an Anthropic key | About 5 to 10 US cents for a first question in a big world; follow-ups cost less |
-| The Archivist: check for contradictions | Copy for Claude | **Check now** | One page and its neighbours: about 10 to 30 US cents. The whole of a world as big as Vael Ardith: about US$2 |
-| Prep helper | Copy for Claude | **Suggest prep** | About 10 to 25 US cents |
-| Flavour for generators | Copy for Claude | **Add flavour** | About 1 US cent |
-| NPC lines in character | Copy for Claude | **Give me lines** | About 1 US cent |
-| Hand-written notes → pages | Copy for Claude (add the photos on claude.ai yourself) | **Read my notes** | About 5 to 10 US cents a page of notes |
+| Recap + world updates | Open in Claude or ChatGPT | **Write it now** with an Anthropic key | About 20 to 50 US cents a session |
+| The Archivist: ask your world | Open in Claude or ChatGPT | **Ask** with an Anthropic key | About 5 to 10 US cents for a first question in a big world; follow-ups cost less |
+| The Archivist: check for contradictions | Open in Claude or ChatGPT | **Check now** | One page and its neighbours: about 10 to 30 US cents. The whole of a world as big as Vael Ardith: about US$2 |
+| Prep helper | Open in Claude or ChatGPT | **Suggest prep** | About 10 to 25 US cents |
+| Flavour for generators | Open in Claude or ChatGPT | **Add flavour** | About 1 US cent |
+| NPC lines in character | Open in Claude or ChatGPT | **Give me lines** | About 1 US cent |
+| Hand-written notes → pages | Open in Claude or ChatGPT (add the photos in the chat yourself) | **Read my notes** | About 5 to 10 US cents a page of notes |
 | Read recaps aloud | Always free (your device's own voices) | – | Free |
 | Spotlight stats | Always free (worked out in the app) | – | Free |
 
@@ -65,7 +65,7 @@ Skip this if you're happy with the free on-device transcripts.
 
 ## 3. Claude: the Anthropic API key
 
-Skip this if you'll always use Copy for Claude (see [section 4](#4-the-free-ways-no-keys-at-all)).
+Skip this if you'll always use Open in Claude or Open in ChatGPT (see [section 4](#4-the-free-ways-no-keys-at-all)).
 
 1. Go to **https://console.anthropic.com** and sign up with Google or email. (It may open as platform.claude.com: same place.) This is a separate account from your claude.ai subscription, even with the same email.
 2. **Settings → Plans & Billing**: add a card, then **Add funds** (or **Purchase credits**). The minimum is US$5, which covers roughly 10 to 25 sessions' recaps plus plenty of small jobs.
@@ -94,14 +94,16 @@ No other user can read them. They never go into a world, a backup, a share link 
 
 **On-device transcripts.** On a session with a recording, press **Transcribe on this device**. The first time, it downloads a speech model once (**Quick**, about 80 MB, or **Better**, about 250 MB and slower; pick in **World settings → This device → AI tools → On-device speech model**). After that it works offline, and the audio never leaves your device. It is slow (roughly as long as the session on an ordinary laptop) and doesn't tell speakers apart. Keep the page open; if you leave or pause, it carries on from where it got to next time.
 
-**Copy for Claude.** Every Claude feature has this button next to its one-click button:
+**Open in Claude / Open in ChatGPT.** Every Claude feature has these buttons next to its one-click button:
 
-1. Press **Copy for Claude**. The app copies the instructions and the parts of your world Claude needs.
-2. Open **https://claude.ai/new**, paste, and send.
-3. Copy Claude's **whole** reply (the copy button under it is easiest).
-4. Back in the app, paste it into the box that opened (for example **Paste Claude's reply here**) and press the button under it (**Check the draft** for recaps).
+1. Press **Open in Claude** (or **Open in ChatGPT**). A new chat opens in another tab with everything already typed in: the instructions and the parts of your world it needs. On a phone, the Claude or ChatGPT app opens if you have it.
+2. Press send (ChatGPT may send it by itself).
+3. Copy the **whole** reply (the copy button under it is easiest).
+4. Back in the app, paste it into the box that opened (**Paste the reply here**) and press the button under it (**Check the draft** for recaps).
 
-It uses your Claude subscription, so it costs nothing extra. The answer comes back in exactly the same form as the one-click way, so world updates, prep and the rest work the same.
+Long jobs (a recap from a three-hour transcript, prep for a big world, the Archivist) are too long to type into a web address, which is how the chat gets filled in. For those the chat opens empty and everything is copied instead: paste it into the message box (Ctrl+V, or press and hold, then **Paste** on a phone) and send. The app says which happened under the buttons. Everything is always copied too, so if a chat ever opens empty, just paste. **Copy** on its own copies without opening anything, for any other AI chat.
+
+It uses your Claude or ChatGPT account, so it costs nothing extra. The answer comes back in exactly the same form as the one-click way, so world updates, prep and the rest work the same.
 
 ---
 
@@ -131,7 +133,7 @@ Then open **Name speakers** and type who each letter is, like `Sam (Wren)`. Next
 
 On the session page, under **Write up this session**:
 
-1. Press **Write it now** (Anthropic key) or **Copy for Claude**. Claude reads the transcript and your GM notes. With a key, you can go to other pages while it writes: a note at the top says **Claude is writing…**, then **Claude finished**, and takes you back.
+1. Press **Write it now** (Anthropic key) or **Open in Claude**. Claude reads the transcript and your GM notes. With a key, you can go to other pages while it writes: a note at the top says **Claude is writing…**, then **Claude finished**, and takes you back.
 2. Check the **GM summary**, fix anything misheard, and press **Add to GM notes**.
 3. Check the **Player recap** and press **Use as the player recap**. Players see it once you reveal the session.
 4. Under **Keep the world up to date**, go through Claude's suggestions: new NPCs and places that came up, lines for existing pages, quest progress, relationships, timeline events, deaths and captures, loot changing hands, loose threads, and things that contradict your notes. Untick or **Edit** anything wrong; tick **Players can see this line** or **Add to timeline** where you want them.
@@ -166,7 +168,7 @@ On each session page: how long each person talked (needs a transcript with speak
 
 ### 5j. Hand-written notes → pages (World settings › Data, or a new world's Getting started)
 
-Press **Import hand-written notes**, add photos or scans of your notebook (one page per photo, flat, in good light; a PDF from a scanner app works too; up to 20 at a time) and/or paste notes you typed. If it helps, say who's who in **Anything Claude should know?** ("Bram and Kit are the players' characters; red ink means secret"). Then **Read my notes**, or **Copy for Claude**: paste it into claude.ai, add the same photos with the + button, send, and paste the answer back.
+Press **Import hand-written notes**, add photos or scans of your notebook (one page per photo, flat, in good light; a PDF from a scanner app works too; up to 20 at a time) and/or paste notes you typed. If it helps, say who's who in **Anything Claude should know?** ("Bram and Kit are the players' characters; red ink means secret"). Then **Read my notes**, or **Open in Claude**: add the same photos in the chat with the + button, send, and paste the answer back.
 
 Claude leaves out memes, doodles and table jokes. At the top it lists words it couldn't read for sure and questions about what a note means ("Is 'the big guy' Gorrak?"); type answers and press **Read again with my answers** if you want it to have another go.
 
@@ -185,7 +187,7 @@ The app uses two Claude models and picks for you. The button shows which one (ho
 
 A token is about four letters of English. Big jobs that have to be right (changing your world, spotting contradictions) get Opus; small, quick ones get Sonnet. Both read your world's material once and remember it briefly (Anthropic calls it caching), so follow-up questions only pay for what's new.
 
-If Claude ever declines a job on safety grounds (rare; usually a very dark scene), the app quietly lets Anthropic try a fallback model first, then tells you if it still couldn't. Copy for Claude always works as a backup.
+If Claude ever declines a job on safety grounds (rare; usually a very dark scene), the app quietly lets Anthropic try a fallback model first, then tells you if it still couldn't. Open in Claude always works as a backup.
 
 ---
 
@@ -196,7 +198,7 @@ If Claude ever declines a job on safety grounds (rare; usually a very dark scene
 - **Transcripts and recap drafts sync** to your other devices so you can review them anywhere. They're **GM only**: players never receive them.
 - **On-device transcription** never sends audio anywhere.
 - **AssemblyAI** receives the audio to transcribe it, then the app deletes its copy (unless you tick **Keep a copy at AssemblyAI**).
-- **Claude with your key** goes to Anthropic's API, which doesn't train on API data by default. **Copy for Claude** goes through your claude.ai account under the same settings as your normal chats.
+- **Claude with your key** goes to Anthropic's API, which doesn't train on API data by default. **Open in Claude** and **Open in ChatGPT** go through your own account there, under the same settings as your normal chats.
 - **What Claude reads includes your secrets** (GM notes, `:::gm` passages), because it's working for you. What comes back is only ever shown to you: the player recap is the only part players see, and only once you use it and reveal the session. World updates follow the usual rules (new pages GM only, session-log lines hidden unless you tick them).
 
 ---
@@ -204,7 +206,7 @@ If Claude ever declines a job on safety grounds (rare; usually a very dark scene
 ## 8. A second computer, a phone, or a co-GM
 
 - **Your other devices:** with **Save my keys to my account** ticked, just sign in and they're there. Otherwise paste the keys again on each one (**World settings → This device → AI tools**). On a phone, the free on-device transcription is very slow; use AssemblyAI or transcribe on the laptop that recorded.
-- **A co-GM:** they need their own keys on their own devices (and pay for their own use), or they can use Copy for Claude with their own Claude subscription. Your keys never reach them.
+- **A co-GM:** they need their own keys on their own devices (and pay for their own use), or they can use Open in Claude or ChatGPT with their own account. Your keys never reach them.
 - **Players:** none of the AI features are open to players. They see the player recap you approved and can have it read aloud.
 
 ---
@@ -221,12 +223,12 @@ If Claude ever declines a job on safety grounds (rare; usually a very dark scene
 | "The transcript is saved here, but AssemblyAI didn't delete its copy" | Nothing is lost. Delete it yourself in the AssemblyAI dashboard if you like |
 | "Anthropic didn't accept the API key" | Make a fresh key (Console → API Keys) and paste it in. Keys are shown only once |
 | "Your Anthropic account is out of credit" | Console → Plans & Billing → Add funds |
-| "You're over your limit for now" | New accounts have low limits. Wait a minute and try again, or use Copy for Claude this once |
+| "You're over your limit for now" | New accounts have low limits. Wait a minute and try again, or use Open in Claude this once |
 | "Anthropic is busy or having trouble right now" | Wait a few minutes and try again |
-| "That's more than Claude can read in one go" | Try a smaller job (one page and its neighbours, one recording), or Copy for Claude |
-| "Claude ran out of room before it finished" | The answer is cut off. Try a smaller job, or Copy for Claude |
-| "Claude declined…" | Rare. Use Copy for Claude, or tidy the transcript and try again |
-| "Claude's answer didn't come in the shape the app can read" | Shown as plain text so nothing is lost. Press the button again, or with Copy for Claude make sure you pasted the **whole** reply |
+| "That's more than Claude can read in one go" | Try a smaller job (one page and its neighbours, one recording), or Open in Claude |
+| "Claude ran out of room before it finished" | The answer is cut off. Try a smaller job, or Open in Claude |
+| "Claude declined…" | Rare. Use Open in Claude, or tidy the transcript and try again |
+| "Claude's answer didn't come in the shape the app can read" | Shown as plain text so nothing is lost. Press the button again, or with Open in Claude make sure you pasted the **whole** reply |
 | On-device transcription is very slow | Normal on older computers (about as long as the session). Leave it running, or use AssemblyAI for long sessions |
 | A name is wrong everywhere | Fix the speaker name on the transcript, or edit or untick that world update. Anything already added can be undone from the page's **History** |
 
@@ -246,7 +248,7 @@ Everything is in `src/ai/`, all client-side: no Supabase edge function and no se
 | `cloud.ts` | AssemblyAI: upload, start, wait, delete |
 | `device.ts`, `whisper.worker.ts` | On-device Whisper |
 | `recap.ts`, `RecapPanel.tsx`, `worldUpdates.ts`, `WorldUpdatesReview.tsx` | Recaps and world updates |
-| `Archivist.tsx`, `PrepHelper.tsx`, `Flavour.tsx` | The other Claude tools; `ClaudeJob.tsx` is their shared Copy for Claude / one-click panel |
+| `Archivist.tsx`, `PrepHelper.tsx`, `Flavour.tsx` | The other Claude tools; `ClaudeJob.tsx` is their shared Open in Claude / one-click panel; `OpenInChat.tsx` makes the Open in Claude / ChatGPT buttons |
 | `jobs.ts`, `LeaveGuard.tsx`, `kept.ts` | Jobs that keep writing while the GM is on another page |
 | `ReadAloud.tsx`, `Spotlight.tsx` | The free features |
 | `../notes/` | Hand-written notes → pages: `photos.ts` shrinks photos for Claude, `claude.ts` the ask and reading the reply, `ImportNotes.tsx` the dialog and review, `apply.ts` adds the pages and sessions. Photos go to Claude through `JobRequest.attachments` in `ClaudeJob.tsx` |

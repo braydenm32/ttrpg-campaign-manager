@@ -560,3 +560,78 @@ test('AssemblyAI’s copies go once nothing waits on them, “not found” count
     }, id)
   }
 })
+
+test('a long ask (a recap) opens a new Claude or ChatGPT chat with everything copied to paste in', async ({ page, world }) => {
+  const context = page.context()
+  // Nothing goes to either site: their pages are stood in for here.
+  const chat = /^https:\/\/(claude\.ai|chatgpt\.com)\//
+  await context.route(chat, (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>A new chat</title>' }))
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  try {
+    await open(page, `${w}/s/${s1.id}?tab=notes`)
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(page.url()).origin })
+    const panel = page.locator('.recap-panel')
+    for (const [name, home] of [
+      ['Claude', 'https://claude.ai/new'],
+      ['ChatGPT', 'https://chatgpt.com/'],
+    ] as const) {
+      const [tab] = await Promise.all([page.waitForEvent('popup'), panel.getByRole('link', { name: `Open in ${name}` }).click()])
+      await tab.waitForLoadState()
+      const url = new URL(tab.url())
+      expect(`${url.origin}${url.pathname}`).toBe(home)
+      const copied = await page.evaluate(() => navigator.clipboard.readText())
+      // The recap's instructions and this session's own notes are what went.
+      expect(copied).toContain('Player recap')
+      const q = url.searchParams.get('q')
+      if (q !== null) {
+        // Filled in: exactly what was copied.
+        expect(q).toBe(copied)
+        await expect(panel).toContainText(`Opened ${name} in a new chat with everything filled in`)
+      } else {
+        // Too long for the address: the chat opens empty and the GM pastes.
+        expect(encodeURIComponent(copied).length).toBeGreaterThan(16_000)
+        await expect(panel).toContainText(`It’s too long to fill in for you, so ${name} opened in a new chat: paste it`)
+      }
+      await expect(panel.getByPlaceholder('Paste the reply here')).toBeVisible()
+      await tab.close()
+    }
+    // “Copy” only copies.
+    await page.evaluate(() => navigator.clipboard.writeText(''))
+    await panel.getByRole('button', { name: 'Copy', exact: true }).click()
+    await expect(panel).toContainText('Paste it into Claude, ChatGPT or another AI chat and send.')
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('Player recap')
+  } finally {
+    await context.unroute(chat)
+  }
+})
+
+test('a short ask, like lines in character, opens ChatGPT with it already typed in', async ({ page, world }) => {
+  const context = page.context()
+  const chat = /^https:\/\/(claude\.ai|chatgpt\.com)\//
+  await context.route(chat, (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>A new chat</title>' }))
+  try {
+    await open(page, `/w/${world.slug}/p/${world.pageSlug('Tam Sixfingers')}`)
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(page.url()).origin })
+    await page.getByRole('button', { name: 'Lines in character' }).click()
+    const lines = page.locator('.npc-lines')
+    await lines.getByLabel('What’s happening').fill('The party asks about the missing oil')
+    const [tab] = await Promise.all([page.waitForEvent('popup'), lines.getByRole('link', { name: 'Open in ChatGPT' }).click()])
+    await tab.waitForLoadState()
+    const url = new URL(tab.url())
+    expect(`${url.origin}${url.pathname}`).toBe('https://chatgpt.com/')
+    const q = url.searchParams.get('q') ?? ''
+    expect(q).toContain('The situation: The party asks about the missing oil')
+    expect(q).toBe(await page.evaluate(() => navigator.clipboard.readText()))
+    await expect(lines).toContainText('Opened ChatGPT in a new chat with everything filled in')
+    await tab.close()
+    // Lines pasted back from either chat work the same as one-click ones.
+    await lines.getByPlaceholder('Paste the reply here').fill('- “Oil? I wouldn’t know.” *He looks away.*\n- “Ask the Assessor.”')
+    await lines.getByRole('button', { name: 'Use this reply' }).click()
+    await expect(lines.locator('.npc-line-list li')).toHaveCount(2)
+  } finally {
+    await context.unroute(chat)
+    // What the panel showed is kept for this tab only; clear it for the next test.
+    await page.evaluate(() => Object.keys(sessionStorage).filter((k) => k.startsWith('codex.kept.npcLines:')).forEach((k) => sessionStorage.removeItem(k)))
+  }
+})

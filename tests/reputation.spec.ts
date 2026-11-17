@@ -127,7 +127,7 @@ test('a reputation change from a pasted recap is made only when the GM adds it',
   })()
   try {
     await page.getByRole('button', { name: 'Paste a reply' }).click()
-    await page.getByPlaceholder('Paste Claude’s reply here').fill(
+    await page.getByPlaceholder('Paste the reply here').fill(
       [
         '## GM summary',
         '- They pulled the mayor’s daughter out of the ford.',
