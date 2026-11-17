@@ -7,6 +7,7 @@ import '../more.css'
 import { saveFileAsAsset, useWorld } from '../hooks'
 import { stop, stopAll, usePlaying } from '../sound/player'
 import { Soundboard, useSounds } from '../sound/Soundboard'
+import { SyrinscapeSets } from '../sound/SyrinscapeSets'
 import { parseSyrinscape, syrinscape, useSyrinscapeToken } from '../sound/syrinscape'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
@@ -43,6 +44,13 @@ export default function Sounds() {
       ) : (
         <Empty>No sounds yet. Upload your own music and ambience below, or add Syrinscape moods. Each becomes a button here, and at the Lectern.</Empty>
       )}
+
+      <section className="card syrinscape-card">
+        <h2>
+          <Ico as={SpeakerHigh} /> Play from your Syrinscape soundsets <Help topic="syrinscapeSets" />
+        </h2>
+        <SyrinscapeSets worldId={worldId} />
+      </section>
 
       <section>
         <h2>Add sounds</h2>
@@ -185,8 +193,11 @@ function SyrinscapeAdd({ worldId, group }: { worldId: string; group: string }) {
           }}
         >
           <p className="small muted">
-            Sign in at syrinscape.com, open the online player’s master interface and copy your auth token from its settings. It stays on this device only: never synced and never in
-            backups.
+            Sign in to Syrinscape, then copy your auth token from{' '}
+            <a href="https://syrinscape.com/account/auth-token/" target="_blank" rel="noreferrer">
+              syrinscape.com/account/auth-token
+            </a>
+            . It stays on this device only: never synced and never in backups.
           </p>
           <div className="row">
             <input type="password" value={tokenDraft} onChange={(e) => setTokenDraft(e.target.value)} placeholder="Syrinscape auth token" autoComplete="off" />
@@ -214,7 +225,7 @@ function SyrinscapeAdd({ worldId, group }: { worldId: string; group: string }) {
           setName('')
         }}
       >
-        <p className="small muted">In Syrinscape, copy a mood’s or element’s remote control link and paste it here. Keep Syrinscape’s player open while you play: it makes the sound.</p>
+        <p className="small muted">Or, for an element or a mood from any soundset: in Syrinscape, copy its remote control link and paste it here. Keep Syrinscape’s player open while you play: it makes the sound.</p>
         <div className="row wrap">
           <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://syrinscape.com/online/frontend-api/moods/1234/play/" />
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Button name, e.g. Tavern" />

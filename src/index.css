@@ -2187,3 +2187,7 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
   .pack-check td { border: none; }
 }
 @media (pointer: coarse) { .pack-chips button, .pack-foot button.link { min-height: 44px; } }
+.syrinscape-sets select { max-width: 100%; }
+.syrinscape-sets .sound-group { margin-top: .6em; }
+.syrinscape-sets > .row { align-items: flex-end; }
+.syrinscape-card { margin-top: 1em; } .syrinscape-card h2 { margin-top: 0; }

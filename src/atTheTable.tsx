@@ -21,7 +21,7 @@ import {
   type TableState,
 } from './cloud/table'
 import { useCharacterOwners } from './players/owners'
-import { usePlaying } from './sound/player'
+import { playingUnsaved, usePlaying } from './sound/player'
 import { Ico } from './icons'
 import { Broadcast, Coffee, DiceFive, HandWaving, Megaphone, Sparkle, Sword, Timer } from '@phosphor-icons/react'
 import { worldPath } from './paths'
@@ -55,7 +55,7 @@ export function TableHost({ world }: { world: World }) {
   const sounds = useLiveQuery(() => db.sounds.where({ worldId: world.id }).toArray(), [world.id])
   const playing = usePlaying()
   const ready = session !== undefined && pages !== undefined && sounds !== undefined && campaign !== undefined
-  const state = ready && session && session.worldId === world.id ? tableStateFor(session, pages, sounds, playing, campaign ?? undefined) : null
+  const state = ready && session && session.worldId === world.id ? tableStateFor(session, pages, [...sounds, ...playingUnsaved(playing, sounds)], playing, campaign ?? undefined) : null
   const json = ready ? JSON.stringify(state) : ''
   const latest = useRef<TableState | null>(null)
   useEffect(() => {

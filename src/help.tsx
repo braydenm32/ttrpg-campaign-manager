@@ -217,9 +217,11 @@ export const HELP = {
   encounters:
     'Build a fight ahead of time: who’s in it, how many, HP and AC. Pick NPC pages to read their HP and AC from their details. "Run" adds everyone to the Lectern’s initiative tracker.',
   soundboard:
-    'Buttons for ambience, music and sound effects. Upload your own audio files, or add Syrinscape moods and elements. Tap to play, tap again to stop. Sounds keep playing as you move around the app.',
+    'Buttons for ambience, music and sound effects. Upload your own audio files, pick a soundset from your Syrinscape library and play its moods, or add Syrinscape moods and elements as buttons. Tap to play, tap again to stop. Sounds keep playing as you move around the app.',
   syrinscape:
     'Control Syrinscape from here: keep its online player open, add your Syrinscape token once on this device, then paste the remote control link of any mood or element.',
+  syrinscapeSets:
+    'Pick any soundset in your Syrinscape library and its moods appear as buttons: tap one to start it in Syrinscape, tap again to stop. Keep Syrinscape’s player open: it makes the sound. The soundset you picked stays chosen in this world, here and at the Lectern. “Keep these moods as buttons” saves them to your soundboard.',
   showPlayers:
     'Put a picture, a page or some text on every player’s screen right now, like handing round a letter or showing a monster. It pops up for players who joined, and the button by this heading opens the Players’ screen: a clean screen for a TV or second monitor that shows only what you’re showing. What’s up now sits at the top with a Stop button. Pictures from this scene come first. Pick a page that isn’t revealed yet and it’s revealed as you show it. A map’s picture always goes out as the players’ copy, never yours with the secrets or the fog lifted. “Several” keeps boards you lay out ahead of time, to put up all at once, and everything you show is kept in Handouts.',
   handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove a picture or text to take it back. A page you remove stays revealed unless you choose to hide it again.',
