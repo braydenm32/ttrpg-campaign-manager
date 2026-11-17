@@ -7,24 +7,25 @@ import { SecretNamesWarning } from '../SecretNamesWarning'
 import { buildRecapPrompt, estimateTokens, parseRecap, RECAP_MODEL, recapCost, recapWithClaude } from './recap'
 import { useAiSettings } from './settings'
 import { Ico } from '../icons'
-import { ClipboardText, Eye, Lock, PenNib, Sparkle } from '@phosphor-icons/react'
+import { Eye, Lock, PenNib, Sparkle } from '@phosphor-icons/react'
 import { worldPath } from '../paths'
 import { WorldUpdatesReview } from './WorldUpdatesReview'
 import { HighlightsDraft } from '../highlights'
 import { dollars, modelName } from './claude'
 import { ModelTag } from './ClaudeJob'
+import { copyNow, OpenedNote, OpenInChat, type Opened } from './OpenInChat'
 import { moveJob, startJob, stopJob, takeFinished, useJob } from './jobs'
 
 /**
  * Turns a session's transcript (and GM notes) into a GM summary and a player recap.
- * Two ways: copy everything to paste into claude.ai (free with a Claude subscription),
+ * Two ways: open Claude or ChatGPT with everything filled in (free with an account there),
  * or one click with the GM's own Anthropic API key. Either way, the GM reviews before anything is saved.
  */
 export function RecapPanel({ world, session, entities }: { world: World; session: Session; entities: Entity[] }) {
   const settings = useAiSettings()
   const [mode, setMode] = useState<'idle' | 'paste'>('idle')
   const [pasted, setPasted] = useState('')
-  const [copied, setCopied] = useState(false)
+  const [opened, setOpened] = useState<Opened>()
   const [error, setError] = useState('')
   const [cost, setCost] = useState('')
   // The recap keeps writing if the GM leaves the page, and saves its draft when it's done (see jobs.ts).
@@ -46,15 +47,10 @@ export function RecapPanel({ world, session, entities }: { world: World; session
   const saveDraft = (text: string, source: 'claude-api' | 'pasted') =>
     db.sessions.update(session.id, { recapDraft: { ...parseRecap(text), source, createdAt: Date.now() } })
 
-  const copy = async () => {
+  const onOpened = (o: Opened) => {
     setError('')
-    try {
-      await navigator.clipboard.writeText(prompt())
-      setCopied(true)
-      setMode('paste')
-    } catch {
-      setError('Couldn’t copy. Your browser may have blocked the clipboard.')
-    }
+    setOpened(o)
+    setMode('paste')
   }
 
   const write = () => {
@@ -101,9 +97,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
         </div>
       ) : (
         <div className="row wrap">
-          <button onClick={copy} disabled={!hasMaterial} title="Copies everything Claude needs. Paste it into claude.ai, then paste the answer back here.">
-            <Ico as={ClipboardText} /> Copy for Claude
-          </button>
+          <OpenInChat text={prompt} onOpened={onOpened} disabled={!hasMaterial} />
           <button
             className="primary"
             onClick={write}
@@ -122,23 +116,15 @@ export function RecapPanel({ world, session, entities }: { world: World; session
       )}
       {!settings.anthropicKey.trim() && !writing && (
         <p className="muted small">
-          “Copy for Claude” is free with your Claude subscription. For one click, add an Anthropic API key in{' '}
+          “Open in Claude” and “Open in ChatGPT” are free with your own account there. For one click, add an Anthropic API key in{' '}
           <Link to={`${worldPath(world.id)}/settings?tab=device`}>World settings → This device</Link>.
         </p>
       )}
 
       {mode === 'paste' && !writing && (
         <div className="recap-paste">
-          {copied && (
-            <p className="small">
-              ✓ Copied. Open{' '}
-              <a href="https://claude.ai/new" target="_blank" rel="noreferrer">
-                claude.ai
-              </a>
-              , paste it in and send. When Claude answers, copy its reply and paste it below.
-            </p>
-          )}
-          <textarea rows={6} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder="Paste Claude’s reply here" />
+          {opened && <OpenedNote opened={opened} onCopyAgain={() => void copyNow(prompt()).then((copied) => setOpened({ ...opened, copied }))} />}
+          <textarea rows={6} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder="Paste the reply here" />
           <div className="row">
             <button
               className="primary"
@@ -147,6 +133,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
                 await saveDraft(pasted, 'pasted')
                 setPasted('')
                 setMode('idle')
+                setOpened(undefined)
               }}
             >
               Check the draft

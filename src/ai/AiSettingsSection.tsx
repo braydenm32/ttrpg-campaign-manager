@@ -37,7 +37,7 @@ export function AiSettingsSection() {
               <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">
                 console.anthropic.com
               </a>{' '}
-              and add a little prepaid credit. A three-hour session’s recap costs roughly 20 to 50 US cents. Without a key you can still use “Copy for Claude”.
+              and add a little prepaid credit. A three-hour session’s recap costs roughly 20 to 50 US cents. Without a key you can still use “Open in Claude” or “Open in ChatGPT”, free with your own account there.
             </>
           }
         />

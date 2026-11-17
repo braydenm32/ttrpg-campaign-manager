@@ -13,7 +13,7 @@ export const PLAYER_HEADING = '## Player recap'
 
 /**
  * The instructions and material for a recap. The same text is used for one-click recaps
- * and for "Copy for Claude", so both give the same kind of result.
+ * and for "Open in Claude", so both give the same kind of result.
  */
 export function buildRecapPrompt(world: World, session: Session, entities: Entity[]) {
   const transcripts = session.recordings
@@ -124,7 +124,7 @@ export async function recapWithClaude(prompt: string, apiKey: string, onText: (s
       onText(soFar)
     })
     const message = await stream.finalMessage()
-    if (message.stop_reason === 'refusal') throw new Error('Claude declined to write this recap. You can still use "Copy for Claude" instead.')
+    if (message.stop_reason === 'refusal') throw new Error('Claude declined to write this recap. You can still use "Open in Claude" or "Open in ChatGPT" instead.')
     const text = message.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('')
     const cutOff = message.stop_reason === 'max_tokens' || message.stop_reason === 'model_context_window_exceeded'
     return { text, inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens, warning: cutOff ? CUT_OFF : undefined }

@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ClipboardText, PenNib, Sparkle } from '@phosphor-icons/react'
+import { PenNib, Sparkle } from '@phosphor-icons/react'
 import { Help } from '../help'
 import { Ico } from '../icons'
 import { worldPath } from '../paths'
 import { askClaude, dollars, estimateTokens, claudeCost, MODEL, modelName, usageCost, type ClaudeModel, type LocalTool } from './claude'
 import { moveJob, startJob, stopJob, takeFinished, useJob } from './jobs'
 import { useAiSettings } from './settings'
+import { copyNow, OpenedNote, OpenInChat, type Opened } from './OpenInChat'
 
 /** What to send Claude for one job. */
 export interface JobRequest {
@@ -23,15 +24,15 @@ export interface JobRequest {
   /** Roughly how long the answer will be, for the price shown on the button. */
   expectOut?: number
   /**
-   * Pictures or PDFs sent with the ask (photos of hand-written notes). With “Copy for Claude” the GM
-   * adds them on claude.ai themselves, so the copied text says so.
+   * Pictures or PDFs sent with the ask (photos of hand-written notes). With “Open in Claude” the GM
+   * adds them in the chat themselves, so the note under the buttons says so.
    */
   attachments?: { name: string; mediaType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' | 'application/pdf'; data: string; tokens: number }[]
 }
 
 /**
- * The two ways to ask Claude for something: free with "Copy for Claude" (paste into claude.ai and
- * paste the answer back), or one click with the GM's own API key. Either way the answer comes back
+ * The two ways to ask Claude for something: free with "Open in Claude" or "Open in ChatGPT" (a new
+ * chat opens with everything filled in, and the GM pastes the answer back, see OpenInChat.tsx), or one click with the GM's own API key. Either way the answer comes back
  * to `onResult` for the GM to look over; nothing changes in the world on its own.
  *
  * The one-click job keeps going if the GM leaves the page (see jobs.ts): coming back shows it still
@@ -67,8 +68,10 @@ export function ClaudeJob({
   const key = settings.anthropicKey.trim()
   const job = useJob(jobId)
   const writing = job?.status === 'writing' ? job : undefined
-  const [paste, setPaste] = useState<'closed' | 'open' | 'copied'>('closed')
-  /** How many photos the GM has to add on claude.ai alongside what was copied. */
+  const [paste, setPaste] = useState<'closed' | 'open'>('closed')
+  /** What the last “Open in…” or “Copy” press did, for the note above the paste box. */
+  const [opened, setOpened] = useState<Opened>()
+  /** How many photos the GM has to add in the chat alongside what was filled in. */
   const [toAttach, setToAttach] = useState(0)
   const [pasted, setPasted] = useState('')
   const [error, setError] = useState('')
@@ -131,16 +134,15 @@ export function ClaudeJob({
     })
   }
 
-  const copy = async () => {
-    setError('')
+  const whole = () => {
     const r = build()
-    try {
-      await navigator.clipboard.writeText(`${r.system}\n\n${r.prompt}`)
-      setToAttach(r.attachments?.length ?? 0)
-      setPaste('copied')
-    } catch {
-      setError('Couldn’t copy. Your browser may have blocked the clipboard.')
-    }
+    setToAttach(r.attachments?.length ?? 0)
+    return `${r.system}\n\n${r.prompt}`
+  }
+  const onOpened = (o: Opened) => {
+    setError('')
+    setOpened(o)
+    setPaste('open')
   }
 
   return (
@@ -160,9 +162,7 @@ export function ClaudeJob({
       ) : (
         <div className="row wrap">
           {extra}
-          <button onClick={copy} disabled={disabled} title="Copies everything Claude needs. Paste it into claude.ai, then paste the answer back here.">
-            <Ico as={ClipboardText} /> Copy for Claude
-          </button>
+          <OpenInChat text={whole} onOpened={onOpened} disabled={disabled} />
           <button className="primary" onClick={run} disabled={disabled || !key} title={key ? 'Uses your Anthropic API key' : 'Add an Anthropic API key in World settings → This device first'}>
             <Ico as={Sparkle} /> {label}
             {price ? ` (about ${dollars(price.usd)})` : ''}
@@ -177,27 +177,13 @@ export function ClaudeJob({
       )}
       {!key && !writing && (
         <p className="muted small">
-          “Copy for Claude” is free with your Claude subscription. For one click, add an Anthropic API key in <Link to={`${worldPath(worldId)}/settings?tab=device`}>World settings → This device</Link>.
+          “Open in Claude” and “Open in ChatGPT” are free with your own account there. For one click, add an Anthropic API key in <Link to={`${worldPath(worldId)}/settings?tab=device`}>World settings → This device</Link>.
         </p>
       )}
       {paste !== 'closed' && !writing && (
         <div className="recap-paste">
-          {paste === 'copied' && (
-            <p className="small">
-              ✓ Copied. Open{' '}
-              <a href="https://claude.ai/new" target="_blank" rel="noreferrer">
-                claude.ai
-              </a>
-              , paste it in
-              {toAttach > 0 && (
-                <>
-                  , <strong>add your {toAttach === 1 ? 'photo' : `${toAttach} photos`}</strong> (the + or paperclip button)
-                </>
-              )}{' '}
-              and send. When Claude answers, copy its reply and paste it below.
-            </p>
-          )}
-          <textarea rows={5} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder="Paste Claude’s reply here" />
+          {opened && <OpenedNote opened={opened} photos={toAttach} onCopyAgain={() => void copyNow(whole()).then((copied) => setOpened({ ...opened, copied }))} />}
+          <textarea rows={5} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder="Paste the reply here" />
           <div className="row">
             <button
               className="primary"
@@ -206,11 +192,18 @@ export function ClaudeJob({
                 onResult(pasted)
                 setPasted('')
                 setPaste('closed')
+                setOpened(undefined)
               }}
             >
               Use this reply
             </button>
-            <button className="ghost" onClick={() => setPaste('closed')}>
+            <button
+              className="ghost"
+              onClick={() => {
+                setPaste('closed')
+                setOpened(undefined)
+              }}
+            >
               Cancel
             </button>
           </div>

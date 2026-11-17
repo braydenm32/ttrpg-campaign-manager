@@ -17,6 +17,7 @@ import { ClaudeJob, ModelTag } from './ClaudeJob'
 import { moveJob, startJob, stopJob, takeFinished, useJob } from './jobs'
 import { getKept, setKept, useKept } from './kept'
 import { useAiSettings } from './settings'
+import { copyNow, OpenedNote, OpenInChat, type Opened } from './OpenInChat'
 import { describeStep, findPages, MARKUP_NOTE, pageByName, pageText, sessionIndex, sessionText, worldHeader, worldIndex, worldTools } from './worldText'
 
 /**
@@ -104,7 +105,8 @@ export function AskWorld({ world, entities, sessions }: { world: World; entities
   const job = useJob(talkKey)
   const writing = job?.status === 'writing' ? job : undefined
   const [error, setError] = useState('')
-  const [copied, setCopied] = useState<string>()
+  /** The question sent to Claude or ChatGPT in a new chat, and what the press did. */
+  const [copied, setCopied] = useState<{ q: string; opened: Opened }>()
   const [pasted, setPasted] = useState('')
   const { pathname, search } = useLocation()
   useEffect(() => {
@@ -144,16 +146,13 @@ export function AskWorld({ world, entities, sessions }: { world: World; entities
     )
   }
 
-  const copy = async () => {
+  const whole = () => {
     const q = question.trim()
-    if (!q) return
+    return `${askSystem(world, entities, sessions, { question: q })}\n\nThe GM asks: ${q}`
+  }
+  const onOpened = (opened: Opened) => {
     setError('')
-    try {
-      await navigator.clipboard.writeText(`${askSystem(world, entities, sessions, { question: q })}\n\nThe GM asks: ${q}`)
-      setCopied(q)
-    } catch {
-      setError('Couldn’t copy. Your browser may have blocked the clipboard.')
-    }
+    setCopied({ q: question.trim(), opened })
   }
 
   const firstCost = claudeCost(ASK_MODEL, estimateTokens(askSystem(world, entities, sessions)) * 1.4, 800)
@@ -205,7 +204,8 @@ export function AskWorld({ world, entities, sessions }: { world: World; entities
         onSubmit={(e) => {
           e.preventDefault()
           if (key) ask(question)
-          else copy()
+          // Without a key, Enter opens Claude with the question filled in.
+          else if (question.trim()) e.currentTarget.querySelector<HTMLAnchorElement>('a[data-chat="claude"]')?.click()
         }}
       >
         <textarea
@@ -227,9 +227,7 @@ export function AskWorld({ world, entities, sessions }: { world: World; entities
             <Ico as={PaperPlaneRight} /> Ask{!turns.length && question.trim() ? ` (about ${dollars(firstCost)})` : ''}
           </button>
           {key && !turns.length && question.trim() && <ModelTag model={ASK_MODEL} />}
-          <button type="button" onClick={copy} disabled={!question.trim() || !!writing} title="Copies your question with the pages that matter. Paste it into claude.ai.">
-            <Ico as={ClipboardText} /> Copy for Claude
-          </button>
+          <OpenInChat text={whole} onOpened={onOpened} disabled={!question.trim() || !!writing} />
           {turns.length > 0 && !writing && (
             <button
               type="button"
@@ -245,23 +243,21 @@ export function AskWorld({ world, entities, sessions }: { world: World; entities
           )}
         </div>
       </form>
-      {!key && <p className="muted small">“Copy for Claude” is free with your Claude subscription: it copies your question with the pages most likely to matter. For answers right here, add an Anthropic API key in <Link to={`${worldPath(world.id)}/settings?tab=device`}>World settings → This device</Link>.</p>}
+      {!key && <p className="muted small">“Open in Claude” and “Open in ChatGPT” are free with your own account there: a new chat opens with your question and the pages most likely to matter. For answers right here, add an Anthropic API key in <Link to={`${worldPath(world.id)}/settings?tab=device`}>World settings → This device</Link>.</p>}
       {copied && (
         <div className="recap-paste">
-          <p className="small">
-            ✓ Copied. Open{' '}
-            <a href="https://claude.ai/new" target="_blank" rel="noreferrer">
-              claude.ai
-            </a>
-            , paste it in and send. Paste the answer here to keep it with its links.
-          </p>
-          <textarea rows={4} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder="Paste Claude’s answer here" />
+          <OpenedNote
+            opened={copied.opened}
+            back="paste the answer here to keep it with its links"
+            onCopyAgain={() => void copyNow(whole()).then((ok) => setCopied({ ...copied, opened: { ...copied.opened, copied: ok } }))}
+          />
+          <textarea rows={4} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder="Paste the answer here" />
           <div className="row">
             <button
               className="primary"
               disabled={!pasted.trim()}
               onClick={() => {
-                setTalk((t) => ({ ...t, turns: [...t.turns, { q: copied, a: pasted, note: 'From claude.ai.' }] }))
+                setTalk((t) => ({ ...t, turns: [...t.turns, { q: copied.q, a: pasted, note: `From ${copied.opened.app === 'chatgpt' ? 'ChatGPT' : copied.opened.app === 'claude' ? 'Claude' : 'a chat you pasted into'}.` }] }))
                 setPasted('')
                 setCopied(undefined)
                 setQuestion('')

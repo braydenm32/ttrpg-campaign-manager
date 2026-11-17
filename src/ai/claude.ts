@@ -150,7 +150,7 @@ export async function askClaude(opts: AskOptions) {
 const MAX_ROUNDS = 12
 
 /** When Claude stops because the answer hit its length limit. */
-export const CUT_OFF = 'Claude ran out of room before it finished, so the end of this answer is missing. Try a smaller job, or use “Copy for Claude” instead.'
+export const CUT_OFF = 'Claude ran out of room before it finished, so the end of this answer is missing. Try a smaller job, or use “Open in Claude” instead.'
 
 /** Turns the SDK's errors into something a GM can act on. */
 export function friendly(err: unknown, Anthropic: typeof import('@anthropic-ai/sdk').default) {
@@ -159,7 +159,7 @@ export function friendly(err: unknown, Anthropic: typeof import('@anthropic-ai/s
   if (err instanceof Anthropic.APIError && /credit/i.test(err.message)) return new Error('Your Anthropic account is out of credit. Add some at console.anthropic.com → Billing.')
   if (err instanceof Anthropic.APIConnectionError) return new Error('Could not reach Anthropic. Check your internet connection.')
   if (err instanceof Anthropic.APIError && (err.status === 413 || (err.status === 400 && /too long|too many tokens|context (window|length)/i.test(err.message))))
-    return new Error('That’s more than Claude can read in one go. Try a smaller job (one page, or one recording), or use “Copy for Claude” instead.')
+    return new Error('That’s more than Claude can read in one go. Try a smaller job (one page, or one recording), or use “Open in Claude” instead.')
   if (err instanceof Anthropic.APIError && (err.status === 529 || (err.status ?? 0) >= 500))
     return new Error('Anthropic is busy or having trouble right now. Wait a few minutes and try again.')
   return err
