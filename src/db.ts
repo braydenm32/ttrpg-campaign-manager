@@ -207,6 +207,12 @@ export interface World {
    * filters for each player, so this needs nothing of its own in public.player_view.
    */
   spread?: Spread | null
+  /**
+   * The in-game clock as players see it, only while the GM shows it (src/gameClock.tsx); null or unset
+   * otherwise. A copy of gmScreen.gameClock without the GM's alarm, so nothing new is needed in
+   * public.player_view.
+   */
+  gameTime?: GameTime | null
   /** Everything the GM has shown, newest first, so players can read a handout again later. */
   handouts?: Showing[]
   /** The table's safety tools: lines (never in the game) and veils (happens off screen). Everyone sees these. */
@@ -249,6 +255,34 @@ export interface GmScreen {
    * to the newest picture (rev) they said no to, so they aren't asked again until it changes again.
    */
   packKept?: Record<string, number>
+  /** The in-game clock (src/gameClock.tsx), with the GM's own alarm. Players get World.gameTime while it's shown. */
+  gameClock?: GameClock
+}
+
+/**
+ * The time of day in the world, kept as a starting point so every screen works it out for itself:
+ * `secs` game seconds after midnight of the world's date (calendar.today) at real time `at`, moving
+ * on `rate` game seconds each real second while running. Past midnight it counts on (86400 and up)
+ * until the GM's app moves the date on a day and takes 86400 off.
+ */
+export interface GameTime {
+  secs: number
+  at: number
+  rate: number
+  running: boolean
+  /** "Reach 21:00 in 1½ hours": the clock stops here (same count as secs). */
+  until?: number
+  /** A clock face (12 hours, with a sun or moon) or 24-hour digital. */
+  look?: 'face' | 'digital'
+  /** Where it sits on the players' screen over something shown, or 'full' to fill the screen. */
+  place?: 'tl' | 'tr' | 'bl' | 'br' | 'full'
+}
+
+export interface GameClock extends GameTime {
+  /** On players' screens now (World.gameTime is set). */
+  shown?: boolean
+  /** Pings the GM (only) when the clock gets here (same count as secs). */
+  alarm?: { secs: number; label?: string }
 }
 
 /** Where something sits on the table: left, top, width and height, in percent of a 16:9 screen. */

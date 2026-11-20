@@ -19,6 +19,7 @@ import { offerGroupPost } from './groupPost'
 import { saveShowBoard, showBoardsOf } from './showBoards'
 import { visibleHandouts } from './counts'
 import './spread.css'
+import { ScreenClock } from './gameClock'
 
 /** The arranging board for showing several at once: only loaded when the GM opens it. */
 const ArrangeBoard = lazy(() => import('./showBoard'))
@@ -1032,6 +1033,8 @@ export function PlayersScreen({ world }: { world: World }) {
   const hiddenPage = showing?.kind === 'page' && !entities.some((e) => e.id === showing.entityId && e.visibility === 'players')
   // The table is told while this device records the session (the GM's own windows don't say it).
   const recording = useRecordingOnThisDevice(world.id)
+  // The in-game clock fills the screen when asked to, or when it's the only thing up.
+  const clockOnly = !!world.gameTime && (world.gameTime.place === 'full' || (!items.length && !showing))
   // Keep the screen awake while it's up, where the browser allows it.
   useEffect(() => {
     let lock: { release: () => Promise<void> } | undefined
@@ -1042,7 +1045,9 @@ export function PlayersScreen({ world }: { world: World }) {
   return (
     <div className={`players-screen world-bare ${items.length ? 'with-spread' : ''}`}>
       {recording && <BeingRecorded />}
-      {items.length ? (
+      {/* The in-game clock: in a corner over what's shown, or the whole screen when nothing else is up. */}
+      <ScreenClock world={world} alone={clockOnly} />
+      {clockOnly ? null : items.length ? (
         <>
           {world.spread?.title && <h1>{world.spread.title}</h1>}
           <SpreadView items={items} worldId={world.id} big />

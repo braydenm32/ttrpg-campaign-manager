@@ -1,0 +1,64 @@
+/* The in-game clock (src/gameClock.tsx). */
+
+.game-dial { display: block; max-width: 100%; height: auto; aspect-ratio: 1; }
+.game-dial .dial-rim { fill: var(--panel); stroke: var(--accent); stroke-width: 4; }
+.game-dial .tick { stroke: var(--muted); stroke-width: 1.5; }
+.game-dial .tick.big { stroke: var(--text); stroke-width: 3; }
+.game-dial .dial-num { fill: var(--heading); font-family: var(--font-display); font-size: 22px; }
+.game-dial .hand { stroke: var(--text); stroke-linecap: round; }
+.game-dial .hand.hour { stroke-width: 7; }
+.game-dial .hand.minute { stroke-width: 4; }
+.game-dial .dial-pin { fill: var(--accent); }
+.game-dial .dial-sun circle { fill: #e8b54a; }
+.game-dial .dial-sun line { stroke: #e8b54a; stroke-width: 2.5; stroke-linecap: round; }
+.game-dial .dial-moon path { fill: #cfd6e6; }
+
+.game-digital { font-family: var(--font-display); font-variant-numeric: tabular-nums; letter-spacing: .04em; color: var(--heading); font-size: 2.4rem; line-height: 1; }
+.game-time { display: inline-flex; flex-direction: column; align-items: center; gap: .3em; }
+.game-date { font-size: .9em; color: var(--muted); text-align: center; }
+
+/* The GM's card on the Clocks page. */
+.game-clock { margin-bottom: 1em; }
+.game-clock-body { display: flex; flex-wrap: wrap; gap: 1.2em; align-items: flex-start; }
+.game-clock-now { display: flex; flex-direction: column; align-items: center; gap: .35em; min-width: 150px; }
+.game-clock-now .game-digital { font-size: 3.2rem; padding: .3em 0; }
+.game-clock-controls { flex: 1; min-width: min(100%, 280px); display: flex; flex-direction: column; gap: .6em; }
+.game-clock-controls form, .game-clock-controls label { align-items: center; }
+.game-num { width: 4.5em; }
+.game-heading, .game-alarm { margin: 0; }
+.game-clock button.on, .game-clock-strip button.on { border-color: var(--accent); color: var(--accent); }
+
+/* At the Lectern. */
+.game-clock-strip { display: flex; flex-wrap: wrap; gap: .5em; align-items: center; }
+.game-clock-mini { display: inline-flex; flex-direction: column; margin-right: .4em; }
+.game-clock-mini .game-digital { font-size: 1.8rem; }
+
+/* For players: the Common Room and the Clocks page. */
+.game-time-bar { display: flex; align-items: center; gap: .8em; padding: .5em .9em; margin-bottom: 1em; }
+.game-time-bar .game-digital { font-size: 1.8rem; }
+.game-time-words { display: flex; flex-direction: column; gap: .1em; min-width: 0; }
+.game-clock .section-header { flex-wrap: wrap; gap: .5em; }
+.game-clock select { max-width: 100%; }
+
+/* The players' screen for a TV. */
+.screen-clock-corner { position: fixed; z-index: 20; padding: .5em; border-radius: 50%; }
+.screen-clock-corner.look-digital { border-radius: var(--radius); padding: .4em .8em; background: rgb(0 0 0 / .55); }
+.screen-clock-corner.look-digital .game-digital { font-size: clamp(2rem, 4vw, 4.5rem); color: #f3e7cc; }
+.screen-clock-corner.look-digital .game-date { color: #d8ccb3; }
+.screen-clock-corner .game-dial { filter: drop-shadow(0 4px 14px rgb(0 0 0 / .5)); }
+.screen-clock-corner .game-date { font-size: .75em; background: rgb(0 0 0 / .55); color: #f3e7cc; border-radius: 999px; padding: .1em .7em; }
+.screen-clock-corner.look-digital .game-date { background: none; padding: 0; }
+.screen-clock-corner.at-tl { top: 1rem; left: 1rem; }
+.screen-clock-corner.at-tr { top: 1rem; right: 1rem; }
+.screen-clock-corner.at-bl { bottom: 1rem; left: 1rem; }
+.screen-clock-corner.at-br { bottom: 1rem; right: 1rem; }
+.screen-clock-full { margin: auto; gap: .6em; }
+.screen-clock-full .game-digital { font-size: clamp(5rem, 22vw, 18rem); }
+.screen-clock-full .game-date { font-size: clamp(1.4rem, 1rem + 1.6vw, 3rem); }
+
+/* Fingertip-sized controls on a phone. */
+@media (max-width: 800px) {
+  :is(.game-clock, .game-clock-strip, .game-heading) :is(button, select, input) { min-height: 44px; min-width: 44px; }
+  :is(.game-clock, .game-clock-strip) a { display: inline-flex; align-items: center; min-height: 44px; }
+}
+.game-speed select { flex: none; }

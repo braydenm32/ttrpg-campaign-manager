@@ -39,6 +39,7 @@ import { StatusBadge } from '../status'
 import { ShowPanel } from '../showing'
 import { WorldToday } from '../calendar'
 import { ClocksPanel } from '../clocks'
+import { beep, GameClockPanel } from '../gameClock'
 import { Ico, TypeIcon } from '../icons'
 import { Armchair, CastleTurret, CloudFog, Coins, Lock, DiceFive, FlagCheckered, Keyboard, MapTrifold, Microphone, NotePencil, Eye, EyeSlash, Play, Prohibit, Shield, SkipForward, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
@@ -217,6 +218,7 @@ export default function Lectern() {
             <Initiative lectern={lectern} edit={edit} entities={entities} campaignId={session.campaignId} />
             {world && <Party world={world} entities={entities} campaignId={session.campaignId} />}
             <CallForRoll lectern={lectern} edit={edit} party={party} cloudId={world?.cloud?.enabled ? worldId : undefined} live={live} />
+            {world && <GameClockPanel world={world} />}
             <ClocksPanel worldId={worldId} entities={entities} />
             <Timers lectern={lectern} edit={edit} shared={!!world?.cloud?.enabled} />
             {world && <JourneyPanel world={world} lectern={lectern} edit={edit} entities={entities} partySize={party.length} />}
@@ -1208,24 +1210,6 @@ function notPlaying(out: Entity[]) {
 }
 
 const TIMER_MINUTES = [1, 3, 5, 10, 30]
-
-/** A short beep when a timer runs out (quiet if the browser won't play sound yet). */
-function beep() {
-  try {
-    const ctx = new AudioContext()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.frequency.value = 880
-    gain.gain.setValueAtTime(0.2, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8)
-    osc.connect(gain).connect(ctx.destination)
-    osc.start()
-    osc.stop(ctx.currentTime + 0.8)
-    osc.onended = () => void ctx.close()
-  } catch {
-    // No sound available: the timer still shows "Time's up".
-  }
-}
 
 /** Countdowns for the table: a ritual finishing, a fuse burning, a time limit on a puzzle. */
 function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {

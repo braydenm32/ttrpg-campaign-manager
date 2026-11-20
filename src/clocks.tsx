@@ -12,6 +12,7 @@ import { pagePath, worldPath } from './paths'
 import { allClocks, clockSize, isTicking, tickingClocks } from './counts'
 import { PagePicker } from './PagePicker'
 import { toast } from './undo'
+import { GameClockCard, GameTimeBar } from './gameClock'
 
 /**
  * Progress clocks (as in Blades in the Dark): a circle cut into slices that fill as a plan, a threat
@@ -264,6 +265,7 @@ export default function ClocksPage() {
           <Ico as={Timer} /> Clocks <Help topic="clocks" />
         </h1>
       </header>
+      {world && (isGM ? <GameClockCard world={world} /> : <GameTimeBar world={world} />)}
       {isGM && <NewClock entities={entities} />}
       {all.length === 0 ? (
         <Empty>

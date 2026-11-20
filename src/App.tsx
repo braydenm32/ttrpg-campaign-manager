@@ -56,6 +56,7 @@ const RelationWeb = lazy(() => import('./pages/RelationWeb'))
 import ClocksPage from './clocks'
 import SafetyPage, { XCardAlert } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
+import { GameClockWatcher } from './gameClock'
 import { LiveBadge, PlayerTableLink, TableHost, TableSignals } from './atTheTable'
 import { DowntimeToast } from './players/Downtime'
 import { NewCharacterRequestsBanner } from './players/NewCharacters'
@@ -413,6 +414,12 @@ function WorldShell() {
           {isGM && !shared && (
             <Part>
               <ShowingBanner world={world} />
+            </Part>
+          )}
+          {/* The in-game clock's midnight, "reach this time" and alarm, wherever the GM is (and in player preview too). */}
+          {!shared && (
+            <Part>
+              <GameClockWatcher world={world} />
             </Part>
           )}
           {/* The Desk lists claims and new characters itself (Needs you, Inbox). */}
