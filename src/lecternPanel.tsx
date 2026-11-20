@@ -67,7 +67,7 @@ export const FoldingProvider = FoldingContext.Provider
 
 /** Every panel's id, in the order they're registered, so "Fold all" can fold them all. */
 export const LECTERN_PANELS = [
-  'notes', 'scene', 'present', 'party', 'threads', 'prep', 'initiative', 'timers', 'clocks', 'journey',
+  'notes', 'scene', 'present', 'party', 'threads', 'prep', 'initiative', 'timers', 'gametime', 'clocks', 'journey',
   'commonroom', 'callroll', 'show', 'loot', 'sound', 'dice', 'recording', 'tables', 'gmscreen', 'improvise',
 ]
 

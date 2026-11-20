@@ -20,6 +20,7 @@ import { partyOf } from '../sessions'
 import { StatusBadge } from '../status'
 import { formatDate } from '../calendar'
 import { hasSafety, openLeads, partyLoot, quantityLabel, useVisibleHandouts } from '../counts'
+import { GameTimeBar } from '../gameClock'
 import { BeingRecorded, ShowingView, spreadTitle, SpreadView, useSpreadItems } from '../showing'
 import { XCardButton } from './Safety'
 import { SignalButtons, TableDice, TimerList, TurnOrder, useMe } from '../atTheTable'
@@ -248,6 +249,7 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
         </span>
       </TabHead>
       <SignedOutCard world={world} />
+      <GameTimeBar world={world} />
       {joined && <InstallCard place="joined" />}
       {stage === 'during' && (
         <>

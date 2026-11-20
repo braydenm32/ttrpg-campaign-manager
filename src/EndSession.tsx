@@ -16,6 +16,7 @@ import { toast } from './undo'
 import { jumpTo } from './jump'
 import { WhoWasThere } from './attendance'
 import { offerGroupPost } from './groupPost'
+import { pauseGameClock } from './gameClock'
 
 /**
  * Finishing a session: "Mark as played" ends the live link to players, marks it played and gets the
@@ -35,7 +36,9 @@ export function useFinish(session: Session) {
       // Players' Common Room stops showing this session as being played.
       if (live === session.id) setLiveSession(session.worldId, undefined)
       const { next, undo } = await markPlayed(session)
-      toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}.`, undo)
+      // The in-game clock stops with the session, so it hasn't run on for days by next time.
+      const paused = await pauseGameClock(session.worldId)
+      toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}.${paused ? ' The in-game clock is paused.' : ''}`, undo)
     } finally {
       setBusy(false)
     }
