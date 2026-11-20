@@ -132,7 +132,7 @@ function HistoryModal({ entity, onClose }: { entity: Entity; onClose: () => void
   )
 }
 
-const BIN_ICON: Record<string, string> = { session: '📖', campaign: '🎲', file: '📁', board: '📌', sound: '🎵', map: '🗺️', elsewhere: '☁️', conflict: '🔀' }
+const BIN_ICON: Record<string, string> = { session: '📖', campaign: '🎲', file: '📁', board: '📌', sound: '🎵', map: '🗺️', elsewhere: '☁️', conflict: '🔀', reset: '🔁' }
 
 /** How many of each list show before "Show all". */
 const SHORT_LIST = 30
@@ -165,7 +165,7 @@ export function RecentlyDeleted() {
                 <span>
                   {BIN_ICON[b.kind]} {b.label || 'Untitled'}{' '}
                   <span className="muted small">
-                    · {b.kind === 'elsewhere' ? 'deleted on another device' : b.kind === 'conflict' ? 'changed on another device' : 'deleted'} {when(b.at)}
+                    · {b.kind === 'elsewhere' ? 'deleted on another device' : b.kind === 'conflict' ? 'changed on another device' : b.kind === 'reset' ? 'replaced by the one-shot reset' : 'deleted'} {when(b.at)}
                     {binSize(b) ? ` · ${formatBytes(binSize(b))}` : ''}
                   </span>
                 </span>

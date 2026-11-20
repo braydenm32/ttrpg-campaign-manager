@@ -27,6 +27,7 @@ import { DraftText, Empty, Skeleton } from '../components'
 import { useViewMode } from '../viewMode'
 import { starterTemplates } from '../prompts'
 import { WorldPacks } from '../packs/WorldPacks'
+import { OneShotSettings } from '../oneShotPanel'
 
 const TABS = [
   ['world', 'World'],
@@ -135,6 +136,8 @@ export default function WorldSettings() {
           <div id="settings-templates">
             <Templates world={world} />
           </div>
+
+          <OneShotSettings world={world} />
         </>
       )}
 

@@ -17,6 +17,8 @@ import { jumpTo } from './jump'
 import { WhoWasThere } from './attendance'
 import { offerGroupPost } from './groupPost'
 import { pauseGameClock } from './gameClock'
+import { ResetButton } from './oneShotPanel'
+import { oneShotOf } from './oneShot'
 
 /**
  * Finishing a session: "Mark as played" ends the live link to players, marks it played and gets the
@@ -268,6 +270,7 @@ export function WrapUpChecklist(props: WrapProps & { played: boolean }) {
                   <Ico as={ListChecks} /> Prepare #{next.number}
                 </Link>
               )}
+              {oneShotOf(world) && <ResetButton world={world} className="primary" />}
               {session.playedAt && (
                 <button
                   type="button"

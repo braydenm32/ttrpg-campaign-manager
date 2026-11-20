@@ -52,6 +52,7 @@ import { toast } from '../undo'
 import { RecentlyOpenedRow } from '../RecentlyOpened'
 import { ImportPages } from '../ImportPages'
 import { ExampleStartHere, SeeTheExampleButton } from '../firstSteps'
+import { OneShotDesk } from '../oneShotPanel'
 import '../desk.css'
 
 /**
@@ -95,6 +96,7 @@ function Today({ world }: { world: World }) {
       </WorldCover>
       <ExampleStartHere world={world} entities={entities} />
       <SessionStrip world={world} inHand={inHand} stage={stage} campaigns={campaigns} onNewCampaign={() => setNewCampaign(true)} />
+      <OneShotDesk world={world} />
       <RecentlyOpenedRow world={world} entities={entities} />
       <div className="desk-cols">
         <NeedsYou world={world} entities={entities} sessions={sessions} inHand={inHand} stage={stage} />
