@@ -70,3 +70,11 @@
 @media (pointer: coarse) {
   .lookup-links a { display: inline-flex; align-items: center; gap: .25em; min-height: 44px; }
 }
+
+/* One-shot reset (src/oneShotPanel.tsx): the review before resetting. */
+.one-shot-reset fieldset { border: 0; padding: 0; margin: .9em 0; min-width: 0; }
+.one-shot-reset legend { padding: 0; margin-bottom: .4em; font-weight: 600; }
+.one-shot-reset label.row { align-items: flex-start; gap: .5em; margin: .3em 0; }
+.one-shot-reset label.row input { margin-top: .25em; flex: none; }
+.one-shot-pages { list-style: none; padding: 0; margin: 0; }
+.one-shot-desk .row p { margin: 0; flex: 1 1 16em; }

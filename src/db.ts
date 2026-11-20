@@ -257,6 +257,42 @@ export interface GmScreen {
   packKept?: Record<string, number>
   /** The in-game clock (src/gameClock.tsx), with the GM's own alarm. Players get World.gameTime while it's shown. */
   gameClock?: GameClock
+  /**
+   * One-shot mode (src/oneShot.ts): the world can be reset to a starting point after a game, to run
+   * it again for the next table. Kept here because public.player_view never sends gmScreen.
+   */
+  oneShot?: OneShot
+}
+
+/** A world run as a one-shot: when it was switched on, how many times it has been reset, and its "Past runs" page. */
+export interface OneShot {
+  on: boolean
+  since: number
+  /** Resets so far (each one is a run played). */
+  runs?: number
+  lastReset?: number
+  /** The GM-only page that keeps a short record of each run. It survives resets. */
+  logId?: string
+}
+
+/**
+ * The starting point of a one-shot: a copy of the whole world as it was when the GM saved it, which
+ * "Reset for the next table" goes back to. Device-only (never synced or in backups); files are
+ * copied in too, so a picture deleted later still comes back. Session recordings are left out.
+ */
+export interface StartingPoint {
+  worldId: string
+  savedAt: number
+  world: World
+  campaigns: Campaign[]
+  entities: Entity[]
+  maps: WorldMap[]
+  pins: Pin[]
+  sessions: Session[]
+  boards: Board[]
+  sounds: Sound[]
+  reputation: Reputation[]
+  assets: Asset[]
 }
 
 /**
@@ -1218,11 +1254,11 @@ export interface BinItem {
    * "conflict": another device's version of a session, board or the world's settings, kept when both
    * devices changed the same part at once and this device's version won (see `fields`).
    */
-  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map' | 'elsewhere' | 'conflict'
+  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map' | 'elsewhere' | 'conflict' | 'reset'
   /** What to call it in the list, e.g. the session's title. */
   label: string
   /** The rows that were removed, by table, so restoring puts every one back. */
-  rows: { table: 'campaigns' | 'sessions' | 'assets' | 'boards' | 'sounds' | 'maps' | 'pins' | 'worlds'; rows: unknown[] }[]
+  rows: { table: 'campaigns' | 'sessions' | 'assets' | 'boards' | 'sounds' | 'maps' | 'pins' | 'worlds' | 'reputation'; rows: unknown[] }[]
   /** Set for "conflict": only these parts of the rows are put back on restore (the rest stays as it is now). */
   fields?: string[]
   /**
@@ -1269,6 +1305,7 @@ export const db = new Dexie('ttrpg-campaign-manager') as Dexie & {
   packs: EntityTable<MapPack, 'id'>
   packPieces: EntityTable<PackPiece, 'id'>
   packFiles: EntityTable<PackFile, 'key'>
+  startingPoints: EntityTable<StartingPoint, 'worldId'>
 }
 
 db.version(1).stores({
@@ -1342,6 +1379,12 @@ db.version(9).stores({
   packFiles: 'key, pieceId',
 })
 
+// v10: one-shot starting points (src/oneShot.ts), one per world, device-only. A new table, so
+// nothing to move.
+db.version(10).stores({
+  startingPoints: 'worldId',
+})
+
 // The bin is cleared of anything over a month old soon after the app opens, not only when it's
 // looked at, so deleting a big recording to make room does give the space back in time.
 db.on('ready', () => {
@@ -1412,7 +1455,8 @@ export function fromTemplate(t: Entity, name = `New ${t.name}`): Entity {
 }
 
 export async function deleteWorld(worldId: string) {
-  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds, db.bin, db.recordingChunks, db.mapVersions, db.reputation], async () => {
+  await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.syncMeta, db.history, db.boards, db.sounds, db.bin, db.recordingChunks, db.mapVersions, db.reputation, db.startingPoints], async () => {
+    await db.startingPoints.delete(worldId)
     await db.history.where({ worldId }).delete()
     await db.mapVersions.where({ worldId }).delete()
     await db.reputation.where({ worldId }).delete()

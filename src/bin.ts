@@ -16,7 +16,7 @@ type Relinks = NonNullable<BinItem['relinks']>
 /** The pins or pages a relink touches. */
 const linkTable = (l: Relinks[number]) => db[l.table] as unknown as Table<Record<string, unknown>, string>
 
-const BIN_TABLES = [db.bin, db.worlds, db.campaigns, db.sessions, db.assets, db.boards, db.sounds, db.maps, db.pins, db.entities]
+const BIN_TABLES = [db.bin, db.worlds, db.campaigns, db.sessions, db.assets, db.boards, db.sounds, db.maps, db.pins, db.entities, db.reputation]
 
 async function moveToBin(worldId: string, kind: BinItem['kind'], label: string, rows: Rows, relinks: Relinks = []) {
   await db.transaction('rw', BIN_TABLES, async () => {

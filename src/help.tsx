@@ -56,6 +56,10 @@ export const HELP = {
     'Every time you save a page, the version before is kept on this device (the last 40). Look at an old version or restore it; restoring keeps today’s version too, and who can see the page stays as it is now.',
   recentlyDeleted:
     'Pages, sessions, campaigns, maps, files, corkboards and sounds deleted on this device, or on another device that syncs this world. Restore brings them back as they were; a page comes back with the places inside it, what it carried and its map pins. When two devices change the same session, corkboard or world setting at once, this device’s version is kept and the other one waits here, marked “changed on another device”. Things other than pages are kept for a month; “Delete forever” or “Delete all for good” frees the space straight away.',
+  oneShot:
+    'Run this world again and again, for one table after another. Making it a one-shot saves the world as it is now as its starting point; after a game, “Reset for the next table” puts everything back the way it was: reveals, fog of war, clocks, the in-game clock, handouts, who’s alive, loot, quests and the sessions. Changed your prep? “Update starting point”. The starting point is kept on this device only; on another device, save one there before anyone plays, or use a backup downloaded from this world.',
+  oneShotReset:
+    'Before anything changes, this lists the pages that changed since the starting point. Tick any fix to your prep you want to keep: it stays as it is now and becomes part of the starting point. A short record of the run (date, who played, recap and notes) goes on the GM-only “Past runs” page, which resets never touch. With players online you can also remove them (the next group joins with the same invite link), free up the characters they claimed and clear their group notes. What the reset replaces stays in Recently deleted for a month.',
   templates:
     'A template is a starting point for new pages, like a "Dungeon room" with the headings and details you always fill in. Templates are always GM only and never appear in lists. Make one with "Save as template" on any page.',
   lifeStatus:

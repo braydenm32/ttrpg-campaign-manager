@@ -249,6 +249,8 @@ export async function importWorld(file: File): Promise<string> {
         // The board for showing several at once: its pictures and pages have new ids too.
         showBoards: showBoardsOf(b.world).map((s) => ({ ...s, shown: undefined, changed: undefined, items: s.items.map((i) => ({ ...i, assetId: opt(i.assetId), entityId: opt(i.entityId) })) })),
         board: undefined,
+        // A one-shot's "Past runs" page has a new id too (the starting point stays on the old device).
+        oneShot: b.world.gmScreen.oneShot && { ...b.world.gmScreen.oneShot, logId: opt(b.world.gmScreen.oneShot.logId) },
       },
     })
     await db.assets.bulkAdd(b.assets.flatMap(({ data: _data, ...a }) => (blobs.has(a.id) ? [{ ...a, id: id(a.id), worldId, blob: blobs.get(a.id)! }] : [])))
