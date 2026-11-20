@@ -176,7 +176,7 @@ test('a backup of a restored backup keeps every link: prep scenes, GM screen, re
           strongStart: '',
           clues: [],
           encounters: [],
-          scenes: [{ id: 'sc1', text: 'Arrive', done: false, placeId: place, presentIds: [npc], soundIds: [sound], revealIds: [npc], show: { kind: 'page', entityId: place } }],
+          scenes: [{ id: 'sc1', text: 'Arrive', done: false, placeId: place, pinId: pin, presentIds: [npc], soundIds: [sound], revealIds: [npc], show: { kind: 'page', entityId: place } }],
         },
         lectern: {
           sceneText: '',
@@ -219,7 +219,7 @@ test('a backup of a restored backup keeps every link: prep scenes, GM screen, re
     // Files in a zip backup are unpacked just after the world opens.
     await expect.poll(async () => ((await read('assets')) as { id: string }[]).length).toBe(1)
     const [s] = (await read('sessions')) as {
-      prep: { scenes: { placeId: string; presentIds: string[]; soundIds: string[]; revealIds: string[]; show: { entityId: string } }[] }
+      prep: { scenes: { placeId: string; pinId: string; presentIds: string[]; soundIds: string[]; revealIds: string[]; show: { entityId: string } }[] }
       lectern: { journey: { encounterTableId: string }; rollCall: { to: string[]; answers: { entityId: string }[] } }
     }[]
     const sc = s.prep.scenes[0]
@@ -231,9 +231,11 @@ test('a backup of a restored backup keeps every link: prep scenes, GM screen, re
     expect(s.lectern.journey.encounterTableId).toBe(id('Road encounters'))
     expect(s.lectern.rollCall.to).toEqual([id('Hero')])
     expect(s.lectern.rollCall.answers[0].entityId).toBe(id('Hero'))
-    const [p] = (await read('pins')) as { note: string }[]
+    const [p] = (await read('pins')) as { id: string; note: string }[]
     const [picture] = (await read('assets')) as { id: string }[]
     expect(p.note).toBe(`![dot](asset:${picture.id})`)
+    // The scene's place on the map: the pin got a new id too, and the scene must follow it.
+    expect(sc.pinId).toBe(p.id)
   }
 
   const worldIds = async () => new Set((await readDatabase(page)).worlds.map((x) => x.id))

@@ -314,12 +314,13 @@ export async function importWorld(file: File): Promise<string> {
           },
           journey: s.lectern.journey && { ...s.lectern.journey, encounterTableId: opt(s.lectern.journey.encounterTableId) },
         },
-        // Prepared scenes point at pages, sounds and pictures; their encounters keep their ids (they live in the session).
+        // Prepared scenes point at pages, map pins, sounds and pictures; their encounters keep their ids (they live in the session).
         prep: s.prep && {
           ...s.prep,
           scenes: s.prep.scenes.map((sc) => ({
             ...sc,
             placeId: opt(sc.placeId),
+            pinId: opt(sc.pinId),
             presentIds: sc.presentIds?.map(id),
             soundIds: sc.soundIds?.map(id),
             revealIds: sc.revealIds?.map(id),
