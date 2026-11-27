@@ -2,7 +2,7 @@
 
 GM-first TTRPG campaign/world manager. Owner (Brayden) is not a developer: explain changes in plain language and keep the app working end to end.
 
-- Local-first: all data lives in IndexedDB (`src/db.ts`, Dexie). Any schema change needs a new `db.version(n)` with an upgrade, never an edit to an existing version.
+- Local-first: all data lives in IndexedDB (`src/db.ts`, Dexie). Any schema change needs a new `db.version(n)` with an upgrade, never an edit to an existing version. Only add a version when tables or indexes change: the browser makes a version step wait for every other open tab, and a tab asleep on a phone never lets go (see the version 11 note in `src/db.ts` and `src/startNote.ts`).
 - Visibility is the core rule: anything with `visibility: 'gm'`, `gmNotes`, or a `:::gm` block must never reach the player view. Exceptions are per player and decided on the server: `revealedTo` (user ids) on a page, and `:::for Name` passages (`player_text`), matched only against characters the player has claimed. Check `useViewMode().canSee` when adding screens.
 - Players see worlds only through server functions (`shared_world`, `member_world`, both built on `player_view(wid, viewer)` in `supabase/migrations`); they never read `records` or `player_notes` directly. New GM-only fields must stay out of `player_view`.
 - New features get a help tip: add a line to `HELP` in `src/help.tsx` and put `<Help topic="…" />` by the heading.
