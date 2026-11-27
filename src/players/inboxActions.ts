@@ -1,6 +1,7 @@
 import { cloudErrorMessage } from '../cloud/client'
 import { answerCharacterRequest, approveClaim, deleteQuestion, releaseCharacter, type CharacterRequest } from '../cloud/players'
 import { afterUndo, toast } from '../undo'
+import { db } from '../db'
 import { deleteDowntime } from './Downtime'
 import { holdBack, type PendingClaim } from './inbox'
 
@@ -34,12 +35,15 @@ export const deleteQuestionLater = (worldId: string, id: string, reload: () => P
 export const deleteDowntimeLater = (worldId: string, id: string, reload: () => Promise<unknown>) =>
   answerLater(id, 'Downtime deleted.', () => deleteDowntime(worldId, id), reload)
 
-/** Approving lets the player edit the character and read what's written for them, so it waits out its Undo too. */
-export const approveClaimLater = (worldId: string, c: PendingClaim, name: string, reload: () => Promise<unknown>) =>
-  answerLater(`claim:${c.entityId}`, `${c.who} now plays ${name}.`, () => approveClaim(worldId, c.entityId), reload)
+/** The character's name, read when the button is pressed (a list on screen may still be loading its names). */
+const characterName = async (entityId: string) => (await db.entities.get(entityId))?.name ?? 'a character'
 
-export const declineClaimLater = (worldId: string, c: PendingClaim, name: string, reload: () => Promise<unknown>) =>
-  answerLater(`claim:${c.entityId}`, `Turned down ${c.who}’s request to play ${name}.`, () => releaseCharacter(worldId, c.entityId, false), reload)
+/** Approving lets the player edit the character and read what's written for them, so it waits out its Undo too. */
+export const approveClaimLater = async (worldId: string, c: PendingClaim, reload: () => Promise<unknown>) =>
+  answerLater(`claim:${c.entityId}`, `${c.who} now plays ${await characterName(c.entityId)}.`, () => approveClaim(worldId, c.entityId), reload)
+
+export const declineClaimLater = async (worldId: string, c: PendingClaim, reload: () => Promise<unknown>) =>
+  answerLater(`claim:${c.entityId}`, `Turned down ${c.who}’s request to play ${await characterName(c.entityId)}.`, () => releaseCharacter(worldId, c.entityId, false), reload)
 
 export const turnDownCharacterLater = (worldId: string, r: CharacterRequest, note: string, reload: () => Promise<unknown>) =>
   answerLater(r.id, `${r.sheet.name} turned down.`, () => answerCharacterRequest(worldId, r.id, false, note), reload)

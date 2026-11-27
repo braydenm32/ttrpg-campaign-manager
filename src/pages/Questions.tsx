@@ -143,10 +143,10 @@ function GmInbox({ world }: { world: World }) {
           </p>
           <ClaimNameClash worldId={world.id} entityId={c.entityId} player={c.who} />
           <div className="row wrap">
-            <button className="primary" onClick={() => approveClaimLater(world.id, c, name(c.entityId), inbox.reload)}>
+            <button className="primary" onClick={() => approveClaimLater(world.id, c, inbox.reload)}>
               ✓ Approve
             </button>
-            <button onClick={() => declineClaimLater(world.id, c, name(c.entityId), inbox.reload)}>Decline</button>
+            <button onClick={() => declineClaimLater(world.id, c, inbox.reload)}>Decline</button>
           </div>
         </div>
       ),

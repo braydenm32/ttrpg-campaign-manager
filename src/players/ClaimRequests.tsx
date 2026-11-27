@@ -28,10 +28,10 @@ export function ClaimRequestsBanner({ world }: { world: World }) {
             <span>
               <Ico as={MaskHappy} /> <strong>{c.who}</strong> asked to play <Link to={`${pagePath(world.id, c.entityId)}`}>{name}</Link>.
             </span>
-            <button className="primary small" onClick={() => approveClaimLater(world.id, c, name, reload)}>
+            <button className="primary small" onClick={() => approveClaimLater(world.id, c, reload)}>
               ✓ Approve
             </button>
-            <button className="small" onClick={() => declineClaimLater(world.id, c, name, reload)}>
+            <button className="small" onClick={() => declineClaimLater(world.id, c, reload)}>
               Decline
             </button>
             <ClaimNameClash worldId={world.id} entityId={c.entityId} player={c.who} inline />

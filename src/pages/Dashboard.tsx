@@ -390,7 +390,7 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
         </>
       ),
       action: (
-        <button className="small" onClick={() => approveClaimLater(world.id, c, nameOf(c.entityId), inbox.reload)}>
+        <button className="small" onClick={() => approveClaimLater(world.id, c, inbox.reload)}>
           Approve
         </button>
       ),
