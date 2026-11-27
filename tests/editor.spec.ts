@@ -5,6 +5,7 @@ import { Transform } from 'prosemirror-transform'
 import { parseLoose, parseMarkdown, schema, secretLines, serializeMarkdown, shapeOf, stripSids } from '../src/editor/markdownDoc'
 import { parseExampleFiles } from '../src/example/parse'
 import { splitSecrets } from '../src/secretText'
+import { plainLinks } from '../src/text'
 import { expect, open, setView, test, type Page } from './fixtures'
 import { allText } from './lib/checks'
 import { getRecord, putBack } from './lib/records'
@@ -63,6 +64,11 @@ const TRICKY = [
   ':::for\nnobody\n:::',
   ':::for Wren, Silas & Brannoch :::\nthree\n:::',
   ':::foryou\nyours\n:::\n:::foryouLegacy text:::\nend',
+  // Names the app would write differently (a colon, a double space, a tab, a non-breaking space): kept as typed, and still safe to edit around.
+  ':::for Dr: Who\nsecret\n:::\n\nhello',
+  ':::for Wren  Ash\nx\n:::\nok',
+  ':::for Wren\tSilas\nx\n:::',
+  ':::for Wren\u00a0Ash\nx\n:::',
   ':::gm\nouter\n:::for Wren\ninner\n:::\nouter again\n:::\nvisible',
   ':::for Wren\nouter\n:::gm\ninner gm\n:::\n:::for Silas\nlayered\n:::\n:::\nvisible',
   ':::\nstray closer\n:::\n',
@@ -242,6 +248,9 @@ test.describe('the text itself (no browser)', () => {
       expect(shape(parseLoose(out.text)), out.text).toBe(shape(doc))
     }
     expect(serializeMarkdown(schema.nodes.doc.create(null, [schema.nodes.paragraph.create(null, lines[0])]), null).text).toBe('wor&#x64;*(an aside)* and on')
+    // Search, previews and Discord read that code as its letter: "word" is still found.
+    expect(plainLinks('wor&#x64;*(an aside)* and on')).toContain('word')
+    expect(plainLinks('Bra&#x6E;**\'s** \\&#x64;')).toBe('Bran**\'s** \\&#x64;')
   })
 
   test('nothing typed can open or close a GM-only passage', () => {
@@ -420,8 +429,8 @@ test('saving without typing changes nothing, a GM-only block can’t be opened b
     expect(cut).not.toBe(was)
     expect(playersGet(cut)).not.toContain(playersGetSecretWord(was))
     expect(passages(cut)).toBe(passages(was))
-    // "Show to players" on the block is the way to open one on purpose, and Undo puts it back.
-    await text.locator('.pm-secret.gm').first().getByRole('button', { name: 'Show to players' }).click()
+    // "Reveal to players" on the block is the way to open one on purpose, and Undo puts it back.
+    await text.locator('.pm-secret.gm').first().getByRole('button', { name: 'Reveal to players' }).click()
     await expect(text.locator('.pm-secret')).toHaveCount(0)
     await press(device, field.getByRole('button', { name: 'Undo' }))
     await expect(text.locator('.pm-secret.gm')).toHaveCount(1)

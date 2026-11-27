@@ -820,8 +820,16 @@ function openerFor(node: PMNode) {
   return `:::for ${cleanNames(node.attrs.names)}`.trimEnd() + '\n'
 }
 
-/** Names for a ":::for" line: nothing that could end the line or pass for a marker. */
-export const cleanNames = (names: string) => String(names).replace(/[:\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()
+/**
+ * Names for a ":::for" line: nothing that could end the line or pass for a marker (no line ends, no
+ * "::"), and otherwise as typed, so the line reads back as the same names ("Dr: Who", "Wren  Ash").
+ */
+export const cleanNames = (names: string) =>
+  String(names)
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/:{2,}/g, ':')
+    .replace(/^[\s:]+/, '')
+    .trim()
 
 /** A paragraph or heading with nothing in it: Markdown has no such thing, so it isn't written. */
 const isEmpty = (n: PMNode) => (n.type === N.paragraph || n.type === N.heading) && n.content.size === 0
@@ -830,6 +838,13 @@ const isEmpty = (n: PMNode) => (n.type === N.paragraph || n.type === N.heading) 
 type Out = string | { tag: string; open: string; close: string | null; body: Out[] } | { tag: string; whole: string }
 
 const tagOf = (node: PMNode) => (node.attrs.kind === 'for' ? `for:${forNames(cleanNames(node.attrs.names)).map((n) => n.toLowerCase()).join(',')}` : String(node.attrs.kind))
+
+/** The passage an opening line opens, as the app's reader reads that very line. */
+function tagOfLine(line: string, node: PMNode) {
+  const read = readOpener(line.replace(/(?:\r\n?|\n)$/, ''))
+  if (!read || read.kind !== node.attrs.kind) return tagOf(node)
+  return read.kind === 'for' ? `for:${read.names.map((n) => n.toLowerCase()).join(',')}` : read.kind
+}
 
 const isList = (n: PMNode) => n.type === N.bullet_list || n.type === N.ordered_list
 const endsLine = (s: string) => /[\r\n]$/.test(s)
@@ -882,11 +897,12 @@ function childrenOut(parent: PMNode, parentId: number, sources: Sources | null, 
 }
 
 function secretOut(node: PMNode, s: Source | undefined, same: boolean, sources: Sources | null, followed: boolean): Out {
-  const tag = tagOf(node)
-  if (same && s!.opaque && (!node.attrs.unclosed || !followed)) return { tag, whole: s!.body.slice(0, s!.body.length - s!.tail.length) }
+  if (same && s!.opaque && (!node.attrs.unclosed || !followed)) return { tag: tagOf(node), whole: s!.body.slice(0, s!.body.length - s!.tail.length) }
   // Its own opening line is kept while it still says the same thing; otherwise the app writes one.
   const kept = s && !s.opaque && s.node.attrs.kind === node.attrs.kind && s.node.attrs.names === node.attrs.names
   let open = kept ? s.open! : openerFor(node)
+  // A kept line is meant for the names as that line reads them ("Dr: Who", "Wren  Ash"), not as the app would write them.
+  const tag = kept ? tagOfLine(open, node) : tagOf(node)
   const close = node.attrs.unclosed && !followed ? null : kept && s.close != null ? s.close : ':::'
   const body = childrenOut(node, s && node.attrs.sid !== null ? node.attrs.sid : -1, sources, close !== null, followed)
   // An opening line that was the last line of the text had no line end: what's inside starts on the next line.

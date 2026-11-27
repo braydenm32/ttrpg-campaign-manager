@@ -1,10 +1,10 @@
-import { ArrowUUpLeft, ArrowUUpRight, At, EyeClosed, Image, Link, ListBullets, ListNumbers, Lock, Minus, Quotes, Shield, Table, TextB, TextItalic, Warning } from '@phosphor-icons/react'
+import { ArrowUUpLeft, ArrowUUpRight, At, EyeClosed, Image, Link, ListBullets, ListNumbers, Lock, Minus, Quotes, Shield, Table, TextB, TextItalic } from '@phosphor-icons/react'
 import { toggleMark } from 'prosemirror-commands'
 import { dropCursor } from 'prosemirror-dropcursor'
 import { gapCursor } from 'prosemirror-gapcursor'
 import { history, redo, redoDepth, undo, undoDepth } from 'prosemirror-history'
 import type { Node as PMNode } from 'prosemirror-model'
-import { type Command, EditorState, NodeSelection } from 'prosemirror-state'
+import { type Command, EditorState, NodeSelection, Plugin } from 'prosemirror-state'
 import { EditorView, type NodeView, type ViewMutationRecord } from 'prosemirror-view'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -92,7 +92,6 @@ export default function FormattedEditor({ worldId, value, onChange, label, rows 
   const change = useRef(onChange)
   change.current = onChange
   const [, redraw] = useState(0)
-  const [unsafe, setUnsafe] = useState(false)
   const [linkDraft, setLinkDraft] = useState<string | null>(null)
   const [dismissed, setDismissed] = useState(-1)
   const [active, setActive] = useState(0)
@@ -110,7 +109,19 @@ export default function FormattedEditor({ worldId, value, onChange, label, rows 
   const suggest = useRef<{ hits: ReturnType<typeof findLinkPages>; from: number; to: number; pick: (name: string) => void } | null>(null)
   const openLink = useRef(() => {})
 
+  /** What a document is written as (kept for the document it was worked out for: the check and the hand-over use the same one). */
+  const written = useRef(new WeakMap<PMNode, ReturnType<typeof serializeMarkdown>>())
+  const writeOut = (doc: PMNode) => {
+    let out = written.current.get(doc)
+    if (!out) {
+      out = serializeMarkdown(doc, sources.current)
+      written.current.set(doc, out)
+    }
+    return out
+  }
+
   const read = (text: string) => {
+    written.current = new WeakMap()
     const { doc, sources: s } = parseMarkdown(text)
     sources.current = s
     return needsLastLine(doc) ? doc.copy(doc.content.addToEnd(N.paragraph.create())) : doc
@@ -129,6 +140,18 @@ export default function FormattedEditor({ worldId, value, onChange, label, rows 
         refusedAt = Date.now()
         toast('That would have moved words into or out of a GM-only block, so nothing was changed. Cut and paste them, or use the block’s own button.')
       }),
+      // The last word on secrets: a change whose text wouldn't keep every line in the block it's shown
+      // in (see serializeMarkdown) isn't made at all, so the editor never holds text it can't save.
+      new Plugin({
+        filterTransaction(tr) {
+          if (!tr.docChanged || writeOut(tr.doc).safe) return true
+          if (Date.now() - refusedAt >= 4000) {
+            refusedAt = Date.now()
+            toast('That change would have moved the edge of a GM-only block, so it wasn’t made. Nothing you wrote was lost. To make it anyway, switch to Markdown.')
+          }
+          return false
+        },
+      }),
       lastLine,
       typedPageLinks,
     ]
@@ -143,9 +166,9 @@ export default function FormattedEditor({ worldId, value, onChange, label, rows 
         const state = v.state.apply(tr)
         v.updateState(state)
         if (tr.docChanged) {
-          const out = serializeMarkdown(state.doc, sources.current)
-          setUnsafe(!out.safe)
-          // A text that wouldn't keep its secrets as shown is never handed on (see serializeMarkdown).
+          const out = writeOut(state.doc)
+          // A text that wouldn't keep its secrets as shown is never handed on (see serializeMarkdown);
+          // the check above means there is none, but this stays as a second lock.
           if (out.safe && out.text !== current.current) {
             current.current = out.text
             caught.current = false
@@ -212,7 +235,6 @@ export default function FormattedEditor({ worldId, value, onChange, label, rows 
     const v = view.current
     if (!v) return
     v.updateState(EditorState.create({ doc: read(value), plugins: v.state.plugins }))
-    setUnsafe(false)
     redraw((n) => n + 1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value])
@@ -487,11 +509,6 @@ export default function FormattedEditor({ worldId, value, onChange, label, rows 
         )}
         <div ref={host} className="pm-host" />
       </div>
-      {unsafe && (
-        <p className="notice error" role="alert">
-          <Ico as={Warning} /> Your last change would have moved a GM-only block’s edge, so it isn’t in the saved text. Press Undo, or switch to Markdown to check the text.
-        </p>
-      )}
     </div>
   )
 }
@@ -554,7 +571,7 @@ class SecretView implements NodeView {
         onClose={() => act(closeSecret)}
         onShow={() => {
           act(unwrapSecret)
-          toast(this.around.secrets ? (kind === 'gm' ? 'That passage is no longer GM only: players can read it once the page is revealed. Undo, above the text, puts the block back.' : 'That passage is now for every player. Undo, above the text, puts the block back.') : 'The block is gone; its words stay in your notes.')
+          toast(this.around.secrets ? (kind === 'gm' ? 'Revealed: that passage is no longer GM only, so players can read it once the page is revealed. Undo, above the text, puts the block back.' : 'Revealed to all players: that passage is no longer for some characters only. Undo, above the text, puts the block back.') : 'The block is gone; its words stay in your notes.')
         }}
       />,
     )
@@ -640,7 +657,7 @@ function SecretHead({
           </>
         )}
         <button type="button" className="ghost small pm-secret-show" title="Take the block away and keep its words, for everyone to read" {...keep} onClick={onShow}>
-          {around.secrets ? (kind === 'gm' ? 'Show to players' : 'Show to all players') : 'Remove block'}
+          {around.secrets ? (kind === 'gm' ? 'Reveal to players' : 'Reveal to all players') : 'Remove block'}
         </button>
       </div>
       {kind === 'for' && inGm ? (

@@ -8,7 +8,7 @@ import { NpcLines } from '../ai/Flavour'
 import { renameLinks } from '../links'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, Skeleton, TagInput } from '../components'
 import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, PICKER_TYPES, saveEntity, templateOf, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus, type World } from '../db'
@@ -536,6 +536,8 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
   const [opened] = useState(entity)
   const [d, setD] = useState<Entity>(entity)
   const entities = useVisibleEntities(worldId)
+  // "As players see it" knows only the pages players can see: a link to any other is drawn as they get it.
+  const playersPages = useMemo(() => entities.filter((e) => e.visibility === 'players' && !e.template), [entities])
   const image = useAssetUrl(d.imageId)
   const set = <K extends keyof Entity>(k: K, v: Entity[K]) => setD((x) => ({ ...x, [k]: v }))
   const [holderPick, setHolderPick] = useState(false)
@@ -955,7 +957,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
           <span>
             Description <Help topic="secrets" />
           </span>
-          <TextEditor worldId={worldId} label="Description" rows={10} value={d.body} onChange={(v) => set('body', v)} preview={entities} />
+          <TextEditor worldId={worldId} label="Description" rows={10} value={d.body} onChange={(v) => set('body', v)} preview={playersPages} />
           <small className="muted">
             Link pages by typing @ or [[ and a name. The buttons hide a passage from every player, or keep it for some characters only. Write roll:1d8+3 for a dice button, or {'{{Table name}}'} to roll on one of your tables. <Help topic="inlineRolls" />
           </small>

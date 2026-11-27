@@ -1,6 +1,20 @@
-/** Text with [[links]] as plain names and pictures from the world's files left out (for previews, exports and Discord). */
+/** Text with [[links]] as plain names and pictures from the world's files left out (for previews, search, exports and Discord). */
 export const plainLinks = (text: string) =>
-  text.replace(/!\[[^\]]*\]\(asset:[^)]*\)/g, '').replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, name: string, label?: string) => label ?? name)
+  asLetters(text).replace(/!\[[^\]]*\]\(asset:[^)]*\)/g, '').replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, name: string, label?: string) => label ?? name)
+
+/**
+ * Character codes ("&#x64;", "&#100;") as the letters they stand for. The formatted editor writes a
+ * letter that way where it touches bold or italic words that start or end with a mark ("Bra&#x6E;**'s**"),
+ * so that the Markdown reads back right; anything that reads the text as plain words (search, previews,
+ * Discord) reads that letter. A code written with a backslash before it ("\&#x64;") stays as typed.
+ */
+export const asLetters = (text: string) =>
+  text.includes('&#')
+    ? text.replace(/(?<!\\)&#(?:x([0-9a-f]{1,6})|(\d{1,7}));/gi, (m, hex?: string, dec?: string) => {
+        const code = hex ? parseInt(hex, 16) : Number(dec)
+        return code > 0 && code < 0x110000 && !(code >= 0xd800 && code < 0xe000) ? String.fromCodePoint(code) : m
+      })
+    : text
 
 /** One or two letters for a page without a picture. */
 export function initials(name: string) {
