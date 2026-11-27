@@ -125,6 +125,63 @@ export async function fogKey(map: WorldMap) {
 /** The picture players get of a map right now: the fogged copy when fog is on (nothing until it's been made), else as playersImageId. */
 export const playersCopyId = (map: WorldMap) => (map.fog?.on ? map.fog.imageId : playersImageId(map))
 
+/** Every picture of a map: the GM's, the players' copy of a drawn map with secrets, and the fogged copy. */
+export const mapPictureIds = (m: Pick<WorldMap, 'imageId' | 'playerImageId' | 'fog'>) => [m.imageId, m.playerImageId, m.fog?.imageId].filter((x): x is string => !!x)
+
+// ---------- which device keeps a shown map live ----------
+//
+// While a map is on players' screens, one device makes its players' copy at once and tells players
+// what changed (src/liveMap.tsx): the one where the GM pressed "Show players" or last changed the fog.
+// Any other device with the world open (the GM's own second device, a co-GM's) leaves it be, so two
+// never make and upload the same copy at once. Kept on this device only (never in the world), so a
+// reload or a second tab here carries on.
+
+const hostKey = (mapId: string) => `atlas.liveMapHost.${mapId}`
+const hostMemory = new Map<string, number>()
+const hostListeners = new Set<() => void>()
+const tellHosts = () => hostListeners.forEach((l) => l())
+if (typeof window !== 'undefined') window.addEventListener('storage', (e) => e.key?.startsWith('atlas.liveMapHost.') && tellHosts())
+
+/** This device showed the map, or just changed its fog: it keeps the map live from now on. */
+export function fogChangedHere(mapId: string) {
+  const now = Date.now()
+  hostMemory.set(mapId, now)
+  try {
+    localStorage.setItem(hostKey(mapId), String(now))
+  } catch {
+    // Storage blocked: this tab keeps it live until it's left.
+  }
+  tellHosts()
+}
+
+/** When this device last showed the map or changed its fog, or undefined if it isn't the one keeping it live. */
+export function fogHereSince(mapId: string): number | undefined {
+  try {
+    const v = Number(localStorage.getItem(hostKey(mapId)))
+    if (v > 0) return v
+  } catch {
+    // Storage blocked: what this tab remembers.
+  }
+  return hostMemory.get(mapId)
+}
+
+/** The fog was changed somewhere else: that device keeps the map live now, not this one. */
+export function fogChangedElsewhere(mapId: string) {
+  hostMemory.delete(mapId)
+  try {
+    localStorage.removeItem(hostKey(mapId))
+  } catch {
+    // Storage blocked: nothing kept there.
+  }
+  tellHosts()
+}
+
+/** Calls fn when which device keeps a map live may have changed. */
+export function onFogHostChange(fn: () => void) {
+  hostListeners.add(fn)
+  return () => void hostListeners.delete(fn)
+}
+
 /** A players' copy that was just made: what a live map (src/liveMap.tsx) needs to send players only the part that changed. */
 export interface FogRendered {
   mapId: string

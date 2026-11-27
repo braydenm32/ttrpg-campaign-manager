@@ -436,11 +436,13 @@ export interface Showing {
   title: string
   assetId?: string
   /**
-   * A map shown from its own "Show players" button: the map this picture is of (assetId is the
-   * players' copy of it: fogged, without GM-only pieces). While it's up it stays live: the picture
-   * follows the fog, and players who can see the map get its revealed pins on it (src/liveMap.tsx).
-   * Players are sent this id; it tells them nothing of a map they can't see.
+   * A map shown from its own "Show players" button (live): while it's up it stays live, the picture
+   * (assetId, the players' copy: fogged, without GM-only pieces) follows the fog (src/liveMap.tsx).
+   * mapId is the map, only for a map players can see (they get its revealed pins on it); a GM-only
+   * map is found by its picture instead, so players are never sent the id of a map they can't see.
+   * Neither is indexed, so neither needs a db.version.
    */
+  live?: boolean
   mapId?: string
   entityId?: string
   text?: string

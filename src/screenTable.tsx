@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef } from 'react'
 import { TimerList, timeLeft, TurnOrder, useNow } from './atTheTable'
-import { linkAsPlayer, tableStateFor, useTable, type TableState } from './cloud/table'
+import { linkAsPlayer, tableStateFor, useLiveSession, useTable, type TableState } from './cloud/table'
 import { db, type Entity, type World } from './db'
 import './liveMap.css'
 
@@ -20,21 +20,26 @@ const DONE_FOR = 60_000
 
 type Table = Pick<TableState, 'combat' | 'timers'>
 
-/** The session whose fight or timers go on this device's players' screen: one not marked played, the one started last. */
+/**
+ * The session whose fight or timers go on this device's players' screen: the one the GM is running
+ * live, as players' phones get it, when there is one; else one not marked played, the one started last.
+ */
 function useOwnTable(world: World): Table | null {
+  const liveId = useLiveSession(world.id)
   const found = useLiveQuery(async () => {
     if (world.shared) return null
     const sessions = (await db.sessions.where({ worldId: world.id }).toArray())
       .filter((s) => !s.playedAt && !!s.lectern && ((!!s.lectern.combat?.activeId && !!s.lectern.combat.combatants?.some((c) => !c.defeated)) || !!s.lectern.timers?.some((t) => !t.hidden)))
       .sort((a, b) => (b.startedAt ?? 0) - (a.startedAt ?? 0) || b.number - a.number)
-    const session = sessions[0]
+    const live = liveId ? await db.sessions.get(liveId) : undefined
+    const session = live && live.worldId === world.id && !live.playedAt && live.lectern ? live : sessions[0]
     if (!session) return null
     const ids = (session.lectern!.combat?.combatants ?? []).flatMap((c) => (c.entityId ? [c.entityId] : []))
     const pages = new Map((await db.entities.bulkGet(ids)).filter((e): e is Entity => !!e).map((e) => [e.id, e]))
     const campaign = await db.campaigns.get(session.campaignId)
     const state = tableStateFor(session, pages, [], [], campaign)
     return state ? { combat: state.combat, timers: state.timers } : null
-  }, [world.id, !!world.shared])
+  }, [world.id, !!world.shared, liveId])
   return found ?? null
 }
 

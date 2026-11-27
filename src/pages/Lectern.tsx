@@ -1323,11 +1323,10 @@ function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {
           <button disabled={!(Number(custom) > 0)}>Start</button>
         </form>
       </div>
-      {timers.length > 0 && (
-        <p className="muted small">
-          Players see timers on the Players’ screen (a TV){shared ? ', and in their Common Room while you’re live,' : ''} unless you hide one with the eye.
-        </p>
-      )}
+      {/* Said whether or not a timer is running yet: a new one is shown to players unless it's hidden. */}
+      <p className="muted small timers-shown-note">
+        Players can see every timer you start: on the Players’ screen (a TV){shared ? ' and, while you’re live, in their Common Room' : ''}. To keep one to yourself, press its eye to make it GM only.
+      </p>
     </LecternPanel>
   )
 }

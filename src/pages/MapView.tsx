@@ -23,7 +23,7 @@ import { StatusBadge, statusIcon } from '../status'
 import { SecretTextarea } from '../SecretTextarea'
 import { SecretNamesWarning } from '../SecretNamesWarning'
 import { useViewMode } from '../viewMode'
-import { circleShape, fogOverlay, pinRevealed, playersImageId, rectShape, removeFog, renderPlayerFog } from '../fog'
+import { circleShape, fogChangedHere, fogOverlay, pinRevealed, playersImageId, rectShape, removeFog, renderPlayerFog } from '../fog'
 import { Ico, TypeIcon } from '../icons'
 import { CloudFog, Crosshair, DoorOpen, DownloadSimple, Eye, HandPalm, ListNumbers, Lock, MapPin, NavigationArrow, PencilSimple, Play, Printer, Ruler, SlidersHorizontal, Tag, Toolbox } from '@phosphor-icons/react'
 import { MeasureBar, ScaleSetting } from '../mapMeasure'
@@ -221,6 +221,8 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const addFogShapes = (shapes: ReturnType<typeof rectShape>[]) => {
     const group = newId()
     const added = shapes.length > 1 ? shapes.map((s, i) => ({ ...s, id: `${group}:${i}` })) : shapes
+    // This device keeps the map live on players' screens while it's shown (see fogChangedHere).
+    fogChangedHere(map.id)
     return db.maps
       .where('id')
       .equals(map.id)
@@ -894,13 +896,15 @@ function FogBar({
   onUndoPoint: () => void
 }) {
   const fog = map.fog
-  const setFog = (patch: Partial<NonNullable<WorldMap['fog']>>) =>
-    db.maps
+  const setFog = (patch: Partial<NonNullable<WorldMap['fog']>>) => {
+    fogChangedHere(map.id)
+    return db.maps
       .where('id')
       .equals(map.id)
       .modify((m) => {
         m.fog = { on: true, shapes: [], ...m.fog, ...patch }
       })
+  }
   const all = { id: 'all', mode: 'reveal' as const, points: [[0, 0], [0, map.width], [map.height, map.width], [map.height, 0]] as [number, number][] }
   const { ask, dialog } = useReview()
   // What Undo took off, for Redo (each step one shape, or the shapes made together, like a room or a
@@ -928,14 +932,15 @@ function FogBar({
     if (!fog) return
     const was = fog.shapes
     await setFog({ shapes: [] })
-    toast('The whole map is covered again.', () =>
-      db.maps
+    toast('The whole map is covered again.', () => {
+      fogChangedHere(map.id)
+      return db.maps
         .where('id')
         .equals(map.id)
         .modify((m) => {
           if (m.fog) m.fog.shapes = [...was, ...m.fog.shapes]
-        }),
-    )
+        })
+    })
   }
   const uncoverAll = async () => {
     const ok = await ask({
@@ -947,14 +952,15 @@ function FogBar({
     if (!ok || !fog) return
     const shape = { ...all, id: newId() }
     await setFog({ shapes: [...fog.shapes, shape] })
-    toast('The whole map is uncovered.', () =>
-      db.maps
+    toast('The whole map is uncovered.', () => {
+      fogChangedHere(map.id)
+      return db.maps
         .where('id')
         .equals(map.id)
         .modify((m) => {
           if (m.fog) m.fog.shapes = m.fog.shapes.filter((s) => s.id !== shape.id)
-        }),
-    )
+        })
+    })
   }
   return (
     <div className="map-toolbar fog-bar">

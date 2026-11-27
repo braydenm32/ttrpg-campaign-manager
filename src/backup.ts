@@ -255,8 +255,8 @@ export async function importWorld(file: File): Promise<{ id: string; name: strin
       cloud: undefined,
       shared: undefined,
       coverId: opt(b.world.coverId),
-      showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId) } : undefined,
-      handouts: b.world.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId) })),
+      showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId), mapId: opt(showing.mapId) } : undefined,
+      handouts: b.world.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId), mapId: opt(h.mapId) })),
       // The GM screen's pinned pages.
       gmScreen: b.world.gmScreen && {
         ...b.world.gmScreen,

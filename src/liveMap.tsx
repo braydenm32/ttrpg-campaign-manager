@@ -1,12 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Link } from 'react-router-dom'
 import { askForMap, hostLiveMap, onTableJoined, onWorldChanged, PATCH_MAX_CHARS, pinsForPlayers, usablePatches, useLiveMap, type MapMessage, type MapPatch } from './cloud/liveMap'
 import { refreshJoinedWorldNow } from './cloud/share'
 import { schedule } from './cloud/sync'
 import { gmIdOf } from './cloud/table'
-import { db, type Asset, type FogShape, type Showing, type World } from './db'
-import { fogKey, onPlayerFogRendered, playersCopyId, renderPlayerFog, type FogRendered } from './fog'
+import { db, type Asset, type FogShape, type Showing, type World, type WorldMap } from './db'
+import { fogChangedElsewhere, fogHereSince, fogKey, mapPictureIds, onFogHostChange, onPlayerFogRendered, playersCopyId, renderPlayerFog, type FogRendered } from './fog'
 import { worldPath } from './paths'
 import './liveMap.css'
 
@@ -18,6 +18,38 @@ const LiveMapView = lazy(() => import('./liveMapView'))
  * that keeps it live. Players only ever get the players' copy of the picture (the fog painted on,
  * GM-only pieces left out) and the pins they may see; how it travels is in src/cloud/liveMap.ts.
  */
+
+/** Whether something shown is a live map (from a map's own "Show players"). */
+export const isLiveMap = (showing: Showing | null | undefined) => !!showing && showing.kind === 'image' && (!!showing.mapId || !!showing.live)
+
+/**
+ * The map a shown picture is of, on this device: by its id when players can see the map, else (a
+ * map that is GM only, whose id players aren't sent) the map that picture belongs to. Null when this
+ * device has no such map (a player's, for a map they can't see); undefined while it's being looked up.
+ */
+export function useShownMap(worldId: string, showing: Showing | null | undefined): WorldMap | null | undefined {
+  const live = isLiveMap(showing)
+  const mapId = live ? showing!.mapId : undefined
+  const assetId = live ? showing!.assetId : undefined
+  const key = `${mapId ?? ''}|${assetId ?? ''}`
+  const found = useLiveQuery(async () => {
+    let map: WorldMap | undefined
+    if (mapId) map = await db.maps.get(mapId)
+    else if (assetId) map = (await db.maps.where({ worldId }).toArray()).find((m) => mapPictureIds(m).includes(assetId))
+    return { key, map: map ?? null }
+  }, [worldId, key])
+  // (A query answers with what it found last time until it has looked again: nothing of the map shown before is used.)
+  if (!live) return null
+  return found && found.key === key ? found.map : undefined
+}
+
+/** Whether this device keeps that map live (see fogChangedHere in src/fog.ts). */
+function useHostHere(mapId: string | undefined) {
+  return useSyncExternalStore(onFogHostChange, () => (mapId ? (fogHereSince(mapId) ?? 0) : 0))
+}
+
+/** A fog change seen this long after this device last touched it came from another device. */
+const ELSEWHERE_AFTER = 5000
 
 /** A picture's version: when its file last changed (how a player's app and the GM's tell which copy each has). */
 const versionOf = (a: Pick<Asset, 'createdAt' | 'updatedAt'> | undefined) => a?.updatedAt ?? a?.createdAt ?? 0
@@ -88,16 +120,30 @@ function changedBox(before: FogShape[], after: FogShape[], r: Pick<FogRendered, 
  * Only the players' copy is ever read here, never the GM's picture.
  */
 export function LiveMapHost({ world }: { world: World }) {
-  const showing = world.showing?.kind === 'image' && world.showing.mapId && !world.spread ? world.showing : undefined
-  const mapId = showing?.mapId
+  const showing = isLiveMap(world.showing) && !world.spread ? world.showing! : undefined
   const showingId = showing?.id
   const shownAsset = showing?.assetId
   const cloud = !!world.cloud?.enabled
-  const map = useLiveQuery(async () => (mapId ? ((await db.maps.get(mapId)) ?? null) : null), [mapId])
+  const map = useShownMap(world.id, showing)
+  const mapId = map?.id
+  // Only the device that showed the map or last changed its fog keeps it live, so two GM devices
+  // never make and upload the same copy at once.
+  const since = useHostHere(mapId)
+  const here = since > 0
+
+  // The fog changed on another device (it came in by sync): that device keeps the map live now.
+  const shapesKey = map?.fog ? `${map.fog.on ? 1 : 0}:${map.fog.shapes.map((x) => x.id).join(',')}` : ''
+  const seenShapes = useRef<{ mapId?: string; key: string }>({ key: '' })
+  useEffect(() => {
+    const was = seenShapes.current
+    seenShapes.current = { mapId, key: shapesKey }
+    if (!mapId || was.mapId !== mapId || was.key === shapesKey) return
+    if (here && Date.now() - since > ELSEWHERE_AFTER) fogChangedElsewhere(mapId)
+  }, [mapId, shapesKey, here, since])
 
   // The fog changed: the players' copy is remade at once, not when the GM next pauses.
   useEffect(() => {
-    if (!map?.fog?.on) return
+    if (!here || !map?.fog?.on) return
     let gone = false
     let timer: ReturnType<typeof setTimeout> | undefined
     void fogKey(map).then((key) => {
@@ -108,7 +154,7 @@ export function LiveMapHost({ world }: { world: World }) {
       gone = true
       clearTimeout(timer)
     }
-  }, [map])
+  }, [map, here])
 
   // Fog switched on or off (or the first GM-only piece drawn) since it went up: what's shown follows to the picture players get now.
   const want = map ? playersCopyId(map) : undefined
@@ -129,7 +175,7 @@ export function LiveMapHost({ world }: { world: World }) {
   const last = useRef<{ mapId: string; version: number; shapes: FogShape[]; base: string }>(undefined)
   const host = useRef<ReturnType<typeof hostLiveMap>>(undefined)
   useEffect(() => {
-    if (!cloud || !mapId) return
+    if (!cloud || !mapId || !here) return
     let sentWhole = 0
     let sentVersion = 0
     let waiting: ReturnType<typeof setTimeout> | undefined
@@ -189,7 +235,7 @@ export function LiveMapHost({ world }: { world: World }) {
       h.close()
       host.current = undefined
     }
-  }, [cloud, mapId, world.id])
+  }, [cloud, mapId, world.id, here])
 
   // A copy made elsewhere (before the map went up, or in another tab): if it's up to date, the shapes it was made from are the ones on the map.
   useEffect(() => {
@@ -207,7 +253,7 @@ export function LiveMapHost({ world }: { world: World }) {
   }, [map])
 
   // A pin revealed, hidden, moved or renamed reaches players' screens at once too.
-  const pins = useLiveQuery(async () => (cloud && map ? JSON.stringify(await pinsForPlayers(map)) : ''), [cloud, map])
+  const pins = useLiveQuery(async () => (cloud && here && map ? JSON.stringify(await pinsForPlayers(map)) : ''), [cloud, here, map])
   useEffect(() => {
     if (!pins || !map) return
     const t = setTimeout(async () => {
@@ -285,9 +331,7 @@ export function LiveMap({ showing, worldId, big }: { showing: Showing; worldId: 
   const world = useLiveQuery(async () => (await db.worlds.get(worldId)) ?? null, [worldId])
   const memberOf = world?.shared?.memberOf
   const own = !!world && !world.shared
-  // (A query answers with what it found last time until it has looked again: nothing of the map shown before is used.)
-  const found = useLiveQuery(async () => (showing.mapId ? ((await db.maps.get(showing.mapId)) ?? null) : null), [showing.mapId])
-  const map = found && found.id !== showing.mapId ? undefined : found
+  const map = useShownMap(worldId, showing)
   const assetId = world === undefined || map === undefined ? undefined : own && map ? playersCopyId(map) : showing.assetId
   const asset = useLiveQuery(async () => (assetId ? ((await db.assets.get(assetId)) ?? null) : null), [assetId])
   const picture = useLoadedPicture(asset && asset.id === assetId ? asset : undefined)

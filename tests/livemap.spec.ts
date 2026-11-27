@@ -326,6 +326,15 @@ test('fog cleared while a map is shown reaches a player without a new Show: a pi
     const sentPins = JSON.stringify(said.map((m) => m.payload.pins))
     for (const name of pins.shown) expect(sentPins, `“${name}” is uncovered and for players`).toContain(name)
     for (const name of pins.gmOnly) expect(sentPins, `“${name}” is GM only`).not.toContain(name)
+    // A pin still under the fog isn't sent either (one inside the circle just uncovered is fair game).
+    const circle = ((await getRecord(page, 'maps', map.id)) as MapRow).fog!.shapes.at(-1)!.points
+    const ys = circle.map((q) => q[0])
+    const xs = circle.map((q) => q[1])
+    const inCircle = (q: [number, number]) => q[0] >= Math.min(...ys) && q[0] <= Math.max(...ys) && q[1] >= Math.min(...xs) && q[1] <= Math.max(...xs)
+    const allPins = world.dump.pins as unknown as PinRow[]
+    const stillFogged = pins.fogged.filter((label) => allPins.every((q) => q.mapId !== map.id || q.label !== label || !q.position || !inCircle(q.position)))
+    expect(stillFogged.length, 'a pin still under the fog').toBeGreaterThan(0)
+    for (const name of stillFogged) expect(sentPins, `“${name}” is still under the fog`).not.toContain(name)
     expect(Object.keys((piece.payload.pins as object[])[0]).sort().join(' ')).not.toMatch(/note|entityId|visibility/)
     // Nothing about the map goes to the room every player can post in.
     expect(gm.sent.filter((m) => m.event === 'map' && m.topic !== `realtime:table:${world.id}`)).toEqual([])
@@ -348,10 +357,71 @@ test('fog cleared while a map is shown reaches a player without a new Show: a pi
     rt.say(`table:${CLOUD}`, 'map', piece.payload)
     await player.waitForTimeout(400)
     await expect(theirs.locator('.live-patch')).toHaveCount(1)
+
+    // Fog changed on another device (here: written straight to the database, as sync would, on a device
+    // that isn't the one keeping the map live, which then opens the world): it neither remakes the
+    // players' copy nor says anything to players, so two devices never send pieces of their own.
+    await page.evaluate((id) => localStorage.removeItem(`atlas.liveMapHost.${id}`), map.id)
+    const fogNow = ((await getRecord(page, 'maps', map.id)) as MapRow).fog!
+    await patchRecord(page, 'maps', map.id, { fog: { ...fogNow, shapes: [...fogNow.shapes, { id: 'elsewhere', mode: 'reveal', points: [[10, 10], [10, 60], [60, 60], [60, 10]] }] } })
+    const quiet = gm.sent.length
+    await page.reload()
+    await expect(page.locator('.map-live-chip')).toBeVisible()
+    await page.waitForTimeout(3000)
+    expect(gm.sent.slice(quiet).filter((m) => m.event === 'map')).toEqual([])
   } finally {
     await player.goto('/').catch(() => {})
     await removeCopy?.()
     await player.close()
+    await tidy(page, world, wasWorld, wasMap)
+  }
+})
+
+test('a GM-only map shown as “A map” goes out as its picture alone: no map id, no pins, no name', async ({ page, world }) => {
+  const map = world.map(MAP) as unknown as MapRow
+  const pins = sortPins(world, map.id)
+  const gm = await fakeRealtime(page)
+  await open(page, '/')
+  const wasWorld = await patchRecord(page, 'worlds', world.id, { cloud: { enabled: true } })
+  const wasMap = await fogWith(page, map.id, pins.box, { visibility: 'gm' })
+  try {
+    await open(page, `/w/${world.slug}/maps/${map.id}`)
+    await page.locator('.map-tools').getByRole('button', { name: 'Show players' }).click()
+    // Its own name would give it away: it goes out as "A map".
+    const ask = page.getByRole('dialog', { name: 'Show this picture?' })
+    await expect(ask.getByLabel('What players see it called')).toHaveValue('A map')
+    await ask.getByRole('button', { name: 'Show players' }).click()
+    await expect(page.locator('.map-live-chip')).toContainText('On players’ screens')
+    const saved = (await getRecord(page, 'worlds', world.id))!
+    const showing = saved.showing as Row & { assetId: string; live?: boolean; mapId?: string; title: string }
+    const copyId = ((await getRecord(page, 'maps', map.id)) as MapRow).fog!.imageId!
+    expect(showing).toMatchObject({ kind: 'image', live: true, title: 'A map', assetId: copyId })
+    expect(showing.mapId).toBeUndefined()
+    // Neither what's shown nor its handout holds the map's id or its name.
+    expect(JSON.stringify([saved.showing, saved.handouts])).not.toContain(map.id)
+    expect(JSON.stringify([saved.showing, saved.handouts])).not.toContain(MAP)
+    // What's said live is about the picture only, with no pins, and never the map's id.
+    await expect.poll(() => gm.sent.filter((m) => m.event === 'map').length, { timeout: 20_000 }).toBeGreaterThan(0)
+    const said = gm.sent.filter((m) => m.event === 'map')
+    for (const m of said) {
+      expect(m.topic).toBe(`realtime:table:${world.id}`)
+      expect(m.payload.pins).toEqual([])
+      expect(JSON.stringify(m.payload)).not.toContain(map.id)
+    }
+    // The players' screen: the picture, no pins, not the map's name.
+    const tv = await page.context().newPage()
+    try {
+      await open(tv, `/screen/${world.slug}`)
+      const live = tv.locator('.live-map')
+      await expect(live.locator('.live-picture')).toBeVisible()
+      await expect(live.locator('.leaflet-tooltip')).toHaveCount(0)
+      const all = await tv.locator('.players-screen').innerHTML()
+      expect(all).not.toContain(MAP)
+      for (const name of [...pins.shown, ...pins.gmOnly]) expect(all).not.toContain(name)
+    } finally {
+      await tv.close()
+    }
+  } finally {
     await tidy(page, world, wasWorld, wasMap)
   }
 })
@@ -393,6 +463,22 @@ test('the players’ screen shows the turn order as players know it, and the tim
     // Nothing of what players don't know is on the page at all: the hidden foe's name, its hit points, the hidden timer, who is down.
     const html = await page.locator('.players-screen').innerHTML()
     for (const hiddenThing of [secret.name, 'Assassin arrives', 'Fallen sellsword', '20/30']) expect(html).not.toContain(hiddenThing)
+
+    // While the GM runs another session live (with no fight in it), the screen follows that one, as players' phones do.
+    const other = sessions.find((x) => x.id !== session.id)!
+    const wasOther = (await getRecord(page, 'sessions', other.id))!
+    try {
+      await patchRecord(page, 'sessions', other.id, { playedAt: undefined, lectern: { sceneText: '', presentIds: [], rolls: [], combat: { round: 0, combatants: [] }, timers: [] } })
+      await page.evaluate(({ w, s }) => sessionStorage.setItem(`codex.liveSession.${w}`, s), { w: world.id, s: other.id })
+      await page.reload()
+      await expect(page.locator('.players-screen')).toBeVisible()
+      // (The panel takes a moment to look: give it one, so this isn't seen before it could appear.)
+      await page.waitForTimeout(1500)
+      await expect(panel).toHaveCount(0)
+    } finally {
+      await page.evaluate((w) => sessionStorage.removeItem(`codex.liveSession.${w}`), world.id)
+      await putBack(page, 'sessions', [[other.id, wasOther]])
+    }
 
     // The fight over and the timers gone: the panel leaves the screen.
     await patchRecord(page, 'sessions', session.id, { lectern: { ...lectern, combat: { round: 0, combatants: [] }, timers: [] } })
