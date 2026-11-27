@@ -125,6 +125,7 @@ export function StartPlayingButton({
           session={session}
           world={world}
           onClose={() => setOpen(false)}
+          here={!!onStarted}
           onStart={async (choice) => {
             setOpen(false)
             if (!(await startWith(session, world, choice))) return
@@ -139,7 +140,7 @@ export function StartPlayingButton({
 }
 
 /** The box itself: the two ticks, each with what it does, then Start playing. */
-function StartBox({ session, world, onClose, onStart }: { session: Session; world: World; onClose: () => void; onStart: (choice: StartChoice) => void }) {
+function StartBox({ session, world, here, onClose, onStart }: { session: Session; world: World; here: boolean; onClose: () => void; onStart: (choice: StartChoice) => void }) {
   const [choice, setChoice] = useState(lastChoice)
   const liveNow = useLiveSession(world.id)
   const recording = useLiveRecording()
@@ -157,7 +158,7 @@ function StartBox({ session, world, onClose, onStart }: { session: Session; worl
     <Modal title={`Start playing #${session.number} ${session.title}`} onClose={onClose}>
       <div className="start-box">
         <p className="small muted">
-          Marks the session as being played and opens the Lectern. <Help topic="startPlaying" />
+          {here ? 'Marks the session as being played.' : 'Marks the session as being played and opens Play: the Lectern.'} <Help topic="startPlaying" />
         </p>
         {!canGoLive ? (
           <p className="small muted start-absent">
@@ -174,7 +175,7 @@ function StartBox({ session, world, onClose, onStart }: { session: Session; worl
               <strong>Go live to players</strong>
               <span className="small muted">
                 Their Common Room shows this session as being played: the scene’s name, music, timers and whose turn it is. Never your notes.
-                {other && ` Session ${other.number} is live now; this one takes its place.`}
+                {other && ` #${other.number} ${other.title} is live now; this one takes its place.`}
               </span>
             </span>
           </label>
