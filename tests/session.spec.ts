@@ -15,6 +15,15 @@ import { keyMark } from './lib/assembly'
 
 const toast = (page: Page) => page.locator('.undo-toast')
 
+/** “Start playing” on the session's strip opens the box with its two ticks; the box's own button starts. */
+async function startFromStrip(page: Page) {
+  await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+  const box = page.getByRole('dialog', { name: /^Start playing #/ })
+  await expect(box.getByText('Record', { exact: true })).toBeVisible()
+  await box.getByRole('button', { name: 'Start playing' }).click()
+  await expect(box).toHaveCount(0)
+}
+
 test('a session moves Prepare → Play → Wrap up, then the next one is up on the Desk', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   const s1 = world.session(1)
@@ -27,7 +36,12 @@ test('a session moves Prepare → Play → Wrap up, then the next one is up on t
   try {
     const strip = page.locator('.session-strip')
     await expect(strip.locator('[data-stage]')).toHaveAttribute('data-stage', 'preparing')
+    // Nothing starts until the box's own button is pressed.
     await strip.getByRole('button', { name: 'Start playing' }).click()
+    await expect(page.getByRole('dialog', { name: /^Start playing #1/ })).toBeVisible()
+    expect((await getRecord(page, 'sessions', s1.id))?.startedAt ?? null).toBeNull()
+    await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click()
+    await startFromStrip(page)
 
     await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}/lectern`)
     await expect(page.getByRole('heading', { name: /Play: the Lectern/ })).toBeVisible()
@@ -67,7 +81,7 @@ test('“Start playing” can be taken back, and a session whose date went by as
   const before2 = await getRecord(page, 'sessions', world.session(2).id)
   try {
     // A press by mistake: the note at the bottom takes it back, on the Lectern it opened.
-    await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+    await startFromStrip(page)
     await expect(toast(page)).toContainText('#1')
     await toast(page).getByRole('button', { name: 'Not started after all' }).click()
     await expect.poll(async () => (await getRecord(page, 'sessions', s1.id))?.startedAt ?? null).toBeNull()
@@ -114,7 +128,7 @@ test('typing the recap does not mark a session played; "Not played yet" takes th
   // Marking #1 played adds its leftovers to #2's plan, so #2 is put back too.
   const before2 = await getRecord(page, 'sessions', world.session(2).id)
   try {
-    await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+    await startFromStrip(page)
     await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}/lectern`)
     await open(page, `${w}/s/${s1.id}?end=1`)
 

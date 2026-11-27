@@ -37,7 +37,7 @@ export interface Dump {
   entities: Entity[]
   maps: { id: string; name: string; visibility: string }[]
   pins: { id: string; mapId: string; label: string; note: string; visibility: string }[]
-  sessions: { id: string; number: number; title: string; notes?: string; recap?: string; visibility: string; campaignId: string }[]
+  sessions: { id: string; number: number; title: string; notes?: string; happened?: string; recap?: string; visibility: string; campaignId: string }[]
   campaigns: { id: string; name: string; description: string; visibility?: string | null }[]
   boards: { id: string; name: string }[]
 }

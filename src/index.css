@@ -1557,6 +1557,10 @@ a.more-item:hover { border-color: var(--accent); }
 @media (max-width: 800px) {
   body:has(.app-shell.with-bottom-bar) .undo-toast { bottom: calc(var(--bottombar-h) + .75em); }
   .undo-toast { width: calc(100vw - 2em); }
+  .undo-toast.long-action { flex-wrap: wrap; row-gap: 0; padding-top: .6em; }
+  .undo-toast.long-action > span { flex-basis: 100%; }
+  .undo-toast.long-action .undo-button { margin-left: -.6em; }
+  .undo-toast.long-action .undo-close { margin-left: auto; }
 }
 
 /* A session's stage (src/stage.tsx): Planned, Preparing, Playing, Played. */

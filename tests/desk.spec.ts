@@ -71,6 +71,11 @@ test('the strip’s main button follows the stage of the session in hand', async
     await expect(strip(page).locator('[data-stage]')).toHaveAttribute('data-stage', 'preparing')
     await expect(strip(page).locator('.primary')).toHaveAttribute('data-next', 'play')
     await expect(strip(page).locator('.primary')).toContainText('Start playing')
+    // It opens the box with the two ticks; nothing starts until the box's own button is pressed.
+    await strip(page).locator('.primary').click()
+    await expect(page.getByRole('dialog', { name: /^Start playing #1/ })).toBeVisible()
+    await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click()
+    expect((await getRecord(page, 'sessions', s1.id))?.startedAt ?? null).toBeNull()
     await expect(strip(page).getByRole('link', { name: 'Continue prep' })).toBeVisible()
 
     // Started at the table: Playing, and the main button wraps it up.
@@ -78,6 +83,8 @@ test('the strip’s main button follows the stage of the session in hand', async
     await open(page, w)
     await expect(strip(page).locator('[data-stage]')).toHaveAttribute('data-stage', 'playing')
     await expect(strip(page).locator('.primary')).toHaveAttribute('data-next', 'wrap')
+    await expect(strip(page).getByRole('link', { name: 'Continue', exact: true })).toHaveAttribute('href', new RegExp(`/s/${s1.id}/lectern$`))
+    await expect(strip(page).getByRole('button', { name: 'Start playing' })).toHaveCount(0)
     await strip(page).locator('.primary').click()
     await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}?end=1`)
 
