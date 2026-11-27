@@ -1,4 +1,6 @@
 import { PagePicker } from '../PagePicker'
+import { isPartOf, isPlace, placeAbove, sameKind, withBelow, afterKindChange } from '../nesting'
+import { ParentFields, UnderIt } from '../nestingUi'
 import { ImagePicker } from '../ImagePicker'
 import { PinOnMapButton } from '../pinOnMap'
 import { StockTable } from '../shopStock'
@@ -117,8 +119,12 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   // A page for the whole world (named like it) is where everything sits; the breadcrumb skips it.
   if (ancestors.length > 1 && world && ancestors[0].name.trim().toLowerCase() === world.name.trim().toLowerCase()) ancestors.shift()
   const inside = entities.filter((x) => x.parentId === e.id)
+  // A page that isn't a place has pages of its own kind under it (a sub-faction), listed apart.
+  const kin = isPlace(e) ? [] : inside.filter((x) => sameKind(x, e))
+  const branch = kin.length ? [...withBelow(e.id, entities)].flatMap((id) => (id !== e.id && byId.get(id) && sameKind(byId.get(id)!, e) ? [byId.get(id)!] : [])) : []
+  const placeOf = ancestors.length && !isPlace(ancestors.at(-1)!) && isPartOf(ancestors.at(-1)!, e) ? placeAbove(e, byId) : undefined
   const backlinks = findBacklinks(e, entities, isGM)
-  const groups = ENTITY_TYPES.map((t) => [t, inside.filter((x) => x.type === t)] as const).filter(([, xs]) => xs.length)
+  const groups = ENTITY_TYPES.map((t) => [t, inside.filter((x) => x.type === t && !kin.includes(x))] as const).filter(([, xs]) => xs.length)
   const seen = HAS_STATUS.includes(e.type) ? lastSeenIn(e, sessions, isGM) : undefined
   // A player's own character: their numbers first, and a word that it's them.
   const owner = e.type === 'pc' ? owners.get(e.id) : undefined
@@ -288,6 +294,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           {world && <PlayerNotesBox world={world} entityId={e.id} entities={entities} />}
           {world && <AskGmBox world={world} entityId={e.id} />}
           {isGM && e.type === 'location' && <AddInside parent={e} />}
+          {!isPlace(e) && <UnderIt page={e} kids={kin} branch={branch} world={world} isGM={isGM} worldId={worldId} />}
           {groups.map(([t, xs]) => (
             <section key={t}>
               <h2>
@@ -351,9 +358,17 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               )}
               {ancestors.length > 0 && (
                 <div>
-                  <dt>{e.type === 'location' ? 'Inside' : e.type === 'event' ? 'Where' : 'Located in'}</dt>
+                  <dt>{e.type === 'location' ? 'Inside' : isPartOf(ancestors.at(-1)!, e) ? 'Part of' : e.type === 'event' ? 'Where' : 'Located in'}</dt>
                   <dd>
                     <Link to={`${pagePath(worldId, ancestors.at(-1)!.id)}`}>{ancestors.at(-1)!.name}</Link>
+                  </dd>
+                </div>
+              )}
+              {placeOf && (
+                <div>
+                  <dt>{e.type === 'event' ? 'Where' : 'Located in'}</dt>
+                  <dd>
+                    <Link to={pagePath(worldId, placeOf.id)}>{placeOf.name}</Link>
                   </dd>
                 </div>
               )}
@@ -477,12 +492,29 @@ async function writeChanges(opened: Entity, d: Entity, world: World | null | und
   if ('name' in mine) merged.name = d.name.trim() || 'Untitled'
   // A new calendar date puts the event in its place on the timeline; an unchanged one keeps its order among same-day events.
   if ('eventWhen' in mine && merged.type === 'event' && merged.eventWhen && world?.calendar) merged.eventOrder = toDays(world.calendar, merged.eventWhen)
+  // A new kind: a page can only be under a page of its own kind (or in a place), so whatever no
+  // longer fits moves up a level (see afterKindChange).
+  const moved = ('type' in mine || 'customType' in mine) && !merged.template ? afterKindChange(merged, await db.entities.where({ worldId: merged.worldId }).toArray()) : []
+  const self = moved.find((m) => m.id === merged.id)
+  if (self) merged.parentId = self.to
+  const under = moved.filter((m) => m.id !== merged.id)
   await saveEntity(merged)
+  for (const m of under) await db.entities.update(m.id, { parentId: m.to, updatedAt: Date.now() })
   clearDraft(opened.id)
   dropHeldPage(opened.id)
   // Renamed: links to the old name (and :::for passages, for a player character) follow it.
   const renamed = merged.template ? '' : await renameLinks(opened.worldId, current, merged)
-  return { before, merged, renamed }
+  return { before, merged, renamed, under }
+}
+
+/** Says which pages moved up a level when a page changed kind, with Undo to put them back under it. */
+function sayMoved(merged: Entity, under: { id: string; from?: string }[], world: World | null | undefined) {
+  if (!under.length) return
+  const one = typeLabel(merged, world).one
+  const kind = /^[A-Z]{2}/.test(one) ? one : one.toLowerCase()
+  toast(`“${merged.name}” is now ${/^([aeiou]|NPC)/i.test(kind) ? 'an' : 'a'} ${kind} page, so the ${under.length === 1 ? 'page' : `${under.length} pages`} under it moved up a level.`, async () => {
+    for (const m of under) await db.entities.update(m.id, { parentId: m.from, updatedAt: Date.now() })
+  })
 }
 
 /**
@@ -550,8 +582,8 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
       if (closed || !changed) return
       // Left without Save or Cancel (a link, Back, another screen): keep what was typed, with Undo.
       void writeChanges(opened, last, world).then(
-        ({ before, merged }) =>
-          toast(`Saved your changes to “${merged.name}”.`, async () => {
+        ({ before, merged, under }) =>
+          under.length ? sayMoved(merged, under, world) : toast(`Saved your changes to “${merged.name}”.`, async () => {
             if (!before) return db.entities.delete(merged.id)
             await db.entities.put(before)
             // Renamed on the way out: the links that followed the new name go back to the old one too.
@@ -572,7 +604,9 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
     leaving.current.closed = true
     let renamed: string
     try {
-      ;({ renamed } = await writeChanges(opened, d, world))
+      let merged: Entity, under: { id: string; from?: string }[]
+      ;({ renamed, merged, under } = await writeChanges(opened, d, world))
+      sayMoved(merged, under, world)
     } catch (err) {
       // Still open, with what was typed, so Save can be pressed again once there's room.
       leaving.current.closed = false
@@ -601,17 +635,6 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
     await db.entities.add(t)
     alert(`Saved “${t.name}” as a template. Choose it next time you make a new ${typeLabel(d, world).one.toLowerCase()}. Templates are listed in World settings.`)
   }
-  // Anything can sit "inside" a location, and locations can nest, but a place can't go inside itself or anything inside it.
-  const within = new Set([d.id])
-  for (let grew = true; grew; ) {
-    grew = false
-    for (const x of entities) {
-      if (!x.parentId || !within.has(x.parentId) || within.has(x.id)) continue
-      within.add(x.id)
-      grew = true
-    }
-  }
-  const parents = entities.filter((x) => x.type === 'location' && !within.has(x.id))
 
   return (
     <div className="page">
@@ -739,11 +762,16 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
               onChange={(ev) => {
                 const v = ev.target.value
                 // A page that becomes a quest or a thread starts open, as a new one does.
-                setD((x) => ({
-                  ...(v.startsWith('custom:') ? { ...x, type: 'custom', customType: v.slice(7) } : { ...x, type: v as EntityType, customType: undefined }),
-                  ...(v === 'quest' && !x.questStatus ? { questStatus: 'open' as const } : {}),
-                  ...(v === 'thread' && !x.threadStatus ? { threadStatus: 'open' as const, threadUrgency: x.threadUrgency ?? ('normal' as const) } : {}),
-                }))
+                setD((x) => {
+                  const next: Entity = {
+                    ...(v.startsWith('custom:') ? { ...x, type: 'custom', customType: v.slice(7) } : { ...x, type: v as EntityType, customType: undefined }),
+                    ...(v === 'quest' && !x.questStatus ? { questStatus: 'open' as const } : {}),
+                    ...(v === 'thread' && !x.threadStatus ? { threadStatus: 'open' as const, threadUrgency: x.threadUrgency ?? ('normal' as const) } : {}),
+                  }
+                  // Part of a page of the old kind: it moves up to the nearest page that can hold it.
+                  const self = afterKindChange(next, entities).find((m) => m.id === x.id)
+                  return self ? { ...next, parentId: self.to } : next
+                })
               }}
             >
               {PICKER_TYPES.map((t) => (
@@ -759,10 +787,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
               {d.type === 'custom' && !world?.customTypes?.some((c) => c.id === d.customType) && <option value={`custom:${d.customType}`}>(removed type)</option>}
             </select>
           </label>
-          <label>
-            {d.type === 'event' ? 'Where it happened' : d.type === 'location' ? 'Inside' : 'Located in'}
-            <PagePicker entities={parents} value={d.parentId ?? ''} onPick={(id) => set('parentId', id || undefined)} placeholder="(none): type a place…" label={d.type === 'event' ? 'Where it happened' : d.type === 'location' ? 'Inside' : 'Located in'} recent />
-          </label>
+          <ParentFields d={d} opened={opened} entities={entities} world={world} onPick={(id) => set('parentId', id)} />
           {d.type === 'event' && (
             <>
               {world?.calendar && (

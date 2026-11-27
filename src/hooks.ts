@@ -81,7 +81,7 @@ export function useVisibleEntities(worldId: string) {
           .filter((e) => !e.template && (isGM || e.visibility === 'players' || (!!as && !!e.revealedTo?.includes(as)) || revealDue(e)))
           .sortBy('name')
         if (isGM) return list
-        // Like the server's copy: a place or carrier the player can't see isn't named.
+        // Like the server’s copy: a page it sits in or under, or a carrier, that the player can’t see isn’t named (for every kind of page).
         const seen = new Set(list.map((e) => e.id))
         return list.map(asPlayerSees).map((e) => ({
           ...e,

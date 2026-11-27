@@ -27,7 +27,9 @@ export const HELP = {
   previewAs:
     'Pick one player to see the world exactly as they do: what’s revealed to everyone, plus pages revealed just to them and passages written for their character. Without invited players you can still pick a character, to check their passages and their Common Room.',
   codex:
-    'Every page in your world, grouped by type. Places (with shops and taverns), People, Factions and Lore (with deities) have tabs of their own in the Atlas, and this list shows every type with how many pages it has. Pages of no particular type are under Other pages. Pages can sit inside places (a tavern inside a town).',
+    'Every page in your world, grouped by type. Places (with shops and taverns), People, Factions and Lore (with deities) have tabs of their own in the Atlas, and this list shows every type with how many pages it has. Pages of no particular type are under Other pages. Pages can sit inside places (a tavern inside a town), and any page can be part of a page of its own kind (a faction under a faction); a list with pages under others shows them as a tree you can fold.',
+  partOf:
+    'A page can be part of another page of its own kind: a smaller faction under a bigger one, a chapter of lore under its subject, a quest’s side quests under it, an item under a set. Pick it in Edit, under “Part of” (places use “Inside” the same way). It then sits where that page is, its trail at the top shows the way up, and its list shows it folded under it. A page can’t go under one of its own pages. Delete a page, or change its kind, and the pages under it move up a level (Undo puts them back). Players see the nesting only between pages they can see.',
   questList: 'Quests are grouped by where they stand: Active (the party is on it now), Open (waiting to be taken up) and Done (finished or failed). Change a quest’s status on its page with Edit.',
   quickAdd: 'Make a new page of any type. It starts as GM only, so nothing is revealed until you choose. You can also press Ctrl+K and type “new npc”.',
   visibility:
@@ -35,7 +37,7 @@ export const HELP = {
 
   // Pages
   entityPage:
-    'A page in your world. Link other pages by typing @ or [[ and the start of a name, then pick from the list (or write [[Their Name]] in full); hover over a link to peek at that page. The sidebar shows the picture, maps it appears on, details and tags; below are the places and people inside it and every page that mentions it.',
+    'A page in your world. Link other pages by typing @ or [[ and the start of a name, then pick from the list (or write [[Their Name]] in full); hover over a link to peek at that page. The sidebar shows the picture, maps it appears on, details and tags; below are the places and people inside it, the pages under it (a faction’s smaller factions) and every page that mentions it.',
   secrets:
     'Hide part of a page with the “GM-only passage” button: players never see it. “Secret for…” keeps a passage for certain characters only: pick their names and it is marked for you (written as “:::for Wren and Silas” on a line of its own, closed with “:::”). Names are suggested as you type.',
   revealTo:
@@ -55,7 +57,7 @@ export const HELP = {
   history:
     'Every time you save a page, the version before is kept on this device (the last 40). Look at an old version or restore it; restoring keeps today’s version too, and who can see the page stays as it is now.',
   recentlyDeleted:
-    'Pages, sessions, campaigns, maps, files, corkboards and sounds deleted on this device, or on another device that syncs this world. Restore brings them back as they were; a page comes back with the places inside it, what it carried and its map pins. When two devices change the same session, corkboard or world setting at once, this device’s version is kept and the other one waits here, marked “changed on another device”. Things other than pages are kept for a month; “Delete forever” or “Delete all for good” frees the space straight away.',
+    'Pages, sessions, campaigns, maps, files, corkboards and sounds deleted on this device, or on another device that syncs this world. Restore brings them back as they were; a page comes back with the places inside it and the pages under it, what it carried and its map pins. When two devices change the same session, corkboard or world setting at once, this device’s version is kept and the other one waits here, marked “changed on another device”. Things other than pages are kept for a month; “Delete forever” or “Delete all for good” frees the space straight away.',
   oneShot:
     'Run this world again and again, for one table after another. Making it a one-shot saves the world as it is now as its starting point; after a game, “Reset for the next table” puts everything back the way it was: reveals, fog of war, clocks, the in-game clock, handouts, who’s alive, loot, quests and the sessions. Changed your prep? “Update starting point”. The starting point is kept on this device only; on another device, save one there before anyone plays, or use a backup downloaded from this world.',
   oneShotReset:

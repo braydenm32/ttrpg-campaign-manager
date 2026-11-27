@@ -1,6 +1,7 @@
 import { strToU8, zipSync } from 'fflate'
 import { blankEntity, db, ENTITY_LABELS, newId, typeLabel, type Entity, type EntityType } from './db'
 import { saveFileAsAsset } from './hooks'
+import { above, canHold, isPartOf, isPlace, sameKind } from './nesting'
 import { stripSecrets } from './Markdown'
 import { IMPORT_ZIP, openZip } from './zipSafe'
 
@@ -25,8 +26,14 @@ export interface ImportedPage {
   /** Other names (GM only), and tags only the GM sees, from our own Markdown export. */
   aliases?: string[]
   gmTags?: string[]
-  /** The key or name of the page this one sits inside. */
+  /** The key or name of the page this one sits inside (a place, as a rule). */
   parent?: string
+  /**
+   * Keys or names of pages this one may be part of, best first: a "parent" it names, then its
+   * folders, nearest first. The first that is a page of its own kind wins (a faction under a
+   * faction); the rest are ignored, so a folder that isn't a page changes nothing.
+   */
+  partOf?: string[]
   status?: Entity['status']
   image?: { name: string; blob: Blob }
 }
@@ -191,7 +198,7 @@ function pullPicture(embed: string, images: string[]) {
   return ''
 }
 
-const SKIP_KEYS = new Set(['title', 'name', 'tags', 'tag', 'type', 'aliases', 'alias', 'summary', 'description', 'cssclass', 'cssclasses', 'publish', 'location', 'parent', 'located in', 'image', 'status', 'visibility', GM_TAGS_KEY])
+const SKIP_KEYS = new Set(['title', 'name', 'tags', 'tag', 'type', 'aliases', 'alias', 'summary', 'description', 'cssclass', 'cssclasses', 'publish', 'location', 'parent', 'part of', 'located in', 'image', 'status', 'visibility', GM_TAGS_KEY])
 
 export async function planMarkdown(files: Map<string, Blob>): Promise<ImportPlan> {
   const pages: ImportedPage[] = []
@@ -233,7 +240,9 @@ export async function planMarkdown(files: Map<string, Blob>): Promise<ImportPlan
       fields,
       aliases: aliases.length ? aliases : undefined,
       gmTags: gmTags.length ? gmTags : undefined,
-      parent: linkName(data.location) ?? linkName(data.parent) ?? linkName(data['located in']),
+      parent: linkName(data.location) ?? linkName(data['located in']) ?? linkName(data.parent),
+      // A note in a folder named after another note of its kind (Factions/The Guild/Dockhands.md) is part of it.
+      partOf: [linkName(data['part of']), linkName(data.parent), ...folders].filter((x): x is string => !!x),
       status: typeof data.status === 'string' && ['alive', 'dead', 'missing', 'captured'].includes(data.status.toLowerCase()) ? (data.status.toLowerCase() as Entity['status']) : undefined,
       image: imageBlob && imageName ? { name: baseName(imageName), blob: imageBlob } : undefined,
     })
@@ -381,6 +390,8 @@ export async function planKanka(files: Map<string, Blob>): Promise<ImportPlan> {
       .map(([k, v]) => ({ key: k as string, value: str(v) }))
     const parentId = str(o.parent_location_id) || str(o.location_id) || str(o.parent_id)
     const parentFolder = o.parent_location_id != null || o.location_id != null ? 'locations' : folder
+    // Kanka names a parent of the same kind as parent_id, or after the kind: organisation_id, quest_id, note_id…
+    const own = str(o.parent_id) || str(o[`${folder.toLowerCase().replace(/ies$/, 'y').replace(/s$/, '')}_id`])
     const type = KANKA_TYPES[folder.toLowerCase()] ?? guessType(folder)
     return {
       // Something without an id of its own still gets a key of its own.
@@ -392,6 +403,7 @@ export async function planKanka(files: Map<string, Blob>): Promise<ImportPlan> {
       tags,
       fields,
       parent: parentId ? `${parentFolder}:${parentId}` : undefined,
+      partOf: own ? [`${folder}:${own}`] : undefined,
       status: o.is_dead === true || o.is_dead === 1 ? ('dead' as const) : undefined,
     }
   })
@@ -513,6 +525,7 @@ export async function planWorldAnvil(files: Map<string, Blob>): Promise<ImportPl
         key: str(o.id) || `${path}#${index}`,
         name: title.trim(),
         type: guessType(template, ...path.split('/').slice(0, -1).reverse()),
+        partOf: path.split('/').slice(0, -1).reverse(),
         // The summary and details are plain text that players see once the page is shown to them, so
         // a secret in the summary is left out, and a detail with a secret in it is GM only.
         summary: stripSecrets(bbcodeToMarkdown(str(o.excerpt))).replace(/\s+/g, ' ').trim().slice(0, 300),
@@ -548,6 +561,9 @@ export async function applyImport(worldId: string, plan: ImportPlan, skipExistin
     if (!idByKey.has(p.key)) idByKey.set(p.key, ids[i])
     if (!idByName.has(p.name.toLowerCase())) idByName.set(p.name.toLowerCase(), ids[i])
   })
+  const find = (ref: string) => idByKey.get(ref) ?? idByName.get(ref.toLowerCase())
+  const kindOf = new Map<string, Pick<Entity, 'type' | 'customType' | 'name'>>(existing.map((e) => [e.id, e]))
+  pages.forEach((p, i) => kindOf.set(ids[i], { type: p.type, name: p.name || 'Untitled' }))
   const now = Date.now()
   // Pictures and pages go in together, so if anything fails (a full device, say) nothing is left half done.
   return db.transaction('rw', [db.entities, db.assets], async () => {
@@ -563,11 +579,20 @@ export async function applyImport(worldId: string, plan: ImportPlan, skipExistin
       if (p.gmTags) e.gmTags = [...new Set(p.gmTags)]
       if (p.status) e.status = p.status
       if (p.type === 'event') e.eventOrder = now + i
-      const parent = p.parent && (idByKey.get(p.parent) ?? idByName.get(p.parent.toLowerCase()))
-      if (parent && parent !== e.id) e.parentId = parent
+      // Part of a page of its own kind if one is named (or is its folder), else in the place it names.
+      const kin = (p.partOf ?? []).map(find).find((id) => id && id !== e.id && sameKind(kindOf.get(id)!, p))
+      const place = p.parent ? find(p.parent) : undefined
+      if (kin) e.parentId = kin
+      else if (place && place !== e.id && canHold(kindOf.get(place)!, p)) e.parentId = place
+      // A place it names that it can't also sit in (or a page it can't sit under) is kept as a detail, so nothing is lost.
+      if (place && place !== e.id && place !== e.parentId && !e.fields.some((f) => /^located in$/i.test(f.key)))
+        e.fields = [...e.fields, { key: isPlace(kindOf.get(place)!) ? 'Located in' : 'Part of', value: kindOf.get(place)!.name }]
       if (p.image) e.imageId = await saveFileAsAsset(worldId, p.image.blob, p.image.name, [p.name])
       rows.push(e)
     }
+    // Two pages naming each other (or a longer circle) would loop: the first of the circle comes out of it.
+    const byId = new Map([...existing, ...rows].map((x) => [x.id, x]))
+    for (const r of rows) if (r.parentId && above(r, byId).some((x) => x.parentId === r.id)) r.parentId = undefined
     await db.entities.bulkAdd(rows)
     return rows.length
   })
@@ -597,7 +622,8 @@ export async function exportMarkdown(worldId: string) {
     if (e.gmTags?.length) fm.push(`${GM_TAGS_KEY}: [${e.gmTags.map((t) => JSON.stringify(t)).join(', ')}]`)
     if (e.status) fm.push(`status: ${e.status}`)
     const parent = e.parentId && byId.get(e.parentId)
-    if (parent) fm.push(`location: ${JSON.stringify(`[[${parent.name}]]`)}`)
+    // A page of its own kind it's part of goes back in as "part of"; a place as "location".
+    if (parent) fm.push(`${isPartOf(parent, e) ? 'part of' : 'location'}: ${JSON.stringify(`[[${parent.name}]]`)}`)
     // GM-only details keep their mark, so importing this back in never shows them to players.
     for (const f of e.fields)
       if (f.key.trim() && !/^(type|tags|summary|status|location|visibility)$/i.test(f.key.trim()))

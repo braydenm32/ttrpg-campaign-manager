@@ -261,6 +261,10 @@ a.card:hover, button.card:hover { border-color: var(--accent); text-decoration: 
 .tree { padding-left: 0; }
 .tree li { padding: .25em 0; }
 .tree ul { border-left: 1px solid var(--border); margin-left: .3em; }
+/* The fold arrow before a page with pages under it (src/nestingUi.tsx). */
+.tree .fold { padding: .1em .3em; margin: 0 .15em 0 -.3em; min-height: 0; line-height: 1; vertical-align: middle; }
+.part-of { margin: -.2em 0 .3em; }
+.under-it > button.ghost { margin-top: .4em; }
 .tags { display: flex; flex-wrap: wrap; gap: .35em; margin: .4em 0; }
 .tag { background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; padding: .1em .65em; font-size: .82em; display: inline-flex; align-items: center; gap: .3em; }
 .tag button { background: none; border: none; padding: 0; color: var(--muted); }
@@ -1900,6 +1904,7 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
   .everything-found li > a { min-height: 44px; display: inline-flex; align-items: center; gap: .35em; }
   /* A fingertip-sized link that still sits in the line of text: the padding grows the tap area, not the row. */
   .tree li > a { display: inline; padding: .88em .55em; margin: 0 -.55em; }
+  .tree .fold { min-width: 44px; min-height: 44px; margin: -.6em 0 -.6em -.6em; }
   .list-seen .help-button { min-width: 44px; min-height: 44px; }
 }
 

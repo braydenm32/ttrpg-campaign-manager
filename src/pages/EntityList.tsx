@@ -1,4 +1,3 @@
-import { type ReactNode } from 'react'
 import { Help } from '../help'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, Skeleton } from '../components'
@@ -6,7 +5,9 @@ import { NothingHere } from '../NothingHere'
 import { SeenMark } from '../reveal'
 import { StatusBadge } from '../status'
 import { ENTITY_TYPES, typeLabel, type Entity, type EntityType } from '../db'
-import { stillReading, treeRoots, useVisibleEntities, useWorld } from '../hooks'
+import { stillReading, useVisibleEntities, useWorld } from '../hooks'
+import { PageTree, PartOfLine } from '../nestingUi'
+import { hasNesting } from '../nesting'
 import { NewPageButton } from '../NewPage'
 import { listedEntries, TableRoller } from '../tables'
 import { pagesIn } from '../counts'
@@ -67,8 +68,10 @@ export default function EntityList() {
     ...((!isGM && group?.readers?.filter((x) => x === t || all.some((e) => e.type === x))) || []),
   ]
 
-  // Locations read best as a tree (region > city > district > building).
-  const showTree = t === 'location' && !q && !tag
+  // Locations read best as a tree (region > city > district > building), and so does any list with
+  // pages under others of the same kind (a faction's smaller factions). A filter shows plain cards.
+  const showTree = !q && !tag && t !== 'quest' && (t === 'location' || hasNesting(filtered))
+  const byId = new Map(all.map((e) => [e.id, e]))
 
   return (
     <div className="page">
@@ -124,13 +127,13 @@ export default function EntityList() {
       ) : filtered.length === 0 ? (
         <Empty>{ofType.length === 0 ? `No ${/^[A-Z]{2}/.test(label.many) ? label.many : label.many.toLowerCase()} yet.` : 'Nothing matches.'}</Empty>
       ) : showTree ? (
-        <LocationTree worldId={worldId} entities={filtered} isGM={isGM} />
+        <PageTree worldId={worldId} entities={filtered} isGM={isGM} />
       ) : t === 'quest' ? (
-        <QuestGroups worldId={worldId} entities={filtered} isGM={isGM} />
+        <QuestGroups worldId={worldId} entities={filtered} isGM={isGM} tree={!q && !tag} byId={byId} />
       ) : (
         <div className="card-grid entity-cards">
           {filtered.map((e) => (
-            <EntityCard key={e.id} worldId={worldId} entity={e} isGM={isGM} />
+            <EntityCard key={e.id} worldId={worldId} entity={e} isGM={isGM} byId={byId} />
           ))}
         </div>
       )}
@@ -138,12 +141,13 @@ export default function EntityList() {
   )
 }
 
-function EntityCard({ worldId, entity: e, isGM }: { worldId: string; entity: Entity; isGM: boolean }) {
+function EntityCard({ worldId, entity: e, isGM, byId }: { worldId: string; entity: Entity; isGM: boolean; byId: Map<string, Entity> }) {
   return (
     <Link className="card" to={`${pagePath(worldId, e.id)}`}>
       <h2 className="card-title">
         {e.name} {isGM && <SeenMark entity={e} />}
       </h2>
+      <PartOfLine entity={e} byId={byId} />
       {e.summary && <p>{e.summary}</p>}
       <div className="tags">
         {e.questStatus && <span className={`tag status-${e.questStatus}`}>{e.questStatus}</span>}
@@ -166,7 +170,8 @@ const QUEST_GROUPS: { title: string; blurb: string; has: (e: Entity) => boolean 
   { title: 'Done', blurb: 'Finished or failed.', has: (e) => e.questStatus === 'done' || e.questStatus === 'failed' },
 ]
 
-function QuestGroups({ worldId, entities, isGM }: { worldId: string; entities: Entity[]; isGM: boolean }) {
+/** Each group is a tree when quests sit under others in it; a side quest whose main quest is in another group starts its own branch, saying what it's part of. */
+function QuestGroups({ worldId, entities, isGM, tree, byId }: { worldId: string; entities: Entity[]; isGM: boolean; tree: boolean; byId: Map<string, Entity> }) {
   return (
     <>
       {QUEST_GROUPS.map((g) => {
@@ -177,36 +182,18 @@ function QuestGroups({ worldId, entities, isGM }: { worldId: string; entities: E
             <h2>
               {g.title} <span className="muted small">· {list.length} · {g.blurb}</span>
             </h2>
-            <div className="card-grid">
-              {list.map((e) => (
-                <EntityCard key={e.id} worldId={worldId} entity={e} isGM={isGM} />
-              ))}
-            </div>
+            {tree && hasNesting(list) ? (
+              <PageTree worldId={worldId} entities={list} isGM={isGM} />
+            ) : (
+              <div className="card-grid">
+                {list.map((e) => (
+                  <EntityCard key={e.id} worldId={worldId} entity={e} isGM={isGM} byId={byId} />
+                ))}
+              </div>
+            )}
           </section>
         )
       })}
     </>
   )
-}
-
-function LocationTree({ worldId, entities, isGM }: { worldId: string; entities: Entity[]; isGM: boolean }) {
-  const roots = treeRoots(entities)
-  const children = (parentId?: string) =>
-    entities.filter((e) => (parentId ? e.parentId === parentId && !roots.has(e.id) : roots.has(e.id)))
-  const render = (parentId?: string, depth = 0): ReactNode => {
-    const kids = children(parentId)
-    if (!kids.length || depth > 12) return null
-    return (
-      <ul className={depth === 0 ? 'tree' : ''}>
-        {kids.map((e) => (
-          <li key={e.id}>
-            <Link to={`${pagePath(worldId, e.id)}`}>{e.name}</Link> {isGM && <SeenMark entity={e} />}
-            {e.summary && <span className="muted"> · {e.summary}</span>}
-            {render(e.id, depth + 1)}
-          </li>
-        ))}
-      </ul>
-    )
-  }
-  return <>{render()}</>
 }

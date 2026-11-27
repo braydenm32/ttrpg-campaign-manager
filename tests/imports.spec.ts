@@ -229,6 +229,30 @@ test('pages without ids of their own all come in, from World Anvil and Kanka', a
   }
 })
 
+test('an Obsidian folder named after a note of the same kind puts the notes in it under that note', async ({ page, world }) => {
+  const md = (type: string, text: string) => Buffer.from(`---\ntype: ${type}\n---\n${text}`)
+  const vault = zip([
+    { name: 'Vault/Factions/Import Test Guild.md', data: md('faction', 'A guild.') },
+    { name: 'Vault/Factions/Import Test Guild/Import Test Dockhands.md', data: md('faction', 'Part of the guild.') },
+    // A folder named after a note of another kind changes nothing.
+    { name: 'Vault/Factions/Import Test Guild/Import Test Ledger.md', data: md('item', 'A ledger.') },
+  ])
+  const ours = async () => (await rows(page, 'entities')).filter((e) => e.worldId === world.id && e.name?.startsWith('Import Test '))
+  try {
+    await open(page, `/w/${world.slug}/settings?tab=data`)
+    await source(page, 'Obsidian').setInputFiles({ name: 'vault.zip', mimeType: 'application/zip', buffer: vault })
+    await importArea(page).getByRole('button', { name: 'Import 3 pages' }).click()
+    await expect(importArea(page)).toContainText('Added 3 pages')
+    const made = await ours()
+    const by = (n: string) => made.find((e) => e.name === n) as { id: string; parentId?: string }
+    expect(by('Import Test Dockhands').parentId).toBe(by('Import Test Guild').id)
+    expect(by('Import Test Ledger').parentId).toBeUndefined()
+    expect(by('Import Test Guild').parentId).toBeUndefined()
+  } finally {
+    await forget(page, 'entities', (await ours()).map((e) => e.id))
+  }
+})
+
 test('an import that runs out of room adds nothing, and says so plainly', async ({ page, world }) => {
   const ours = async () => ({
     pages: (await rows(page, 'entities')).filter((e) => e.worldId === world.id && e.name?.startsWith('Import Test ')),

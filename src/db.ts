@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable, type Table } from 'dexie'
 import type { Drawing } from './mapDrawing'
+import { newHome } from './nesting'
 
 /** Who can see a piece of content. GM-only content never appears in the player view. */
 export type Visibility = 'gm' | 'players'
@@ -496,7 +497,10 @@ export interface Entity {
   /** Player copies only: this page was revealed to you alone, not to the whole table. */
   secretForYou?: boolean
   tags: string[]
-  /** For locations: the containing location (city inside a region, etc). */
+  /**
+   * Where the page sits: a place it is in (a town in a region, a person in a tavern), or a page of
+   * its own kind it is part of (a faction under a faction). See src/nesting.ts.
+   */
   parentId?: string
   /** Free-form key/value fields (stats, prices, alignment...). Keeps the core system-agnostic. gm: never shown to players. */
   fields: { key: string; value: string; gm?: boolean }[]
@@ -620,6 +624,8 @@ export interface PageRelink {
   table: 'entities' | 'pins' | 'maps'
   field: 'parentId' | 'heldBy' | 'entityId' | 'locationId'
   ids: string[]
+  /** Pages under it that moved up to another page instead of being cleared: where each went. */
+  to?: Record<string, string>
 }
 
 export interface WorldMap {
@@ -1492,19 +1498,31 @@ export async function whatDeleteUnlinks(id: string) {
 }
 
 /**
- * Deletes a page. Links to it are cleared (places inside it move up a level, items it carried
+ * Deletes a page. Links to it are cleared (pages inside or under it move up a level, items it carried
  * belong to no one, pins and maps stop pointing at it) and remembered with the deleted version,
  * so restoring it (restoreDeletedPage) puts them back.
  */
 export async function deleteEntity(id: string) {
   return db.transaction('rw', [db.entities, db.pins, db.maps, db.history], async () => {
     const e = await db.entities.get(id)
-    const { relinks } = await whatDeleteUnlinks(id)
+    const { inside, relinks } = await whatDeleteUnlinks(id)
+    // Pages under it move up to the page above it when that can hold them (a sub-faction to the
+    // faction above, a district to the city), else to the top of their list.
+    const byId = new Map(e ? (await db.entities.where({ worldId: e.worldId }).toArray()).map((x) => [x.id, x]) : [])
+    const to: Record<string, string> = {}
+    for (const x of inside) {
+      const home = newHome(x, e?.parentId, byId, id)
+      if (home) to[x.id] = home
+    }
+    const parents = relinks.find((l) => l.field === 'parentId')
+    if (parents && Object.keys(to).length) parents.to = to
     const v = e ? await keepVersion(e, 'deleted', relinks) : undefined
     await db.entities.filter((x) => x.heldBy === id).modify({ heldBy: undefined })
     await db.pins.where({ entityId: id }).modify({ entityId: undefined })
     await db.maps.where({ locationId: id }).modify({ locationId: undefined })
-    await db.entities.where({ parentId: id }).modify({ parentId: undefined })
+    await db.entities.where({ parentId: id }).modify((x) => {
+      x.parentId = to[x.id]
+    })
     await db.entities.delete(id)
     return v
   })
@@ -1522,7 +1540,8 @@ export async function restoreDeletedPage(v: PageVersion) {
       await table
         .where(':id')
         .anyOf(l.ids)
-        .filter((x) => !x[l.field])
+        // Still where deleting it left them (cleared, or moved up a level).
+        .filter((x) => !x[l.field] || (!!l.to && x[l.field] === l.to[x.id as string]))
         .modify({ [l.field]: v.entityId, ...(l.table === 'entities' ? { updatedAt: Date.now() } : {}) })
     }
   })

@@ -1,5 +1,6 @@
 import { blankEntity, db, newId, saveEntity, type Entity, type Session } from '../db'
 import { nameIndex } from '../links'
+import { above, canHold } from '../nesting'
 import { gmBlock } from '../Markdown'
 import type { NotePage, NoteSession } from './claude'
 
@@ -77,14 +78,16 @@ export async function applyNotes(worldId: string, picks: NotePick[], sessions: N
     }
   }
 
-  // Places: "in" names a place in the notes or one already in the world.
+  // Places: "in" names a place (or a page of its own kind) in the notes or one already in the world.
   const names = nameIndex([...existing.map((e) => changed.get(e.id) ?? e), ...made])
+  const pageById = new Map([...existing.map((e) => changed.get(e.id) ?? e), ...made].map((e) => [e.id, e]))
   for (const [i, { page: p }] of picks.entries()) {
     if (!p.in) continue
     const t = forPick[i]
     const e = typeof t === 'string' ? changed.get(t) : t
     const parent = names.get(p.in.toLowerCase())
-    if (e && parent && parent.id !== e.id && !e.parentId) e.parentId = parent.id
+    // In a place, or part of a page of its own kind (never one that is already under it).
+    if (e && parent && parent.id !== e.id && !e.parentId && canHold(parent, e) && !above(parent, pageById).some((x) => x.id === e.id)) e.parentId = parent.id
   }
 
   await db.transaction('rw', [db.entities, db.history], async () => {

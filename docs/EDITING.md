@@ -212,7 +212,7 @@ Only `type` and `name` are required. Leave out anything you don't need.
 | `name` | The page's title | `name: The Last Candle` |
 | `players` | `true` reveals it to every player. Without it, the page is GM only | `players: true` |
 | `summary` | The one-line description under the title | `summary: A tavern with one candle.` |
-| `parent` | The page this one sits inside (a tavern in a town, an NPC in a tavern), by key | `parent: cinderford` |
+| `parent` | The page this one sits inside (a tavern in a town, an NPC in a tavern), or the page of its own kind it is part of (a faction under a faction, lore under lore), by key | `parent: cinderford` |
 | `aliases` | Other names `[[links]]` can use (GM only) | `aliases: [ The Captain, Ilse ]` |
 | `tags` | Tags players can see (if the page is revealed) | `tags: [ tavern, cinderford ]` |
 | `gmTags` | Tags only the GM sees | `gmTags: [ traitor ]` |
@@ -326,6 +326,7 @@ Every `:::gm` or `:::for` needs its closing `:::` line. If one is missing, every
 
 - **In the text**, link by name: `[[Lantern Keep]]`, or with different words: `[[Lantern Keep|the Keep]]`. A link to a page that doesn't exist yet is allowed (it shows as a "no page yet" link), and the checker mentions it as a warning in case it's a typo.
 - **"Located in"** is `parent:` with the key of the place.
+- **"Part of"** is `parent:` too, with the key of a page of the same type (a smaller faction under its faction: `parent: f-barge-clans`). A page has one `parent`, so a page that is part of another sits wherever that one is.
 - **Relationships** (for the relationship web) are a list under `relations:`, each pointing at a key:
 
   ```

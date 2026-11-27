@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Trash } from '@phosphor-icons/react'
 import { Modal } from './components'
+import { isPlace } from './nesting'
 import { db, deleteEntity, restoreDeletedPage, whatDeleteUnlinks, type Entity } from './db'
 import { namesOf } from './links'
 import { typePath, worldPath } from './paths'
@@ -22,7 +23,8 @@ async function consequences(e: Entity) {
   const out: string[] = []
   if (inside.length) {
     const places = inside.every((x) => x.type === 'location')
-    out.push(`${plural(inside.length, places ? 'place' : 'page')} inside it will move up a level.`)
+    // A place holds things; any other page has pages of its own kind under it (a sub-faction).
+    out.push(`${plural(inside.length, places ? 'place' : 'page')} ${isPlace(e) ? 'inside it' : 'under it'} will move up a level.`)
   }
   if (carried) out.push(`${plural(carried, 'item')} it carries will belong to no one.`)
   if (pins) out.push(`${plural(pins, 'map pin')} will stop opening it.`)
