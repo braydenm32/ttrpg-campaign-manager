@@ -8,13 +8,14 @@ import { HighlightLine } from './highlights'
 import { Ico } from './icons'
 import { Markdown } from './Markdown'
 import { worldPath } from './paths'
-import { isPlayed, sessionsBefore } from './sessions'
+import { isPlayed, notesFromPlay, sessionsBefore } from './sessions'
 import { showDay } from './text'
 import { useViewMode } from './viewMode'
 
 /**
  * "Last time", at the top of a session's Prepare: the recap of the session before this one in the
  * same campaign (see sessionsBefore), and the awards given at the end of it, to read while planning.
+ * With no recap written yet, the GM's own "What happened" notes from that session show instead.
  * A long recap shows its first lines with "Show all of the recap" (it grows in place; nothing
  * scrolls inside the page). Only the GM gets it: Prepare is a GM screen, and this draws nothing in
  * the player view.
@@ -32,7 +33,9 @@ export function LastTime({ session, entities, worldId }: { session: Session; ent
   const awards = highlights.filter((h) => h.kind === 'award')
   const others = highlights.filter((h) => h.kind !== 'award')
   // Made ahead and not played yet, with nothing written on it: one line says so.
-  const notYet = !!last && !isPlayed(last) && !last.startedAt && !last.recap.trim() && !highlights.length
+  // With no recap written, the GM's own notes on what happened are the next best thing to read.
+  const happened = last ? notesFromPlay(last).trim() : ''
+  const notYet = !!last && !isPlayed(last) && !last.startedAt && !last.recap.trim() && !highlights.length && !happened
   return (
     <section className="card wrap-card last-time" id="last-time">
       <div className="plan-head">
@@ -64,6 +67,12 @@ export function LastTime({ session, entities, worldId }: { session: Session; ent
               <Link className="last-write" to={`${to}?tab=recap`}>
                 Write it in #{last.number}’s Wrap up
               </Link>
+              {happened && (
+                <>
+                  <h3>What happened (your notes)</h3>
+                  <LastRecap text={happened} entities={entities} worldId={worldId} what="your notes" />
+                </>
+              )}
             </>
           )}
           <h3>
@@ -103,7 +112,7 @@ export function LastTime({ session, entities, worldId }: { session: Session; ent
  * with "Show all of the recap" under it; a short one shows whole, with no button. It's measured as
  * drawn, so the same recap can be short on a laptop and folded on a phone.
  */
-function LastRecap({ text, entities, worldId }: { text: string; entities: Entity[]; worldId: string }) {
+function LastRecap({ text, entities, worldId, what = 'the recap' }: { text: string; entities: Entity[]; worldId: string; what?: string }) {
   const [all, setAll] = useState(false)
   const [tall, setTall] = useState(false)
   const box = useRef<HTMLDivElement>(null)
@@ -123,7 +132,7 @@ function LastRecap({ text, entities, worldId }: { text: string; entities: Entity
       </div>
       {tall && (
         <button type="button" className="link show-all" aria-expanded={all} onClick={() => setAll(!all)}>
-          {all ? 'Show less of the recap' : 'Show all of the recap'}
+          {all ? `Show less of ${what}` : `Show all of ${what}`}
         </button>
       )}
     </>

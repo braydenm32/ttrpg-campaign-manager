@@ -240,7 +240,7 @@ export const HELP = {
   prep:
     'Plan the session: a strong start, the scenes you expect, secrets and clues, and fights ready to run. At the Lectern you tick scenes and clues off as they happen. Removed something by mistake? The note at the bottom of the screen has Undo for a few seconds.',
   lastTime:
-    'What happened in the session before this one, to read while you plan: its recap (the one players read, with any GM-only passages you wrote in it) and the awards you gave at the end. A long recap shows its first lines; “Show all of the recap” opens the rest. “Open #…” goes to that session. Moments and quotes are folded underneath. It’s GM only: players never see your Prepare page.',
+    'What happened in the session before this one, to read while you plan: its recap (the one players read, with any GM-only passages you wrote in it) and the awards you gave at the end. A long recap shows its first lines; “Show all of the recap” opens the rest. If there’s no recap yet, your own “What happened” notes from that session show instead, with a link to write the recap. “Open #…” goes to that session. Moments and quotes are folded underneath. It’s GM only: players never see your Prepare page.',
   strongStart: 'How the session opens. Starting in the middle of something happening gets the table going fast.',
   clues:
     'Things the players could learn, not tied to any one scene. Drop each one wherever it fits and tick it off when they find it; leftovers carry into your next prep.',

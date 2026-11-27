@@ -130,11 +130,20 @@ test('Last time says so when there is no earlier session, no recap or no awards'
     const write = box.getByRole('link', { name: 'Write it in #1’s Wrap up' })
     await expect(write).toHaveAttribute('href', `${w}/s/${s1.id}?tab=recap`)
     if (device === 'phone') expect(await smallIn(page, '#last-time')).toEqual([])
+    await expect(box.getByRole('heading', { name: 'What happened (your notes)' })).toHaveCount(0)
+
+    // Still no recap, but the GM wrote down what happened: those notes show instead.
+    await patchRecord(page, 'sessions', s1.id, { happened: 'ZZHAPPENED The paymaster never came.' })
+    await open(page, `${w}/s/${s2.id}?tab=prep`)
+    await expect(box).toContainText(`#1 ${s1.title} has no recap yet.`)
+    await expect(box.getByRole('heading', { name: 'What happened (your notes)' })).toBeVisible()
+    await expect(box.locator('.last-recap')).toHaveText('ZZHAPPENED The paymaster never came.')
 
     // A short recap shows whole, with nothing to unfold; moments alone are not awards.
     await patchRecord(page, 'sessions', s1.id, { recap: 'ZZSHORT The company mustered and was paid.', highlights: [HIGHLIGHTS[1]] })
     await open(page, `${w}/s/${s2.id}?tab=prep`)
     await expect(box.locator('.last-recap')).toHaveText('ZZSHORT The company mustered and was paid.')
+    await expect(box.getByRole('heading', { name: 'What happened (your notes)' })).toHaveCount(0)
     await expect(box.getByRole('button', { name: /of the recap/ })).toHaveCount(0)
     await expect(box).toContainText('No awards were given last time.')
     await expect(box.locator('details.last-others summary')).toHaveText('Moments and quotes (1)')
@@ -156,7 +165,7 @@ test('players never get Last time: a revealed session opens as its recap, with n
   const s3 = world.session(3)
   const campaign = world.dump.campaigns.find((c) => c.id === s3.campaignId)!
   await open(page, `${w}/s/${s3.id}?tab=prep`)
-  const before2 = await patchRecord(page, 'sessions', s2.id, { recap: LONG_RECAP, highlights: HIGHLIGHTS, notes: 'ZZGMPLAN the plan', playedAt: Date.now(), visibility: 'players' })
+  const before2 = await patchRecord(page, 'sessions', s2.id, { recap: LONG_RECAP, highlights: HIGHLIGHTS, notes: 'ZZGMPLAN the plan', happened: 'ZZGMHAPPENED what the GM wrote', playedAt: Date.now(), visibility: 'players' })
   const before3 = await patchRecord(page, 'sessions', s3.id, { recap: 'ZZTHREE What players read of session three.', visibility: 'players' })
   const beforeCampaign = await patchRecord(page, 'campaigns', campaign.id, { visibility: 'players' })
   try {
@@ -172,7 +181,7 @@ test('players never get Last time: a revealed session opens as its recap, with n
     await expect(player.locator('#last-time')).toHaveCount(0)
     await expect(player.getByRole('heading', { name: 'Last time' })).toHaveCount(0)
     const text = await player.locator('body').innerText()
-    for (const gm of ['ZZGMONLY', 'ZZGMPLAN', 'ZZRECAP', 'Bravest Fool', 'Show all of the recap']) expect(text, gm).not.toContain(gm)
+    for (const gm of ['ZZGMONLY', 'ZZGMPLAN', 'ZZGMHAPPENED', 'ZZRECAP', 'Bravest Fool', 'Show all of the recap']) expect(text, gm).not.toContain(gm)
     // Session two itself, revealed, shows them its recap without the GM-only passage.
     await open(player, `${w}/s/${s2.id}`)
     await expect(player.locator('main')).toContainText('ZZRECAP The company walked the Ash Road')
