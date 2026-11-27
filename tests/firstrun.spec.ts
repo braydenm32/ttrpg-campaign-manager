@@ -229,6 +229,7 @@ test('a session being played keeps a paused campaign on the Desk, and starting o
     await putBack(page, 'sessions', [[s1.id, beforeS1]])
     await open(page, `${w}/s/${s1.id}?tab=prep`)
     await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+    await page.getByRole('dialog', { name: /^Start playing #/ }).getByRole('button', { name: 'Start playing' }).click()
     await expect.poll(status).toBe('active')
     // Taking the start back puts the campaign back as it was.
     await toast(page).getByRole('button', { name: 'Not started after all' }).click()
