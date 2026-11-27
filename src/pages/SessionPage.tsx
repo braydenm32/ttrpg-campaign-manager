@@ -103,7 +103,7 @@ export default function SessionPage() {
   return (
     <div className={`page session-page ${view}`}>
       <SessionStrip {...props} view={view} />
-      {view === 'prep' ? <PrepareView {...props} /> : <WrapUpView {...props} focus={params.get('end') === '1' ? 'finish' : tab === 'recap' ? 'recap' : undefined} review={tab === 'recap' && params.get('show') === '1'} />}
+      {view === 'prep' ? <PrepareView {...props} /> : <WrapUpView key={session.id} {...props} focus={params.get('end') === '1' ? 'finish' : tab === 'recap' ? 'recap' : undefined} review={tab === 'recap' && params.get('show') === '1'} />}
     </div>
   )
 }
@@ -224,6 +224,8 @@ function PrepareView({ session, campaign, world, entities }: ViewProps) {
 function WrapUpView({ session, campaign, world, entities, stage, focus, review }: ViewProps & { focus?: 'finish' | 'recap'; review?: boolean }) {
   const worldId = world.id
   const update = (patch: Partial<Session>) => saving(db.sessions.update(session.id, patch))
+  // The Plan shows under What happened when there is one; cleared while it's open, it stays, so it can be typed again.
+  const [hadPlan] = useState(() => !!session.notes.trim())
   // Arriving from "End session" or a recap link: go straight to that part.
   const jumped = useRef(false)
   useEffect(() => {
@@ -251,7 +253,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus, review }
       </p>
       {stage !== 'preparing' && stage !== 'planned' && <WrapProgress world={world} session={session} campaign={campaign} entities={entities} />}
       <NotesCard session={session} entities={entities} worldId={worldId} id="notes" box="happened" />
-      {session.notes.trim() && <NotesCard session={session} entities={entities} worldId={worldId} id="plan-notes" box="plan" />}
+      {(hadPlan || !!session.notes.trim()) && <NotesCard session={session} entities={entities} worldId={worldId} id="plan-notes" box="plan" />}
       <div id="recording">
         <Recorder session={session} />
       </div>
