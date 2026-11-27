@@ -10,10 +10,16 @@ import { loadInBackground } from '../worldLoading'
  */
 export const EXAMPLE_VERSION = Number(worldFile.match(/^version:\s*(\d+)/m)?.[1] ?? 1)
 
-/** Loads the example world as a new world on this device and returns its id. */
-export async function loadExampleWorld(): Promise<string> {
+/**
+ * Loads the example world as a new world on this device and returns its id. `onStep` hears how far
+ * it has got, in words for the button that started it (the pictures and maps come afterwards, with
+ * their own note in the top bar).
+ */
+export async function loadExampleWorld(onStep?: (words: string) => void): Promise<string> {
   // The content and its drawings are big, so they only download when someone opens the example.
+  onStep?.('Fetching its pages…')
   const [{ EXAMPLE }, { drawArt }] = await Promise.all([import('./content'), import('./art')])
+  onStep?.('Saving them on this device…')
   return addExample(EXAMPLE, drawArt)
 }
 

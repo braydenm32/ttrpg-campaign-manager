@@ -178,7 +178,25 @@ export async function startPlaying(sessionId: string) {
     .where('id')
     .equals(sessionId)
     .modify((s) => stampStart(s, today))
-  return () => notStarted(sessionId, !!today)
+  const backToPlanning = await campaignUnderWay(before.campaignId)
+  return async () => {
+    await notStarted(sessionId, !!today)
+    await backToPlanning?.()
+  }
+}
+
+/**
+ * A campaign still in Planning becomes Active the first time one of its sessions is started (Start
+ * playing, or starting a scene). Gives back an undo that puts it back to Planning, or nothing if it
+ * wasn't in Planning.
+ */
+export async function campaignUnderWay(campaignId: string) {
+  const c = await db.campaigns.get(campaignId)
+  if (c?.status !== 'planning') return undefined
+  await db.campaigns.update(campaignId, { status: 'active' })
+  return async () => {
+    if ((await db.campaigns.get(campaignId))?.status === 'active') await db.campaigns.update(campaignId, { status: 'planning' })
+  }
 }
 
 /**

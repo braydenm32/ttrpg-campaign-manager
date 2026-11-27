@@ -54,6 +54,7 @@ const MapPacks = lazy(() => import('./pages/MapPacks'))
 import Questions from './pages/Questions'
 const RelationWeb = lazy(() => import('./pages/RelationWeb'))
 import ClocksPage from './clocks'
+import DateTime from './pages/DateTime'
 import SafetyPage, { XCardAlert } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
 import { GameClockWatcher } from './gameClock'
@@ -131,6 +132,7 @@ export default function App() {
             <Route path="questions" element={<Questions />} />
             <Route path="web" element={<RelationWeb />} />
             <Route path="clocks" element={<ClocksPage />} />
+            <Route path="date" element={<DateTime />} />
             <Route path="safety" element={<SafetyPage />} />
             <Route path="handouts" element={<Handouts />} />
             <Route path="more" element={<More />} />

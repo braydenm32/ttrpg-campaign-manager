@@ -13,7 +13,6 @@ import { pagePath, worldPath } from './paths'
 import { allClocks, clockSize, isTicking, tickingClocks } from './counts'
 import { PagePicker } from './PagePicker'
 import { toast } from './undo'
-import { GameClockCard, GameTimeBar } from './gameClock'
 
 /**
  * Progress clocks (as in Blades in the Dark): a circle cut into slices that fill as a plan, a threat
@@ -280,7 +279,12 @@ export default function ClocksPage() {
           <Ico as={Timer} /> Clocks <Help topic="clocks" />
         </h1>
       </header>
-      {world && (isGM ? <GameClockCard world={world} /> : <GameTimeBar world={world} />)}
+      {isGM && (
+        // The time of day used to lead this page; it now sits with the world's date. Old links to it land here.
+        <p className="muted small clocks-moved">
+          These are progress clocks. The time of day (In-game time) is with the world’s date: <Link to={`${worldPath(worldId)}/date`}>Date and time</Link>.
+        </p>
+      )}
       {isGM && <NewClock entities={entities} />}
       {all.length === 0 ? (
         <Empty>

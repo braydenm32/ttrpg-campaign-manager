@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useGameSystem } from '../gameSystem'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { Camera, NotePencil, Question, X } from '@phosphor-icons/react'
@@ -22,6 +23,7 @@ const TYPES = (Object.keys(ENTITY_LABELS) as EntityType[]).filter((t) => t !== '
  */
 export function ImportNotes({ worldId, onClose }: { worldId: string; onClose: () => void }) {
   const world = useLiveQuery(() => db.worlds.get(worldId), [worldId])
+  const game = useGameSystem(world)
   const entities = useLiveQuery(() => db.entities.where({ worldId }).toArray(), [worldId])
   const [photos, setPhotos] = useState<NotePhoto[]>([])
   const [text, setText] = useState('')
@@ -125,7 +127,7 @@ export function ImportNotes({ worldId, onClose }: { worldId: string; onClose: ()
               jobId={`notes:${worldId}`}
               jobTitle="Reading your notes"
               label="Read my notes"
-              build={() => notesRequest({ worldName: world.name, system: world.system, entities, photos, text, hints })}
+              build={() => notesRequest({ worldName: world.name, system: game, entities, photos, text, hints })}
               priceKey={`${photos.map((p) => p.name).join('|')}:${text.length}:${hints.length}`}
               onResult={(reply) => {
                 setError('')

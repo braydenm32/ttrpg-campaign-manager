@@ -111,12 +111,15 @@ export default function WorldSettings() {
               <DraftText value={world.name} onCommit={(name) => update({ name })} />
             </label>
             <label>
-              Default game system
+              <span>
+                Default game system <Help topic="gameSystem" />
+              </span>
               <select value={world.system} onChange={(e) => update({ system: e.target.value })}>
                 {GAME_SYSTEMS.map((s) => (
                   <option key={s}>{s}</option>
                 ))}
               </select>
+              <small className="muted">Used where a campaign doesn’t say its own: each campaign’s game system wins (Campaign settings).</small>
             </label>
             <label>
               Description

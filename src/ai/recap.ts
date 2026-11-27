@@ -15,7 +15,7 @@ export const PLAYER_HEADING = '## Player recap'
  * The instructions and material for a recap. The same text is used for one-click recaps
  * and for "Open in Claude", so both give the same kind of result.
  */
-export function buildRecapPrompt(world: World, session: Session, entities: Entity[]) {
+export function buildRecapPrompt(world: World, session: Session, entities: Entity[], system = world.system) {
   const transcripts = session.recordings
     .filter((r) => r.transcript && !r.transcript.pending)
     .map((r, i, all) => {
@@ -56,7 +56,7 @@ export function buildRecapPrompt(world: World, session: Session, entities: Entit
 
   return `You are helping the game master of a tabletop roleplaying campaign write up a session.
 
-World: ${world.name}${world.system ? ` (${world.system})` : ''}
+World: ${world.name}${system ? ` (${system})` : ''}
 Session ${session.number}: ${session.title}${session.date ? `, played ${session.date}` : ''}${session.worldDate && world.calendar ? `\nIn-world date at the start of the session: ${formatDate(world.calendar, session.worldDate, false)}` : ''}${presentLine(session, entities) ? `\n${presentLine(session, entities)} Characters who weren't there didn't take part; don't give them moments, lines or awards.` : ''}
 
 Below is a transcript of the session recorded at the table. It was made automatically, so expect misheard words, cross-talk and out-of-character chatter. Speaker names may be generic labels. Read it for what actually happened in the story. ${UNTRUSTED_NOTE}

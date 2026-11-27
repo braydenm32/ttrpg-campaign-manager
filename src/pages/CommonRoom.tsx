@@ -15,7 +15,7 @@ import { LeadRow, LeadsView } from '../players/Leads'
 import { lastTime, liveSeenAt, markLiveSeen, nextSession, roomStage, type NextSession, type RoomStage } from '../players/roomStage'
 import { plainLinks, initials } from '../text'
 import { HP_KEY, keyNumbers, NumberTiles } from '../players/sheetGlance'
-import { useCampaigns, useWorldSessions } from '../threads'
+import { isRunning, useCampaigns, useWorldSessions } from '../threads'
 import { partyOf } from '../sessions'
 import { StatusBadge } from '../status'
 import { formatDate } from '../calendar'
@@ -110,7 +110,9 @@ export default function CommonRoom({ world }: { world: World }) {
   const liveCampaign = table ? allCampaigns.find((c) => gmIdOf(c.id) === table.session.campaignId) : undefined
   const theirs = allCampaigns.filter((c) => mine.some((m) => m.campaignId === c.id))
   const campaigns = liveCampaign ? [liveCampaign] : theirs.length ? theirs : allCampaigns
-  const next = nextSession(campaigns, sessions)
+  // A Paused or Finished campaign has no "next session" (unless the GM is playing it live right now).
+  const running = liveCampaign ? campaigns : campaigns.filter(isRunning)
+  const next: NextSession = campaigns.length && !running.length ? { kind: 'unset' } : nextSession(running, sessions)
   const ids = new Set(campaigns.map((c) => c.id))
   const last = lastTime(sessions.filter((s) => !ids.size || ids.has(s.campaignId)))
   const campaign = liveCampaign ?? (next.kind === 'booked' || next.kind === 'poll' ? next.campaign : undefined) ?? campaigns.find((c) => c.id === last?.campaignId) ?? campaigns[0]

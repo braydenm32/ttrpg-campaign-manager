@@ -7,7 +7,8 @@ import { Empty } from '../components'
 import { Help } from '../help'
 import { useWorld } from '../hooks'
 import { Ico } from '../icons'
-import { nextSessions } from '../threads'
+import { isRunning, nextSessions } from '../threads'
+import { PausedCampaigns } from '../pausedCampaigns'
 import { createNextSession, playedAlready } from '../sessions'
 import { useViewMode } from '../viewMode'
 import { useFrameContext } from '../Sidebar'
@@ -40,7 +41,7 @@ export default function SessionLanding() {
   if (home && home !== `${w}/session`) return <Navigate to={home} replace />
   const next = nextSessions(data.campaigns, data.sessions)[0]
   if (next && !playedAlready(next.session)) return <Navigate to={`${w}/s/${next.session.id}?tab=prep`} replace />
-  const campaign = next?.campaign ?? data.campaigns.find((c) => c.status !== 'finished') ?? data.campaigns[0]
+  const campaign = next?.campaign ?? data.campaigns.find(isRunning)
   const plan = async (campaignId: string) => {
     const s = await createNextSession(worldId, campaignId, '')
     navigate(`${w}/s/${s.id}?tab=prep`)
@@ -57,7 +58,9 @@ export default function SessionLanding() {
               ? `Session #${next.session.number} of ${next.campaign.name} has been played.`
               : campaign
                 ? `${campaign.name} has no sessions yet.`
-                : 'No campaign yet. A campaign is one group’s story in this world; its sessions are planned, played and wrapped up here.'}
+                : data.campaigns.length
+                  ? 'No campaign is being run just now: they’re all paused or finished. Carry on with one, or plan the first session of a new one.'
+                  : 'No campaign yet. A campaign is one group’s story in this world; its sessions are planned, played and wrapped up here.'}
           </p>
         </div>
       </header>
@@ -68,6 +71,7 @@ export default function SessionLanding() {
         {next && <Link className="button" to={`${w}/s/${next.session.id}?tab=notes`}>Wrap up #{next.session.number}</Link>}
         {campaign && <Link className="button" to={`${w}/c/${campaign.id}`}>All sessions</Link>}
       </div>
+      <PausedCampaigns world={world} campaigns={data.campaigns} />
       {naming && <NewCampaign worldId={worldId} defaultSystem={world.system} onClose={() => setNaming(false)} onCreated={(id) => plan(id)} />}
     </div>
   )

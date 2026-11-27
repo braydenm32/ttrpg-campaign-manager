@@ -16,6 +16,7 @@ import { toast } from '../undo'
 import { feedbackLines, useFeedback } from '../players/StarsWishes'
 import { useInbox } from '../Sidebar'
 import { describeStep, MARKUP_NOTE, pageByName, pageText, sessionIndex, sessionText, untrusted, worldHeader, worldIndex, worldTools } from './worldText'
+import { useSessionSystem } from '../gameSystem'
 
 /**
  * The prep helper: Claude reads the last sessions, the open threads and the party, then suggests a
@@ -62,6 +63,7 @@ export function PrepHelper({ world, session, entities }: { world: World; session
   // Stars and wishes players sent about the last sessions: what to keep doing, and what they'd like more of.
   // They're the players' own words, so they only go to Claude when the GM ticks "Include players' feedback".
   const feedback = useFeedback(world)
+  const game = useSessionSystem(world, session)
   const [withFeedback, setWithFeedback] = useKept(`prep:${session.id}:feedback`, false)
   const { nameOf } = useInbox()
   // Kept outside the panel, so the suggestion is still here after a look at another page (see kept.ts).
@@ -111,7 +113,7 @@ One short paragraph: the session opens in the middle of something happening.
 
 Write the name of any page you mention exactly as written, inside double square brackets like [[Name]].
 
-${worldHeader(world)}
+${worldHeader(world, game)}
 ${MARKUP_NOTE}
 
 Every page in the world:

@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
 import { pagePath } from './paths'
-import { stampStart } from './sessions'
+import { campaignUnderWay, stampStart } from './sessions'
 import { blankLectern, db, saveEntity, type Entity, type PrepScene, type Session, type World } from './db'
 import { DraftText } from './components'
 import { Help } from './help'
@@ -146,6 +146,7 @@ export async function startScene(world: World, session: Session, scene: PrepScen
       if (mine) mine.done = true
       stampStart(s, worldBefore?.calendar?.today)
     })
+  const backToPlanning = await campaignUnderWay(session.campaignId)
   // Through saveEntity, so the page's History keeps the version before the reveal.
   for (const e of toReveal) {
     const now = await db.entities.get(e.id)
@@ -162,6 +163,7 @@ export async function startScene(world: World, session: Session, scene: PrepScen
   }
   const shownId = shown ? (await db.worlds.get(world.id))?.showing?.id : undefined
   return async () => {
+    await backToPlanning?.()
     for (const e of toReveal) {
       const now = await db.entities.get(e.id)
       if (now?.visibility === 'players') await db.entities.update(e.id, { visibility: e.visibility, updatedAt: Date.now() })

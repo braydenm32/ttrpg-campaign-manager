@@ -191,10 +191,10 @@ export function describeStep(name: string, input: Record<string, unknown>) {
   return name
 }
 
-/** The world in a nutshell, for the top of every prompt. */
-export function worldHeader(world: World) {
+/** The world in a nutshell, for the top of every prompt. `system` is the game being played (src/gameSystem.ts), the world's own by default. */
+export function worldHeader(world: World, system = world.system) {
   const today = world.calendar?.today ? formatDate(world.calendar, world.calendar.today, false) : ''
-  return [`World: ${world.name}${world.system ? ` (${world.system})` : ''}`, world.description?.trim() ? `About it: ${world.description.trim()}` : '', today ? `Today in the world: ${today}` : '']
+  return [`World: ${world.name}${system ? ` (${system})` : ''}`, world.description?.trim() ? `About it: ${world.description.trim()}` : '', today ? `Today in the world: ${today}` : '']
     .filter(Boolean)
     .join('\n')
 }

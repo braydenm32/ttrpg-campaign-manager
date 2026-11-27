@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { CaretLeft, Shield, SlidersHorizontal } from '@phosphor-icons/react'
+import { CalendarBlank, CaretLeft, Shield, SlidersHorizontal } from '@phosphor-icons/react'
 import logo from './assets/logo.svg'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type World } from './db'
@@ -276,12 +276,21 @@ export function WorldTile({ world, frame, deep }: { world: World; frame: Frame; 
   )
 }
 
-/** Today's date in the world, if it keeps a calendar (read as cleaned: one in the wrong shape mustn't stop the world opening). */
+/**
+ * Today's date in the world, if it keeps a calendar (read as cleaned: one in the wrong shape mustn't
+ * stop the world opening). Pressing it opens Date and time (date, in-game time, weather, the month);
+ * a reader of a public wiki link just sees the date.
+ */
 export function WorldDate({ world }: { world: World }) {
   const cal = cleanCalendar(world.calendar)
   const date = cal?.today && formatDate(cal, cal.today)
   if (!date) return null
-  return <span className="world-date">{date}</span>
+  if (world.shared?.token) return <span className="world-date">{date}</span>
+  return (
+    <Link className="world-date" to={`${worldPath(world.id)}/date`} title="Date and time: the world’s date, weather and in-game time" aria-label={`Date and time: ${date}`}>
+      <Ico as={CalendarBlank} /> <span className="world-date-text">{date}</span>
+    </Link>
+  )
 }
 
 /** Sync stopped (an error), or finished with a note worth reading (files that didn't upload, say). */

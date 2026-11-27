@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { db, type Entity, type Session, type World } from '../db'
 import { Markdown } from '../Markdown'
 import { SecretNamesWarning } from '../SecretNamesWarning'
+import { useSessionSystem } from '../gameSystem'
 import { buildRecapPrompt, estimateTokens, parseRecap, RECAP_MODEL, recapCost, recapWithClaude } from './recap'
 import { useAiSettings } from './settings'
 import { Ico } from '../icons'
@@ -22,6 +23,7 @@ import { moveJob, startJob, stopJob, takeFinished, useJob } from './jobs'
  * or one click with the GM's own Anthropic API key. Either way, the GM reviews before anything is saved.
  */
 export function RecapPanel({ world, session, entities }: { world: World; session: Session; entities: Entity[] }) {
+  const game = useSessionSystem(world, session)
   const settings = useAiSettings()
   const [mode, setMode] = useState<'idle' | 'paste'>('idle')
   const [pasted, setPasted] = useState('')
@@ -41,7 +43,7 @@ export function RecapPanel({ world, session, entities }: { world: World; session
 
   const transcribed = session.recordings.filter((r) => r.transcript && !r.transcript.pending).length
   const hasMaterial = transcribed > 0 || session.notes.trim().length > 0
-  const prompt = () => buildRecapPrompt(world, session, entities)
+  const prompt = () => buildRecapPrompt(world, session, entities, game)
   const estimate = hasMaterial ? recapCost(estimateTokens(prompt()), 6000) : 0
 
   const saveDraft = (text: string, source: 'claude-api' | 'pasted') =>

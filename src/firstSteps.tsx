@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, type NavigateFunction } from 'react-router-dom'
 import { db, type Entity, type World } from './db'
 import { Help } from './help'
-import { pagePath, worldPath } from './paths'
+import { pagePath, setPages, worldPath } from './paths'
 
 /**
  * The first ten minutes: the way into Vael Ardith's hand-written guides (its "Start Here" page is
@@ -13,11 +13,24 @@ import { pagePath, worldPath } from './paths'
 /** The example world's guide that starts the tour. */
 export const GUIDE_START = 'Start Here'
 
-/** Opens Vael Ardith at its Start Here guide, loading the example first if it isn't on this device. */
-export async function openExampleGuide(navigate: NavigateFunction) {
+/** A load of the example already on its way, so a second press (or a second button) waits for it instead of making a second copy. */
+let loading: Promise<string> | undefined
+
+/**
+ * Opens Vael Ardith at its Start Here guide, loading the example first if it isn't on this device
+ * (a copy already here is opened, never loaded twice). `onStep` hears how far the load has got.
+ */
+export async function openExampleGuide(navigate: NavigateFunction, onStep?: (words: string) => void) {
   const existing = (await db.worlds.toArray()).find((w) => w.example && !w.shared)
-  const worldId = existing?.id ?? (await (await import('./example/load')).loadExampleWorld())
-  const guide = await db.entities.where({ worldId }).filter((e) => e.name === GUIDE_START && !e.template).first()
+  let worldId = existing?.id
+  if (!worldId) {
+    loading ??= import('./example/load').then((m) => m.loadExampleWorld(onStep)).finally(() => (loading = undefined))
+    worldId = await loading
+  }
+  // The world's page names first, so the address reads /p/start-here rather than a long id.
+  const pages = await db.entities.where({ worldId }).toArray()
+  setPages(worldId, pages)
+  const guide = pages.find((e) => e.name === GUIDE_START && !e.template)
   navigate(guide ? pagePath(worldId, guide.id) : worldPath(worldId))
 }
 

@@ -8,7 +8,8 @@ import '../desk.css'
 import { Help, HELP } from '../help'
 import { db, GAME_SYSTEMS, newId, worldColor, type World } from '../db'
 import { useAssetUrl } from '../hooks'
-import { EXAMPLE_VERSION, loadExampleWorld } from '../example/load'
+import { EXAMPLE_VERSION } from '../example/load'
+import { openExampleGuide } from '../firstSteps'
 import { loadSampleWorld } from '../sample'
 import { AccountModal, useAuthSession } from '../cloud/auth'
 import { listMyMemberships, loadMemberWorld, memberWorldId, pendingInvite } from '../cloud/players'
@@ -36,14 +37,25 @@ export default function Home() {
   const joinedNotHere = user ? memberships.filter((m) => !localIds.has(memberWorldId(m.cloudId))) : []
   // A first visit: nothing on the shelf at all. A short welcome comes first instead of an empty shelf.
   const empty = !!loaded && worlds.length === 0 && notHere.length === 0 && joinedNotHere.length === 0
-  const [opening, setOpening] = useState(false)
+  // The big button opens Vael Ardith at its Start here tour; the words say how far the load has got.
+  const [opening, setOpening] = useState('')
+  const openExample = async () => {
+    setOpening('Opening Vael Ardith…')
+    try {
+      await openExampleGuide(navigate, (words) => setOpening(words))
+    } catch (err) {
+      alert(`Couldn’t open the example: ${(err as Error).message}`)
+      setOpening('')
+    }
+  }
+  const [sampling, setSampling] = useState(false)
   const openSample = async () => {
-    setOpening(true)
+    setSampling(true)
     try {
       navigate(worldPath(await loadSampleWorld()))
     } catch (err) {
-      alert(`Couldn’t open the example: ${(err as Error).message}`)
-      setOpening(false)
+      alert(`Couldn’t open the small sample: ${(err as Error).message}`)
+      setSampling(false)
     }
   }
 
@@ -81,7 +93,7 @@ export default function Home() {
           Your worlds, maps, people and sessions, all in one place. Everything is saved on this device. <Help topic="home" />
         </p>
       </header>
-      {empty && <Welcome opening={opening} onExample={openSample} onStart={() => setCreating(true)} />}
+      {empty && <Welcome opening={opening} onExample={openExample} sampling={sampling} onSample={openSample} onStart={() => setCreating(true)} />}
       <div className="shelf-head">
         <h2>
           Your worlds <Help topic="yourWorlds" />
@@ -134,11 +146,11 @@ export default function Home() {
         <h2>Examples to explore</h2>
       </div>
       <div className="shelf examples">
-        {!worlds.some(isSample) && (
-          <ExampleBook name="The Shattered Coast" blurb="Sample world · opens instantly" help={HELP.sampleWorld} load={loadSampleWorld} onOpen={(id) => navigate(`${worldPath(id)}`)} />
-        )}
         {!worlds.some((w) => w.example) && (
-          <ExampleBook name="Vael Ardith" blurb="The full example · a minute to draw its maps the first time" help={HELP.exampleWorld} load={loadExampleWorld} onOpen={(id) => navigate(`${worldPath(id)}`)} />
+          <ExampleBook name="Vael Ardith" blurb="The full example, with a Start here tour" help={HELP.exampleWorld} open={(onStep) => openExampleGuide(navigate, onStep)} />
+        )}
+        {!worlds.some(isSample) && (
+          <ExampleBook name="The Shattered Coast" blurb="The small sample · opens instantly" help={HELP.sampleWorld} open={async () => navigate(worldPath(await loadSampleWorld()))} />
         )}
         {examples.map((w) => (
           <WorldBook key={w.id} world={w} onOpen={() => navigate(`${worldPath(w.id)}`)} />
@@ -223,9 +235,11 @@ export default function Home() {
 /**
  * The welcome on an empty shelf: one sentence, a picture of the app at a real table (a player's
  * phone open on the Common Room beside the GM's laptop at the Lectern, both from the Vael Ardith
- * example), and the two ways in. The quick example is the Shattered Coast, which opens at once.
+ * example), and the ways in. The big button opens Vael Ardith at its Start here tour (the words on
+ * it say how far the load has got); the small sample, the Shattered Coast, is the quick look under it.
  */
-function Welcome({ opening, onExample, onStart }: { opening: boolean; onExample: () => void; onStart: () => void }) {
+function Welcome({ opening, onExample, sampling, onSample, onStart }: { opening: string; onExample: () => void; sampling: boolean; onSample: () => void; onStart: () => void }) {
+  const busy = !!opening || sampling
   return (
     <section className="welcome" aria-labelledby="welcome-title">
       <div className="welcome-text">
@@ -235,11 +249,25 @@ function Welcome({ opening, onExample, onStart }: { opening: boolean; onExample:
           <Help topic="welcome" />
         </p>
         <div className="welcome-actions">
-          <button className="primary" disabled={opening} onClick={onExample}>
-            {opening ? 'Opening…' : 'Open the example (instant)'}
+          <button className="primary welcome-example" disabled={busy} aria-busy={!!opening} onClick={onExample}>
+            {opening ? (
+              <span role="status">{opening}</span>
+            ) : (
+              <>
+                <span>Open the example, Vael Ardith</span>
+                <small>A world and campaign to look round, starting at its Start here tour</small>
+              </>
+            )}
           </button>
-          <button onClick={onStart}>Start my world</button>
+          <button disabled={busy} onClick={onStart}>Start my world</button>
         </div>
+        <p className="small muted welcome-sample">
+          Just a quick look?{' '}
+          <button className="link" disabled={busy} onClick={onSample}>
+            {sampling ? 'Opening the small sample…' : 'Open the small sample, The Shattered Coast'}
+          </button>{' '}
+          (opens instantly, no tour).
+        </p>
       </div>
       <img
         className="welcome-picture"
@@ -269,6 +297,10 @@ function About() {
         <li><strong>Secrets stay secret:</strong> anything marked for the GM never reaches players, and you can reveal pages to individual players.</li>
         <li><strong>Players join your world</strong> to see what you’ve revealed, claim their characters and keep notes.</li>
       </ul>
+      <p>
+        To see it working, open the example world, Vael Ardith: a whole world and campaign ready to run, starting at a short tour of the world and the app. The
+        Shattered Coast is a smaller sample that opens at once.
+      </p>
       <h2>Why sign in? <Help topic="cloudSync" /></h2>
       <p>
         Signing in is optional. An account, using your email or your Google account, lets you sync your worlds between your devices and invite players. The
@@ -355,29 +387,30 @@ function NewWorld({ onClose, onCreated }: { onClose: () => void; onCreated: (id:
 const isSample = (w: World) => !!w.sample || w.name === 'The Shattered Coast (sample)'
 
 /**
- * A ready-made world on the shelf: the small sample or the full example. It is only loaded the first time someone
- * opens it, and then stays on this device like any world (it syncs only if they switch sync on).
+ * A ready-made world on the shelf: the full example or the small sample. It is only loaded the first time someone
+ * opens it, and then stays on this device like any world (it syncs only if they switch sync on). `open` loads it
+ * and goes there, telling `onStep` how far it has got.
  */
-function ExampleBook({ name, blurb, help, load, onOpen }: { name: string; blurb: string; help: string; load: () => Promise<string>; onOpen: (worldId: string) => void }) {
-  const [loading, setLoading] = useState(false)
+function ExampleBook({ name, blurb, help, open }: { name: string; blurb: string; help: string; open: (onStep: (words: string) => void) => Promise<void> }) {
+  const [loading, setLoading] = useState('')
   return (
     <button
       className="book book-example"
-      disabled={loading}
+      disabled={!!loading}
       title={help}
       onClick={async () => {
-        setLoading(true)
+        setLoading('Opening…')
         try {
-          onOpen(await load())
+          await open(setLoading)
         } catch (err) {
           alert(`Couldn’t open ${name}: ${(err as Error).message}`)
-          setLoading(false)
+          setLoading('')
         }
       }}
     >
       <img className="book-sigil" src={logo} alt="" />
       <b>{name}</b>
-      <small>{loading ? 'Opening…' : blurb}</small>
+      <small role={loading ? 'status' : undefined}>{loading || blurb}</small>
     </button>
   )
 }

@@ -210,6 +210,7 @@ export const ROUTES: RouteEntry[] = [
   { path: '/w/:worldId/questions', screen: 'Inbox (GM) / Questions (players)', who: 'both', kind: 'screen', samples: [{ url: `${W}/questions` }], note: 'Needs cloud sync; offline it explains that (desk.spec.ts tries it with a pretend cloud).' },
   { path: '/w/:worldId/web', screen: 'Relationships web', who: 'both', kind: 'screen', samples: [{ url: `${W}/web` }, { url: `${W}/web?view=family`, label: 'family tree' }] },
   { path: '/w/:worldId/clocks', screen: 'Clocks', who: 'both', kind: 'screen', samples: [{ url: `${W}/clocks` }] },
+  { path: '/w/:worldId/date', screen: 'Date and time (the date in the top bar)', who: 'both', kind: 'screen', samples: [{ url: `${W}/date` }] },
   { path: '/w/:worldId/safety', screen: 'Table rules (safety tools)', who: 'both', kind: 'screen', samples: [{ url: `${W}/safety` }] },
   { path: '/w/:worldId/handouts', screen: 'Handouts', who: 'both', kind: 'screen', samples: [{ url: `${W}/handouts` }] },
   { path: '/w/:worldId/more', screen: 'More (things used now and then)', who: 'both', kind: 'screen', samples: [{ url: `${W}/more` }] },

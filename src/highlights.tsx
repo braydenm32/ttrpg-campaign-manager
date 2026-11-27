@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { systemOf } from './gameSystem'
 import { BookOpenText, ChatCenteredText, Sparkle, Trophy } from '@phosphor-icons/react'
 import { db, newId, type Campaign, type Entity, type Session, type SessionHighlight, type World } from './db'
 import { DraftText } from './components'
@@ -197,7 +198,7 @@ export function StorySoFar({ world, campaign, sessions, entities, isGM, compact 
   const save = (text: string) => db.campaigns.update(campaign.id, { storySoFar: text.trim() || undefined, storySoFarUpTo: text.trim() ? latest?.number : undefined })
   const build = () => ({
     system: `You write "the story so far" for the players of a tabletop roleplaying campaign: a catch-up they can read before a session, or that a new player can read to join in. Use only the session recaps given, which are what the players know. Write three to six short paragraphs in a warm storyteller's voice, past tense, about the characters. Bring out the threads still open at the end. Keep the [[Name]] links as they are written in the recaps, and add no others. Answer with the story only: no heading, no preamble.`,
-    prompt: `Campaign: ${campaign.name}${world.system ? ` (${world.system})` : ''}${campaign.description.trim() ? `\n${stripSecrets(campaign.description).trim()}` : ''}
+    prompt: `Campaign: ${campaign.name}${systemOf(world, campaign) ? ` (${systemOf(world, campaign)})` : ''}${campaign.description.trim() ? `\n${stripSecrets(campaign.description).trim()}` : ''}
 
 ${recaps.map((s) => `<session number="${s.number}" title="${s.title.replace(/"/g, "'")}">\n${stripSecrets(s.recap).trim()}\n</session>`).join('\n\n')}`,
     expectOut: 900,

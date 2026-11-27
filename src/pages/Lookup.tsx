@@ -13,6 +13,7 @@ import { toast } from '../undo'
 import { useViewMode } from '../viewMode'
 import { LookupError, pageBody, read, search, type Found, type Hit } from '../lookup/fetch'
 import { LOOKUP_SYSTEMS, sourcesFor } from '../lookup/sources'
+import { useGameSystem } from '../gameSystem'
 import '../more.css'
 
 /**
@@ -26,8 +27,11 @@ export default function Lookup() {
   const { isGM } = useViewMode()
   const entities = useVisibleEntities(worldId)
   const kept = `lookup:${worldId}`
-  const startSystem = world && LOOKUP_SYSTEMS.includes(world.system) ? world.system : 'D&D 5e (2024)'
-  const [system, setSystem] = useKept(`${kept}:system`, '')
+  // The game being played (the campaign in hand's, else the world's: see src/gameSystem.ts). A game
+  // picked here is kept for this tab only while that stays the same: a new campaign in hand starts on its own game.
+  const playing = useGameSystem(world)
+  const startSystem = LOOKUP_SYSTEMS.includes(playing) ? playing : 'D&D 5e (2024)'
+  const [system, setSystem] = useKept(`${kept}:system:${playing}`, '')
   const game = system || startSystem
   const sources = sourcesFor(game)
   const askable = sources.filter((s) => s.kind !== 'web')
@@ -88,6 +92,11 @@ export default function Lookup() {
               ))}
             </select>
           </label>
+          {game !== startSystem && (
+            <button className="small ghost" onClick={() => (setSystem(''), setSourceId(''), fresh())} title="Go back to the game your campaign is played in">
+              Back to {startSystem}
+            </button>
+          )}
           {askable.length > 1 && (
             <div className="segmented" role="group" aria-label="Where to look">
               {askable.map((s) => (

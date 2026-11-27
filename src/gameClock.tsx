@@ -406,7 +406,7 @@ function Heading({ worldId, c }: { worldId: string; c: GameClock }) {
   )
 }
 
-/** The GM's clock on the Clocks page: everything. */
+/** The GM's clock on Date and time (the date in the top bar): everything. */
 export function GameClockCard({ world }: { world: World }) {
   const c = readClock(world.gmScreen?.gameClock) ?? fresh()
   const secs = useTicking(c)
@@ -553,7 +553,7 @@ export function GameClockPanel({ world }: { world: World }) {
       sectionId="lectern-gametime"
       name="In-game time"
       keywords="clock time hour day night speed alarm"
-      title={<><Ico as={Clock} /> <Link to={`${worldPath(world.id)}/clocks`}>In-game time</Link> <Help topic="gameClock" /></>}
+      title={<><Ico as={Clock} /> <Link to={`${worldPath(world.id)}/date`}>In-game time</Link> <Help topic="gameClock" /></>}
     >
       <div className="game-clock-strip">
         <span className="game-clock-mini">

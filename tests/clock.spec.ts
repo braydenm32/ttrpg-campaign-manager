@@ -2,7 +2,7 @@ import { expect, open, setView, test } from './fixtures'
 import { getRecord, putBack } from './lib/records'
 
 /**
- * The in-game time on the Clocks page, on a laptop and a phone: set to a time, sent to reach another
+ * The in-game time on Date and time (the date in the top bar; it used to lead the Clocks page), on a laptop and a phone: set to a time, sent to reach another
  * time in so long (it works out the speed), an alarm that stays the GM's, shown on the players' TV
  * screen and in their Common Room, and passing midnight moves the world's date on. Puts back what it changed.
  */
@@ -11,7 +11,7 @@ type Clock = { secs: number; rate: number; running: boolean; until?: number; ala
 type Cal = { today?: { year: number; month: number; day: number } }
 
 test('the in-game time is set, runs to a time, keeps its alarm to the GM, shows on players’ screens and moves the date on at midnight', async ({ page, world }) => {
-  await open(page, `/w/${world.slug}/clocks`)
+  await open(page, `/w/${world.slug}/date`)
   const before = await getRecord(page, 'worlds', world.id)
   const clock = async () => ((await getRecord(page, 'worlds', world.id))!.gmScreen as { gameClock?: Clock } | undefined)?.gameClock
   try {

@@ -1,5 +1,6 @@
 import {
   Armchair,
+  CalendarBlank,
   Backpack,
   BookOpenText,
   Books,
@@ -166,7 +167,7 @@ const worldTabs: NavTab[] = [
     keywords: 'history events sessions recaps campaigns',
   },
   { id: 'everything', label: 'Everything', icon: SquaresFour, to: (f) => w(f, 'everything'), paths: ['everything', 'other/:kind'], types: ['item', 'event', 'custom', 'table'], who: readers, keywords: 'all types codex items events' },
-  { id: 'more', label: 'More', icon: DotsThreeOutline, to: (f) => w(f, 'more'), paths: ['more', 'handouts', 'web'], who: readers, keywords: 'campaigns' },
+  { id: 'more', label: 'More', icon: DotsThreeOutline, to: (f) => w(f, 'more'), paths: ['more', 'handouts', 'web', 'date'], who: readers, keywords: 'campaigns' },
 ]
 
 export const AREAS: NavArea[] = [
@@ -288,6 +289,15 @@ export const AREAS: NavArea[] = [
       { id: 'quests', label: 'Quests', icon: Compass, to: (f) => w(f, 'quests'), types: ['quest'], who: own, keywords: 'objectives rewards' },
       { id: 'clocks', label: 'Clocks', icon: Timer, to: (f) => w(f, 'clocks'), paths: ['clocks'], who: own, count: (f) => f.clocks || undefined, keywords: 'countdown progress' },
       { id: 'timeline', label: 'Timeline', icon: Hourglass, to: (f) => w(f, 'timeline'), paths: ['timeline'], who: own, keywords: 'history events calendar' },
+      {
+        id: 'date',
+        label: 'Date and time',
+        icon: CalendarBlank,
+        to: (f) => w(f, 'date'),
+        paths: ['date'],
+        who: own,
+        keywords: 'date today world date in-game time time of day game clock hour weather calendar move the date on',
+      },
       {
         id: 'reputation',
         label: 'Reputation',
@@ -468,6 +478,15 @@ export const MORE_GROUPS: MoreGroup[] = [
         keywords: 'one-shot oneshot one shot reset restart replay run again convention starting point fresh table',
       },
       { id: 'deleted', label: 'Recently deleted', icon: Trash, to: (f) => w(f, 'settings?tab=data&at=deleted'), who: own, blurb: 'Bring back what you deleted in the last month.', keywords: 'bin trash restore undelete' },
+      {
+        id: 'start',
+        label: 'Getting started',
+        icon: ListChecks,
+        to: (f) => `${w(f)}?start=1`,
+        who: own,
+        blurb: 'The first steps for a new world, on the Desk again if you hid them.',
+        keywords: 'getting started first steps new world checklist tutorial how to begin onboarding',
+      },
       { id: 'print', label: 'Print', icon: Printer, to: () => undefined, who: own, blurb: 'Every page and session has a Print button, for a GM copy or a player copy.', keywords: 'pdf paper' },
     ],
   },
@@ -502,6 +521,15 @@ export const PLAYER_MORE_GROUPS: MoreGroup[] = [
       { id: 'everything', label: 'Everything', icon: SquaresFour, to: (f) => w(f, 'everything'), who: readers, blurb: 'Every kind of page, with how many there are.' },
       { id: 'web', label: 'Relationships', icon: Graph, to: (f) => w(f, 'web'), who: readers, when: (f) => !!f.links, blurb: 'Who knows whom.', keywords: 'web family tree who knows' },
       { id: 'timeline', label: 'Timeline', icon: Hourglass, to: (f) => w(f, 'timeline'), who: readers, blurb: 'Dates, history and past sessions.' },
+      {
+        id: 'date',
+        label: 'Date and time',
+        icon: CalendarBlank,
+        to: (f) => w(f, 'date'),
+        who: players,
+        blurb: 'Today in the world, its weather, and the time of day when your GM shows it.',
+        keywords: 'date today in-game time time of day weather calendar',
+      },
       // Players have it on their Party tab; a wiki reader has no Common Room, so it's here.
       {
         id: 'reputation',

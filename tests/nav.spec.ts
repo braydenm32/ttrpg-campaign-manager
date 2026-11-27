@@ -84,6 +84,7 @@ test('each address lights the right area and tab, GM view', () => {
     [`${W}/quests`, 'story/quests'],
     [`${W}/p/drowned`, 'story/quests'],
     [`${W}/clocks`, 'story/clocks'],
+    [`${W}/date`, 'story/date'],
     [`${W}/timeline`, 'story/timeline'],
     [`${W}/web`, 'story/web'],
     [`${W}/more`, 'more/more'],
@@ -136,6 +137,7 @@ test('each address lights the right area and tab, player view and wiki', () => {
     [`${W}/more`, 'world/more'],
     [`${W}/handouts`, 'world/more'],
     [`${W}/web`, 'world/more'],
+    [`${W}/date`, 'world/more'],
     // GM tools have no place in a player's menus.
     [`${W}/generators`, undefined],
     [`${W}/settings`, undefined],

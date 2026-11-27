@@ -51,6 +51,12 @@ export function useWorldSessions(worldId: string) {
 const underWay = (s: Session, playing: Set<string>, today: string) => (playing.has(s.id) && !s.playedAt) || (!!s.startedAt && !isPlayed(s, today))
 
 /**
+ * Whether a campaign is being run: Planning or Active. A Paused or Finished one leaves the Desk,
+ * the Session area, "Needs you" and the players' "next session" (it still opens from All sessions).
+ */
+export const isRunning = (c: Pick<Campaign, 'status'>) => c.status !== 'finished' && c.status !== 'paused'
+
+/**
  * Each running campaign's coming session, the one in hand: the one being played, else the first
  * one with a date that hasn't been played (booked ahead, or overdue), else the first one not played
  * yet, else its newest. Sessions being played
@@ -61,13 +67,19 @@ export function nextSessions(campaigns: Campaign[], sessions: Session[], playing
   const today = localDate()
   const live = new Set(playing)
   return campaigns
-    .filter((c) => c.status !== 'finished')
+    .filter(isRunning)
     .flatMap((c) => {
       const own = sessions.filter((s) => s.campaignId === c.id).sort((a, b) => a.number - b.number)
       const next = own.find((s) => underWay(s, live, today)) ?? inHand(own, today) ?? own.at(-1)
       return next ? [{ campaign: c, session: next, underWay: underWay(next, live, today) }] : []
     })
-    .sort((a, b) => Number(b.underWay) - Number(a.underWay) || (a.session.date || '9999').localeCompare(b.session.date || '9999'))
+    // Then by date; on a tie (no dates, say) an Active campaign before one still in Planning.
+    .sort(
+      (a, b) =>
+        Number(b.underWay) - Number(a.underWay) ||
+        (a.session.date || '9999').localeCompare(b.session.date || '9999') ||
+        Number(b.campaign.status === 'active') - Number(a.campaign.status === 'active'),
+    )
 }
 
 /** The session most recently played (or the newest one, if none has been played yet). */

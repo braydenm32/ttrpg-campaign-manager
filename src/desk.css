@@ -78,6 +78,8 @@
 .desk-statline b { color: var(--text); }
 
 .getting-started ol { gap: .5em; }
+.getting-started li.done { opacity: .75; }
+.getting-started .step-tick { color: var(--good, var(--accent)); }
 .getting-started li { display: flex; align-items: center; justify-content: space-between; gap: .4em 1em; flex-wrap: wrap; }
 
 @media (max-width: 800px) {
@@ -166,6 +168,8 @@
 .getting-started-import { flex-basis: 100%; padding: .4em 0 .6em; }
 .getting-started-import .import-sources { display: flex; flex-direction: column; gap: .4em; }
 .example-start-here { margin: 0 0 1em; padding: .6em .9em; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); border-radius: 0 var(--radius) var(--radius) 0; }
+.paused-campaigns { margin: -.4em 0 1em; display: flex; flex-wrap: wrap; align-items: center; gap: .3em; }
+.paused-campaigns > span { display: inline-flex; align-items: center; gap: .4em; }
 
 /* The welcome on an empty shelf: a sentence, two buttons and the picture of the app at a table. */
 .welcome { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 1.6em; align-items: center; margin: 1.6em 0 .6em; }
@@ -174,6 +178,11 @@
 .welcome-actions { display: flex; flex-wrap: wrap; gap: .6em; }
 .welcome-actions button { min-height: 44px; }
 .welcome-picture { width: 100%; height: auto; display: block; border-radius: 10px; }
+/* The big button: Vael Ardith at its tour, with a line under its name (and how far the load has got while it opens). */
+.welcome-actions .welcome-example { flex-direction: column; align-items: flex-start; gap: .15em; text-align: left; padding-block: .5em; white-space: normal; max-width: 100%; }
+.welcome-example small { font-weight: 400; font-size: .8rem; opacity: .85; }
+.welcome-text p.welcome-sample { margin: .9em 0 0; }
+.welcome-sample button.link { min-height: 0; text-decoration: underline; white-space: normal; text-align: left; display: inline; }
 @media (max-width: 760px) {
   .welcome { grid-template-columns: 1fr; gap: 1em; }
 }
@@ -185,3 +194,6 @@
 .install-close { position: absolute; top: .4em; right: .4em; min-width: 44px; min-height: 44px; }
 .install-steps { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: .3em; }
 .install-steps li.here { font-weight: 500; }
+
+/* Date and time: the date, the in-game time and the month, each a card with room between. */
+.date-time > .card + *, .date-time > * + .card { margin-top: 1em; }

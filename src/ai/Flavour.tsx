@@ -8,6 +8,7 @@ import { ClaudeJob } from './ClaudeJob'
 import { useKept } from './kept'
 import { toast } from '../undo'
 import { MARKUP_NOTE, indexLine, pageText, worldHeader } from './worldText'
+import { useGameSystem } from '../gameSystem'
 
 /**
  * Small Claude jobs for colour: flavour for a generated tavern, shop or person that fits the world,
@@ -27,6 +28,7 @@ export function GeneratorFlavour({ world, entities, preview, parentId, onUse }: 
   // Kept outside the panel, so it's still here after a look at another page (see kept.ts).
   const [flavour, setFlavour] = useKept(`flavour:${world.id}`, '')
   const parent = entities.find((e) => e.id === parentId)
+  const game = useGameSystem(world)
   const build = () => ({
     system: `You add colour to things a tabletop roleplaying game master rolled up on random tables, so they feel like they belong in the GM's world. Keep the names and facts you're given. Match the world's tone.
 
@@ -37,7 +39,7 @@ Write:
 
 Keep it under 200 words. Use Markdown with those two bold labels. Write the name of any existing page exactly as listed inside double square brackets like [[Name]].
 
-${worldHeader(world)}
+${worldHeader(world, game)}
 ${MARKUP_NOTE}${parent ? `\n\nIt will go in:\n${pageText(parent, world, entities)}` : ''}
 
 Some of the world around it:
@@ -98,6 +100,7 @@ export const keepSecretsSecret = (text: string) => {
 /** On an NPC's page: a few lines they might say, for the GM to read out in character. */
 export function NpcLines({ world, entity, entities }: { world: World; entity: Entity; entities: Entity[] }) {
   const kept = `npcLines:${entity.id}`
+  const game = useGameSystem(world)
   const [situation, setSituation] = useKept(`${kept}:situation`, '')
   const [lines, setLines] = useKept<string[]>(kept, [])
   const [open, setOpen] = useKept(`${kept}:open`, false)
@@ -106,7 +109,7 @@ export function NpcLines({ world, entity, entities }: { world: World; entity: En
 
 Write 4 different lines as bullets, each one or two sentences, from friendly to guarded or from calm to heated. Only the spoken words in quotes, then an optional short stage direction in italics. Nothing else.
 
-${worldHeader(world)}
+${worldHeader(world, game)}
 ${MARKUP_NOTE}
 
 The character:

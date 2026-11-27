@@ -32,14 +32,15 @@ const countPages = (page: Page) =>
 const gmPage = (world: World) =>
   world.dump.entities.find((e) => e.visibility === 'gm' && !e.template && e.type === 'npc')!
 
-test('an empty shelf welcomes a new GM with the picture and two ways in', async ({ browser }) => {
+test('an empty shelf welcomes a new GM with the picture and the ways in', async ({ browser }) => {
   const context = await browser.newContext({ baseURL: `http://localhost:${PORT}`, serviceWorkers: 'block', viewport: { width: 1366, height: 860 } })
   await context.route((url) => url.host !== `localhost:${PORT}`, (route) => route.abort())
   const page = await context.newPage()
   try {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: /Run your world from one place/ })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Open the example (instant)' })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Open the example, Vael Ardith/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /small sample, The Shattered Coast/ })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Start my world' })).toBeVisible()
     const img = page.locator('img[src$="welcome.webp"]')
     await expect(img).toBeVisible()

@@ -1,4 +1,5 @@
 import { DeleteCampaignButton } from '../deleteAsk'
+import { setCampaignStatus, STATUS_WORDS } from '../campaignStatus'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -69,6 +70,14 @@ export default function CampaignPage() {
           )}
           <div className="muted">
             {campaign.system} · {capital(campaign.status)}
+            {isGM && (campaign.status === 'paused' || campaign.status === 'finished') && (
+              <>
+                {' '}
+                <button className="small" onClick={() => setCampaignStatus(campaign, 'active')}>
+                  {campaign.status === 'paused' ? 'Carry on' : 'Back on the Desk'}
+                </button>
+              </>
+            )}
             {isGM && campaign.visibility === 'gm' && (
               <>
                 {' · '}
@@ -167,16 +176,19 @@ export default function CampaignPage() {
           <summary>Campaign settings</summary>
           <div className="row">
             <select aria-label="Game system" value={campaign.system} onChange={(e) => update({ system: e.target.value })}>
+              {!GAME_SYSTEMS.includes(campaign.system) && <option>{campaign.system}</option>}
               {GAME_SYSTEMS.map((s) => (
                 <option key={s}>{s}</option>
               ))}
             </select>
-            <select aria-label="Status" value={campaign.status} onChange={(e) => update({ status: e.target.value as Campaign['status'] })}>
+            <Help topic="gameSystem" />
+            <select aria-label="Status" value={campaign.status} onChange={(e) => setCampaignStatus(campaign, e.target.value as Campaign['status'])}>
               <option value="planning">Planning</option>
               <option value="active">Active</option>
               <option value="paused">Paused</option>
               <option value="finished">Finished</option>
             </select>
+            <Help topic="campaignStatus" />
             <VisibilityToggle
               value={campaign.visibility ?? 'players'}
               onChange={async (v) => {
@@ -188,6 +200,7 @@ export default function CampaignPage() {
             <Help topic="hiddenCampaign" />
             <SavedMark />
           </div>
+          <small className="muted">{STATUS_WORDS[campaign.status] ?? ''}</small>
           <DraftText
             multiline
             rows={3}
