@@ -21,6 +21,9 @@ test('a session moves Prepare → Play → Wrap up, then the next one is up on t
   const s2 = world.session(2)
   await open(page, `${w}/s/${s1.id}?tab=prep`)
   const before = await getRecord(page, 'sessions', s1.id)
+  const before2 = await getRecord(page, 'sessions', s2.id)
+  const clueRows = (row: Awaited<ReturnType<typeof getRecord>>) => (row?.prep as { clues?: { text: string; done: boolean }[] } | undefined)?.clues ?? []
+  const clues = (row: Awaited<ReturnType<typeof getRecord>>) => clueRows(row).map((c) => c.text)
   try {
     const strip = page.locator('.session-strip')
     await expect(strip.locator('[data-stage]')).toHaveAttribute('data-stage', 'preparing')
@@ -38,11 +41,52 @@ test('a session moves Prepare → Play → Wrap up, then the next one is up on t
     await expect(toast(page)).toContainText('#1 marked played')
     await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'played')
     await expect(page.locator('#finish')).toContainText(`Next up: #2 ${s2.title}`)
+    // #2 was already written: the clues nobody found in #1 are added to its plan, marked where they came from.
+    const carried = clues(await getRecord(page, 'sessions', s2.id)).filter((t) => t.endsWith('(from #1)'))
+    expect(carried.length).toBeGreaterThan(0)
+    expect(carried.length).toBe(clueRows(before).filter((c) => !c.done && c.text.trim()).length)
+    expect(clues(await getRecord(page, 'sessions', s2.id)).length).toBe(clues(before2).length + carried.length)
 
     await open(page, w)
     const card = page.locator('.next-sessions')
     await expect(card).toContainText(`#2 ${s2.title}`)
     await expect(card.locator('[data-stage]').first()).not.toHaveAttribute('data-stage', 'played')
+  } finally {
+    await putBack(page, 'sessions', [
+      [s1.id, before],
+      [s2.id, before2],
+    ])
+  }
+})
+
+test('“Start playing” can be taken back, and a session whose date went by asks instead of turning Played', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  await open(page, `${w}/s/${s1.id}?tab=prep`)
+  const before = await getRecord(page, 'sessions', s1.id)
+  try {
+    // A press by mistake: the note at the bottom takes it back, on the Lectern it opened.
+    await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+    await expect(toast(page)).toContainText('#1')
+    await toast(page).getByRole('button', { name: 'Not started after all' }).click()
+    await expect.poll(async () => (await getRecord(page, 'sessions', s1.id))?.startedAt ?? null).toBeNull()
+
+    // Started again, Session details keeps the same way back for later.
+    await patchRecord(page, 'sessions', s1.id, { startedAt: Date.now() })
+    await open(page, `${w}/s/${s1.id}?tab=prep`)
+    await page.locator('#details').getByRole('button', { name: 'Not started after all' }).click()
+    await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'preparing')
+
+    // A date in the past doesn't make it Played: the strip says when it was due, and the Desk asks.
+    await patchRecord(page, 'sessions', s1.id, { date: '2020-01-04' })
+    await open(page, `${w}/s/${s1.id}?tab=prep`)
+    await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'preparing')
+    await expect(page.locator('.session-strip')).not.toContainText('played')
+    await open(page, w)
+    const needs = page.locator('.needs-you')
+    await expect(needs).toContainText('Did you play it?')
+    await expect(needs.getByRole('button', { name: 'Yes, mark as played' })).toBeVisible()
+    await expect(needs.getByRole('button', { name: 'Pick a new date' })).toBeVisible()
   } finally {
     await putBack(page, 'sessions', [[s1.id, before]])
   }
@@ -53,6 +97,8 @@ test('typing the recap does not mark a session played; "Not played yet" takes th
   const s1 = world.session(1)
   await open(page, `${w}/s/${s1.id}?tab=prep`)
   const before = await getRecord(page, 'sessions', s1.id)
+  // Marking #1 played adds its leftovers to #2's plan, so #2 is put back too.
+  const before2 = await getRecord(page, 'sessions', world.session(2).id)
   try {
     await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
     await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}/lectern`)
@@ -74,7 +120,10 @@ test('typing the recap does not mark a session played; "Not played yet" takes th
     await toast(page).getByRole('button', { name: 'Undo' }).click()
     await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'played')
   } finally {
-    await putBack(page, 'sessions', [[s1.id, before]])
+    await putBack(page, 'sessions', [
+      [s1.id, before],
+      [world.session(2).id, before2],
+    ])
   }
 })
 
