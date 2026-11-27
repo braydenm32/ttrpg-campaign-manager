@@ -197,3 +197,8 @@
 
 /* Date and time: the date, the in-game time and the month, each a card with room between. */
 .date-time > .card + *, .date-time > * + .card { margin-top: 1em; }
+/* On a phone every button and link on Date and time is a full finger's width and height. */
+@media (pointer: coarse) {
+  .date-time :is(button, select, input:not([type='checkbox']):not([type='radio']), .section-header a) { min-height: 44px; min-width: 44px; }
+  .date-time .section-header a { display: inline-flex; align-items: center; }
+}

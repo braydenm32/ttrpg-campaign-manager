@@ -82,7 +82,8 @@ test('Now answers next session, last time and what we’re doing first, and chan
     await expect(page.getByRole('heading', { level: 1, name: /After the game/ })).toBeVisible()
     const recap = page.locator('.room-recap')
     await expect(recap).toContainText('They ended the night in the Last Candle')
-    expect((await recap.boundingBox())!.y).toBeLessThan((await answers(page).boundingBox())!.y)
+    // Asked until it holds: the two cards settle into their order a moment after the heading changes.
+    await expect.poll(async () => (await recap.boundingBox())!.y - (await answers(page).boundingBox())!.y).toBeLessThan(0)
     await expect(page.locator('body')).not.toContainText('ROOM-TEST-GM-SECRET')
   } finally {
     await putBack(page, 'sessions', [[s1.id, before.session]])

@@ -96,6 +96,8 @@
   /* Only long notes fade out at the top: a line or two stays fully readable. */
   .lectern-notes.long { -webkit-mask-image: linear-gradient(transparent, #000 4em); mask-image: linear-gradient(transparent, #000 4em); }
   .lectern-notes.all { max-height: none; -webkit-mask-image: none; mask-image: none; }
+  /* The Plan, folded under them: opened, it is as long as it is. */
+  .lectern-plan-notes > div { max-height: none; overflow: visible; }
   /* Strips that scroll sideways (tabs, jump buttons) never wobble up and down too. */
   :is(.jump-row, .area-tabs, .builder-tools) { overflow-y: hidden; }
   /* Rows of pictures to pick from scroll sideways, not up and down inside the page. */

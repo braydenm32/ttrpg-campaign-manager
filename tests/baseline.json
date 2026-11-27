@@ -23,6 +23,10 @@
     "problems": [],
     "smallTargets": 8
   },
+  "phone gm /w/:worldId/date": {
+    "problems": [],
+    "smallTargets": 8
+  },
   "phone gm /w/:worldId/e/:entityId": {
     "problems": [],
     "smallTargets": 3
