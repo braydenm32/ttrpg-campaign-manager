@@ -298,10 +298,17 @@ export const syncProblem = (s: SyncState) => s.status === 'error' || (s.status =
 
 function SyncBadge() {
   const s = useSyncExternalStore(syncStore.subscribe, syncStore.get)
-  const label = { off: '', idle: s.message ? '⚠️ Synced, with a note' : '☁️ Synced', syncing: '☁️ Syncing…', offline: '☁️ Offline, will sync later', error: '⚠️ Sync problem' }[s.status]
+  // Waiting its turn behind another tab of this browser: said, so it never looks as if nothing is happening.
+  const label = s.waiting
+    ? '☁️ Waiting for another tab…'
+    : { off: '', idle: s.message ? '⚠️ Synced, with a note' : '☁️ Synced', syncing: '☁️ Syncing…', offline: '☁️ Offline, will sync later', error: '⚠️ Sync problem' }[s.status]
   if (!label) return null
   return (
-    <button className="sync-badge ghost" title={s.message ?? 'Sync now'} onClick={() => syncNow()}>
+    <button
+      className="sync-badge ghost"
+      title={s.waiting ? 'Another Warded Atlas tab on this device is syncing. This one goes ahead when it finishes, or by itself in a minute or two if that tab has stopped.' : (s.message ?? 'Sync now')}
+      onClick={() => syncNow()}
+    >
       {label}
     </button>
   )

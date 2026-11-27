@@ -292,7 +292,7 @@ export const HELP = {
 
   // Sharing and players
   cloudSync:
-    'Sign in to keep this world in step across your devices. Your world is still saved on each device, so it works offline and catches up when you reconnect. If two devices change the same page at once, both sets of changes are kept where they don’t overlap; where they do, the other version is kept in the page’s history.',
+    'Sign in to keep this world in step across your devices. Your world is still saved on each device, so it works offline and catches up when you reconnect. If two devices change the same page at once, both sets of changes are kept where they don’t overlap; where they do, the other version is kept in the page’s history. With the app open in two tabs on one device, one syncs at a time: the other says it is waiting, and goes ahead by itself in a minute or two if the first has stopped.',
   moving:
     'The web app moved from braydenm32.github.io to its own web address. Your browser keeps each web address’s saved worlds apart, so “Move my worlds” copies everything saved here (worlds, files, recordings, page history and this device’s settings) to the new web address. Your worlds stay here too, but once they’ve moved the old address forgets its AI keys, tokens and sign-in, so no other page there can read them. Afterwards the old web address just sends you to the new one, and old invite and share links keep working.',
   deleteAccount:

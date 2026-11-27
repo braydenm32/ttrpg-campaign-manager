@@ -126,13 +126,17 @@ export default function CloudSettings({ world }: { world: World }) {
           <p>
             Sync is on.{' '}
             <span className="muted">
-              {sync.status === 'syncing'
+              {sync.waiting
+                ? 'Waiting for another Warded Atlas tab on this device to finish syncing. This one goes ahead by itself in a minute or two if that tab has stopped.'
+                : sync.status === 'syncing'
                 ? 'Syncing now…'
                 : sync.status === 'offline'
                   ? "You're offline; changes will upload when you reconnect."
                   : sync.lastSync
                     ? `Last synced ${new Date(sync.lastSync).toLocaleTimeString()}.`
-                    : ''}
+                    : sync.status === 'error'
+                      ? ''
+                      : 'Not synced yet since the app was opened.'}
             </span>
           </p>
           {sync.message && <p className="notice small">{sync.message}</p>}
