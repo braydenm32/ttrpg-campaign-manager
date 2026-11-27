@@ -205,7 +205,8 @@ export const clearSceneToast = () => {
  * and pages it added, the pages it revealed and what was on players' screens.
  */
 export async function goToScene(world: World, session: Session, scene: PrepScene, ask: (r: Review) => Promise<string | null>) {
-  const before = sceneSnapshot(session)
+  // The session as it is saved now, not as the screen last drew it: text typed a moment ago must be in what Undo puts back.
+  const before = sceneSnapshot((await db.sessions.get(session.id)) ?? session)
   const undoShown = await startScene(world, session, scene, ask)
   if (!undoShown) return
   const n = (session.prep?.scenes ?? []).findIndex((x) => x.id === scene.id) + 1
@@ -221,7 +222,8 @@ export async function goToScene(world: World, session: Session, scene: PrepScene
  * so last scene's text can't be read out by mistake. Undo puts it back.
  */
 export async function changePlace(session: Session, placeId: string | undefined, placeName?: string) {
-  const before = sceneSnapshot(session)
+  // The session as it is saved now, not as the screen last drew it: text typed a moment ago must be in what Undo puts back.
+  const before = sceneSnapshot((await db.sessions.get(session.id)) ?? session)
   const planned = placeId ? session.prep?.scenes.find((x) => x.placeId === placeId && !x.done) ?? session.prep?.scenes.find((x) => x.placeId === placeId) : undefined
   await db.sessions
     .where('id')
