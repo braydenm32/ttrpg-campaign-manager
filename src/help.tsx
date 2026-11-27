@@ -31,7 +31,7 @@ export const HELP = {
   questList: 'Quests are grouped by where they stand: Active (the party is on it now), Open (waiting to be taken up) and Done (finished or failed). Change a quest’s status on its page with Edit.',
   quickAdd: 'Make a new page of any type. It starts as GM only, so nothing is revealed until you choose. You can also press Ctrl+K and type “new npc”.',
   visibility:
-    '🔒 GM only means just you. 👁 Players can see this means every player can see it. Click to switch. Pins, maps, sessions and files work the same way.',
+    '🔒 GM only means just you. 👁 Players can see this means every player can see it. Click to switch. Pins, maps and sessions work the same way. A file goes wherever what uses it goes (Files says which).',
 
   // Pages
   entityPage:
@@ -249,7 +249,8 @@ export const HELP = {
     'Before something reaches your players you see what they’ll get: which page, which coins, which items. Once you go ahead, Undo takes it back for a few seconds, though anyone looking at that moment may already have seen it.',
   existingImage:
     'A page’s picture can be uploaded, or picked from the pictures already in this world (anything uploaded on another page, as a handout or in More › Files) with “Use an existing image”. The picture isn’t copied, so one portrait can be on several pages. Players see it once the page is revealed to them, just like an uploaded one.',
-  assets: 'Every file in this world: map images, portraits and handouts. Mark a file revealed to let players see it.',
+  assets:
+    'Every file in this world: map images, portraits and handouts. Each one says whether players can see it, and why. Players get a file when something they can see uses it: the world’s cover, the picture on a page they can read, a map they can see, a picture in text they read (not in a GM-only passage), a handout, or what’s on their screens. Hide that and the file goes with it. A file nothing like that uses goes to players only if you mark it “Players can see this”. The full picture of a fogged map, and your copy of a map with secrets on it, never go to players.',
   loot:
     'What the party has: the stash, what each player character carries and the party’s coin. Set "Carried by" on any item page. Players see the revealed items and the coins in the purse; things an NPC, shop or place holds are listed only for you.',
   lootSteps: 'Use − and + to take coins out of the purse or put them in, by the amount in the box (1 to start with). Click the number to type a new total instead. What other people carry, and items nobody does, are folded under “Everything else in the world”.',
@@ -430,8 +431,8 @@ export const HELP = {
   welcome: 'The quickest look is the Shattered Coast, a small example that opens at once. Vael Ardith, the full example with a campaign ready to run, is on the shelf below; it takes a minute to draw its maps the first time. Or start your own world: it asks for a name, and you can bring in notes from Obsidian, Kanka or World Anvil.',
   installApp: 'Put the Warded Atlas on your home screen and it opens like an app, full screen, straight to your table. It’s the same as the website, kept up to date; nothing extra to download from a store. Hold the icon for shortcuts to the Common Room.',
   inlineRolls: 'Write roll:1d8+3 anywhere in a page’s text and it shows as a small dice button: press it to roll, and the result appears beside it. {{Blackwood encounters}} rolls on your table of that name. Players get the buttons too, but only in text they can read. While a session is being played, you can add a roll to its notes.',
-  pagePrompts: 'Questions to get a new page going, different for people, places, factions, items, quests and the rest. Answer one and it goes into the description under the question as a heading. Change or delete anything afterwards.',
-  starterTemplates: 'Three ready-made starting points (a person, a town and a quest), each with the questions worth answering as headings. Add them, change them, or make your own with “Save as template” on any page.',
+  pagePrompts: 'Questions to get a new page going, different for people, places, factions, items, quests and the rest. Answer one and it goes into the description under the question as a heading. Questions that ask for a secret (marked with a lock) go into GM notes instead, so players never see the answer. Change or delete anything afterwards.',
+  starterTemplates: 'Three ready-made starting points (a person, a town and a quest), each with the questions worth answering as headings. The secret ones (“Their secret”, “The twist”) sit in GM notes, so players never see what you write there. Add them, change them, or make your own with “Save as template” on any page.',
   whoWasThere: 'Tick the player characters who were at the table. Everyone starts ticked. It goes into the recap and highlights Claude writes (no moments for someone who wasn’t there), Spotlight, and players see it with the recap. Players whose characters weren’t there aren’t asked for downtime.',
   starsWishes: 'For a few days after a game, each player can send one star (something they loved) and one wish (something they’d like more of) about last session. They’re signed with the player’s name, not anonymous, and only the GM and any co-GM read them, in the Inbox under that session. The form tells players their GM may share them with Claude: the prep helper sends them only if you tick “Include players’ feedback”.',
   sessionNotes: 'Your own notes on one session, under its recap: what you want to remember, theories, names. Only you can see them. They’re kept with your other notes and come with you to any device you sign in on.',

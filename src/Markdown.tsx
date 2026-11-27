@@ -27,10 +27,10 @@ export function forNames(spec: string) {
 
 /** A line that opens a secret passage: ":::gm", ":::for …" or ":::foryou", forgiving of case and spaces. */
 const OPENER = /^[ \t]*:::[ \t]*(foryou|gm|for)(?![a-z0-9])(.*)$/i
-const CLOSER = /^[ \t]*:::[ \t]*$/
+export const CLOSER = /^[ \t]*:::[ \t]*$/
 
 /** Reads an opener line: its kind, and for a one-line passage its text (and names). */
-function readOpener(line: string): { kind: 'gm' | 'for' | 'foryou'; names: string[]; one?: string; first?: string } | null {
+export function readOpener(line: string): { kind: 'gm' | 'for' | 'foryou'; names: string[]; one?: string; first?: string } | null {
   const m = line.match(OPENER)
   if (!m) {
     // Older player copies hold one-line passages as ":::foryouText:::".

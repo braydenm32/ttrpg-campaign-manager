@@ -65,9 +65,21 @@ const words = (text: string) => text.split(/\s+/).filter(Boolean).length
 /**
  * Showing a session to players, with a short look at what they'll get first: the title, the recap
  * (secret passages left out), highlights and who featured. Hiding it again is one tap, with Undo.
+ * Every "Show to players" goes through this review, the Desk's too.
  */
-export function ShowToPlayers({ session, campaign, entities }: { session: Session; campaign: Campaign | null | undefined; entities: Entity[] }) {
-  const [review, setReview] = useState(false)
+export function ShowToPlayers({
+  session,
+  campaign,
+  entities,
+  startOpen = false,
+}: {
+  session: Session
+  campaign: Campaign | null | undefined
+  entities: Entity[]
+  /** Open with the review already showing (the Desk's "Show to players…" lands here). */
+  startOpen?: boolean
+}) {
+  const [review, setReview] = useState(startOpen)
   const set = (visibility: Session['visibility']) => db.sessions.update(session.id, { visibility })
   if (session.visibility === 'players')
     return (

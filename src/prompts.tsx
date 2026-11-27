@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Lightbulb } from '@phosphor-icons/react'
+import { Lightbulb, Lock } from '@phosphor-icons/react'
 import { blankEntity, type Entity, type EntityType } from './db'
 import { Help } from './help'
 import { Ico } from './icons'
@@ -7,7 +7,8 @@ import { Ico } from './icons'
 /**
  * Questions for a blank page ("What does she want? What is she afraid of?"), a few for each kind of
  * page. Answering one adds it to the description under the question as a heading, so a new GM never
- * faces an empty box with nothing to go on.
+ * faces an empty box with nothing to go on. The questions in GM_PROMPTS ask for a secret, so their
+ * answers go into GM notes instead, which players never see.
  */
 export const PROMPTS: Partial<Record<EntityType, string[]>> = {
   npc: [
@@ -38,8 +39,38 @@ export const PROMPTS: Partial<Record<EntityType, string[]>> = {
   thread: ['What started it?', 'Who is it waiting on?', 'What happens if it’s left alone?', 'How could it come back?'],
 }
 
+/** Questions whose answer is a secret: answers go into GM notes, never into the description players read. */
+export const GM_PROMPTS = new Set([
+  'What secret are they keeping?',
+  'What’s for sale that shouldn’t be?',
+  'What is their weakness?',
+  'What’s the catch?',
+  'What’s the twist?',
+  'What do people get wrong about it?',
+  'What do most people believe, and what is the truth?',
+  'What’s hidden here?',
+])
+
+/** Adds a question and its answer, as a heading and text, to the end of a piece of writing. */
+const appendAnswer = (text: string, question: string, answer: string) => `${text.trimEnd()}${text.trim() ? '\n\n' : ''}### ${question}\n${answer}\n`
+
 /** "Prompts" by the Description box: pick a question, answer it, and it's added to the page. */
-export function PagePrompts({ type, body, onChange }: { type: EntityType; body: string; onChange: (body: string) => void }) {
+export function PagePrompts({
+  type,
+  body,
+  onChange,
+  gmNotes,
+  onGmNotesChange,
+  revealed,
+}: {
+  type: EntityType
+  body: string
+  onChange: (body: string) => void
+  gmNotes: string
+  onGmNotesChange: (gmNotes: string) => void
+  /** The page is one players can read already. */
+  revealed: boolean
+}) {
   const questions = PROMPTS[type]
   const [open, setOpen] = useState(false)
   const [answers, setAnswers] = useState<Record<number, string>>({})
@@ -47,7 +78,8 @@ export function PagePrompts({ type, body, onChange }: { type: EntityType; body: 
   const add = (i: number) => {
     const text = (answers[i] ?? '').trim()
     if (!text) return
-    onChange(`${body.trimEnd()}${body.trim() ? '\n\n' : ''}### ${questions[i]}\n${text}\n`)
+    if (GM_PROMPTS.has(questions[i])) onGmNotesChange(appendAnswer(gmNotes, questions[i], text))
+    else onChange(appendAnswer(body, questions[i], text))
     setAnswers((a) => ({ ...a, [i]: '' }))
   }
   return (
@@ -62,6 +94,13 @@ export function PagePrompts({ type, body, onChange }: { type: EntityType; body: 
             <li key={q}>
               <label>
                 <span>{q}</span>
+                {GM_PROMPTS.has(q) ? (
+                  <small className="muted">
+                    <Ico as={Lock} /> Goes into GM notes: players never see it
+                  </small>
+                ) : (
+                  <small className="muted">{revealed ? 'Goes into the description, which players can read' : 'Goes into the description: players read it once the page is revealed'}</small>
+                )}
                 <span className="row">
                   <input
                     value={answers[i] ?? ''}
@@ -86,24 +125,30 @@ export function PagePrompts({ type, body, onChange }: { type: EntityType; body: 
   )
 }
 
-/** Ready-made templates offered while a world has none: a person, a town and a quest, each with its questions as headings. */
+/**
+ * Ready-made templates offered while a world has none: a person, a town and a quest, each with its
+ * questions as headings. Headings that ask for a secret ("Their secret", "The twist") go in GM notes,
+ * so what is written under them never reaches players.
+ */
 export function starterTemplates(worldId: string): Entity[] {
-  const make = (type: EntityType, name: string, summary: string, headings: string[], fields: { key: string; value: string }[] = []): Entity => ({
+  const headed = (headings: string[]) => headings.map((h) => `### ${h}\n`).join('\n')
+  const make = (type: EntityType, name: string, summary: string, headings: string[], fields: { key: string; value: string }[] = [], secretHeadings: string[] = []): Entity => ({
     ...blankEntity(worldId, type, name),
     summary,
-    body: headings.map((h) => `### ${h}\n`).join('\n'),
+    body: headed(headings),
+    gmNotes: headed(secretHeadings),
     fields,
     template: true,
   })
   return [
-    make('npc', 'Person to meet', 'Who they are in one line', ['What they want', 'What they’re afraid of', 'Their secret', 'How they talk', 'What they can offer the party'], [
+    make('npc', 'Person to meet', 'Who they are in one line', ['What they want', 'What they’re afraid of', 'How they talk', 'What they can offer the party'], [
       { key: 'Role', value: '' },
       { key: 'Where to find them', value: '' },
-    ]),
+    ], ['Their secret']),
     make('location', 'Town', 'A town in one line', ['First impressions', 'Who runs it', 'Trouble brewing', 'Rumours', 'Places to go (inn, market, temple)'], [
       { key: 'Population', value: '' },
       { key: 'Ruled by', value: '' },
     ]),
-    make('quest', 'Quest', 'The job in one line', ['Who asked, and why', 'Where it starts', 'What stands in the way', 'The twist', 'The reward']),
+    make('quest', 'Quest', 'The job in one line', ['Who asked, and why', 'Where it starts', 'What stands in the way', 'The reward'], [], ['The twist']),
   ]
 }

@@ -126,10 +126,15 @@ function ClockRow({ clock, owner, isGM, showOwner, worldId }: { clock: Clock; ow
   )
 }
 
+/** Whether players really see a clock: it's marked "Players know" and its page is one they can read. */
+export function playersSeeClock(clock: Clock, owner: Entity) {
+  return !!clock.known && owner.visibility === 'players'
+}
+
 /** Who sees a clock, in a few words, for the GM. */
 function clockAudience(clock: Clock, owner: Entity) {
   if (!clock.known) return 'GM only'
-  if (owner.visibility !== 'players') return `GM only until “${owner.name}” is revealed`
+  if (!playersSeeClock(clock, owner)) return `GM only until “${owner.name}” is revealed`
   return 'Players see it'
 }
 

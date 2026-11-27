@@ -915,7 +915,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
             Link pages by typing @ or [[ and a name. The buttons hide a passage from every player, or keep it for some characters only. Write roll:1d8+3 for a dice button, or {'{{Table name}}'} to roll on one of your tables. <Help topic="inlineRolls" />
           </small>
         </label>
-        <PagePrompts type={d.type} body={d.body} onChange={(v) => set('body', v)} />
+        <PagePrompts type={d.type} body={d.body} onChange={(v) => set('body', v)} gmNotes={d.gmNotes} onGmNotesChange={(v) => set('gmNotes', v)} revealed={d.visibility === 'players'} />
         <SecretNamesWarning worldId={worldId} texts={[d.summary, d.body, d.playerBody]} show={d.visibility === 'players' && !d.template} />
         <label className="gm-notes-field">
           <span>

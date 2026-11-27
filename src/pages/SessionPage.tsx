@@ -40,7 +40,8 @@ import { MySessionNote } from '../players/SessionNote'
 
 /**
  * A session. For the GM it's two of the Session area's three stages (the third, Play, is the
- * Lectern): Prepare (?tab=prep), the plan first; and Wrap up (?tab=notes, ?tab=recap, ?end=1), the
+ * Lectern): Prepare (?tab=prep), the plan first; and Wrap up (?tab=notes, ?tab=recap, ?end=1; with
+ * ?tab=recap&show=1 the recap's "Players will see" review starts open), the
  * after-session tools in order, ending with "Mark as played". A strip across the top shows the
  * stage, the number and title (edited in place) and the one thing to do next. Players get the
  * recap, read-only.
@@ -99,7 +100,7 @@ export default function SessionPage() {
   return (
     <div className={`page session-page ${view}`}>
       <SessionStrip {...props} view={view} />
-      {view === 'prep' ? <PrepareView {...props} /> : <WrapUpView {...props} focus={params.get('end') === '1' ? 'finish' : tab === 'recap' ? 'recap' : undefined} />}
+      {view === 'prep' ? <PrepareView {...props} /> : <WrapUpView {...props} focus={params.get('end') === '1' ? 'finish' : tab === 'recap' ? 'recap' : undefined} review={tab === 'recap' && params.get('show') === '1'} />}
     </div>
   )
 }
@@ -229,7 +230,7 @@ function PrepareView({ session, campaign, world, entities }: ViewProps) {
  * pages), the players' recap, highlights, spotlight, threads and who featured, then the checklist
  * that ends with "Mark as played".
  */
-function WrapUpView({ session, campaign, world, entities, stage, focus }: ViewProps & { focus?: 'finish' | 'recap' }) {
+function WrapUpView({ session, campaign, world, entities, stage, focus, review }: ViewProps & { focus?: 'finish' | 'recap'; review?: boolean }) {
   const worldId = world.id
   const update = (patch: Partial<Session>) => saving(db.sessions.update(session.id, patch))
   // Arriving from "End session" or a recap link: go straight to that part.
@@ -300,7 +301,8 @@ function WrapUpView({ session, campaign, world, entities, stage, focus }: ViewPr
             <Markdown text={session.recap} entities={entities} worldId={worldId} showSecrets />
           </details>
         )}
-        <ShowToPlayers session={session} campaign={campaign} entities={entities} />
+        {/* From the Desk's "Show to players…" (?tab=recap&show=1): the review is already open. */}
+        <ShowToPlayers session={session} campaign={campaign} entities={entities} startOpen={review} />
       </section>
       <div id="highlights">
         <Highlights session={session} entities={entities} worldId={worldId} isGM />

@@ -16,7 +16,7 @@ import { BackupButton, useBackupDue, useRecordingsOnlyHere } from '../BackupRemi
 import WikiHome from './WikiHome'
 import CommonRoom, { ago } from './CommonRoom'
 import { showDate, upcoming } from '../players/Schedule'
-import { ClockFace } from '../clocks'
+import { ClockFace, playersSeeClock } from '../clocks'
 import { approveClaimLater } from '../players/inboxActions'
 import { ClaimNameClash, ReviewCharacter } from '../players/NewCharacters'
 import type { CharacterRequest } from '../cloud/players'
@@ -677,15 +677,10 @@ function recapRow(world: World, sessions: Session[], inHand: InHand | undefined,
     text: <>The recap of #{last.number} {last.title} is still GM only</>,
     action: (
       <span className="row">
-        <button
-          className="small"
-          onClick={async () => {
-            await db.sessions.update(last.id, { visibility: 'players' })
-            toast(`Players can read #${last.number} now.`, () => db.sessions.update(last.id, { visibility: 'gm' }))
-          }}
-        >
-          Show to players
-        </button>
+        {/* The same "Players will see" review as on the session, opened there, before anything is shown. */}
+        <Link className="button small" to={`${worldPath(world.id)}/s/${last.id}?tab=recap&show=1`}>
+          Show to players…
+        </Link>
         {skipButton}
       </span>
     ),
@@ -755,13 +750,13 @@ function DeskClocks({ world, entities }: { world: World; entities: Entity[] }) {
               <span className="muted small">
                 {clock.filled} of {clockSize(clock)}
               </span>
-              {clock.known ? (
+              {playersSeeClock(clock, owner) ? (
                 <span className="chip need-chip good">
                   <Ico as={Eye} /> Players know
                 </span>
               ) : (
-                <span className="chip need-chip">
-                  <Ico as={LockSimple} /> Secret
+                <span className="chip need-chip" title={clock.known ? `GM only until “${owner.name}” is revealed` : undefined}>
+                  <Ico as={LockSimple} /> GM only
                 </span>
               )}
             </Link>
