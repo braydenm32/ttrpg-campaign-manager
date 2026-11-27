@@ -9,7 +9,7 @@ import { Ico } from './icons'
 import { stripSecrets } from './Markdown'
 import { worldPath } from './paths'
 import { useReview } from './reveal'
-import { A_PICTURE, PicturePicker, pictureTitleOf, putUpBoard, sameHandout, SpreadPiece, stopShowing, useShowablePictures } from './showing'
+import { A_PICTURE, PicturePicker, pictureTitleOf, putUpBoard, sameHandout, SpreadPiece, stopShowingAll, useShowablePictures } from './showing'
 import { blankBoard, boardInHand, deleteShowBoard, freeName, saveShowBoard, showBoardsOf } from './showBoards'
 import { saveFailed, toast } from './undo'
 
@@ -486,7 +486,7 @@ export default function ArrangeBoard({
           <button className="primary" onClick={show} disabled={!items.length || (live && !board.changed)}>
             <Ico as={Television} /> {live ? 'Update players’ screen' : items.length > 1 ? `Show all ${items.length}` : 'Show players'}
           </button>
-          {(world.spread || world.showing) && <button onClick={() => stopShowing(world.id)}>Stop showing</button>}
+          {(world.spread || world.showing) && <button onClick={() => stopShowingAll(world.id)}>Stop showing</button>}
           <Link className="small" to={`/screen${worldPath(world.id).slice(2)}`} target="_blank">
             Players’ screen ↗
           </Link>

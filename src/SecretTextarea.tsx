@@ -3,8 +3,8 @@ import { useLayoutEffect, useRef, useState, type TextareaHTMLAttributes } from '
 import { db } from './db'
 import { Help } from './help'
 import { saveFileAsAsset } from './hooks'
-import { saveFailed } from './undo'
-import { forNames } from './Markdown'
+import { saveFailed, toast } from './undo'
+import { CLOSER, forNames, readOpener } from './Markdown'
 import { Ico, TypeIcon } from './icons'
 import { EyeClosed, Image, Lock, Shield } from '@phosphor-icons/react'
 
@@ -110,6 +110,19 @@ export function SecretTextarea({
   }
   const insertBlock = (kind: 'gm' | 'for') => {
     const t = ref.current
+    // A secret for some characters inside a GM-only passage would reach nobody (the outer passage
+    // hides everything in it), so it goes just after that passage instead, leaving the passage as it was.
+    const gmAround = kind === 'for' ? passagesAt(value, t ? t.selectionStart : value.length).find((k) => k.kind === 'gm') : undefined
+    if (gmAround) {
+      const end = gmAround.end ?? value.length
+      // A passage never closed runs to the end, so close it first (everything in it stays GM only).
+      const close = gmAround.end === null ? `${value.endsWith('\n') || !value ? '' : '\n'}:::\n` : ''
+      const lead = !close && end > 0 && value[end - 1] !== '\n' ? '\n' : ''
+      const caretAt = end + close.length + lead.length + ':::for '.length
+      edit(end, end, `${close}${lead}:::for \n\n:::\n`, caretAt)
+      toast('A secret inside a GM-only passage would reach no one, so it starts just after that passage.')
+      return
+    }
     const at = t ? t.selectionStart : value.length
     const end = t ? t.selectionEnd : at
     const picked = value.slice(at, end)
@@ -150,7 +163,7 @@ export function SecretTextarea({
     return true
   }
 
-  const where = passageAt(value, pos)
+  const where = whoReads(passagesAt(value, pos))
 
   return (
     <div className="secret-textarea">
@@ -238,9 +251,21 @@ export function SecretTextarea({
             <>
               <Ico as={Lock} /> You’re writing inside a GM-only passage: players never see this part.
             </>
+          ) : where.kind === 'for-in-gm' ? (
+            <>
+              <Ico as={Lock} /> This secret{where.names.length ? ` for ${where.names.join(', ')}` : ''} is inside a GM-only passage, so no player sees it. Move it out of the GM-only passage to share it.
+            </>
+          ) : where.names.length ? (
+            <>
+              <Ico as={EyeClosed} /> You’re writing inside a secret passage: only {where.names.join(', ')} will see this part.
+            </>
+          ) : where.layered ? (
+            <>
+              <Ico as={EyeClosed} /> You’re writing inside secrets for different characters: only a character named in every one of them would see this part, and none is.
+            </>
           ) : (
             <>
-              <Ico as={EyeClosed} /> You’re writing inside a secret passage: only {where.names.length ? where.names.join(', ') : 'the characters named on its first line'} will see this part.
+              <Ico as={EyeClosed} /> You’re writing inside a secret passage: only the characters named on its first line will see this part.
             </>
           )}
         </p>
@@ -278,19 +303,40 @@ export function SecretTextarea({
 
 const GM_PLACEHOLDER = 'Only you can read this. Players never see it.'
 
-/** Whether the caret sits inside a ":::gm" or ":::for" passage, so the box can say who will read what's typed there. */
-function passageAt(text: string, pos: number): { kind: 'gm' | 'for'; names: string[] } | null {
-  if (pos < 0) return null
-  const stack: { kind: 'gm' | 'for'; names: string[] }[] = []
-  const lines = text.slice(0, pos).split(/\r?\n/)
-  // Only the lines above the caret's own line count, so the opening line itself isn't "inside" yet.
-  for (const line of lines.slice(0, -1)) {
-    const open = line.match(/^:::(gm|for)\b(.*)$/i)
-    if (open) {
-      // A one-line passage (":::gm secret :::") opens and closes on the same line.
-      if (/\S.*:::\s*$/.test(open[2]) && (open[1].toLowerCase() === 'gm' || (open[2].match(/:::/g) ?? []).length > 1)) continue
-      stack.push({ kind: open[1].toLowerCase() as 'gm' | 'for', names: open[1].toLowerCase() === 'for' ? forNames(open[2]) : [] })
-    } else if (/^:::\s*$/.test(line)) stack.pop()
+/** A secret passage, from its opening line to just after its closing ":::" line (null while it is never closed). */
+type Passage = { kind: 'gm' | 'for'; names: string[]; end: number | null }
+
+/**
+ * The passages the caret sits inside, outermost first, read line by line the same way as splitSecrets
+ * (and public.player_text on the server). Only the lines above the caret's own line count, so the
+ * opening line itself isn't "inside" yet.
+ */
+function passagesAt(text: string, pos: number): Passage[] {
+  if (pos < 0) return []
+  const stack: Passage[] = []
+  let around: Passage[] | null = null
+  const line = /([^\r\n]*)(\r\n?|\n|$)/g
+  for (let m = line.exec(text); m; m = line.exec(text)) {
+    const start = m.index
+    if (around === null && start + m[1].length >= pos) around = [...stack]
+    const opener = readOpener(m[1])
+    if (opener && opener.one === undefined) stack.push({ kind: opener.kind === 'gm' ? 'gm' : 'for', names: opener.names, end: null })
+    else if (!opener && CLOSER.test(m[1]) && stack.length) stack.pop()!.end = line.lastIndex
+    if (!m[2]) break
   }
-  return stack.at(-1) ?? null
+  return around ?? stack
+}
+
+/**
+ * Who will read what's typed at the caret, as the server decides it: a GM-only passage anywhere around
+ * it hides it from every player, and inside secrets for characters only one named in every one of
+ * them reads it.
+ */
+function whoReads(around: Passage[]): { kind: 'gm' | 'for-in-gm' | 'for'; names: string[]; layered?: boolean } | null {
+  const inner = around.at(-1)
+  if (!inner) return null
+  if (around.some((k) => k.kind === 'gm')) return { kind: inner.kind === 'gm' ? 'gm' : 'for-in-gm', names: inner.names }
+  const named = around.filter((k) => k.names.length)
+  const names = inner.names.filter((n) => named.every((k) => k.names.some((o) => o.toLowerCase() === n.toLowerCase())))
+  return { kind: 'for', names, layered: named.length > 1 }
 }

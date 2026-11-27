@@ -218,6 +218,25 @@ test('Places, People and Lore each switch between their two kinds, and headings 
   await expect(page.getByRole('heading', { level: 1 })).not.toContainText('Loose')
 })
 
+test('for players, People also switches to Factions; the GM keeps a Factions tab of its own', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  // The GM: People holds two kinds, and Factions is its own screen with no switch.
+  await open(page, `${w}/npcs`)
+  await expect(page.locator('.people-switch').getByRole('link', { name: 'Factions' })).toHaveCount(0)
+  await open(page, `${w}/factions`)
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Factions')
+  await expect(page.locator('.people-switch')).toHaveCount(0)
+  // A player: Factions is the third choice on People, and opens the list of factions under People.
+  await setView(page, world, 'player')
+  await open(page, `${w}/npcs`)
+  await page.locator('.people-switch').getByRole('link', { name: 'Factions' }).click()
+  await expect.poll(() => here(page)).toBe(`${w}/factions`)
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('People')
+  await expect(page.locator('.kicker').first()).toContainText('Factions')
+  await expect(page.locator('.people-switch').getByRole('link', { name: 'Factions' })).toHaveClass(/\bon\b/)
+  await expect(page.locator('.entity-cards > *').first()).toBeVisible()
+})
+
 test('“Use an existing image” puts a picture already in the world on a page, without uploading it again', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   const pictured = (e: (typeof world.dump.entities)[number]) => (e as { imageId?: string }).imageId

@@ -75,6 +75,7 @@ export function useDowntime(world: World | null | undefined) {
   const [error, setError] = useState('')
   // A player sending one (or the GM answering) says so on the live link: reload straight away.
   const { downtime: changed } = useTable(cloudId)
+  const reader = world?.shared ? 'player' : 'gm'
   const reload = useCallback(async () => {
     if (!cloudId) return
     try {
@@ -82,11 +83,11 @@ export function useDowntime(world: World | null | undefined) {
       setError('')
     } catch (e) {
       // Before the server knows about downtime there's nothing to show; say nothing.
-      const msg = cloudErrorMessage(e)
+      const msg = cloudErrorMessage(e, { reader, doing: 'refreshing' })
       setError(/downtime_actions/.test(msg) ? '' : msg)
       setList([])
     }
-  }, [cloudId])
+  }, [cloudId, reader])
   useEffect(() => {
     if (!cloudId) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -204,7 +205,7 @@ export function DowntimeItem({ cloudId, d, who, onChange, onDelete, head }: { cl
       await fn()
       onChange()
     } catch (e) {
-      setError(cloudErrorMessage(e))
+      setError(cloudErrorMessage(e, { reader: 'gm' }))
     } finally {
       setBusy(false)
     }

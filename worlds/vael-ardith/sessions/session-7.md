@@ -156,13 +156,34 @@ The Keep gate. A Shellback banker three hundred and forty years old sits in a ca
 == Scenes ==
 
 - The 5th: Tollamund calls in the debt at the gate; Odile holds the charter, signed but not sealed; the hole in the Treaty.
+  where: lantern-keep
+  who: [ tollamund, npc-tollamund-daughters, odile-fairweather, ilse-marrow, fennick ]
+  > The Keep gate. A Shellback banker three hundred and forty years old sits in a carried chair in the ash, with eight porters, two lawyers and the Reeve of Cinderford beside her, and she has been saying the same sentence for nearly a minute, stopping only for sips of water. She is not finished. The sentence is "We are here to collect."
 - The night of the 5th: Mote burns the Assessor's files and comes for the lantern and Ysse's key with two hired knives.
+  where: lantern-keep
+  who: [ ansel-mote ]
+  fight: Mote's night
+  > Around midnight a red glow rises over the Ford: the Assessor's Office is burning. By the third watch, every eye in town is on it.
 - The cipher on the back of Form 9-K, and its fifth line: the girl at the Ledger.
 - The 6th: Seraphine comes for Ysse with the faithful; the Lamp-Wardens try for the Halcyra road.
+  where: lantern-hill
+  who: [ seraphine-ashe ]
+  fight: The Lamp-Wardens on the Halcyra road
+  > First light, and singing on the hill road. Seraphine Ashe is coming up it in white, with a crowd of the faithful behind her, and six Lamp-Wardens in red surcoats walk with her.
 - Mother Corvane comes down from the Rise to ask Ysse to put the lamp out.
+  where: lantern-hill
+  who: [ mother-corvane, npc-skrell ]
+  > For the first time in a year, Mother Corvane has come down from Corvel Rise. She stands at the foot of Lantern Hill on Skrell's arm, and asks for Ysse.
 - Side threads on the 6th: a knife for Vosk at first light; the Sleepless at the cage ladder during the mutiny.
+  who: [ mirrel-vosk, npc-ambry-coyle ]
 - Sallow's mutiny in the drill yard.
+  where: lantern-keep
+  who: [ garrick-sallow, mirrel-vosk, ilse-marrow ]
+  fight: The mutiny in the yard
+  > Lieutenant Sallow has broken out of confinement, and he is calling the files to the drill yard. Half the company is listening. "They've sold us," he says. "Let's sell them first."
 - Grashka's letter arrives, with a second ink for Varra alone.
+  where: lantern-keep
+  > In the middle of everything, a letter reaches the gate under the Mothers' seal, a clenched fist in iron-red wax. The orc officer who carries it has a short message and no expression, and he stays.
 
 == Clues ==
 

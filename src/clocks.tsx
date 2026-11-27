@@ -1,3 +1,4 @@
+import { revealDue } from './revealDue'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Empty } from './components'
@@ -68,7 +69,7 @@ function ClockRow({ clock, owner, isGM, showOwner, worldId }: { clock: Clock; ow
       <ClockFace clock={clock} onSet={onSet} />
       <div className="clock-info">
         <strong>{clock.name}</strong>
-        {isGM && <span className={`clock-seen small ${clock.known && owner.visibility === 'players' ? 'on' : ''}`}>{clockAudience(clock, owner)}</span>}
+        {isGM && <span className={`clock-seen small ${playersSeeClock(clock, owner) ? 'on' : ''}`}>{clockAudience(clock, owner)}</span>}
         <div className="muted small">
           {clock.filled} of {clockSize(clock)}
           {!isTicking(clock) && ' · it happens!'}
@@ -126,11 +127,25 @@ function ClockRow({ clock, owner, isGM, showOwner, worldId }: { clock: Clock; ow
   )
 }
 
+/**
+ * Who really sees a clock, the way the server decides it: it's marked "Players know" and its page
+ * is one they can read. 'all' players, 'some' (the page is revealed to a few by name), or nobody.
+ */
+export function clockReach(clock: Clock, owner: Entity): 'all' | 'some' | undefined {
+  if (!clock.known) return undefined
+  if (owner.visibility === 'players' || revealDue(owner)) return 'all'
+  return owner.revealedTo?.length ? 'some' : undefined
+}
+
+/** Whether any player really sees a clock (see clockReach). */
+export const playersSeeClock = (clock: Clock, owner: Entity) => !!clockReach(clock, owner)
+
 /** Who sees a clock, in a few words, for the GM. */
 function clockAudience(clock: Clock, owner: Entity) {
   if (!clock.known) return 'GM only'
-  if (owner.visibility !== 'players') return `GM only until “${owner.name}” is revealed`
-  return 'Players see it'
+  const reach = clockReach(clock, owner)
+  if (!reach) return `GM only until “${owner.name}” is revealed`
+  return reach === 'some' ? 'Some players see it' : 'Players see it'
 }
 
 /** On the Clocks page: start a clock on any page (a faction, a villain, a loose thread). */

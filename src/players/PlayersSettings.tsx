@@ -49,7 +49,7 @@ export function PlayersSettings({ world }: { world: World }) {
       setEveryone(p.members)
       setClaims(p.claims)
     } catch (e) {
-      setError(cloudErrorMessage(e))
+      setError(cloudErrorMessage(e, { reader: 'gm', doing: 'refreshing' }))
     }
   }, [world.id])
   useEffect(() => {
@@ -64,7 +64,7 @@ export function PlayersSettings({ world }: { world: World }) {
       await fn()
       await load()
     } catch (e) {
-      setError(cloudErrorMessage(e))
+      setError(cloudErrorMessage(e, { reader: 'gm' }))
     } finally {
       setBusy(false)
     }
@@ -180,7 +180,11 @@ export function PlayersSettings({ world }: { world: World }) {
                   <button
                     className="ghost small"
                     disabled={busy}
-                    onClick={() => confirm(`Remove ${m.name} from this world? They’ll lose access straight away.`) && run(() => removePlayer(world.id, m.userId))}
+                    onClick={() =>
+                      confirm(
+                        `Remove ${m.name} from this world?\n\nThey lose access straight away. Deleted for good: their private notes, their notes on their character, their questions and your answers, their downtime, their date answers and their stars and wishes. Their character is freed.\n\nInviting them again doesn’t bring any of that back.`,
+                      ) && run(() => removePlayer(world.id, m.userId))
+                    }
                   >
                     Remove
                   </button>
@@ -211,7 +215,7 @@ export function CoGmSettings({ world }: { world: World }) {
       setGms(p.members.filter((m) => m.role === 'gm'))
       setEveryone(p.members)
     } catch (e) {
-      setError(cloudErrorMessage(e))
+      setError(cloudErrorMessage(e, { reader: 'gm', doing: 'refreshing' }))
     }
   }, [world.id])
   useEffect(() => {
@@ -226,7 +230,7 @@ export function CoGmSettings({ world }: { world: World }) {
       await fn()
       await load()
     } catch (e) {
-      setError(cloudErrorMessage(e))
+      setError(cloudErrorMessage(e, { reader: 'gm' }))
     } finally {
       setBusy(false)
     }

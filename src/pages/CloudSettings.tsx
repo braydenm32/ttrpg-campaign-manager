@@ -50,7 +50,7 @@ export default function CloudSettings({ world }: { world: World }) {
     try {
       await fn()
     } catch (e) {
-      setError(cloudErrorMessage(e))
+      setError(cloudErrorMessage(e, { reader: 'gm' }))
     } finally {
       setBusy(false)
     }
@@ -156,7 +156,9 @@ export default function CloudSettings({ world }: { world: World }) {
             <button
               className="danger"
               onClick={() =>
-                confirm('Delete the cloud copy of this world? This device keeps its copy, but other devices and the share link stop updating.') &&
+                confirm(
+                  'Delete the cloud copy of this world?\n\nThis device keeps its copy of the world. Deleted for good: every player and co-GM is taken out of the world, and the players’ notes, group notes, questions and your answers, downtime, date answers, stars and wishes and their claims on characters all go. The wiki, invite and co-GM links stop working, and your other devices stop updating.\n\nTurning sync back on later doesn’t bring any of this back.',
+                ) &&
                 run(() => deleteCloudCopy(world.id))
               }
             >

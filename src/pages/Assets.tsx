@@ -11,8 +11,8 @@ import { outOfRoom } from '../undo'
 import { ShowButton, unshowableImages } from '../showing'
 import { Ico } from '../icons'
 import { useViewMode } from '../viewMode'
-import { File, Folder } from '@phosphor-icons/react'
-import { assetUses, friendlyName, keyNamed } from '../assetUses'
+import { Eye, File, Folder, Lock } from '@phosphor-icons/react'
+import { assetUses, filesForPlayers, friendlyName, keyNamed, type PlayersGet } from '../assetUses'
 
 export default function Assets() {
   const { worldId } = useWorld()
@@ -20,6 +20,7 @@ export default function Assets() {
   const assets = stored ?? []
   const unshowable = useLiveQuery(() => unshowableImages(worldId), [worldId])
   const uses = useLiveQuery(() => assetUses(worldId), [worldId])
+  const reach = useLiveQuery(() => filesForPlayers(worldId), [worldId])
   const [filter, setFilter] = useState('')
   const [unused, setUnused] = useState(false)
   const [uploadNote, setUploadNote] = useState('')
@@ -82,7 +83,7 @@ export default function Assets() {
       ) : (
         <div className="card-grid">
           {shown.map((a) => (
-            <AssetCard key={a.id} asset={a} unshowable={unshowable} uses={uses?.get(a.id)} known={!!uses} />
+            <AssetCard key={a.id} asset={a} unshowable={unshowable} uses={uses?.get(a.id)} known={!!uses} reach={reach && (reach.get(a.id) ?? null)} />
           ))}
         </div>
       )}
@@ -124,7 +125,31 @@ async function upload(worldId: string, files: File[]) {
     .join(' ')
 }
 
-function AssetCard({ asset, unshowable, uses, known }: { asset: Asset; unshowable?: Map<string, string | undefined>; uses?: string[]; known: boolean }) {
+/** "a", "a and b", "a, b and c"; past three, "and N more". */
+const andMore = (list: string[]) => {
+  const shown = list.length > 3 ? [...list.slice(0, 2), `${list.length - 2} more`] : list
+  return shown.length > 1 ? `${shown.slice(0, -1).join(', ')} and ${shown.at(-1)}` : shown.join('')
+}
+
+/**
+ * A file card. Who sees the file is said as it really is (see filesForPlayers): a file used by
+ * something players see goes to them whatever its own mark, and the clean picture of a fogged map
+ * never does, so the file's own "GM only · Reveal…" switch shows only where it decides it.
+ */
+function AssetCard({
+  asset,
+  unshowable,
+  uses,
+  known,
+  reach,
+}: {
+  asset: Asset
+  unshowable?: Map<string, string | undefined>
+  uses?: string[]
+  known: boolean
+  /** Why players get it (null: nothing they see uses it; undefined: still working it out). */
+  reach?: PlayersGet | null
+}) {
   const url = useBlobUrl(asset)
   const update = (patch: Partial<Asset>) => db.assets.update(asset.id, patch)
   const kind = asset.mime.split('/')[0]
@@ -156,15 +181,32 @@ function AssetCard({ asset, unshowable, uses, known }: { asset: Asset; unshowabl
           )}
         </>
       )}
+      {reach?.all.length ? (
+        <div className="muted small">Players get it: {andMore(reach.all)}.</div>
+      ) : reach?.some.length ? (
+        <div className="muted small">Some players get it: {andMore(reach.some)}.</div>
+      ) : null}
       <div className="row spread">
-        <VisibilityControl
-          value={asset.visibility}
-          onChange={(visibility) => update({ visibility })}
-          name={`“${asset.name}”`}
-          compact
-          see={[recording ? 'the whole recording, to listen to or download' : kind === 'image' ? 'the picture' : kind === 'audio' ? 'the sound' : 'the file']}
-          warn={recording ? 'This is a recording of your session: every player gets the whole audio, everything said at the table included (asides, rules talk and GM secrets).' : undefined}
-        />
+        {unshowable?.has(asset.id) ? (
+          <span className="chip" title="Never sent to players, whatever else uses it">
+            <Ico as={Lock} /> GM only
+          </span>
+        ) : reach?.all.length ? (
+          <span className="chip shown-chip" title="Players get it through what uses it, whatever the file’s own setting">
+            <Ico as={Eye} /> Players can see this
+          </span>
+        ) : reach !== undefined ? (
+          <VisibilityControl
+            value={asset.visibility}
+            onChange={(visibility) => update({ visibility })}
+            name={`“${asset.name}”`}
+            compact
+            see={[recording ? 'the whole recording, to listen to or download' : kind === 'image' ? 'the picture' : kind === 'audio' ? 'the sound' : 'the file']}
+            warn={recording ? 'This is a recording of your session: every player gets the whole audio, everything said at the table included (asides, rules talk and GM secrets).' : undefined}
+          />
+        ) : (
+          <span />
+        )}
         <div className="row">
           {url && (
             <a className="button" href={url} download={asset.name} aria-label={`Download ${asset.name}`} title="Download">

@@ -308,7 +308,8 @@ export function ShellFoot({ world, className = '' }: { world: World; className?:
   const { owners } = useCharacterOwners(world)
   const shared = world.shared
   const memberOf = shared?.memberOf
-  const mine = [...owners.entries()].filter(([, o]) => o.mine).map(([id]) => id)
+  // Only characters the GM has approved: one still waiting isn't "my character" yet.
+  const mine = [...owners.entries()].filter(([, o]) => o.mine && !o.pending).map(([id]) => id)
   return (
     <div className={`sidebar-foot ${className}`}>
       {!shared && isGM && (
@@ -329,7 +330,12 @@ export function ShellFoot({ world, className = '' }: { world: World; className?:
           <button
             className="link small leave-world"
             onClick={async () => {
-              if (!confirm('Leave this world? It will be removed from this device, and you’ll need a new invite to come back.')) return
+              if (
+                !confirm(
+                  'Leave this world?\n\nIt will be removed from this device. Deleted for good: your private notes, your notes on your character, your questions and your GM’s answers, your downtime, your date answers and your stars and wishes. Your character is freed for someone else.\n\nA new invite lets you back in, but doesn’t bring any of that back.',
+                )
+              )
+                return
               await leaveWorld(memberOf)
               navigate('/')
             }}

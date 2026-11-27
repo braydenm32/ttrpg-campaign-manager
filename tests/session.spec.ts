@@ -21,6 +21,9 @@ test('a session moves Prepare → Play → Wrap up, then the next one is up on t
   const s2 = world.session(2)
   await open(page, `${w}/s/${s1.id}?tab=prep`)
   const before = await getRecord(page, 'sessions', s1.id)
+  const before2 = await getRecord(page, 'sessions', s2.id)
+  const clueRows = (row: Awaited<ReturnType<typeof getRecord>>) => (row?.prep as { clues?: { text: string; done: boolean }[] } | undefined)?.clues ?? []
+  const clues = (row: Awaited<ReturnType<typeof getRecord>>) => clueRows(row).map((c) => c.text)
   try {
     const strip = page.locator('.session-strip')
     await expect(strip.locator('[data-stage]')).toHaveAttribute('data-stage', 'preparing')
@@ -38,13 +41,68 @@ test('a session moves Prepare → Play → Wrap up, then the next one is up on t
     await expect(toast(page)).toContainText('#1 marked played')
     await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'played')
     await expect(page.locator('#finish')).toContainText(`Next up: #2 ${s2.title}`)
+    // #2 was already written: the clues nobody found in #1 are added to its plan, marked where they came from.
+    const carried = clues(await getRecord(page, 'sessions', s2.id)).filter((t) => t.endsWith('(from #1)'))
+    expect(carried.length).toBeGreaterThan(0)
+    expect(carried.length).toBe(clueRows(before).filter((c) => !c.done && c.text.trim()).length)
+    expect(clues(await getRecord(page, 'sessions', s2.id)).length).toBe(clues(before2).length + carried.length)
 
     await open(page, w)
     const card = page.locator('.next-sessions')
     await expect(card).toContainText(`#2 ${s2.title}`)
     await expect(card.locator('[data-stage]').first()).not.toHaveAttribute('data-stage', 'played')
   } finally {
-    await putBack(page, 'sessions', [[s1.id, before]])
+    await putBack(page, 'sessions', [
+      [s1.id, before],
+      [s2.id, before2],
+    ])
+  }
+})
+
+test('“Start playing” can be taken back, and a session whose date went by asks instead of turning Played', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const s1 = world.session(1)
+  await open(page, `${w}/s/${s1.id}?tab=prep`)
+  const before = await getRecord(page, 'sessions', s1.id)
+  const before2 = await getRecord(page, 'sessions', world.session(2).id)
+  try {
+    // A press by mistake: the note at the bottom takes it back, on the Lectern it opened.
+    await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+    await expect(toast(page)).toContainText('#1')
+    await toast(page).getByRole('button', { name: 'Not started after all' }).click()
+    await expect.poll(async () => (await getRecord(page, 'sessions', s1.id))?.startedAt ?? null).toBeNull()
+
+    // Started again, Session details keeps the same way back for later.
+    await patchRecord(page, 'sessions', s1.id, { startedAt: Date.now() })
+    await open(page, `${w}/s/${s1.id}?tab=prep`)
+    await page.locator('#details').getByRole('button', { name: 'Not started after all' }).click()
+    await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'preparing')
+
+    // A date in the past doesn't make it Played: the strip says when it was due, and the Desk asks.
+    await patchRecord(page, 'sessions', s1.id, { date: '2020-01-04' })
+    await open(page, `${w}/s/${s1.id}?tab=prep`)
+    await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'preparing')
+    await expect(page.locator('.session-strip')).not.toContainText('played')
+    await open(page, w)
+    const needs = page.locator('.needs-you')
+    await expect(needs).toContainText('Did you play it?')
+    await expect(needs.getByRole('button', { name: 'Yes, mark as played' })).toBeVisible()
+    await expect(needs.getByRole('button', { name: 'Pick a new date' })).toBeVisible()
+
+    // "Yes" by mistake: Undo puts the question back, and the session isn't left "being played".
+    await needs.getByRole('button', { name: 'Yes, mark as played' }).click()
+    await expect(toast(page)).toContainText('#1 marked played')
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect(needs).toContainText('Did you play it?')
+    const after = await getRecord(page, 'sessions', s1.id)
+    expect(after?.startedAt ?? null).toBeNull()
+    expect(after?.playedAt ?? null).toBeNull()
+    expect((await getRecord(page, 'sessions', world.session(2).id))?.prep).toEqual(before2?.prep)
+  } finally {
+    await putBack(page, 'sessions', [
+      [s1.id, before],
+      [world.session(2).id, before2],
+    ])
   }
 })
 
@@ -53,6 +111,8 @@ test('typing the recap does not mark a session played; "Not played yet" takes th
   const s1 = world.session(1)
   await open(page, `${w}/s/${s1.id}?tab=prep`)
   const before = await getRecord(page, 'sessions', s1.id)
+  // Marking #1 played adds its leftovers to #2's plan, so #2 is put back too.
+  const before2 = await getRecord(page, 'sessions', world.session(2).id)
   try {
     await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
     await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}/lectern`)
@@ -74,7 +134,10 @@ test('typing the recap does not mark a session played; "Not played yet" takes th
     await toast(page).getByRole('button', { name: 'Undo' }).click()
     await expect(page.locator('.session-strip [data-stage]')).toHaveAttribute('data-stage', 'played')
   } finally {
-    await putBack(page, 'sessions', [[s1.id, before]])
+    await putBack(page, 'sessions', [
+      [s1.id, before],
+      [world.session(2).id, before2],
+    ])
   }
 })
 
@@ -106,10 +169,14 @@ test('changing the scene at the Lectern replaces the read-aloud text and who’s
 
     // "Next scene" goes through the planned scenes in order.
     await scene.getByRole('button', { name: 'First scene' }).click()
+    // The example's scenes carry scene cards: each brings its own read-aloud text and people.
     await expect(scene.locator('h2')).toContainText('Scene 1 of')
-    await expect(text).toHaveValue('')
+    await expect(text).toHaveValue(/^The handbell on Lantern Hill/)
+    await expect(present).toContainText('Ilse Marrow')
     await scene.getByRole('button', { name: 'Next scene' }).click()
     await expect(scene.locator('h2')).toContainText('Scene 2 of')
+    await expect(text).toHaveValue(/^The Last Candle is a long, low room/)
+    await expect(present).toContainText('Mother Hennet')
   } finally {
     await putBack(page, 'sessions', [[s1.id, before]])
   }
@@ -340,7 +407,13 @@ test('on the Lectern: Wrap up sits at the foot on a phone, Record opens the cons
   await open(page, `${w}/s/${s1.id}/lectern`)
   const before = await getRecord(page, 'sessions', s1.id)
   try {
-    await patchRecord(page, 'sessions', s1.id, { startedAt: Date.now() - 1000 })
+    // The example's first scene card reads out the Strong start itself (and the Lectern doesn't show
+    // the same text twice), so its read-aloud is left out here to see the folded Strong start.
+    const prep = before!.prep as { scenes: Record<string, unknown>[] }
+    await patchRecord(page, 'sessions', s1.id, {
+      startedAt: Date.now() - 1000,
+      prep: { ...prep, scenes: prep.scenes.map((x, i) => (i === 0 ? { ...x, readAloud: undefined } : x)) },
+    })
     await open(page, `${w}/s/${s1.id}/lectern`)
     const top = page.locator('.lectern-strip .wrap-up-top')
     const foot = page.locator('.wrap-up-foot')
@@ -433,6 +506,12 @@ test('Show players at the Lectern: tabs, a picture search, what’s up with Stop
     const person = world.dump.entities.find((e) => (e as { imageId?: string }).imageId && e.type === 'npc' && e.visibility === 'players' && !e.template)!
     await panel.getByRole('searchbox', { name: 'Find a picture' }).fill(person.name)
     await panel.locator('.show-pics .show-thumb', { hasText: person.name }).first().click()
+    // A slip of the finger: the note's Undo takes it off screens and out of Handouts again.
+    await expect(toast(page)).toContainText('is on the players’ screens')
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect.poll(async () => (await getRecord(page, 'worlds', world.id))!.showing ?? null).toBeNull()
+    expect(((await getRecord(page, 'worlds', world.id))!.handouts as unknown[] | undefined)?.length ?? 0).toBe((before!.handouts as unknown[] | undefined)?.length ?? 0)
+    await panel.locator('.show-pics .show-thumb', { hasText: person.name }).first().click()
     // What's up sits at the top with Stop.
     const now = panel.locator('.now-showing')
     await expect(now).toContainText(person.name)
@@ -440,6 +519,7 @@ test('Show players at the Lectern: tabs, a picture search, what’s up with Stop
     await now.getByRole('button', { name: 'Stop' }).click()
     await expect(now).toHaveCount(0)
     await expect.poll(async () => (await getRecord(page, 'worlds', world.id))!.showing ?? null).toBeNull()
+    await expect(toast(page)).toContainText('Players’ screens are clear.')
     // Boards have a tab of their own.
     await tabs.getByRole('tab', { name: 'Several' }).click()
     await expect(panel.getByRole('button', { name: '+ New board' })).toBeVisible()

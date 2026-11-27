@@ -140,12 +140,27 @@ The rope is old company rope, tarred and knotted, and three hundred feet down it
 == Scenes ==
 
 - The ride east and the lip: the standing dead, nearer every time you look away; Quorl's Doorsnight door.
+  where: the-rent
+  who: [ npc-jory-dunmore, npc-jessom-dunmore ]
+  > You smell it before you see it: cold stone and pears and something under both like a struck match. Then the plain simply stops. A lip of fused glass, and beyond it air, and the far side a quarter-mile off, and between, going down past where the light goes, a wall of layered rock and glass and darkness that breathes. Slowly. Out, warm, red-tinged, for the length of a long breath. Then in, cold. Along the lip in both directions, as far as you can see, figures standing, facing the gap. They do not turn round. They were not there a moment ago.
 - The descent: rope steps, the Glass Stair (walk the red), the Halfway Ledge, the Choir; or the Cold Seam from below.
+  where: the-rent
+  fight: The glass-stalker
+  > The rope is old company rope, tarred and knotted, and three hundred feet down it runs out. Ysse's hand is on the knot when the voice comes up out of the dark, warm and slow and patient: "There you are. I have waited such a long time." Everyone heard it; it was meant for one.
 - Warden Uthrem tells the truth of the Godslaying, the digs, the first spell at Cinders and the Cinders-born.
+  where: ninth-stone
+  who: [ warden-uthrem ]
+  > The Stone is a tower that was never built: a single finger of grey Lithic rock standing on a pillar of its own in the dark of the chasm, and down its whole length a crack a hand wide that glows the colour of the Ember. At its foot a ring of nine lesser stones, each the rough shape of a standing figure, and one of them is missing. On the step of the ninth, where the figure should be, something that was a person sits very still with its legs already grey and its hands folded in its lap, and raises its head, and the sound it makes is of two stones being drawn apart.
 - Uthrem says Ysse's name and asks her to stand with him.
+  who: [ warden-uthrem ]
 - Taking and reading the rubbing from the Ninth Stone.
+  who: [ warden-uthrem ]
+  show: h-rubbing
 - Borrin's shadow stands up on its own and bows to the Stone.
+  who: [ warden-uthrem ]
 - The climb out at dusk; the rider: "They're all moving at once."
+  where: the-rent
+  > At the top of the climb a rider from Cinderford is waiting, exhausted, his horse blown. "Captain says come home now," he says. "They're all moving at once."
 
 == Clues ==
 

@@ -7,7 +7,8 @@ import { Modal, useMenu } from '../components'
 import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel, type Campaign, type Entity, type Session, type World } from '../db'
 import { useCreatePage } from '../NewPage'
 import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
-import { initials } from '../text'
+import { initials, showDay } from '../text'
+import { useFinish } from '../EndSession'
 import { nextSessions, useCampaigns, useWorldSessions } from '../threads'
 import { WantedPages, wantedPages } from '../wanted'
 import { useViewMode } from '../viewMode'
@@ -15,7 +16,7 @@ import { BackupButton, useBackupDue, useRecordingsOnlyHere } from '../BackupRemi
 import WikiHome from './WikiHome'
 import CommonRoom, { ago } from './CommonRoom'
 import { showDate, upcoming } from '../players/Schedule'
-import { ClockFace } from '../clocks'
+import { ClockFace, clockReach } from '../clocks'
 import { approveClaimLater } from '../players/inboxActions'
 import { ClaimNameClash, ReviewCharacter } from '../players/NewCharacters'
 import type { CharacterRequest } from '../cloud/players'
@@ -45,10 +46,12 @@ import {
   type Icon,
 } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { createNextSession, isPlayed, localDate, partyOf, sessionStage, startPlaying, type SessionStage } from '../sessions'
+import { createNextSession, isOverdue, isPlayed, localDate, partyOf, sessionStage, startAndTell, type SessionStage } from '../sessions'
 import { StageChip, usePlayingNow } from '../stage'
 import { detailOf } from '../partyGlance'
 import { toast } from '../undo'
+import { endLiveSession } from '../EndSession'
+import { useLiveSession } from '../cloud/table'
 import { RecentlyOpenedRow } from '../RecentlyOpened'
 import { ImportPages } from '../ImportPages'
 import { ExampleStartHere, SeeTheExampleButton } from '../firstSteps'
@@ -181,6 +184,7 @@ function SessionStrip({
 }) {
   const navigate = useNavigate()
   const w = worldPath(world.id)
+  const live = useLiveSession(world.id)
   if (!inHand || !stage) {
     // No session yet: a campaign to make, or a first session to plan.
     const first = campaigns.find((c) => c.status !== 'finished')
@@ -229,7 +233,7 @@ function SessionStrip({
         data-next={next.id}
         title={HELP.startPlaying}
         onClick={async () => {
-          await startPlaying(s.id)
+          await startAndTell(s)
           navigate(`${w}/s/${s.id}/lectern`)
         }}
       >
@@ -237,7 +241,8 @@ function SessionStrip({
       </button>
     ),
     playing: (
-      <Link className="button primary" data-next={next.id} to={`${w}/s/${s.id}?end=1`}>
+      // Ends the live link and clears players' screens, as the Lectern's Wrap up does.
+      <Link className="button primary" data-next={next.id} to={`${w}/s/${s.id}?end=1`} onClick={() => live === s.id && void endLiveSession(world.id, s.id)}>
         <Ico as={FlagCheckered} /> {next.label}
       </Link>
     ),
@@ -385,7 +390,7 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
         </>
       ),
       action: (
-        <button className="small" onClick={() => approveClaimLater(world.id, c, nameOf(c.entityId), inbox.reload)}>
+        <button className="small" onClick={() => approveClaimLater(world.id, c, inbox.reload)}>
           Approve
         </button>
       ),
@@ -411,6 +416,20 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
     .map((n) => ({ ...n, inbox: true }))
 
   const needs: Need[] = fromPlayers.slice(0, INBOX_ROWS)
+  // Its date went by and it was never started: ask, don't guess that it was played.
+  if (s && isOverdue(s))
+    needs.push({
+      key: 'overdue',
+      chip: 'Overdue',
+      icon: CalendarBlank,
+      tone: 'warn',
+      text: (
+        <>
+          #{s.number} {s.title} was due on {showDay(s.date)}. Did you play it?
+        </>
+      ),
+      action: <Overdue session={s} />,
+    })
   if (s && upcomingStage && !s.date && inHand && !upcoming(inHand.campaign))
     needs.push({ key: 'date', chip: 'No date', icon: CalendarBlank, tone: 'warn', text: <>#{s.number} {s.title} has no date yet</>, action: <SetDate session={s} /> })
   if (s && stage === 'planned')
@@ -561,7 +580,19 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
       ),
     })
   const more = fromPlayers.length - INBOX_ROWS
-  const waiting = needs.filter((n) => n.tone !== 'quiet' && !n.reminder).length + Math.max(0, more)
+  // What's waiting on the GM (the red number), and the reminders listed apart beneath it.
+  const asks = needs.filter((n) => n.tone !== 'quiet' && !n.reminder)
+  const mind = needs.filter((n) => n.tone === 'quiet' || n.reminder)
+  const waiting = asks.length + Math.max(0, more)
+  const row = (n: Need) => (
+    <li key={n.key} className={`need ${n.tone ?? ''}`} {...(n.inbox ? { 'data-inbox-item': '' } : {})}>
+      <span className={`chip need-chip ${n.tone ?? ''}`}>
+        <Ico as={n.icon} /> {n.chip}
+      </span>
+      <span className="need-text">{n.text}</span>
+      {n.action && <span className="need-action">{n.action}</span>}
+    </li>
+  )
 
   return (
     <section className="card needs-you" data-inbox-total={inbox.total}>
@@ -575,25 +606,25 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
       </div>
       {waiting === 0 && (
         <p className="muted small all-caught-up">
-          <Ico as={CheckCircle} /> All caught up.
+          <Ico as={CheckCircle} /> {mind.length ? 'Nothing is waiting on you.' : 'All caught up.'}
         </p>
       )}
-      <ul className="needs">
-        {needs.map((n) => (
-          <li key={n.key} className={`need ${n.tone ?? ''}`} {...(n.inbox ? { 'data-inbox-item': '' } : {})}>
-            <span className={`chip need-chip ${n.tone ?? ''}`}>
-              <Ico as={n.icon} /> {n.chip}
-            </span>
-            <span className="need-text">{n.text}</span>
-            {n.action && <span className="need-action">{n.action}</span>}
-          </li>
-        ))}
-        {more > 0 && (
-          <li className="need" data-inbox-more={more}>
-            <Link to={`${w}/questions`}>…and {more} more in the Inbox</Link>
-          </li>
-        )}
-      </ul>
+      {(asks.length > 0 || more > 0) && (
+        <ul className="needs">
+          {asks.map(row)}
+          {more > 0 && (
+            <li className="need" data-inbox-more={more}>
+              <Link to={`${w}/questions`}>…and {more} more in the Inbox</Link>
+            </li>
+          )}
+        </ul>
+      )}
+      {mind.length > 0 && (
+        <>
+          <p className="muted small keep-in-mind">Keep in mind (not counted above)</p>
+          <ul className="needs">{mind.map(row)}</ul>
+        </>
+      )}
       {wantedOpen && <WantedPages worldId={world.id} entities={entities} sessions={sessions} />}
       {reading && <ReviewCharacter world={world} request={reading} player={inbox.nameOf(reading.userId)} onClose={() => setReading(undefined)} onDone={inbox.reload} />}
     </section>
@@ -650,15 +681,10 @@ function recapRow(world: World, sessions: Session[], inHand: InHand | undefined,
     text: <>The recap of #{last.number} {last.title} is still GM only</>,
     action: (
       <span className="row">
-        <button
-          className="small"
-          onClick={async () => {
-            await db.sessions.update(last.id, { visibility: 'players' })
-            toast(`Players can read #${last.number} now.`, () => db.sessions.update(last.id, { visibility: 'gm' }))
-          }}
-        >
-          Show to players
-        </button>
+        {/* The same "Players will see" review as on the session, opened there, before anything is shown. */}
+        <Link className="button small" to={`${worldPath(world.id)}/s/${last.id}?tab=recap&show=1`}>
+          Show to players…
+        </Link>
         {skipButton}
       </span>
     ),
@@ -666,13 +692,13 @@ function recapRow(world: World, sessions: Session[], inHand: InHand | undefined,
 }
 
 /** "Set a date": a date box in place; the session takes the day you pick (today or later). */
-function SetDate({ session }: { session: Session }) {
+function SetDate({ session, label = 'Set a date' }: { session: Session; label?: string }) {
   const [open, setOpen] = useState(false)
   const [min] = useState(() => localDate())
   if (!open)
     return (
       <button className="small" onClick={() => setOpen(true)}>
-        Set a date
+        {label}
       </button>
     )
   return (
@@ -684,10 +710,24 @@ function SetDate({ session }: { session: Session }) {
       onChange={async (e) => {
         const date = e.target.value
         if (!date || date < min) return
+        const before = session.date
         await db.sessions.update(session.id, { date })
-        toast(`#${session.number} is on ${new Date(`${date}T12:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}.`, () => db.sessions.update(session.id, { date: '' }))
+        toast(`#${session.number} is on ${new Date(`${date}T12:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}.`, () => db.sessions.update(session.id, { date: before }))
       }}
     />
+  )
+}
+
+/** The answers to "Did you play it?" for a session whose date went by: yes (mark it played), or a new date. */
+function Overdue({ session }: { session: Session }) {
+  const { finish, busy, blocked } = useFinish(session)
+  return (
+    <span className="row">
+      <button className="small" disabled={busy || !!blocked} title={blocked} onClick={() => finish({ sure: true })}>
+        Yes, mark as played
+      </button>
+      <SetDate session={session} label="Pick a new date" />
+    </span>
   )
 }
 
@@ -714,13 +754,13 @@ function DeskClocks({ world, entities }: { world: World; entities: Entity[] }) {
               <span className="muted small">
                 {clock.filled} of {clockSize(clock)}
               </span>
-              {clock.known ? (
+              {clockReach(clock, owner) ? (
                 <span className="chip need-chip good">
-                  <Ico as={Eye} /> Players know
+                  <Ico as={Eye} /> {clockReach(clock, owner) === 'some' ? 'Some players know' : 'Players know'}
                 </span>
               ) : (
-                <span className="chip need-chip">
-                  <Ico as={LockSimple} /> Secret
+                <span className="chip need-chip" title={clock.known ? `GM only until “${owner.name}” is revealed` : undefined}>
+                  <Ico as={LockSimple} /> GM only
                 </span>
               )}
             </Link>

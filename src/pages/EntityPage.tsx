@@ -7,13 +7,13 @@ import { renameLinks } from '../links'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, Skeleton, TagInput } from '../components'
 import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, PICKER_TYPES, saveEntity, templateOf, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus, type World } from '../db'
 import { HistoryButton } from '../History'
 import { listedEntries, TableRoller } from '../tables'
 import { newThread, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
-import { asPlayerSees, saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
+import { asPlayerSees, saveFileAsAsset, useAssetUrl, useFromAddress, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
 import { SecretNamesWarning } from '../SecretNamesWarning'
@@ -57,23 +57,32 @@ export default function EntityPage() {
   usePathsVersion()
   const entityId = resolvePage(worldId, param)
   const [params, setParams] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const { isGM, canSeeEntity } = useViewMode()
-  // null once we know the page isn't there (undefined means still loading).
-  const stored = useLiveQuery(async () => (await db.entities.get(entityId)) ?? null, [entityId])
+  // null once we know the page isn't there (undefined means still loading). An old long-id link from
+  // the GM opens in a player's copy too, and a player's for the GM.
+  const stored = useFromAddress('entities', entityId)
   const editing = isGM && params.get('edit') === '1'
+  /**
+   * Save or Cancel. An editor opened with Edit steps back to the page already in the history, so
+   * Back afterwards goes where you were before the page, not into the editor again. An editor
+   * opened straight from a link (a new page) swaps itself for the page.
+   */
+  const done = () => ((location.state as { fromPage?: boolean } | null)?.fromPage ? navigate(-1) : setParams({}, { replace: true }))
   // A new page that isn't saved yet (see pendingPages.ts) opens straight in the editor.
   const held = editing && stored === null ? heldPage(entityId) : undefined
 
   if (stored === undefined) return <Skeleton />
-  if (held && held.worldId === worldId) return <EntityEditor key={held.id} entity={held} fresh held onDone={() => setParams({})} />
+  if (held && held.worldId === worldId) return <EntityEditor key={held.id} entity={held} fresh held onDone={done} />
   if (stored === null || stored.worldId !== worldId || stored.template && !isGM || !canSeeEntity(stored))
     return <Empty>{isGM ? 'This page doesn’t exist.' : 'This page isn’t here, or your GM hasn’t shared it with you yet.'}</Empty>
   const entity = isGM ? stored : asPlayerSees(stored)
 
   return editing ? (
-    <EntityEditor key={entity.id} entity={entity} fresh={params.get('new') === '1' && entity.createdAt === entity.updatedAt} onDone={() => setParams({})} />
+    <EntityEditor key={entity.id} entity={entity} fresh={params.get('new') === '1' && entity.createdAt === entity.updatedAt} onDone={done} />
   ) : (
-    <EntityView entity={entity} onEdit={() => setParams({ edit: '1' })} />
+    <EntityView entity={entity} onEdit={() => setParams({ edit: '1' }, { state: { fromPage: true } })} />
   )
 }
 
@@ -113,7 +122,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   const seen = HAS_STATUS.includes(e.type) ? lastSeenIn(e, sessions, isGM) : undefined
   // A player's own character: their numbers first, and a word that it's them.
   const owner = e.type === 'pc' ? owners.get(e.id) : undefined
-  const isYou = !isGM && e.type === 'pc' && (!!owner?.mine || !!previewAs?.characterNames.some((n) => n.toLowerCase() === e.name.toLowerCase()))
+  const isYou = !isGM && e.type === 'pc' && ((!!owner?.mine && !owner.pending) || !!previewAs?.characterNames.some((n) => n.toLowerCase() === e.name.toLowerCase()))
   // Where it is on a map: its own map (a town's map), else the first pin.
   const onMap = ownMaps[0] ? `${worldPath(worldId)}/maps/${ownMaps[0].id}` : pins[0] ? `${worldPath(worldId)}/maps/${pins[0].map.id}?pin=${pins[0].pin.id}` : undefined
   const gmNotes = isGM && !!e.gmNotes.trim()
@@ -915,7 +924,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
             Link pages by typing @ or [[ and a name. The buttons hide a passage from every player, or keep it for some characters only. Write roll:1d8+3 for a dice button, or {'{{Table name}}'} to roll on one of your tables. <Help topic="inlineRolls" />
           </small>
         </label>
-        <PagePrompts type={d.type} body={d.body} onChange={(v) => set('body', v)} />
+        <PagePrompts type={d.type} body={d.body} onChange={(v) => set('body', v)} gmNotes={d.gmNotes} onGmNotesChange={(v) => set('gmNotes', v)} revealed={d.visibility === 'players'} />
         <SecretNamesWarning worldId={worldId} texts={[d.summary, d.body, d.playerBody]} show={d.visibility === 'players' && !d.template} />
         <label className="gm-notes-field">
           <span>

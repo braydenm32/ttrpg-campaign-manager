@@ -60,7 +60,23 @@ export function useFolding(query: string) {
     [],
   )
   const value = useMemo<Folding>(() => ({ folded, toggle, query: query.trim().toLowerCase() }), [folded, toggle, query])
-  return { value, foldAll: (ids: string[]) => save(new Set(ids)), openAll: () => save(new Set()) }
+  /** Opens one panel if it's folded (doing it twice is the same as once). */
+  const unfold = useCallback(
+    (id: string) =>
+      setFolded((now) => {
+        if (!now.has(id)) return now
+        const next = new Set(now)
+        next.delete(id)
+        try {
+          localStorage.setItem(KEY, JSON.stringify([...next]))
+        } catch {
+          // As above.
+        }
+        return next
+      }),
+    [],
+  )
+  return { value, unfold, foldAll: (ids: string[]) => save(new Set(ids)), openAll: () => save(new Set()) }
 }
 
 export const FoldingProvider = FoldingContext.Provider
@@ -94,6 +110,8 @@ export function LecternPanel({
   sectionId?: string
 }) {
   const folding = useContext(FoldingContext)
+  // Every panel can be jumped to (`?at=lectern-dice`, from search's "Go to").
+  sectionId ??= `lectern-${id}`
   if (!folding) {
     return (
       <section className="card lectern-panel" id={sectionId}>

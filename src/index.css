@@ -1429,6 +1429,10 @@ button.portrait-placeholder:hover { border: none; filter: brightness(1.08); }
 .roll-call-results .tag { margin-left: .4em; }
 .roll-call-form { display: flex; flex-direction: column; gap: .4em; margin-top: .4em; }
 .roll-call-prompt { top: calc(var(--topbar-h) + 4.8em); }
+/* A player's live prompts (a roll call, "Your turn") stack at the top instead of sitting on each other. */
+.table-prompts { position: fixed; top: calc(var(--topbar-h) + .8em); left: 1em; right: 1em; z-index: 2400; display: flex; flex-direction: column; align-items: center; gap: .5em; max-height: calc(100dvh - var(--topbar-h) - 1.6em); overflow-y: auto; pointer-events: none; }
+.table-prompts:empty { display: none; }
+.table-prompts > .your-turn { position: static; transform: none; max-width: 100%; pointer-events: auto; }
 .roll-call-prompt input.hp-input { width: 4.5em; }
 
 /* Scene cards */

@@ -1,6 +1,6 @@
 import { parse as parseYaml, YAMLParseError } from 'yaml'
 import type { CalDate, EntityType, LifeStatus, ThreadStatus, WorldCalendar } from '../db.ts'
-import type { ExAge, ExampleContent, ExFoe, ExPage, ExSession, ExWorld } from './types.ts'
+import type { ExAge, ExampleContent, ExFoe, ExPage, ExScene, ExSession, ExWorld } from './types.ts'
 
 /**
  * Reads an example world written as Markdown files (see docs/EDITING.md):
@@ -48,11 +48,12 @@ interface Split {
   settings: Record<string, unknown>
   text: string
   parts: Map<string, string>
-  /** The line each setting starts on, for pointing at mistakes. */
+  /** The line each setting starts on (and each part's text, as "text <part>"), for pointing at mistakes. */
   lines: Map<string, number>
 }
 
-type Report = (message: string, setting?: string, level?: Problem['level']) => void
+/** Reports a mistake at a setting (by name) or at a line (by number). */
+type Report = (message: string, setting?: string | number, level?: Problem['level']) => void
 
 /** What the checker needs from a map (src/example/maps): the page keys its place and pins point at. */
 export interface MapRefs {
@@ -179,7 +180,12 @@ function splitFile(file: string, raw: string, problems: Problem[]): Split | unde
   const parts = new Map<string, string>()
   let current = ''
   let buf: string[] = []
-  const flush = () => void parts.set(current, buf.join('\n').trim())
+  let bufStart = firstLine
+  const flush = () => {
+    parts.set(current, buf.join('\n').trim())
+    const lead = buf.findIndex((l) => l.trim())
+    if (lead >= 0) lines.set(`text ${current}`, bufStart + lead)
+  }
   body.split('\n').forEach((line, i) => {
     const m = line.match(/^==\s*(.+?)\s*==\s*$/)
     if (!m) return void buf.push(line)
@@ -189,6 +195,7 @@ function splitFile(file: string, raw: string, problems: Problem[]): Split | unde
     current = name
     lines.set(`== ${name}`, firstLine + i)
     buf = []
+    bufStart = firstLine + i + 1
   })
   flush()
   checkSecrets(file, body, firstLine, problems)
@@ -226,7 +233,8 @@ function checkSecrets(file: string, body: string, firstLine: number, problems: P
 }
 
 function reporter(file: string, split: Split, problems: Problem[]): Report {
-  return (message, setting, level = 'error') => problems.push({ file, line: setting ? split.lines.get(setting) : undefined, message, level })
+  return (message, setting, level = 'error') =>
+    problems.push({ file, line: typeof setting === 'number' ? setting : setting ? split.lines.get(setting) : undefined, message, level })
 }
 
 // ───────────────────────────── Reading values ─────────────────────────────
@@ -345,7 +353,7 @@ function readDate(v: unknown, months: string[], setting: string, report: Report)
   return { year: Number(m[3]), month, day }
 }
 
-/** "- one" lines, as written under "== Entries ==" or "== Scenes ==". */
+/** "- one" lines, as written under "== Entries ==" or "== Clues ==". */
 function listLines(text: string | undefined): string[] | undefined {
   if (text === undefined) return undefined
   return text
@@ -466,7 +474,7 @@ function readSession(split: Split, report: Report, months: string[]): ExSession 
     lectern = { scene: rec.scene === undefined ? undefined : String(rec.scene), sceneText: split.parts.get('lectern') ?? '', present: Array.isArray(present) ? present.map(String) : undefined }
   }
   const strongStart = split.parts.get('strong start')
-  const scenes = listLines(split.parts.get('scenes'))
+  const scenes = readScenes(split.parts.get('scenes'), split.lines.get('text scenes') ?? 0, report, encounters ?? [])
   const clues = listLines(split.parts.get('clues'))
   const hasPrep = strongStart !== undefined || scenes || clues || encounters?.length
   return {
@@ -480,6 +488,65 @@ function readSession(split: Split, report: Report, months: string[]): ExSession 
     prep: hasPrep ? { strongStart: strongStart ?? '', scenes: scenes ?? [], clues: clues ?? [], encounters: encounters ?? [] } : undefined,
     lectern,
   }
+}
+
+/** The parts a scene card can have, written under its scene (see docs/EDITING.md). */
+const CARD = ['where', 'who', 'fight', 'show', 'reveal']
+
+/**
+ * The "== Scenes ==" part: one scene per "- " line. Lines indented under a scene are its scene card:
+ * "where: lantern-hill", "who: [ fennick, kettle ]", "fight: The drowned walk", "show: h-pay-notice",
+ * "reveal: [ ... ]", and "> " lines of read-aloud text (one paragraph each). A scene with nothing
+ * under it is a plain line, as scenes always were.
+ */
+function readScenes(text: string | undefined, firstLine: number, report: Report, encounters: { name: string }[]): ExScene[] | undefined {
+  if (text === undefined) return undefined
+  const scenes: (ExScene & { seen: Set<string> })[] = []
+  text.split('\n').forEach((raw, i) => {
+    if (!raw.trim()) return
+    const line = firstLine + i
+    const last = scenes.at(-1)
+    if (last && /^\s/.test(raw)) {
+      const quote = raw.match(/^\s+>\s?(.*)$/)
+      if (quote) {
+        // A bare ">" (a gap between paragraphs, as in the GM notes) adds nothing.
+        const para = quote[1].trim()
+        if (para) last.readAloud = last.readAloud ? `${last.readAloud}\n\n${para}` : para
+        return
+      }
+      const m = raw.match(/^\s+([A-Za-z]+):\s*(.*)$/)
+      if (m) {
+        const [, setting, value] = m
+        const name = setting.toLowerCase()
+        const n = scenes.length
+        if (!CARD.includes(name)) {
+          const near = nearest(name, CARD)
+          return report(`Scene ${n}: unknown "${setting}". Under a scene you can write ${CARD.map((c) => `${c}:`).join(', ')} or > read-aloud text.${near ? ` Did you mean "${near}"?` : ''}`, line)
+        }
+        if (last.seen.has(name)) return report(`Scene ${n}: "${name}" appears twice.`, line)
+        last.seen.add(name)
+        const v = value.trim()
+        if (!v) return report(`Scene ${n}: "${name}" is empty.`, line, 'warning')
+        if (name === 'who' || name === 'reveal') {
+          const keys = v.replace(/^\[|\]$/g, '').split(',').map((k) => k.trim()).filter(Boolean)
+          last[name as 'who' | 'reveal'] = keys
+        } else if (name === 'fight') {
+          const enc = encounters.find((e) => e.name.toLowerCase() === v.toLowerCase())
+          if (!enc)
+            return report(
+              `Scene ${n}: "fight" should be the name of one of this session's encounters${encounters.length ? ` (${encounters.map((e) => `"${e.name}"`).join(', ')})` : ', and it has none'}, not "${v}".`,
+              line,
+            )
+          last.fight = enc.name
+        } else if (/[\s,[\]]/.test(v)) {
+          return report(`Scene ${n}: "${name}" should be one page key, like "lantern-hill".`, line)
+        } else last[name as 'where' | 'show'] = v
+        return
+      }
+    }
+    scenes.push({ text: raw.replace(/^\s*[-*]\s+/, '').trim(), seen: new Set() })
+  })
+  return scenes.map(({ seen: _seen, ...sc }) => sc)
 }
 
 function readWorld(split: Split, report: Report): { world?: ExWorld; version: number } {
@@ -630,6 +697,16 @@ function checkReferences(
     for (const enc of s.prep?.encounters ?? []) for (const f of enc.foes) page(s.file, f.page, `encounter "${enc.name}"`)
     page(s.file, s.lectern?.scene, 'lectern "scene"')
     for (const k of s.lectern?.present ?? []) page(s.file, k, 'lectern "present"')
+    for (const [i, sc] of (s.prep?.scenes ?? []).entries()) {
+      const at = `scene ${i + 1}`
+      page(s.file, sc.where, `${at} "where"`)
+      for (const k of sc.who ?? []) page(s.file, k, `${at} "who"`)
+      page(s.file, sc.show, `${at} "show"`)
+      for (const k of sc.reveal ?? []) page(s.file, k, `${at} "reveal"`)
+      const place = sc.where ? pages.find((p) => p.key === sc.where) : undefined
+      if (place && place.type !== 'location' && place.type !== 'shop')
+        err(s.file, `${at} "where": "${sc.where}" is a ${place.type} page, not a place (a location or shop).`, 'warning')
+    }
   }
   const mapKeys = new Set(maps.map((m) => m.key))
   for (const m of maps) {
@@ -652,7 +729,7 @@ function checkReferences(
     }
   }
   for (const p of pages) [p.body, p.gmNotes, p.summary, ...(p.entries ?? [])].forEach((t) => linkCheck(p.file, t))
-  for (const s of sessions) [s.notes, s.recap, s.prep?.strongStart, ...(s.prep?.scenes ?? []), ...(s.prep?.clues ?? []), s.lectern?.sceneText].forEach((t) => linkCheck(s.file, t))
+  for (const s of sessions) [s.notes, s.recap, s.prep?.strongStart, ...(s.prep?.scenes ?? []).flatMap((sc) => [sc.text, sc.readAloud]), ...(s.prep?.clues ?? []), s.lectern?.sceneText].forEach((t) => linkCheck(s.file, t))
 }
 
 /** How many letters must change to turn one word into the other, ignoring capitals. */

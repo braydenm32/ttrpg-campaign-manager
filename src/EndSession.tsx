@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { WorldToday } from './calendar'
 import { db, type Campaign, type Entity, type Session, type World } from './db'
 import { Help } from './help'
-import { featuredInPlay, markPlayed, notesFromPlay, unmarkPlayed } from './sessions'
+import { featuredInPlay, inHand, markPlayed, notesFromPlay, unmarkPlayed } from './sessions'
 import { Ico } from './icons'
 import { CheckCircle, Eye, EyeSlash, FlagCheckered, ListChecks } from '@phosphor-icons/react'
 import { worldPath } from './paths'
@@ -13,16 +13,31 @@ import { useLiveRecording } from './recordingStore'
 import { prepCounts } from './counts'
 import { stripSecrets } from './Markdown'
 import { toast } from './undo'
+import { showDay } from './text'
 import { jumpTo } from './jump'
 import { WhoWasThere } from './attendance'
 import { offerGroupPost } from './groupPost'
 import { pauseGameClock } from './gameClock'
+import { clearPlayersScreens } from './showing'
 import { ResetButton } from './oneShotPanel'
 import { oneShotOf } from './oneShot'
 
 /**
- * Finishing a session: "Mark as played" ends the live link to players, marks it played and gets the
- * next session ready (see markPlayed), with Undo. Shared by the strip at the top of Wrap up and the
+ * "Wrap up" while this session is live: the live link to players ends and what's on their screens
+ * (the in-game clock too) comes off, with Undo. The same from the Desk and the Lectern.
+ */
+export async function endLiveSession(worldId: string, sessionId: string) {
+  setLiveSession(worldId, undefined)
+  const unclear = await clearPlayersScreens(worldId)
+  toast(`The live session has ended.${unclear ? ' Players’ screens are clear.' : ''}`, async () => {
+    setLiveSession(worldId, sessionId)
+    await unclear?.()
+  })
+}
+
+/**
+ * Finishing a session: "Mark as played" ends the live link to players, clears their screens (the
+ * in-game clock too), marks it played and gets the next session ready (see markPlayed), with Undo. Shared by the strip at the top of Wrap up and the
  * checklist at its end. Blocked while this session is still recording.
  */
 export function useFinish(session: Session) {
@@ -30,17 +45,28 @@ export function useFinish(session: Session) {
   const recording = useLiveRecording()
   const [busy, setBusy] = useState(false)
   const blocked = recording?.sessionId === session.id ? 'Stop the recording first' : undefined
-  const finish = async () => {
+  /** `sure`: the GM has just said they played it (the Desk's "Did you play it?"), so there's nothing to ask. */
+  const finish = async ({ sure = false } = {}) => {
     if (blocked || busy) return
-    if (!session.startedAt && live !== session.id && !confirm('You haven’t started playing this one. Mark it played anyway?')) return
+    if (!sure && !session.startedAt && live !== session.id && !confirm('You haven’t started playing this one. Mark it played anyway?')) return
     setBusy(true)
     try {
       // Players' Common Room stops showing this session as being played.
-      if (live === session.id) setLiveSession(session.worldId, undefined)
-      const { next, undo } = await markPlayed(session)
+      const wasLive = live === session.id
+      if (wasLive) setLiveSession(session.worldId, undefined)
+      const { next, undo, carried } = await markPlayed(session)
       // The in-game clock stops with the session, so it hasn't run on for days by next time.
       const paused = await pauseGameClock(session.worldId)
-      toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}.${paused ? ' The in-game clock is paused.' : ''}`, undo)
+      // The table is over: the last handout and the clock come off players' screens (Undo puts them back).
+      // Not when the GM is only answering about a day gone by: what's up now belongs to another night.
+      const unclear = sure ? undefined : await clearPlayersScreens(session.worldId)
+      const n = (count: number, one: string) => `${count} ${one}${count === 1 ? '' : 's'}`
+      const brought = [carried.clues ? n(carried.clues, 'unfound clue') : '', carried.scenes ? n(carried.scenes, 'unplayed scene') : ''].filter(Boolean).join(' and ')
+      toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}${brought ? `, with ${brought} carried over` : ''}.${unclear ? ' Players’ screens are clear.' : ''}${paused ? ' The in-game clock is paused.' : ''}`, async () => {
+        await undo()
+        await unclear?.()
+        if (wasLive) setLiveSession(session.worldId, session.id)
+      })
     } finally {
       setBusy(false)
     }
@@ -48,11 +74,11 @@ export function useFinish(session: Session) {
   return { finish, busy, blocked }
 }
 
-/** The session after this one in its campaign, if there is one yet. */
+/** The session that comes after this one is marked played (see inHand), if it's made yet. */
 export function useNextSession(session: Session) {
   return useLiveQuery(
-    async () => (await db.sessions.where({ campaignId: session.campaignId }).filter((s) => s.number > session.number).sortBy('number'))[0] ?? null,
-    [session.campaignId, session.number],
+    async () => inHand((await db.sessions.where({ campaignId: session.campaignId }).toArray()).filter((s) => s.id !== session.id)) ?? null,
+    [session.campaignId, session.id],
   )
 }
 
@@ -61,9 +87,21 @@ const words = (text: string) => text.split(/\s+/).filter(Boolean).length
 /**
  * Showing a session to players, with a short look at what they'll get first: the title, the recap
  * (secret passages left out), highlights and who featured. Hiding it again is one tap, with Undo.
+ * Every "Show to players" goes through this review, the Desk's too.
  */
-export function ShowToPlayers({ session, campaign, entities }: { session: Session; campaign: Campaign | null | undefined; entities: Entity[] }) {
-  const [review, setReview] = useState(false)
+export function ShowToPlayers({
+  session,
+  campaign,
+  entities,
+  startOpen = false,
+}: {
+  session: Session
+  campaign: Campaign | null | undefined
+  entities: Entity[]
+  /** Open with the review already showing (the Desk's "Show to players…" lands here). */
+  startOpen?: boolean
+}) {
+  const [review, setReview] = useState(startOpen)
   const set = (visibility: Session['visibility']) => db.sessions.update(session.id, { visibility })
   if (session.visibility === 'players')
     return (
@@ -101,7 +139,7 @@ export function ShowToPlayers({ session, campaign, entities }: { session: Sessio
       </strong>
       <ul>
         <li>
-          the title “#{session.number} {session.title}”{session.date && `, played ${session.date}`}
+          the title “#{session.number} {session.title}”{session.date && `, ${session.playedAt ? 'played' : 'on'} ${showDay(session.date)}`}
         </li>
         <li>{recap ? `the recap, ${words(recap)} words (secret passages left out)` : 'no recap yet: it shows here once you write one'}</li>
         {highlights > 0 && <li>{highlights === 1 ? '1 highlight' : `${highlights} highlights`}</li>}
@@ -144,6 +182,7 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
   // Pages that came up in play (not just the ones linked while planning), and only ones still there: a page deleted since keeps its id in the session.
   const inPlay = new Set(featuredInPlay(session))
   const featured = entities.filter((e) => inPlay.has(e.id)).length
+  const linked = entities.filter((e) => session.entityIds.includes(e.id)).length
   // What was written once play began: the prep script in the notes doesn't count.
   const notes = notesFromPlay(session).trim()
   const jump = (id: string, text: ReactNode) => (
@@ -158,7 +197,9 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
       detail: !notes && jump('notes', 'Your notes, at the top'),
     },
     {
-      done: !recorded || transcribed === recorded,
+      // Nothing recorded is nothing to do: it isn't counted as a step done.
+      done: recorded > 0 && transcribed === recorded,
+      optional: !recorded,
       label: recorded ? (transcribed === recorded ? `Recording transcribed${recorded > 1 ? ` (${recorded})` : ''}` : 'Transcribe the recording') : 'No recording this time',
       detail: recorded > transcribed && (transcribing ? 'Transcribing now…' : jump('recording', 'Transcribe it (on this device, or with AssemblyAI)')),
     },
@@ -177,14 +218,18 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
       detail: !session.ledger?.length && jump('writeup', session.recapDraft?.updates?.length ? 'Tick the ones you want' : 'Claude suggests them along with the write-up'),
     },
     {
-      done: true,
+      // A check, not a job: unticked, the whole party counts as there.
+      done: !!session.present,
+      optional: true,
       label: 'Who was there',
       detail: <WhoWasThere session={session} entities={entities} />,
     },
     {
       done: featured > 0,
-      label: featured ? `${featured} featured in this session` : 'Nobody featured yet',
-      detail: !featured && 'People you put in a scene at the Lectern are added by themselves. Add others under “Featured in this session”.',
+      label: featured ? `${featured} came up in play` : 'Nobody has come up in play yet',
+      detail:
+        !featured &&
+        `${linked ? `The ${linked} under “Featured in this session” ${linked === 1 ? 'was' : 'were'} linked while planning, so ${linked === 1 ? 'it isn’t' : 'they aren’t'} counted here. ` : ''}People you put in a scene at the Lectern are added by themselves. Add others under “Featured in this session”.`,
     },
     {
       done: session.visibility === 'players',
@@ -193,17 +238,17 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
     },
   ]
   if (world.calendar?.today) steps.push({ done: false, optional: true, label: 'Move the world’s date on, if time passed', detail: <WorldToday world={world} isGM /> })
-  const carry =
-    [
-      leftClues && `${leftClues} unfound clue${leftClues > 1 ? 's' : ''}`,
-      leftScenes && `${leftScenes} unplayed scene${leftScenes > 1 ? 's' : ''}`,
-      session.lectern?.sceneId && 'the current scene and who’s there',
-    ]
+  const inWords = (parts: (string | 0 | false | undefined)[]) =>
+    parts
       .filter(Boolean)
       .join(', ')
       .replace(/, ([^,]*)$/, ' and $1')
+  const left = [leftClues && `${leftClues} unfound clue${leftClues > 1 ? 's' : ''}`, leftScenes && `${leftScenes} unplayed scene${leftScenes > 1 ? 's' : ''}`]
+  // A session made new also opens on the current scene; one that's already written keeps its own.
+  const carry = inWords([...left, session.lectern?.sceneId && 'the current scene and who’s there'])
+  const carryOn = inWords(left)
 
-  return { steps, carry }
+  return { steps, carry, carryOn }
 }
 
 /** “3 of 7 done” and what's next, as a slim line beside the title; the checklist itself is at the end. */
@@ -231,7 +276,7 @@ export function WrapUpChecklist(props: WrapProps & { played: boolean }) {
   const { finish, busy, blocked } = useFinish(session)
   const next = useNextSession(session)
   const w = worldPath(world.id)
-  const { steps, carry } = wrapSteps(props)
+  const { steps, carry, carryOn } = wrapSteps(props)
 
   return (
     <section className="card end-session" id="finish">
@@ -242,7 +287,7 @@ export function WrapUpChecklist(props: WrapProps & { played: boolean }) {
         {steps.map((s, i) => (
           <li key={i} className={s.done ? 'done' : ''}>
             <span className="end-tick" aria-hidden>
-              {s.done ? '✓' : '○'}
+              {s.done ? '✓' : s.optional ? '·' : '○'}
             </span>
             <div>
               <strong>{s.label}</strong>
@@ -288,9 +333,9 @@ export function WrapUpChecklist(props: WrapProps & { played: boolean }) {
           <>
             <p className="small muted">
               {next ? `Then #${next.number} ${next.title} becomes the next session.` : `Then session #${session.number + 1} is made, ready to prepare.`}{' '}
-              {!next && carry && `${carry[0].toUpperCase()}${carry.slice(1)} carry over.`}
+              {next ? carryOn && `${carryOn[0].toUpperCase()}${carryOn.slice(1)} carry over to the end of its plan.` : carry && `${carry[0].toUpperCase()}${carry.slice(1)} carry over.`}
             </p>
-            <button type="button" className="primary big" disabled={busy || !!blocked} title={blocked} onClick={finish}>
+            <button type="button" className="primary big" disabled={busy || !!blocked} title={blocked} onClick={() => finish()}>
               <Ico as={CheckCircle} /> Mark as played
             </button>
             <Help topic="markPlayed" />

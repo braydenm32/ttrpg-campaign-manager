@@ -73,4 +73,23 @@ export function encounterCombatants(enc: Encounter): Omit<Combatant, 'id'>[] {
   )
 }
 
+/**
+ * Whether everyone in a planned encounter is in the initiative list already and still up (by name,
+ * so "Goblin" and "Goblin 2" count as two goblins): pressing "Fight it" again would add a second set.
+ */
+export function encounterLoaded(l: LecternState | undefined, enc: Encounter) {
+  if (!l || !enc.foes.length) return false
+  const wanted = new Map<string, number>()
+  for (const f of enc.foes) wanted.set(f.name, (wanted.get(f.name) ?? 0) + Math.min(Math.max(1, f.count), 30))
+  const numbered = /^(.*) \d+$/
+  const have = new Map<string, number>()
+  for (const c of l.combat.combatants) {
+    // Ones already down don't count: the same foes in a later scene are new ones.
+    if (c.defeated) continue
+    const base = wanted.has(c.name) ? c.name : (c.name.match(numbered)?.[1] ?? c.name)
+    have.set(base, (have.get(base) ?? 0) + 1)
+  }
+  return [...wanted].every(([name, n]) => (have.get(name) ?? 0) >= n)
+}
+
 export const foeCount = (enc: Encounter) => enc.foes.reduce((n, f) => n + Math.max(1, f.count), 0)

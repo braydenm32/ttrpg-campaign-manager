@@ -12,7 +12,7 @@ import { dropCloudTranscripts, TranscriptPanel } from '../ai/TranscriptPanel'
 import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { db, ENTITY_LABELS, THREAD_STATUS, type Campaign, type Entity, type Recording, type Session, type World } from '../db'
-import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
+import { formatBytes, useAssetUrl, useFromAddress, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
 import { SecretNamesWarning } from '../SecretNamesWarning'
@@ -29,18 +29,19 @@ import { ShowToPlayers, useFinish, useNextSession, WrapProgress, WrapUpChecklist
 import { Ico, TypeIcon } from '../icons'
 import { BookBookmark, BookmarkSimple, CheckCircle, Eye, FlagCheckered, ListChecks, Lock, Microphone, PencilSimple, Play, Spiral, UsersThree, Warning, X } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { sessionFirstTab, startPlaying, type SessionStage } from '../sessions'
+import { localDate, notStarted, sessionFirstTab, startAndTell, type SessionStage } from '../sessions'
 import { prepCounts } from '../counts'
 import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, jumpTo, useKeepScroll } from '../jump'
-import { removeWithUndo, SavedMark, saving } from '../undo'
+import { removeWithUndo, SavedMark, saving, toast } from '../undo'
 import { showDay } from '../text'
 import { PresentLine } from '../attendance'
 import { MySessionNote } from '../players/SessionNote'
 
 /**
  * A session. For the GM it's two of the Session area's three stages (the third, Play, is the
- * Lectern): Prepare (?tab=prep), the plan first; and Wrap up (?tab=notes, ?tab=recap, ?end=1), the
+ * Lectern): Prepare (?tab=prep), the plan first; and Wrap up (?tab=notes, ?tab=recap, ?end=1; with
+ * ?tab=recap&show=1 the recap's "Players will see" review starts open), the
  * after-session tools in order, ending with "Mark as played". A strip across the top shows the
  * stage, the number and title (edited in place) and the one thing to do next. Players get the
  * recap, read-only.
@@ -49,7 +50,8 @@ export default function SessionPage() {
   const { worldId, world } = useWorld()
   const { sessionId = '' } = useParams()
   const { isGM } = useViewMode()
-  const session = useLiveQuery(async () => (await db.sessions.get(sessionId)) ?? null, [sessionId])
+  // The GM's link to a session opens in a player's copy too, and a player's link for the GM.
+  const session = useFromAddress('sessions', sessionId)
   const campaign = useLiveQuery(async () => (session ? ((await db.campaigns.get(session.campaignId)) ?? null) : undefined), [session?.campaignId])
   const entities = useVisibleEntities(worldId)
   const [params] = useSearchParams()
@@ -99,7 +101,7 @@ export default function SessionPage() {
   return (
     <div className={`page session-page ${view}`}>
       <SessionStrip {...props} view={view} />
-      {view === 'prep' ? <PrepareView {...props} /> : <WrapUpView {...props} focus={params.get('end') === '1' ? 'finish' : tab === 'recap' ? 'recap' : undefined} />}
+      {view === 'prep' ? <PrepareView {...props} /> : <WrapUpView {...props} focus={params.get('end') === '1' ? 'finish' : tab === 'recap' ? 'recap' : undefined} review={tab === 'recap' && params.get('show') === '1'} />}
     </div>
   )
 }
@@ -129,7 +131,7 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
     counts.scenes.total ? plural(counts.scenes.total, 'scene') : '',
     counts.clues.total ? plural(counts.clues.total, 'clue') : '',
     fights ? plural(fights, 'fight') : '',
-    session.date ? `played ${session.date}` : 'no date set',
+    session.date ? `${stage === 'played' ? 'played' : session.date === localDate() ? 'today,' : 'on'} ${showDay(session.date)}` : 'no date set',
   ].filter(Boolean)
   const lectern = `${w}/s/${session.id}/lectern`
 
@@ -140,7 +142,7 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
         className="primary"
         title={HELP.startPlaying}
         onClick={async () => {
-          await startPlaying(session.id)
+          await startAndTell(session)
           navigate(lectern)
         }}
       >
@@ -155,7 +157,7 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
     )
   else if (stage !== 'played')
     action = (
-      <button className="primary" onClick={finish} disabled={busy || !!blocked} title={blocked ?? HELP.markPlayed}>
+      <button className="primary" onClick={() => finish()} disabled={busy || !!blocked} title={blocked ?? HELP.markPlayed}>
         <Ico as={CheckCircle} /> Mark as played
       </button>
     )
@@ -229,7 +231,7 @@ function PrepareView({ session, campaign, world, entities }: ViewProps) {
  * pages), the players' recap, highlights, spotlight, threads and who featured, then the checklist
  * that ends with "Mark as played".
  */
-function WrapUpView({ session, campaign, world, entities, stage, focus }: ViewProps & { focus?: 'finish' | 'recap' }) {
+function WrapUpView({ session, campaign, world, entities, stage, focus, review }: ViewProps & { focus?: 'finish' | 'recap'; review?: boolean }) {
   const worldId = world.id
   const update = (patch: Partial<Session>) => saving(db.sessions.update(session.id, patch))
   // Arriving from "End session" or a recap link: go straight to that part.
@@ -300,7 +302,8 @@ function WrapUpView({ session, campaign, world, entities, stage, focus }: ViewPr
             <Markdown text={session.recap} entities={entities} worldId={worldId} showSecrets />
           </details>
         )}
-        <ShowToPlayers session={session} campaign={campaign} entities={entities} />
+        {/* From the Desk's "Show to players…" (?tab=recap&show=1): the review is already open. */}
+        <ShowToPlayers session={session} campaign={campaign} entities={entities} startOpen={review} />
       </section>
       <div id="highlights">
         <Highlights session={session} entities={entities} worldId={worldId} isGM />
@@ -436,6 +439,20 @@ function SessionDetails({ session, campaign, world, entities }: Omit<ViewProps, 
       </div>
       <div className="row wrap details-actions">
         <PrintButton to={`${w}/print/s/${session.id}`} />
+        {session.startedAt && !session.playedAt && (
+          <button
+            type="button"
+            title="Pressed Start playing by mistake? This puts the session back to being prepared. Nothing you wrote is lost."
+            disabled={live?.sessionId === session.id}
+            onClick={async () => {
+              const { startedAt, playStart, worldDate } = session
+              await notStarted(session.id)
+              toast(`#${session.number} is not started any more.`, () => db.sessions.update(session.id, { startedAt, playStart, worldDate }))
+            }}
+          >
+            Not started after all
+          </button>
+        )}
         <span className="grow" />
         <button
           className="danger"

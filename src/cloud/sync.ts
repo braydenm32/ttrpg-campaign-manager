@@ -695,7 +695,7 @@ function pushed(upserts: Upsert[]) {
 
 /** A file upload error in plain words. */
 const uploadProblem = (message: string) =>
-  /maximum allowed size|too large|payload|413/i.test(message) ? 'too big: the free plan allows 50 MB per file' : cloudErrorMessage(new Error(message))
+  /maximum allowed size|too large|payload|413/i.test(message) ? 'too big: the free plan allows 50 MB per file' : cloudErrorMessage(new Error(message), { reader: 'gm', doing: 'refreshing' })
 
 /**
  * Uploads files, each followed straight away by its row, and remembers each one as soon as it's in
@@ -715,7 +715,7 @@ async function sendFiles(worldId: string, files: FileSend[]) {
       continue
     }
     const { error: rowError } = await supabase.from('records').upsert(f.upsert, { onConflict: 'table_name,id' })
-    if (rowError) throw new Error(`“${f.label}” couldn’t be saved to the cloud: ${cloudErrorMessage(rowError)}`)
+    if (rowError) throw new Error(`“${f.label}” couldn’t be saved to the cloud: ${cloudErrorMessage(rowError, { reader: 'gm', doing: 'refreshing' })}`)
     await db.syncMeta.put(f.meta)
     pushed([f.upsert])
   }
@@ -734,7 +734,7 @@ async function sendRecords(worldId: string, records: Send[]) {
       { onConflict: 'table_name,id' },
     )
     if (error) {
-      if (chunk.length === 1) throw new Error(`“${chunk[0].label}” couldn’t be saved to the cloud: ${cloudErrorMessage(error)}`)
+      if (chunk.length === 1) throw new Error(`“${chunk[0].label}” couldn’t be saved to the cloud: ${cloudErrorMessage(error, { reader: 'gm', doing: 'refreshing' })}`)
       for (const r of chunk) await sendRecords(worldId, [r])
       continue
     }
@@ -964,7 +964,7 @@ async function syncAll() {
       } catch (err) {
         if (err instanceof Stopped) continue
         confirmed.delete(id)
-        problems.push(`“${name}”: ${cloudErrorMessage(err)}`)
+        problems.push(`“${name}”: ${cloudErrorMessage(err, { reader: 'gm', doing: 'refreshing' })}`)
       }
     }
     const gone = (await db.worlds.toArray()).filter((w) => syncsFor(w, userId) && w.cloud!.gone)
@@ -975,7 +975,7 @@ async function syncAll() {
     setState({ status: 'idle', lastSync: Date.now(), message: notes.length ? notes.join(' ') : undefined, unsent: unsent.length ? unsent : undefined })
   } catch (err) {
     const online = navigator.onLine
-    setState({ status: online ? 'error' : 'offline', message: cloudErrorMessage(err) })
+    setState({ status: online ? 'error' : 'offline', message: cloudErrorMessage(err, { reader: 'gm', doing: 'refreshing' }) })
     // A hiccup (the server waking up, say) is tried again soon, a few times, before waiting for the next edit or check.
     if (online && retries < RETRY_AFTER.length) schedule(RETRY_AFTER[retries++])
   }
@@ -1077,7 +1077,7 @@ export async function enableCloud(worldId: string) {
       throw new Error(
         error.code === '23505' || /duplicate|row-level security/i.test(error.message)
           ? 'This world’s cloud copy belongs to another account, and you’re not one of its GMs. Ask its owner to invite you as a co-GM, then try again.'
-          : cloudErrorMessage(error),
+          : cloudErrorMessage(error, { reader: 'gm' }),
       )
   } else if (row.owner === auth.user.id) {
     const { error } = await supabase.from('cloud_worlds').update({ name: world.name }).eq('id', worldId)

@@ -172,7 +172,11 @@ test('nothing in a player’s menus or search leads to a GM tool', () => {
 test('search finds every area, tab and More item by name, and the old place names', () => {
   const gm = navPlaces({ worldId: 'w', viewer: 'gm', cloud: true, boards: 1, sessionId: 's', campaignId: 'c', sessionHome: '/w/w/s/s?tab=prep' })
   const titles = gm.map((p) => p.title)
-  for (const a of AREAS.filter((a) => a.who.includes('gm'))) expect(titles).toContain(a.label)
+  // An area that opens on one of its tabs is one row with both names (Atlas is Maps), so either counts.
+  for (const a of AREAS.filter((a) => a.who.includes('gm'))) expect(gm.some((p) => p.title === a.label || p.names?.includes(a.label)), a.label).toBe(true)
+  // No screen is listed twice under two names (Desk and Today were).
+  const plain = gm.filter((p) => !p.where).map((p) => p.to)
+  expect(plain.length).toBe(new Set(plain).size)
   for (const t of MORE_GROUPS.flatMap((g) => g.items)) if (t.to({ worldId: 'w', viewer: 'gm' })) expect(titles).toContain(t.label)
   for (const title of ['The Lectern', 'Wrap up the session', 'Inbox', 'Group notes', 'All sessions', 'Templates', 'Recently deleted']) expect(titles).toContain(title)
   // The names search used before the areas still find somewhere.

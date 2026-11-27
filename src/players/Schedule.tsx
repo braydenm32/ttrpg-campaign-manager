@@ -72,7 +72,7 @@ export function SessionScheduler({
       setMembers(p.members.filter((m) => m.role === 'player'))
       setAnswers(a)
     } catch (e) {
-      setError(cloudErrorMessage(e))
+      setError(cloudErrorMessage(e, { reader: 'gm', doing: 'refreshing' }))
     }
   }, [synced, world.id])
   useEffect(() => {

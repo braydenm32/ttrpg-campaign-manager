@@ -59,7 +59,7 @@ export function RenameButton({
           await onSave(name.trim())
           setEditing(false)
         } catch (err) {
-          setError(cloudErrorMessage(err))
+          setError(cloudErrorMessage(err, { reader: player ? 'player' : 'gm' }))
         } finally {
           setBusy(false)
         }

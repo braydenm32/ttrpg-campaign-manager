@@ -1,13 +1,13 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { ENTITY_LABELS, ENTITY_TYPES, typeLabel } from '../db'
 import { Help } from '../help'
-import { useVisibleEntities, useWorld } from '../hooks'
+import { stillReading, useVisibleEntities, useWorld } from '../hooks'
 import { TypeIcon } from '../icons'
 import { countByType, pagesIn } from '../counts'
 import { useViewMode } from '../viewMode'
 import { pagePath, typePath } from '../paths'
 import { SeenMark } from '../reveal'
-import { Empty } from '../components'
+import { Empty, Skeleton } from '../components'
 
 /**
  * Everything: every kind of page in the world, with how many there are, including the GM's own
@@ -44,7 +44,8 @@ export default function Everything() {
           <h1>
             Everything <Help topic="everything" />
           </h1>
-          <p className="lead">{entities.length} pages, by kind.</p>
+          {/* Counted once the pages are read, so it never says "0 pages" for a moment. */}
+          <p className="lead">{stillReading(entities) ? '\u00a0' : `${entities.length} pages, by kind.`}</p>
           <p className="muted small">
             Quick links: <Link to={typePath(worldId, 'item')}>Items</Link> · <Link to={typePath(worldId, 'event')}>Events</Link>
           </p>
@@ -78,6 +79,8 @@ export default function Everything() {
         ) : (
           <Empty>No page’s name has “{query.trim()}” in it.</Empty>
         )
+      ) : stillReading(entities) ? (
+        <Skeleton />
       ) : (
         <ul className="everything-grid">
           {kinds.map((k) => (

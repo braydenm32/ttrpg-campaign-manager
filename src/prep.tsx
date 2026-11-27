@@ -3,14 +3,14 @@ import { Link, useNavigate } from 'react-router-dom'
 import { DraftText } from './components'
 import { PagePicker } from './PagePicker'
 import { blankLectern, blankPrep, db, newId, type CheckItem, type Encounter, type Entity, type Session, type SessionPrep, type World } from './db'
-import { addCombatants, encounterCombatants, foeCount, foeFromEntity, numberFrom } from './encounters'
+import { addCombatants, encounterCombatants, encounterLoaded, foeCount, foeFromEntity, numberFrom } from './encounters'
 import { Help } from './help'
 import { cardSummary, hasCard, SceneCardEditor } from './sceneCards'
 import { LecternPanel } from './lecternPanel'
 import { StatusBadge } from './status'
 import { Ico, TypeIcon } from './icons'
 import { ArrowUp, FilmSlate, MagnifyingGlass, PencilSimple, Plus, Sword, X } from '@phosphor-icons/react'
-import { removeWithUndo } from './undo'
+import { removeWithUndo, toast } from './undo'
 import { pagePath, worldPath } from './paths'
 import { prepCounts } from './counts'
 
@@ -258,10 +258,13 @@ function Encounters({ session, prep, entities, worldId }: { session: Session; pr
               <button
                 type="button"
                 disabled={!enc.foes.length}
-                title="Add everyone in this fight to the Lectern’s initiative list and open the Lectern"
+                title="Add everyone in this fight to the Lectern’s initiative list (once: pressing it again just opens the Lectern) and open the Lectern"
                 onClick={async () => {
-                  await runEncounter(session.id, enc)
+                  // Already loaded (a look ahead while preparing, say): open the Lectern without adding a second set.
+                  const there = encounterLoaded(session.lectern, enc)
+                  if (!there) await runEncounter(session.id, enc)
                   navigate(`${worldPath(worldId)}/s/${session.id}/lectern?at=fight`)
+                  if (there) toast(`“${enc.name}” is already in the initiative list.`, () => runEncounter(session.id, enc), 'Add another set')
                 }}
               >
                 <Ico as={Sword} /> Fight it at the Lectern
@@ -503,7 +506,10 @@ export function LecternPrep({ session, world }: { session: Session; world: World
                 disabled={!enc.foes.length}
                 title={enc.notes || 'Add to initiative'}
                 onClick={() => {
-                  if (loaded.includes(enc.id) && !confirm(`“${enc.name}” is already in the initiative list. Add it again?`)) return
+                  if (loaded.includes(enc.id) || encounterLoaded(session.lectern, enc)) {
+                    toast(`“${enc.name}” is already in the initiative list.`, () => runEncounter(session.id, enc), 'Add another set')
+                    return
+                  }
                   runEncounter(session.id, enc)
                   setLoaded([...loaded, enc.id])
                 }}
@@ -512,7 +518,7 @@ export function LecternPrep({ session, world }: { session: Session; world: World
               </button>
             ))}
           </div>
-          {loaded.length > 0 && <div className="muted">Added to the fight. Tap again to add another set.</div>}
+          {loaded.length > 0 && <div className="muted">Added to the fight. For a second set, tap it again and choose “Add another set”.</div>}
         </div>
       )}
     </LecternPanel>

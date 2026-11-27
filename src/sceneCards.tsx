@@ -1,4 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Link } from 'react-router-dom'
+import { pagePath } from './paths'
 import { stampStart } from './sessions'
 import { blankLectern, db, saveEntity, type Entity, type PrepScene, type Session, type World } from './db'
 import { DraftText } from './components'
@@ -27,12 +29,13 @@ export function cardSummary(s: PrepScene, entities: Entity[], session: Session) 
   const name = (id: string) => entities.find((e) => e.id === id)?.name
   // Count only pages that are still there.
   const there = (id: string) => entities.some((e) => e.id === id)
-  const present = (s.presentIds ?? []).filter(there).length
+  const here = (s.presentIds ?? []).filter(there)
+  const present = here.length
   const reveal = (s.revealIds ?? []).filter(there).length
   const bits = [
     s.placeId && `scene: ${name(s.placeId) ?? 'a place'}`,
     s.readAloud?.trim() && 'read-aloud text',
-    present && `${present} here`,
+    present && (present <= 3 ? `with ${here.map(name).join(', ')}` : `${present} here`),
     s.soundIds?.length && `${s.soundIds.length} sound${s.soundIds.length === 1 ? '' : 's'}`,
     s.encounterId && `fight: ${session.prep?.encounters.find((e) => e.id === s.encounterId)?.name ?? 'an encounter'}`,
     s.show && 'show players',
@@ -55,6 +58,8 @@ export interface SceneSnapshot {
   combatantIds: string[]
   activeId?: string
   startedAt?: number
+  /** Whether the session had its date in the world already (starting a session sets it). */
+  hadWorldDate?: boolean
 }
 
 export function sceneSnapshot(session: Session): SceneSnapshot {
@@ -69,6 +74,7 @@ export function sceneSnapshot(session: Session): SceneSnapshot {
     combatantIds: (l?.combat.combatants ?? []).map((c) => c.id),
     activeId: l?.combat.activeId,
     startedAt: session.startedAt,
+    hadWorldDate: !!session.worldDate,
   }
 }
 
@@ -94,13 +100,15 @@ export const restoreScene = (sessionId: string, snap: SceneSnapshot) =>
       else {
         delete s.startedAt
         delete s.playStart
+        if (snap.hadWorldDate === false) delete s.worldDate
       }
     })
 
 /**
  * Starts a scene: a new scene replaces the last one, so its read-aloud text and who's there take
- * the place of the old (none, if the card has none; a scene with no place of its own stays where the
- * party is). It also loads its fight, plays its sounds, reveals its pages and puts its handout on
+ * the place of the old. A scene with no place of its own stays where the party is, and one with
+ * nothing at all on its card (a plain line in the plan) leaves the text and people as they are.
+ * It also loads its fight, plays its sounds, reveals its pages and puts its handout on
  * players' screens. The scene is ticked as played, and becomes the scene "Next scene" goes on from.
  * Pages it would reveal get the same review as on the page itself (one review for all of them).
  * Gives back a function that hides those pages again and puts back what was on players' screens
@@ -125,15 +133,18 @@ export async function startScene(world: World, session: Session, scene: PrepScen
       s.lectern = { ...blankLectern(), ...s.lectern }
       const l = s.lectern
       if (scene.placeId) l.sceneId = scene.placeId
-      l.sceneText = scene.readAloud?.trim() ? scene.readAloud : ''
-      l.presentIds = [...new Set(scene.presentIds ?? [])]
+      // A scene with nothing on its card (a plain line in the plan) leaves the text and people the GM set up by hand.
+      if (scene.placeId || scene.readAloud?.trim() || scene.presentIds?.length) {
+        l.sceneText = scene.readAloud?.trim() ? scene.readAloud : ''
+        l.presentIds = [...new Set(scene.presentIds ?? [])]
+      }
       l.planSceneId = scene.id
       const fresh = l.presentIds.filter((id) => !s.entityIds.includes(id))
       if (fresh.length) s.entityIds = [...s.entityIds, ...fresh]
       if (enc) addCombatants(l, encounterCombatants(enc))
       const mine = s.prep?.scenes.find((x) => x.id === scene.id)
       if (mine) mine.done = true
-      stampStart(s)
+      stampStart(s, worldBefore?.calendar?.today)
     })
   // Through saveEntity, so the page's History keeps the version before the reveal.
   for (const e of toReveal) {
@@ -183,7 +194,11 @@ export function plannedScenes(session: Session) {
 
 /** The note shown for the last scene change, so leaving the Lectern can take it away (it would mean nothing on another screen). */
 let sceneToast: number | undefined
-export const clearSceneToast = () => dismissToast(sceneToast)
+export const clearSceneToast = () => {
+  // Only the scene's own note: with none to name, dismissToast() would take away whatever note is showing (Wrap up's, say).
+  if (sceneToast !== undefined) dismissToast(sceneToast)
+  sceneToast = undefined
+}
 
 /**
  * Starts a scene from the Lectern with Undo, which takes it all back: the last scene, the fighters
@@ -252,13 +267,31 @@ export function SceneCardEditor({ scene, session, entities, onChange }: { scene:
   const byId = new Map(entities.map((e) => [e.id, e]))
   const places = entities.filter((e) => e.type === 'location' || e.type === 'shop')
   const people = entities.filter((e) => ['npc', 'pc', 'faction', 'deity'].includes(e.type))
-  const chips = (ids: string[] | undefined, remove: (id: string) => void) =>
+  // The name opens the page; only the ✕ takes it off the scene, with Undo putting it back.
+  const chips = (ids: string[] | undefined, remove: (id: string) => void, add: (id: string) => void) =>
     (ids ?? []).map((id) => {
       const e = byId.get(id)
       return (
-        <button key={id} className="tag" title="Remove" onClick={() => remove(id)}>
-          {e ? <TypeIcon type={e.type} /> : null} {e?.name ?? 'Deleted page'} ✕
-        </button>
+        <span key={id} className="tag">
+          {e ? (
+            <Link to={pagePath(session.worldId, e.id)}>
+              <TypeIcon type={e.type} /> {e.name}
+            </Link>
+          ) : (
+            'Deleted page'
+          )}
+          <button
+            type="button"
+            aria-label={`Take ${e?.name ?? 'this page'} off this scene`}
+            title="Take off this scene"
+            onClick={() => {
+              remove(id)
+              toast(`${e?.name ?? 'That page'} taken off this scene.`, () => add(id))
+            }}
+          >
+            ✕
+          </button>
+        </span>
       )
     })
   return (
@@ -278,7 +311,11 @@ export function SceneCardEditor({ scene, session, entities, onChange }: { scene:
       </label>
       <div>
         <span className="small muted">Who’s there</span>
-        <span className="tags">{chips(scene.presentIds, (id) => onChange((s) => void (s.presentIds = s.presentIds?.filter((x) => x !== id))))}</span>
+        <span className="tags">{chips(
+            scene.presentIds,
+            (id) => onChange((s) => void (s.presentIds = s.presentIds?.filter((x) => x !== id))),
+            (id) => onChange((s) => void (s.presentIds?.includes(id) || (s.presentIds = [...(s.presentIds ?? []), id]))),
+          )}</span>
         <PagePicker entities={people.filter((e) => !scene.presentIds?.includes(e.id))} placeholder="+ Someone in this scene" onPick={(id) => id && onChange((s) => void (s.presentIds = [...(s.presentIds ?? []), id]))} />
       </div>
       {sounds.length > 0 && (
@@ -314,16 +351,24 @@ export function SceneCardEditor({ scene, session, entities, onChange }: { scene:
             }}
           >
             <option value="">No pin</option>
-            {mapPins.map((g) => (
-              <optgroup key={g.map.id} label={g.map.name}>
-                {g.pins.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.number ? `${p.number}. ` : ''}
-                    {p.label || byId.get(p.entityId ?? '')?.name || 'Pin'}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
+            {mapPins.map((g) => {
+              const label = (p: (typeof g.pins)[number]) => `${p.number ? `${p.number}. ` : ''}${p.label || byId.get(p.entityId ?? '')?.name || 'Pin'}`
+              // Pins with the same name on one map (eight wards on one page) are counted, so they can be told apart.
+              const same = (p: (typeof g.pins)[number]) => g.pins.filter((q) => label(q) === label(p))
+              return (
+                <optgroup key={g.map.id} label={g.map.name}>
+                  {g.pins.map((p) => {
+                    const twins = same(p)
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {label(p)}
+                        {twins.length > 1 ? ` (${twins.indexOf(p) + 1} of ${twins.length})` : ''}
+                      </option>
+                    )
+                  })}
+                </optgroup>
+              )
+            })}
           </select>
         </label>
       )}
@@ -390,7 +435,11 @@ export function SceneCardEditor({ scene, session, entities, onChange }: { scene:
       </div>
       <div>
         <span className="small muted">Reveal to everyone</span>
-        <span className="tags">{chips(scene.revealIds, (id) => onChange((s) => void (s.revealIds = s.revealIds?.filter((x) => x !== id))))}</span>
+        <span className="tags">{chips(
+            scene.revealIds,
+            (id) => onChange((s) => void (s.revealIds = s.revealIds?.filter((x) => x !== id))),
+            (id) => onChange((s) => void (s.revealIds?.includes(id) || (s.revealIds = [...(s.revealIds ?? []), id]))),
+          )}</span>
         <PagePicker
           entities={entities.filter((e) => e.visibility === 'gm' && !e.template && !scene.revealIds?.includes(e.id))}
           placeholder="+ A GM-only page players learn about here"

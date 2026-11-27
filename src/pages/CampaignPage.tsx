@@ -10,8 +10,8 @@ import { PartyGlance } from '../partyGlance'
 import { StorySoFar } from '../highlights'
 import { questProgress } from '../quests'
 import { isActiveQuest, isOpenQuest } from '../counts'
-import { bookNextSession, createNextSession, partyOf, sessionFirstTab, sessionStage, startPlaying, type SessionStage } from '../sessions'
-import { useVisibleEntities, useWorld } from '../hooks'
+import { bookNextSession, createNextSession, partyOf, sessionFirstTab, sessionStage, startAndTell, type SessionStage } from '../sessions'
+import { useFromAddress, useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
@@ -26,10 +26,12 @@ import { capital, showDay } from '../text'
 
 export default function CampaignPage() {
   const { worldId, world } = useWorld()
-  const { campaignId = '' } = useParams()
+  const { campaignId: param = '' } = useParams()
   const { isGM } = useViewMode()
   const navigate = useNavigate()
-  const campaign = useLiveQuery(async () => (await db.campaigns.get(campaignId)) ?? null, [campaignId])
+  // The GM's link to a campaign opens in a player's copy too, and a player's link for the GM.
+  const campaign = useFromAddress('campaigns', param)
+  const campaignId = campaign?.id ?? param
   const sessions = (useLiveQuery(() => db.sessions.where({ campaignId }).sortBy('number'), [campaignId]) ?? []).filter((s) => canSeeSession(s, campaign, isGM))
   const live = useLiveRecording()
   const recording = !!live && sessions.some((s) => s.id === live.sessionId)
@@ -99,7 +101,7 @@ export default function CampaignPage() {
                   <Link to={`${w}/s/${s.id}${isGM ? `?tab=${sessionFirstTab(s)}` : ''}`}>
                     <span className="session-num">#{s.number}</span>
                     <span className="session-name">{s.title}</span>
-                    <span className="muted small session-date">{s.date ? (isGM ? s.date : showDay(s.date)) : isGM ? 'no date' : ''}</span>
+                    <span className="muted small session-date">{s.date ? showDay(s.date) : isGM ? 'no date' : ''}</span>
                   </Link>
                   {isGM && <StageChip stage={stage} />}
                   {isGM && s.visibility === 'gm' && <VisibilityBadge value={s.visibility} />}
@@ -270,7 +272,7 @@ function NextUp({ worldId, next, stage, onNew }: { worldId: string; next: Sessio
             </Link>
             <button
               onClick={async () => {
-                await startPlaying(next.id)
+                await startAndTell(next)
                 navigate(`${w}/s/${next.id}/lectern`)
               }}
             >

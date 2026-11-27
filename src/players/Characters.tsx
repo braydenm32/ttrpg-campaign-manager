@@ -32,7 +32,7 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
       await fn()
       await reload()
     } catch (e) {
-      setError(cloudErrorMessage(e))
+      setError(cloudErrorMessage(e, { reader: memberOf ? 'player' : 'gm' }))
     } finally {
       setBusy(false)
     }
@@ -80,7 +80,8 @@ export function CharacterOwnerBox({ entity, world }: { entity: Entity; world: Wo
 
       {owner?.mine && !owner.pending && memberOf && <EditMyCharacter entity={entity} cloudId={memberOf} system={world.system} />}
       {owner?.mine ? (
-        <PlayerNotes key={entity.id} worldId={entity.worldId} initial={owner.notes} onSave={(notes) => savePlayerNotes(memberOf!, entity.id, notes)} />
+        // Their notes on the character wait for the GM's yes, like the sheet.
+        !owner.pending && <PlayerNotes key={entity.id} worldId={entity.worldId} initial={owner.notes} onSave={(notes) => savePlayerNotes(memberOf!, entity.id, notes)} />
       ) : (
         owner?.notes && (
           <div className="player-notes">
@@ -275,6 +276,8 @@ export function ChooseCharacterBanner({ world }: { world: World }) {
 /**
  * Which character are you playing? The characters nobody has claimed yet, each a button; your GM
  * approves the claim. Shown along the top until you have one (with "Later"), and on your Me tab.
+ * While a claim waits for the GM it says so instead, naming the character (also for a second
+ * character asked for by someone who already plays one).
  */
 export function ChooseCharacter({ world, banner, onLater }: { world: World; banner?: boolean; onLater?: () => void }) {
   const { owners, memberOf } = useCharacterOwners(world)
@@ -283,14 +286,17 @@ export function ChooseCharacter({ world, banner, onLater }: { world: World; bann
   const [error, setError] = useState('')
   if (!memberOf || !pcs) return null
   const mine = [...owners.values()].filter((o) => o.mine)
-  if (mine.some((o) => !o.pending)) return null
-  if (mine.length)
+  const waiting = pcs.filter((e) => owners.get(e.id)?.mine && owners.get(e.id)?.pending).map((e) => e.name)
+  if (mine.some((o) => o.pending))
     return (
       <div className={banner ? 'choose-character' : 'choose-character inline'}>
         <strong><Ico as={MaskHappy} /> Waiting for your GM</strong>
-        <p className="muted small">You’ve asked to play {pcs.find((e) => owners.get(e.id)?.mine)?.name ?? 'a character'}. Your GM approves it, and then it’s yours.</p>
+        <p className="muted small">
+          You’ve asked to play {waiting.join(' and ') || 'a character'}. Your GM approves it, and then {waiting.length > 1 ? 'they’re' : 'it’s'} yours.
+        </p>
       </div>
     )
+  if (mine.length) return null
   const free = pcs.filter((e) => !owners.has(e.id))
 
   if (banner && free.length > 0)

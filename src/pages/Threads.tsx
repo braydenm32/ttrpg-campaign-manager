@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Help } from '../help'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Empty } from '../components'
+import { Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { gmBlock } from '../Markdown'
 import { db, THREAD_STATUS, type Entity, type Session, type ThreadStatus } from '../db'
-import { useVisibleEntities, useWorld } from '../hooks'
+import { stillReading, useVisibleEntities, useWorld } from '../hooks'
 import { ThreadCard } from '../ThreadCard'
 import { COLD_AFTER, newThread, nextSessions, sessionInHand, sessionsSinceTouched, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
 import { useKeepScroll } from '../jump'
@@ -166,7 +166,9 @@ function ThreadBoard() {
         )}
       </p>
 
-      {threads.length === 0 ? (
+      {stillReading(entities) ? (
+        <Skeleton />
+      ) : threads.length === 0 ? (
         <Empty>No threads yet. Add one above, or from the Lectern during a game.</Empty>
       ) : (
         <div className="thread-board" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>

@@ -156,34 +156,48 @@ async function addExample(content: ExampleContent, drawArt: DrawArt): Promise<st
     if (p.raisedIn) entities[i].raisedIn = sessionIds.get(p.raisedIn)
     if (p.tiedOffIn) entities[i].tiedOffIn = sessionIds.get(p.tiedOffIn)
   }
-  const sessions: Session[] = content.sessions.map((s) => ({
-    id: sessionIds.get(s.number)!,
-    worldId,
-    campaignId,
-    number: s.number,
-    title: s.title,
-    date: '',
-    notes: s.notes,
-    recap: s.recap ?? '',
-    visibility: s.players ? 'players' : 'gm',
-    entityIds: (s.pages ?? []).map((k) => ref(k)!),
-    recordings: [],
-    worldDate: date(s.worldDate),
-    prep: s.prep && {
-      ...blankPrep(),
-      strongStart: s.prep.strongStart,
-      scenes: s.prep.scenes.map((text) => ({ id: newId(), text, done: false })),
-      clues: s.prep.clues.map((text) => ({ id: newId(), text, done: false })),
-      encounters: s.prep.encounters.map((enc) => ({
-        id: newId(),
-        name: enc.name,
-        notes: enc.notes,
-        foes: enc.foes.map((f) => ({ id: newId(), name: f.name, count: f.count, hp: f.hp, ac: f.ac, side: f.side, entityId: ref(f.page) })),
-      })),
-    },
-    lectern: s.lectern && { ...blankLectern(), sceneId: ref(s.lectern.scene), sceneText: s.lectern.sceneText, presentIds: (s.lectern.present ?? []).map((k) => ref(k)!) },
-    createdAt: now + s.number,
-  }))
+  const sessions: Session[] = content.sessions.map((s) => {
+    const encounters = (s.prep?.encounters ?? []).map((enc) => ({
+      id: newId(),
+      name: enc.name,
+      notes: enc.notes,
+      foes: enc.foes.map((f) => ({ id: newId(), name: f.name, count: f.count, hp: f.hp, ac: f.ac, side: f.side, entityId: ref(f.page) })),
+    }))
+    return {
+      id: sessionIds.get(s.number)!,
+      worldId,
+      campaignId,
+      number: s.number,
+      title: s.title,
+      date: '',
+      notes: s.notes,
+      recap: s.recap ?? '',
+      visibility: s.players ? 'players' : 'gm',
+      entityIds: (s.pages ?? []).map((k) => ref(k)!),
+      recordings: [],
+      worldDate: date(s.worldDate),
+      prep: s.prep && {
+        ...blankPrep(),
+        strongStart: s.prep.strongStart,
+        // Each scene's card: its place, read-aloud text, who's there, its fight and what it shows or reveals.
+        scenes: s.prep.scenes.map((sc) => ({
+          id: newId(),
+          text: sc.text,
+          done: false,
+          placeId: ref(sc.where),
+          readAloud: sc.readAloud,
+          presentIds: sc.who?.map((k) => ref(k)!),
+          encounterId: sc.fight ? encounters[s.prep!.encounters.findIndex((e) => e.name === sc.fight)]?.id : undefined,
+          show: sc.show ? { kind: 'page' as const, entityId: ref(sc.show)! } : undefined,
+          revealIds: sc.reveal?.map((k) => ref(k)!),
+        })),
+        clues: s.prep.clues.map((text) => ({ id: newId(), text, done: false })),
+        encounters,
+      },
+      lectern: s.lectern && { ...blankLectern(), sceneId: ref(s.lectern.scene), sceneText: s.lectern.sceneText, presentIds: (s.lectern.present ?? []).map((k) => ref(k)!) },
+      createdAt: now + s.number,
+    }
+  })
 
   const w = content.world
   const world: World = {

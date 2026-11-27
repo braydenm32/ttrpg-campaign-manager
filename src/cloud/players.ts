@@ -2,6 +2,7 @@ import { db, type Entity, type Availability, type PlayerNote, type PlayerQuestio
 import { tellPlayers } from './sync'
 import { appLink, supabase } from './client'
 import { downloadFiles, storePlayerCopy, tellOtherPlayers, type SharedPayload } from './share'
+import { copyTail } from '../paths'
 
 /**
  * Players joining a world. The GM makes an invite link; a player opens it, signs in, and gets a
@@ -227,7 +228,7 @@ export async function loadMemberWorld(cloudId: string): Promise<string> {
   return storePlayerCopy(
     p,
     memberWorldId(cloudId),
-    `@m${cloudId.slice(0, 8)}`,
+    copyTail({ memberOf: cloudId }),
     { memberOf: cloudId, me: p.me, members: p.members, claims: p.claims, notes: p.notes, availability: p.availability, questions: p.questions },
     (ids) => downloadFiles({ world: cloudId }, ids, access),
   )
@@ -520,6 +521,24 @@ export async function listMyCharacterRequests(cloudId: string): Promise<Characte
     .eq('world_id', cloudId)
     .eq('user_id', auth.user?.id ?? '')
     .neq('status', 'approved')
+    .order('created_at')
+  if (error) throw error
+  return data.map(toRequest)
+}
+
+/**
+ * A player's own approved requests that came with a note from the GM ("Welcome aboard!"). The request
+ * stays on the server after it's approved and its player may read it, so the note is fetched from there.
+ * `me` is their user id (the world's shared.me); the server only ever hands a player their own requests.
+ */
+export async function listMyApprovalNotes(cloudId: string, me: string): Promise<CharacterRequest[]> {
+  const { data, error } = await supabase
+    .from('character_requests')
+    .select('id, user_id, sheet, status, gm_note, created_at')
+    .eq('world_id', cloudId)
+    .eq('user_id', me)
+    .eq('status', 'approved')
+    .neq('gm_note', '')
     .order('created_at')
   if (error) throw error
   return data.map(toRequest)

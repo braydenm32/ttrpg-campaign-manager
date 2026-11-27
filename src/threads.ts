@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { blankEntity, db, type Campaign, type Entity, type Session, type ThreadStatus } from './db'
 import { stripSecrets } from './Markdown'
 import { useViewMode } from './viewMode'
-import { isPlayed, localDate } from './sessions'
+import { inHand, isPlayed, localDate } from './sessions'
 
 /** The pages a thread involves: anything it [[links]] to, plus where it's located. */
 export function threadLinks(thread: Entity, entities: Entity[], showSecrets: boolean) {
@@ -51,8 +51,9 @@ export function useWorldSessions(worldId: string) {
 const underWay = (s: Session, playing: Set<string>, today: string) => (playing.has(s.id) && !s.playedAt) || (!!s.startedAt && !isPlayed(s, today))
 
 /**
- * Each running campaign's coming session, the one in hand: the one being played, else a booked
- * session still to come, else the first one not played yet, else its newest. Sessions being played
+ * Each running campaign's coming session, the one in hand: the one being played, else the first
+ * one with a date that hasn't been played (booked ahead, or overdue), else the first one not played
+ * yet, else its newest. Sessions being played
  * come first, then the soonest. `playing` is the sessions live to players or recording right now.
  * The Desk, the Session area and "Mark as played" all go by this, so they move on together.
  */
@@ -63,11 +64,7 @@ export function nextSessions(campaigns: Campaign[], sessions: Session[], playing
     .filter((c) => c.status !== 'finished')
     .flatMap((c) => {
       const own = sessions.filter((s) => s.campaignId === c.id).sort((a, b) => a.number - b.number)
-      const next =
-        own.find((s) => underWay(s, live, today)) ??
-        own.find((s) => s.date >= today && !isPlayed(s, today)) ??
-        own.find((s) => !s.date && !isPlayed(s, today)) ??
-        own.at(-1)
+      const next = own.find((s) => underWay(s, live, today)) ?? inHand(own, today) ?? own.at(-1)
       return next ? [{ campaign: c, session: next, underWay: underWay(next, live, today) }] : []
     })
     .sort((a, b) => Number(b.underWay) - Number(a.underWay) || (a.session.date || '9999').localeCompare(b.session.date || '9999'))

@@ -286,6 +286,24 @@ test.describe('a joined player and a wiki reader (pretend player copies)', () =>
     }
   })
 
+  test('a link the GM copied opens in a player’s copy, and a GM-only page still doesn’t', async ({ page, world }) => {
+    await offline(page)
+    await page.goto('/')
+    const copy = await makePlayerCopy(page, world, 'wiki')
+    try {
+      // The copy keeps every id with a tail of its own; the GM's address has the id without it.
+      const shown = world.playerPages.find((e) => e.type === 'npc')!
+      await open(page, `/w/${copy.id}/p/${shown.id}`)
+      await expect(page.getByRole('heading', { name: shown.name, level: 1 })).toBeVisible()
+      const secret = world.dump.entities.find((e) => e.visibility === 'gm' && e.type === 'npc' && !e.template)!
+      await open(page, `/w/${copy.id}/p/${secret.id}`)
+      await expect(page.getByText('This page isn’t here, or your GM hasn’t shared it with you yet.')).toBeVisible()
+      await expect(page.locator('body')).not.toContainText(secret.name)
+    } finally {
+      await copy.remove()
+    }
+  })
+
   test('a wiki reader opening the table’s own screens by address gets a plain note instead', async ({ page, world }) => {
     await offline(page)
     await page.goto('/')

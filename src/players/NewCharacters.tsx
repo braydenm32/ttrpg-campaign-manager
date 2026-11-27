@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { cloudErrorMessage } from '../cloud/client'
 import {
   answerCharacterRequest,
+  listMyApprovalNotes,
   listMyCharacterRequests,
   requestCharacter,
   withdrawCharacterRequest,
@@ -195,6 +196,69 @@ export function MyNewCharacters({ world, compact }: { world: World; compact?: bo
   )
 }
 
+/** Approval notes this player has read ("Got it"), by request id, kept on this device. */
+const READ_NOTES_KEY = 'atlas.readApprovalNotes'
+function readNotes(): string[] {
+  try {
+    const list: unknown = JSON.parse(localStorage.getItem(READ_NOTES_KEY) ?? '[]')
+    return Array.isArray(list) ? list.filter((x): x is string => typeof x === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * For a player: the note their GM wrote when approving a character they sent ("Welcome aboard!").
+ * It stays at the top of Now and Me until they tap "Got it" (remembered on this device).
+ */
+export function ApprovedCharacterNotes({ world }: { world: World }) {
+  const cloudId = world.shared?.memberOf
+  const me = world.shared?.me
+  const [notes, setNotes] = useState<CharacterRequest[]>([])
+  const [read, setRead] = useState(readNotes)
+  useEffect(() => {
+    if (!cloudId || !me) return
+    let live = true
+    listMyApprovalNotes(cloudId, me).then(
+      (list) => live && setNotes(list),
+      () => {
+        // Offline or signed out: nothing to show for now.
+      },
+    )
+    return () => {
+      live = false
+    }
+    // An approval arrives with the world's next refresh.
+  }, [cloudId, me, world.shared?.fetchedAt])
+  const unread = notes.filter((r) => r.gmNote.trim() && !read.includes(r.id))
+  if (!cloudId || !unread.length) return null
+  const gotIt = (id: string) => {
+    const next = [...readNotes().filter((x) => x !== id), id].slice(-200)
+    setRead(next)
+    try {
+      localStorage.setItem(READ_NOTES_KEY, JSON.stringify(next))
+    } catch {
+      // Storage blocked: the note comes back next time the app opens.
+    }
+  }
+  return (
+    <>
+      {unread.map((r) => (
+        <section key={r.id} className="card room-card approved-note" role="status">
+          <p>
+            <Ico as={MaskHappy} /> Your GM approved <b>{r.sheet.name}</b>: “{r.gmNote.trim()}”
+          </p>
+          <div className="row">
+            <button className="small" onClick={() => gotIt(r.id)}>
+              Got it
+            </button>
+          </div>
+        </section>
+      ))}
+    </>
+  )
+}
+
 /** For the GM: new characters players have sent, with a look at each and Approve or Turn down. (On the Desk and in the Inbox they're listed already.) */
 export function NewCharacterRequestsBanner({ world }: { world: World }) {
   const inbox = useInbox()
@@ -247,7 +311,7 @@ export function ReviewCharacter({ world, request, player, onClose, onDone }: { w
         onClose()
       }
     } catch (e) {
-      setError(cloudErrorMessage(e))
+      setError(cloudErrorMessage(e, { reader: 'gm' }))
     } finally {
       setBusy(false)
     }
