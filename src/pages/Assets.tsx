@@ -1,4 +1,4 @@
-import { binFile } from '../bin'
+import { binFile, deletedNote } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import '../more.css'
@@ -216,11 +216,13 @@ function AssetCard({
           <button
             className="danger"
             aria-label={`Delete ${asset.name}`}
-            title="Delete (it goes to Recently deleted for a month)"
+            title="Delete (Undo, or Recently deleted for a month, brings it back)"
             onClick={async () => {
-              const usedBy = await db.maps.filter((m) => m.imageId === asset.id).count()
-              if (!confirm(usedBy ? 'This file is used as a map image. Delete anyway?' : `Delete "${asset.name}"?`)) return
-              await binFile(asset.id)
+              // Gone at once, with Undo: the note says where it was used, since those show no picture until it's back.
+              const where = (await assetUses(asset.worldId)).get(asset.id) ?? []
+              const bin = await binFile(asset.id)
+              const used = where.length ? ` ${where.slice(0, 2).join(', ')}${where.length > 2 ? ` and ${where.length - 2} more` : ''} ${where.length === 1 ? 'goes' : 'go'} without it until you put it back.` : ''
+              deletedNote(`“${friendlyName(asset.name, where)}” deleted.${used}`, bin)
             }}
           >
             🗑

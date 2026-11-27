@@ -38,11 +38,12 @@ export async function forgetCloudTranscripts(sessions: Session[]) {
 /**
  * Before sessions are deleted to the bin (a session, or a campaign with its sessions): the same, and
  * the transcripts still being made are taken off them, so a restored session doesn't wait on a job
- * that's gone.
+ * that's gone. Returns the jobs it stopped.
  */
 export async function dropCloudTranscripts(sessions: Session[]) {
   const ids = await forgetCloudTranscripts(sessions)
   for (const s of sessions) for (const r of s.recordings) if (r.transcript?.pending?.jobId && ids.includes(r.transcript.pending.jobId)) await saveTranscript(s.id, r.assetId, undefined)
+  return ids
 }
 
 /**

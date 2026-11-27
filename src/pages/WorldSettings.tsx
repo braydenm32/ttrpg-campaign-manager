@@ -6,14 +6,11 @@ import '../more.css'
 import { ThemePicker } from '../theme'
 import { RecentlyDeleted } from '../History'
 import { AiSettingsSection } from '../ai/AiSettingsSection'
-import { forgetCloudTranscripts } from '../ai/TranscriptPanel'
 import { BackupButton } from '../BackupReminder'
 import { DeviceStorage } from '../deviceStorage'
 import { backupStore } from '../backup'
 import { saveFailed, toast } from '../undo'
-import { deleteCloudCopy } from '../cloud/sync'
-import { myRole } from '../cloud/players'
-import { db, deleteWorld, GAME_SYSTEMS, newId, typeLabel, WORLD_COLORS, worldColor, type Asset, type CustomType, type World } from '../db'
+import { db, GAME_SYSTEMS, newId, typeLabel, WORLD_COLORS, worldColor, type Asset, type CustomType, type World } from '../db'
 import { saveFileAsAsset, useBlobUrl, useTemplates, useWorld } from '../hooks'
 import CloudSettings from './CloudSettings'
 import { CalendarEditor } from '../calendar'
@@ -28,6 +25,7 @@ import { useViewMode } from '../viewMode'
 import { starterTemplates } from '../prompts'
 import { WorldPacks } from '../packs/WorldPacks'
 import { OneShotSettings } from '../oneShotPanel'
+import { DeleteWorldButton } from '../worldDelete'
 
 const TABS = [
   ['world', 'World'],
@@ -223,34 +221,7 @@ export default function WorldSettings() {
 
           <section>
             <h2>Danger zone</h2>
-            <button
-              className="danger"
-              onClick={async () => {
-                const inCloud = !!world.cloud?.enabled
-                const warning = inCloud ? ' This also deletes the cloud copy, so your players, share link and other devices lose it too.' : ''
-                if (prompt(`Type the world's name to delete it forever: ${world.name}.${warning}`) !== world.name) return
-                // Only the owner can delete the cloud copy; a co-GM just removes it from this device.
-                let forGood = !inCloud
-                if (inCloud) {
-                  const role = await myRole(worldId).catch(() => null)
-                  if (role === 'owner') {
-                    try {
-                      await deleteCloudCopy(worldId)
-                      forGood = true
-                    } catch (e) {
-                      if (!confirm(`Couldn't delete the cloud copy (${(e as Error).message}). Delete it from this device only?`)) return
-                    }
-                  } else if (!role && !confirm('You’re offline or signed out, so the cloud copy stays. Delete it from this device only?')) return
-                }
-                // Gone everywhere, so AssemblyAI's copies of transcripts still being made go too. (A world
-                // only taken off this device keeps them, as another device may still pick them up.)
-                if (forGood) await forgetCloudTranscripts(await db.sessions.where({ worldId }).toArray())
-                await deleteWorld(worldId)
-                navigate('/')
-              }}
-            >
-              Delete this world
-            </button>
+            <DeleteWorldButton world={world} />
           </section>
         </>
       )}

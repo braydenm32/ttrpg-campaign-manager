@@ -1,4 +1,4 @@
-import { binCampaign } from '../bin'
+import { binCampaign, deletedNote } from '../bin'
 import { dropCloudTranscripts } from '../ai/TranscriptPanel'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
@@ -203,13 +203,19 @@ export default function CampaignPage() {
               disabled={recording}
               title={recording ? 'Stop the recording first' : undefined}
               onClick={async () => {
-                if (!confirm(`Delete campaign "${campaign.name}" and its sessions? World content is kept.`)) return
-                // Characters who played only in this campaign go back to "any campaign", so they don't vanish from every party.
-                await db.entities.where({ worldId }).filter((e) => e.campaignId === campaignId).modify({ campaignId: undefined })
+                // Gone at once, with Undo: restoring brings back its sessions (notes, recaps, recordings)
+                // and puts its characters back in it. Pages, maps and files of the world aren't touched.
+                const sessions = await db.sessions.where({ campaignId }).toArray()
                 // As for one session: AssemblyAI's copies of transcripts still being made go too.
-                await dropCloudTranscripts(await db.sessions.where({ campaignId }).toArray())
-                await binCampaign(campaignId)
+                const stopped = (await dropCloudTranscripts(sessions)).length
+                // binCampaign sends its characters back to "any campaign" (so they don't vanish from every party) and remembers them for Restore.
+                const bin = await binCampaign(campaignId)
                 navigate(`${worldPath(worldId)}`)
+                const n = sessions.length
+                deletedNote(
+                  `Campaign “${campaign.name}” deleted${n ? `, with its ${n === 1 ? 'session' : `${n} sessions`}` : ''}. The world’s pages, maps and files are kept.${stopped ? ' Transcripts still being made were stopped.' : ''}`,
+                  bin,
+                )
               }}
             >
               Delete campaign

@@ -1270,7 +1270,7 @@ export interface BinItem {
    * "conflict": another device's version of a session, board or the world's settings, kept when both
    * devices changed the same part at once and this device's version won (see `fields`).
    */
-  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map' | 'elsewhere' | 'conflict' | 'reset'
+  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map' | 'pin' | 'elsewhere' | 'conflict' | 'reset'
   /** What to call it in the list, e.g. the session's title. */
   label: string
   /** The rows that were removed, by table, so restoring puts every one back. */

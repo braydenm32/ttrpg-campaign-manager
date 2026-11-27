@@ -594,7 +594,7 @@ test('AssemblyAI’s copies go once nothing waits on them, “not found” count
 
     // Deleting the session deletes the copy it was waiting on, and the bin's copy no longer waits on it.
     await open(page, `${w}/s/${id}?tab=prep`)
-    page.once('dialog', (d) => void d.accept())
+    // It goes at once, with Undo (no "are you sure?" first).
     await page.getByRole('button', { name: 'Delete session' }).click()
     await expect.poll(() => deleted.includes('job-waiting')).toBe(true)
     await expect.poll(noted).not.toContain('job-waiting')

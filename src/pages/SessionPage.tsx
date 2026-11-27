@@ -1,5 +1,5 @@
 import { ReadAloud } from '../ai/ReadAloud'
-import { binSession } from '../bin'
+import { binSession, deletedNote } from '../bin'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help, HELP } from '../help'
 import { useEffect, useRef, useState } from 'react'
@@ -459,10 +459,16 @@ function SessionDetails({ session, campaign, world, entities }: Omit<ViewProps, 
           disabled={live?.sessionId === session.id}
           title={live?.sessionId === session.id ? 'Stop the recording first' : undefined}
           onClick={async () => {
-            if (!confirm('Delete this session and its recordings? You can restore it from World settings for a month.')) return
-            await dropCloudTranscripts([session])
-            await binSession(session.id)
+            // Gone at once, with Undo: restoring brings back its notes, recap and recordings. Only a
+            // transcript AssemblyAI is still making is stopped (it can be made again from the recording).
+            const stopped = (await dropCloudTranscripts([session])).length
+            const bin = await binSession(session.id)
             navigate(campaign ? `${w}/c/${campaign.id}` : w)
+            const recs = session.recordings.length
+            deletedNote(
+              `Session #${session.number}${session.title ? ` “${session.title}”` : ''} deleted${recs ? `, with its ${recs === 1 ? 'recording' : `${recs} recordings`}` : ''}.${stopped ? ' The transcript still being made was stopped.' : ''}`,
+              bin,
+            )
           }}
         >
           Delete session

@@ -5,6 +5,7 @@ import { db, restoreDeletedPage, saveEntity, type Entity, type PageVersion } fro
 import { renameLinks } from './links'
 import { Help } from './help'
 import { binSize, deleteFromBin, emptyBin, restoreFromBin, useBin } from './bin'
+import { toast } from './undo'
 import { formatBytes, useWorld } from './hooks'
 import { Ico, PageIcon } from './icons'
 import { ClockCounterClockwise } from '@phosphor-icons/react'
@@ -132,7 +133,7 @@ function HistoryModal({ entity, onClose }: { entity: Entity; onClose: () => void
   )
 }
 
-const BIN_ICON: Record<string, string> = { session: '📖', campaign: '🎲', file: '📁', board: '📌', sound: '🎵', map: '🗺️', elsewhere: '☁️', conflict: '🔀', reset: '🔁' }
+const BIN_ICON: Record<string, string> = { session: '📖', campaign: '🎲', file: '📁', board: '📌', sound: '🎵', map: '🗺️', pin: '📍', elsewhere: '☁️', conflict: '🔀', reset: '🔁' }
 
 /** How many of each list show before "Show all". */
 const SHORT_LIST = 30
@@ -173,7 +174,9 @@ export function RecentlyDeleted() {
                   <button
                     className="small"
                     title={b.kind === 'conflict' ? 'Use the other device’s version of these parts instead of this one' : undefined}
-                    onClick={() => restoreFromBin(b.id)}
+                    onClick={async () => {
+                      if ((await restoreFromBin(b.id)) === 'no map') toast('That pin’s map is deleted too. Restore the map first, then the pin.')
+                    }}
                   >
                     {b.kind === 'conflict' ? 'Use this version' : 'Restore'}
                   </button>

@@ -3,13 +3,14 @@ import { Help } from '../help'
 import '../more.css'
 import { AccountModal, useAuthSession } from '../cloud/auth'
 import { createShareLink, getShareToken, revokeShareLink, shareUrl } from '../cloud/share'
-import { deleteCloudCopy, disableCloud, enableCloud, syncNow, syncStore, wouldOverwriteCloud } from '../cloud/sync'
+import { disableCloud, enableCloud, syncNow, syncStore, wouldOverwriteCloud } from '../cloud/sync'
 import type { World } from '../db'
 import { myRole } from '../cloud/players'
 import { cloudErrorMessage } from '../cloud/client'
 import { CoGmSettings, PlayersSettings } from '../players/PlayersSettings'
 import { Ico } from '../icons'
 import { BookOpen, Cloud, Scroll } from '@phosphor-icons/react'
+import { DeleteCloudCopyButton } from '../worldDelete'
 
 /** World settings section: turn on sync, and manage the player share link. */
 export default function CloudSettings({ world }: { world: World }) {
@@ -153,17 +154,7 @@ export default function CloudSettings({ world }: { world: World }) {
               Stop syncing on this device
             </button>
             {!coGM && (
-            <button
-              className="danger"
-              onClick={() =>
-                confirm(
-                  'Delete the cloud copy of this world?\n\nThis device keeps its copy of the world. Deleted for good: every player and co-GM is taken out of the world, and the players’ notes, group notes, questions and your answers, downtime, date answers, stars and wishes and their claims on characters all go. The wiki, invite and co-GM links stop working, and your other devices stop updating.\n\nTurning sync back on later doesn’t bring any of this back.',
-                ) &&
-                run(() => deleteCloudCopy(world.id))
-              }
-            >
-              Delete cloud copy
-            </button>
+            <DeleteCloudCopyButton world={world} run={run} />
             )}
           </div>
           {!coGM && (
