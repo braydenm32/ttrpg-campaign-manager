@@ -1,5 +1,5 @@
 import { ReadAloud } from '../ai/ReadAloud'
-import { binSession, deletedNote } from '../bin'
+import { DeleteSessionButton } from '../deleteAsk'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help, HELP } from '../help'
 import { useEffect, useRef, useState } from 'react'
@@ -8,7 +8,7 @@ import { PrepHelper } from '../ai/PrepHelper'
 import { RecapPanel } from '../ai/RecapPanel'
 import { Highlights } from '../highlights'
 import { SpotlightPanel } from '../ai/Spotlight'
-import { dropCloudTranscripts, TranscriptPanel } from '../ai/TranscriptPanel'
+import { TranscriptPanel } from '../ai/TranscriptPanel'
 import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { db, ENTITY_LABELS, THREAD_STATUS, type Campaign, type Entity, type Recording, type Session, type World } from '../db'
@@ -454,25 +454,7 @@ function SessionDetails({ session, campaign, world, entities }: Omit<ViewProps, 
           </button>
         )}
         <span className="grow" />
-        <button
-          className="danger"
-          disabled={live?.sessionId === session.id}
-          title={live?.sessionId === session.id ? 'Stop the recording first' : undefined}
-          onClick={async () => {
-            // Gone at once, with Undo: restoring brings back its notes, recap and recordings. Only a
-            // transcript AssemblyAI is still making is stopped (it can be made again from the recording).
-            const stopped = (await dropCloudTranscripts([session])).length
-            const bin = await binSession(session.id)
-            navigate(campaign ? `${w}/c/${campaign.id}` : w)
-            const recs = session.recordings.length
-            deletedNote(
-              `Session #${session.number}${session.title ? ` “${session.title}”` : ''} deleted${recs ? `, with its ${recs === 1 ? 'recording' : `${recs} recordings`}` : ''}.${stopped ? ' The transcript still being made was stopped.' : ''}`,
-              bin,
-            )
-          }}
-        >
-          Delete session
-        </button>
+        <DeleteSessionButton session={session} campaign={campaign} recording={live?.sessionId === session.id} onDeleted={() => navigate(campaign ? `${w}/c/${campaign.id}` : w)} />
       </div>
     </section>
   )

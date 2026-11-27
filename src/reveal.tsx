@@ -120,10 +120,11 @@ export function pageReveal(e: Entity, pages: Entity[]) {
   if (e.tags.length) see.push(`tags: ${e.tags.join(', ')}`)
   if (e.imageId) see.push('the picture')
   if (e.playerBody) see.push('what the player wrote')
-  // Threads and quests have no list of their own for players: they're in the Common Room's Leads.
-  if (e.type === 'thread' || e.type === 'quest') see.push('Players see this under Leads')
   const known = (e.relations ?? []).filter((r) => r.known).length
   if (known) see.push(`${plural(known, 'relationship')} marked “Players know”, with ${known === 1 ? 'its note' : 'their notes'} (to pages they can see)`)
+  // Threads and quests have no list of their own for players: they're in the Common Room's Leads.
+  // Last, and worded to follow "Players will see" (alone in a list, or after a semicolon for several pages).
+  if (e.type === 'thread' || e.type === 'quest') see.push('it under Leads, in the Common Room')
   const gmPassages = segs.filter((s) => s.kind === 'gm').length
   const forPassages = segs.filter((s) => s.kind === 'for')
   if (e.gmNotes.trim()) kept.push('GM notes')

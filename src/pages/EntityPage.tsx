@@ -507,13 +507,19 @@ async function writeChanges(opened: Entity, d: Entity, world: World | null | und
   return { before, merged, renamed, under }
 }
 
-/** Says which pages moved up a level when a page changed kind, with Undo to put them back under it. */
-function sayMoved(merged: Entity, under: { id: string; from?: string }[], world: World | null | undefined) {
+/**
+ * Says which pages moved up a level when a page changed kind, with Undo to put them back under it.
+ * `unsave` is for an editor left without Save: the one note then says the changes were saved too,
+ * and its Undo takes them back as well (the pages under it first, then the page itself).
+ */
+function sayMoved(merged: Entity, under: { id: string; from?: string }[], world: World | null | undefined, unsave?: () => Promise<unknown>) {
   if (!under.length) return
   const one = typeLabel(merged, world).one
   const kind = /^[A-Z]{2}/.test(one) ? one : one.toLowerCase()
-  toast(`“${merged.name}” is now ${/^([aeiou]|NPC)/i.test(kind) ? 'an' : 'a'} ${kind} page, so the ${under.length === 1 ? 'page' : `${under.length} pages`} under it moved up a level.`, async () => {
+  const now = `is now ${/^([aeiou]|NPC)/i.test(kind) ? 'an' : 'a'} ${kind} page, so the ${under.length === 1 ? 'page' : `${under.length} pages`} under it moved up a level.`
+  toast(unsave ? `Saved your changes to “${merged.name}”. It ${now}` : `“${merged.name}” ${now}`, async () => {
     for (const m of under) await db.entities.update(m.id, { parentId: m.from, updatedAt: Date.now() })
+    await unsave?.()
   })
 }
 
@@ -582,13 +588,17 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
       if (closed || !changed) return
       // Left without Save or Cancel (a link, Back, another screen): keep what was typed, with Undo.
       void writeChanges(opened, last, world).then(
-        ({ before, merged, under }) =>
-          under.length ? sayMoved(merged, under, world) : toast(`Saved your changes to “${merged.name}”.`, async () => {
+        ({ before, merged, under }) => {
+          const unsave = async () => {
             if (!before) return db.entities.delete(merged.id)
             await db.entities.put(before)
             // Renamed on the way out: the links that followed the new name go back to the old one too.
             if (!merged.template && before.name.trim() !== merged.name.trim()) await renameLinks(merged.worldId, merged, before)
-          }),
+          }
+          // A new kind that moved pages up a level: one note says both, and its Undo takes both back.
+          if (under.length) sayMoved(merged, under, world, unsave)
+          else toast(`Saved your changes to “${merged.name}”.`, unsave)
+        },
         // What was typed is kept on this device (the draft), and offered next time the editor opens.
         (err) => {
           keep()
@@ -787,7 +797,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
               {d.type === 'custom' && !world?.customTypes?.some((c) => c.id === d.customType) && <option value={`custom:${d.customType}`}>(removed type)</option>}
             </select>
           </label>
-          <ParentFields d={d} opened={opened} entities={entities} world={world} onPick={(id) => set('parentId', id)} />
+          <ParentFields d={d} opened={opened} entities={entities} onPick={(id) => set('parentId', id)} />
           {d.type === 'event' && (
             <>
               {world?.calendar && (

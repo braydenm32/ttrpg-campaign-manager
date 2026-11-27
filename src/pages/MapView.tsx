@@ -1,4 +1,5 @@
-import { binMap, binPin, deletedNote } from '../bin'
+import { binPin, deletedNote } from '../bin'
+import { DeleteMapButton } from '../deleteAsk'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import L from 'leaflet'
@@ -1299,7 +1300,7 @@ function PinEditor({ pin, entities, maps, categories, onClose, onDone }: { pin: 
             // Gone at once, with Undo; Recently deleted keeps it for a month, to go back on the same spot.
             const gone = await binPin(pin.id)
             onClose()
-            if (gone) deletedNote(`Pin “${gone.name}” deleted.`, gone.bin)
+            if (gone) deletedNote(`${pin.kind === 'region' ? 'Region' : 'Pin'} “${gone.name}” deleted.`, gone.bin)
           }}
         >
           Delete
@@ -1356,18 +1357,7 @@ function MapSettings({ map, entities, onClose, onDeleted }: { map: WorldMap; ent
         Show numbers, with a key <Help topic="mapNumbers" />
       </label>
       <small className="muted">For dungeons and towns: each pin and linked piece gets a number on the map, and Key lists them. Players see only the ones they can see.</small>
-      <button
-        className="danger"
-        onClick={async () => {
-          // Gone at once, with Undo: restoring brings back its pins, picture and fog too.
-          const pins = await db.pins.where({ mapId: map.id }).count()
-          const bin = await binMap(map.id)
-          onDeleted()
-          deletedNote(`Map “${map.name}” deleted${pins ? `, with its ${pins === 1 ? 'pin' : `${pins} pins`}` : ''}.`, bin)
-        }}
-      >
-        Delete map
-      </button>
+      <DeleteMapButton map={map} onDeleted={onDeleted} />
     </div>
   )
 }

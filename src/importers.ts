@@ -556,7 +556,8 @@ export async function applyImport(worldId: string, plan: ImportPlan, skipExistin
   // Every page gets an id of its own, even when two share a key (a link to that key finds the first).
   const ids = pages.map(() => newId())
   const idByKey = new Map<string, string>()
-  const idByName = new Map(existing.map((e) => [e.name.trim().toLowerCase(), e.id]))
+  // Templates aren't pages: nothing imported sits in or under one (a folder called "Quest" isn't the Quest template).
+  const idByName = new Map(existing.filter((e) => !e.template).map((e) => [e.name.trim().toLowerCase(), e.id]))
   pages.forEach((p, i) => {
     if (!idByKey.has(p.key)) idByKey.set(p.key, ids[i])
     if (!idByName.has(p.name.toLowerCase())) idByName.set(p.name.toLowerCase(), ids[i])

@@ -4,7 +4,8 @@ import { db, deleteWorld, type World } from './db'
 import { backupStore, recordingsOnlyHere } from './backup'
 import { forgetCloudTranscripts } from './ai/TranscriptPanel'
 import { BackupButton } from './BackupReminder'
-import { useDeleteCheck } from './deleteCheck'
+import { nameToType, useDeleteCheck } from './deleteCheck'
+import { useLiveRecording } from './recordingStore'
 import { formatBytes } from './hooks'
 import { listPlayers, myRole } from './cloud/players'
 import { deleteCloudCopy } from './cloud/sync'
@@ -12,8 +13,11 @@ import { deleteCloudCopy } from './cloud/sync'
 /**
  * The two deletes nothing can undo: a whole world, and a world's cloud copy. Each asks with the
  * app's own dialog (src/deleteCheck.tsx), listing what goes with real counts, and has the world's
- * name typed first.
+ * name typed first (or the word "delete", for a world with no name).
  */
+
+/** The world in a dialog's title: “Its name”, or "this unnamed world". */
+const called = (world: World) => (world.name.trim() ? `“${world.name.trim()}”` : 'this unnamed world')
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
@@ -75,6 +79,8 @@ export function DeleteWorldButton({ world }: { world: World }) {
   const { ask, dialog } = useDeleteCheck()
   const [busy, setBusy] = useState(false)
   const worldId = world.id
+  // A recording still running would go on writing into a world that's gone.
+  const recording = useLiveRecording()?.worldId === worldId
   const go = async () => {
     setBusy(true)
     try {
@@ -85,7 +91,7 @@ export function DeleteWorldButton({ world }: { world: World }) {
       const [here, who] = await Promise.all([onThisDevice(worldId), owner ? whoIsIn(worldId) : Promise.resolve('')])
       const backedUp = backupStore.read(worldId, 'last')
       const yes = await ask({
-        title: `Delete the world “${world.name}”?`,
+        title: world.name.trim() ? `Delete the world ${called(world)}?` : 'Delete this unnamed world?',
         goesTitle: 'Deleted from this device',
         goes: here,
         alsoGoes: owner ? { title: 'Deleted from the cloud', lines: ['The world’s cloud copy', takenOut(who), ...CLOUD_GOES] } : undefined,
@@ -95,7 +101,7 @@ export function DeleteWorldButton({ world }: { world: World }) {
             ? undefined
             : [
                 role === 'gm'
-                  ? 'The cloud copy: you’re a co-GM, so the world only goes from this device. The owner and the players keep it, and you can download it again from Home.'
+                  ? 'The cloud copy: you’re a co-GM, so the world only goes from this device. The owner and the players keep it, and you can download it again from Your worlds.'
                   : 'The cloud copy: you’re offline or signed out, so it can’t be deleted now. Your players keep the world. To delete it too, cancel, sign in and try again.',
               ],
         back: `This can’t be undone, and it doesn’t go to Recently deleted. Only a backup brings it back${backedUp ? ` (your last one is from ${new Date(backedUp).toLocaleDateString()})` : ': you haven’t downloaded one on this device'}.`,
@@ -105,7 +111,7 @@ export function DeleteWorldButton({ world }: { world: World }) {
           </div>
         ),
         confirm: 'Delete world',
-        typeToConfirm: world.name,
+        ...nameToType(world.name),
       })
       if (!yes) return
       let forGood = !inCloud
@@ -135,9 +141,10 @@ export function DeleteWorldButton({ world }: { world: World }) {
   }
   return (
     <>
-      <button className="danger" disabled={busy} onClick={go}>
+      <button className="danger" disabled={busy || recording} title={recording ? 'Stop the recording first' : undefined} onClick={go}>
         Delete this world
       </button>
+      {recording && <span className="muted small"> Stop the recording first.</span>}
       {dialog}
     </>
   )
@@ -152,13 +159,13 @@ export function DeleteCloudCopyButton({ world, run }: { world: World; run: (fn: 
     try {
       const who = await whoIsIn(world.id)
       const yes = await ask({
-        title: `Delete the cloud copy of “${world.name}”?`,
+        title: `Delete the cloud copy of ${called(world)}?`,
         goesTitle: 'Deleted from the cloud',
         goes: [takenOut(who), ...CLOUD_GOES],
         stays: ['This device’s copy of the world: every page, map, session and file'],
         back: 'This can’t be undone. Turning sync back on later doesn’t bring any of it back, and players would need a new invite.',
         confirm: 'Delete cloud copy',
-        typeToConfirm: world.name,
+        ...nameToType(world.name),
       })
       if (!yes) return
       await run(() => deleteCloudCopy(world.id))

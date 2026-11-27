@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable, type Table } from 'dexie'
 import type { Drawing } from './mapDrawing'
-import { newHome } from './nesting'
+import { above, newHome } from './nesting'
 
 /** Who can see a piece of content. GM-only content never appears in the player view. */
 export type Visibility = 'gm' | 'players'
@@ -1539,11 +1539,15 @@ export async function deleteEntity(id: string) {
 
 /**
  * Brings a deleted page back from its deleted version, and puts back the links to it that are
- * still empty (a place moved somewhere else since stays where it is now).
+ * still empty (a place moved somewhere else since stays where it is now). A page that used to be
+ * under it but that it now sits under (moved there since) stays where it is, so nothing loops.
  */
 export async function restoreDeletedPage(v: PageVersion) {
   await db.transaction('rw', [db.entities, db.pins, db.maps], async () => {
-    await db.entities.put({ ...v.entity, updatedAt: Date.now() })
+    const back = { ...v.entity, updatedAt: Date.now() }
+    await db.entities.put(back)
+    const byId = new Map((await db.entities.where({ worldId: back.worldId }).toArray()).map((x) => [x.id, x]))
+    const over = new Set(above(back, byId).map((x) => x.id))
     for (const l of v.relinks ?? []) {
       const table = db[l.table] as unknown as Table<Record<string, unknown>, string>
       await table
@@ -1551,6 +1555,7 @@ export async function restoreDeletedPage(v: PageVersion) {
         .anyOf(l.ids)
         // Still where deleting it left them (cleared, or moved up a level).
         .filter((x) => !x[l.field] || (!!l.to && x[l.field] === l.to[x.id as string]))
+        .filter((x) => l.field !== 'parentId' || !over.has(x.id as string))
         .modify({ [l.field]: v.entityId, ...(l.table === 'entities' ? { updatedAt: Date.now() } : {}) })
     }
   })

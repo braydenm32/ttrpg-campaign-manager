@@ -435,6 +435,9 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
   .player-banner > button { min-height: 44px; }
   /* A page's picture: Upload, Use an existing image and Remove are whole fingertips. */
   .image-actions > :is(button, .button) { min-height: 44px; }
+  /* "+ New … under it" on a page (src/nestingUi.tsx), and everything pressed in the delete dialog (src/deleteCheck.tsx). */
+  :is(.add-under, .under-it) > button.ghost { min-height: 44px; }
+  .delete-check :is(button, .button) { min-height: 44px; }
 }
 .page-header > .row { flex-wrap: wrap; justify-content: flex-end; }
 
@@ -1813,6 +1816,8 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 /* Deleting what can't be undone (src/deleteCheck.tsx): the name to type. */
 .delete-check-name { display: flex; flex-direction: column; gap: .3em; margin-top: .9em; }
 .delete-check-name input { width: 100%; box-sizing: border-box; font-size: 1rem; }
+/* It can be restored: a plain note, not the warning a world's delete shows. */
+.delete-check .delete-check-back { margin: .9em 0 0; color: var(--muted); }
 .seen-mark { display: inline-flex; align-items: center; vertical-align: middle; font-size: .85em; margin-left: .15em; }
 .seen-mark.players { color: var(--good-text, var(--good)); }
 .seen-mark.gm { color: var(--muted); opacity: .75; }

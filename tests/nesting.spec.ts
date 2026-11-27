@@ -4,7 +4,8 @@ import { getRecord, putBack, type Row } from './lib/records'
 /**
  * Pages under pages of their own kind, on a laptop: a faction made "under" another sits under it in
  * its trail, its details and the Factions list (folded with the arrow), can't be put under its own
- * child, moves up a level when its parent is deleted and goes back with Undo. In the player view a
+ * child, moves up a level when its parent is deleted and goes back with Undo; restoring a deleted
+ * page never makes a circle of pages. In the player view a
  * GM-only parent of a page players can see is never named: not on the page, nor in the list.
  *
  * Each test puts back what it changed.
@@ -136,5 +137,52 @@ test('players never see the name of a GM-only page that a page they can see sits
   } finally {
     await setView(page, world, 'gm')
     await putBack(page, 'entities', [[childId, null]])
+  }
+})
+
+test('restoring a deleted page leaves alone a page that it now sits under, so nothing loops', async ({ page, world }) => {
+  const w = `/w/${world.slug}`
+  const base = world.dump.entities.find((e) => e.type === 'faction')!
+  await open(page, w)
+  const like = (await getRecord(page, 'entities', base.id))!
+  const row = (n: string, name: string, parentId?: string): Row => ({ ...like, id: `test-loop-${n}-0000-0000-000000000000`, name, parentId, relations: [], imageId: undefined, aliases: undefined })
+  // A > B > C.
+  const a = row('a', 'Loop Test Alder')
+  const b = row('b', 'Loop Test Birch', a.id)
+  const c = row('c', 'Loop Test Cedar', b.id)
+  await putBack(page, 'entities', [[a.id, a], [b.id, b], [c.id, c]])
+  try {
+    // Deleting B moves C up under A.
+    await open(page, `${w}/p/${b.id}`)
+    await page.locator('.page-strip, .page').getByRole('button', { name: 'Delete' }).first().click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Delete it' }).click()
+    await expect.poll(async () => (await getRecord(page, 'entities', c.id))?.parentId).toBe(a.id)
+    // Since then the GM took C to the top and put A under it.
+    await putBack(page, 'entities', [[c.id, { ...c, parentId: undefined }], [a.id, { ...a, parentId: c.id }]])
+    // Restoring B puts it back under A, but C (now above both) stays where it is.
+    await open(page, `${w}/settings?tab=data&at=deleted`)
+    await page.locator('li', { hasText: 'Loop Test Birch' }).getByRole('button', { name: 'Restore' }).click()
+    await expect.poll(async () => (await getRecord(page, 'entities', b.id))?.parentId).toBe(a.id)
+    expect((await getRecord(page, 'entities', c.id))?.parentId).toBeUndefined()
+    expect((await getRecord(page, 'entities', a.id))?.parentId).toBe(c.id)
+  } finally {
+    await putBack(page, 'entities', [[a.id, null], [b.id, null], [c.id, null]])
+    // The deleted version kept in the page's history goes too.
+    await page.evaluate(
+      (id) =>
+        new Promise<void>((resolve) => {
+          const r = indexedDB.open('ttrpg-campaign-manager')
+          r.onsuccess = () => {
+            const tx = r.result.transaction('history', 'readwrite')
+            const all = tx.objectStore('history').index('entityId').getAllKeys(id)
+            all.onsuccess = () => all.result.forEach((k) => tx.objectStore('history').delete(k))
+            tx.oncomplete = () => {
+              r.result.close()
+              resolve()
+            }
+          }
+        }),
+      b.id,
+    )
   }
 })

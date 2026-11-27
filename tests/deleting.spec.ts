@@ -5,11 +5,14 @@ import { getRecord, putBack, type Row } from './lib/records'
 import { PORT } from './lib/server'
 
 /**
- * Deleting (the owner's answer to question 13): a map pin goes to Recently deleted with Undo, like a
- * page; a session, campaign, map or file goes at once with Undo and Recently deleted; a whole world
- * and its cloud copy, which nothing can bring back, ask in the app's own dialog (Cancel first,
- * Escape cancels, the world's name typed before the delete button works). No browser "OK / Cancel"
- * box comes up on any of these: each test fails if one does. Each test puts back what it changed.
+ * Deleting (the owner's answer to question 13): a map pin goes at once to Recently deleted, with
+ * Undo; a session, campaign, map or file asks first in the app's own dialog (what goes with it, with
+ * real counts, what is kept, and that Recently deleted keeps it for a month; Cancel has the focus
+ * and leaves everything), then goes with an Undo note; a whole world and its cloud copy, which
+ * nothing can bring back, ask in the same dialog with the world's name typed before the delete
+ * button works (quote marks, dashes, spaces and capitals don't have to match, and a world with no
+ * name asks for the word "delete"). No browser "OK / Cancel" box comes up on any of these: each
+ * test fails if one does. Each test puts back what it changed.
  */
 
 const toast = (page: Page) => page.locator('.undo-toast')
@@ -55,8 +58,9 @@ test('a map pin: Undo puts it back, and so does Recently deleted, on the same sp
     const remove = async () => {
       await open(page, `${w}/maps/${map.id}?pin=${pin.id}`)
       const panel = page.locator('.map-panel')
-      const edit = panel.getByRole('button', { name: 'Edit pin' })
-      if (await edit.isVisible()) await edit.click()
+      // A pin opened from its address always shows its page first, with the editor one press further.
+      // (Waiting for the button, not peeking at it: on a busy machine the panel can come after the map.)
+      await panel.getByRole('button', { name: 'Edit pin' }).click()
       await panel.locator('.pin-editor').getByRole('button', { name: 'Delete' }).click()
       await expect(toast(page)).toContainText('Pin “Deleting Test Cairn” deleted. It’s in More → Recently deleted.')
       expect(await getRecord(page, 'pins', pin.id)).toBeUndefined()
@@ -80,7 +84,7 @@ test('a map pin: Undo puts it back, and so does Recently deleted, on the same sp
   }
 })
 
-test('a map goes at once with Undo, and comes back with its pins', async ({ page, world }) => {
+test('a map asks first, then goes with Undo, and comes back with its pins', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   const real = (await (async () => {
     await open(page, `${w}/maps`)
@@ -95,7 +99,20 @@ test('a map goes at once with Undo, and comes back with its pins', async ({ page
   try {
     await open(page, `${w}/maps/${map.id}`)
     await page.getByRole('button', { name: 'Map settings' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Delete the map “Deleting Test Map”?' })
+    // It says what goes, with counts, and that it can come back; Cancel has the focus and leaves everything.
     await page.getByRole('button', { name: 'Delete map' }).click()
+    await expect(dialog).toContainText('The map (its picture stays, as something else uses it)')
+    await expect(dialog).toContainText('1 pin')
+    await expect(dialog).toContainText('It goes to Recently deleted (under More) for a month.')
+    await expect(dialog.getByRole('textbox')).toHaveCount(0)
+    await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused()
+    await dialog.getByRole('button', { name: 'Cancel' }).click()
+    await expect(dialog).toHaveCount(0)
+    expect(await getRecord(page, 'maps', map.id)).toBeTruthy()
+    expect(await getRecord(page, 'pins', pin.id)).toEqual(pin)
+    await page.getByRole('button', { name: 'Delete map' }).click()
+    await dialog.getByRole('button', { name: 'Delete map' }).click()
     await expect(toast(page)).toContainText('Map “Deleting Test Map” deleted, with its pin. It’s in More → Recently deleted.')
     await expect.poll(() => here(page)).toMatch(/\/maps$/)
     expect(await getRecord(page, 'maps', map.id)).toBeUndefined()
@@ -113,7 +130,7 @@ test('a map goes at once with Undo, and comes back with its pins', async ({ page
   }
 })
 
-test('a session and a campaign go at once with Undo, which brings back the sessions and their notes', async ({ page, world }) => {
+test('a session and a campaign ask first, then go with Undo, which brings back the sessions and their notes', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   await open(page, w)
   const realCampaign = (await getRecord(page, 'campaigns', world.dump.campaigns[0].id))!
@@ -125,7 +142,19 @@ test('a session and a campaign go at once with Undo, which brings back the sessi
   await putBack(page, 'sessions', [[session.id, session]])
   try {
     await open(page, `${w}/s/${session.id}?tab=prep`)
+    const sessionDialog = page.getByRole('dialog', { name: 'Delete session #1 “Deleting Test Session”?' })
     await page.getByRole('button', { name: 'Delete session' }).click()
+    await expect(sessionDialog).toContainText('Its prep, your notes, the recap and the highlights')
+    await expect(sessionDialog).toContainText('The campaign “Deleting Test Campaign” and its other sessions')
+    await expect(sessionDialog).toContainText('It goes to Recently deleted (under More) for a month.')
+    // No transcript is being made, so nothing is said about stopping one.
+    await expect(sessionDialog).not.toContainText('transcript')
+    await expect(sessionDialog.getByRole('button', { name: 'Cancel' })).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(sessionDialog).toHaveCount(0)
+    expect(await getRecord(page, 'sessions', session.id)).toBeTruthy()
+    await page.getByRole('button', { name: 'Delete session' }).click()
+    await sessionDialog.getByRole('button', { name: 'Delete session' }).click()
     await expect(toast(page)).toContainText('Session #1 “Deleting Test Session” deleted. It’s in More → Recently deleted.')
     expect(await getRecord(page, 'sessions', session.id)).toBeUndefined()
     await toast(page).getByRole('button', { name: 'Undo' }).click()
@@ -133,7 +162,17 @@ test('a session and a campaign go at once with Undo, which brings back the sessi
 
     await open(page, `${w}/c/${campaign.id}`)
     await page.getByText('Campaign settings').click()
+    const campaignDialog = page.getByRole('dialog', { name: 'Delete the campaign “Deleting Test Campaign”?' })
     await page.getByRole('button', { name: 'Delete campaign' }).click()
+    await expect(campaignDialog).toContainText('1 session, with its prep, notes and recaps')
+    await expect(campaignDialog).toContainText('Every page, map and file of the world')
+    await expect(campaignDialog.getByRole('button', { name: 'Cancel' })).toBeFocused()
+    await campaignDialog.getByRole('button', { name: 'Cancel' }).click()
+    await expect(campaignDialog).toHaveCount(0)
+    expect(await getRecord(page, 'campaigns', campaign.id)).toBeTruthy()
+    expect(await getRecord(page, 'sessions', session.id)).toBeTruthy()
+    await page.getByRole('button', { name: 'Delete campaign' }).click()
+    await campaignDialog.getByRole('button', { name: 'Delete campaign' }).click()
     await expect(toast(page)).toContainText('Campaign “Deleting Test Campaign” deleted, with its session. The world’s pages, maps and files are kept.')
     expect(await getRecord(page, 'campaigns', campaign.id)).toBeUndefined()
     expect(await getRecord(page, 'sessions', session.id)).toBeUndefined()
@@ -148,7 +187,7 @@ test('a session and a campaign go at once with Undo, which brings back the sessi
   }
 })
 
-test('a file goes at once with Undo, and comes back', async ({ page, world }) => {
+test('a file asks first, then goes with Undo, and comes back', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   const ok = noBrowserBoxes(page)
   await open(page, `${w}/assets`)
@@ -158,7 +197,16 @@ test('a file goes at once with Undo, and comes back', async ({ page, world }) =>
   const card = page.locator('.asset-card', { has: page.getByRole('button', { name: 'Delete deleting-test.png' }) })
   await expect(card).toBeVisible()
   try {
+    const dialog = page.getByRole('dialog', { name: 'Delete the file “deleting-test.png”?' })
     await card.getByRole('button', { name: 'Delete deleting-test.png' }).click()
+    await expect(dialog).toContainText('nothing in this world uses this file')
+    await expect(dialog).toContainText('It goes to Recently deleted (under More) for a month.')
+    await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused()
+    await dialog.getByRole('button', { name: 'Cancel' }).click()
+    await expect(dialog).toHaveCount(0)
+    await expect(card).toBeVisible()
+    await card.getByRole('button', { name: 'Delete deleting-test.png' }).click()
+    await dialog.getByRole('button', { name: 'Delete file' }).click()
     await expect(toast(page)).toContainText('“deleting-test.png” deleted. It’s in More → Recently deleted.')
     await expect(card).toHaveCount(0)
     await toast(page).getByRole('button', { name: 'Undo' }).click()
@@ -233,6 +281,48 @@ test('deleting a world asks in the app’s dialog: Cancel and Escape keep it, it
     await putBack(page, 'sessions', [[session.id, null]])
     await putBack(page, 'campaigns', [[campaign.id, null]])
     await putBack(page, 'entities', [[pageRow.id, null]])
+    await putBack(page, 'worlds', [[id, null]])
+  }
+})
+
+test('the name to type: curly or straight quotes and dashes both do, and a world with no name asks for the word “delete”', async ({ page, world }) => {
+  test.setTimeout(90_000)
+  await open(page, `/w/${world.slug}`)
+  const real = (await getRecord(page, 'worlds', world.id))!
+  const id = 'deleting-test-names'
+  // As a phone would have typed it: a curly apostrophe, curly quotes and a long dash.
+  const copy: Row = { ...real, id, name: 'Brayden’s “Test” World — two', example: undefined, cloud: undefined, slug: undefined }
+  const ok = noBrowserBoxes(page)
+  await putBack(page, 'worlds', [[id, copy]])
+  try {
+    await open(page, `/w/${id}/settings?tab=data`)
+    const button = page.getByRole('button', { name: 'Delete this world' })
+    const dialog = page.getByRole('dialog', { name: 'Delete the world “Brayden’s “Test” World — two”?' })
+    await button.click()
+    const del = dialog.getByRole('button', { name: 'Delete world' })
+    await expect(del).toBeDisabled()
+    // As a laptop types it: straight marks and a hyphen.
+    await dialog.getByRole('textbox').fill(`brayden's "test" world - two`)
+    await expect(del).toBeEnabled()
+    await dialog.getByRole('textbox').fill(`brayden's "test" world - tw`)
+    await expect(del).toBeDisabled()
+    await dialog.getByRole('button', { name: 'Cancel' }).click()
+    expect(await getRecord(page, 'worlds', id)).toBeTruthy()
+
+    // No name at all (only spaces): the button doesn't open by itself, it waits for the word "delete".
+    await putBack(page, 'worlds', [[id, { ...copy, name: '  ' }]])
+    await open(page, `/w/${id}/settings?tab=data`)
+    const unnamed = page.getByRole('dialog', { name: 'Delete this unnamed world?' })
+    await button.click()
+    await expect(unnamed).toContainText('This world has no name. To delete it, type the word: delete')
+    const delUnnamed = unnamed.getByRole('button', { name: 'Delete world' })
+    await expect(delUnnamed).toBeDisabled()
+    await unnamed.getByRole('textbox').fill('Delete')
+    await delUnnamed.click()
+    await expect.poll(() => here(page)).toBe('/')
+    expect(await getRecord(page, 'worlds', id)).toBeUndefined()
+    ok()
+  } finally {
     await putBack(page, 'worlds', [[id, null]])
   }
 })

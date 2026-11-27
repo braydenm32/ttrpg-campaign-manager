@@ -37,7 +37,7 @@ export function cardSummary(s: PrepScene, entities: Entity[], session: Session) 
     s.readAloud?.trim() && 'read-aloud text',
     present && (present <= 3 ? `with ${here.map(name).join(', ')}` : `${present} here`),
     s.soundIds?.length && `${s.soundIds.length} sound${s.soundIds.length === 1 ? '' : 's'}`,
-    s.encounterId && `fight: ${session.prep?.encounters.find((e) => e.id === s.encounterId)?.name ?? 'an encounter'}`,
+    s.encounterId && `fight: ${session.prep?.encounters.find((e) => e.id === s.encounterId)?.name ?? 'one you prepared'}`,
     s.show && 'show players',
     reveal && `reveal ${reveal}`,
   ].filter(Boolean)

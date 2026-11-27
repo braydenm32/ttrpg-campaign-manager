@@ -594,8 +594,14 @@ test('AssemblyAI’s copies go once nothing waits on them, “not found” count
 
     // Deleting the session deletes the copy it was waiting on, and the bin's copy no longer waits on it.
     await open(page, `${w}/s/${id}?tab=prep`)
-    // It goes at once, with Undo (no "are you sure?" first).
+    // It asks first, in the app's own dialog, and says the transcript still being made would be stopped.
+    // Nothing is stopped until the GM says yes.
     await page.getByRole('button', { name: 'Delete session' }).click()
+    const ask = page.getByRole('dialog', { name: /^Delete session #98/ })
+    await expect(ask).toContainText('1 recording')
+    await expect(ask).toContainText('A transcript still being made is stopped, and would need making again.')
+    expect(deleted).not.toContain('job-waiting')
+    await ask.getByRole('button', { name: 'Delete session' }).click()
     await expect.poll(() => deleted.includes('job-waiting')).toBe(true)
     await expect.poll(noted).not.toContain('job-waiting')
     const binned = await page.evaluate(

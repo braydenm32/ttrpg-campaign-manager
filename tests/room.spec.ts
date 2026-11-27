@@ -161,6 +161,13 @@ test('Table rules: from the foot of Now and from the frame', async ({ page, worl
   await expect.poll(() => here(page)).toBe(`${w}/safety`)
 })
 
+test('Notes: the downtime card is called Downtime, whether or not you have a character', async ({ page, world }) => {
+  await open(page, `/w/${world.slug}?tab=notes`)
+  const card = page.locator('#downtime')
+  await expect(card.getByRole('heading')).toContainText('Downtime')
+  await expect(card).not.toContainText('Between sessions')
+})
+
 test('Me: previewing as one character shows them, and nothing GM-only', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   await open(page, `${w}?tab=me`)

@@ -131,6 +131,13 @@ const startsWord = (text: string, q: string) => {
   return false
 }
 
+/** Other words for a kind of page in "new …": what its button says, and what it used to be called. */
+const NEW_WORDS: Partial<Record<Entity['type'], string[]>> = {
+  npc: ['person', 'character'],
+  location: ['location'],
+  shop: ['tavern', 'inn'],
+}
+
 /** Things to do rather than pages to open: "new npc", "clocks", "settings"… */
 function commandHits(
   query: string,
@@ -152,9 +159,11 @@ function commandHits(
       ...(world?.customTypes ?? []).map((c) => ['custom', c.id, c.one] as [Entity['type'], string, string]),
     ]
     for (const [type, custom, one] of types) {
-      const name = one.toLowerCase()
-      if (want && !name.includes(want) && !(type === 'npc' && 'npc person character'.includes(want)) && !(type === 'location' && 'location'.includes(want))) continue
-      if (!wantsNew && !name.startsWith(q)) continue
+      // Its name, and the other words a GM might type for it ("new tavern", "location", "person").
+      const words = [one.toLowerCase(), ...(custom ? [] : (NEW_WORDS[type] ?? []))]
+      if (want && !words.some((w) => w.includes(want))) continue
+      // Without "new", the start of its name is enough; another word for it needs three letters ("in" isn't asking for an inn).
+      if (!wantsNew && !words.some((w, i) => w.startsWith(q) && (i === 0 || q.length > 2))) continue
       hits.push({ key: `new:${type}:${custom ?? ''}`, to: '', icon: '+', node: <Ico as={Plus} />, title: `New ${newWord(one, type)}`, snippet: 'Make a new page', score: wantsNew ? 120 : 55, run: () => create(type, custom) })
     }
   }

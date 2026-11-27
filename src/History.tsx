@@ -175,7 +175,9 @@ export function RecentlyDeleted() {
                     className="small"
                     title={b.kind === 'conflict' ? 'Use the other device’s version of these parts instead of this one' : undefined}
                     onClick={async () => {
-                      if ((await restoreFromBin(b.id)) === 'no map') toast('That pin’s map is deleted too. Restore the map first, then the pin.')
+                      const said = await restoreFromBin(b.id)
+                      if (said === 'no map') toast('That pin’s map is in Recently deleted too. Restore the map first, then the pin.')
+                      if (said === 'map gone') toast('That pin’s map was deleted for good, so the pin can’t go back on it.')
                     }}
                   >
                     {b.kind === 'conflict' ? 'Use this version' : 'Restore'}

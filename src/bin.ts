@@ -157,15 +157,21 @@ export async function binRemovedElsewhere(worldId: string, removed: Removed[]) {
 }
 
 /**
- * Puts a bin item back. A pin whose map is itself in the bin can't go back on its own: it says
- * "no map" (restore the map first) and nothing changes.
+ * Puts a bin item back. A pin whose map is gone can't go back on its own, and nothing changes: it
+ * says "no map" when the map is in the bin too (restore the map first), or "map gone" when the map
+ * was deleted for good.
  */
-export async function restoreFromBin(id: string): Promise<'no map' | void> {
+export async function restoreFromBin(id: string): Promise<'no map' | 'map gone' | void> {
   const item = await db.bin.get(id)
   if (!item) return
   if (item.kind === 'pin') {
     const mapIds = item.rows.flatMap((r) => (r.table === 'pins' ? (r.rows as Pin[]).map((p) => p.mapId) : []))
-    if ((await db.maps.bulkGet(mapIds)).some((m) => !m)) return 'no map'
+    const maps = await db.maps.bulkGet(mapIds)
+    const missing = mapIds.filter((_, i) => !maps[i])
+    if (missing.length) {
+      const binned = new Set((await db.bin.where({ worldId: item.worldId }).toArray()).flatMap((b) => b.rows.flatMap((r) => (r.table === 'maps' ? (r.rows as WorldMap[]).map((m) => m.id) : []))))
+      return missing.every((m) => binned.has(m)) ? 'no map' : 'map gone'
+    }
   }
   await db.transaction('rw', BIN_TABLES, async () => {
     // Another device's version kept after a clash: only the parts that clashed go back, on top of the row as it is now.

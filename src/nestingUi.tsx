@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CaretDown, CaretRight } from '@phosphor-icons/react'
-import { blankEntity, typeLabel, type Entity, type World } from './db'
+import { blankEntity, newWord, typeLabel, type Entity, type World } from './db'
 import { Help } from './help'
 import { Ico, TypeIcon } from './icons'
 import { PagePicker } from './PagePicker'
@@ -18,7 +18,7 @@ import { isPartOf, isPlace, placeAbove, sameKind, withBelow } from './nesting'
  * "Located in" (a place). Both set the one `parentId`, so a page that is part of another sits where
  * that one sits, and the box says so.
  */
-export function ParentFields({ d, opened, entities, world, onPick }: { d: Entity; opened: Entity; entities: Entity[]; world?: World | null; onPick: (id: string | undefined) => void }) {
+export function ParentFields({ d, opened, entities, onPick }: { d: Entity; opened: Entity; entities: Entity[]; onPick: (id: string | undefined) => void }) {
   // A page can't go under itself or under anything below it, so it can never loop.
   const below = withBelow(d.id, entities)
   const byId = new Map(entities.map((x) => [x.id, x]))
@@ -33,7 +33,6 @@ export function ParentFields({ d, opened, entities, world, onPick }: { d: Entity
         <PagePicker entities={keep(places)} value={d.parentId ?? ''} onPick={(id) => onPick(id || undefined)} placeholder="(none): type a place…" label="Inside" recent />
       </label>
     )
-  const label = typeLabel(d, world)
   const kin = entities.filter((x) => sameKind(x, d) && !below.has(x.id))
   const partOf = current && isPartOf(current, d) ? current : undefined
   const where = d.type === 'event' ? 'Where it happened' : 'Located in'
@@ -49,7 +48,7 @@ export function ParentFields({ d, opened, entities, world, onPick }: { d: Entity
           entities={kin}
           value={partOf?.id ?? ''}
           onPick={(id) => onPick(id || (was && !isPartOf(was, d) ? was.id : undefined))}
-          placeholder={`(none): type a ${label.one.toLowerCase()}…`}
+          placeholder="(none): type a name…"
           label="Part of"
           recent
         />
@@ -75,6 +74,8 @@ export function ParentFields({ d, opened, entities, world, onPick }: { d: Entity
 export function UnderIt({ page, kids, branch, world, isGM, worldId }: { page: Entity; kids: Entity[]; branch: Entity[]; world?: World | null; isGM: boolean; worldId: string }) {
   const navigate = useNavigate()
   const label = typeLabel(page, world)
+  // The word the "+ New" buttons use everywhere ("person" for an NPC, never "npc").
+  const word = newWord(label.one, page.type)
   // People under people are rare: the button waits until someone is there (Part of still works).
   const offer = isGM && !page.template && world && (kids.length > 0 || (page.type !== 'npc' && page.type !== 'pc'))
   if (!kids.length && !offer) return null
@@ -87,7 +88,7 @@ export function UnderIt({ page, kids, branch, world, isGM, worldId }: { page: En
     return (
       <p className="row add-under">
         <button type="button" className="ghost" onClick={start}>
-          + New {label.one.toLowerCase()} under it
+          + New {word} under it
         </button>
       </p>
     )
@@ -100,7 +101,7 @@ export function UnderIt({ page, kids, branch, world, isGM, worldId }: { page: En
       <PageTree worldId={worldId} entities={branch} isGM={isGM} roots={new Set(kids.map((k) => k.id))} />
       {offer && (
         <button type="button" className="ghost" onClick={start}>
-          + New {label.one.toLowerCase()} under it
+          + New {word} under it
         </button>
       )}
     </section>

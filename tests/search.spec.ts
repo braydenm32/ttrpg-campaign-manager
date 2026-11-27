@@ -125,6 +125,19 @@ test.describe('GM view', () => {
     await expect.poll(() => here(page)).toBe(`/w/${world.slug}/maps/${world.map('Cinderford').id}`)
   })
 
+  test('“new tavern” still offers a new shop, and “location” a new place, after the renames', async ({ page, world, device }) => {
+    await find(page, device, world, 'new tavern', 'New shop')
+    const box = page.getByRole('dialog', { name: 'Search' }).getByRole('textbox')
+    await box.fill('location')
+    await expect(result(page, 'New place')).toBeVisible()
+    await box.fill('person')
+    await expect(result(page, 'New person')).toBeVisible()
+    // Two letters of another word for it aren't enough: "in" isn't asking for an inn.
+    await box.fill('in')
+    await expect(page.getByRole('dialog', { name: 'Search' }).locator('.search-results')).toBeVisible()
+    await expect(result(page, 'New shop')).toHaveCount(0)
+  })
+
   test('“new npc” makes a new NPC page (and Cancel removes it again)', async ({ page, world, device }) => {
     await (await find(page, device, world, 'new npc', 'New person')).click()
     await expect.poll(() => here(page)).toMatch(new RegExp(`^/w/${world.slug}/p/[^/?]+\\?edit=1&new=1$`))

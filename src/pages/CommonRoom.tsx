@@ -1007,7 +1007,7 @@ function NotesTab({ ctx }: { ctx: RoomContext }) {
         {memberOf && mine.length > 0 && wasThere.length === 0 ? (
           <section className="card room-card">
             <h2 className="room-card-title">
-              <Ico as={Hourglass} /> Between sessions <Help topic="downtime" />
+              <Ico as={Hourglass} /> Downtime <Help topic="downtime" />
             </h2>
             <p className="muted small">Your GM noted that {mine.map((c) => c.name.split(' ')[0]).join(' and ')} wasn’t at the last session, so there’s no downtime to send this time.</p>
           </section>
@@ -1016,7 +1016,7 @@ function NotesTab({ ctx }: { ctx: RoomContext }) {
         ) : (
           <section className="card room-card">
             <h2 className="room-card-title">
-              <Ico as={Hourglass} /> Between sessions <Help topic="downtime" />
+              <Ico as={Hourglass} /> Downtime <Help topic="downtime" />
             </h2>
             <p className="muted small">{memberOf ? 'Once you have a character, tell your GM here what they do between sessions.' : 'Players tell their GM here what their character does between sessions.'}</p>
           </section>
