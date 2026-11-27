@@ -1,4 +1,4 @@
-import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, LIFE_STATUS, newId, saveEntity, THREAD_STATUS, type Entity, type EntityType, type LedgerEntry, type LifeStatus, type Session, type World, type WorldUpdate } from '../db'
+import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, LIFE_STATUS, newId, newWord, saveEntity, THREAD_STATUS, type Entity, type EntityType, type LedgerEntry, type LifeStatus, type Session, type World, type WorldUpdate } from '../db'
 import { nameIndex } from '../links'
 import { gmBlock } from '../Markdown'
 import { RELATION_KINDS } from '../relations'
@@ -191,7 +191,7 @@ export function namesIn(u: WorldUpdate): string[] {
 export function describe(u: WorldUpdate): string {
   switch (u.kind) {
     case 'new':
-      return `New ${u.type === 'npc' ? 'NPC' : (ENTITY_LABELS[u.type]?.one.toLowerCase() ?? u.type)}: ${u.name}${u.summary ? `, ${u.summary}` : ''}`
+      return `New ${newWord(ENTITY_LABELS[u.type]?.one ?? u.type, u.type)}: ${u.name}${u.summary ? `, ${u.summary}` : ''}`
     case 'note':
       return `${u.page}: ${u.note}`
     case 'quest':
