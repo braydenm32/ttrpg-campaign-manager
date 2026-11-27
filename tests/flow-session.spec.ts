@@ -15,7 +15,10 @@ import { readDatabase } from './lib/world'
  * - What the party is given at the Lectern is in the players' Party loot at once, unless "Keep it
  *   secret" is ticked.
  * - A session has two notes boxes, Plan and What happened; notes from before the change show under
- *   Plan; and What happened never reaches a player.
+ *   Plan (a session being played when the app updated has tonight's lines moved to What happened);
+ *   and neither shows in the player view on the GM's device. What real players get is decided on
+ *   the server (player_view builds a session from a list of safe fields), which the pretend cloud
+ *   doesn't copy, so that part isn't tested here.
  *
  * Going live needs players, so those tests make a small world of their own in a fresh browser
  * profile and talk to the pretend cloud (tests/lib/cloud.ts). The rest use the example world and
@@ -191,6 +194,12 @@ test.describe('with players (the pretend cloud)', () => {
     await expect.poll(() => here(page)).toBe(`${w}/s/flow-s1?end=1`)
     await untouched()
 
+    // All sessions' "Next session" card.
+    await open(page, `${w}/c/flow-campaign`)
+    await page.locator('.next-up').getByRole('link', { name: 'Wrap up' }).click()
+    await expect.poll(() => here(page)).toBe(`${w}/s/flow-s1?tab=notes`)
+    await untouched()
+
     // The Session tab.
     await open(page, `${w}/s/flow-s1?tab=prep`)
     await page.getByRole('navigation', { name: 'Session', exact: true }).getByRole('link', { name: 'Wrap up' }).click()
@@ -222,6 +231,36 @@ test.describe('with players (the pretend cloud)', () => {
     await expect.poll(async () => ((await world())?.showing as { title: string } | null)?.title ?? null).toBe('The pay notice')
     await expect.poll(async () => !!(await world())?.gameTime).toBe(true)
     await expect(first).toContainText('End the live session')
+  })
+
+  test('“Not started after all” puts back the session that was live before; on another tab Wrap up says it went live there', async ({ browser, device }) => {
+    const { page, w, wid, liveNow } = await sharedWorld(browser, device)
+    await putRows(page, 'sessions', [sessionRow(wid, { id: 'flow-s2', number: 2, title: 'The Long Ford', notes: 'Flowplan for two.' })])
+    // Session #2 is live in this tab (as the Lectern's own switch leaves it).
+    await page.evaluate(([k, v]) => sessionStorage.setItem(k, v), [`codex.liveSession.${wid}`, 'flow-s2'])
+    await open(page, `${w}/s/flow-s1?tab=prep`)
+    await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+    await expect(startBox(page)).toContainText('#2 The Long Ford is live now; this one takes its place.')
+    await startBox(page).getByRole('button', { name: 'Start playing' }).click()
+    await expect.poll(liveNow).toBe('flow-s1')
+    await toast(page).getByRole('button', { name: 'Not started after all' }).click()
+    await expect.poll(async () => (await getRecord(page, 'sessions', 'flow-s1'))?.startedAt ?? null).toBeNull()
+    await expect.poll(liveNow).toBe('flow-s2')
+
+    // Started and live again here; another tab (as good as another device) doesn't hold the live link.
+    await open(page, `${w}/s/flow-s1?tab=prep`)
+    await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+    await startBox(page).getByRole('button', { name: 'Start playing' }).click()
+    await expect.poll(liveNow).toBe('flow-s1')
+    const other = await context.newPage()
+    await open(other, `${w}/s/flow-s1?end=1`)
+    const first = other.locator('#finish .end-steps > li').first()
+    await expect(first).toContainText('Live from another device')
+    await expect(first).not.toContainText('has ended')
+    await expect(first).not.toHaveClass(/done/)
+    // Not counted against the GM: the line at the top doesn't name it as what's next.
+    await expect(other.locator('.wrap-progress')).not.toContainText('another device')
+    await other.close()
   })
 })
 
@@ -289,6 +328,17 @@ test('loot given at the Lectern is in the player’s Party loot at once; “Keep
   await open(page, w)
   const before = await getRecord(page, 'sessions', s1.id)
   const hidden = world.dump.entities.find((e) => e.visibility === 'gm' && !e.template && /^[A-Za-z]{5,}( [A-Za-z]+)*$/.test(e.name))!
+  // A page players can see, with no nicknames, whose name has no other page's name or nickname in it.
+  const names = (e: { name: string; aliases?: string[] }) => [e.name, ...(e.aliases ?? [])].map((n) => n.trim().toLowerCase()).filter((n) => n.length >= 3)
+  const visible = world.dump.entities.find(
+    (e) =>
+      e.visibility === 'players' &&
+      !e.template &&
+      !e.aliases?.length &&
+      /^[A-Za-z]{5,}( [A-Za-z]+)*$/.test(e.name) &&
+      world.dump.entities.every((x) => x.id === e.id || !names(x).some((n) => `flowtest gift for ${e.name.toLowerCase()}`.includes(n))),
+  )!
+  const visibleBefore = await getRecord(page, 'entities', visible.id)
   const made = async (name: string) => (await readDatabase(page)).entities.find((e) => e.name === name) as (Row & { visibility: string; heldBy?: string }) | undefined
   /** What a player reads on Party loot, in a tab of their own. */
   const playerLoot = async () => {
@@ -357,15 +407,40 @@ test('loot given at the Lectern is in the player’s Party loot at once; “Keep
     await panel.getByRole('button', { name: 'Give to the party' }).click()
     const ask = page.getByRole('dialog', { name: `Give “${risky}” to the party?` })
     await expect(ask).toContainText(hidden.name)
-    await expect(ask).toContainText('GM-only page')
+    await expect(ask).toContainText('GM-only name')
     expect(await made(risky)).toBeUndefined()
     await shot(page, `loot-ask-${device}`)
     await ask.getByRole('button', { name: 'Keep it secret' }).click()
     await expect(toast(page)).toContainText('kept secret')
     expect((await made(risky))!.visibility).toBe('gm')
+
+    // In other capitals it is the same name, and asks the same way.
+    const shouted = `Flowtest seal of ${hidden.name.toUpperCase()}`
+    await name.fill(shouted)
+    await panel.getByRole('button', { name: 'Give to the party' }).click()
+    const ask2 = page.getByRole('dialog', { name: `Give “${shouted}” to the party?` })
+    await expect(ask2).toContainText(hidden.name)
+    await ask2.getByRole('button', { name: 'Keep it secret' }).click()
+    expect((await made(shouted))!.visibility).toBe('gm')
+
+    // A nickname is GM only even on a page players can see: it asks too, and names whose nickname it is.
+    await patchRecord(page, 'entities', visible.id, { aliases: [...(visible.aliases ?? []), 'Hollowcrown Varr'] })
+    const nick = 'Flowtest mask of the HOLLOWCROWN varr'
+    await name.fill(nick)
+    await panel.getByRole('button', { name: 'Give to the party' }).click()
+    const ask3 = page.getByRole('dialog', { name: `Give “${nick}” to the party?` })
+    await expect(ask3).toContainText(`Hollowcrown Varr (a nickname of ${visible.name})`)
+    await ask3.getByRole('button', { name: 'Give it, players can see it' }).click()
+    expect((await made(nick))!.visibility).toBe('players')
+    // The visible page's own name is no secret: giving something named after it doesn't ask.
+    const plain = `Flowtest gift for ${visible.name}`
+    await name.fill(plain)
+    await panel.getByRole('button', { name: 'Give to the party' }).click()
+    await expect(toast(page)).toContainText(`“${plain}” given to the party. Players can see it`)
+    await expect(page.getByRole('dialog', { name: `Give “${plain}” to the party?` })).toHaveCount(0)
   } finally {
     const mine = (await readDatabase(page)).entities.filter((e) => e.name.startsWith('Flowtest '))
-    await putBack(page, 'entities', mine.map((e) => [e.id, null] as [string, null]))
+    await putBack(page, 'entities', [...mine.map((e) => [e.id, null] as [string, null]), [visible.id, visibleBefore]])
     await putBack(page, 'sessions', [[s1.id, before]])
   }
 })
@@ -411,7 +486,7 @@ test('two notes boxes: Plan before the game, What happened at the table, and the
   }
 })
 
-test('“What happened” and the Plan never reach a player: not on the session, in print or in search', async ({ page, world, device }) => {
+test('“What happened” and the Plan stay out of the player view on the GM’s device: the session, print and search', async ({ page, world, device }) => {
   const w = `/w/${world.slug}`
   const s1 = world.session(1)
   await open(page, w)
@@ -480,6 +555,7 @@ test.describe('a world from before the two notes boxes', () => {
     await page.goto('/terms.html')
     const olds = [
       sessionRow(row.id, { id: 'old-1', number: 1, title: 'Before the change', notes: 'Flowold notes written before the two boxes.' }),
+      // Being played when the app updated: started the old way (its notes at the start kept beside it).
       sessionRow(row.id, {
         id: 'old-2',
         number: 2,
@@ -487,6 +563,27 @@ test.describe('a world from before the two notes boxes', () => {
         notes: 'Flowold plan for night two.\n\nFlowold typed at the table.',
         startedAt: Date.now() - 1000,
         playStart: { notes: 'Flowold plan for night two.', entityIds: [] },
+      }),
+      // Played in the one box, never started: its notes were what happened.
+      sessionRow(row.id, { id: 'old-3', number: 3, title: 'Played in one box', notes: 'Flowold the bridge fell.', startedAt: Date.now() - 5000, playedAt: Date.now() - 4000 }),
+      // Started the old way and played: left exactly as it was.
+      sessionRow(row.id, {
+        id: 'old-4',
+        number: 4,
+        title: 'Played the old way',
+        notes: 'Flowold plan four.\n\nFlowold four happened.',
+        startedAt: Date.now() - 3000,
+        playedAt: Date.now() - 2000,
+        playStart: { notes: 'Flowold plan four.', entityIds: [] },
+      }),
+      // Being played, but the start of its notes was changed since: can't be split, so left as it was.
+      sessionRow(row.id, {
+        id: 'old-5',
+        number: 5,
+        title: 'Plan changed in play',
+        notes: 'Flowold a new plan.\n\nFlowold five typed.',
+        startedAt: Date.now() - 1000,
+        playStart: { notes: 'Flowold the old plan.', entityIds: [] },
       }),
     ]
     const was = await page.evaluate(
@@ -575,9 +672,35 @@ test.describe('a world from before the two notes boxes', () => {
     await expect(page.locator('#plan-notes')).toContainText('Flowold notes written before the two boxes.')
     await shot(page, `notes-old-${device}`)
 
-    // A session started before the change: what was typed after the start still counts as what happened.
+    // Being played when the app updated: what was typed after the start moved to What happened,
+    // and the Plan is as it was at the start.
+    const split = (await getRecord(page, 'sessions', 'old-2'))!
+    expect(split.notes).toBe('Flowold plan for night two.')
+    expect(split.happened).toBe('Flowold typed at the table.')
+    expect((split.playStart as { notes?: string; entityIds: string[] }).notes).toBeUndefined()
+    expect(split.startedAt).toBeTruthy()
     await open(page, `${w}/s/old-2?end=1`)
+    await expect(page.locator('#notes')).toContainText('Flowold typed at the table.')
+    await expect(page.locator('#plan-notes')).toContainText('Flowold plan for night two.')
+    await expect(page.locator('#plan-notes')).not.toContainText('Flowold typed')
     await expect(page.locator('#finish .end-steps')).toContainText('What happened is written down')
-    expect((await getRecord(page, 'sessions', 'old-2'))?.notes).toBe('Flowold plan for night two.\n\nFlowold typed at the table.')
+
+    // Played in one box: nothing moved, its notes still show under Plan, and they count as what happened.
+    const one = (await getRecord(page, 'sessions', 'old-3'))!
+    expect(one.notes).toBe('Flowold the bridge fell.')
+    expect(one.happened).toBeUndefined()
+    await open(page, `${w}/s/old-3?end=1`)
+    await expect(page.locator('#plan-notes')).toContainText('Flowold the bridge fell.')
+    await expect(page.locator('#finish .end-steps')).toContainText('What happened is written down')
+
+    // Played the old way, and a plan changed in play: both left exactly as they were.
+    const four = (await getRecord(page, 'sessions', 'old-4'))!
+    expect(four.notes).toBe('Flowold plan four.\n\nFlowold four happened.')
+    expect(four.happened).toBeUndefined()
+    expect(four.playStart).toEqual({ notes: 'Flowold plan four.', entityIds: [] })
+    const five = (await getRecord(page, 'sessions', 'old-5'))!
+    expect(five.notes).toBe('Flowold a new plan.\n\nFlowold five typed.')
+    expect(five.happened).toBeUndefined()
+    expect(five.playStart).toEqual({ notes: 'Flowold the old plan.', entityIds: [] })
   })
 })
