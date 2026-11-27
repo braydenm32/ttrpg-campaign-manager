@@ -6,6 +6,7 @@ import { Help } from '../help'
 import { Ico } from '../icons'
 import { splitSecrets } from '../Markdown'
 import { plainLinks } from '../text'
+import { sessionsBefore } from '../sessions'
 import { getAiSettings, setAiSettings, useAiSettings } from './settings'
 
 /**
@@ -155,10 +156,7 @@ export function VoiceSettings() {
 /** In the Lectern: read the last session's player recap to the table. */
 export function PreviouslyOn({ session }: { session: Session }) {
   const last = useLiveQuery(
-    async () =>
-      (await db.sessions.where({ worldId: session.worldId }).toArray())
-        .filter((s) => s.campaignId === session.campaignId && s.number < session.number && s.recap.trim())
-        .sort((a, b) => b.number - a.number)[0],
+    async () => sessionsBefore(await db.sessions.where({ worldId: session.worldId }).toArray(), session).find((s) => s.recap.trim()),
     [session.worldId, session.campaignId, session.number],
   )
   if (!last) return null

@@ -1659,7 +1659,7 @@ textarea.read-text:hover { border-color: var(--border); border-left-color: var(-
 .jump-row button { flex: none; min-height: 44px; border-radius: 999px; padding: 0 1em; background: var(--panel-2); border-color: transparent; font-weight: 500; }
 .jump-row button.on { background: var(--accent); color: var(--accent-ink); }
 .jump-row.phone-only { display: none; }
-:is(#plan, #scenes, #clues, #fights, #people, #details, #notes, #recording, #writeup, #recap, #highlights, #finish, #threads) { scroll-margin-top: calc(var(--topbar-h) + 4.5em); }
+:is(#last-time, #plan, #scenes, #clues, #fights, #people, #details, #notes, #recording, #writeup, #recap, #highlights, #finish, #threads) { scroll-margin-top: calc(var(--topbar-h) + 4.5em); }
 
 @media (max-width: 1000px) {
   .prep-plan { grid-template-columns: minmax(0, 1fr); }
@@ -1675,8 +1675,22 @@ textarea.read-text:hover { border-color: var(--border); border-left-color: var(-
   .featured-chips .tag a { min-height: 44px; display: inline-flex; align-items: center; }
   .featured-chips .tag button { min-width: 44px; min-height: 44px; }
   .finish-row .primary { flex: 1 1 100%; justify-content: center; }
+  .last-recap.folded { max-height: 9em; }
+  .last-time :is(.last-open, .last-write, .last-others > summary) { min-height: 44px; display: inline-flex; align-items: center; }
+  .last-time .last-open { min-width: 44px; justify-content: center; }
+  .last-others > summary { display: flex; }
 }
 .notes-view { font-size: .95rem; }
+/* Last time, at the top of Prepare: last session's recap (its first lines, the rest a tap away) and its awards. */
+.session-page > .last-time { margin: 0 0 1em; }
+.last-time h3 { font-size: .95rem; margin-top: .3em; }
+.last-time .last-which { margin-top: -.3em; }
+.last-recap { font-size: .95rem; max-width: 75ch; }
+.last-recap p { margin: 0 0 .7em; color: var(--text); font-size: inherit; line-height: 1.55; }
+.last-recap.folded { max-height: 11em; overflow: hidden; }
+.last-recap.folded.tall { -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
+.last-time .last-write { align-self: flex-start; }
+.last-others > summary { margin: 0; }
 .notes-view.folded { max-height: 22em; overflow: hidden; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
 .end-steps button.link, .session-page button.link { white-space: normal; text-align: left; }
 #gm-notes { scroll-margin-top: calc(var(--topbar-h) + 4.5em); }

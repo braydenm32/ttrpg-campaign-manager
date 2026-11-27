@@ -49,8 +49,8 @@ export function parseHighlights(text: string): SessionHighlight[] {
   return out.slice(0, 12)
 }
 
-/** One highlight, as players see it. */
-function HighlightLine({ h, entities, worldId }: { h: SessionHighlight; entities: Entity[]; worldId: string }) {
+/** One highlight, as players see it (also in “Last time” on the next session’s Prepare, src/lastTime.tsx). */
+export function HighlightLine({ h, entities, worldId }: { h: SessionHighlight; entities: Entity[]; worldId: string }) {
   return (
     <>
       <span className={`highlight-kind ${h.kind}`} title={KIND_LABELS[h.kind]}>
