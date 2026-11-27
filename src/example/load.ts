@@ -177,7 +177,7 @@ async function addExample(content: ExampleContent, drawArt: DrawArt): Promise<st
       title: s.title,
       date: '',
       notes: s.notes,
-      ...(s.happened ? { happened: s.happened } : {}),
+      happened: s.happened ?? '',
       recap: s.recap ?? '',
       visibility: s.players ? 'players' : 'gm',
       entityIds: (s.pages ?? []).map((k) => ref(k)!),

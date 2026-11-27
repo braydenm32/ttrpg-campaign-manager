@@ -910,7 +910,8 @@ export interface Session {
   notes: string
   /**
    * "What happened": the GM's notes during and after the game (Markdown): the Lectern's notes and
-   * quick notes go here. Unset on sessions from before there were two boxes. GM-only (player_view
+   * quick notes go here. Unset on sessions from before there were two boxes (src/sessions.ts,
+   * notesFromPlay); new sessions start with it empty. GM-only (player_view
    * sends sessions from a list of player-safe fields, which leaves it out).
    */
   happened?: string
@@ -1428,12 +1429,28 @@ db.version(10).stores({
 })
 
 // v11: a session's notes are two boxes, "Plan" (Session.notes, as before) and "What happened"
-// (Session.happened, new and not indexed). Existing notes stay in Plan, so nothing moves: the
-// upgrade is here only so the change of shape is recorded. A session also notes when it last went
-// live to players (Session.liveAt, not indexed either), for Wrap up's "End the live session" step.
+// (Session.happened, new and not indexed). Existing notes stay in Plan, with one exception: a
+// session being played right now (started, not yet marked played) whose notes still begin with the
+// copy kept at its start (playStart.notes). What was typed after the start is what happened tonight,
+// so it moves to What happened and the Plan goes back to how it was at the start. Played sessions
+// are left as they are. A session also notes when it last went live to players (Session.liveAt, not
+// indexed either), for Wrap up's "End the live session" step.
 db.version(11)
   .stores({})
-  .upgrade(() => {})
+  .upgrade((tx) =>
+    tx
+      .table('sessions')
+      .toCollection()
+      .modify((s: Session) => {
+        const before = s.playStart?.notes
+        if (!s.startedAt || s.playedAt || typeof before !== 'string' || typeof s.notes !== 'string' || !s.notes.startsWith(before)) return
+        const tail = s.notes.slice(before.length).trim()
+        const was = s.happened?.trim() ?? ''
+        s.happened = [tail, was].filter(Boolean).join('\n\n')
+        s.notes = before
+        delete s.playStart!.notes
+      }),
+  )
 
 // The bin is cleared of anything over a month old soon after the app opens, not only when it's
 // looked at, so deleting a big recording to make room does give the space back in time.

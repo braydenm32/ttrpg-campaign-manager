@@ -79,6 +79,8 @@ export async function createNextSession(worldId: string, campaignId: string, dat
     title: `Session ${number}`,
     date,
     notes: '',
+    // Set from the start, so the session never counts as one from before the two boxes (notesFromPlay).
+    happened: '',
     recap: '',
     visibility: 'gm',
     entityIds: [],
@@ -240,11 +242,20 @@ export function featuredInPlay(s: Pick<Session, 'entityIds' | 'lectern' | 'start
 }
 
 /**
+ * A session played before there were two notes boxes, and never started: its one box was the record
+ * of what happened, so that is what its notes count as (they still show under Plan). Sessions made
+ * since always have a "What happened" (empty to begin with), so they never count as this.
+ */
+const playedInOneBox = (s: Pick<Session, 'happened' | 'playedAt' | 'playStart'>) => !!s.playedAt && !s.playStart && s.happened === undefined
+
+/**
  * What the GM wrote about what happened: the "What happened" box. A session started before there
  * were two boxes kept everything in one, with a copy of it as it was at the start (playStart.notes):
- * what was typed after that counts too (all of it, if the start of it was changed since).
+ * what was typed after that counts too (all of it, if the start of it was changed since). A session
+ * played in one box before that (see playedInOneBox) counts all its notes.
  */
-export function notesFromPlay(s: Pick<Session, 'notes' | 'happened' | 'startedAt' | 'playStart'>) {
+export function notesFromPlay(s: Pick<Session, 'notes' | 'happened' | 'startedAt' | 'playedAt' | 'playStart'>) {
+  if (playedInOneBox(s)) return s.notes
   const before = s.playStart?.notes
   const old = s.startedAt && typeof before === 'string' ? (s.notes.startsWith(before) ? s.notes.slice(before.length) : s.notes) : ''
   return [old.trim(), s.happened?.trim() ?? ''].filter(Boolean).join('\n\n')
@@ -252,9 +263,11 @@ export function notesFromPlay(s: Pick<Session, 'notes' | 'happened' | 'startedAt
 
 /**
  * The plan written before the game: the "Plan" box. On a session started before there were two
- * boxes, only what was there at the start (the rest counts as what happened, see notesFromPlay).
+ * boxes, only what was there at the start (the rest counts as what happened, see notesFromPlay);
+ * on one played in one box before that, none (it was all what happened).
  */
-export function planNotes(s: Pick<Session, 'notes' | 'startedAt' | 'playStart'>) {
+export function planNotes(s: Pick<Session, 'notes' | 'happened' | 'startedAt' | 'playedAt' | 'playStart'>) {
+  if (playedInOneBox(s)) return ''
   const before = s.playStart?.notes
   if (!s.startedAt || typeof before !== 'string') return s.notes
   return s.notes.startsWith(before) ? before : ''
