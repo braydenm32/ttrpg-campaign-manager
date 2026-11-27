@@ -64,6 +64,7 @@ test('“Start playing” can be taken back, and a session whose date went by as
   const s1 = world.session(1)
   await open(page, `${w}/s/${s1.id}?tab=prep`)
   const before = await getRecord(page, 'sessions', s1.id)
+  const before2 = await getRecord(page, 'sessions', world.session(2).id)
   try {
     // A press by mistake: the note at the bottom takes it back, on the Lectern it opened.
     await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
@@ -87,8 +88,21 @@ test('“Start playing” can be taken back, and a session whose date went by as
     await expect(needs).toContainText('Did you play it?')
     await expect(needs.getByRole('button', { name: 'Yes, mark as played' })).toBeVisible()
     await expect(needs.getByRole('button', { name: 'Pick a new date' })).toBeVisible()
+
+    // "Yes" by mistake: Undo puts the question back, and the session isn't left "being played".
+    await needs.getByRole('button', { name: 'Yes, mark as played' }).click()
+    await expect(toast(page)).toContainText('#1 marked played')
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect(needs).toContainText('Did you play it?')
+    const after = await getRecord(page, 'sessions', s1.id)
+    expect(after?.startedAt ?? null).toBeNull()
+    expect(after?.playedAt ?? null).toBeNull()
+    expect((await getRecord(page, 'sessions', world.session(2).id))?.prep).toEqual(before2?.prep)
   } finally {
-    await putBack(page, 'sessions', [[s1.id, before]])
+    await putBack(page, 'sessions', [
+      [s1.id, before],
+      [world.session(2).id, before2],
+    ])
   }
 })
 

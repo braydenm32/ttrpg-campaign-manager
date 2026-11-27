@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { blankEntity, db, type Campaign, type Entity, type Session, type ThreadStatus } from './db'
 import { stripSecrets } from './Markdown'
 import { useViewMode } from './viewMode'
-import { isPlayed, localDate } from './sessions'
+import { inHand, isPlayed, localDate } from './sessions'
 
 /** The pages a thread involves: anything it [[links]] to, plus where it's located. */
 export function threadLinks(thread: Entity, entities: Entity[], showSecrets: boolean) {
@@ -64,11 +64,7 @@ export function nextSessions(campaigns: Campaign[], sessions: Session[], playing
     .filter((c) => c.status !== 'finished')
     .flatMap((c) => {
       const own = sessions.filter((s) => s.campaignId === c.id).sort((a, b) => a.number - b.number)
-      const next =
-        own.find((s) => underWay(s, live, today)) ??
-        own.find((s) => !!s.date && !isPlayed(s, today)) ??
-        own.find((s) => !isPlayed(s, today)) ??
-        own.at(-1)
+      const next = own.find((s) => underWay(s, live, today)) ?? inHand(own, today) ?? own.at(-1)
       return next ? [{ campaign: c, session: next, underWay: underWay(next, live, today) }] : []
     })
     .sort((a, b) => Number(b.underWay) - Number(a.underWay) || (a.session.date || '9999').localeCompare(b.session.date || '9999'))

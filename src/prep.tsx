@@ -518,7 +518,7 @@ export function LecternPrep({ session, world }: { session: Session; world: World
               </button>
             ))}
           </div>
-          {loaded.length > 0 && <div className="muted">Added to the fight. Tap again if you want another set.</div>}
+          {loaded.length > 0 && <div className="muted">Added to the fight. For a second set, tap it again and choose “Add another set”.</div>}
         </div>
       )}
     </LecternPanel>

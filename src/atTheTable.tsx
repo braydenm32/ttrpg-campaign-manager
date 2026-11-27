@@ -438,7 +438,7 @@ export function TimerWatcher({ worldId }: { worldId: string }) {
           if (rungTimers.has(t.key)) return
           rungTimers.add(t.key)
           beep()
-          toast(`Timer “${t.label || 'Timer'}”: time’s up.`)
+          toast(t.label ? `Timer “${t.label}”: time’s up.` : 'A timer has run out.')
         }, Math.max(0, t.endsAt - now)),
       )
     return () => waits.forEach(clearTimeout)

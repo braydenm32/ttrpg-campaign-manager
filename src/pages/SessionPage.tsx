@@ -444,9 +444,9 @@ function SessionDetails({ session, campaign, world, entities }: Omit<ViewProps, 
             title="Pressed Start playing by mistake? This puts the session back to being prepared. Nothing you wrote is lost."
             disabled={live?.sessionId === session.id}
             onClick={async () => {
-              const { startedAt, playStart } = session
+              const { startedAt, playStart, worldDate } = session
               await notStarted(session.id)
-              toast(`#${session.number} is not started any more.`, () => db.sessions.update(session.id, { startedAt, playStart }))
+              toast(`#${session.number} is not started any more.`, () => db.sessions.update(session.id, { startedAt, playStart, worldDate }))
             }}
           >
             Not started after all

@@ -16,7 +16,7 @@ import { BackupButton, useBackupDue, useRecordingsOnlyHere } from '../BackupRemi
 import WikiHome from './WikiHome'
 import CommonRoom, { ago } from './CommonRoom'
 import { showDate, upcoming } from '../players/Schedule'
-import { ClockFace, playersSeeClock } from '../clocks'
+import { ClockFace, clockReach } from '../clocks'
 import { approveClaimLater } from '../players/inboxActions'
 import { ClaimNameClash, ReviewCharacter } from '../players/NewCharacters'
 import type { CharacterRequest } from '../cloud/players'
@@ -754,9 +754,9 @@ function DeskClocks({ world, entities }: { world: World; entities: Entity[] }) {
               <span className="muted small">
                 {clock.filled} of {clockSize(clock)}
               </span>
-              {playersSeeClock(clock, owner) ? (
+              {clockReach(clock, owner) ? (
                 <span className="chip need-chip good">
-                  <Ico as={Eye} /> Players know
+                  <Ico as={Eye} /> {clockReach(clock, owner) === 'some' ? 'Some players know' : 'Players know'}
                 </span>
               ) : (
                 <span className="chip need-chip" title={clock.known ? `GM only until “${owner.name}” is revealed` : undefined}>

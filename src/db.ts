@@ -914,9 +914,10 @@ export interface Session {
   present?: string[]
   /**
    * What the session held when play began (the prep script in the GM notes, the pages already linked),
-   * so Wrap up can tell what happened in play from what was only planned. GM-only.
+   * so Wrap up can tell what happened in play from what was only planned. `datedWorld` says Start
+   * playing also gave the session its date in the world, so taking the start back takes that back too. GM-only.
    */
-  playStart?: { notes: string; entityIds: string[] }
+  playStart?: { notes: string; entityIds: string[]; datedWorld?: boolean }
   createdAt: number
 }
 

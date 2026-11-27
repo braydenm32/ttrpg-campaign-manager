@@ -695,8 +695,8 @@ export const TOOLS: NavTool[] = [
   { id: 'ruler', label: 'Ruler', icon: Ruler, to: (f) => w(f, 'maps'), who: own, where: 'Maps (open a map)', keywords: 'ruler measure distance scale' },
   { id: 'calendar', label: 'Calendar', icon: Hourglass, to: (f) => w(f, 'settings?at=calendar'), who: own, where: 'World settings', keywords: 'calendar date dates months weeks seasons weather climate' },
   // ——— Players, on their Now tab (the GM's turn order shows there while they run the game live) ———
-  { id: 'dice', label: 'Dice', icon: DiceFive, to: (f) => w(f), who: players, where: 'Now', keywords: 'dice roll roller d20' },
-  { id: 'turns', label: 'Turn order', icon: Armchair, to: (f) => w(f), who: players, where: 'Now', keywords: 'turn order initiative whose turn combat fight' },
+  { id: 'dice', label: 'Dice', icon: DiceFive, to: (f) => w(f), who: players, where: 'the Now tab', keywords: 'dice roll roller d20' },
+  { id: 'turns', label: 'Turn order', icon: Armchair, to: (f) => w(f), who: players, where: 'the Now tab', keywords: 'turn order initiative whose turn combat fight' },
 ]
 
 /** A "Go to" place for search. */

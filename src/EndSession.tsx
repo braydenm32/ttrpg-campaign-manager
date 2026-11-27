@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { WorldToday } from './calendar'
 import { db, type Campaign, type Entity, type Session, type World } from './db'
 import { Help } from './help'
-import { featuredInPlay, markPlayed, notesFromPlay, unmarkPlayed } from './sessions'
+import { featuredInPlay, inHand, markPlayed, notesFromPlay, unmarkPlayed } from './sessions'
 import { Ico } from './icons'
 import { CheckCircle, Eye, EyeSlash, FlagCheckered, ListChecks } from '@phosphor-icons/react'
 import { worldPath } from './paths'
@@ -52,17 +52,20 @@ export function useFinish(session: Session) {
     setBusy(true)
     try {
       // Players' Common Room stops showing this session as being played.
-      if (live === session.id) setLiveSession(session.worldId, undefined)
+      const wasLive = live === session.id
+      if (wasLive) setLiveSession(session.worldId, undefined)
       const { next, undo, carried } = await markPlayed(session)
       // The in-game clock stops with the session, so it hasn't run on for days by next time.
       const paused = await pauseGameClock(session.worldId)
       // The table is over: the last handout and the clock come off players' screens (Undo puts them back).
-      const unclear = await clearPlayersScreens(session.worldId)
+      // Not when the GM is only answering about a day gone by: what's up now belongs to another night.
+      const unclear = sure ? undefined : await clearPlayersScreens(session.worldId)
       const n = (count: number, one: string) => `${count} ${one}${count === 1 ? '' : 's'}`
       const brought = [carried.clues ? n(carried.clues, 'unfound clue') : '', carried.scenes ? n(carried.scenes, 'unplayed scene') : ''].filter(Boolean).join(' and ')
       toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}${brought ? `, with ${brought} carried over` : ''}.${unclear ? ' Players’ screens are clear.' : ''}${paused ? ' The in-game clock is paused.' : ''}`, async () => {
         await undo()
         await unclear?.()
+        if (wasLive) setLiveSession(session.worldId, session.id)
       })
     } finally {
       setBusy(false)
@@ -71,11 +74,11 @@ export function useFinish(session: Session) {
   return { finish, busy, blocked }
 }
 
-/** The session after this one in its campaign, if there is one yet. */
+/** The session that comes after this one is marked played (see inHand), if it's made yet. */
 export function useNextSession(session: Session) {
   return useLiveQuery(
-    async () => (await db.sessions.where({ campaignId: session.campaignId }).filter((s) => s.number > session.number).sortBy('number'))[0] ?? null,
-    [session.campaignId, session.number],
+    async () => inHand((await db.sessions.where({ campaignId: session.campaignId }).toArray()).filter((s) => s.id !== session.id)) ?? null,
+    [session.campaignId, session.id],
   )
 }
 
@@ -235,17 +238,17 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
     },
   ]
   if (world.calendar?.today) steps.push({ done: false, optional: true, label: 'Move the world’s date on, if time passed', detail: <WorldToday world={world} isGM /> })
-  const carry =
-    [
-      leftClues && `${leftClues} unfound clue${leftClues > 1 ? 's' : ''}`,
-      leftScenes && `${leftScenes} unplayed scene${leftScenes > 1 ? 's' : ''}`,
-      session.lectern?.sceneId && 'the current scene and who’s there',
-    ]
+  const inWords = (parts: (string | 0 | false | undefined)[]) =>
+    parts
       .filter(Boolean)
       .join(', ')
       .replace(/, ([^,]*)$/, ' and $1')
+  const left = [leftClues && `${leftClues} unfound clue${leftClues > 1 ? 's' : ''}`, leftScenes && `${leftScenes} unplayed scene${leftScenes > 1 ? 's' : ''}`]
+  // A session made new also opens on the current scene; one that's already written keeps its own.
+  const carry = inWords([...left, session.lectern?.sceneId && 'the current scene and who’s there'])
+  const carryOn = inWords(left)
 
-  return { steps, carry }
+  return { steps, carry, carryOn }
 }
 
 /** “3 of 7 done” and what's next, as a slim line beside the title; the checklist itself is at the end. */
@@ -273,7 +276,7 @@ export function WrapUpChecklist(props: WrapProps & { played: boolean }) {
   const { finish, busy, blocked } = useFinish(session)
   const next = useNextSession(session)
   const w = worldPath(world.id)
-  const { steps, carry } = wrapSteps(props)
+  const { steps, carry, carryOn } = wrapSteps(props)
 
   return (
     <section className="card end-session" id="finish">
@@ -330,7 +333,7 @@ export function WrapUpChecklist(props: WrapProps & { played: boolean }) {
           <>
             <p className="small muted">
               {next ? `Then #${next.number} ${next.title} becomes the next session.` : `Then session #${session.number + 1} is made, ready to prepare.`}{' '}
-              {!next && carry && `${carry[0].toUpperCase()}${carry.slice(1)} carry over.`}
+              {next ? carryOn && `${carryOn[0].toUpperCase()}${carryOn.slice(1)} carry over to the end of its plan.` : carry && `${carry[0].toUpperCase()}${carry.slice(1)} carry over.`}
             </p>
             <button type="button" className="primary big" disabled={busy || !!blocked} title={blocked} onClick={() => finish()}>
               <Ico as={CheckCircle} /> Mark as played

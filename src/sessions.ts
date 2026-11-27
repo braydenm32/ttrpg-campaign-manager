@@ -30,6 +30,16 @@ export const firstUnplayed = (sessions: Session[], today = localDate()) =>
   [...sessions].sort((a, b) => a.number - b.number).find((s) => !isPlayed(s, today) && !s.startedAt && !s.recordings.length)
 
 /**
+ * The session in hand out of a campaign's sessions: one that was started and isn't played yet, else
+ * the first one with a date that hasn't been played (booked ahead, or overdue), else the first one
+ * not played yet. The Desk, the Session area and "Mark as played" all go by this.
+ */
+export function inHand(sessions: Session[], today = localDate()) {
+  const own = [...sessions].sort((a, b) => a.number - b.number)
+  return own.find((s) => !!s.startedAt && !isPlayed(s, today)) ?? own.find((s) => !!s.date && !isPlayed(s, today)) ?? own.find((s) => !isPlayed(s, today))
+}
+
+/**
  * Books a date for the next session: the next one to play, if it's already made, takes the date;
  * otherwise a new one is made.
  */
@@ -183,15 +193,18 @@ export async function startAndTell(session: Pick<Session, 'id' | 'number' | 'tit
   toast(`#${session.number} ${session.title} is being played.${other ? ` #${other.number} ${other.title} is still being played too.` : ''}`, undo, 'Not started after all')
 }
 
-/** "Not started after all": takes a start back, so the session is being prepared again. */
-export const notStarted = (sessionId: string, clearWorldDate = false) =>
+/**
+ * "Not started after all": takes a start back, so the session is being prepared again. The date in
+ * the world that the start gave it goes too (so a later, real start takes the world's date then).
+ */
+export const notStarted = (sessionId: string, clearWorldDate?: boolean) =>
   db.sessions
     .where('id')
     .equals(sessionId)
     .modify((s) => {
+      if (clearWorldDate ?? s.playStart?.datedWorld) delete s.worldDate
       delete s.startedAt
       delete s.playStart
-      if (clearWorldDate) delete s.worldDate
     })
 
 /**
@@ -202,7 +215,10 @@ export function stampStart(s: Session, worldToday?: CalDate) {
   if (s.startedAt) return
   s.startedAt = Date.now()
   s.playStart = { notes: s.notes, entityIds: [...s.entityIds] }
-  if (worldToday && !s.worldDate) s.worldDate = { ...worldToday }
+  if (worldToday && !s.worldDate) {
+    s.worldDate = { ...worldToday }
+    s.playStart.datedWorld = true
+  }
 }
 
 /** Pages that came up in play: added after play began, or put in a scene, a fight or the Lectern's place. Without a start mark, all of those linked. */
@@ -234,26 +250,27 @@ export async function unmarkPlayed(session: Session) {
 
 /**
  * "Mark as played", at the end of Wrap up: the session is done and the next one becomes the one in
- * hand. Unfound clues and unplayed scenes carry over to it: into a new session if the campaign has
- * none waiting, or added to the end of the next one's plan if it's already made. A date still ahead
- * (or none) becomes today, the day it was played. Gives back the next session, how much was carried
- * into one that already existed, and an undo that takes all of it back (and the session it made, if
- * nobody has touched it since).
+ * hand (see inHand). Unfound clues and unplayed scenes carry over to it: into a new session if the
+ * campaign has none waiting, or added to the end of the next one's plan if it's already made. A date
+ * still ahead (or none) becomes today, the day it was played. Gives back the next session, how much
+ * was carried into one that already existed, and an undo that takes all of it back (and the session
+ * it made, if nobody has touched it since).
  */
 export async function markPlayed(session: Session) {
   const today = localDate()
   const date = !session.date || session.date > today ? today : session.date
   await db.sessions.update(session.id, { playedAt: Date.now(), startedAt: session.startedAt ?? Date.now(), date })
-  const later = (await db.sessions.where({ campaignId: session.campaignId }).sortBy('number')).filter((s) => s.number > session.number)
-  const made = later.length ? undefined : await createNextSession(session.worldId, session.campaignId)
-  const next = later[0] ?? made!
-  // Leftovers go into a next session that was already written, unless they're there from an earlier go.
+  const others = (await db.sessions.where({ campaignId: session.campaignId }).toArray()).filter((s) => s.id !== session.id)
+  const waiting = inHand(others, today)
+  const made = waiting ? undefined : await createNextSession(session.worldId, session.campaignId)
+  const next = waiting ?? made!
+  // Leftovers go into the next session's plan, unless they're there already (from an earlier go, or because it was just made from this one).
   const fresh = <T extends CheckItem>(items: T[], have: CheckItem[] | undefined) => {
     const texts = new Set((have ?? []).map((x) => x.text))
     return items.filter((x) => !texts.has(x.text))
   }
-  const clues = made ? [] : fresh(carried(session.prep?.clues, session.number), next.prep?.clues)
-  const scenes = made ? [] : fresh(carriedScenes(session.prep?.scenes, session.number), next.prep?.scenes)
+  const clues = fresh(carried(session.prep?.clues, session.number), next.prep?.clues)
+  const scenes = fresh(carriedScenes(session.prep?.scenes, session.number), next.prep?.scenes)
   const added = new Set<string>([...clues, ...scenes].map((x) => x.id))
   if (added.size)
     await db.sessions
@@ -264,8 +281,15 @@ export async function markPlayed(session: Session) {
         s.prep.clues = [...s.prep.clues, ...clues]
         s.prep.scenes = [...s.prep.scenes, ...scenes]
       })
+  // The new session as this left it, to tell on Undo whether anybody has touched it since.
+  const asMade = made && (added.size ? await db.sessions.get(made.id) : made)
   const undo = async () => {
-    await db.sessions.update(session.id, { playedAt: undefined, date: session.date })
+    // All three go back as they were: a session that was never started isn't left "being played".
+    await db.sessions.update(session.id, { playedAt: undefined, date: session.date, startedAt: session.startedAt })
+    if (made) {
+      const now = await db.sessions.get(made.id)
+      if (now && JSON.stringify(now) === JSON.stringify(asMade)) return void (await db.sessions.delete(made.id))
+    }
     if (added.size)
       await db.sessions
         .where('id')
@@ -275,9 +299,6 @@ export async function markPlayed(session: Session) {
           s.prep.clues = s.prep.clues.filter((x) => !added.has(x.id))
           s.prep.scenes = s.prep.scenes.filter((x) => !added.has(x.id))
         })
-    if (!made) return
-    const now = await db.sessions.get(made.id)
-    if (now && JSON.stringify(now) === JSON.stringify(made)) await db.sessions.delete(made.id)
   }
   return { next, undo, carried: { clues: clues.length, scenes: scenes.length } }
 }
