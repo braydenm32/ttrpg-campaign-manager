@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Empty } from '../components'
+import { Empty, Skeleton } from '../components'
 import { ENTITY_LABELS, type Entity } from '../db'
 import { Help } from '../help'
-import { useVisibleEntities, useWorld } from '../hooks'
+import { stillReading, useVisibleEntities, useWorld } from '../hooks'
 import { familyOf, linksOf, toneOf } from '../relations'
 import { useViewMode } from '../viewMode'
 import { Ico, TypeIcon } from '../icons'
@@ -129,7 +129,9 @@ export default function RelationWeb() {
           </select>
         </div>
       </header>
-      {nodeIds.length === 0 ? (
+      {stillReading(entities) ? (
+        <Skeleton />
+      ) : nodeIds.length === 0 ? (
         <Empty>
           {mode === 'family'
             ? 'No family links yet. On a character’s page, use Relationships to add “parent of”, “married to” or “sibling of”.'

@@ -46,7 +46,7 @@ export const HELP = {
     'A campaign you’re still planning can stay 🔒 GM only: players don’t see it or any of its sessions until you switch it to 👁 Players can see this.',
   pictures:
     'Type @ or [[ and the start of a page’s name to link to it: pick it from the list (arrow keys and Enter work too). Put pictures in the text: paste one, drop one in, or use 🖼️ Picture. Players see a picture once the text around it is revealed to them (not inside a secret passage).',
-  search: 'Finds pages by name, nickname, summary, details, tags and the words in them, plus sessions and maps. Several words find pages that have all of them, in any order (“mercy fort” finds Fort Mercy), and each result says what kind of page it is. It also does things: type “new npc” to make a page, or “clocks” to go there. Press Ctrl+K (⌘K on a Mac) anywhere to open it. In the player view it only searches what players can read.',
+  search: 'Finds pages by name, nickname, summary, details, tags and the words in them, plus sessions and maps. Several words find pages that have all of them, in any order (“mercy fort” finds Fort Mercy), and each result says what kind of page it is. It also does things: type “new npc” to make a page, or “clocks” to go there. Places come first, and the tools inside a screen are there too: “initiative”, “dice” or “timer” open that panel of the Lectern, “fog” the maps, “calendar” World settings. Press Ctrl+K (⌘K on a Mac) anywhere to open it. In the player view it only searches what players can read.',
   news: 'What’s happened since you last looked: new pages, handouts and session recaps, answers to your questions, and what changed on pages you already had (new writing, someone’s fate, a clock that moved). Tap one to read it, and “Got it” when you’re done.',
   backupReminder: 'A reminder to download a backup of this world every two weeks (monthly with cloud sync on). Save the file somewhere safe, like Google Drive or a USB stick. “Later” asks again in a week.',
   aliases:
@@ -265,7 +265,7 @@ export const HELP = {
   exportMarkdown: 'Download every page as plain-text (Markdown) files in folders, ready to open in Obsidian or any notes app. GM notes and secrets are included, so keep it to yourself.',
   discord:
     'Post recaps and session dates to your group’s Discord channel. In Discord: Server settings, Integrations, Webhooks, New webhook, then copy its link here. The link is kept on this device only.',
-  backup: 'Save the whole world, with its uploaded files, as one .zip file. Session recordings are only in it if you tick “Include session recordings”, and they stay on the device that made them, even with sync on, so back them up too. Keep a backup even if sync is on. Older .json backups still import.',
+  backup: 'Save the whole world, with its uploaded files, as one .zip file. Session recordings are only in it if you tick “Include session recordings”, and they stay on the device that made them, even with sync on, so back them up too. Keep a backup even if sync is on. Older .json backups still import. Importing (Import backup… on your worlds) always adds a new world and never changes one you have; if the name is taken, the copy is called “Name (2)”.',
 
   // Sharing and players
   cloudSync:

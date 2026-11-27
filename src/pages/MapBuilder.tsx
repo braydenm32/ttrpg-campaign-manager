@@ -47,6 +47,8 @@ import { ConditionPicker, PackPicker } from '../packs/PackPicker'
 import { groundName, KitPicker, loadKit, useKits } from '../packs/Kits'
 import { laidGround, markFits, tileKey, tileMark, tileSet, tileValue, type TileMark } from '../packs/tiles'
 import { kitOf } from '../packs/art'
+import { BUILTIN_PACK, loadBuiltinPack } from '../packs/builtin'
+import { worldPacks } from '../packs/store'
 import { canTurn, classicBlob, classicHitSvg, drawPiece, floorTest, FONTS, landTest, loadMapFonts, LOOKS, pieceOutline, playersCopy, renderClassic, riverWidth, roomTest, secretFloorTest, streetWidth, styleFor, townWallHalf } from '../mapArt/classic'
 import { groundColour } from '../mapArt/ground'
 import { useViewMode } from '../viewMode'
@@ -1965,8 +1967,30 @@ function ToolOptions(p: {
 /** The towers a town wall gets at its corners: one of the wall tower's versions, or none. */
 /** The Walls tool's options: the wall or fence to build with, and what a click or drag does. */
 function WallOptions({ drawing, brush, setBrush }: { drawing: Drawing; brush: TileBrush; setBrush: (b: TileBrush) => void }) {
-  const { worldId } = useWorld()
+  const { worldId, world } = useWorld()
   const kits = useKits('tiles')
+  // Whether the Warded Atlas pack's list has ever reached this device (it's downloaded on first use).
+  const builtinHere = useLiveQuery(async () => !!(await db.packs.get(BUILTIN_PACK)), [])
+  const [online, setOnline] = useState(() => typeof navigator === 'undefined' || navigator.onLine)
+  const [trying, setTrying] = useState(false)
+  const tryAgain = async () => {
+    setTrying(true)
+    await loadBuiltinPack(true).catch(() => false)
+    setTrying(false)
+  }
+  useEffect(() => {
+    const on = () => {
+      setOnline(true)
+      void loadBuiltinPack(true).catch(() => {})
+    }
+    const off = () => setOnline(false)
+    window.addEventListener('online', on)
+    window.addEventListener('offline', off)
+    return () => {
+      window.removeEventListener('online', on)
+      window.removeEventListener('offline', off)
+    }
+  }, [])
   const modes: { id: TileBrush['mode']; label: string; hint: string }[] = [
     { id: 'build', label: 'Build', hint: 'Drag along the squares the wall runs through' },
     { id: 'door', label: 'Doorway', hint: 'Click a square of straight wall to leave a doorway in it (click it again to wall it up)' },
@@ -1974,12 +1998,32 @@ function WallOptions({ drawing, brush, setBrush }: { drawing: Drawing; brush: Ti
     { id: 'remove', label: 'Take away', hint: 'Drag across wall to take it away' },
   ]
   const mode = modes.find((m) => m.id === brush.mode)!
-  if (!kits.length)
-    return (
-      <p className="muted small">
-        Walls and fences come from map packs. Switch the Warded Atlas pack on for this world in <Link to={`${worldPath(worldId)}/settings?at=packs`}>World settings › Map pieces</Link>.
-      </p>
-    )
+  if (!kits.length) {
+    if (builtinHere === undefined) return null
+    // Not downloaded yet: say so, and that it needs the internet (switching anything on wouldn't help).
+    if (!builtinHere)
+      return (
+        <div className="muted small">
+          <p>
+            Wall pieces download the first time you use them and need the internet.{' '}
+            {online ? 'They haven’t arrived yet.' : 'You’re offline, so they’ll come when you’re back online.'} Meanwhile the Line tool draws stone walls and fences.
+          </p>
+          {online && (
+            <button type="button" className="small" disabled={trying} onClick={() => void tryAgain()}>
+              {trying ? 'Trying…' : 'Try again'}
+            </button>
+          )}
+        </div>
+      )
+    // On this device but switched off for this world: that switch is in World settings.
+    if (!worldPacks(world ?? undefined).includes(BUILTIN_PACK))
+      return (
+        <p className="muted small">
+          Walls and fences come from map packs. Switch the Warded Atlas pack on for this world in <Link to={`${worldPath(worldId)}/settings?at=packs`}>World settings › Map pieces</Link>.
+        </p>
+      )
+    return <p className="muted small">No walls or fences in your map packs yet. The Line tool draws stone walls and fences.</p>
+  }
   const set = brush.set && kitOf(brush.set) ? brush.set : undefined
   return (
     <>

@@ -51,6 +51,8 @@ export default function WorldSettings() {
   const tab: Tab = TABS.find(([t]) => t === params.get('tab'))?.[0] ?? 'world'
   // ?at=templates (or import, deleted, backup) from the More page: scroll to that part.
   const at = params.get('at')
+  // Drawn again after a backup downloads, so "Last backup from this device" says today at once.
+  const [, backedUp] = useState(0)
   const ready = !!world
   // The pictures and calendar above it settle a moment later and push it down, so it scrolls again until they have (or you scroll yourself).
   useEffect(() => {
@@ -127,7 +129,9 @@ export default function WorldSettings() {
 
           <WorldLook world={world} update={update} />
 
-          <CalendarEditor world={world} />
+          <div id="settings-calendar">
+            <CalendarEditor world={world} />
+          </div>
 
           <CustomTypes world={world} update={update} />
 
@@ -174,7 +178,7 @@ export default function WorldSettings() {
               A backup is a single file with the whole world in it, including uploaded files. Session recordings are left out unless you tick the box below (they stay on the device that made them). Keep one even if sync is on; you can import it from the
               home screen on any device.
             </p>
-            <BackupButton worldId={worldId} />
+            <BackupButton worldId={worldId} onDone={() => backedUp((n) => n + 1)} />
             <DeviceStorage worldId={worldId} backupHere />
           </section>
 

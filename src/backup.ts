@@ -179,8 +179,20 @@ export async function recordingsOnlyHere(worldId: string) {
   return { count: here.length, bytes: here.reduce((n, a) => n + (a?.size ?? 0), 0) }
 }
 
-/** Imports a backup as a new copy of the world (fresh ids), so importing twice never overwrites anything. */
-export async function importWorld(file: File): Promise<string> {
+/** A name for an imported world that no world on this device has: “Name”, else “Name (2)”, “Name (3)”… */
+async function freeName(name: string) {
+  const taken = new Set((await db.worlds.toArray()).map((w) => w.name.trim().toLowerCase()))
+  if (!taken.has(name.trim().toLowerCase())) return name
+  const base = name.replace(/\s*\(\d+\)$/, '')
+  for (let n = 2; ; n++) if (!taken.has(`${base} (${n})`.toLowerCase())) return `${base} (${n})`
+}
+
+/**
+ * Imports a backup as a new copy of the world (fresh ids), so importing twice never overwrites
+ * anything. If a world here already has its name, the copy is named “Name (2)” so the two can be
+ * told apart on the shelf; `copyOf` is then the name it came with.
+ */
+export async function importWorld(file: File): Promise<{ id: string; name: string; copyOf?: string }> {
   let bytes: Uint8Array<ArrayBuffer>
   try {
     bytes = new Uint8Array(await file.arrayBuffer())
@@ -229,13 +241,16 @@ export async function importWorld(file: File): Promise<string> {
   for (const a of b.assets) id(a.id)
   const worldId = id(b.world.id)
   const now = Date.now()
+  const name = await freeName(b.world.name)
 
   await db.transaction('rw', [db.worlds, db.campaigns, db.entities, db.maps, db.pins, db.sessions, db.assets, db.boards, db.sounds, db.reputation], async () => {
     const showing = b.world.showing
     await db.worlds.add({
       ...b.world,
       id: worldId,
-      name: b.world.name,
+      name,
+      // An exported example world comes back as a world of the GM's own, not another example.
+      example: undefined,
       updatedAt: now,
       cloud: undefined,
       shared: undefined,
@@ -358,7 +373,7 @@ export async function importWorld(file: File): Promise<string> {
   unpackFiles(worldId, b.assets.filter((a) => !blobs.has(a.id)), id, isZip ? entry : () => undefined, b).catch((e: Error) =>
     alert(`The world was imported, but unpacking its files stopped: ${e.message}. Import the backup again to get them all.`),
   )
-  return worldId
+  return { id: worldId, name, copyOf: name !== b.world.name ? b.world.name : undefined }
 }
 
 /**

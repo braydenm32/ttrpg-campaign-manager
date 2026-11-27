@@ -166,7 +166,7 @@ const worldTabs: NavTab[] = [
     keywords: 'history events sessions recaps campaigns',
   },
   { id: 'everything', label: 'Everything', icon: SquaresFour, to: (f) => w(f, 'everything'), paths: ['everything', 'other/:kind'], types: ['item', 'event', 'custom', 'table'], who: readers, keywords: 'all types codex items events' },
-  { id: 'more', label: 'More', icon: DotsThreeOutline, to: (f) => w(f, 'more'), paths: ['more', 'handouts', 'web'], who: readers, keywords: 'handouts relationships campaigns' },
+  { id: 'more', label: 'More', icon: DotsThreeOutline, to: (f) => w(f, 'more'), paths: ['more', 'handouts', 'web'], who: readers, keywords: 'campaigns' },
 ]
 
 export const AREAS: NavArea[] = [
@@ -179,7 +179,7 @@ export const AREAS: NavArea[] = [
     count: (f) => f.inbox || undefined,
     keywords: 'home overview front page dashboard',
     tabs: [
-      { id: 'today', label: 'Today', icon: Sun, to: (f) => w(f), paths: [''], who: own, keywords: 'home overview front page dashboard needs you' },
+      { id: 'today', label: 'Today', searchTitle: 'Desk', icon: Sun, to: (f) => w(f), paths: [''], who: own, keywords: 'home overview front page dashboard needs you' },
       {
         id: 'inbox',
         label: 'Inbox',
@@ -317,7 +317,7 @@ export const AREAS: NavArea[] = [
     who: players,
     keywords: 'home overview front page',
     tabs: [
-      { id: 'now', label: 'Now', icon: Armchair, to: (f) => w(f), paths: ['?tab=overview', '?tab=scene'], who: players, keywords: 'home common room overview next session the scene' },
+      { id: 'now', label: 'Now', searchTitle: 'Common Room', icon: Armchair, to: (f) => w(f), paths: ['?tab=overview', '?tab=scene'], who: players, keywords: 'home common room overview next session the scene' },
       { id: 'me', label: 'Me', searchTitle: 'My character', icon: UserCircle, to: (f) => `${w(f)}?tab=me`, paths: ['?tab=me'], who: players, keywords: 'my character sheet' },
       { id: 'party', label: 'Party', icon: UsersThree, to: (f) => `${w(f)}?tab=party`, paths: ['?tab=party', 'loot', 'reputation'], who: players, keywords: 'the party loot treasure coin inventory items reputation fame infamy' },
       {
@@ -370,7 +370,7 @@ export const MORE_GROUPS: MoreGroup[] = [
     blurb: 'Things you reach for while you play.',
     items: [
       { id: 'handouts', label: 'Handouts', icon: Newspaper, to: (f) => w(f, 'handouts'), paths: ['handouts'], who: own, blurb: 'Pictures, pages and notes you’ve shown the players.', keywords: 'shown' },
-      { id: 'sounds', label: 'Soundboard', icon: MusicNotes, to: (f) => w(f, 'sounds'), paths: ['sounds'], who: own, blurb: 'Music and ambience for the table.', keywords: 'music ambience' },
+      { id: 'sounds', label: 'Soundboard', icon: MusicNotes, to: (f) => w(f, 'sounds'), paths: ['sounds'], who: own, blurb: 'Music and ambience for the table.', keywords: 'music ambience sounds sound effects' },
       { id: 'safety', label: 'Safety tools', icon: HandPalm, to: (f) => w(f, 'safety'), paths: ['safety'], who: own, blurb: 'Lines, veils and the X-card.', keywords: 'lines veils x-card table rules' },
       {
         id: 'screen',
@@ -432,7 +432,7 @@ export const MORE_GROUPS: MoreGroup[] = [
         paths: ['lookup'],
         who: own,
         blurb: 'Search the rules and wikis for your game (D&D and Daggerheart SRDs, Forgotten Realms, PathfinderWiki…) and keep what you find as a page.',
-        keywords: 'wiki srd rules compendium spell monster creature item search open5e forgotten realms pathfinder archives of nethys lore',
+        keywords: 'lookup wiki srd rules compendium spell monster creature item search open5e d&d beyond forgotten realms pathfinder archives of nethys lore',
       },
       { id: 'assets', label: 'Files', icon: Folder, to: (f) => w(f, 'assets'), paths: ['assets'], who: own, blurb: 'Pictures, maps and sounds you’ve uploaded.', keywords: 'assets images uploads pictures' },
       { id: 'packs', label: 'Map packs', icon: Stack, to: (f) => w(f, 'packs'), paths: ['packs'], who: own, blurb: 'Your own pictures as map pieces, for any of your worlds.', keywords: 'map pieces assets pack tokens props stamps pictures upload zip' },
@@ -457,7 +457,7 @@ export const MORE_GROUPS: MoreGroup[] = [
         keywords: 'invite players sync share wiki link co-gm claims',
       },
       { id: 'backups', label: 'Backups', icon: DownloadSimple, to: (f) => w(f, 'settings?tab=data'), paths: ['settings?tab=data'], who: own, blurb: 'Download the whole world as one file.', keywords: 'backup download export markdown obsidian json copy save' },
-      { id: 'import', label: 'Import pages and character sheets', icon: FileArrowUp, to: (f) => w(f, 'settings?tab=data&at=import'), who: own, blurb: 'Bring in pages, or a character from D&D Beyond, Foundry and others.', keywords: 'import character sheet dndbeyond foundry pathbuilder obsidian kanka markdown world anvil' },
+      { id: 'import', label: 'Import pages and character sheets', icon: FileArrowUp, to: (f) => w(f, 'settings?tab=data&at=import'), who: own, blurb: 'Bring in pages, or a character from D&D Beyond, Foundry and others.', keywords: 'import character sheet dndbeyond d&d beyond foundry pathbuilder obsidian kanka markdown world anvil' },
       {
         id: 'oneshot',
         label: 'One-shot reset',
@@ -663,30 +663,79 @@ export function topTabs(area: NavArea, f: NavFacts, lit?: NavTab) {
   return tabs
 }
 
+/**
+ * Tools that live inside a screen rather than having a menu place of their own (the Lectern's
+ * initiative, dice and timers, a map's fog of war, the calendar in World settings). Search offers
+ * each as a "Go to" place that opens the screen holding it, at the tool where the screen can jump
+ * to it (the Lectern opens the panel, World settings scrolls to the part). `where` names the
+ * screen in the search result ("Go to the Lectern").
+ */
+export interface NavTool extends NavTab {
+  where: string
+}
+
+/** The Lectern of the session in hand, opened at one of its panels (its id in src/lecternPanel.tsx). */
+const lectern = (panel?: string) => (f: NavFacts) => (f.sessionId ? w(f, `s/${f.sessionId}/lectern${panel ? `?at=lectern-${panel}` : ''}`) : undefined)
+
+export const TOOLS: NavTool[] = [
+  // ——— The GM's Lectern ———
+  { id: 'initiative', label: 'Initiative', icon: Play, to: lectern('initiative'), who: own, where: 'the Lectern', keywords: 'initiative turn order combat tracker fight battle round hp conditions encounter' },
+  { id: 'dice', label: 'Dice', icon: DiceFive, to: lectern('dice'), who: own, where: 'the Lectern', keywords: 'dice roll roller d20 d6 advantage' },
+  { id: 'callroll', label: 'Call for a roll', icon: Play, to: lectern('callroll'), who: own, where: 'the Lectern', keywords: 'roll call ask for a roll check saving throw save perception' },
+  { id: 'timers', label: 'Timers', icon: Timer, to: lectern('timers'), who: own, where: 'the Lectern', keywords: 'timer timers countdown stopwatch minutes' },
+  { id: 'gametime', label: 'In-game time', icon: Hourglass, to: lectern('gametime'), who: own, where: 'the Lectern', keywords: 'in-game time time of day hour day night game time' },
+  { id: 'journey', label: 'Journey', icon: Compass, to: lectern('journey'), who: own, where: 'the Lectern', keywords: 'journey travel road trip overland weather pace rations' },
+  { id: 'show', label: 'Show players', icon: Television, to: lectern('show'), who: own, where: 'the Lectern', keywords: 'show players handout picture reveal screen' },
+  { id: 'gmscreen', label: 'GM screen', icon: PushPin, to: lectern('gmscreen'), who: own, where: 'the Lectern', keywords: 'gm screen reference pinned rules macros' },
+  { id: 'improvise', label: 'Improvise', icon: DiceFive, to: lectern('improvise'), who: own, where: 'the Lectern', keywords: 'improvise random name npc tavern shop generate' },
+  { id: 'recording', label: 'Recording', icon: Play, to: lectern('recording'), who: own, where: 'the Lectern', keywords: 'record recording microphone audio transcript' },
+  { id: 'golive', label: 'Go live to players', icon: Play, to: lectern(), who: own, when: (f) => !!f.cloud, where: 'the Lectern', keywords: 'go live live players common room share rolls' },
+  // ——— Elsewhere for the GM ———
+  { id: 'fog', label: 'Fog of war', icon: MapTrifold, to: (f) => w(f, 'maps'), who: own, where: 'Maps (open a map)', keywords: 'fog fog of war hide reveal' },
+  { id: 'ruler', label: 'Ruler', icon: Ruler, to: (f) => w(f, 'maps'), who: own, where: 'Maps (open a map)', keywords: 'ruler measure distance scale' },
+  { id: 'calendar', label: 'Calendar', icon: Hourglass, to: (f) => w(f, 'settings?at=calendar'), who: own, where: 'World settings', keywords: 'calendar date dates months weeks seasons weather climate' },
+  // ——— Players, on their Now tab (the GM's turn order shows there while they run the game live) ———
+  { id: 'dice', label: 'Dice', icon: DiceFive, to: (f) => w(f), who: players, where: 'Now', keywords: 'dice roll roller d20' },
+  { id: 'turns', label: 'Turn order', icon: Armchair, to: (f) => w(f), who: players, where: 'Now', keywords: 'turn order initiative whose turn combat fight' },
+]
+
 /** A "Go to" place for search. */
 export interface NavPlace {
   title: string
   to: string
   words: string
+  /** Its other names in the menus: the tab's own word when search calls it something longer ("Play" for The Lectern), or the area that opens on it (Atlas for Maps). */
+  names?: string[]
+  /** The screen that holds it, for a tool inside a screen ("the Lectern"). */
+  where?: string
   external?: boolean
 }
 
-/** Every area, tab and More item the viewer has, for the search's "Go to" places. */
+/**
+ * Every area, tab and More item the viewer has, and the tools inside screens, for the search's
+ * "Go to" places. A place reached two ways (Desk and its first tab, Today) is listed once.
+ */
 export function navPlaces(f: NavFacts): NavPlace[] {
   const out: NavPlace[] = []
-  const add = (title: string, to: string | undefined, words = '', external?: boolean) => {
+  const add = (title: string, to: string | undefined, words = '', more: Partial<NavPlace> = {}) => {
     if (!to) return
-    const same = out.find((p) => p.title === title && p.to === to)
-    if (same) same.words = `${same.words} ${words.toLowerCase()}`
-    else out.push({ title, to, words: words.toLowerCase(), external })
+    // The same screen under a second name (an area and its first tab): one row, found by both names.
+    const same = out.find((p) => p.to === to && !p.where && !more.where)
+    if (same) {
+      same.words = `${same.words} ${words.toLowerCase()}`
+      same.names = [...new Set([...(same.names ?? []), title, ...(more.names ?? [])])]
+    } else out.push({ title, to, words: words.toLowerCase(), ...more })
   }
   for (const area of areasFor(f.viewer)) {
+    // Tabs first, so a tab keeps its own name when its area opens on it (Atlas opens Maps).
+    for (const t of area.tabs) if (showsTab(t, f)) add(t.searchTitle ?? t.label, t.to(f), t.keywords, { names: [t.label] })
     add(area.label, areaHome(area, f), area.keywords)
-    for (const t of area.tabs) if (showsTab(t, f)) add(t.searchTitle ?? t.label, t.to(f), `${t.label} ${t.keywords ?? ''}`)
   }
   for (const g of f.viewer === 'gm' ? MORE_GROUPS : PLAYER_MORE_GROUPS)
-    for (const t of g.items) if (t.who.includes(f.viewer) && (!t.when || t.when(f))) add(t.searchTitle ?? t.label, t.to(f), `${g.label} ${t.keywords ?? ''}`, t.external)
-  for (const c of f.campaigns ?? []) add(c.name, w(f, `c/${c.id}`), 'campaign sessions')
+    for (const t of g.items) if (t.who.includes(f.viewer) && (!t.when || t.when(f))) add(t.searchTitle ?? t.label, t.to(f), t.keywords, { names: [t.label], external: t.external })
+  // Campaigns by their own name (a name, like a page's, so never folded into All sessions).
+  for (const c of f.campaigns ?? []) out.push({ title: c.name, to: w(f, `c/${c.id}`), words: '' })
+  for (const t of TOOLS) if (showsTab(t, f)) add(t.label, t.to(f), t.keywords, { where: t.where })
   return out
 }
 

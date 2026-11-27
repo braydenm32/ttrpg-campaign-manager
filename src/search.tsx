@@ -125,6 +125,12 @@ export function searchWorld(
   return hits.sort((a, b) => b.score - a.score || a.title.localeCompare(b.title)).slice(0, 40)
 }
 
+/** Whether a word in the text starts with what was typed ("fog" in "fog of war", "card" in "x-card"). */
+const startsWord = (text: string, q: string) => {
+  for (let i = text.indexOf(q); i >= 0; i = text.indexOf(q, i + 1)) if (i === 0 || !/[a-z0-9]/.test(text[i - 1])) return true
+  return false
+}
+
 /** Things to do rather than pages to open: "new npc", "clocks", "settings"… */
 function commandHits(
   query: string,
@@ -155,11 +161,22 @@ function commandHits(
   // The GM's Player view switch lives in the sidebar, so search says where it is and does it.
   if (own && playerView && q.length >= 3 && ['player view', 'players view', 'preview as players', 'see as players'].some((w) => w.includes(q)))
     hits.push({ key: 'cmd:player-view', to: '', icon: '👁', node: <Ico as={Eye} />, title: 'Player view', snippet: 'See the world as your players do', score: 85, run: playerView })
-  // Every area, tab and More item the viewer has (src/nav.ts), found by its name or the names it used to have.
+  // Every area, tab, More item and tool the viewer has (src/nav.ts), found by its name or the names it used to have.
+  // Words match from their start ("end" finds Wrap up's "end of session", not "calendar"). A place found
+  // by its own words ranks above pages that only mention them; only a page named that comes first.
   for (const p of places) {
     const title = p.title.toLowerCase()
-    if (!title.includes(q) && !p.words.includes(q) && !allIn(searchWords(q), [`${title} ${p.words}`])) continue
-    hits.push({ key: `go:${p.title}:${p.to}`, to: p.to, icon: '→', node: <Ico as={ArrowRight} />, title: p.title, snippet: 'Go to', score: title.startsWith(q) ? 90 : 35, external: p.external })
+    const names = [title, ...(p.names ?? []).map((n) => n.toLowerCase())]
+    const all = `${names.join(' ')} ${p.words}`
+    let score = 0
+    if (names.includes(q)) score = 95
+    else if (names.some((n) => n.startsWith(q))) score = 90
+    else if (names.some((n) => startsWord(n, q))) score = 75
+    else if (startsWord(all, q) || searchWords(q).every((w) => startsWord(all, w))) score = 70
+    if (!score) continue
+    // A place that opens a second browser tab (the TV screen) is never the one Enter opens by surprise.
+    if (p.external) score -= 15
+    hits.push({ key: `go:${p.title}:${p.to}`, to: p.to, icon: '→', node: <Ico as={ArrowRight} />, title: p.title, snippet: p.where ? `Go to ${p.where}` : 'Go to', score, external: p.external })
   }
   return hits
 }
@@ -188,7 +205,8 @@ export function QuickSearch({ worldId, world, onClose }: { worldId: string; worl
   const recent = useRecentPages(worldId, data.entities, 8)
   const recentHits: Hit[] = recent.map((e) => ({ key: e.id, to: pagePath(worldId, e.id), icon: typeLabel(e, world).icon, node: <TypeIcon type={e.type} custom={world?.customTypes?.find((c) => c.id === e.customType)} />, title: e.name, snippet: e.summary, score: 0, gmOnly: data.isGM && e.visibility === 'gm' }))
   const typed = !!query.trim()
-  const hits = typed ? [...commandHits(query, world, data.isGM, places, create, () => setMode('player')), ...found].sort((a, b) => b.score - a.score).slice(0, 40) : recentHits
+  // At most 40 pages, but every matching place and action stays: a big world never pushes them off the list.
+  const hits = typed ? [...commandHits(query, world, data.isGM, places, create, () => setMode('player')), ...found].sort((a, b) => b.score - a.score) : recentHits
   const open = (h: Hit | undefined) => {
     if (!h) return
     onClose()

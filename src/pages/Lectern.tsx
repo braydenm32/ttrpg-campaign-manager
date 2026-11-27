@@ -84,6 +84,12 @@ export default function Lectern() {
     setParams(next, { replace: true })
   }
   const folding = useFolding(query)
+  // Arriving at one panel (`?at=lectern-timers`, from search's "Go to"): open it if it's folded, then go to it.
+  const arriveAt = params.get('at')
+  const openPanel = folding.unfold
+  useEffect(() => {
+    if (arriveAt?.startsWith('lectern-')) openPanel(arriveAt.slice('lectern-'.length))
+  }, [arriveAt, openPanel])
   useKeepScroll(!!session && !!world)
   // Leaving the Lectern (to Wrap up, say) takes its “Scene 2: …” note with it.
   useEffect(() => clearSceneToast, [])

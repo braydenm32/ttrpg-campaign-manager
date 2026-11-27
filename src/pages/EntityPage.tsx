@@ -7,7 +7,7 @@ import { renameLinks } from '../links'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, Skeleton, TagInput } from '../components'
 import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, PICKER_TYPES, saveEntity, templateOf, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus, type World } from '../db'
 import { HistoryButton } from '../History'
@@ -57,23 +57,31 @@ export default function EntityPage() {
   usePathsVersion()
   const entityId = resolvePage(worldId, param)
   const [params, setParams] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const { isGM, canSeeEntity } = useViewMode()
   // null once we know the page isn't there (undefined means still loading).
   const stored = useLiveQuery(async () => (await db.entities.get(entityId)) ?? null, [entityId])
   const editing = isGM && params.get('edit') === '1'
+  /**
+   * Save or Cancel. An editor opened with Edit steps back to the page already in the history, so
+   * Back afterwards goes where you were before the page, not into the editor again. An editor
+   * opened straight from a link (a new page) swaps itself for the page.
+   */
+  const done = () => ((location.state as { fromPage?: boolean } | null)?.fromPage ? navigate(-1) : setParams({}, { replace: true }))
   // A new page that isn't saved yet (see pendingPages.ts) opens straight in the editor.
   const held = editing && stored === null ? heldPage(entityId) : undefined
 
   if (stored === undefined) return <Skeleton />
-  if (held && held.worldId === worldId) return <EntityEditor key={held.id} entity={held} fresh held onDone={() => setParams({})} />
+  if (held && held.worldId === worldId) return <EntityEditor key={held.id} entity={held} fresh held onDone={done} />
   if (stored === null || stored.worldId !== worldId || stored.template && !isGM || !canSeeEntity(stored))
     return <Empty>{isGM ? 'This page doesn’t exist.' : 'This page isn’t here, or your GM hasn’t shared it with you yet.'}</Empty>
   const entity = isGM ? stored : asPlayerSees(stored)
 
   return editing ? (
-    <EntityEditor key={entity.id} entity={entity} fresh={params.get('new') === '1' && entity.createdAt === entity.updatedAt} onDone={() => setParams({})} />
+    <EntityEditor key={entity.id} entity={entity} fresh={params.get('new') === '1' && entity.createdAt === entity.updatedAt} onDone={done} />
   ) : (
-    <EntityView entity={entity} onEdit={() => setParams({ edit: '1' })} />
+    <EntityView entity={entity} onEdit={() => setParams({ edit: '1' }, { state: { fromPage: true } })} />
   )
 }
 

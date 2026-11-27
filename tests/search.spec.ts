@@ -14,7 +14,8 @@ import type { World } from './lib/world'
  * inside the world, and for players what it's called and where it goes, or null if it's GM only].
  */
 const PLACES: [string, string, string, [string, string] | null][] = [
-  ['Home', 'Today', '', ['Now', '']],
+  // The Desk and its Today tab are one screen, listed once (for players, the Common Room and Now).
+  ['Home', 'Desk', '', ['Common Room', '']],
   ['Maps', 'Maps', '/maps', ['Maps', '/maps']],
   ['Timeline', 'Timeline', '/timeline', ['Timeline', '/timeline']],
   ['Relationships', 'Relationships', '/web', ['Relationships', '/web']],

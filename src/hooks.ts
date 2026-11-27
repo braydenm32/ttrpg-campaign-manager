@@ -33,6 +33,12 @@ export function useWorld() {
   return { worldId, world }
 }
 
+/** What useVisibleEntities gives while the pages are still being read: empty, but not "there are none". */
+const READING: Entity[] = []
+
+/** Whether a list from useVisibleEntities is still being read, so a screen shows "Loading" and not "No pages yet". */
+export const stillReading = (pages: Entity[]) => pages === READING
+
 /** All entities in the world the current viewer is allowed to see (templates aren't real pages, so they're left out). */
 export function useVisibleEntities(worldId: string) {
   const { isGM, previewAs } = useViewMode()
@@ -54,7 +60,7 @@ export function useVisibleEntities(worldId: string) {
         }))
       },
       [worldId, isGM, as],
-    ) ?? []
+    ) ?? READING
   )
 }
 
@@ -158,5 +164,7 @@ export function imageSize(file: Blob): Promise<{ width: number; height: number }
 export function formatBytes(n: number) {
   if (n < 1024) return `${n} B`
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`
-  return `${(n / 1024 / 1024).toFixed(1)} MB`
+  if (n < 1024 ** 3) return `${(n / 1024 / 1024).toFixed(1)} MB`
+  // "10 GB", not "10240.0 MB" (a browser's room is often a round number of them).
+  return `${Number((n / 1024 ** 3).toFixed(1))} GB`
 }

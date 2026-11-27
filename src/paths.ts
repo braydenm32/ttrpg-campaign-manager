@@ -196,14 +196,10 @@ export function tidyPath(pathname: string): string | undefined {
 /** An href for a link outside the router's own links (raw HTML). */
 export const hrefFor = (path: string) => (hashRouting ? `#${path}` : path)
 
-/**
- * Old links have the address after a "#/" (wardedatlas.com/#/join/…). Moves that into the address
- * itself before the app starts, so the router sees it.
- */
-export function upgradeHashLink() {
-  if (hashRouting) return
+/** Moves an old "#/…" address into the address itself. True if there was one to move. */
+function moveHashLink() {
   const { hash, search } = window.location
-  if (!hash.startsWith('#/')) return
+  if (!hash.startsWith('#/')) return false
   const inner = hash.slice(1)
   const q = inner.indexOf('?')
   const path = q < 0 ? inner : inner.slice(0, q)
@@ -211,6 +207,22 @@ export function upgradeHashLink() {
   for (const [k, v] of new URLSearchParams(search)) if (!params.has(k)) params.set(k, v)
   const query = params.toString()
   window.history.replaceState(null, '', path + (query ? `?${query}` : ''))
+  return true
+}
+
+/**
+ * Old links have the address after a "#/" (wardedatlas.com/#/join/…). Moves that into the address
+ * itself before the app starts, so the router sees it. An old link pasted into a tab that already
+ * has the app open only changes the part after the "#" (the page doesn't reload), so it's moved
+ * then too, and the router told. The desktop app and the old GitHub Pages copy still use "#/"
+ * addresses, so they're left alone.
+ */
+export function upgradeHashLink() {
+  if (hashRouting) return
+  moveHashLink()
+  window.addEventListener('hashchange', () => {
+    if (moveHashLink()) window.dispatchEvent(new PopStateEvent('popstate'))
+  })
 }
 
 /** Goes to an address from outside the router (after signing in, say). */

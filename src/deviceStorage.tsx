@@ -50,14 +50,18 @@ export function DeviceStorage({ worldId, backupHere = false }: { worldId: string
         {room.kept === false && ' · the browser hasn’t promised to keep it.'}
         {room.kept === undefined && '.'} <Help topic="deviceStorage" />
       </p>
-      {room.kept === false && (
+      {room.kept === false && !backupHere && (
+        // The warning itself is on Data and backups, beside the Download button, so it's said once.
         <p className="small">
-          It may clear this app’s data if the device runs short of space (Safari on an iPhone can after a week unused).{' '}
-          {backupHere ? 'Download a backup below to be safe.' : <Link to={`${worldPath(worldId)}/settings?tab=data`}>Download a backup</Link>}
+          It may clear this app’s data. <Link to={`${worldPath(worldId)}/settings?tab=data`}>Data and backups</Link> says what to do.
+        </p>
+      )}
+      {room.kept === false && backupHere && (
+        <p className="small">
+          It may clear this app’s data if the device runs short of space (Safari on an iPhone can after a week unused). Download a backup above to be safe
           {navigator.storage?.persist && (
             <>
-              {' '}
-              or{' '}
+              , or{' '}
               <button
                 className="link"
                 onClick={async () => {

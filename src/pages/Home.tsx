@@ -15,6 +15,7 @@ import { listMyMemberships, loadMemberWorld, memberWorldId, pendingInvite } from
 import { downloadCloudWorld, listCloudWorlds, type CloudWorld } from '../cloud/sync'
 import { worldPath } from '../paths'
 import { lastWorld } from '../install'
+import { toast } from '../undo'
 
 export default function Home() {
   const loaded = useLiveQuery(() => db.worlds.orderBy('updatedAt').reverse().toArray())
@@ -97,7 +98,10 @@ export default function Home() {
               const f = e.target.files?.[0]
               if (!f) return
               try {
-                navigate(`${worldPath(await importWorld(f))}`)
+                const made = await importWorld(f)
+                // Never over the top of a world already here: say so, and what the copy is called.
+                toast(made.copyOf ? `Imported as a new world, “${made.name}”. Your existing “${made.copyOf}” is unchanged.` : `Imported “${made.name}” as a new world.`)
+                navigate(`${worldPath(made.id)}`)
               } catch (err) {
                 alert(`Import failed: ${(err as Error).message}`)
               }

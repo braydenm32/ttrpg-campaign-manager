@@ -1,12 +1,12 @@
 import { type ReactNode } from 'react'
 import { Help } from '../help'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
-import { Empty } from '../components'
+import { Empty, Skeleton } from '../components'
 import { NothingHere } from '../NothingHere'
 import { SeenMark } from '../reveal'
 import { StatusBadge } from '../status'
 import { ENTITY_TYPES, typeLabel, type Entity, type EntityType } from '../db'
-import { treeRoots, useVisibleEntities, useWorld } from '../hooks'
+import { stillReading, treeRoots, useVisibleEntities, useWorld } from '../hooks'
 import { NewPageButton } from '../NewPage'
 import { listedEntries, TableRoller } from '../tables'
 import { pagesIn } from '../counts'
@@ -112,7 +112,9 @@ export default function EntityList() {
           </select>
         )}
       </div>
-      {filtered.length === 0 ? (
+      {stillReading(all) ? (
+        <Skeleton />
+      ) : filtered.length === 0 ? (
         <Empty>{ofType.length === 0 ? `No ${/^[A-Z]{2}/.test(label.many) ? label.many : label.many.toLowerCase()} yet.` : 'Nothing matches.'}</Empty>
       ) : showTree ? (
         <LocationTree worldId={worldId} entities={filtered} isGM={isGM} />
