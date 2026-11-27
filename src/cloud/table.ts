@@ -791,6 +791,24 @@ export function setLiveSession(worldId: string, sessionId: string | undefined) {
   liveListeners.forEach((l) => l())
 }
 
+/**
+ * Goes live to players with a session: their Common Room starts showing it as being played (and any
+ * other session of the world stops being live). The Lectern's switch and the "Start playing" box both
+ * go through here. The session notes when (Session.liveAt).
+ */
+export function goLiveWith(worldId: string, session: Pick<Session, 'id'>) {
+  setLiveSession(worldId, session.id)
+  return db.sessions
+    .where('id')
+    .equals(session.id)
+    .modify((s) => {
+      // Noted on the session, so Wrap up knows there is a live session to end.
+      s.liveAt = Date.now()
+      // Older sessions could be set to share nothing; going live means sharing.
+      if (s.lectern?.share?.off) s.lectern.share = { ...s.lectern.share, off: undefined }
+    })
+}
+
 /** The session the GM is live with in this world right now, if any (for code that isn't drawing a screen). */
 export function liveSessionOf(worldId: string) {
   if (memory.has(worldId)) return memory.get(worldId)

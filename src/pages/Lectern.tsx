@@ -46,7 +46,6 @@ import { Armchair, CastleTurret, CloudFog, Coins, Lock, DiceFive, FlagCheckered,
 import { pagePath, worldPath } from '../paths'
 import { clockText, GoLive, RollDetail, RollLog, timeLeft, useNow } from '../atTheTable'
 import { shareRoll, useLiveSession, useTable } from '../cloud/table'
-import { endLiveSession } from '../EndSession'
 import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, jumpTo, useKeepScroll } from '../jump'
 import { changePlace, clearSceneToast, goToScene, plannedScenes } from '../sceneCards'
@@ -121,10 +120,8 @@ export default function Lectern() {
   // Opening a folded panel before jumping to it.
   const unfold = (id: string) => () => folding.value.folded.has(id) && folding.value.toggle(id)
   const party = partyOf(entities, session.campaignId, { activeOnly: true })
-  const wrapUp = async () => {
-    if (live) await endLiveSession(worldId, session.id)
-    navigate(`${w}/s/${session.id}?end=1`)
-  }
+  // "Wrap up" only opens the checklist. Ending the live session is the checklist's first step.
+  const wrapUp = () => navigate(`${w}/s/${session.id}?end=1`)
   // The Record chip: open the Recording panel (with its consent note) and go to it.
   const openRecording = () => {
     unfold('recording')()
@@ -270,7 +267,7 @@ export default function Lectern() {
   )
 }
 
-const WRAP_UP_TITLE = 'End the session at the table: stops showing it live to players, then opens Wrap up'
+const WRAP_UP_TITLE = 'Opens the Wrap up checklist and changes nothing by itself. Its first step ends the live session for players.'
 
 /** A small “Record” chip in the strip: opens the Recording panel, where the consent note and Start are. */
 function RecordChip({ onOpen }: { onOpen: () => void }) {

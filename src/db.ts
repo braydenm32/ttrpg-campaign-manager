@@ -940,6 +940,12 @@ export interface Session {
   startedAt?: number
   playedAt?: number
   /**
+   * When the GM last went live to players with this session (the "Start playing" box, or the
+   * Lectern's switch). Wrap up's first step, "End the live session", only counts for a session that
+   * was live at some point. Not indexed; GM-only (player_view leaves it out, like startedAt).
+   */
+  liveAt?: number
+  /**
    * Who was there: the ids of the player characters at the table (src/attendance.tsx). Unset means
    * nobody said, which counts as the whole party. Players see it with the recap (only characters
    * they can see).
@@ -1423,7 +1429,8 @@ db.version(10).stores({
 
 // v11: a session's notes are two boxes, "Plan" (Session.notes, as before) and "What happened"
 // (Session.happened, new and not indexed). Existing notes stay in Plan, so nothing moves: the
-// upgrade is here only so the change of shape is recorded.
+// upgrade is here only so the change of shape is recorded. A session also notes when it last went
+// live to players (Session.liveAt, not indexed either), for Wrap up's "End the live session" step.
 db.version(11)
   .stores({})
   .upgrade(() => {})

@@ -51,8 +51,6 @@ import { StartPlayingButton } from '../startPlaying'
 import { StageChip, usePlayingNow } from '../stage'
 import { detailOf } from '../partyGlance'
 import { toast } from '../undo'
-import { endLiveSession } from '../EndSession'
-import { useLiveSession } from '../cloud/table'
 import { RecentlyOpenedRow } from '../RecentlyOpened'
 import { ExampleStartHere } from '../firstSteps'
 import { GettingStarted } from '../gettingStarted'
@@ -189,7 +187,6 @@ function SessionStrip({
 }) {
   const navigate = useNavigate()
   const w = worldPath(world.id)
-  const live = useLiveSession(world.id)
   if (!inHand || !stage) {
     // No session yet: a campaign to make, or a first session to plan.
     const first = campaigns.find(isRunning)
@@ -241,8 +238,8 @@ function SessionStrip({
     // One "Start playing" everywhere: a small box with "Go live to players" and "Record" (src/startPlaying.tsx).
     preparing: <StartPlayingButton session={s} dataNext={next.id} />,
     playing: (
-      // Ends the live link and clears players' screens, as the Lectern's Wrap up does.
-      <Link className="button primary" data-next={next.id} to={`${w}/s/${s.id}?end=1`} onClick={() => live === s.id && void endLiveSession(world.id, s.id)}>
+      // Only opens the Wrap up checklist, like every "Wrap up": ending the live session is its first step.
+      <Link className="button primary" data-next={next.id} to={`${w}/s/${s.id}?end=1`} title="Opens the Wrap up checklist and changes nothing by itself. Its first step ends the live session for players.">
         <Ico as={FlagCheckered} /> {next.label}
       </Link>
     ),

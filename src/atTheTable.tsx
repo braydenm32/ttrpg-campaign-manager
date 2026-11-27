@@ -8,6 +8,7 @@ import {
   answerCall,
   answerSignal,
   gmIdOf,
+  goLiveWith,
   linkAsHost,
   linkAsPlayer,
   publishTable,
@@ -84,17 +85,6 @@ export function LiveBadge({ world }: { world: World }) {
       </button>
     </div>
   )
-}
-
-/**
- * Goes live to players with a session: their Common Room starts showing it as being played (and any
- * other session of the world stops being live). The Lectern's switch and the "Start playing" box both
- * go through here.
- */
-export function goLiveWith(worldId: string, session: Pick<Session, 'id' | 'lectern'>) {
-  setLiveSession(worldId, session.id)
-  // Older sessions could be set to share nothing; going live means sharing.
-  if (session.lectern?.share?.off) void db.sessions.where('id').equals(session.id).modify((s) => void (s.lectern!.share = { ...s.lectern!.share, off: undefined }))
 }
 
 /**

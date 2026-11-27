@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link, useNavigate } from 'react-router-dom'
 import { Play } from '@phosphor-icons/react'
-import { goLiveWith } from './atTheTable'
-import { liveSessionOf, setLiveSession, useLiveSession } from './cloud/table'
+import { goLiveWith, liveSessionOf, setLiveSession, useLiveSession } from './cloud/table'
 import { Modal } from './components'
 import { db, type Session, type World } from './db'
 import { HELP, Help } from './help'
@@ -58,13 +57,13 @@ function rememberChoice(choice: StartChoice) {
  * session of the campaign that is still being played, since two at once is nearly always a slip.
  * Gives back false if the session was already under way.
  */
-export async function startWith(session: Pick<Session, 'id' | 'number' | 'title' | 'campaignId' | 'lectern'>, world: Pick<World, 'id' | 'cloud'>, choice: StartChoice) {
+async function startWith(session: Pick<Session, 'id' | 'number' | 'title' | 'campaignId' | 'lectern' | 'liveAt'>, world: Pick<World, 'id' | 'cloud'>, choice: StartChoice) {
   const undoStart = await startPlaying(session.id)
   if (!undoStart) return false
   const liveBefore = liveSessionOf(world.id)
   const goLive = choice.live && !!world.cloud?.enabled && liveBefore !== session.id
   const shareOff = session.lectern?.share?.off
-  if (goLive) goLiveWith(world.id, session)
+  if (goLive) await goLiveWith(world.id, session)
   const other = (await db.sessions.where({ campaignId: session.campaignId }).toArray()).find((s) => s.id !== session.id && s.startedAt && !s.playedAt)
   const name = `#${session.number} ${session.title}`
   toast(
@@ -73,7 +72,14 @@ export async function startWith(session: Pick<Session, 'id' | 'number' | 'title'
       await undoStart()
       if (goLive && liveSessionOf(world.id) === session.id) {
         setLiveSession(world.id, liveBefore)
-        if (shareOff) await db.sessions.where('id').equals(session.id).modify((s) => void (s.lectern && (s.lectern.share = { ...s.lectern.share, off: true })))
+        await db.sessions
+          .where('id')
+          .equals(session.id)
+          .modify((s) => {
+            if (session.liveAt) s.liveAt = session.liveAt
+            else delete s.liveAt
+            if (shareOff && s.lectern) s.lectern.share = { ...s.lectern.share, off: true }
+          })
       }
       // A recording is people's voices: it is never thrown away or cut short by an Undo.
       if (recordingStore.get()?.sessionId === session.id) toast(`${name} is not started any more. Its recording is still running: press “Stop & save” when you want it to end.`)

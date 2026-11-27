@@ -1039,6 +1039,7 @@ label.check-item { display: flex; gap: .4em; align-items: flex-start; font-size:
 .end-steps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .6em; }
 .end-steps li { display: flex; gap: .6em; align-items: flex-start; }
 .end-steps li.done strong { color: var(--muted); }
+.end-steps li p { margin: .2em 0 .5em; }
 .end-tick { width: 1.4em; flex: none; text-align: center; color: var(--accent); font-weight: bold; }
 .recap-preview { max-height: 18em; overflow: hidden; mask-image: linear-gradient(to bottom, #000 75%, transparent); }
 .my-character { display: flex; gap: .8em; align-items: center; color: var(--text); margin-bottom: .6em; }
