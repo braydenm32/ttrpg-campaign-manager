@@ -7,7 +7,7 @@ import { Ico } from '../icons'
 import { Markdown } from '../Markdown'
 import { DraftText } from '../components'
 import { editPrep } from '../prep'
-import { partyOf } from '../sessions'
+import { partyOf, sessionsBefore } from '../sessions'
 import { isOpenQuest, isOpenThread, tickingClocks } from '../counts'
 import { MODEL } from './claude'
 import { ClaudeJob } from './ClaudeJob'
@@ -76,11 +76,7 @@ export function PrepHelper({ world, session, entities }: { world: World; session
   const heading = saved.heading ?? ''
   const ideas = saved.ideas ?? ''
 
-  const earlier = sessions
-    .filter((s) => s.campaignId === session.campaignId && s.number < session.number)
-    .sort((a, b) => b.number - a.number)
-    .slice(0, 2)
-    .reverse()
+  const earlier = sessionsBefore(sessions, session).slice(0, 2).reverse()
   const said = feedback.list.filter((f) => earlier.some((s) => s.id === f.sessionId) && (f.star.trim() || f.wish.trim()))
   const senders = new Set(said.map((f) => f.userId)).size
 

@@ -39,6 +39,15 @@ export function inHand(sessions: Session[], today = localDate()) {
 }
 
 /**
+ * The sessions of the same campaign that come before this one, the nearest first: the ones with a
+ * lower number (sessions are numbered in the order they're played). The first of them is "last
+ * time" for the session being prepared; the prep helper and the Lectern's "Previously on…" go by
+ * the same list.
+ */
+export const sessionsBefore = <S extends Pick<Session, 'campaignId' | 'number'>>(sessions: S[], session: Pick<Session, 'campaignId' | 'number'>) =>
+  sessions.filter((s) => s.campaignId === session.campaignId && s.number < session.number).sort((a, b) => b.number - a.number)
+
+/**
  * Books a date for the next session: the next one to play, if it's already made, takes the date;
  * otherwise a new one is made.
  */

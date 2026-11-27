@@ -22,6 +22,7 @@ import { addBookmark, beginRecording, discardRecording, endRecording, recoverRec
 import { canSeeSession, newThread } from '../threads'
 import { useViewMode } from '../viewMode'
 import { PrepSheet } from '../prep'
+import { LastTime } from '../lastTime'
 import { PrintButton } from '../print'
 import { CalDateInput, formatDate } from '../calendar'
 import { DiscordButton, forDiscord } from '../discord'
@@ -190,7 +191,7 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
   )
 }
 
-/** Prepare: the plan first (as readable cards), who's in it, ideas from Claude, then the session's details. */
+/** Prepare: last time's recap and awards to read, the plan (as readable cards), who's in it, ideas from Claude, then the session's details. */
 function PrepareView({ session, campaign, world, entities }: ViewProps) {
   return (
     <>
@@ -198,6 +199,7 @@ function PrepareView({ session, campaign, world, entities }: ViewProps) {
         label="Parts of the plan"
         className="phone-only"
         targets={[
+          { id: 'last-time', label: 'Last time' },
           { id: 'plan', label: 'Start' },
           { id: 'scenes', label: 'Scenes' },
           { id: 'fights', label: 'Fights' },
@@ -207,6 +209,7 @@ function PrepareView({ session, campaign, world, entities }: ViewProps) {
           { id: 'details', label: 'Details' },
         ]}
       />
+      <LastTime session={session} entities={entities} worldId={world.id} />
       <PrepSheet session={session} entities={entities} worldId={world.id} />
       <NotesCard session={session} entities={entities} worldId={world.id} id="gm-notes" box="plan" />
       <FeaturedSection session={session} entities={entities} worldId={world.id} />
