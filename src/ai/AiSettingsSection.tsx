@@ -72,7 +72,7 @@ export function AiSettingsSection() {
             <br />
             <span className="muted small">
               {!user
-                ? 'Sign in (your account, on the front page) to use this.'
+                ? 'Sign in (your account, in Your worlds) to use this.'
                 : account.status === 'error'
                   ? account.error
                   : account.status === 'saving'

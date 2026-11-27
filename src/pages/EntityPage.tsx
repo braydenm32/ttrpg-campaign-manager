@@ -654,7 +654,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
                 <Ico as={Lock} /> GM only
               </button>
               <button type="button" className={d.visibility === 'players' ? 'on' : ''} aria-pressed={d.visibility === 'players'} onClick={() => set('visibility', 'players')}>
-                <Ico as={Eye} /> Players can see it
+                <Ico as={Eye} /> Players can see this
               </button>
             </div>
           )}
@@ -882,7 +882,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
               {d.status && (
                 <span className="row small">
                   <input type="checkbox" checked={!!d.statusKnown} onChange={(ev) => set('statusKnown', ev.target.checked || undefined)} />
-                  Players know this
+                  Players know
                 </span>
               )}
             </label>
@@ -953,7 +953,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
         <SecretNamesWarning worldId={worldId} texts={[d.summary, d.body, d.playerBody]} show={d.visibility === 'players' && !d.template} />
         <label className="gm-notes-field">
           <span>
-            <Ico as={Lock} /> GM notes: never shown to players <Help topic="gmNotes" />
+            <Ico as={Lock} /> GM notes: GM only, never sent to players <Help topic="gmNotes" />
           </span>
           <textarea rows={4} value={d.gmNotes} onChange={(ev) => set('gmNotes', ev.target.value)} placeholder="Secrets, plans, stat lines, what they really want…" />
         </label>
@@ -990,8 +990,8 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
                 <button
                   type="button"
                   className={`ghost field-lock ${f.gm ? 'on' : ''}`}
-                  title={f.gm ? 'GM only: players never see this. Click to show it to players.' : 'Players see this once the page is revealed. Click to keep it GM only.'}
-                  aria-label={f.gm ? 'GM only' : 'Players see it'}
+                  title={f.gm ? 'GM only: players never see this. Click so players know it once the page is revealed.' : 'Players know this once the page is revealed. Click to make it GM only.'}
+                  aria-label={f.gm ? 'GM only' : 'Players know'}
                   aria-pressed={!!f.gm}
                   onClick={() => set('fields', d.fields.map((x, j) => (j === i ? { ...x, gm: !x.gm || undefined } : x)))}
                 >
@@ -1153,7 +1153,7 @@ function AddInside({ parent }: { parent: Entity }) {
       }}
     >
       <input value={name} onChange={(ev) => setName(ev.target.value)} placeholder={`Add a place inside ${parent.name}, e.g. a district or building`} />
-      <button disabled={!name.trim()}>+ Add place inside</button>
+      <button disabled={!name.trim()}>+ New place inside</button>
     </form>
   )
 }

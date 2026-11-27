@@ -149,7 +149,7 @@ export default function Timeline() {
               </h2>
               {era.age?.summary && <p className="muted small age-summary">{era.age.summary}</p>}
             </div>
-            {isGM && <button onClick={() => add(era.era, era.age)}>+ Event</button>}
+            {isGM && <button onClick={() => add(era.era, era.age)}>+ New event</button>}
           </div>
           {era.items.length === 0 ? (
             // An empty age is one quiet line, so a long history doesn't turn into a column of boxes.
@@ -226,7 +226,7 @@ function AgesEditor({ world, onClose }: { world: World; onClose: () => void }) {
           ))}
         </ol>
         <div className="row end">
-          <button type="button" onClick={() => setAges([...ages, { id: newId(), name: '' }])}>+ Age</button>
+          <button type="button" onClick={() => setAges([...ages, { id: newId(), name: '' }])}>+ New age</button>
           <button type="button" onClick={onClose}>Cancel</button>
           <button className="primary">Save</button>
         </div>

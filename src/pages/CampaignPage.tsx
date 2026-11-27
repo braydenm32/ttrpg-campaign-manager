@@ -91,7 +91,7 @@ export default function CampaignPage() {
           All sessions <Help topic="session" />
         </h2>
         {sessions.length === 0 ? (
-          <Empty>{isGM ? 'No sessions yet.' : 'No sessions to read yet. Your GM’s write-ups will land here.'}</Empty>
+          <Empty>{isGM ? 'No sessions yet.' : 'No sessions to read yet. Your GM’s recaps will land here.'}</Empty>
         ) : (
           <ul className="session-rows">
             {[...sessions].reverse().map((s) => {
@@ -119,7 +119,7 @@ export default function CampaignPage() {
         <section>
           <h2>The party <Help topic="partyCampaign" /></h2>
           {pcs.length === 0 ? (
-            <Empty>{isGM ? 'Add Player Characters in the Atlas (People).' : 'Nobody’s in the party yet. Once your GM adds your characters, they show here.'}</Empty>
+            <Empty>{isGM ? 'Add player characters in the Atlas, under People.' : 'Nobody’s in the party yet. Once your GM adds your characters, they show here.'}</Empty>
           ) : isGM && world ? (
             <PartyGlance world={world} party={pcs} />
           ) : (
@@ -183,7 +183,7 @@ export default function CampaignPage() {
               onChange={async (v) => {
                 const was = campaign.visibility
                 await update({ visibility: v === 'players' ? undefined : v })
-                toast(v === 'players' ? `Players can see “${campaign.name}” and the sessions you’ve shown them.` : `“${campaign.name}” is hidden from players.`, () => update({ visibility: was }))
+                toast(v === 'players' ? `Players can see “${campaign.name}” and the sessions you’ve revealed.` : `“${campaign.name}” is GM only now.`, () => update({ visibility: was }))
               }}
             />
             <Help topic="hiddenCampaign" />
@@ -196,7 +196,7 @@ export default function CampaignPage() {
             value={campaign.description}
             onCommit={(description) => update({ description })}
           />
-          <small className="muted">{campaign.visibility === 'gm' ? 'This campaign is hidden from players.' : 'Players can see this. Keep secrets out of it.'}</small>
+          <small className="muted">{campaign.visibility === 'gm' ? 'This campaign is GM only.' : 'Players can see this. Keep GM-only things out of it.'}</small>
           <div className="row end">
             <button
               className="danger"

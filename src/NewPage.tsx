@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { blankEntity, fromTemplate, newId, typeLabel, type Entity, type EntityType, type World } from './db'
+import { blankEntity, fromTemplate, newId, newWord, typeLabel, type Entity, type EntityType, type World } from './db'
 import { useMenu } from './components'
 import { Ico } from './icons'
 import { HELP } from './help'
@@ -26,17 +26,17 @@ export function NewPageButton({ world, type, customType, className = 'primary' }
   const create = useCreatePage(world)
   const templates = useTemplates(world.id).filter((t) => t.type === type && (type !== 'custom' || t.customType === customType))
   const menu = useMenu()
-  const label = typeLabel({ type, customType }, world)
+  const word = newWord(typeLabel({ type, customType }, world).one, type)
   if (!templates.length)
     return (
       <button className={className} onClick={() => create(type, customType)}>
-        + New {label.one}
+        + New {word}
       </button>
     )
   return (
     <span className="menu-wrap" {...menu.wrapProps}>
       <button className={className} {...menu.buttonProps}>
-        + New {label.one} ▾
+        + New {word} ▾
       </button>
       {menu.open && (
         <span className="menu" {...menu.menuProps}>

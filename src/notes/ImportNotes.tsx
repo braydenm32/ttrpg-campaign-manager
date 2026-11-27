@@ -393,7 +393,7 @@ function NotesReview({
       )}
 
       <p className="muted small">
-        Pages ticked 👁 are shown to your players; the rest are 🔒 GM only. Secrets always go into GM notes, which players never see. Notes for a page you
+        Pages ticked 👁 are revealed to your players; the rest are 🔒 GM only. Secrets always go into GM notes, which players never see. Notes for a page you
         already have are added under “From my notes” (GM only unless ticked), and its old version stays in its history. Sessions are kept as your GM notes.
       </p>
       {error && <p className="error small">{error}</p>}

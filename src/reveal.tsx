@@ -120,6 +120,8 @@ export function pageReveal(e: Entity, pages: Entity[]) {
   if (e.tags.length) see.push(`tags: ${e.tags.join(', ')}`)
   if (e.imageId) see.push('the picture')
   if (e.playerBody) see.push('what the player wrote')
+  // Threads and quests have no list of their own for players: they're in the Common Room's Leads.
+  if (e.type === 'thread' || e.type === 'quest') see.push('Players see this under Leads')
   const known = (e.relations ?? []).filter((r) => r.known).length
   if (known) see.push(`${plural(known, 'relationship')} marked “Players know”, with ${known === 1 ? 'its note' : 'their notes'} (to pages they can see)`)
   const gmPassages = segs.filter((s) => s.kind === 'gm').length
@@ -258,7 +260,7 @@ export function PageVisibility({ entity: e, world, entities }: { entity: Entity;
           type="button"
           className={`vis-control ${who.kind}`}
           onClick={who.kind === 'players' ? hide : reveal}
-          title={who.kind === 'players' ? 'Every player can read this page (not its GM notes or secret passages). Click to make it GM only.' : 'Click to see what players would get, then reveal it.'}
+          title={who.kind === 'players' ? 'Every player can read this page (not its GM notes or GM-only passages). Click to make it GM only.' : 'Click to see what players would get, then reveal it.'}
         >
           <Ico as={who.kind === 'players' ? Eye : who.kind === 'some' ? EyeClosed : Lock} /> {who.label}
           <span className="vis-change">{who.kind === 'players' ? 'Hide' : 'Reveal…'}</span>
@@ -282,6 +284,7 @@ export function VisibilityControl({
   kept,
   warn,
   compact,
+  fact,
 }: {
   value: Visibility
   onChange: (v: Visibility) => unknown
@@ -292,8 +295,11 @@ export function VisibilityControl({
   /** Something to read before revealing it (a session recording: the whole audio goes out). */
   warn?: ReactNode
   compact?: boolean
+  /** A single fact (a pin) says "Players know" when revealed; a whole thing (a map, a file) says "Players can see this". */
+  fact?: boolean
 }) {
   const { ask, dialog } = useReview()
+  const shared = fact ? 'Players know' : 'Players can see this'
   const flip = async () => {
     if (value === 'gm') {
       const ok = await ask({ title: `Reveal ${name} to players?`, see, kept, warn, confirm: 'Reveal to players' })
@@ -311,9 +317,9 @@ export function VisibilityControl({
         type="button"
         className={`vis-control ${value === 'players' ? 'players' : 'gm'} ${compact ? 'compact' : ''}`}
         onClick={flip}
-        title={value === 'gm' ? 'Only you can see this. Click to review and reveal it.' : 'Players can see this. Click to make it GM only.'}
+        title={value === 'gm' ? 'GM only. Click to review and reveal it.' : `${shared}. Click to make it GM only.`}
       >
-        <Ico as={value === 'players' ? Eye : Lock} /> {value === 'players' ? 'Players can see this' : 'GM only'}
+        <Ico as={value === 'players' ? Eye : Lock} /> {value === 'players' ? shared : 'GM only'}
         <span className="vis-change">{value === 'players' ? 'Hide' : 'Reveal…'}</span>
       </button>
       {dialog}

@@ -30,7 +30,7 @@ test('a session moves Prepare → Play → Wrap up, then the next one is up on t
     await strip.getByRole('button', { name: 'Start playing' }).click()
 
     await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}/lectern`)
-    await expect(page.getByRole('heading', { name: /The Lectern/ })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Play: the Lectern/ })).toBeVisible()
     await expect(page.locator('.lectern-strip [data-stage]')).toHaveAttribute('data-stage', 'playing')
     // On a phone “Wrap up” sits at the foot of the page, away from a thumb.
     await page.getByRole('button', { name: 'Wrap up' }).click()
@@ -324,7 +324,7 @@ test('nothing typed in the page editor is lost by leaving, and an untouched new 
     const pages = await count()
     const newNpc = async () => {
       await open(page, `${w}/npcs`)
-      await page.getByRole('button', { name: /^\+ New NPC/ }).first().click()
+      await page.getByRole('button', { name: /^\+ New person/ }).first().click()
       const blank = page.getByRole('menuitem', { name: 'Blank page' })
       if (await blank.isVisible()) await blank.click()
       await expect.poll(() => here(page)).toMatch(/\?edit=1&new=1$/)

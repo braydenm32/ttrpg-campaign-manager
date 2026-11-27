@@ -78,7 +78,7 @@ export default function Home() {
         </button>
         <h1 className="brand-title"><img className="brand-mark" src={logo} alt="" />The Warded Atlas</h1>
         <p>
-          Your worlds, maps, NPCs and sessions, all in one place. Everything is saved on this device. <Help topic="home" />
+          Your worlds, maps, people and sessions, all in one place. Everything is saved on this device. <Help topic="home" />
         </p>
       </header>
       {empty && <Welcome opening={opening} onExample={openSample} onStart={() => setCreating(true)} />}
@@ -264,7 +264,7 @@ function About() {
       </p>
       <ul>
         <li><strong>Wiki pages</strong> for places, people, factions, items and lore, linked together.</li>
-        <li><strong>Interactive maps</strong> with pins, regions, fog of war and a built-in map maker.</li>
+        <li><strong>Interactive maps</strong> with pins, regions, fog of war and a built-in map builder.</li>
         <li><strong>Sessions</strong> with prep sheets, encounters, recordings, transcripts and recaps.</li>
         <li><strong>Secrets stay secret:</strong> anything marked for the GM never reaches players, and you can reveal pages to individual players.</li>
         <li><strong>Players join your world</strong> to see what you’ve revealed, claim their characters and keep notes.</li>

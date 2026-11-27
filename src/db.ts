@@ -23,19 +23,28 @@ export const ENTITY_TYPES = [
 export type EntityType = (typeof ENTITY_TYPES)[number]
 
 export const ENTITY_LABELS: Record<EntityType, { one: string; many: string; icon: string }> = {
-  location: { one: 'Location', many: 'Locations', icon: '🏰' },
+  location: { one: 'Place', many: 'Places', icon: '🏰' },
   npc: { one: 'NPC', many: 'NPCs', icon: '🧙' },
-  pc: { one: 'Player Character', many: 'Player Characters', icon: '🛡️' },
+  pc: { one: 'Player character', many: 'Player characters', icon: '🛡️' },
   faction: { one: 'Faction', many: 'Factions', icon: '⚑' },
   item: { one: 'Item', many: 'Items', icon: '🗝️' },
   event: { one: 'Event', many: 'Events', icon: '📜' },
   quest: { one: 'Quest', many: 'Quests', icon: '🧭' },
-  shop: { one: 'Shop / Tavern', many: 'Shops & Taverns', icon: '🍺' },
+  shop: { one: 'Shop', many: 'Shops', icon: '🍺' },
   deity: { one: 'Deity', many: 'Deities', icon: '✨' },
   lore: { one: 'Lore', many: 'Lore', icon: '📚' },
   thread: { one: 'Thread', many: 'Threads', icon: '🧵' },
   table: { one: 'Random table', many: 'Random tables', icon: '🎲' },
   custom: { one: 'Page', many: 'Other pages', icon: '📄' },
+}
+
+/**
+ * The word after "+ New" on a button: People make a "person" (an NPC), and other kinds go in
+ * small letters ("+ New place") unless they're short for something ("+ New NPC" never shows).
+ */
+export function newWord(one: string, type: EntityType) {
+  if (type === 'npc') return 'person'
+  return /^[A-Z]{2}/.test(one) ? one : one.toLowerCase()
 }
 
 /** Colours a world can take for its cover and book: deep, matte cloth colours that keep gold and text readable. */

@@ -281,7 +281,7 @@ export function TurnOrder({ combat, mine }: { combat: NonNullable<TableState['co
   const next = combat.order.length > 1 ? combat.order[(i + 1) % combat.order.length] : undefined
   return (
     <div className="turn-order">
-      <div className="muted small">Round {combat.round}</div>
+      <div className="muted small">Turn order · round {combat.round}</div>
       <ol>
         {combat.order.map((t) => {
           const you = !!t.entityId && mine.has(t.entityId)

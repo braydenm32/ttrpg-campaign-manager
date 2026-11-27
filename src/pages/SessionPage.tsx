@@ -292,7 +292,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus, review }
               label="💬 Post recap to Discord"
               title={`Session ${session.number}: ${session.title}`}
               text={() => forDiscord(session.recap)}
-              confirmText={session.visibility === 'players' ? undefined : 'This session is still GM only. Post the player recap to Discord anyway? Secret passages are left out.'}
+              confirmText={session.visibility === 'players' ? undefined : 'This session is still GM only. Post the player recap to Discord anyway? GM-only passages are left out.'}
             />
           </div>
         )}
@@ -302,7 +302,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus, review }
             <Markdown text={session.recap} entities={entities} worldId={worldId} showSecrets />
           </details>
         )}
-        {/* From the Desk's "Show to players…" (?tab=recap&show=1): the review is already open. */}
+        {/* From the Desk's "Reveal to players…" (?tab=recap&show=1): the review is already open. */}
         <ShowToPlayers session={session} campaign={campaign} entities={entities} startOpen={review} />
       </section>
       <div id="highlights">
@@ -377,7 +377,7 @@ function NotesCard({ session, entities, worldId, id }: { session: Session; entit
           className="notes-text"
           aria-label="GM notes"
           value={session.notes}
-          placeholder="What happened, who they met, what’s left hanging… Links like [[Page name]] work. Only you see these."
+          placeholder="What happened, who they met, what’s left hanging… Links like [[Page name]] work. GM only."
           onCommit={(notes) => saving(db.sessions.update(session.id, { notes }))}
         />
       ) : (

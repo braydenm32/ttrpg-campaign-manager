@@ -226,7 +226,7 @@ export function ResetDialog({ world, onClose }: { world: World; onClose: () => v
       ) : (
         <div className="one-shot-reset">
           <p>
-            The world goes back to its starting point from {when(plan.startingPoint.savedAt)}: reveals, fog of war, clocks, the in-game clock, handouts, who’s alive, loot, quests and the sessions with their Lectern. <Help topic="oneShotReset" />
+            The world goes back to its starting point from {when(plan.startingPoint.savedAt)}: reveals, fog of war, clocks, the in-game time, handouts, who’s alive, loot, quests and the sessions with their Lectern. <Help topic="oneShotReset" />
           </p>
           {!pages.length && !others.length && <p className="muted">Nothing has changed since the starting point.</p>}
           {pages.length > 0 && (
@@ -291,7 +291,7 @@ export function ResetDialog({ world, onClose }: { world: World; onClose: () => v
                 </label>
                 <label className="row">
                   <input type="checkbox" checked={clearNotes} onChange={(e) => setClearNotes(e.target.checked)} />
-                  Clear the players’ group notes and party scratchpad
+                  Clear the players’ Group notes
                 </label>
               </>
             )}

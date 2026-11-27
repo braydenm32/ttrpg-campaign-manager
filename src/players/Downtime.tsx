@@ -119,9 +119,10 @@ export function PlayerDowntime({ world, mine }: { world: World; mine: Entity[] }
   return (
     <section className="card room-card downtime">
       <h3>
-        <Ico as={Hourglass} /> Between sessions <Help topic="downtime" />
+        <Ico as={Hourglass} /> Downtime <Help topic="downtime" />
       </h3>
-      <p className="muted small">What does your character do until next time? Train, research, craft, look someone up… Only your GM (and any co-GM) sees this.</p>
+      <p className="muted small">What your character does between sessions</p>
+      <p className="muted small">Train, research, craft, look someone up… Only your GM (and any co-GM) sees this.</p>
       <form
         className="form"
         onSubmit={async (e) => {

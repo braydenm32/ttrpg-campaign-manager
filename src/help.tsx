@@ -10,7 +10,7 @@ export const HELP = {
   overview: 'Your Desk: the session in hand with the one button for what comes next, everything waiting on you before it, ticking clocks, the party, the sessions coming up and what changed lately. “New page” makes a page of any type.',
   areas:
     'The world is split into areas, down the side on a computer and along the bottom on a phone. Desk is what needs you now. Session is the session in hand: prepare it, play it (the Lectern) and wrap it up. Atlas is the world itself (maps, places, people), Story is what’s moving (threads, quests, clocks, timeline), and More has the tools you need now and then. The tabs along the top belong to the area you’re in, and each area remembers where you were. Players get the Common Room and The World instead. On a phone the top bar slides out of the way while you scroll down a page and comes back as soon as you scroll up.',
-  more: 'Things used now and then, in one place: what you reach for at the table (handouts, sounds, safety tools, the players’ screen), the workshop (generators and tables, files, the Archivist, templates) and keeping the world (settings, backups, importing, Recently deleted). The numbers say how many there are (and how much space files take). Search (Ctrl+K) finds every one of them by name too.',
+  more: 'Things used now and then, in one place: what you reach for at the table (handouts, sounds, table rules, the players’ screen for a TV), the workshop (generators and tables, files, the Archivist, templates) and keeping the world (settings, backups, importing, Recently deleted). The numbers say how many there are (and how much space files take). Search (Ctrl+K) finds every one of them by name too.',
   settings:
     'Everything about this world in four tabs: the world itself (name, cover, calendar, your own page types, templates), players and sharing (sync, invite links, the wiki link, co-GMs), this device (look, help tips, Discord, AI keys) and data (backups, importing, recently deleted). Each tab is a step in Back.',
   everything:
@@ -20,12 +20,17 @@ export const HELP = {
     'A small, simple world for a first look: a coast, a town, a handful of people and two drawn maps with pins. Good for learning the basics in a few minutes. Vael Ardith is the full example with a campaign ready to run.',
   exampleWorld:
     'A complete world to explore and learn from: places, people, factions, gods, history, maps (the continent, a region, the town of Cinderford, a battle map and a dungeon), handouts and a campaign ready to run. Open it, look around, borrow ideas, or run it for your group. It lives only on this device unless you switch on sync, and World settings can reset it to new.',
-  worldLook: 'Give this world its own cover picture and colour. They show on Home and on the world’s book on your shelf of worlds. Players see them too.',
+  worldLook: 'Give this world its own cover picture and colour. They show on the Desk and on the world’s book in Your worlds. Players see them too.',
   theme: 'Candlelit is the dark look, Parchment the light one. “Match this device” follows your phone or computer’s own setting.',
   viewingAs:
-    'Switch to Player to preview exactly what your players can see. Anything marked 🔒 GM only, GM notes and secret passages disappear.',
+    'Switch to Player to preview exactly what your players can see. Anything marked 🔒 GM only, GM notes and GM-only passages disappear.',
   previewAs:
     'Pick one player to see the world exactly as they do: what’s revealed to everyone, plus pages revealed just to them and passages written for their character. Without invited players you can still pick a character, to check their passages and their Common Room.',
+  people:
+    'The people of this world. NPCs and player characters are two kinds of person: the switch at the top goes between them (and to factions, in the player view).',
+  places:
+    'The places of this world, from regions down to single rooms. Shops (taverns too) are a second kind of place: the switch at the top goes between them. Places sit inside places, so a tavern can be in a town, in a region.',
+  lore: 'History, legends and beliefs of this world, with the gods (deities) as a second kind: the switch at the top goes between them.',
   codex:
     'Every page in your world, grouped by type. Places (with shops and taverns), People, Factions and Lore (with deities) have tabs of their own in the Atlas, and this list shows every type with how many pages it has. Pages of no particular type are under Other pages. Pages can sit inside places (a tavern inside a town), and any page can be part of a page of its own kind (a faction under a faction); a list with pages under others shows them as a tree you can fold.',
   partOf:
@@ -47,25 +52,25 @@ export const HELP = {
   hiddenCampaign:
     'A campaign you’re still planning can stay 🔒 GM only: players don’t see it or any of its sessions until you switch it to 👁 Players can see this.',
   pictures:
-    'Type @ or [[ and the start of a page’s name to link to it: pick it from the list (arrow keys and Enter work too). Put pictures in the text: paste one, drop one in, or use 🖼️ Picture. Players see a picture once the text around it is revealed to them (not inside a secret passage).',
+    'Type @ or [[ and the start of a page’s name to link to it: pick it from the list (arrow keys and Enter work too). Put pictures in the text: paste one, drop one in, or use 🖼️ Picture. Players see a picture once the text around it is revealed to them (not inside a GM-only passage).',
   search: 'Finds pages by name, nickname, summary, details, tags and the words in them, plus sessions and maps. Several words find pages that have all of them, in any order (“mercy fort” finds Fort Mercy), and each result says what kind of page it is. It also does things: type “new npc” to make a page, or “clocks” to go there. Places come first, and the tools inside a screen are there too: “initiative”, “dice” or “timer” open that panel of the Lectern, “fog” the maps, “calendar” World settings. Press Ctrl+K (⌘K on a Mac) anywhere to open it. In the player view it only searches what players can read.',
   news: 'What’s happened since you last looked: new pages, handouts and session recaps, answers to your questions, and what changed on pages you already had (new writing, someone’s fate, a clock that moved). Tap one to read it, and “Got it” when you’re done.',
   backupReminder: 'A reminder to download a backup of this world every two weeks (monthly with cloud sync on). Save the file somewhere safe, like Google Drive or a USB stick. “Later” asks again in a week.',
   aliases:
     'Other names this page goes by, like “the Harbourmaster” for Corvin Vane. A [[link]] to any of them finds this page. Nicknames are for you: players don’t see them. Renaming a page updates every link to it. For a GM-only page, text your players can read keeps the old name (so the new one stays secret), and the old name is added here.',
-  gmTags: 'Tags only you see, like “traitor” or “recurring”. Players get the ordinary tags of a revealed page, never these.',
+  gmTags: 'GM-only tags, like “traitor” or “recurring”. Players get the ordinary tags of a revealed page, never these.',
   history:
     'Every time you save a page, the version before is kept on this device (the last 40). Look at an old version or restore it; restoring keeps today’s version too, and who can see the page stays as it is now.',
   recentlyDeleted:
     'Pages, sessions, campaigns, maps, files, corkboards and sounds deleted on this device, or on another device that syncs this world. Restore brings them back as they were; a page comes back with the places inside it and the pages under it, what it carried and its map pins. When two devices change the same session, corkboard or world setting at once, this device’s version is kept and the other one waits here, marked “changed on another device”. Things other than pages are kept for a month; “Delete forever” or “Delete all for good” frees the space straight away.',
   oneShot:
-    'Run this world again and again, for one table after another. Making it a one-shot saves the world as it is now as its starting point; after a game, “Reset for the next table” puts everything back the way it was: reveals, fog of war, clocks, the in-game clock, handouts, who’s alive, loot, quests and the sessions. Changed your prep? “Update starting point”. The starting point is kept on this device only; on another device, save one there before anyone plays, or use a backup downloaded from this world.',
+    'Run this world again and again, for one table after another. Making it a one-shot saves the world as it is now as its starting point; after a game, “Reset for the next table” puts everything back the way it was: reveals, fog of war, clocks, the in-game time, handouts, who’s alive, loot, quests and the sessions. Changed your prep? “Update starting point”. The starting point is kept on this device only; on another device, save one there before anyone plays, or use a backup downloaded from this world.',
   oneShotReset:
     'Before anything changes, this lists the pages that changed since the starting point. Tick any fix to your prep you want to keep: it stays as it is now and becomes part of the starting point. A short record of the run (date, who played, recap and notes) goes on the GM-only “Past runs” page, which resets never touch. With players online you can also remove them (the next group joins with the same invite link), free up the characters they claimed and clear their group notes. What the reset replaces stays in Recently deleted for a month.',
   templates:
     'A template is a starting point for new pages, like a "Dungeon room" with the headings and details you always fill in. Templates are always GM only and never appear in lists. Make one with "Save as template" on any page.',
   lifeStatus:
-    'Mark a character alive, dead, missing or captured. It shows in lists, on map pins and at the Lectern. Players only see it if you tick "Players know this".',
+    'Mark a character alive, dead, missing or captured. It shows in lists, on map pins and at the Lectern. Players only see it if you tick “Players know”.',
   print: 'A clean copy to print or save as a PDF (choose "Save as PDF" in the print window). The player copy leaves out secrets, GM notes and anything not revealed.',
   customTypes: 'Add your own kinds of page, such as Ships, Spells or Gods of the Deep. Each gets its own section in Everything.',
 
@@ -75,7 +80,7 @@ export const HELP = {
     'Click a pin or region to see what is there. "Enter" opens a more detailed map, such as a town inside a region. As GM, use the toolbar to add pins and regions. Clicking a pin shows its page first (Open page); “Edit pin” changes its name, colour, page, category or note.',
   fog:
     'Hide the map from players and uncover it as they explore. Uncover a circle (its outline follows the pointer at the size you set; drag to uncover a trail), a box or any shape; switch to Cover to hide a part again. Undo takes back the last one (a whole room or trail at once) and Redo puts it back. Players get a copy of the picture with the fog painted on, so covered areas and the pins in them can’t be peeked at.',
-  signOut: 'Signing out stops cloud sync on this device; your own worlds stay here. If you joined worlds as a player, it asks whether to remove their copies from this device too. You stay in those worlds: sign in again and Home lists them to open. On a shared or borrowed computer, choose “Sign out and remove all worlds and keys from this device” instead: it saves your latest changes to your account first, says what goes (a world that’s only on this device is gone for good, and so are recordings made here), then removes everything the app keeps on this device, AI keys included.',
+  signOut: 'Signing out stops cloud sync on this device; your own worlds stay here. If you joined worlds as a player, it asks whether to remove their copies from this device too. You stay in those worlds: sign in again and Your worlds lists them to open. On a shared or borrowed computer, choose “Sign out and remove all worlds and keys from this device” instead: it saves your latest changes to your account first, says what goes (a world that’s only on this device is gone for good, and so are recordings made here), then removes everything the app keeps on this device, AI keys included.',
   syncProblem: 'Cloud sync stopped, or finished with something to tell you (a file that didn’t upload, say). Nothing is lost: your changes stay on this device and go up once sync works again. “Try again” syncs now; if it keeps failing, check you’re online and signed in (World settings › Players and sharing).',
   deviceStorage: 'How much room this app’s worlds, pictures, recordings and Recently deleted take in this browser, and whether the browser has promised to keep them. Without that promise a browser may clear the data when the device runs short of space (Safari on an iPhone can after a week unused), so keep a backup. Installing the app to your home screen usually earns the promise.',
   unusedFiles: 'Files no page, map, handout, sound or session uses (as a picture, in its text, or as a recording). Handy for tidying up: deleted files go to Recently deleted for a month. Each file also says what uses it.',
@@ -116,7 +121,7 @@ export const HELP = {
   tileWalls:
     'Build walls and fences square by square from a map pack: pick a brick, stone, timber or cave wall, or a hedge, picket, iron or rope fence, and drag along the squares it runs through. Each square joins up with the wall next to it by itself, so corners, crossings and ends come out right. Doorway leaves a doorway in a straight run of wall (click it again to wall it up), Broken breaks a stretch, and Take away removes wall. Walls go in exports for virtual tabletops, with a door at each doorway; fences other than hedges don’t block sight.',
   packGrounds:
-    'Floor textures from your map packs (cobblestones, flagstones, marble, planks, grass, sand, lava and more) paint just like the other grounds, a picture repeated across the brush stroke. Laid floors stop at the walls of rooms unless you untick it. You can also start a whole map on one, in Map settings.',
+    'Floor textures from your map packs (cobblestones, flagstones, marble, planks, grass, sand, lava and more) paint just like the other grounds, a picture repeated across the brush stroke. Laid floors stop at the walls of rooms unless you untick it. You can also start a whole map on one, in Drawing settings.',
   packCondition:
     'Pieces from an imported pack can come in several conditions: intact, damaged, broken, burned, ruined. Each condition fills exactly the same space, so you can change a piece already on the map and it stays where it is.',
   mapPacks:
@@ -132,7 +137,7 @@ export const HELP = {
   scatterBrush:
     'Click and hold with Place, then drag, and pieces keep landing inside the dashed circle without piling on top of each other: quick forests, mountain ranges and hills. Trees, mountains and towns stay on land; ships and waves stay at sea. Spread is the size of the circle; How thick sets how close together they sit. Letting go makes it one step, so Undo takes the whole lot back. Erase works the same way: drag across pieces to remove several.',
   gmMarks:
-    'Marks only you see, in red like the notes in a published adventure: secret doors (the old "S" on the wall), traps, hidden treasure and danger (ambushes, watchers, monsters). Players get a copy of the map picture without them, so they can’t peek. A secret door snaps onto a wall like a door; select it and press "Players found it" to turn it into a normal door they can see. Tick "Players can see this mark too" on a trap or treasure mark once they know about it.',
+    'Marks only you see, in red like the notes in a published adventure: secret doors (the old "S" on the wall), traps, hidden treasure and danger (ambushes, watchers, monsters). Players get a copy of the map picture without them, so they can’t peek. A secret door snaps onto a wall like a door; select it and press "Players found it" to turn it into a normal door they can see. Untick “GM only” on a trap or treasure mark once players know about it.',
   gmOnly:
     'Tick this and the piece, line or label is only on your copy of the map: players get a picture without it. On your copy it has a red dashed line round it so you know. Handy for a cult’s hidden lair on a world map, a secret tunnel, or a label with a note to yourself. A piece linked to a page stays GM only too.',
   secretRooms:
@@ -159,7 +164,7 @@ export const HELP = {
   relationWeb:
     'Everyone and how they’re connected, drawn as a web. It opens on one person and everyone within two links of them: your own character for a player, otherwise the best-connected player character. Click someone to move to them (Back goes back), pick Everyone to see the whole web, or switch to the family tree. In a big world it shows just people, factions and gods; switch to every kind of page to see places and items too. Add links from any page’s Relationships box; removing one offers Undo. On a phone, swiping up or down over the web scrolls the page; drag sideways or use + and − to move around it.',
   gameClock:
-    'The time of day in your world. Set it, then press Run: at real time, faster (1 real minute = 10 game minutes, or any speed you type), or say “Reach 21:00 in 1 h 30 min real time” and it works out the speed and stops there. Passing midnight moves the world’s date on a day. Show players puts it on the players’ screen (a clock face with a sun or moon, or 24-hour digital), in a corner over whatever you’re showing, or filling the screen when nothing else is up; their phones show it too. An alarm (“23:00: the ritual completes”) pings only you. The clock pauses itself when you mark a session played.',
+    'The time of day in your world. Set it, then press Run: at real time, faster (1 real minute = 10 game minutes, or any speed you type), or say “Reach 21:00 in 1 h 30 min real time” and it works out the speed and stops there. Passing midnight moves the world’s date on a day. Show players puts it on the players’ screen (a clock face with a sun or moon, or 24-hour digital), in a corner over whatever you’re showing, or filling the screen when nothing else is up; their phones show it too. An alarm (“23:00: the ritual completes”) pings only you. It pauses itself when you mark a session played. (Clocks, on the same page, are progress clocks: a different thing.)',
   gameTimePlayers: 'The time of day in the game world, as your GM keeps it. It may run faster than real time.',
   clocks:
     'A progress clock is a circle cut into slices. Fill a slice when a villain’s plan moves on, a rival gets closer or danger grows; when it’s full, it happens. Players only see clocks you mark “Players know”, on pages they can see: each clock says which. Start one here or from a page’s Clocks box; removing one offers Undo.',
@@ -172,7 +177,7 @@ export const HELP = {
   characterFame:
     'This character’s own fame: how far their name has spread and which way the talk leans, with the history folded away. Players see it on the character’s page and the Party tab, with only the reasons you tick for them.',
   safety:
-    'Agree what’s off limits before you play. Lines never happen in the game; veils can happen, but off screen. Everyone in the world can read this page.',
+    'Table rules are your table’s safety tools. Agree what’s off limits before you play. Lines never happen in the game; veils can happen, but off screen. Everyone in the world can read this page.',
   xcard:
     'Tap the X-card if something in the game isn’t OK for you. Your GM is told without your name: straight away if their app is open, or as soon as they next open it. They move the story on, and no one asks why.',
   campaign: 'A campaign is one story in your world, with its sessions, party and active quests. A world can hold several.',
@@ -191,9 +196,9 @@ export const HELP = {
   wrapUp:
     'After play, in order: your notes, the recording and its transcript, the write-up from Claude, the players’ recap, highlights, and changes to your pages. Then “Mark as played”, and the next session is ready to prepare. The line at the top counts how many of the “Before you finish” steps are done (a session with no recording has no recording step to count, and “Who was there” is a check, not a step); “who featured” and the notes only count what happened once you pressed Start playing, not the plan.',
   markPlayed:
-    'Marks this session played and moves on: the next session (made now if there isn’t one) becomes the one the Desk and the Session area open, and the clues and scenes you didn’t reach are added to its plan, marked “(from #1)”. A date still ahead changes to today. Whatever is on players’ screens, the in-game clock too, comes down (handouts stay in Handouts). Undo puts it all back.',
+    'Marks this session played and moves on: the next session (made now if there isn’t one) becomes the one the Desk and the Session area open, and the clues and scenes you didn’t reach are added to its plan, marked “(from #1)”. A date still ahead changes to today. Whatever is on players’ screens, the in-game time too, comes down (handouts stay in Handouts). Undo puts it all back.',
   revealRecap:
-    'Players can read the recap and the highlights, and see who featured, once the session is shown to them. GM notes, the prep, the recording and the transcript stay yours.',
+    'Players can read the recap and the highlights, and see who featured, once the session is revealed to them. GM notes, the prep, the recording and the transcript stay yours.',
   undo: 'Removed something by mistake? The note at the bottom of the screen has Undo for a few seconds.',
   recording:
     'Record from one microphone for games at the table, or the microphone plus your Discord or Zoom audio for online games. Add bookmarks while you play to jump back to big moments. Recording carries on while you use the rest of the app (the Lectern, maps, pages), and is saved every few seconds, so if the app closes by accident you can recover it here. Always get everyone’s OK before recording (and a parent’s OK for anyone under 18), and tell them where it goes: the audio stays on the device that made it unless you send it to AssemblyAI (US) for a transcript; the transcript syncs with the world, where any co-GM can read it, and goes to Claude (Anthropic, US) if you ask for a recap.',
@@ -202,14 +207,14 @@ export const HELP = {
   recap:
     'Claude drafts a GM summary, a player recap and updates for your pages from the transcript. "Open in Claude" (or ChatGPT) is free with your own account there; "Write it now" uses your own API key. You review both before saving.',
   worldUpdates:
-    'Claude compares the session with your pages and suggests what to change: new NPCs, places and shops that came up, quests moving on, new relationships, timeline events, deaths and captures, loot changing hands, threads and the party’s reputation. Tick the ones you want and add them in one go. New pages start GM only, and lines on existing pages go in a “Session log” at the bottom of the page. Every change is listed in the Chronicle and can be undone from the page’s history.',
+    'Claude compares the session with your pages and suggests what to change: new NPCs, places and shops that came up, quests moving on, new relationships, timeline events, deaths and captures, loot changing hands, threads and the party’s reputation. Tick the ones you want and add them in one go. New pages start GM only, and lines on existing pages go in a “Session log” at the bottom of the page. Every change is listed under “What changed” in this session’s Wrap up and can be undone from the page’s history.',
   whatChanged:
-    'In a session’s Wrap up: every change its write-up made to your world (pages made, lines added, quests and fates that changed). Click a line to open the page. It used to be the Chronicle tab under Story; old Chronicle links open the newest one here. Only you see it.',
+    'In a session’s Wrap up: every change its write-up made to your world (pages made, lines added, quests and fates that changed). Click a line to open the page. It used to be the Chronicle tab under Story; old Chronicle links open the newest one here. It’s GM only.',
   heardIn:
     'Where this page’s name (or a nickname) was said out loud in a session’s transcript. Click a time to open the session and play that moment, if the recording is on this device.',
   sessionMentions: 'Sessions whose notes or recap link to this page.',
   lectern:
-    'Play (the Lectern) is your screen while you run the session: the scene and its read-aloud text, who is there, the fight, the party, and tools (show players, dice, loot, sounds). On a computer it’s three columns; on a phone the scene comes first, Who’s here and Clocks start folded, and the row of buttons at the top jumps to each part. “Record” opens the recording panel. “Wrap up” ends the session (on a phone it sits at the bottom, away from your thumb).',
+    'Play: the Lectern is your screen while you run the session: the scene and its read-aloud text, who is there, the fight, the party, and tools (show players, dice, loot, sounds). On a computer it’s three columns; on a phone the scene comes first, Who’s here and Clocks start folded, and the row of buttons at the top jumps to each part. “Record” opens the recording panel. “Wrap up” ends the session (on a phone it sits at the bottom, away from your thumb).',
   nextScene:
     'Goes on to the next scene you planned: ticks off this one, and puts the next one’s place, read-aloud text and people on screen (and its fight, sounds and handout, if its card has them). A scene with nothing on its card leaves the text and people as you set them. If it reveals pages, you see what players will get first. Undo puts it all back: the last scene, the fight and people it added, and the pages it revealed or showed.',
   sceneChange:
@@ -232,7 +237,7 @@ export const HELP = {
   syrinscapeSets:
     'Pick any soundset in your Syrinscape library and its moods appear as buttons: tap one to start it in Syrinscape, tap again to stop. Keep Syrinscape’s player open: it makes the sound. The soundset you picked stays chosen in this world, here and at the Lectern. “Keep these moods as buttons” saves them to your soundboard.',
   showPlayers:
-    'Put a picture, a page or some text on every player’s screen right now, like handing round a letter or showing a monster. It pops up for players who joined, and the button by this heading opens the Players’ screen: a clean screen for a TV or second monitor that shows only what you’re showing. What’s up now sits at the top (the in-game clock too, when it’s on their screens) with a Stop button that takes it all down; Undo in the note puts it back. Pictures from this scene come first. Pick a page that isn’t revealed yet and it’s revealed as you show it. A map’s picture always goes out as the players’ copy, never yours with the secrets or the fog lifted. “Several” keeps boards you lay out ahead of time, to put up all at once, and everything you show is kept in Handouts.',
+    'Put a picture, a page or some text on every player’s screen right now, like handing round a letter or showing a monster. It pops up for players who joined, and the button by this heading opens the Players’ screen: a clean screen for a TV or second monitor that shows only what you’re showing. What’s up now sits at the top (the in-game time too, when it’s on their screens) with a Stop button that takes it all down; Undo in the note puts it back. Pictures from this scene come first. Pick a page that isn’t revealed yet and it’s revealed as you show it. A map’s picture always goes out as the players’ copy, never yours with the secrets or the fog lifted. “Several” keeps boards you lay out ahead of time, to put up all at once, and everything you show is kept in Handouts.',
   handouts: 'Everything you’ve shown players, newest first. Players can open a letter or picture again any time after you stop showing it. Remove a picture or text to take it back. A page you remove stays revealed unless you choose to hide it again.',
   handoutsReady: 'Handouts you’ve prepared but not shown yet: any GM-only page tagged “handout”. Players can’t see them. “Reveal and show” first says what players will see, then reveals the page to everyone and puts it on their screens (with Undo), and it moves to Shown so far.',
   showSeveral:
@@ -259,7 +264,7 @@ export const HELP = {
   importPages:
     'Bring pages in from Obsidian (or any folder of plain-text notes), a Kanka export or a World Anvil export. Everything arrives as 🔒 GM only, so you can tidy up before revealing anything.',
   lookup:
-    'Search the open rules and fan wikis for your world’s game: the D&D 5e System Reference Documents (spells, monsters, magic items, rules), the Daggerheart SRD (built into the app, so it works offline), the Forgotten Realms Wiki, PathfinderWiki, Starfinder Wiki, and the Lovecraft, Cyberpunk and White Wolf wikis. Open a result to read it. The GM can keep it as a new page (🔒 GM only until you reveal it) or add it to a page you already have; a line at the bottom says where it came from and its licence, so keep it if you share the page. Players can search and read too (More › Look up rules), but nothing they find is saved. Games whose rules aren’t free to copy (Pathfinder’s Archives of Nethys, D&D Beyond, Shadowdark…) get links that open the right site in a new tab.',
+    'Search the open rules and fan wikis for your world’s game: the D&D 5e System Reference Documents (spells, monsters, magic items, rules), the Daggerheart SRD (built into the app, so it works offline), the Forgotten Realms Wiki, PathfinderWiki, Starfinder Wiki, and the Lovecraft, Cyberpunk and White Wolf wikis. Open a result to read it. The GM can keep it as a new page (🔒 GM only until you reveal it) or add it to a page you already have; a line at the bottom says where it came from and its licence, so keep it if you share the page. Players can search and read too (More › Look it up), but nothing they find is saved. Games whose rules aren’t free to copy (Pathfinder’s Archives of Nethys, D&D Beyond, Shadowdark…) get links that open the right site in a new tab.',
   importSheet:
     'Bring a character in from another tool. A file: Foundry VTT’s Export Data (any game), a Hero Lab portfolio (.por) or XML statblock, a Fantasy Grounds character export, Shadowdarklings’ JSON, D&D Beyond, Pathbuilder or DiceCloud data, or a fillable PDF sheet. A link: a public D&D Beyond or DiceCloud character, or Pathbuilder’s Export JSON. Anything else (Hero Lab Online, Demiplane, Roll20, notes): paste the sheet’s text and Claude sorts it. Gear becomes item pages the character carries. Import again after a level-up to update the same page; your GM notes and secrets stay as they are.',
   importNotes:
@@ -285,16 +290,16 @@ export const HELP = {
   playerNotes:
     '“My notes” are private to you. “Group notes” are shared with the whole party, and your GM can read them. “My notes” save when you click away. “Group notes” show as they will read: type a line in the box and press “Add a line”, or use “Edit the whole notebook” to rewrite them. If someone else changed the group notes while you were typing, nothing is lost: you choose to keep both, yours or theirs.',
   scratchpad:
-    'A notebook for anything that isn’t about one page: plans, names, clues. Keep your own notes (My notes) or write in the party’s shared Group notes.',
+    'For anything that isn’t about one page: plans, names, clues. Keep your own notes (My notes) or write in the party’s shared Group notes.',
   gmPlayerNotes:
     'What your players have written together in Group notes. Only they can edit it, and their private notes stay private.',
   coGM:
     'A co-GM sees and edits everything in this world, secrets included, from their own account. Only you can invite or remove co-GMs, manage players and links, or delete the cloud copy. Each co-GM link works once: make a new one for each co-GM.',
   schedule:
-    'Suggest a few dates for the next session. Players who joined mark each one yes, maybe or no, and you book the one that works. Booking puts the date on the next session you haven’t played (making one if there is none) and shows it to players. Times show in each person’s own time zone.',
+    'Suggest a few dates for the next session. Players who joined mark each one yes, maybe or no, and you book the one that works. Booking puts the date on the next session you haven’t played (making one if there is none), and players see it there. Times show in each person’s own time zone.',
   nextSession: 'The session in hand, with its stage (Planned, Preparing, Playing, Played), its date, how many scenes and clues you’ve written, and one main button for what comes next: prepare it, start playing, wrap it up, or plan the one after.',
   endSession:
-    'What’s done and what’s left before you mark the session played: the recording transcribed, the recap written, your pages updated, the session shown to players, the world’s date moved on. “Mark as played” then gets the next session ready, carrying over the clues they didn’t find and the scenes they didn’t reach (and, for a session made now, where the party is).',
+    'What’s done and what’s left before you mark the session played: the recording transcribed, the recap written, your pages updated, the session revealed to players, the world’s date moved on. “Mark as played” then gets the next session ready, carrying over the clues they didn’t find and the scenes they didn’t reach (and, for a session made now, where the party is).',
   partyNotPlaying:
     'Characters marked dead, missing or captured on their page stay out of the Lectern’s party list and “Add the party”, so the table only shows who’s playing. Tap “Show” to see them for a moment. Their pages, the Atlas and what players see are unchanged.',
   partyCampaign: 'When a world has more than one group, pick which campaign this character plays in. The campaign page and the Lectern’s “Add the party” then only show that group.',
@@ -320,7 +325,7 @@ export const HELP = {
   roomNow:
     'Now changes with the game. Before a session: when you play next, what happened last time and what the party is doing. While your GM runs the session live: the scene, whose turn it is, dice everyone sees, a quiet word to the GM and the X-card, with your character’s numbers right under the scene (tap your HP to change it). At any other time a small Dice card at the foot keeps dice in reach. After a game, until the day of the next one: last time’s recap first, then the loot and the Group notes.',
   roomMe: 'Your character at a glance: the numbers that matter, what you carry, passages only you can read, and your own notes. “Edit my character” lets you update the sheet, or fill it in from a character sheet file.',
-  roomParty: 'Everyone in the party, who plays them and what each one carries, plus the party’s purse, the stash you share and how far your name has spread. The full loot list has every item with its notes.',
+  roomParty: 'Everyone in the party, who plays them and what each one carries, plus the party’s purse, the stash you share and how far your name has spread. Party loot has every item with its notes.',
   tableRules:
     'What your table agreed before playing. Lines never happen in the game; veils can happen, but off screen. The X-card tells your GM, without your name, that something isn’t OK.',
   tableLink:
@@ -356,7 +361,7 @@ export const HELP = {
     'Say what’s happening and Claude writes four lines this character might say, in their voice, using what their page says about them. Keep the ones you like in your GM notes.',
   spotlight:
     'Who got time at the table. With a transcript that tells speakers apart, it shows how long each person talked; it also counts how often each character came up (in the transcript, or in your recap and the notes you wrote during play without one). Worked out on this device; nothing is sent anywhere.',
-  readAloud: 'Reads recaps aloud with your device’s own voices: free, private, and secret passages are never read, not even ones meant only for you (the whole table would hear them). Pick a voice and speed here.',
+  readAloud: 'Reads recaps aloud with your device’s own voices: free, private, and GM-only passages are never read, nor passages meant only for some characters, not even yours (the whole table would hear them). Pick a voice and speed here.',
   newCharacterName:
     'Secret passages written “for” a character reach whoever plays a character with that full name or first name. If the new character shares a name with another, those secrets would reach both players, so give one of them a different name.',
   pageVisibility:
@@ -376,7 +381,7 @@ export const HELP = {
   fogRoom:
     'Click inside a room to uncover just that room, right up to its walls. It stops at walls drawn across the room and at doors, gates and bars, so click in the next room to open that one too. Secret rooms are left alone until you mark their door as found. With Cover chosen, it covers the room again. Only on maps with rooms drawn in the map builder.',
   keysInAccount:
-    'Keeps your AssemblyAI and Anthropic keys in your Warded Atlas account, so any device you sign in on gets them without pasting, and signing out takes them off that device again. No other user can read them, and they never go into worlds, backups, share links or anything players or co-GMs receive. They are stored as plain text in the app’s database, which only Brayden (who makes the app) looks after, so set a monthly spending limit in the Anthropic Console. On a shared computer, keys someone else typed in stay theirs: they never go into your account, and come back when you sign out. Untick to take them out of your account.',
+    'Keeps your AssemblyAI and Anthropic keys in your Warded Atlas account, so any device you sign in on gets them without pasting, and signing out takes them off that device again. No other user can read them, and they never go into worlds, backups, share links or anything players or co-GMs receive. They are stored as plain text in the app’s database, which only the person who runs the app looks after, so set a monthly spending limit in the Anthropic Console. On a shared computer, keys someone else typed in stay theirs: they never go into your account, and come back when you sign out. Untick to take them out of your account.',
   keepAtAssembly:
     'Once a cloud transcript is saved in your world, the app deletes it from AssemblyAI, so your table’s talk isn’t kept by another company. A transcript you start over, or one still being made when you delete its session (or its campaign, or the whole world), is deleted there too; if a delete doesn’t go through, the app tries again each time you open a session’s recordings on this device. Tick this to leave a copy in your AssemblyAI account instead (for example, to look at it on their website). Applies on this device only.',
   openInChat:
@@ -392,9 +397,9 @@ export const HELP = {
   wantedPages:
     'Names you’ve written as [[links]] in pages or sessions that no page answers to yet, most mentioned first. Pick one and choose a type to make its page (it starts as GM only). You can also click a grey dashed link anywhere to make its page.',
   partyGlance:
-    'Every character in one table, with the details you choose as columns: AC, Passive Perception, Languages, Darkvision, anything from their pages. Choose columns once and they show here and at the Lectern. Only you see this table.',
+    'Every character in one table, with the details you choose as columns: AC, Passive Perception, Languages, Darkvision, anything from their pages. Choose columns once and they show here and at the Lectern. This table is GM only.',
   gmScreen:
-    'Your own GM screen. Pin pages you look up every session (house rules, a monster, a random table) to read them here, save rolls you make again and again (“Goblin attack d20+4”) as buttons, and ask the Archivist a question without leaving the Lectern. Only you see it.',
+    'Your own GM screen. Pin pages you look up every session (house rules, a monster, a random table) to read them here, save rolls you make again and again (“Goblin attack d20+4”) as buttons, and ask the Archivist a question without leaving the Lectern. It’s GM only.',
   names:
     'Names for people, places, taverns and ships, in eight styles (Common, Elvish, Dwarvish, Orcish, Halfling, Northern, Southern, Infernal). “Like my world’s names” learns from the names already in your world (your NPCs for people, your locations for places) and makes up new ones that sound the same. Press More for another batch.',
   treasure:
@@ -402,9 +407,9 @@ export const HELP = {
   starterTables:
     'Ready-made random tables (rumours, plot hooks, road and wilderness encounters, dungeon dressing, trinkets, NPC quirks, town events) to get you rolling. They start as GM only, and you can change, add or remove any line.',
   objectives:
-    'The steps to finish this quest. Players see the ones with an open eye and can follow the ticks as you make them. A step with a closed eye stays yours alone (a hidden goal, a twist) until you click the eye to tell them.',
+    'The steps to finish this quest. Players see the ones with an open eye and can follow the ticks as you make them. A step with a closed eye is GM only (a hidden goal, a twist) until you click the eye to reveal it.',
   rewards:
-    'What finishing the quest is worth. A reward stays hidden from players until you click its eye. “Give to the party” puts any coins in its text (like “200 gp”) into the party’s purse and its item into the party stash, and shows it to players.',
+    'What finishing the quest is worth. A reward is GM only until you click its eye to reveal it. “Give to the party” puts any coins in its text (like “200 gp”) into the party’s purse and its item into the party stash, and reveals it to players.',
   downtime:
     'Tell your GM what your character does between sessions: training, research, crafting, visiting someone, working a job. Only your GM (and any co-GM) sees it, and their answer appears here, for you alone.',
   callForRoll:

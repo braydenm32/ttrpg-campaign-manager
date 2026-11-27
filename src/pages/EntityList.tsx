@@ -77,10 +77,11 @@ export default function EntityList() {
     <div className="page">
       <header className="page-header">
         <div>
-          {group && <div className="kicker">{label.many}</div>}
+          {group && label.many !== group.title && <div className="kicker">{label.many}</div>}
           <h1>
-            {label.icon} {group ? group.title : label.many} <Help topic={t === 'table' ? 'randomTables' : t === 'quest' ? 'questList' : t === 'custom' && kind ? 'customTypes' : 'codex'} />
+            {label.icon} {group ? group.title : label.many} <Help topic={t === 'table' ? 'randomTables' : t === 'quest' ? 'questList' : t === 'custom' && kind ? 'customTypes' : group?.title === 'People' ? 'people' : group?.title === 'Places' ? 'places' : group?.title === 'Lore' ? 'lore' : 'codex'} />
           </h1>
+          {isGM && t === 'quest' && <p className="muted small">Players see this under Leads, once you reveal a quest.</p>}
         </div>
         {isGM && world && (t !== 'custom' || kind) && <NewPageButton world={world} type={t} customType={kind} />}
       </header>

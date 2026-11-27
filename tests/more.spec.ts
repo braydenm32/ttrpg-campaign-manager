@@ -20,7 +20,7 @@ async function shot(page: Page, name: string) {
 }
 
 /** The GM tools, by their names on the More page. */
-const GM_TOOLS = ['Soundboard', 'Generators and tables', 'Old corkboards', 'Files', 'The Archivist', 'Templates', 'World settings', 'Players and sharing', 'Backups', 'Recently deleted']
+const GM_TOOLS = ['Soundboard', 'Generators and tables', 'Old corkboards', 'Files', 'The Archivist', 'Templates', 'World settings', 'Players and sharing', 'Data and backups', 'Recently deleted']
 
 test.describe('the More page', () => {
   test('the GM’s lists their tools in three groups, with counts, and Print is a note, not a button', async ({ page, world, device }) => {
@@ -115,7 +115,7 @@ test.describe('Undo on the More area’s quick removes', () => {
       expect(((await getRecord(page, 'worlds', world.id))!.calendar as { holidays: { name: string }[] }).holidays[0].name).toBe(first)
 
       await page.getByPlaceholder('Name, e.g. Ship').fill('Airship')
-      await page.getByRole('button', { name: '+ Add type' }).click()
+      await page.getByRole('button', { name: '+ New type' }).click()
       const remove = page.getByRole('button', { name: 'Remove the type Airships' })
       await remove.click()
       await expect(remove).toHaveCount(0)
@@ -364,7 +364,7 @@ test.describe('before players see something', () => {
     try {
       await page.getByRole('button', { name: /Show several at once/ }).click()
       const dialog = page.getByRole('dialog', { name: 'Show several at once' })
-      const name = dialog.getByLabel('This board’s name (only you see it)')
+      const name = dialog.getByLabel('This board’s name (GM only)')
       await expect(name).toHaveValue('Board 1')
       await name.fill('Crime scene')
       await name.press('Enter')

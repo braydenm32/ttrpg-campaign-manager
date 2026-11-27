@@ -187,7 +187,7 @@ export function ExportMap({
                 : copy === 'gm'
                   ? 'Keep this one to yourself: secret doors go in a tabletop file as doors players can see.'
                   : secrets
-                    ? 'Without the secret doors, traps and anything else only you see.'
+                    ? 'Without the secret doors, traps and anything else that’s GM only.'
                     : 'The whole map, as drawn.'}
             </span>
             {fog && !fogged && <span className="muted small">Fog of war isn’t included (virtual tabletops add their own).</span>}

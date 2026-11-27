@@ -7,7 +7,7 @@ The full step-by-step guide is [docs/EDITING.md](../../docs/EDITING.md).
 
 | To change… | Look in |
 | --- | --- |
-| The world's name, blurb, calendar, moons, holidays, history ages, safety tools, party coin | `world.md` |
+| The world's name, blurb, calendar, moons, holidays, history ages, table rules (safety tools), party coin | `world.md` |
 | Player characters and NPCs | `people/` |
 | Continents, nations, towns, taverns, shops, dungeons | `places/` |
 | Factions and companies | `factions/` |
@@ -16,7 +16,7 @@ The full step-by-step guide is [docs/EDITING.md](../../docs/EDITING.md).
 | Items | `items/` |
 | Random tables | `tables/` |
 | Quests, threads, handouts, endings, campaign events | `campaign/` |
-| The eight sessions (notes, prep, encounters, Lectern) | `sessions/` |
+| The eight sessions (notes, prep, fights (`encounters`), Lectern) | `sessions/` |
 | The GM's guides (Start Here, Running The Lantern Gutters, The Clocks) and the Player's Guide | `guides/` |
 | Page templates | `templates/` |
 | Maps (drawn by code; pins point at pages by key) | `src/example/maps/` |

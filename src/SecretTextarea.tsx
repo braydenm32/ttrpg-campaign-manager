@@ -242,7 +242,7 @@ export function SecretTextarea({
         </div>
       ) : forLine && pcs.length === 0 ? (
         <div className="name-suggestions">
-          <span className="small muted">Add your players’ characters as Player Character pages to pick them here.</span>
+          <span className="small muted">Add your players’ characters as player character pages to pick them here.</span>
         </div>
       ) : null}
       {where && (

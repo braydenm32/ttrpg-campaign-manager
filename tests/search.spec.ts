@@ -24,7 +24,7 @@ const PLACES: [string, string, string, [string, string] | null][] = [
   ['Party loot', 'Party loot', '/loot', ['Party', '?tab=party']],
   // Players are offered Handouts only once the GM has shown something (search follows the menus' `when`).
   ['Handouts', 'Handouts', '/handouts', null],
-  ['Safety tools', 'Safety tools', '/safety', ['Table rules', '/safety']],
+  ['Safety tools', 'Table rules', '/safety', ['Table rules', '/safety']],
   ['Soundboard', 'Soundboard', '/sounds', null],
   ['The Archivist', 'The Archivist', '/archivist', null],
   ['Generators and random tables', 'Generators and tables', '/generators', null],
@@ -36,7 +36,7 @@ const PLACES: [string, string, string, [string, string] | null][] = [
 
 /** Places search couldn't find before the areas: [what you type, the result, its address inside the world]. GM only. */
 const NEW_PLACES: [string, string, string | RegExp][] = [
-  ['Lectern', 'The Lectern', /^\/s\/[^/]+\/lectern$/],
+  ['Lectern', 'Play: the Lectern', /^\/s\/[^/]+\/lectern$/],
   // The Chronicle is now “What changed” in each session's Wrap up.
   ['Chronicle', 'Wrap up the session', /^\/s\/[^/]+\?tab=notes$/],
   ['Questions', 'Inbox', '/questions'],
@@ -92,6 +92,11 @@ test.describe('GM view', () => {
       else await expect.poll(() => at(here(page))).toMatch(path)
     })
 
+  test('“play” finds Play: the Lectern', async ({ page, world, device }) => {
+    await (await find(page, device, world, 'play', 'Play: the Lectern', 'Go to')).click()
+    await expect.poll(() => here(page)).toMatch(new RegExp(`^/w/${world.slug}/s/[^/]+/lectern$`))
+  })
+
   test('finds a campaign by name', async ({ page, world, device }) => {
     const c = world.dump.campaigns[0]
     await (await find(page, device, world, c.name, c.name, 'Go to')).click()
@@ -121,7 +126,7 @@ test.describe('GM view', () => {
   })
 
   test('“new npc” makes a new NPC page (and Cancel removes it again)', async ({ page, world, device }) => {
-    await (await find(page, device, world, 'new npc', 'New NPC')).click()
+    await (await find(page, device, world, 'new npc', 'New person')).click()
     await expect.poll(() => here(page)).toMatch(new RegExp(`^/w/${world.slug}/p/[^/?]+\\?edit=1&new=1$`))
     await page.getByRole('button', { name: 'Cancel', exact: true }).click()
     await expect.poll(() => here(page)).toBe(`/w/${world.slug}/npcs`)
@@ -192,6 +197,6 @@ test.describe('player view', () => {
     await expect(result(page, 'The Sleeper Below')).toHaveCount(0)
     await box.fill('new npc')
     await expect(page.getByRole('dialog', { name: 'Search' }).locator('.search-results')).toBeVisible()
-    await expect(result(page, 'New NPC')).toHaveCount(0)
+    await expect(result(page, 'New person')).toHaveCount(0)
   })
 })

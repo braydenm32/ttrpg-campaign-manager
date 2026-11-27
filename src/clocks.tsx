@@ -145,7 +145,7 @@ function clockAudience(clock: Clock, owner: Entity) {
   if (!clock.known) return 'GM only'
   const reach = clockReach(clock, owner)
   if (!reach) return `GM only until “${owner.name}” is revealed`
-  return reach === 'some' ? 'Some players see it' : 'Players see it'
+  return reach === 'some' ? 'Some players know' : 'Players know'
 }
 
 /** On the Clocks page: start a clock on any page (a faction, a villain, a loose thread). */
@@ -157,7 +157,7 @@ function NewClock({ entities }: { entities: Entity[] }) {
   if (!open)
     return (
       <button className="add-extra" onClick={() => setOpen(true)}>
-        <Ico as={Timer} /> New clock
+        <Ico as={Timer} /> + New clock
       </button>
     )
   return (
@@ -202,7 +202,7 @@ export function ClocksBox({ entity, isGM, worldId }: { entity: Entity; isGM: boo
   if (!clocks.length && !adding)
     return (
       <button className="add-extra" onClick={() => setAdding(true)}>
-        <Ico as={Timer} /> Add a clock
+        <Ico as={Timer} /> + New clock
       </button>
     )
   return (
@@ -211,7 +211,7 @@ export function ClocksBox({ entity, isGM, worldId }: { entity: Entity; isGM: boo
         <h2>
           <Ico as={Timer} /> Clocks <Help topic="clocks" />
         </h2>
-        {isGM && !adding && <button onClick={() => setAdding(true)}>+ Clock</button>}
+        {isGM && !adding && <button onClick={() => setAdding(true)}>+ New clock</button>}
       </div>
       <div className="clock-list">
         {clocks.map((c) => (

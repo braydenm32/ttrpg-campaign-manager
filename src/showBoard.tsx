@@ -279,7 +279,7 @@ export default function ArrangeBoard({
             </button>
           </div>
           <div className="row wrap board-name">
-            <input ref={nameBox} value={board.name} onChange={(e) => rename(e.target.value)} onBlur={keepName} onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()} aria-label="This board’s name (only you see it)" placeholder="Name, e.g. Crime scene" />
+            <input ref={nameBox} value={board.name} onChange={(e) => rename(e.target.value)} onBlur={keepName} onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()} aria-label="This board’s name (GM only)" placeholder="Name, e.g. Crime scene" />
             <button className="small" onClick={copy} disabled={!board.items.length}>
               <Ico as={Copy} /> Copy
             </button>

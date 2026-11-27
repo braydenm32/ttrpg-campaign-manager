@@ -31,7 +31,7 @@ export default function More() {
           <h1>
             More <Help topic="more" />
           </h1>
-          <p className="lead">{gm ? 'Tools and settings you need now and then.' : 'Everything else the party can open.'}</p>
+          <p className="lead">{gm ? 'Tools and settings you need now and then.' : 'Everything else you can open.'}</p>
         </div>
       </header>
       {groups.map((g) => (

@@ -309,7 +309,7 @@ function ChangeForm({
           </select>
         </label>
         <label className="inline-check">
-          <input type="checkbox" checked={known} onChange={(e) => setKnown(e.target.checked)} /> Players can see why
+          <input type="checkbox" checked={known} onChange={(e) => setKnown(e.target.checked)} /> Players know why
         </label>
       </div>
       <div className="row wrap">
@@ -345,7 +345,7 @@ function HistoryList({ worldId, rep, levels, sessions, isGM }: { worldId: string
               {isGM && (
                 <>
                   <label className="inline-check" title="Players see this change either way; this shows them why">
-                    <input type="checkbox" checked={!!h.known} onChange={(e) => edit((l) => l.map((x) => (x.id === h.id ? { ...x, known: e.target.checked || undefined } : x)))} /> Players can see why
+                    <input type="checkbox" checked={!!h.known} onChange={(e) => edit((l) => l.map((x) => (x.id === h.id ? { ...x, known: e.target.checked || undefined } : x)))} /> Players know why
                   </label>
                   <button
                     type="button"
@@ -407,7 +407,7 @@ function PlaceNotes({ worldId, rep, entities, isGM }: { worldId: string; rep: Re
                 {isGM && (
                   <div className="row wrap small rep-note-tools">
                     <label className="inline-check">
-                      <input type="checkbox" checked={!!n.known} onChange={(e) => edit((l) => l.map((x) => (x.id === n.id ? { ...x, known: e.target.checked || undefined } : x)))} /> Players can see this
+                      <input type="checkbox" checked={!!n.known} onChange={(e) => edit((l) => l.map((x) => (x.id === n.id ? { ...x, known: e.target.checked || undefined } : x)))} /> Players know
                     </label>
                     {page && page.visibility !== 'players' && n.known && <span className="muted">Players see the name, but can’t open {page.name}’s page yet.</span>}
                     <button
@@ -486,7 +486,7 @@ function AddNote({ entities, onAdd }: { entities: Entity[]; onAdd: (n: Reputatio
       </label>
       <div className="row wrap">
         <label className="inline-check">
-          <input type="checkbox" checked={known} onChange={(e) => setKnown(e.target.checked)} /> Players can see this
+          <input type="checkbox" checked={known} onChange={(e) => setKnown(e.target.checked)} /> Players know
         </label>
         <button className="primary" disabled={!text.trim() || !(place.trim() || entityId)}>
           Add

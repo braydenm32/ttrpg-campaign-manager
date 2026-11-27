@@ -85,7 +85,7 @@ export function PrepSheet({ session, entities, worldId }: { session: Session; en
         <section className="card plan-card" id="fights">
           <div className="plan-head">
             <h2>
-              <Ico as={Sword} /> Encounters <Help topic="encounters" />
+              <Ico as={Sword} /> Fights <Help topic="encounters" />
             </h2>
           </div>
           <Encounters session={session} prep={prep} entities={entities} worldId={worldId} />
@@ -244,7 +244,7 @@ function Encounters({ session, prep, entities, worldId }: { session: Session; pr
         return (
           <div key={enc.id} className={`encounter ${editing ? 'open' : ''}`}>
             <div className="encounter-head">
-              <DraftText className="encounter-name" value={enc.name} aria-label="Encounter name" onCommit={(v) => change(enc.id, (x) => void (x.name = v))} />
+              <DraftText className="encounter-name" value={enc.name} aria-label="Fight name" onCommit={(v) => change(enc.id, (x) => void (x.name = v))} />
               <span className="muted small">
                 {foeCount(enc)} in the fight
               </span>
@@ -272,12 +272,12 @@ function Encounters({ session, prep, entities, worldId }: { session: Session; pr
               <button
                 type="button"
                 className="ghost"
-                title="Remove this encounter"
-                aria-label={`Remove encounter ${enc.name}`}
+                title="Remove this fight"
+                aria-label={`Remove fight ${enc.name}`}
                 onClick={() => {
                   let at = -1
                   void removeWithUndo(
-                    `Encounter “${shorten(enc.name)}” removed`,
+                    `Fight “${shorten(enc.name)}” removed`,
                     () =>
                       edit((p) => {
                         at = p.encounters.findIndex((x) => x.id === enc.id)
@@ -318,7 +318,7 @@ function Encounters({ session, prep, entities, worldId }: { session: Session; pr
           setName('')
         }}
       >
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="New encounter, e.g. ‘Bandits at the ford’" aria-label="New encounter" />
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="New fight, e.g. ‘Bandits at the ford’" aria-label="New fight" />
         <button disabled={!name.trim()}>
           <Ico as={Plus} /> Add
         </button>

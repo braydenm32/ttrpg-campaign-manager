@@ -138,7 +138,7 @@ export default function Lectern() {
         <div className="strip-title">
           {stage && <StageChip stage={stage} help />}
           <h1 className="lectern-title">
-            The Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
+            Play: the Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
           </h1>
         </div>
         <div className="strip-facts">
@@ -168,7 +168,7 @@ export default function Lectern() {
           <PreviouslyOn session={session} />
           {!!(world?.safety?.lines.length || world?.safety?.veils.length) && (
             <details className="small safety-reminder">
-              <summary><Ico as={Shield} /> Lines and veils</summary>
+              <summary><Ico as={Shield} /> Table rules</summary>
               {world!.safety!.lines.length > 0 && <div><Ico as={Prohibit} /> Lines: {world!.safety!.lines.join(' · ')}</div>}
               {world!.safety!.veils.length > 0 && <div><Ico as={CloudFog} /> Veils: {world!.safety!.veils.join(' · ')}</div>}
             </details>
@@ -182,7 +182,7 @@ export default function Lectern() {
           help="lecternJump"
           targets={[
             { id: 'lectern-scene', label: 'Scene', open: unfold('scene') },
-            { id: 'lectern-initiative', label: 'Fight', open: unfold('initiative') },
+            { id: 'lectern-initiative', label: 'Initiative', open: unfold('initiative') },
             { id: 'lectern-present', label: 'People', open: unfold('present') },
             { id: 'lectern-clocks', label: 'Clocks', open: unfold('clocks') },
             { id: 'lectern-show', label: 'Show', open: unfold('show') },
@@ -1281,7 +1281,7 @@ function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {
               {shared && (
                 <button
                   className="ghost small"
-                  title={t.hidden ? 'Players can’t see this one. Show it to them' : 'Players see this one. Hide it from them'}
+                  title={t.hidden ? 'GM only. Click so players see it too' : 'Players see this one. Click to make it GM only'}
                   onClick={() => change(t.id, (x) => void (x.hidden = !x.hidden || undefined))}
                 >
                   <Ico as={t.hidden ? EyeSlash : Eye} />

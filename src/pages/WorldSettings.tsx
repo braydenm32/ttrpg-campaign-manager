@@ -81,7 +81,7 @@ export default function WorldSettings() {
   // A player's copy of someone else's world has no settings to change.
   if (world.shared) return <Navigate to={worldPath(worldId)} replace />
   // Previewing as a player: settings would show GM-only names, so switch back to change them.
-  if (!isGM) return <Empty>Switch back to the GM view to change the world's settings.</Empty>
+  if (!isGM) return <Empty>World settings are a GM tool. Switch back to the GM view to use them.</Empty>
   const update = (patch: Partial<World>) => db.worlds.update(worldId, { ...patch, updatedAt: Date.now() })
 
   return (
@@ -167,7 +167,7 @@ export default function WorldSettings() {
         <>
           <section id="settings-backup">
             <h2>
-              Backup <Help topic="backup" />
+              Backups <Help topic="backup" />
             </h2>
             <p>
               {backupStore.read(worldId, 'last')
@@ -333,7 +333,7 @@ function CustomTypes({ world, update }: { world: World; update: (patch: Partial<
           onChange={(e) => setDraft({ ...draft, many: e.target.value })}
           placeholder={draft.one ? `${draft.one}s` : 'Plural, e.g. Ships'}
         />
-        <button disabled={!draft.one.trim()}>+ Add type</button>
+        <button disabled={!draft.one.trim()}>+ New type</button>
       </form>
     </section>
   )

@@ -7,8 +7,8 @@ Runs in the browser, installs as an offline web app, and packages as a desktop a
 ## What it does today
 
 - **Worlds and campaigns.** One world can host several campaigns.
-- **Codex.** Pages for locations, NPCs, player characters, factions, items, events, quests, shops and taverns, deities and lore. Link pages by writing `[[Name]]`. Every page shows what's inside it (NPCs, shops and events in a town) and which pages mention it.
-- **GM secrets.** Every page, pin, map and session is either 🔒 GM only or 👁 revealed. You can also hide one passage inside a page:
+- **Pages (the Atlas).** People (NPCs and player characters), Places (and shops), factions, items, events, quests, deities and lore. Link pages by writing `[[Name]]`. Every page shows what's inside it (NPCs, shops and events in a town) and which pages mention it.
+- **GM only, or players can see it.** Every page, map and session is either 🔒 GM only or 👁 Players can see this (a pin, a status or a detail: GM only or Players know). You can also keep one passage inside a page GM only:
 
   ```
   :::gm
@@ -16,7 +16,7 @@ Runs in the browser, installs as an offline web app, and packages as a desktop a
   :::
   ```
 
-  GM notes on a page are never shown to players.
+  GM notes on a page are GM only: never sent to players.
 - **Secrets for particular players.** In a world your players have joined, a GM-only page can be revealed to just the players you tick ("🤫 Reveal just to"). A passage can be meant for certain characters only, by first or full name:
 
   ```
@@ -31,18 +31,18 @@ Runs in the browser, installs as an offline web app, and packages as a desktop a
 - **Sessions.** GM notes and a separate player recap. You can record audio from one microphone for in-person games, or from the microphone plus your Discord or Zoom audio for online games. While recording, you can add timestamped bookmarks, and clicking one later jumps the playback to that moment.
 - **Transcripts and recaps.** Turn a recording into text either on your own device (free and private, slower, no speaker names) or in the cloud with AssemblyAI (faster, tells speakers apart, needs your own key). Click any line to hear it, search it, and name the speakers. Then have Claude draft a GM summary and a player recap: either "Open in Claude" or "Open in ChatGPT" (a new chat with everything typed in, free with your own account there), or "Write it now" with your own Anthropic API key. You check and edit both drafts before anything is saved. Keys are kept on the device only, set under World settings → AI tools.
 - **Sessions in three stages.** Each session is Planned, Preparing, Playing or Played, shown as a chip wherever it appears. Prepare is the plan (strong start, scenes, clues, fights); "Start playing" opens the Lectern; Wrap up gathers notes, the recording, the recap and world updates, and "Mark as played" brings up the next session on the Desk. Quick removes come with Undo.
-- **The Lectern.** One screen for running a session at the table: the scene with its read-aloud text and a "Next scene" button that follows your plan, who's present (with their GM notes), an initiative tracker with hit points and conditions, a dice roller (`2d6+3`, advantage, `4d6kh3`), a quick note that lands in the session log, "Party found" for coins and items, and NPC, tavern and shop generators. Open it from any session with "Start playing", or the Play tab.
-- **Loose threads.** A board of every hook, mystery, promise and grudge: dangling, in play, tied off or dropped. Threads link to the NPCs and places they involve, remember which session raised and resolved them, and warn you when one hasn't moved in three sessions. They also show up in the Lectern (the ones touching the current scene first), on session pages and on the overview. Reveal a thread and players see it under "Leads".
+- **Play: the Lectern.** One screen for running a session at the table: the scene with its read-aloud text and a "Next scene" button that follows your plan, who's present (with their GM notes), an initiative tracker with hit points and conditions, a dice roller (`2d6+3`, advantage, `4d6kh3`), a quick note that lands in the session log, "Party found" for coins and items, and NPC, tavern and shop generators. Open it from any session with "Start playing", or the Play tab.
+- **Threads.** A board of every hook, mystery, promise and grudge: dangling, in play, tied off or dropped. Threads link to the NPCs and places they involve, remember which session raised and resolved them, and warn you when one hasn't moved in three sessions. They also show up in the Lectern (the ones touching the current scene first), on session pages and on the overview. Reveal a thread and players see it under "Leads".
 - **Generators.** Taverns (menu, patrons, rumours), shops (blacksmith, general store, alchemist, magic shop) and NPCs, saved into your world in one click.
-- **Assets.** A library for handouts, portraits, maps, audio and PDFs.
+- **Files.** A library for handouts, portraits, maps, audio and PDFs (More › Files).
 - **Help tips.** A small ? next to each feature explains it. Hover or tap to read; turn them off (and back on) in World settings.
 - **Player view.** Switch "Viewing as" to Player to see exactly what players would see.
 - **Map builder.** Draw maps in the app: paint land, forest, mountains and water, add roads, rivers, rooms, symbols, labels and a square or hex grid.
 - **Cloud sync (optional).** Sign in and turn on sync for a world to keep it backed up and in step across your devices, with changes appearing within seconds.
 - **Player share links.** A read-only link to the revealed parts of a world. Everything GM-only is removed on the server before it's sent, and the link updates live as you work.
 - **Players.** Invite your players with a link from World settings. They sign in, join, and see everything you've revealed (GM-only content is removed on the server), kept up to date as you sync. Each player can claim their player character and keep their own notes on it, which you can read on the character's page. You can see who plays whom, release a character, or remove a player.
-- **Player notes and the scratchpad.** On every page they can see, players keep private notes (only them) and group notes (the whole party edits them together). The 📝 Scratchpad is the same for notes that aren't about any one page. You can read the group notes, never the private ones.
-- **Backups.** Download a whole world as one file and import it on another device.
+- **My notes and Group notes.** On every page they can see, players keep My notes (only them) and Group notes (the whole party edits them together). The Notes tab in the Common Room has the same for notes that aren't about any one page. You can read the Group notes, never anyone's My notes.
+- **Data and backups.** Download a whole world as one file and import it on another device.
 
 Everything is stored on your device first, so it works with no internet. Sync catches up when you're back online.
 

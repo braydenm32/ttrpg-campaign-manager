@@ -254,6 +254,16 @@ function WorldLayout() {
 /** The players' screen for a TV: always the player view, whoever opens it. */
 function ScreenRoute() {
   const { world } = useWorld()
+  // The browser tab names the screen, not the app's slogan (it's what the GM picks when casting to a TV).
+  const name = world?.name
+  useEffect(() => {
+    if (!name) return
+    const before = document.title
+    document.title = `Players’ screen · ${name}`
+    return () => {
+      document.title = before
+    }
+  }, [name])
   if (!world)
     return world === null ? (
       <div className="players-screen world-bare">

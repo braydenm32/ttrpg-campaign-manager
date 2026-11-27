@@ -70,7 +70,7 @@ export default function CloudSettings({ world }: { world: World }) {
             </li>
             <li>
               <strong>Invite your players.</strong> You get an invite link to send them. Each player signs in, joins, and claims their character.
-              They see only what you reveal: GM-only pages, GM notes and secret passages never leave your devices.
+              They see only what you reveal: GM-only pages, GM notes and GM-only passages never leave your devices.
             </li>
             <li>
               <strong>Or share a read-only wiki link</strong> with anyone, no account needed. It shows only what’s revealed to the whole table.
@@ -174,7 +174,7 @@ export default function CloudSettings({ world }: { world: World }) {
           </h3>
           <p className="muted">
             A read-only wiki of your world for anyone with the link, no account needed: friends outside the group, or a player before
-            they sign up. It shows only what you've revealed to the whole table. GM-only pages, pins, maps, sessions, secret passages,
+            they sign up. It shows only what you've revealed to the whole table. GM-only pages, pins, maps, sessions, GM-only passages,
             GM notes and anything revealed to just one player are removed on the server before anything is sent. It updates as you sync.
             To bring players into the game, use the invite link below instead.
           </p>

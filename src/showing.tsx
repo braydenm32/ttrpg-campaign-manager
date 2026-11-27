@@ -271,7 +271,7 @@ export async function showWithUndo(worldId: string, what: Omit<Showing, 'id' | '
 export function onScreensNow(world: World) {
   const what = world.spread ? spreadTitle(world.spread, world.spread.items.length) : world.showing ? world.showing.title.trim() || 'Untitled' : ''
   if (!world.gameTime) return what
-  return what ? `${what} and the in-game clock` : 'the in-game clock'
+  return what ? `${what} and the in-game time` : 'the in-game time'
 }
 
 /**
@@ -1001,9 +1001,9 @@ function NowShowing({ world }: { world: World }) {
       </span>
       <span className="now-showing-what">
         <span className="muted small">On players’ screens</span>
-        <strong>{clockOnly ? 'The in-game clock' : what}</strong>
+        <strong>{clockOnly ? 'The in-game time' : what}</strong>
       </span>
-      <button type="button" className="primary" title="Take everything off players’ screens, the in-game clock too" onClick={() => stopShowingAll(world.id)}>
+      <button type="button" className="primary" title="Take everything off players’ screens, the in-game time too" onClick={() => stopShowingAll(world.id)}>
         Stop
       </button>
     </div>

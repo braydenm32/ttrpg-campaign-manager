@@ -126,7 +126,7 @@ export default defineConfig({
         // Long-press the home-screen icon: straight to the world used last (see src/install.tsx).
         shortcuts: [
           { name: 'Common Room', short_name: 'Common Room', description: 'Your table: next session, last time and your character', url: '/?open=room', icons: [{ src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] },
-          { name: 'The Lectern', short_name: 'Lectern', description: 'The GM’s session in hand', url: '/?open=session', icons: [{ src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] },
+          { name: 'Play: the Lectern', short_name: 'Play', description: 'The GM’s session in hand', url: '/?open=session', icons: [{ src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] },
         ],
         // Chrome's fuller install sheet shows these.
         screenshots: [

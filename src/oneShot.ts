@@ -86,7 +86,7 @@ export async function saveStartingPoint(worldId: string) {
  */
 export async function startingPointFromBackup(worldId: string, file: File) {
   const bytes = new Uint8Array(await file.arrayBuffer())
-  if (!(bytes[0] === 0x50 && bytes[1] === 0x4b)) throw new Error('Pick a backup of this world (a .codex.zip file).')
+  if (!(bytes[0] === 0x50 && bytes[1] === 0x4b)) throw new Error('Pick a backup of this world (a .zip file downloaded from Data and backups).')
   let b: Partial<Omit<Rows, 'assets'>> & { format?: string; exportedAt?: string; world?: World; assets?: (Omit<StartingPoint['assets'][number], 'blob'> & { data?: string })[] }
   let zip
   try {

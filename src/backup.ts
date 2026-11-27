@@ -149,7 +149,7 @@ export async function exportWorld(worldId: string, onProgress?: (done: number, t
   const link = document.createElement('a')
   link.href = URL.createObjectURL(file)
   // Any letters (Zoë, Ægir, 龍) stay in the name; only characters file systems refuse are swapped.
-  link.download = `${world.name.replace(/[\\/:*?"<>|\s]+/g, '_').replace(/^[._]+|_+$/g, '') || 'world'}-${backup.exportedAt.slice(0, 10)}.codex.zip`
+  link.download = `${world.name.replace(/[\\/:*?"<>|\s]+/g, '_').replace(/^[._]+|_+$/g, '') || 'world'}-${backup.exportedAt.slice(0, 10)}.warded-atlas.zip`
   link.click()
   setTimeout(() => URL.revokeObjectURL(link.href), 60_000)
   backupStore.write(worldId, 'last', Date.now())

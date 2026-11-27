@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useGuardedNavigate } from './ai/leave'
-import { db, ENTITY_LABELS, PICKER_TYPES, typeLabel, type Entity, type Session, type World, type WorldMap } from './db'
+import { db, ENTITY_LABELS, newWord, PICKER_TYPES, typeLabel, type Entity, type Session, type World, type WorldMap } from './db'
 import { Help, HELP } from './help'
 import { Ico, TypeIcon } from './icons'
 import { BookOpen, Lock, MagnifyingGlass, MapTrifold, Plus, ArrowRight, Eye, Timer } from '@phosphor-icons/react'
@@ -153,9 +153,9 @@ function commandHits(
     ]
     for (const [type, custom, one] of types) {
       const name = one.toLowerCase()
-      if (want && !name.includes(want) && !(type === 'npc' && 'person character'.includes(want))) continue
+      if (want && !name.includes(want) && !(type === 'npc' && 'npc person character'.includes(want)) && !(type === 'location' && 'location'.includes(want))) continue
       if (!wantsNew && !name.startsWith(q)) continue
-      hits.push({ key: `new:${type}:${custom ?? ''}`, to: '', icon: '+', node: <Ico as={Plus} />, title: `New ${one}`, snippet: 'Make a new page', score: wantsNew ? 120 : 55, run: () => create(type, custom) })
+      hits.push({ key: `new:${type}:${custom ?? ''}`, to: '', icon: '+', node: <Ico as={Plus} />, title: `New ${newWord(one, type)}`, snippet: 'Make a new page', score: wantsNew ? 120 : 55, run: () => create(type, custom) })
     }
   }
   // The GM's Player view switch lives in the sidebar, so search says where it is and does it.

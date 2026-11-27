@@ -642,7 +642,7 @@ const recapSkipped = (sessionId: string) => {
 
 /**
  * The session just played, when players have no recap for it yet: none written ("Write it"), or one
- * written but still GM only ("Show to players", with Undo). "Skip" quiets it on this device.
+ * written but still GM only ("Reveal to players", with Undo). "Skip" quiets it on this device.
  */
 function recapRow(world: World, sessions: Session[], inHand: InHand | undefined, skip: (id: string) => void): Need | undefined {
   if (!inHand) return undefined
@@ -683,7 +683,7 @@ function recapRow(world: World, sessions: Session[], inHand: InHand | undefined,
       <span className="row">
         {/* The same "Players will see" review as on the session, opened there, before anything is shown. */}
         <Link className="button small" to={`${worldPath(world.id)}/s/${last.id}?tab=recap&show=1`}>
-          Show to players…
+          Reveal to players…
         </Link>
         {skipButton}
       </span>
@@ -1032,8 +1032,8 @@ function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign:
       'Add a few people and places',
       'Link pages to each other by writing [[Name]].',
       <span key="pages" className="row">
-        <button className="small" onClick={() => create('npc')}>New NPC</button>
-        <button className="small" onClick={() => create('location')}>New place</button>
+        <button className="small" onClick={() => create('npc')}>+ New person</button>
+        <button className="small" onClick={() => create('location')}>+ New place</button>
       </span>,
     ],
     ['🗺️', 'Add a map', 'Upload one or draw it, then pin your places on it.', <Link key="maps" className="button small" to={`${w}/maps`}>Maps</Link>],

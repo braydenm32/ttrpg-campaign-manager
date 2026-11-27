@@ -1211,6 +1211,7 @@ function PinEditor({ pin, entities, maps, categories, onClose, onDone }: { pin: 
       <div className="row">
         <VisibilityControl
           compact
+          fact
           value={pin.visibility}
           onChange={(v) => update({ visibility: v })}
           name={`the pin “${pin.label || entity?.name || 'Pin'}”`}

@@ -62,7 +62,7 @@ export function useFinish(session: Session) {
       const unclear = sure ? undefined : await clearPlayersScreens(session.worldId)
       const n = (count: number, one: string) => `${count} ${one}${count === 1 ? '' : 's'}`
       const brought = [carried.clues ? n(carried.clues, 'unfound clue') : '', carried.scenes ? n(carried.scenes, 'unplayed scene') : ''].filter(Boolean).join(' and ')
-      toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}${brought ? `, with ${brought} carried over` : ''}.${unclear ? ' Players’ screens are clear.' : ''}${paused ? ' The in-game clock is paused.' : ''}`, async () => {
+      toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}${brought ? `, with ${brought} carried over` : ''}.${unclear ? ' Players’ screens are clear.' : ''}${paused ? ' The in-game time is paused.' : ''}`, async () => {
         await undo()
         await unclear?.()
         if (wasLive) setLiveSession(session.worldId, session.id)
@@ -87,7 +87,7 @@ const words = (text: string) => text.split(/\s+/).filter(Boolean).length
 /**
  * Showing a session to players, with a short look at what they'll get first: the title, the recap
  * (secret passages left out), highlights and who featured. Hiding it again is one tap, with Undo.
- * Every "Show to players" goes through this review, the Desk's too.
+ * Every "Reveal to players" goes through this review, the Desk's too.
  */
 export function ShowToPlayers({
   session,
@@ -98,7 +98,7 @@ export function ShowToPlayers({
   session: Session
   campaign: Campaign | null | undefined
   entities: Entity[]
-  /** Open with the review already showing (the Desk's "Show to players…" lands here). */
+  /** Open with the review already showing (the Desk's "Reveal to players…" lands here). */
   startOpen?: boolean
 }) {
   const [review, setReview] = useState(startOpen)
@@ -113,7 +113,7 @@ export function ShowToPlayers({
           type="button"
           onClick={async () => {
             await set('gm')
-            toast(`#${session.number} is hidden from players again.`, () => set('players'))
+            toast(`#${session.number} is GM only again.`, () => set('players'))
           }}
         >
           <Ico as={EyeSlash} /> Hide from players
@@ -125,7 +125,7 @@ export function ShowToPlayers({
       <div className="row wrap show-players">
         <span className="chip">🔒 GM only</span>
         <button type="button" onClick={() => setReview(true)}>
-          <Ico as={Eye} /> Show to players…
+          <Ico as={Eye} /> Reveal to players…
         </button>
       </div>
     )
@@ -141,7 +141,7 @@ export function ShowToPlayers({
         <li>
           the title “#{session.number} {session.title}”{session.date && `, ${session.playedAt ? 'played' : 'on'} ${showDay(session.date)}`}
         </li>
-        <li>{recap ? `the recap, ${words(recap)} words (secret passages left out)` : 'no recap yet: it shows here once you write one'}</li>
+        <li>{recap ? `the recap, ${words(recap)} words (GM-only passages left out)` : 'no recap yet: it shows here once you write one'}</li>
         {highlights > 0 && <li>{highlights === 1 ? '1 highlight' : `${highlights} highlights`}</li>}
         {featured.length > 0 && <li>who featured, only pages they can already see: {featured.slice(0, 6).map((e) => e.name).join(', ')}{featured.length > 6 && ` and ${featured.length - 6} more`}</li>}
       </ul>
@@ -160,7 +160,7 @@ export function ShowToPlayers({
             offerGroupPost(await db.worlds.get(session.worldId), `The recap of #${session.number} ${session.title} is up in the Common Room.`)
           }}
         >
-          <Ico as={Eye} /> Show it to players
+          <Ico as={Eye} /> Reveal to players
         </button>
         <button type="button" onClick={() => setReview(false)}>
           Not yet

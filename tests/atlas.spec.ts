@@ -105,7 +105,7 @@ test('the breadcrumb starts at the list, not the world, and folds the middle on 
   // The Lantern Keep sits in Lantern Hill, in Cinderford, and further out still.
   await open(page, `${w}/p/${world.pageSlug('The Lantern Keep')}`)
   const crumbs = page.getByRole('navigation', { name: 'Where this page sits' })
-  await expect(crumbs.getByRole('link').first()).toHaveText('Locations')
+  await expect(crumbs.getByRole('link').first()).toHaveText('Places')
   await expect(crumbs.getByRole('link', { name: 'Lantern Hill' })).toBeVisible()
   await expect(crumbs).not.toContainText(world.world.name + ' ›')
   if (device === 'phone') {
@@ -200,8 +200,8 @@ test('Timeline keeps List or Month in the address, and Back steps between them',
 test('Places, People and Lore each switch between their two kinds, and headings follow the tabs', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   for (const [path, heading, kinds] of [
-    ['locations', 'Places', ['Locations', 'Shops & Taverns']],
-    ['npcs', 'People', ['NPCs', 'Player Characters']],
+    ['locations', 'Places', ['Places', 'Shops']],
+    ['npcs', 'People', ['NPCs', 'Player characters']],
     ['lore', 'Lore', ['Lore', 'Deities']],
   ] as const) {
     await open(page, `${w}/${path}`)
@@ -210,8 +210,8 @@ test('Places, People and Lore each switch between their two kinds, and headings 
   }
   // The second kind opens its own list.
   await open(page, `${w}/locations`)
-  await page.locator('.people-switch').getByRole('link', { name: 'Shops & Taverns' }).click()
-  await expect(page.locator('.kicker').first()).toContainText('Shops & Taverns')
+  await page.locator('.people-switch').getByRole('link', { name: 'Shops' }).click()
+  await expect(page.locator('.kicker').first()).toContainText('Shops')
   // Threads has one name everywhere.
   await open(page, `${w}/threads`)
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Threads')

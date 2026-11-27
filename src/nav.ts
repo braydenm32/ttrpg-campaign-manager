@@ -102,7 +102,7 @@ export interface NavFacts {
 export interface NavTab {
   id: string
   label: string
-  /** The name in search, where the label alone is vague ("Play" is the Lectern). */
+  /** The name in search, where the label alone is vague ("Play" is "Play: the Lectern"). */
   searchTitle?: string
   icon: Icon
   /** Where it goes. Nothing means it's left out of the menus for now. */
@@ -210,12 +210,12 @@ export const AREAS: NavArea[] = [
         to: (f) => (f.sessionId ? w(f, `s/${f.sessionId}?tab=prep`) : undefined),
         paths: ['s/:sessionId?tab=prep'],
         who: own,
-        keywords: 'prep scenes clues encounters next session',
+        keywords: 'prep scenes clues fights encounters next session',
       },
       {
         id: 'play',
         label: 'Play',
-        searchTitle: 'The Lectern',
+        searchTitle: 'Play: the Lectern',
         icon: Play,
         to: (f) => (f.sessionId ? w(f, `s/${f.sessionId}/lectern`) : undefined),
         paths: ['s/:sessionId/lectern'],
@@ -371,10 +371,10 @@ export const MORE_GROUPS: MoreGroup[] = [
     items: [
       { id: 'handouts', label: 'Handouts', icon: Newspaper, to: (f) => w(f, 'handouts'), paths: ['handouts'], who: own, blurb: 'Pictures, pages and notes you’ve shown the players.', keywords: 'shown' },
       { id: 'sounds', label: 'Soundboard', icon: MusicNotes, to: (f) => w(f, 'sounds'), paths: ['sounds'], who: own, blurb: 'Music and ambience for the table.', keywords: 'music ambience sounds sound effects' },
-      { id: 'safety', label: 'Safety tools', icon: HandPalm, to: (f) => w(f, 'safety'), paths: ['safety'], who: own, blurb: 'Lines, veils and the X-card.', keywords: 'lines veils x-card table rules' },
+      { id: 'safety', label: 'Table rules', icon: HandPalm, to: (f) => w(f, 'safety'), paths: ['safety'], who: own, blurb: 'Safety tools: lines, veils and the X-card.', keywords: 'safety tools lines veils x-card' },
       {
         id: 'screen',
-        label: 'Players’ screen for a TV',
+        label: 'Players’ screen (for a TV)',
         icon: Television,
         to: (f) => `/screen/${worldPath(f.worldId).slice(3)}`,
         who: own,
@@ -456,7 +456,7 @@ export const MORE_GROUPS: MoreGroup[] = [
         blurb: 'Cloud sync, invites, the wiki link and who plays whom.',
         keywords: 'invite players sync share wiki link co-gm claims',
       },
-      { id: 'backups', label: 'Backups', icon: DownloadSimple, to: (f) => w(f, 'settings?tab=data'), paths: ['settings?tab=data'], who: own, blurb: 'Download the whole world as one file.', keywords: 'backup download export markdown obsidian json copy save' },
+      { id: 'backups', label: 'Data and backups', icon: DownloadSimple, to: (f) => w(f, 'settings?tab=data'), paths: ['settings?tab=data'], who: own, blurb: 'Download the whole world as one file.', keywords: 'backup download export markdown obsidian json copy save' },
       { id: 'import', label: 'Import pages and character sheets', icon: FileArrowUp, to: (f) => w(f, 'settings?tab=data&at=import'), who: own, blurb: 'Bring in pages, or a character from D&D Beyond, Foundry and others.', keywords: 'import character sheet dndbeyond d&d beyond foundry pathbuilder obsidian kanka markdown world anvil' },
       {
         id: 'oneshot',
@@ -480,11 +480,11 @@ export const PLAYER_MORE_GROUPS: MoreGroup[] = [
     label: 'At the table',
     blurb: 'For game night. Loot, clocks, Group notes and questions are on the Common Room tabs.',
     items: [
-      { id: 'rules', label: 'Table rules', icon: HandPalm, to: (f) => w(f, 'safety'), who: players, when: (f) => !!f.safety, blurb: 'Lines, veils and the X-card your table agreed on.' },
+      { id: 'rules', label: 'Table rules', icon: HandPalm, to: (f) => w(f, 'safety'), who: players, when: (f) => !!f.safety, blurb: 'Safety tools: lines, veils and the X-card your table agreed on.', keywords: 'safety tools lines veils x-card' },
       { id: 'handouts', label: 'Handouts', icon: Newspaper, to: (f) => w(f, 'handouts'), who: readers, when: (f) => !!f.handouts, blurb: 'What your GM has shown you.', keywords: 'shown' },
       {
         id: 'lookup',
-        label: 'Look up rules',
+        label: 'Look it up',
         icon: BookOpenText,
         to: (f) => w(f, 'lookup'),
         paths: ['lookup'],

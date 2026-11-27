@@ -134,7 +134,7 @@ Everything is in the folder **`worlds/vael-ardith/`**. Each page in the app is o
 | --- | --- |
 | The world's name, the blurb on its book, the game system | `world.md` |
 | The calendar (months, weekdays, moons, holidays, today's date), the history ages on the timeline | `world.md` |
-| Safety tools (lines, veils, X-card) and the party's starting coin | `world.md` |
+| Table rules (safety tools: lines, veils, X-card) and the party's starting coin | `world.md` |
 | The campaign's name and description | `world.md` |
 | Player characters and NPCs | `people/` (PCs: `varra.md`, `ysse.md`, `borrin.md`, `tick.md`, `quorl.md`) |
 | The continent, nations, regions, towns, buildings, taverns, shops, dungeons | `places/` |
@@ -148,7 +148,7 @@ Everything is in the folder **`worlds/vael-ardith/`**. Each page in the app is o
 | Handouts | `campaign/handouts/` |
 | The three endings | `campaign/endings/` |
 | Events that happen during play | `campaign/events/` |
-| Sessions 1 to 8: GM notes, recap, prep, encounters, the Lectern | `sessions/session-1.md` … `session-8.md` |
+| Sessions 1 to 8: GM notes, recap, prep, fights (`encounters`), the Lectern | `sessions/session-1.md` … `session-8.md` |
 | The GM's "Start here" tour, the GM's chapter and the Player's Guide | `guides/guide-start.md`, `guide-running.md`, `guide-players.md` |
 | Page templates | `templates/` |
 

@@ -270,7 +270,7 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
           <DoingCard ctx={ctx} />
           {stage === 'after' && <AfterLoot ctx={ctx} />}
           {stage === 'after' && memberOf && (
-            <Card title="Party notes" icon={Notepad} to={roomLink(worldId, 'notes')} more="All notes">
+            <Card title="Group notes" icon={Notepad} to={roomLink(worldId, 'notes')} more="All notes">
               <PartyNotesPeek ctx={ctx} />
             </Card>
           )}
@@ -338,7 +338,7 @@ function Answers({ ctx, poll }: { ctx: RoomContext; poll?: ReactNode }) {
       {stage !== 'after' && (
         <div className="answer-row">
           <span className="stage-chip">
-            <Ico as={Scroll} /> Last time
+            <Ico as={Scroll} /> Recap
           </span>
           <div className="answer-text">
             {last ? (
@@ -353,7 +353,7 @@ function Answers({ ctx, poll }: { ctx: RoomContext; poll?: ReactNode }) {
                 <MySessionNote world={ctx.world} sessionId={last.id} />
               </>
             ) : (
-              <span className="muted">Nothing yet. Your GM’s write-up of each session lands here.</span>
+              <span className="muted">Nothing yet. Your GM’s recap of each session lands here.</span>
             )}
           </div>
         </div>
@@ -371,7 +371,7 @@ function LastTimeFull({ ctx }: { ctx: RoomContext }) {
     <section className="card room-card room-recap">
       <div className="room-card-head">
         <h2>
-          <Ico as={Scroll} /> Last time
+          <Ico as={Scroll} /> Recap
         </h2>
         {last && <ReadAloud text={last.recap} id={`room-${last.id}`} />}
       </div>
@@ -419,7 +419,7 @@ function AfterLoot({ ctx }: { ctx: RoomContext }) {
   if (!items.length) return null
   const newest = [...items].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 3)
   return (
-    <Card title="Loot" icon={Backpack} to={roomLink(ctx.worldId, 'party')} more="Who carries what">
+    <Card title="Party loot" icon={Backpack} to={`${worldPath(ctx.worldId)}/loot`} more="All of it">
       <p className="small">
         The party carries {items.length} thing{items.length === 1 ? '' : 's'}. Lately:{' '}
         {newest.map((i, n) => (
@@ -630,7 +630,7 @@ function RoomFoot({ ctx }: { ctx: RoomContext }) {
       )}
       {campaign && (
         <Link to={`${worldPath(worldId)}/c/${campaign.id}`}>
-          <Ico as={Scroll} /> Past sessions
+          <Ico as={Scroll} /> All sessions
         </Link>
       )}
       {/* Live, the X-card is in the session's own card. */}
@@ -727,7 +727,7 @@ function NoCharacter({ ctx }: { ctx: RoomContext }) {
   if (!ctx.party.length)
     return (
       <p className="muted small">
-        Previewing as every player, so there’s no “you” here, and no player characters to preview as yet. Make a Player Character page and reveal it to the players, and this becomes their seat.
+        Previewing as every player, so there’s no “you” here, and no player characters to preview as yet. Make a player character page and reveal it to the players, and this becomes their seat.
       </p>
     )
   return <p className="muted small">Previewing as every player, so there’s no “you” here. Choose a character in the Player view bar above to see the Common Room as them.</p>
@@ -753,7 +753,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
         )}
         {memberOf && (
           <section className="card room-card">
-            <h2 className="room-card-title">My private notes</h2>
+            <h2 className="room-card-title">My notes</h2>
             <MyNote world={world} entityId="" placeholder="Anything you want to remember. Only you can see this." />
           </section>
         )}
@@ -846,7 +846,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
       )}
       {memberOf && (
         <section className="card room-card">
-          <h2 className="room-card-title">My private notes</h2>
+          <h2 className="room-card-title">My notes</h2>
           <MyNote world={world} entityId="" placeholder="Anything you want to remember. Only you can see this." />
         </section>
       )}
@@ -876,7 +876,7 @@ function PartyTab({ ctx }: { ctx: RoomContext }) {
       <TabHead title="The party" help="roomParty">
         {loot.any && (
           <Link className="room-more" to={`${worldPath(worldId)}/loot`}>
-            The full loot list
+            Party loot
           </Link>
         )}
       </TabHead>
@@ -1058,7 +1058,7 @@ function PartyNotesPeek({ ctx }: { ctx: RoomContext }) {
           }
         }}
       >
-        <input value={line} onChange={(e) => setLine(e.target.value)} placeholder="Add to the party notes" aria-label="Add to the party notes" maxLength={500} />
+        <input value={line} onChange={(e) => setLine(e.target.value)} placeholder="Add to the group notes" aria-label="Add to the group notes" maxLength={500} />
         <button disabled={!line.trim()}>Add</button>
       </form>
       {state && <span className="small muted">{state}</span>}

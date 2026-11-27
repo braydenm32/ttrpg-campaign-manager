@@ -32,7 +32,7 @@ export default function Archivist() {
   const [params, setParams] = useSearchParams()
   const tab = params.get('tab') === 'check' ? 'check' : 'ask'
   if (!world) return <Skeleton />
-  if (!isGM) return <Empty>The Archivist is for the GM.</Empty>
+  if (!isGM) return <Empty>The Archivist is a GM tool. Switch back to the GM view to use it.</Empty>
   return (
     <div className="page archivist more-screen">
       <header className="page-header">

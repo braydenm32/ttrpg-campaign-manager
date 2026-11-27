@@ -7,7 +7,7 @@ import { db, type World } from './db'
 import { Help, HELP } from './help'
 import { useVisibleEntities } from './hooks'
 import { Ico } from './icons'
-import { areaHome, areasFor, locate, PHONE_BAR, showsTab, topTabs, type AreaId, type BarItem, type LocateHelp, type NavArea, type NavFacts, type NavSpot, type NavTab, type Viewer } from './nav'
+import { areaHome, areasFor, locate, MORE_GROUPS, PHONE_BAR, PLAYER_MORE_GROUPS, showsTab, topTabs, type AreaId, type BarItem, type LocateHelp, type NavArea, type NavFacts, type NavSpot, type NavTab, type Viewer } from './nav'
 import { hasSafety, isOpenThread, openLeads, partyLoot, tickingClocks, useVisibleHandouts } from './counts'
 import { EMPTY_INBOX, useGmInbox, type GmInbox } from './players/inbox'
 import { useCharacterOwners } from './players/owners'
@@ -403,8 +403,14 @@ export function screenTitle(world: World, frame: Frame, pathname: string) {
   let name: string | undefined
   if ((parts[0] === 'p' || parts[0] === 'e') && parts[1]) name = nameOf('page', parts[1])
   else if (parts[0] === 's' && parts[1]) name = nameOf('session', parts[1])
+  // The Lectern goes by the pair, "Play: the Lectern", before the session's name.
+  if (parts[0] === 's' && parts[2] === 'lectern') name = [spot?.tab?.searchTitle, name].filter(Boolean).join(' · ')
+  // A screen reached from More (players' Handouts, say) lights More, but the tab names the screen itself.
+  const moreItem = spot?.tab?.id === 'more' && parts.length && parts[0] !== 'more'
+    ? [...MORE_GROUPS, ...PLAYER_MORE_GROUPS].flatMap((g) => g.items).find((t) => t.who.includes(frame.facts.viewer) && pathOf(t.to(frame.facts) ?? '') === pathname)
+    : undefined
   // The first tab of an area (Today, Now) is the area itself.
-  const tab = spot?.tab && spot.tab.label !== spot.area.label && !['today', 'now'].includes(spot.tab.id) ? spot.tab.label : undefined
+  const tab = moreItem ? moreItem.label : spot?.tab && spot.tab.label !== spot.area.label && !['today', 'now'].includes(spot.tab.id) ? spot.tab.label : undefined
   const sub = name && tab && name.toLowerCase() !== tab.toLowerCase() ? undefined : tab
   return [name ?? sub, spot?.area.label, world.name].filter((x, i, all) => x && all.indexOf(x) === i).join(' · ')
 }

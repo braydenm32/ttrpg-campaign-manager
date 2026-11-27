@@ -230,7 +230,7 @@ ${recaps.map((s) => `<session number="${s.number}" title="${s.title.replace(/"/g
               onResult={setDraft}
             />
           ) : (
-            <p className="muted small">Once sessions have player recaps (and are shown to players), Claude can write this from them.</p>
+            <p className="muted small">Once sessions have player recaps (and are revealed to players), Claude can write this from them.</p>
           )}
           {draft !== undefined && (
             <div className="card story-draft">
@@ -259,7 +259,7 @@ ${recaps.map((s) => `<session number="${s.number}" title="${s.title.replace(/"/g
               </div>
             </div>
           )}
-          {campaign.visibility === 'gm' && <p className="muted small">This campaign is hidden from players, so they don’t see this yet.</p>}
+          {campaign.visibility === 'gm' && <p className="muted small">This campaign is GM only, so players don’t see this yet.</p>}
         </>
       ) : (
         <>

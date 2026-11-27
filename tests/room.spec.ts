@@ -31,7 +31,7 @@ test('Now answers next session, last time and what we’re doing first, and chan
   // Nothing booked and no recap revealed in the example: it says so rather than showing an empty box.
   await expect(answers(page)).toContainText('Next session')
   await expect(answers(page)).toContainText('Not set yet')
-  await expect(answers(page)).toContainText('Last time')
+  await expect(answers(page)).toContainText('Recap')
   await expect(answers(page)).toContainText('Nothing yet')
   // What we're doing: the leads under way first, three of them, and a way to the rest.
   await expect(doing(page).locator('.lead-row')).toHaveCount(3)

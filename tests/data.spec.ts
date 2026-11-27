@@ -116,7 +116,7 @@ test('a new page that was never saved, typed in and deleted, leaves nothing behi
   const pages = await count()
   let made: string | undefined
   try {
-    await page.getByRole('button', { name: /^\+ New NPC/ }).first().click()
+    await page.getByRole('button', { name: /^\+ New person/ }).first().click()
     const blank = page.getByRole('menuitem', { name: 'Blank page' })
     if (await blank.isVisible()) await blank.click()
     await expect.poll(() => here(page)).toMatch(/\?edit=1&new=1$/)

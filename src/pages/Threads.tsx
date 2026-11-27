@@ -114,6 +114,7 @@ function ThreadBoard() {
             <Ico as={Spiral} /> Threads <Help topic="threads" />
           </h1>
           <p className="muted">Hooks you’ve planted, mysteries the players noticed, promises and grudges. Keep them here so nothing gets forgotten.</p>
+          <p className="muted small">Players see this under Leads, once you reveal a thread.</p>
         </div>
       </header>
 
@@ -134,7 +135,7 @@ function ThreadBoard() {
           ))}
         </select>
         <button className="primary" disabled={!name.trim()}>
-          Add thread
+          + New thread
         </button>
         {latest && <span className="muted small">Will be marked as raised in #{latest.number} {latest.title}. New threads start GM only.</span>}
       </form>

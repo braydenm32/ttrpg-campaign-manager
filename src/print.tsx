@@ -101,7 +101,7 @@ function PrintBody({ world }: { world: World }) {
           <Ico as={Printer} /> Print or save as PDF
         </button>
         <p className="muted small print-note">
-          {playerCopy ? 'The player copy: secrets, GM notes and hidden pages are left out.' : 'Your copy, with secrets and GM notes. Choose Player copy for one to hand out.'}
+          {playerCopy ? 'The player copy: GM-only passages, GM notes and GM-only pages are left out.' : 'Your copy, with GM-only passages and GM notes. Choose Player copy for one to hand out.'}
         </p>
       </div>
       <div className="print-sheet">
@@ -216,7 +216,7 @@ function PrintPrep({ session, entities, worldId }: { session: Session; entities:
       {p.scenes.length > 0 && <Section title="Scenes">{list(p.scenes)}</Section>}
       {p.clues.length > 0 && <Section title="Secrets and clues">{list(p.clues)}</Section>}
       {p.encounters.length > 0 && (
-        <Section title="Encounters">
+        <Section title="Fights">
           {p.encounters.map((enc) => (
             <div key={enc.id} className="print-encounter">
               <h3>

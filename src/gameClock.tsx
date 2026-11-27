@@ -209,7 +209,7 @@ export function GameClockWatcher({ world }: { world: World }) {
         if (rang) {
           beep()
           toast(`In-game alarm: it’s ${hhmm(rang.secs)}${rang.label ? `. ${rang.label}` : ''}`)
-        } else if (reached !== undefined) toast(`The in-game clock reached ${hhmm(reached)} and stopped.`)
+        } else if (reached !== undefined) toast(`The in-game time reached ${hhmm(reached)} and stopped.`)
       })
       .finally(() => (busy.current = false))
   }, [due, world.id])
@@ -290,7 +290,7 @@ export function GameTimeBar({ world }: { world: World }) {
       <GameTimeView time={time} world={world} size={56} noDate />
       <span className="game-time-words">
         <span className="small muted">
-          The time in the world <Help topic="gameTimePlayers" />
+          In-game time <Help topic="gameTimePlayers" />
         </span>
         <BarDate world={world} time={time} />
       </span>
@@ -383,10 +383,10 @@ function ShowToggle({ worldId, c }: { worldId: string; c: GameClock }) {
     <button
       className={c.shown ? 'on' : ''}
       aria-pressed={!!c.shown}
-      title={c.shown ? 'Players see the clock on the players’ screen and their phones' : 'Put the clock on the players’ screen and their phones'}
+      title={c.shown ? 'The in-game time is on the players’ screen and their phones now. Press to take it off.' : 'Put the in-game time on the players’ screen and their phones'}
       onClick={() => editClock(worldId, (x) => ({ ...x, shown: !x.shown || undefined }))}
     >
-      <Ico as={c.shown ? EyeSlash : Eye} /> {c.shown ? 'Hide from players' : 'Show players'}
+      <Ico as={c.shown ? EyeSlash : Eye} /> {c.shown ? 'Stop showing' : 'Show players'}
     </button>
   )
 }
