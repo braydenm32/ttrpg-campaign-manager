@@ -612,6 +612,94 @@ test('turning off a link or sync first says what stops working (a pretend cloud)
   }
 })
 
+test('a tab waiting its turn to sync says so, and goes ahead once the other tab has stopped (a pretend cloud)', async ({ browser, device }) => {
+  test.setTimeout(120_000)
+  const context = await freshContext(browser, device)
+  try {
+    const state: CloudState = { worldId: '', world_members: [], player_questions: [], downtime_actions: [], character_claims: [], character_requests: [], writes: [] }
+    await fakeCloud(context, state)
+    const page = await context.newPage()
+    await page.goto('/')
+    await page.getByRole('button', { name: /New world/ }).click()
+    await page.getByLabel('Name').fill('The Lantern Road')
+    await page.getByRole('button', { name: 'Create world' }).click()
+    await page.waitForURL(/\/w\/[^/]+/)
+    const worldRow = await page.evaluate(
+      () =>
+        new Promise<Record<string, unknown>>((resolve) => {
+          const req = indexedDB.open('ttrpg-campaign-manager')
+          req.onsuccess = () => {
+            const get = req.result.transaction('worlds').objectStore('worlds').getAll()
+            get.onsuccess = () => resolve(get.result[0])
+          }
+        }),
+    )
+    state.worldId = worldRow.id as string
+    await putRows(page, 'worlds', [{ ...worldRow, cloud: { enabled: true } }])
+    const w = here(page).split('?')[0]
+    await open(page, `${w}/settings?tab=players`)
+    // With the turn free, it syncs by itself.
+    await expect(page.getByText(/Last synced/)).toBeVisible()
+
+    // Another tab of the app takes the turn and never gives it back, as a tab put to sleep half way
+    // through a sync does. While its mark keeps moving it is still at work, so this tab waits and says so.
+    const other = await context.newPage()
+    await other.goto('/terms.html')
+    await other.evaluate(
+      () =>
+        new Promise<void>((got) => {
+          const mark = () => localStorage.setItem('atlas.syncTurn', String(Date.now()))
+          mark()
+          ;(window as unknown as { atWork: number }).atWork = window.setInterval(mark, 500)
+          navigator.locks
+            .request('atlas-sync', () => {
+              got()
+              return new Promise(() => {})
+            })
+            .catch(() => {})
+        }),
+    )
+    const sent: string[] = []
+    page.on('request', (r) => {
+      if (r.url().includes('/rest/v1/records')) sent.push(r.method())
+    })
+    const waiting = page.getByText(/Waiting for another Warded Atlas tab on this device/)
+    await page.getByRole('button', { name: 'Sync now' }).click()
+    await expect(waiting).toBeVisible()
+    if (device !== 'phone') await expect(page.locator('.sync-badge')).toHaveText(/Waiting for another tab/)
+    // Longer than one more look at the mark: still waiting, and nothing has gone to the cloud.
+    await page.waitForTimeout(7000)
+    await expect(waiting).toBeVisible()
+    expect(sent).toEqual([])
+
+    // The other tab goes to sleep: its mark stops moving. This one goes ahead without it.
+    await other.evaluate(() => {
+      clearInterval((window as unknown as { atWork: number }).atWork)
+      localStorage.setItem('atlas.syncTurn', String(Date.now() - 100_000))
+    })
+    await expect(page.getByText(/Last synced/)).toBeVisible({ timeout: 20_000 })
+    await expect(waiting).toHaveCount(0)
+    expect(sent.length).toBeGreaterThan(0)
+    if (device !== 'phone') await expect(page.locator('.sync-badge')).toHaveText(/Synced/)
+
+    // The other way round: this tab is half way through a slow sync when another tab takes the turn
+    // from it. Its sync still finishes, and it isn't called a problem.
+    await context.route(/\/rest\/v1\/records/, async (route) => {
+      await new Promise((r) => setTimeout(r, 2500))
+      await route.fallback()
+    })
+    await page.getByRole('button', { name: 'Sync now' }).click()
+    await expect(page.getByText('Syncing now…')).toBeVisible()
+    await other.evaluate(() => navigator.locks.request('atlas-sync', { steal: true }, () => {}))
+    await expect(page.getByText('Syncing now…')).toBeVisible()
+    await expect(page.getByText(/Last synced/)).toBeVisible({ timeout: 30_000 })
+    await expect(page.locator('.notice', { hasText: /sync|cloud/i })).toHaveCount(0)
+    if (device !== 'phone') await expect(page.locator('.sync-badge')).toHaveText(/^☁️ Synced$/)
+  } finally {
+    await context.close()
+  }
+})
+
 test('the GM renames a player whose name came out as the invite link (a pretend cloud)', async ({ browser, device }) => {
   test.setTimeout(120_000)
   const context = await freshContext(browser, device)

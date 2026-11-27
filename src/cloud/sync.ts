@@ -47,6 +47,8 @@ export type SyncState = {
   message?: string
   /** The worlds whose last sync left files that couldn't upload (so the account doesn't have them). */
   unsent?: string[]
+  /** Another tab of this browser is syncing, and this one is waiting its turn. */
+  waiting?: boolean
 }
 
 // ---------- status store (read by React with useSyncExternalStore) ----------
@@ -469,6 +471,7 @@ async function applyRemote(
     if (have?.blob && have.size === data.size && have.updatedAt === data.updatedAt) {
       await db.assets.put({ ...(data as unknown as Asset), blob: have.blob })
     } else {
+      gotSomewhere()
       const { data: file, error } = await supabase.storage.from('assets').download(storagePath(worldId, id))
       if (error || !file) return false
       await db.assets.put({ ...(data as unknown as Asset), blob: file })
@@ -706,6 +709,7 @@ async function sendFiles(worldId: string, files: FileSend[]) {
   const failures: string[] = []
   for (const f of files) {
     await stillSyncing(worldId)
+    gotSomewhere()
     const { error } = await supabase.storage
       .from('assets')
       .upload(storagePath(worldId, f.upsert.id), f.blob, { upsert: true, contentType: (f.upsert.data as Asset).mime || 'application/octet-stream' })
@@ -829,9 +833,105 @@ async function quietly<T>(fn: () => Promise<T>) {
   }
 }
 
-/** One tab at a time (a second tab, or the installed app beside a browser tab, waits its turn), where the browser can say. */
-function oneTabAtATime<T>(fn: () => Promise<T>): Promise<T> {
-  return typeof navigator !== 'undefined' && navigator.locks ? (navigator.locks.request('atlas-sync', fn) as Promise<T>) : fn()
+// ---------- one tab at a time ----------
+//
+// Only one tab of this browser syncs at a time (a second tab, or the installed app beside a browser
+// tab, waits its turn). The turn is a browser lock, and a lock is only given back when its holder
+// finishes or is closed. A tab left hanging (asleep on a phone half way through a sync, or stuck
+// half way through an app update) kept the turn for good once, and every other tab waited in
+// silence: nothing synced and nothing said why. So the tab with the turn now leaves a mark every
+// few seconds while it is awake and getting somewhere, a tab that is waiting says so, and when the
+// mark has not moved for TURN_WAIT the waiting tab goes ahead anyway. Two tabs syncing at once is
+// no worse than two devices doing it.
+
+/** When the tab with the turn last showed it was at work: kept where every tab of this browser can read it. */
+const TURN_MARK = 'atlas.syncTurn'
+/**
+ * How long the mark may stand still before a waiting tab goes ahead without the turn. Longer than
+ * a minute, because a browser lets a tab in the background run its timers only once a minute.
+ */
+const TURN_WAIT = 90_000
+/** A tab that is awake but has got nowhere for this long (one request that never comes back) stops leaving its mark. */
+const STUCK_AFTER = 10 * 60_000
+/** When this tab's sync last got somewhere, and when it last left its mark. */
+let progressed = 0
+let marked = 0
+
+function leaveMark() {
+  marked = Date.now()
+  try {
+    localStorage.setItem(TURN_MARK, String(marked))
+  } catch {
+    // Nowhere to leave the mark: a waiting tab goes ahead without waiting.
+  }
+}
+
+/** Called as a sync gets somewhere (a world done, a file sent). Costs nothing when called often. */
+function gotSomewhere() {
+  progressed = Date.now()
+  if (progressed - marked >= 2000) leaveMark()
+}
+
+function quietFor() {
+  try {
+    return Date.now() - Number(localStorage.getItem(TURN_MARK) ?? 0)
+  } catch {
+    return Infinity
+  }
+}
+
+async function oneTabAtATime<T>(fn: () => Promise<T>): Promise<T> {
+  if (typeof navigator === 'undefined' || !navigator.locks) return fn()
+  const locks = navigator.locks
+  let mine: Promise<T> | undefined
+  const run = () => {
+    progressed = Date.now()
+    leaveMark()
+    // A long upload is still work: the mark keeps moving while this tab is awake, and stops when it is put to sleep.
+    const beat = setInterval(() => Date.now() - progressed < STUCK_AFTER && leaveMark(), 5000)
+    return (mine = fn().finally(() => clearInterval(beat)))
+  }
+  // The turn was taken from this tab while it was still working (it looked stuck to another tab):
+  // the work carries on all the same, so wait for it rather than calling it a failure.
+  const finish = (err: unknown): Promise<T> => {
+    if (mine) return mine
+    throw err
+  }
+  // Free? Take it.
+  let took = false
+  const first = await locks
+    .request('atlas-sync', { ifAvailable: true }, async (lock) => {
+      if (!lock) return undefined
+      took = true
+      return await run()
+    })
+    .catch(finish)
+  if (took) return first as T
+  // Another tab has the turn: say so, and wait while it keeps getting somewhere.
+  setState({ waiting: true })
+  try {
+    for (;;) {
+      const quiet = quietFor()
+      if (quiet >= TURN_WAIT) return await (locks.request('atlas-sync', { steal: true }, run) as Promise<T>).catch(finish)
+      const stop = new AbortController()
+      // Looked at again every few seconds, so a tab that stops getting anywhere is noticed soon after TURN_WAIT.
+      const timer = setTimeout(() => stop.abort(), Math.min(TURN_WAIT - quiet + 250, 5000))
+      try {
+        return await (locks.request('atlas-sync', { signal: stop.signal }, () => {
+          clearTimeout(timer)
+          return run()
+        }) as Promise<T>)
+      } catch (err) {
+        if (mine) return await mine
+        // Our own wait ran out: look at the mark again. Anything else is a real problem.
+        if (!stop.signal.aborted) throw err
+      } finally {
+        clearTimeout(timer)
+      }
+    }
+  } finally {
+    setState({ waiting: false })
+  }
 }
 
 /**
@@ -943,12 +1043,15 @@ async function syncAll() {
     for (const id of ids) {
       const name = (await db.worlds.get(id))?.name ?? 'A world'
       try {
+        gotSomewhere()
         if (!(await cloudCopyThere(id, userId))) continue
         await quietly(async () => {
           await pullWorld(id)
           await retryMissing(id)
         })
+        gotSomewhere()
         const { forPlayers, failed, missing } = await pushWorld(id)
+        gotSomewhere()
         // Players only refresh when something they can see changed. Telling them doesn't hold up the next world.
         if (forPlayers) void notifyShareViewers(id).catch(() => {})
         if (failed.length) {
