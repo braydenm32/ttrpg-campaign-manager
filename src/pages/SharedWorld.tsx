@@ -19,7 +19,7 @@ export default function SharedWorld() {
     let cancelled = false
     loadSharedWorld(token)
       .then((id) => !cancelled && navigate(`${worldPath(id)}`, { replace: true }))
-      .catch((e: Error) => !cancelled && setError(cloudErrorMessage(e)))
+      .catch((e: Error) => !cancelled && setError(cloudErrorMessage(e, { doing: 'opening' })))
     return () => {
       cancelled = true
     }

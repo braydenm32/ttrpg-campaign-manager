@@ -13,7 +13,7 @@ import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, 
 import { HistoryButton } from '../History'
 import { listedEntries, TableRoller } from '../tables'
 import { newThread, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
-import { asPlayerSees, saveFileAsAsset, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
+import { asPlayerSees, saveFileAsAsset, useAssetUrl, useFromAddress, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
 import { SecretNamesWarning } from '../SecretNamesWarning'
@@ -60,8 +60,9 @@ export default function EntityPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const { isGM, canSeeEntity } = useViewMode()
-  // null once we know the page isn't there (undefined means still loading).
-  const stored = useLiveQuery(async () => (await db.entities.get(entityId)) ?? null, [entityId])
+  // null once we know the page isn't there (undefined means still loading). An old long-id link from
+  // the GM opens in a player's copy too, and a player's for the GM.
+  const stored = useFromAddress('entities', entityId)
   const editing = isGM && params.get('edit') === '1'
   /**
    * Save or Cancel. An editor opened with Edit steps back to the page already in the history, so
@@ -121,7 +122,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   const seen = HAS_STATUS.includes(e.type) ? lastSeenIn(e, sessions, isGM) : undefined
   // A player's own character: their numbers first, and a word that it's them.
   const owner = e.type === 'pc' ? owners.get(e.id) : undefined
-  const isYou = !isGM && e.type === 'pc' && (!!owner?.mine || !!previewAs?.characterNames.some((n) => n.toLowerCase() === e.name.toLowerCase()))
+  const isYou = !isGM && e.type === 'pc' && ((!!owner?.mine && !owner.pending) || !!previewAs?.characterNames.some((n) => n.toLowerCase() === e.name.toLowerCase()))
   // Where it is on a map: its own map (a town's map), else the first pin.
   const onMap = ownMaps[0] ? `${worldPath(worldId)}/maps/${ownMaps[0].id}` : pins[0] ? `${worldPath(worldId)}/maps/${pins[0].map.id}?pin=${pins[0].pin.id}` : undefined
   const gmNotes = isGM && !!e.gmNotes.trim()

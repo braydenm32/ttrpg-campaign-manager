@@ -102,19 +102,39 @@ export function passwordProblem(password: string) {
  * A plain-words message for a failed cloud call. The free server falls asleep after about a week
  * with nobody using it (a weekly keep-alive normally stops that), and then every call fails the same
  * way, so that case gets its own explanation.
+ *
+ * `reader` is who will read it. Only a GM on their own screens ('gm': sync, the world's settings,
+ * the Inbox) is told how the server is woken; a player or wiki reader ('player', the default) can
+ * only wait or tell their GM; 'anyone' is for places both use, like signing in.
+ * `doing` is what failed. 'sending' (the default) is anything a person sends or saves: nothing keeps
+ * it for later, so offline it says it wasn't sent. 'refreshing' is what the app tries again by
+ * itself (sync, a player's copy, a list reloading): only that "will catch up". 'opening' is a
+ * first fetch or a sign-in, with no copy on the device to fall back on.
  */
-export function cloudErrorMessage(e: unknown) {
+export function cloudErrorMessage(
+  e: unknown,
+  { reader = 'player', doing = 'sending' }: { reader?: 'gm' | 'player' | 'anyone'; doing?: 'sending' | 'refreshing' | 'opening' } = {},
+) {
   const msg = (e as Error)?.message ?? String(e)
   if ((e as { code?: string })?.code === 'weak_password')
     return (e as { reasons?: string[] }).reasons?.includes('pwned')
       ? 'That password has turned up in a known data leak, so it isn’t safe to use. Please pick another.'
       : `That password is too easy to guess. ${PASSWORD_RULE}`
-  if (typeof navigator !== 'undefined' && !navigator.onLine) return 'You’re offline. Your copy on this device still works, and it will catch up when you’re back online.'
-  if (/failed to fetch|networkerror|load failed|network request failed|paused|status of 54\d|fetch/i.test(msg))
-    return 'Can’t reach the Warded Atlas server right now. If nobody has used it for about a week it may be asleep: the GM can wake it by opening their Supabase dashboard (it takes a minute). Your copy on this device still works.'
+  if (typeof navigator !== 'undefined' && !navigator.onLine)
+    return doing === 'refreshing'
+      ? 'You’re offline. Your copy on this device still works, and it will catch up when you’re back online.'
+      : doing === 'opening'
+        ? 'You’re offline. Try again when you’re back online.'
+        : 'You’re offline, so this wasn’t sent. Try again when you’re back online.'
+  if (/failed to fetch|networkerror|load failed|network request failed|paused|status of 54\d|fetch/i.test(msg)) {
+    if (reader === 'gm')
+      return 'Can’t reach the Warded Atlas server right now. If nobody has used it for about a week it may be asleep: the GM can wake it by opening their Supabase dashboard (it takes a minute). Your copy on this device still works.'
+    const plain = reader === 'player' ? 'The world’s server isn’t answering. Try again in a minute, or tell your GM.' : 'The Warded Atlas server isn’t answering. Try again in a minute.'
+    return doing === 'refreshing' ? `${plain} Your copy on this device still works.` : plain
+  }
   if (/row-level security|permission denied|violates.*policy/i.test(msg))
     return 'The cloud didn’t allow that: this world’s cloud copy may have been deleted on another device, or you may no longer be one of its GMs.'
-  if (/jwt expired|invalid jwt|refresh token|not authenticated/i.test(msg)) return 'Your sign-in has run out. Sign in again (Cloud settings) and it will carry on.'
+  if (/jwt expired|invalid jwt|refresh token|not authenticated/i.test(msg)) return 'Your sign-in has run out. Sign in again and it will carry on.'
   if (/payload too large|request entity too large|maximum allowed size|413/i.test(msg)) return 'That’s too big to upload: the free plan allows 50 MB per file.'
   if (/unsupported unicode escape|\\u0000/i.test(msg)) return 'Some text has a hidden character the cloud can’t store (it often comes from copying out of a PDF).'
   return msg

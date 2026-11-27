@@ -13,9 +13,13 @@ import { pagesIn } from '../counts'
 import { useViewMode } from '../viewMode'
 import { pagePath, resolveCustom, sectionType, typePath, usePathsVersion, worldPath } from '../paths'
 
-/** Kinds that share one tab, with the switch between them. The heading is the tab's name; the kind sits above it in small type. */
-const GROUPS: { title: string; types: readonly EntityType[]; always: boolean }[] = [
-  { title: 'People', types: ['npc', 'pc'], always: true },
+/**
+ * Kinds that share one tab, with the switch between them. The heading is the tab's name; the kind sits above it in small type.
+ * `readers` are kinds that join the tab for players and wiki readers only: their People tab holds factions too
+ * (src/nav.ts), where the GM has a Factions tab of its own.
+ */
+const GROUPS: { title: string; types: readonly EntityType[]; readers?: readonly EntityType[]; always: boolean }[] = [
+  { title: 'People', types: ['npc', 'pc'], readers: ['faction'], always: true },
   { title: 'Places', types: ['location', 'shop'], always: false },
   { title: 'Lore', types: ['lore', 'deity'], always: false },
 ]
@@ -56,9 +60,12 @@ export default function EntityList() {
       (!tag || e.tags.includes(tag)),
   )
 
-  const group = GROUPS.find((g) => g.types.includes(t))
+  const group = GROUPS.find((g) => g.types.includes(t) || (!isGM && g.readers?.includes(t)))
   // The GM always gets the switch; players only when the other kind has something they can read.
-  const switchTypes = group?.types.filter((x) => group.always || isGM || x === t || all.some((e) => e.type === x)) ?? []
+  const switchTypes = [
+    ...(group?.types.filter((x) => group.always || isGM || x === t || all.some((e) => e.type === x)) ?? []),
+    ...((!isGM && group?.readers?.filter((x) => x === t || all.some((e) => e.type === x))) || []),
+  ]
 
   // Locations read best as a tree (region > city > district > building).
   const showTree = t === 'location' && !q && !tag

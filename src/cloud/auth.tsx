@@ -337,7 +337,7 @@ function SignOutEverything({ userId, onCancel }: { userId: string; onCancel: () 
             try {
               await removeEverythingHere(check)
             } catch (err) {
-              setError(cloudErrorMessage(err))
+              setError(cloudErrorMessage(err, { reader: 'anyone', doing: 'opening' }))
               setBusy(false)
             }
           }}
@@ -412,7 +412,7 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
                     await deleteMyAccount()
                     onClose()
                   } catch (err) {
-                    setError(cloudErrorMessage(err))
+                    setError(cloudErrorMessage(err, { reader: 'anyone', doing: 'opening' }))
                   } finally {
                     setBusy(false)
                   }
@@ -483,7 +483,7 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
         setMessage('If that email has an account, a reset link is on its way.')
       }
     } catch (err) {
-      setError(cloudErrorMessage(err))
+      setError(cloudErrorMessage(err, { reader: 'anyone', doing: 'opening' }))
     } finally {
       setBusy(false)
     }
@@ -517,7 +517,7 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
                     try {
                       await signInWith(p.id)
                     } catch (err) {
-                      setError(cloudErrorMessage(err))
+                      setError(cloudErrorMessage(err, { reader: 'anyone', doing: 'opening' }))
                       setBusy(false)
                     }
                   }}

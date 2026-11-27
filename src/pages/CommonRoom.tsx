@@ -7,7 +7,7 @@ import { useAssetUrl, useVisibleEntities } from '../hooks'
 import { Markdown, splitSecrets, stripSecrets } from '../Markdown'
 import { useCharacterOwners } from '../players/owners'
 import { addToPartyNotes, MyNote, NotesText, PlayerNotesBox } from '../players/Notes'
-import { MyNewCharacters } from '../players/NewCharacters'
+import { ApprovedCharacterNotes, MyNewCharacters } from '../players/NewCharacters'
 import { ChooseCharacter, EditMyCharacter } from '../players/Characters'
 import { SessionScheduler, showDate } from '../players/Schedule'
 import { AskForm, pageLink, QuestionList } from '../players/Questions'
@@ -249,6 +249,7 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
         </span>
       </TabHead>
       <SignedOutCard world={world} />
+      <ApprovedCharacterNotes world={world} />
       <GameTimeBar world={world} />
       {joined && <InstallCard place="joined" />}
       {stage === 'during' && (
@@ -740,6 +741,7 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
     return (
       <>
         <TabHead title="Me" help="roomMe" />
+        <ApprovedCharacterNotes world={world} />
         {memberOf ? (
           <section className="card room-card">
             <ChooseCharacter world={world} />
@@ -763,6 +765,13 @@ function MeTab({ ctx }: { ctx: RoomContext }) {
   return (
     <>
       <TabHead title="Me" help="roomMe" />
+      <ApprovedCharacterNotes world={world} />
+      {/* Another character asked for, still waiting for the GM. */}
+      {memberOf && [...ctx.owners.values()].some((o) => o.mine && o.pending) && (
+        <section className="card room-card">
+          <ChooseCharacter world={world} />
+        </section>
+      )}
       {mine.map((c) => {
         // The rest of the sheet, without the numbers already in the tiles.
         const tiles = keyNumbers(c)

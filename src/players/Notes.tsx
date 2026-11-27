@@ -377,7 +377,7 @@ function GmReply({ worldId, entityId, onSent }: { worldId: string; entityId: str
           setState('')
           onSent()
         } catch (err) {
-          setState(cloudErrorMessage(err))
+          setState(cloudErrorMessage(err, { reader: 'gm' }))
         }
       }}
     >

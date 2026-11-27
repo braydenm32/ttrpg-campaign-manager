@@ -12,7 +12,7 @@ import { dropCloudTranscripts, TranscriptPanel } from '../ai/TranscriptPanel'
 import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { db, ENTITY_LABELS, THREAD_STATUS, type Campaign, type Entity, type Recording, type Session, type World } from '../db'
-import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
+import { formatBytes, useAssetUrl, useFromAddress, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { SecretTextarea } from '../SecretTextarea'
 import { SecretNamesWarning } from '../SecretNamesWarning'
@@ -50,7 +50,8 @@ export default function SessionPage() {
   const { worldId, world } = useWorld()
   const { sessionId = '' } = useParams()
   const { isGM } = useViewMode()
-  const session = useLiveQuery(async () => (await db.sessions.get(sessionId)) ?? null, [sessionId])
+  // The GM's link to a session opens in a player's copy too, and a player's link for the GM.
+  const session = useFromAddress('sessions', sessionId)
   const campaign = useLiveQuery(async () => (session ? ((await db.campaigns.get(session.campaignId)) ?? null) : undefined), [session?.campaignId])
   const entities = useVisibleEntities(worldId)
   const [params] = useSearchParams()

@@ -163,6 +163,23 @@ export const resolveWorld = (param: string) => {
 export const resolvePage = (worldId: string, param: string) => pageBySlug.get(`${worldId}/${param}`) ?? param
 export const resolveCustom = (worldId: string, param: string) => customBySlug.get(`${worldId}/${param}`) ?? param
 
+/**
+ * The tail every id carries in a player's copy of a world ("…@m1a2b3c4d" in a joined world,
+ * "…@Ab3xY9_k" in a wiki link's copy), so the copy never collides with the GM's own world when both
+ * are on one device. Empty for a world of your own.
+ */
+export const copyTail = (from: { token?: string; memberOf?: string } | undefined | null) =>
+  from?.memberOf ? `@m${from.memberOf.slice(0, 8)}` : from?.token ? `@${from.token.slice(0, 8)}` : ''
+const COPY_TAIL = /@(?:m[0-9a-f]{8}|[\w-]{8})$/
+
+/**
+ * An id from an address, as this copy of the world keeps it: another copy's tail comes off and
+ * this copy's own (`tail`, see copyTail) goes on. Maps, campaigns and sessions have their id in the
+ * address, so this is what lets the GM's link to a map open on a player's phone, and a player's
+ * link open for the GM.
+ */
+export const idHere = (id: string, tail: string) => id.replace(COPY_TAIL, '') + tail
+
 export const worldPath = (worldId: string) => `/w/${worldSlug.get(worldId) ?? worldId}`
 export const pagePath = (worldId: string, entityId: string) => `${worldPath(worldId)}/p/${pageSlug.get(entityId) ?? entityId}`
 export function typePath(worldId: string, type: string, customId?: string) {

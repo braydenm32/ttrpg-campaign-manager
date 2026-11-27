@@ -84,6 +84,7 @@ export function useFeedback(world: World | null | undefined) {
   const { cloudId, ready } = useBetweenSessions(world)
   const [list, setList] = useState<Feedback[]>()
   const [error, setError] = useState('')
+  const reader = world?.shared ? 'player' : 'gm'
   const reload = useCallback(async () => {
     if (!cloudId || !ready) return
     const { data, error } = await supabase
@@ -92,12 +93,12 @@ export function useFeedback(world: World | null | undefined) {
       .eq('world_id', cloudId)
       .order('created_at', { ascending: true })
     if (error) {
-      setError(cloudErrorMessage(error))
+      setError(cloudErrorMessage(error, { reader, doing: 'refreshing' }))
       return
     }
     setError('')
     setList((data as Row[]).map(fromRow))
-  }, [cloudId, ready])
+  }, [cloudId, ready, reader])
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     reload()
@@ -305,7 +306,7 @@ export function FeedbackInInbox({ world, sessions, nameOf }: { world: World; ses
                       setGone((g) => [...g, f.id])
                       afterUndo(
                         'Stars and wishes removed.',
-                        () => deleteFeedback(world.id, f.id).then(reload, (e) => toast(`That didn’t go through: ${cloudErrorMessage(e)}`)),
+                        () => deleteFeedback(world.id, f.id).then(reload, (e) => toast(`That didn’t go through: ${cloudErrorMessage(e, { reader: 'gm' })}`)),
                         () => setGone((g) => g.filter((x) => x !== f.id)),
                       )
                     }}

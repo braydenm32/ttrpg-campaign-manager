@@ -1,8 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { db, type Asset, type Entity } from './db'
-import { resolveWorld, usePathsVersion } from './paths'
+import { db, type Asset, type Campaign, type Entity, type Session, type WorldMap } from './db'
+import { copyTail, idHere, resolveWorld, usePathsVersion } from './paths'
 import { useViewMode } from './viewMode'
 import { revealDue } from './revealDue'
 import { outOfRoom } from './undo'
@@ -38,6 +38,36 @@ const READING: Entity[] = []
 
 /** Whether a list from useVisibleEntities is still being read, so a screen shows "Loading" and not "No pages yet". */
 export const stillReading = (pages: Entity[]) => pages === READING
+
+/**
+ * A map, campaign, session or page of the open world, from the id in the address: looked up as it
+ * is, and if this world has none by that id, as this copy of the world keeps it (see idHere in
+ * paths.ts). So a link the GM copies from their address bar opens for a player, and a player's
+ * link opens for the GM (also when the GM's world and a player's copy are on one device).
+ * Whether the viewer may see it is still up to the screen. Null when it isn't there; undefined
+ * while still looking.
+ */
+export function useFromAddress<K extends keyof FromAddress>(table: K, id: string) {
+  const { worldId, world } = useWorld()
+  // Until the world has loaded there's no telling which copy this is.
+  const tail = world === undefined ? undefined : copyTail(world?.shared)
+  return useLiveQuery(async () => {
+    const get = (x: string) => db[table].get(x) as Promise<FromAddress[K] | undefined>
+    const found = await get(id)
+    if (found?.worldId === worldId) return found
+    if (tail === undefined) return undefined
+    const here = idHere(id, tail)
+    // One from another world on this device is handed back as it is: the screen says it isn't here.
+    return (here !== id ? await get(here) : undefined) ?? found ?? null
+  }, [table, id, worldId, tail])
+}
+/** The things whose id is in their address. */
+interface FromAddress {
+  maps: WorldMap
+  campaigns: Campaign
+  sessions: Session
+  entities: Entity
+}
 
 /** All entities in the world the current viewer is allowed to see (templates aren't real pages, so they're left out). */
 export function useVisibleEntities(worldId: string) {

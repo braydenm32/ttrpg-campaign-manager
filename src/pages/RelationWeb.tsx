@@ -63,7 +63,7 @@ export default function RelationWeb() {
     return n
   }, [edges, mode])
   const mine = entities.find(
-    (e) => e.type === 'pc' && linked.has(e.id) && (owners.get(e.id)?.mine || previewAs?.characterNames.some((n) => n.toLowerCase() === e.name.toLowerCase())),
+    (e) => e.type === 'pc' && linked.has(e.id) && ((owners.get(e.id)?.mine && !owners.get(e.id)?.pending) || previewAs?.characterNames.some((n) => n.toLowerCase() === e.name.toLowerCase())),
   )
   const most = (pick: (e: Entity) => boolean) => [...linked.entries()].filter(([id]) => byId.get(id) && pick(byId.get(id)!)).sort((a, b) => b[1] - a[1])[0]?.[0]
   const focus = asked === 'all' ? '' : asked && byId.has(asked) ? asked : (mine?.id ?? (linked.size > 12 ? (most((e) => e.type === 'pc') ?? most(() => true) ?? '') : ''))

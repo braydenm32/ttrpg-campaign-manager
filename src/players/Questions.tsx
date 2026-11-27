@@ -118,7 +118,7 @@ export function useGmQuestions(world: World | null | undefined) {
       setQuestions(await listQuestions(cloudId))
       setError('')
     } catch (e) {
-      setError(cloudErrorMessage(e))
+      setError(cloudErrorMessage(e, { reader: 'gm', doing: 'refreshing' }))
     }
   }, [cloudId])
   useEffect(() => {

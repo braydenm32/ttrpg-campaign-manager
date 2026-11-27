@@ -57,7 +57,7 @@ export default function JoinWorld() {
     } catch (e) {
       // A link that's been turned off would otherwise send the player back here every time they open the app.
       pendingInvite.set(null)
-      setError(cloudErrorMessage(e))
+      setError(cloudErrorMessage(e, { doing: 'opening' }))
     } finally {
       setBusy(false)
     }

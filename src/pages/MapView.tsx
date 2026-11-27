@@ -14,7 +14,7 @@ import { useFrameContext } from '../Sidebar'
 import { mapKey, numberPins, type KeyEntry } from '../mapKey'
 import { toast } from '../undo'
 import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, newId, PICKER_TYPES, type Entity, type EntityType, type FogShape, type Pin, type World, type WorldMap } from '../db'
-import { useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
+import { useAssetUrl, useFromAddress, useVisibleEntities, useWorld } from '../hooks'
 import { Markdown } from '../Markdown'
 import { StatusBadge, statusIcon } from '../status'
 import { SecretTextarea } from '../SecretTextarea'
@@ -27,7 +27,7 @@ import { MeasureBar, ScaleSetting } from '../mapMeasure'
 import { saveRoute } from '../journey'
 import { gmIdOf, sendPing, useTable, type MapPing } from '../cloud/table'
 import { useMe } from '../atTheTable'
-import { pagePath, worldPath } from '../paths'
+import { copyTail, idHere, pagePath, worldPath } from '../paths'
 import { ExportMap } from '../ExportMap'
 import { toClassic } from '../mapDrawing'
 import { canSeeMap, useVisibleMaps } from '../counts'
@@ -87,7 +87,8 @@ export default function MapView() {
   const { worldId } = useWorld()
   const { mapId = '' } = useParams()
   const { isGM } = useViewMode()
-  const map = useLiveQuery(async () => (await db.maps.get(mapId)) ?? null, [mapId])
+  // The GM's link to a map opens in a player's copy too, and a player's link for the GM.
+  const map = useFromAddress('maps', mapId)
   // previewing as a player shows their copy of a map with secrets on it
   const url = useAssetUrl(map ? (isGM ? map.imageId : playersImageId(map)) : undefined)
 
@@ -141,7 +142,8 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   // The pin for where the party is: the place itself, or the nearest place it's inside.
   const herePin = here.around.map((id) => allPins.find((p) => p.entityId === id)).find(Boolean)
   const hasRooms = !!exportDrawing?.rooms?.length && exportDrawing.scene === 'battle'
-  const selectedId = params.get('pin')
+  // A pin in a link from the GM (or from a player) is found the same way as the map itself.
+  const selectedId = params.get('pin') ? idHere(params.get('pin')!, copyTail(world?.shared)) : null
   // The legend's choice of categories lives in the address, so Back keeps it; picking a pin keeps it too.
   const select = (id?: string) =>
     setParams(

@@ -200,7 +200,7 @@ function CloudBoot() {
           const problem = passwordProblem(password)
           if (problem) return setError(problem)
           const { error } = await supabase.auth.updateUser({ password })
-          if (error) setError(cloudErrorMessage(error))
+          if (error) setError(cloudErrorMessage(error, { reader: 'anyone', doing: 'opening' }))
           else setRecovering(false)
         }}
       >
@@ -309,7 +309,14 @@ function WorldShell() {
   const token = shared?.token
   const memberOf = shared?.memberOf
   useEffect(
-    () => (token || memberOf ? watchPlayerCopy({ token, memberOf, fetchedAt: 0 }, (e) => setShareError(cloudErrorMessage(e))) : undefined),
+    () =>
+      token || memberOf
+        ? watchPlayerCopy(
+            { token, memberOf, fetchedAt: 0 },
+            (e) => setShareError(cloudErrorMessage(e, { doing: 'refreshing' })),
+            () => setShareError(''),
+          )
+        : undefined,
     [token, memberOf],
   )
   // Asks first when Claude is writing on this page (see LeaveGuard).

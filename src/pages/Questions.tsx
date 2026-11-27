@@ -261,7 +261,7 @@ function QuestionItem({
       await fn()
       await onChange()
     } catch (e) {
-      setError(cloudErrorMessage(e))
+      setError(cloudErrorMessage(e, { reader: 'gm' }))
     } finally {
       setBusy(false)
     }

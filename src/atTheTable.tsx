@@ -155,10 +155,13 @@ export function TableSignals({ world }: { world: World }) {
   )
 }
 
-/** A player's characters here, by local id and by the GM's id, and the name to sign rolls with. */
+/**
+ * A player's characters here, by local id and by the GM's id, and the name to sign rolls with.
+ * A character they've asked for isn't theirs until the GM approves it: no turns, roll calls or name from it yet.
+ */
 export function useMe(world: World) {
   const { owners } = useCharacterOwners(world)
-  const ids = [...owners.entries()].filter(([, o]) => o.mine).map(([id]) => id)
+  const ids = [...owners.entries()].filter(([, o]) => o.mine && !o.pending).map(([id]) => id)
   const key = ids.join(',')
   const characters = useLiveQuery(async () => (await db.entities.bulkGet(key ? key.split(',') : [])).filter((e): e is Entity => !!e), [key]) ?? []
   const me = world.shared?.members?.find((m) => m.userId === world.shared?.me)

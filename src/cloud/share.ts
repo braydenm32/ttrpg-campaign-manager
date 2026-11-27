@@ -1,8 +1,9 @@
 import { db, PARTY, type Asset, type Campaign, type Entity, type Pin, type Reputation, type Session, type SharedInfo, type World, type WorldMap } from '../db'
 import { worldLoading } from '../worldLoading'
 import { appLink, supabase, SUPABASE_URL } from './client'
-import { joinRoom, sendOnce } from './live'
+import { JOINED, joinRoom, sendOnce } from './live'
 import { stableStringify } from './sync'
+import { copyTail } from '../paths'
 
 /**
  * Player share links. The GM turns on a link for a synced world; anyone with the link gets a
@@ -61,7 +62,7 @@ export async function loadSharedWorld(token: string): Promise<string> {
   const { data, error } = await supabase.rpc('shared_world', { token })
   if (error) throw error
   if (!data) throw new Error('This share link has been turned off or replaced. Ask your GM for a new one.')
-  return storePlayerCopy(data as SharedPayload, sharedWorldId(token), `@${token.slice(0, 8)}`, { token }, (ids) => downloadFiles({ token }, ids))
+  return storePlayerCopy(data as SharedPayload, sharedWorldId(token), copyTail({ token }), { token }, (ids) => downloadFiles({ token }, ids))
 }
 
 /**
@@ -105,8 +106,8 @@ export async function downloadFiles(from: { token: string } | { world: string },
 }
 
 /**
- * Stores a player-safe world on this device as a read-only copy. Ids get a suffix so the copy
- * never collides with the GM's own world when both are on one device.
+ * Stores a player-safe world on this device as a read-only copy. Ids get a suffix (copyTail in
+ * paths.ts) so the copy never collides with the GM's own world when both are on one device.
  */
 export async function storePlayerCopy(
   p: SharedPayload,
@@ -328,15 +329,23 @@ export function tellOtherPlayers(cloudId: string) {
 /** Players refresh at most this often while the GM is busy editing; the first change still arrives at once. */
 const REFRESH_GAP = 30_000
 
+/** A copy fetched less than this long ago is fresh enough when the app opens or comes back to the front. */
+const FRESH_FOR = 60_000
+
 /**
- * Keeps a read-only copy fresh while it's open: a refresh when the GM syncs, plus a slow poll.
+ * Keeps a read-only copy fresh while it's open: a refresh when the world opens (unless it was
+ * fetched a moment ago, as the join and wiki links do), when the GM syncs, when the tab comes back
+ * to the front or the live link reconnects (a phone waking up), plus a slow poll.
  * A burst of changes becomes one refresh now and one more at the end, so nothing is missed and
  * players don't re-download the world every few seconds while the GM types.
+ * `onFresh` is called after each refresh that worked (to clear an error shown for an earlier one).
  */
-export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) {
+export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void, onFresh?: () => void) {
   let busy = false
   let pending = false
-  let last = 0
+  let stopped = false
+  // When the copy was last fetched (or tried). Read from the copy itself when the watch starts.
+  let last = info.fetchedAt
   let timer: ReturnType<typeof setTimeout> | undefined
   const run = async () => {
     if (!navigator.onLine) return
@@ -347,7 +356,10 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) 
     busy = true
     last = Date.now()
     try {
+      // A joined world is fetched as the signed-in player. Signed out, there is nothing to ask for: the Common Room says so.
+      if (info.memberOf && !(await supabase.auth.getSession()).data.session) return
       await refreshPlayerCopy(info)
+      onFresh?.()
     } catch (e) {
       onError?.(e as Error)
     } finally {
@@ -361,6 +373,7 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) 
   // A tab nobody is looking at doesn't download anything; it catches up when it's opened again.
   let missed = false
   const refresh = () => {
+    if (stopped) return
     if (document.hidden) {
       missed = true
       return
@@ -372,23 +385,45 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void) 
       run()
     }, wait)
   }
-  const name = info.token ? `share:${info.token}` : `members:${info.memberOf}`
-  const room = joinRoom(name)
-  room.on('changed', refresh)
-  // The GM's broadcast is the main signal; this slow check only covers a missed one, and skips hidden tabs.
-  const poll = setInterval(() => !document.hidden && refresh(), 5 * 60_000)
-  const onVisible = () => {
-    if (document.hidden || !(missed || Date.now() - last > 5 * 60_000)) return
+  // Opening the world, coming back to the tab and reconnecting each fetch the copy, unless it was fetched a moment ago.
+  let started = false
+  const catchUp = () => {
+    if (!started || (!missed && Date.now() - last < FRESH_FOR)) return
     missed = false
     refresh()
   }
+  const name = info.token ? `share:${info.token}` : `members:${info.memberOf}`
+  const room = joinRoom(name)
+  room.on('changed', refresh)
+  // The live link coming back (after the phone slept, say) may have missed a "changed" while it was away.
+  room.on(JOINED, catchUp)
+  // The GM's broadcast is the main signal; this slow check only covers a missed one, and skips hidden tabs.
+  const poll = setInterval(() => !document.hidden && refresh(), 5 * 60_000)
+  const onVisible = () => !document.hidden && catchUp()
   window.addEventListener('online', refresh)
   document.addEventListener('visibilitychange', onVisible)
+  // Signing back in (a joined world stops refreshing while signed out) fetches it too.
+  const { data: auth } = supabase.auth.onAuthStateChange((event) => event === 'SIGNED_IN' && catchUp())
+  // The world as it was when the app last closed may be days old: fetch it now, so what the GM revealed
+  // or answered since is there at once.
+  void db.worlds
+    .filter((w) => !!w.shared && w.shared.token === info.token && w.shared.memberOf === info.memberOf)
+    .first()
+    .then(
+      (copy) => (last = Math.max(last, copy?.shared?.fetchedAt ?? 0)),
+      () => undefined,
+    )
+    .then(() => {
+      started = true
+      catchUp()
+    })
   return () => {
+    stopped = true
     clearTimeout(timer)
     room.leave()
     clearInterval(poll)
     window.removeEventListener('online', refresh)
     document.removeEventListener('visibilitychange', onVisible)
+    auth.subscription.unsubscribe()
   }
 }

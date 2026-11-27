@@ -54,7 +54,7 @@ async function upload(id: string) {
   const { error } = await supabase.from('ai_keys').upsert({ user_id: id, anthropic_key: s.anthropicKey.trim(), assembly_key: s.assemblyKey.trim() })
   if (userId !== id) return false
   if (error) {
-    setState({ status: 'error', error: cloudErrorMessage(error) })
+    setState({ status: 'error', error: cloudErrorMessage(error, { reader: 'gm', doing: 'refreshing' }) })
     return false
   }
   inAccount = keys
@@ -101,7 +101,7 @@ export async function startAccountKeys(id: string) {
   if (userId !== id) return
   if (error) {
     // Most likely offline: this device carries on with the keys it has.
-    return setState(getAiSettings().keysInAccount ? { status: 'error', error: cloudErrorMessage(error) } : { status: 'off' })
+    return setState(getAiSettings().keysInAccount ? { status: 'error', error: cloudErrorMessage(error, { reader: 'gm', doing: 'refreshing' }) } : { status: 'off' })
   }
   const s = getAiSettings()
   if (!data) {
@@ -168,7 +168,7 @@ export async function saveKeysToAccount(on: boolean) {
   clearTimeout(timer)
   setState({ status: 'saving' })
   const { error } = await supabase.from('ai_keys').delete().eq('user_id', userId)
-  if (error) return setState({ status: 'error', error: cloudErrorMessage(error) })
+  if (error) return setState({ status: 'error', error: cloudErrorMessage(error, { reader: 'gm' }) })
   inAccount = ''
   setAiSettings({ keysInAccount: false })
   setState({ status: 'off' })

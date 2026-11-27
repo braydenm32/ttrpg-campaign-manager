@@ -11,7 +11,7 @@ import { StorySoFar } from '../highlights'
 import { questProgress } from '../quests'
 import { isActiveQuest, isOpenQuest } from '../counts'
 import { bookNextSession, createNextSession, partyOf, sessionFirstTab, sessionStage, startAndTell, type SessionStage } from '../sessions'
-import { useVisibleEntities, useWorld } from '../hooks'
+import { useFromAddress, useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
 import { useViewMode } from '../viewMode'
 import { Ico } from '../icons'
@@ -26,10 +26,12 @@ import { capital, showDay } from '../text'
 
 export default function CampaignPage() {
   const { worldId, world } = useWorld()
-  const { campaignId = '' } = useParams()
+  const { campaignId: param = '' } = useParams()
   const { isGM } = useViewMode()
   const navigate = useNavigate()
-  const campaign = useLiveQuery(async () => (await db.campaigns.get(campaignId)) ?? null, [campaignId])
+  // The GM's link to a campaign opens in a player's copy too, and a player's link for the GM.
+  const campaign = useFromAddress('campaigns', param)
+  const campaignId = campaign?.id ?? param
   const sessions = (useLiveQuery(() => db.sessions.where({ campaignId }).sortBy('number'), [campaignId]) ?? []).filter((s) => canSeeSession(s, campaign, isGM))
   const live = useLiveRecording()
   const recording = !!live && sessions.some((s) => s.id === live.sessionId)

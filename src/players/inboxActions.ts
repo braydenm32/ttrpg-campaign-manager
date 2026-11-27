@@ -20,7 +20,7 @@ function answerLater(key: string, text: string, commit: () => Promise<unknown>, 
         await commit()
         await reload()
       } catch (e) {
-        toast(`That didn’t go through: ${cloudErrorMessage(e)}`)
+        toast(`That didn’t go through: ${cloudErrorMessage(e, { reader: 'gm' })}`)
       } finally {
         holdBack(key, false)
       }

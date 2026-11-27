@@ -297,7 +297,7 @@ export const HELP = {
     'Characters marked dead, missing or captured on their page stay out of the Lectern’s party list and “Add the party”, so the table only shows who’s playing. Tap “Show” to see them for a moment. Their pages, the Atlas and what players see are unchanged.',
   partyCampaign: 'When a world has more than one group, pick which campaign this character plays in. The campaign page and the Lectern’s “Add the party” then only show that group.',
   trackAsThread: 'Quests are what the players know they’re doing. A thread is your own tracker for it: how pressing it is, and a warning when it goes cold.',
-  claimRequests: 'A player asked to play one of your characters. Approve it and they can edit that character’s sheet and read passages written for them.',
+  claimRequests: 'A player asked to play one of your characters. Approve it and they can edit that character’s sheet and read passages written for them. Until you do, they don’t get its turns or roll calls at the table.',
   gettingStarted: 'A few first steps for a new world. It goes away once you’ve made a campaign and a few pages, or when you hide it.',
   inbox:
     'Everything your players sent that waits on you, oldest first: questions, what their characters do between sessions (downtime), asking to play a character, and new characters they wrote up. Answer each one right here. Deleting, approving and turning down wait a few seconds with Undo before they reach the player. The number on Desk and Inbox counts what’s still waiting.',
@@ -326,9 +326,9 @@ export const HELP = {
   inspiration:
     'Inspiration or hero points: tap + to hand one out. Players see how many they have in their Common Room and on their character page, and can ask to use one; you’ll get a pop-up with “Use it”.',
   newCharacter:
-    'Write up the character you’d like to play and send it to your GM. They can approve it (it becomes your character, ready to play) or get back to you with a note.',
+    'Write up the character you’d like to play and send it to your GM. They can approve it (it becomes your character, ready to play) or get back to you with a note. A note they write when approving shows at the top of your Common Room.',
   newCharacterGm:
-    'A player wrote up a character they’d like to play. Approve it and the app makes a player character page from it, revealed and already theirs. Or turn it down with a note saying why.',
+    'A player wrote up a character they’d like to play. Approve it and the app makes a player character page from it, revealed and already theirs. Or turn it down with a note saying why. A note you write reaches the player either way.',
   gmReply: 'Add a line to your players’ Group notes, signed “GM”: a nudge, a reminder of something they saw, an answer to a question they wrote down. They see it next time they look.',
   leapYears:
     'Every so many years, chosen months get extra days: February’s 29th, or a festival that only happens in leap years (give it 0 days and 1 leap day, like Shieldmeet). Tick “festival” for days between months, like Midwinter: their dates read “Midwinter” or “3rd day of Needfest”. To line a moon up with a published calendar, set a date it was full.',
