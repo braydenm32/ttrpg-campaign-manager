@@ -728,6 +728,14 @@ button.social.facebook .social-icon { background: #1877f2; }
 
 /* Writing secrets: the buttons under a text box and character suggestions on a ":::for" line */
 .secret-textarea { display: flex; flex-direction: column; gap: .35em; }
+/* A long text with its Formatted / Markdown switch (src/TextEditor.tsx). */
+.form .text-field { display: flex; flex-direction: column; gap: .3em; font-size: .9em; color: var(--muted); }
+.text-editor { display: flex; flex-direction: column; gap: .35em; min-width: 0; }
+.text-editor textarea { color: var(--text); font-size: 1rem; }
+.text-editor-modes { gap: .5em; }
+.text-editor-modes .segmented button { font-size: .9em; padding: .3em .8em; }
+@media (max-width: 800px) { .text-editor-modes .segmented button { min-height: 44px; } }
+.text-editor-preview { border: 1px dashed var(--border); border-radius: 8px; padding: .6em .8em; background: var(--panel); color: var(--text); font-size: 1rem; }
 .secret-textarea textarea { width: 100%; }
 .secret-buttons { gap: .4em; }
 .hp-input.scale-value { width: 6em; flex: none; }

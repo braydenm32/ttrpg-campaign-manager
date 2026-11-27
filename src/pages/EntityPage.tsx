@@ -17,7 +17,7 @@ import { listedEntries, TableRoller } from '../tables'
 import { newThread, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
 import { asPlayerSees, saveFileAsAsset, useAssetUrl, useFromAddress, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
-import { SecretTextarea } from '../SecretTextarea'
+import { TextEditor } from '../TextEditor'
 import { SecretNamesWarning } from '../SecretNamesWarning'
 import { CharacterOwnerBox } from '../players/Characters'
 import { NameClashNotice, nameClashes } from '../players/NewCharacters'
@@ -950,23 +950,24 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
           Summary
           <input value={d.summary} onChange={(ev) => set('summary', ev.target.value)} placeholder="One line shown in lists and on map pins" />
         </label>
-        <label>
+        {/* Not a <label>: a click in the formatted text would count as a click on the first button in it. */}
+        <div className="text-field">
           <span>
             Description <Help topic="secrets" />
           </span>
-          <SecretTextarea worldId={worldId} rows={10} value={d.body} onChange={(v) => set('body', v)} />
+          <TextEditor worldId={worldId} label="Description" rows={10} value={d.body} onChange={(v) => set('body', v)} preview={entities} />
           <small className="muted">
             Link pages by typing @ or [[ and a name. The buttons hide a passage from every player, or keep it for some characters only. Write roll:1d8+3 for a dice button, or {'{{Table name}}'} to roll on one of your tables. <Help topic="inlineRolls" />
           </small>
-        </label>
+        </div>
         <PagePrompts type={d.type} body={d.body} onChange={(v) => set('body', v)} gmNotes={d.gmNotes} onGmNotesChange={(v) => set('gmNotes', v)} revealed={d.visibility === 'players'} />
         <SecretNamesWarning worldId={worldId} texts={[d.summary, d.body, d.playerBody]} show={d.visibility === 'players' && !d.template} />
-        <label className="gm-notes-field">
+        <div className="text-field gm-notes-field">
           <span>
             <Ico as={Lock} /> GM notes: GM only, never sent to players <Help topic="gmNotes" />
           </span>
-          <textarea rows={4} value={d.gmNotes} onChange={(ev) => set('gmNotes', ev.target.value)} placeholder="Secrets, plans, stat lines, what they really want…" />
-        </label>
+          <TextEditor worldId={worldId} label="GM notes" rows={4} value={d.gmNotes} onChange={(v) => set('gmNotes', v)} placeholder="Secrets, plans, stat lines, what they really want…" secrets={false} />
+        </div>
         {d.type === 'pc' && (
           <label>
             <span>
