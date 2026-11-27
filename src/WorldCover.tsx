@@ -9,8 +9,9 @@ import { useViewMode } from './viewMode'
 /**
  * The top of a world's front page: its cover picture (or its colour), name, description and today's
  * date. `compact` is the Desk's slim band, with the date's controls folded away under the date.
+ * `system` is the game to name, when it isn't the world's default (the Desk gives the game being played).
  */
-export function WorldCover({ world, help = 'overview', compact = false, children }: { world: World; help?: HelpTopic; compact?: boolean; children?: ReactNode }) {
+export function WorldCover({ world, help = 'overview', compact = false, system, children }: { world: World; help?: HelpTopic; compact?: boolean; system?: string; children?: ReactNode }) {
   const { isGM } = useViewMode()
   const cover = useAssetUrl(world.coverId)
   return (
@@ -20,7 +21,7 @@ export function WorldCover({ world, help = 'overview', compact = false, children
           {world.name} <Help topic={help} />
         </h1>
         {world.description && <p>{plainLinks(world.description)}</p>}
-        <span className="world-cover-meta">{world.system}</span>
+        <span className="world-cover-meta">{system || world.system}</span>
       </div>
       <div className="world-cover-side">
         <WorldToday world={world} isGM={isGM && !world.shared} folded={compact} />

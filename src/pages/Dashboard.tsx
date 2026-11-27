@@ -9,7 +9,7 @@ import { useCreatePage } from '../NewPage'
 import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { initials, showDay } from '../text'
 import { useFinish } from '../EndSession'
-import { isRunning, nextSessions, useCampaigns, useWorldSessions } from '../threads'
+import { campaignsOnDesk, isRunning, nextSessions, useCampaigns, useWorldSessions } from '../threads'
 import { WantedPages, wantedPages } from '../wanted'
 import { useViewMode } from '../viewMode'
 import { BackupButton, useBackupDue, useRecordingsOnlyHere } from '../BackupReminder'
@@ -55,6 +55,7 @@ import { useLiveSession } from '../cloud/table'
 import { RecentlyOpenedRow } from '../RecentlyOpened'
 import { ExampleStartHere } from '../firstSteps'
 import { GettingStarted } from '../gettingStarted'
+import { gameSystemOf } from '../gameSystem'
 import { PausedCampaigns } from '../pausedCampaigns'
 import { OneShotDesk } from '../oneShotPanel'
 import '../desk.css'
@@ -94,12 +95,14 @@ function Today({ world }: { world: World }) {
 
   return (
     <div className="page home-page desk-today">
-      <WorldCover world={world} compact>
+      {/* The game named on the cover is the one being played: the campaign in hand's, else the world's. */}
+      <WorldCover world={world} compact system={gameSystemOf(world, campaigns, sessions, playing)}>
         <NewPageMenu world={world} />
       </WorldCover>
       <ExampleStartHere world={world} entities={entities} />
       <SessionStrip world={world} inHand={inHand} stage={stage} campaigns={campaigns} onNewCampaign={() => setNewCampaign(true)} />
-      <PausedCampaigns world={world} campaigns={campaigns} />
+      {/* With nothing on the Desk, the finished ones are offered too, so there's always a way back. */}
+      <PausedCampaigns world={world} campaigns={campaigns} finishedToo={!inHand && !campaigns.some(isRunning)} />
       <OneShotDesk world={world} />
       <RecentlyOpenedRow world={world} entities={entities} />
       <div className="desk-cols">
@@ -199,7 +202,7 @@ function SessionStrip({
           {first
             ? `${first.name} has no sessions.`
             : campaigns.length
-              ? 'Your campaigns are paused or finished. Carry on with one, or make a new one.'
+              ? 'Your campaigns are paused or finished. Pick one up again below, or make a new one.'
               : 'A campaign is one group’s story in this world. Make one, then plan its first session.'}
         </span>
         <span className="grow" />
@@ -835,7 +838,8 @@ function ComingUp({
   onNewCampaign: () => void
 }) {
   const w = worldPath(world.id)
-  const running = campaigns.filter(isRunning)
+  // The running campaigns, and a paused or finished one while a session of it is still being played.
+  const running = campaignsOnDesk(campaigns, sessions, playing)
   const next = sessions
     .filter((s) => running.some((c) => c.id === s.campaignId) && (!isPlayed(s) || playing.includes(s.id)))
     .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || a.number - b.number)

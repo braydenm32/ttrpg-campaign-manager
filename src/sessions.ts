@@ -1,5 +1,5 @@
 import { toast } from './undo'
-import { blankLectern, blankPrep, db, newId, type CalDate, type CheckItem, type Entity, type PrepScene, type Session } from './db'
+import { blankLectern, blankPrep, db, newId, type CalDate, type Campaign, type CheckItem, type Entity, type PrepScene, type Session } from './db'
 
 /** Today's date on this device, "2026-10-26" (not UTC, which is a day off in the evening or morning in many places). */
 export function localDate(t: number | Date = new Date()) {
@@ -187,15 +187,17 @@ export async function startPlaying(sessionId: string) {
 
 /**
  * A campaign still in Planning becomes Active the first time one of its sessions is started (Start
- * playing, or starting a scene). Gives back an undo that puts it back to Planning, or nothing if it
- * wasn't in Planning.
+ * playing, or starting a scene) or marked played, and starting a session in a Paused campaign
+ * carries it on (Active again). `from` is the statuses that change: marking a session played only
+ * moves Planning on, so wrapping up a paused campaign's last session leaves it paused. Gives back an
+ * undo that puts the status back as it was, or nothing if it didn't change.
  */
-export async function campaignUnderWay(campaignId: string) {
-  const c = await db.campaigns.get(campaignId)
-  if (c?.status !== 'planning') return undefined
+export async function campaignUnderWay(campaignId: string, from: Campaign['status'][] = ['planning', 'paused']) {
+  const was = (await db.campaigns.get(campaignId))?.status
+  if (!was || !from.includes(was)) return undefined
   await db.campaigns.update(campaignId, { status: 'active' })
   return async () => {
-    if ((await db.campaigns.get(campaignId))?.status === 'active') await db.campaigns.update(campaignId, { status: 'planning' })
+    if ((await db.campaigns.get(campaignId))?.status === 'active') await db.campaigns.update(campaignId, { status: was })
   }
 }
 
@@ -278,6 +280,8 @@ export async function markPlayed(session: Session) {
   const today = localDate()
   const date = !session.date || session.date > today ? today : session.date
   await db.sessions.update(session.id, { playedAt: Date.now(), startedAt: session.startedAt ?? Date.now(), date })
+  // A campaign in Planning has now been played: it's Active (Undo puts it back).
+  const backToPlanning = await campaignUnderWay(session.campaignId, ['planning'])
   const others = (await db.sessions.where({ campaignId: session.campaignId }).toArray()).filter((s) => s.id !== session.id)
   const waiting = inHand(others, today)
   const made = waiting ? undefined : await createNextSession(session.worldId, session.campaignId)
@@ -304,6 +308,7 @@ export async function markPlayed(session: Session) {
   const undo = async () => {
     // All three go back as they were: a session that was never started isn't left "being played".
     await db.sessions.update(session.id, { playedAt: undefined, date: session.date, startedAt: session.startedAt })
+    await backToPlanning?.()
     if (made) {
       const now = await db.sessions.get(made.id)
       if (now && JSON.stringify(now) === JSON.stringify(asMade)) return void (await db.sessions.delete(made.id))

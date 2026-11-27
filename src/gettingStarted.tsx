@@ -10,6 +10,9 @@ import { useCreatePage } from './NewPage'
 import { pagePath, worldPath } from './paths'
 import { SeeTheExampleButton } from './firstSteps'
 import { getInviteToken } from './cloud/players'
+import { stillReading } from './hooks'
+import { useImported } from './importedMark'
+import { toast } from './undo'
 
 /**
  * The Desk's "Getting started" card: seven first steps for a new world, each with a button to the
@@ -19,7 +22,8 @@ import { getInviteToken } from './cloud/players'
  *
  * It starts by itself only for a world that was new and nearly empty when the Desk first showed it
  * (fewer than 3 pages, no campaign), so worlds made before it and the example worlds aren't nagged;
- * More › Getting started shows it in any world.
+ * More › Getting started shows it in any world. "New and nearly empty" is only decided once the
+ * world's pages and campaigns have been read: while they load, every world looks empty.
  */
 
 const key = (what: 'hidden' | 'started' | 'skipped', worldId: string) => `gettingStarted.${what}.${worldId}`
@@ -50,6 +54,8 @@ interface Step {
   action: ReactNode
   done: boolean
   optional?: boolean
+  /** The button stays on the row after the step is ticked (the importer is useful more than once). */
+  keepAction?: boolean
 }
 
 /**
@@ -62,11 +68,17 @@ export function GettingStarted({ world, entities, campaigns, onNewCampaign }: { 
   const [search, setSearch] = useSearchParams()
   // "Start from an export…" in the New world dialog lands here with ?import=1: the importer open.
   const [importing, setImporting] = useState(() => search.get('import') === '1')
-  useEffect(() => {
-    if (search.get('import') === '1') document.getElementById('getting-started-import')?.scrollIntoView({ block: 'center' })
-  }, [search])
+  // What to bring into view once the card is on screen: the importer (?import=1), or the card itself (?start=1).
+  const [want, setWant] = useState<'card' | 'import' | null>(() => (search.get('import') === '1' ? 'import' : null))
   const pages = entities.filter((e) => !e.template)
-  const fresh = pages.length < 3 && campaigns.length === 0
+  const maps = useLiveQuery(() => db.maps.where({ worldId: world.id }).count(), [world.id])
+  // Counted here rather than taken from the list, which is empty both while loading and when there are none.
+  const campaignCount = useLiveQuery(() => db.campaigns.where({ worldId: world.id }).count(), [world.id])
+  const hasExample = useLiveQuery(async () => (await db.worlds.toArray()).some((x) => x.example && !x.shared), [])
+  const imported = useImported(world.id)
+  // Everything the steps are judged by has been read. Until then the world only looks new.
+  const loaded = !stillReading(entities) && maps !== undefined && campaignCount !== undefined && hasExample !== undefined
+  const fresh = loaded && pages.length < 3 && campaignCount === 0
   const [hidden, setHidden] = useState(() => read(key('hidden', world.id)) === '1')
   const [started, setStarted] = useState(() => read(key('started', world.id)) === '1')
   const [skipped, setSkipped] = useState<string[]>(() => (read(key('skipped', world.id)) ?? '').split(',').filter(Boolean))
@@ -76,28 +88,31 @@ export function GettingStarted({ world, entities, campaigns, onNewCampaign }: { 
     if (!bringBack) return
     write(key('hidden', world.id), null)
     write(key('started', world.id), '1')
+    // The address asked for it: what's remembered on the device and what's on screen change together.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHidden(false)
     setStarted(true)
+    setWant('card')
     const next = new URLSearchParams(search)
     next.delete('start')
     setSearch(next, { replace: true })
-    document.querySelector('.getting-started')?.scrollIntoView({ block: 'center' })
   }, [bringBack, search, setSearch, world.id])
   // A new world: the card starts, and stays started (remembered) after its first pages and campaign.
   const on = started || fresh
   useEffect(() => {
-    if (fresh && !hidden) write(key('started', world.id), '1')
-  }, [fresh, hidden, world.id])
+    if (!fresh || hidden || started) return
+    write(key('started', world.id), '1')
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStarted(true)
+  }, [fresh, hidden, started, world.id])
 
-  const maps = useLiveQuery(() => db.maps.where({ worldId: world.id }).count(), [world.id])
-  const hasExample = useLiveQuery(async () => (await db.worlds.toArray()).some((x) => x.example && !x.shared), [])
-  // Invite links live in the cloud: asked only once sync is on.
+  // Invite links live in the cloud: asked only once sync is on (undefined until the answer is in).
   const cloud = !!world.cloud?.enabled
-  const [invited, setInvited] = useState(false)
+  const [invited, setInvited] = useState<boolean>()
   useEffect(() => {
     if (!cloud) return
     let gone = false
-    getInviteToken(world.id).then((t) => !gone && setInvited(!!t), () => undefined)
+    getInviteToken(world.id).then((t) => !gone && setInvited(!!t), () => !gone && setInvited(false))
     return () => void (gone = true)
   }, [cloud, world.id])
 
@@ -113,9 +128,10 @@ export function GettingStarted({ world, entities, campaigns, onNewCampaign }: { 
           {importing ? 'Close' : 'Import notes'}
         </button>
       ),
-      // Ticked once the world has pages, brought in or written by hand: either way it's past an empty start.
-      done: pages.length > 0,
+      // Ticked by a real import (pages or hand-written notes), or by Skip: pages typed by hand don't count.
+      done: imported,
       optional: true,
+      keepAction: true,
     },
     {
       id: 'campaign',
@@ -123,7 +139,7 @@ export function GettingStarted({ world, entities, campaigns, onNewCampaign }: { 
       title: 'Make a campaign',
       text: 'One group’s story in this world.',
       action: <button className="small" onClick={onNewCampaign}>Make a campaign</button>,
-      done: campaigns.length > 0,
+      done: campaigns.length > 0 || !!campaignCount,
     },
     {
       id: 'pages',
@@ -160,21 +176,36 @@ export function GettingStarted({ world, entities, campaigns, onNewCampaign }: { 
       title: 'Invite your players (optional)',
       text: 'Turn on cloud sync, then make an invite link and send it.',
       action: <Link className="button small" to={`${w}/settings?tab=players`}>Players</Link>,
-      done: invited,
+      done: !!invited,
       optional: true,
     },
     {
       id: 'example',
       icon: '📖',
       title: 'See how a finished campaign looks',
-      text: 'Vael Ardith, the full example, starting at its Start Here guide.',
+      text: 'Vael Ardith, the full example, starting at its Start here tour.',
       action: <SeeTheExampleButton />,
       done: !!hasExample || !!world.example,
     },
   ]
   const ticked = (s: Step) => s.done || (!!s.optional && skipped.includes(s.id))
   const left = steps.filter((s) => !ticked(s)).length
-  if (hidden || !on || left === 0 || maps === undefined) return null
+  const shown = loaded && !hidden && on && left > 0
+  // Once the card is really on screen, bring what was asked for into view. Brought back from More
+  // with every step done, there's no card to show: say so instead of landing on the Desk in silence.
+  const asked = !cloud || invited !== undefined
+  useEffect(() => {
+    if (!want || !loaded) return
+    if (want === 'card') {
+      if (!asked) return
+      if (left === 0) toast('All seven first steps are done in this world, so there’s nothing left to show.')
+      else document.getElementById('getting-started')?.scrollIntoView({ block: 'center' })
+    } else document.getElementById('getting-started-import')?.scrollIntoView({ block: 'center' })
+    // Done once: scrolled (or said), so later changes to the card don't scroll again.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setWant(null)
+  }, [want, loaded, asked, left])
+  if (!shown) return null
 
   const skip = (id: string, on: boolean) => {
     const next = on ? [...new Set([...skipped, id])] : skipped.filter((x) => x !== id)
@@ -182,7 +213,7 @@ export function GettingStarted({ world, entities, campaigns, onNewCampaign }: { 
     setSkipped(next)
   }
   return (
-    <section className="card getting-started">
+    <section className="card getting-started" id="getting-started">
       <div className="card-head">
         <h2>
           Getting started <Help topic="gettingStarted" />
@@ -211,10 +242,10 @@ export function GettingStarted({ world, entities, campaigns, onNewCampaign }: { 
                 {isTicked ? <><Ico as={CheckCircle} weight="fill" className="icon step-tick" /><span className="sr-only">Done:</span></> : s.icon} <strong>{s.title}.</strong>{' '}
                 <span className="muted">{s.done || !isTicked ? s.text : 'Skipped.'}</span>
               </span>
-              {!isTicked && (
+              {(!isTicked || s.keepAction) && (
                 <span className="row">
                   {s.action}
-                  {s.optional && (
+                  {!isTicked && s.optional && (
                     <button className="small ghost" onClick={() => skip(s.id, true)}>
                       Skip
                     </button>
@@ -236,7 +267,7 @@ export function GettingStarted({ world, entities, campaigns, onNewCampaign }: { 
         })}
       </ol>
       <p className="small muted">
-        Each step ticks itself when it’s done. Every ? button explains the thing next to it; World settings › This device can turn them off.
+        Each step ticks itself when it’s done. Every ? button explains the thing next to it; <Link to={`${w}/settings?tab=device`}>World settings › This device</Link> can turn them off.
       </p>
     </section>
   )

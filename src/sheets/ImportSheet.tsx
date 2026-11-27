@@ -36,8 +36,9 @@ export function ImportSheet({
   onSheet?: (sheet: Sheet) => void
   onClose: () => void
 }) {
-  // The game being played (the campaign in hand's, else the world's: src/gameSystem.ts), else the one passed in.
-  const game = useGameSystem(useWorld().world) || system
+  // The game of the campaign this character plays in, else the game being played (the campaign in
+  // hand's, else the world's: src/gameSystem.ts), else the one passed in.
+  const game = useGameSystem(useWorld().world, into?.campaignId) || system
   const [sheet, setSheet] = useState<Sheet>()
   /** A file with several characters in it (a Hero Lab portfolio): which one. */
   const [several, setSeveral] = useState<Sheet[]>()

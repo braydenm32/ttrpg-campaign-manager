@@ -64,7 +64,8 @@ export default function DateTime() {
               {gm && <Link to={`${w}/settings?at=calendar`}>Set up the calendar</Link>}
             </span>
           </div>
-          <MonthGrid world={{ ...world, calendar: cal }} events={events} sessions={sessions} />
+          {/* Keyed by today's month, so moving the date on into a new month shows that month. */}
+          <MonthGrid key={`${cal.today.year}-${cal.today.month}`} world={{ ...world, calendar: cal }} events={events} sessions={sessions} />
         </section>
       )}
     </div>

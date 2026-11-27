@@ -59,19 +59,19 @@ export default function SessionLanding() {
               : campaign
                 ? `${campaign.name} has no sessions yet.`
                 : data.campaigns.length
-                  ? 'No campaign is being run just now: they’re all paused or finished. Carry on with one, or plan the first session of a new one.'
+                  ? 'No campaign is being run just now: they’re all paused or finished. Pick one up again below, or make a new one.'
                   : 'No campaign yet. A campaign is one group’s story in this world; its sessions are planned, played and wrapped up here.'}
           </p>
         </div>
       </header>
       <div className="row wrap">
         <button className="primary" onClick={() => (campaign ? plan(campaign.id) : setNaming(true))}>
-          <Ico as={ListChecks} /> {next ? `Plan session #${next.session.number + 1}` : 'Plan the first session'}
+          <Ico as={ListChecks} /> {next ? `Plan session #${next.session.number + 1}` : !campaign && data.campaigns.length ? 'Make a new campaign' : 'Plan the first session'}
         </button>
         {next && <Link className="button" to={`${w}/s/${next.session.id}?tab=notes`}>Wrap up #{next.session.number}</Link>}
         {campaign && <Link className="button" to={`${w}/c/${campaign.id}`}>All sessions</Link>}
       </div>
-      <PausedCampaigns world={world} campaigns={data.campaigns} />
+      <PausedCampaigns world={world} campaigns={data.campaigns} finishedToo={!campaign} />
       {naming && <NewCampaign worldId={worldId} defaultSystem={world.system} onClose={() => setNaming(false)} onCreated={(id) => plan(id)} />}
     </div>
   )

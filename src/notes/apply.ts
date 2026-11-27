@@ -3,6 +3,7 @@ import { nameIndex } from '../links'
 import { above, canHold } from '../nesting'
 import { gmBlock } from '../Markdown'
 import type { NotePage, NoteSession } from './claude'
+import { campaignUnderWay } from '../sessions'
 
 /** Where each page from the notes goes: a new page, or added to one already in the world. */
 export interface NotePick {
@@ -123,6 +124,8 @@ export async function applyNotes(worldId: string, picks: NotePick[], sessions: N
     })
     await db.sessions.bulkAdd(rows)
     added = rows.length
+    // Sessions that were played: a campaign still in Planning is Active now.
+    await campaignUnderWay(campaignId, ['planning'])
   }
   return {
     made: made.length,

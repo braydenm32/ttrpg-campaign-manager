@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Link, useNavigate, type NavigateFunction } from 'react-router-dom'
 import { db, type Entity, type World } from './db'
 import { Help } from './help'
+import { noRoomFor } from './hooks'
 import { pagePath, setPages, worldPath } from './paths'
+import { outOfRoom, toast } from './undo'
 
 /**
  * The first ten minutes: the way into Vael Ardith's hand-written guides (its "Start Here" page is
@@ -10,8 +12,27 @@ import { pagePath, setPages, worldPath } from './paths'
  * own Desk.
  */
 
-/** The example world's guide that starts the tour. */
+/** The example world's guide that starts the tour (the page's name; on screen it's "the Start here tour"). */
 export const GUIDE_START = 'Start Here'
+
+/**
+ * Says why an example world couldn't be opened, in the note at the bottom: offline (its pages are
+ * only downloaded when it's first opened), no room left on the device, or whatever else went wrong.
+ * `what` is "the example" or "the small sample".
+ */
+export function tellExampleFailed(err: unknown, what = 'the example') {
+  const offline = typeof navigator !== 'undefined' && navigator.onLine === false
+  const fetching = err instanceof Error && /fetch|dynamically imported|importing a module|load failed|network/i.test(err.message)
+  toast(
+    outOfRoom(err)
+      ? noRoomFor(what === 'the example' ? 'the example world' : what).message
+      : offline
+        ? `You’re offline, so ${what} can’t be fetched. Try again when you’re back online.`
+        : fetching
+          ? `${what === 'the example' ? 'The example' : 'The small sample'} couldn’t be fetched. Check your connection, then try again.`
+          : `Couldn’t open ${what}: ${(err as Error)?.message ?? 'something went wrong'}`,
+  )
+}
 
 /** A load of the example already on its way, so a second press (or a second button) waits for it instead of making a second copy. */
 let loading: Promise<string> | undefined
@@ -47,7 +68,7 @@ export function SeeTheExampleButton() {
         try {
           await openExampleGuide(navigate)
         } catch (err) {
-          alert(`Couldn’t open the example: ${(err as Error).message}`)
+          tellExampleFailed(err)
           setBusy(false)
         }
       }}

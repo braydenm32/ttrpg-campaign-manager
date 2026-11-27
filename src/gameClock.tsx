@@ -12,7 +12,7 @@ import { toast } from './undo'
 import './gameClock.css'
 
 /**
- * The in-game clock: the time of day in the world, on the Clocks page and at the Lectern. The GM sets
+ * The in-game clock: the time of day in the world, on Date and time and at the Lectern. The GM sets
  * it and lets it run at any speed (or "reach 21:00 in 1½ real hours"), and can show it on players'
  * screens as a clock face or 24-hour digital. Only a starting point is saved (World.gmScreen.gameClock,
  * see GameTime), so every screen works the time out for itself and nothing needs saving each second.
@@ -281,7 +281,7 @@ export function ScreenClock({ world, alone }: { world: World; alone: boolean }) 
   return <GameTimeView time={time} world={world} size="clamp(110px, 14vw, 240px)" className={`screen-clock-corner at-${time.place}`} />
 }
 
-/** For players (the Common Room, the Clocks page): the time in the world, while the GM shows it. */
+/** For players (the Common Room, Date and time): the time in the world, while the GM shows it. */
 export function GameTimeBar({ world }: { world: World }) {
   const time = readTime(world.gameTime)
   if (!time) return null

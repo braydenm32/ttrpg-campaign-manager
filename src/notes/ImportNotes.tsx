@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useGameSystem } from '../gameSystem'
+import { markImported } from '../importedMark'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { Camera, NotePencil, Question, X } from '@phosphor-icons/react'
@@ -236,6 +237,8 @@ function NotesReview({
         pickedSessions,
         campaignId || undefined,
       )
+      // Getting started's first step ticks on a real import.
+      if (res.made || res.updated || res.sessions) markImported(worldId)
       const said = [
         res.made && `${res.made} new page${res.made === 1 ? '' : 's'}${res.shown ? ` (${res.shown} that players can see)` : ''}`,
         res.updated && `${res.updated} page${res.updated === 1 ? '' : 's'} updated`,

@@ -229,7 +229,8 @@ function NowTab({ ctx }: { ctx: RoomContext }) {
   // Just after joining (JoinWorld adds ?joined=1) the "keep this on your phone" card comes first.
   const [params] = useSearchParams()
   const joined = params.get('joined') === '1'
-  const voting = ctx.campaigns.filter((c) => c.schedule?.length)
+  // A paused or finished campaign isn't looking for a date (unless it's the one being played live right now).
+  const voting = ctx.campaigns.filter((c) => c.schedule?.length && (!!ctx.table || isRunning(c)))
   const today = world.calendar?.today ? formatDate(world.calendar, world.calendar.today) : ''
   const scheduler = voting.length > 0 && (
     <div id="when" className="room-when">

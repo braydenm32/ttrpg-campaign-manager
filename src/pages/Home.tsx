@@ -9,7 +9,7 @@ import { Help, HELP } from '../help'
 import { db, GAME_SYSTEMS, newId, worldColor, type World } from '../db'
 import { useAssetUrl } from '../hooks'
 import { EXAMPLE_VERSION } from '../example/load'
-import { openExampleGuide } from '../firstSteps'
+import { openExampleGuide, tellExampleFailed } from '../firstSteps'
 import { loadSampleWorld } from '../sample'
 import { AccountModal, useAuthSession } from '../cloud/auth'
 import { listMyMemberships, loadMemberWorld, memberWorldId, pendingInvite } from '../cloud/players'
@@ -44,7 +44,7 @@ export default function Home() {
     try {
       await openExampleGuide(navigate, (words) => setOpening(words))
     } catch (err) {
-      alert(`Couldn’t open the example: ${(err as Error).message}`)
+      tellExampleFailed(err)
       setOpening('')
     }
   }
@@ -54,7 +54,7 @@ export default function Home() {
     try {
       navigate(worldPath(await loadSampleWorld()))
     } catch (err) {
-      alert(`Couldn’t open the small sample: ${(err as Error).message}`)
+      tellExampleFailed(err, 'the small sample')
       setSampling(false)
     }
   }
@@ -150,7 +150,7 @@ export default function Home() {
           <ExampleBook name="Vael Ardith" blurb="The full example, with a Start here tour" help={HELP.exampleWorld} open={(onStep) => openExampleGuide(navigate, onStep)} />
         )}
         {!worlds.some(isSample) && (
-          <ExampleBook name="The Shattered Coast" blurb="The small sample · opens instantly" help={HELP.sampleWorld} open={async () => navigate(worldPath(await loadSampleWorld()))} />
+          <ExampleBook name="The Shattered Coast" blurb="The small sample · opens at once" help={HELP.sampleWorld} sample open={async () => navigate(worldPath(await loadSampleWorld()))} />
         )}
         {examples.map((w) => (
           <WorldBook key={w.id} world={w} onOpen={() => navigate(`${worldPath(w.id)}`)} />
@@ -266,7 +266,7 @@ function Welcome({ opening, onExample, sampling, onSample, onStart }: { opening:
           <button className="link" disabled={busy} onClick={onSample}>
             {sampling ? 'Opening the small sample…' : 'Open the small sample, The Shattered Coast'}
           </button>{' '}
-          (opens instantly, no tour).
+          (opens at once, no tour).
         </p>
       </div>
       <img
@@ -391,7 +391,7 @@ const isSample = (w: World) => !!w.sample || w.name === 'The Shattered Coast (sa
  * opens it, and then stays on this device like any world (it syncs only if they switch sync on). `open` loads it
  * and goes there, telling `onStep` how far it has got.
  */
-function ExampleBook({ name, blurb, help, open }: { name: string; blurb: string; help: string; open: (onStep: (words: string) => void) => Promise<void> }) {
+function ExampleBook({ name, blurb, help, sample, open }: { name: string; blurb: string; help: string; sample?: boolean; open: (onStep: (words: string) => void) => Promise<void> }) {
   const [loading, setLoading] = useState('')
   return (
     <button
@@ -403,7 +403,7 @@ function ExampleBook({ name, blurb, help, open }: { name: string; blurb: string;
         try {
           await open(setLoading)
         } catch (err) {
-          alert(`Couldn’t open ${name}: ${(err as Error).message}`)
+          tellExampleFailed(err, sample ? 'the small sample' : 'the example')
           setLoading('')
         }
       }}

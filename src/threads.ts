@@ -57,17 +57,27 @@ const underWay = (s: Session, playing: Set<string>, today: string) => (playing.h
 export const isRunning = (c: Pick<Campaign, 'status'>) => c.status !== 'finished' && c.status !== 'paused'
 
 /**
- * Each running campaign's coming session, the one in hand: the one being played, else the first
- * one with a date that hasn't been played (booked ahead, or overdue), else the first one not played
- * yet, else its newest. Sessions being played
+ * The campaigns the Desk and the Session area show: the running ones, and a Paused or Finished one
+ * for as long as one of its sessions is under way (a session being played must never drop out of
+ * sight; it leaves once it's marked played).
+ */
+export function campaignsOnDesk(campaigns: Campaign[], sessions: Session[], playing: Iterable<string> = []) {
+  const today = localDate()
+  const live = new Set(playing)
+  return campaigns.filter((c) => isRunning(c) || sessions.some((s) => s.campaignId === c.id && underWay(s, live, today)))
+}
+
+/**
+ * The coming session, the one in hand, of each campaign on the Desk (see campaignsOnDesk): the one
+ * being played, else the first one with a date that hasn't been played (booked ahead, or overdue),
+ * else the first one not played yet, else its newest. Sessions being played
  * come first, then the soonest. `playing` is the sessions live to players or recording right now.
  * The Desk, the Session area and "Mark as played" all go by this, so they move on together.
  */
 export function nextSessions(campaigns: Campaign[], sessions: Session[], playing: Iterable<string> = []) {
   const today = localDate()
   const live = new Set(playing)
-  return campaigns
-    .filter(isRunning)
+  return campaignsOnDesk(campaigns, sessions, live)
     .flatMap((c) => {
       const own = sessions.filter((s) => s.campaignId === c.id).sort((a, b) => a.number - b.number)
       const next = own.find((s) => underWay(s, live, today)) ?? inHand(own, today) ?? own.at(-1)
