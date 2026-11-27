@@ -119,12 +119,12 @@ export function WorldUpdatesReview({ world, session, entities }: { world: World;
                           )}
                           {u.kind === 'note' && (
                             <label className="row">
-                              <input type="checkbox" checked={!!u.players} onChange={(e) => change(u.id, { players: e.target.checked })} /> Players can see this line
+                              <input type="checkbox" checked={!!u.players} onChange={(e) => change(u.id, { players: e.target.checked })} /> Players know
                             </label>
                           )}
                           {u.kind === 'reputation' && (
                             <label className="row">
-                              <input type="checkbox" checked={!!u.players} onChange={(e) => change(u.id, { players: e.target.checked })} /> Players can see why
+                              <input type="checkbox" checked={!!u.players} onChange={(e) => change(u.id, { players: e.target.checked })} /> Players know why
                             </label>
                           )}
                           {(u.kind === 'note' || u.kind === 'status' || u.kind === 'quest') && (

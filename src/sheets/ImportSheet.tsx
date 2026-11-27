@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useGameSystem } from '../gameSystem'
+import { useWorld } from '../hooks'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { FileArrowUp, LinkSimple, TextAa } from '@phosphor-icons/react'
@@ -34,6 +36,9 @@ export function ImportSheet({
   onSheet?: (sheet: Sheet) => void
   onClose: () => void
 }) {
+  // The game of the campaign this character plays in, else the game being played (the campaign in
+  // hand's, else the world's: src/gameSystem.ts), else the one passed in.
+  const game = useGameSystem(useWorld().world, into?.campaignId) || system
   const [sheet, setSheet] = useState<Sheet>()
   /** A file with several characters in it (a Hero Lab portfolio): which one. */
   const [several, setSeveral] = useState<Sheet[]>()
@@ -204,7 +209,7 @@ export function ImportSheet({
                   jobId={`sheet:${worldId}:${into?.id ?? 'new'}`}
                   jobTitle="Reading a character sheet"
                   label="Read it with Claude"
-                  build={() => sheetRequest(text, system)}
+                  build={() => sheetRequest(text, game)}
                   priceKey={text}
                   onResult={(reply) => attempt('Reading Claude’s answer…', () => sheetFromReply(reply))}
                 />

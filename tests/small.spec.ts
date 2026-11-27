@@ -66,7 +66,7 @@ test.describe('Print', () => {
     await tidy(page, device)
     await shot(page, `print-page-gm-${device}`)
     await page.getByRole('button', { name: 'Player copy' }).click()
-    await expect(page.locator('.print-note')).toContainText('secrets, GM notes and hidden pages are left out')
+    await expect(page.locator('.print-note')).toContainText('GM-only passages, GM notes and GM-only pages are left out')
     await shot(page, `print-page-players-${device}`)
     // Opened straight from its address, there's no step to go back to: Back opens the page itself.
     await page.getByRole('button', { name: 'Back' }).click()

@@ -84,6 +84,7 @@ test('each address lights the right area and tab, GM view', () => {
     [`${W}/quests`, 'story/quests'],
     [`${W}/p/drowned`, 'story/quests'],
     [`${W}/clocks`, 'story/clocks'],
+    [`${W}/date`, 'story/date'],
     [`${W}/timeline`, 'story/timeline'],
     [`${W}/web`, 'story/web'],
     [`${W}/more`, 'more/more'],
@@ -136,6 +137,7 @@ test('each address lights the right area and tab, player view and wiki', () => {
     [`${W}/more`, 'world/more'],
     [`${W}/handouts`, 'world/more'],
     [`${W}/web`, 'world/more'],
+    [`${W}/date`, 'world/more'],
     // GM tools have no place in a player's menus.
     [`${W}/generators`, undefined],
     [`${W}/settings`, undefined],
@@ -162,7 +164,7 @@ test('nothing in a player’s menus or search leads to a GM tool', () => {
     // The GM's More items, apart from the ones players have too (handouts).
     const gmItems = MORE_GROUPS.flatMap((g) => g.items).filter((t) => !PLAYER_MORE_GROUPS.some((g) => g.items.some((x) => x.id === t.id)))
     for (const t of gmItems) expect(places, `${viewer} search offers ${t.label}`).not.toContain(t.label)
-    for (const title of ['The Lectern', 'Chronicle', 'Inbox', 'Prepare the session']) expect(places).not.toContain(title)
+    for (const title of ['Play: the Lectern', 'Chronicle', 'Inbox', 'Prepare the session']) expect(places).not.toContain(title)
   }
   // Wiki readers have no table: no Table rules, Common Room or notes.
   const wiki = navPlaces({ worldId: 'w', viewer: 'wiki' }).map((p) => p.title)
@@ -178,7 +180,7 @@ test('search finds every area, tab and More item by name, and the old place name
   const plain = gm.filter((p) => !p.where).map((p) => p.to)
   expect(plain.length).toBe(new Set(plain).size)
   for (const t of MORE_GROUPS.flatMap((g) => g.items)) if (t.to({ worldId: 'w', viewer: 'gm' })) expect(titles).toContain(t.label)
-  for (const title of ['The Lectern', 'Wrap up the session', 'Inbox', 'Group notes', 'All sessions', 'Templates', 'Recently deleted']) expect(titles).toContain(title)
+  for (const title of ['Play: the Lectern', 'Wrap up the session', 'Inbox', 'Group notes', 'All sessions', 'Templates', 'Recently deleted']) expect(titles).toContain(title)
   // The names search used before the areas still find somewhere.
   for (const old of ['home', 'loose threads', 'generators and random tables', 'questions', 'campaigns'])
     expect(gm.some((p) => p.title.toLowerCase().includes(old) || p.words.includes(old)), old).toBe(true)

@@ -54,8 +54,10 @@ const MapPacks = lazy(() => import('./pages/MapPacks'))
 import Questions from './pages/Questions'
 const RelationWeb = lazy(() => import('./pages/RelationWeb'))
 import ClocksPage from './clocks'
+import DateTime from './pages/DateTime'
 import SafetyPage, { XCardAlert } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
+import { LiveMapHost } from './liveMap'
 import { GameClockWatcher } from './gameClock'
 import { LiveBadge, PlayerTableLink, TableHost, TableSignals, TimerWatcher } from './atTheTable'
 import { DowntimeToast } from './players/Downtime'
@@ -131,6 +133,7 @@ export default function App() {
             <Route path="questions" element={<Questions />} />
             <Route path="web" element={<RelationWeb />} />
             <Route path="clocks" element={<ClocksPage />} />
+            <Route path="date" element={<DateTime />} />
             <Route path="safety" element={<SafetyPage />} />
             <Route path="handouts" element={<Handouts />} />
             <Route path="more" element={<More />} />
@@ -254,6 +257,16 @@ function WorldLayout() {
 /** The players' screen for a TV: always the player view, whoever opens it. */
 function ScreenRoute() {
   const { world } = useWorld()
+  // The browser tab names the screen, not the app's slogan (it's what the GM picks when casting to a TV).
+  const name = world?.name
+  useEffect(() => {
+    if (!name) return
+    const before = document.title
+    document.title = `Players’ screen · ${name}`
+    return () => {
+      document.title = before
+    }
+  }, [name])
   if (!world)
     return world === null ? (
       <div className="players-screen world-bare">
@@ -456,6 +469,12 @@ function WorldShell() {
           {!shared && world.cloud?.enabled && (
             <Part>
               <TableHost world={world} />
+            </Part>
+          )}
+          {/* A map on players' screens follows its fog and pins while it's up (the TV here; joined players too, with cloud sync). */}
+          {!shared && (
+            <Part>
+              <LiveMapHost world={world} />
             </Part>
           )}
           {isGM && !shared && world.cloud?.enabled && (

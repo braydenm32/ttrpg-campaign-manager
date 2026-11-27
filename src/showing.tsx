@@ -5,12 +5,15 @@ import { Link } from 'react-router-dom'
 import { Help } from './help'
 import { LecternPanel } from './lecternPanel'
 import { db, newId, saveEntity, type Asset, type Entity, type ShowBoard, type Showing, type Spot, type Spread, type World, type WorldMap } from './db'
+import { fogChangedHere, mapPictureIds, renderPlayerFog } from './fog'
+import { isLiveMap, LiveMap, useShownMap } from './liveMap'
+import { ScreenTable } from './screenTable'
 import { saveFileAsAsset, useAssetUrl, useBlobUrl, useVisibleEntities } from './hooks'
 import { Markdown, stripSecrets } from './Markdown'
 import { schedule } from './cloud/sync'
 import { useRecordingOnThisDevice } from './cloud/table'
 import { Ico } from './icons'
-import { ArrowSquareOut, Clock, Lock, Scroll, SquaresFour, Television } from '@phosphor-icons/react'
+import { ArrowSquareOut, Clock, Lock, MapTrifold, Scroll, SquaresFour, Television } from '@phosphor-icons/react'
 import { Modal, useDialog } from './components'
 import { worldPath } from './paths'
 import { askToReveal, useReview } from './reveal'
@@ -34,6 +37,10 @@ const ArrangeBoard = lazy(() => import('./showBoard'))
  * Several at once: the GM lays handouts out on an arranging board (src/showBoard.tsx, kept in the
  * GM-only gmScreen) and shows them together. Each becomes a handout as usual, and World.spread says
  * which handouts are up and where each sits, so the server's filtering of handouts covers it too.
+ *
+ * A map shown from its own "Show players" button (ShowMapButton) is a picture like any other, the
+ * players' copy of it, that also says which map it is (Showing.mapId): while it's up it follows
+ * the fog and shows the pins players may see (src/liveMap.tsx).
  */
 
 /** The same thing shown twice is one handout. */
@@ -251,7 +258,7 @@ export async function showWithUndo(worldId: string, what: Omit<Showing, 'id' | '
   if (!(await showToPlayers(worldId, what))) return
   const shown = (await db.worlds.get(worldId))?.showing
   if (!shown) return
-  toast(`“${shown.title.trim() || 'Untitled'}” is on the players’ screens.`, async () => {
+  toast(`“${shown.title.trim() || 'Untitled'}” is on the players’ screens.${isLiveMap(shown) ? ' It stays live: fog you clear or put back shows there at once.' : ''}`, async () => {
     await db.worlds
       .where('id')
       .equals(worldId)
@@ -269,9 +276,10 @@ export async function showWithUndo(worldId: string, what: Omit<Showing, 'id' | '
 
 /** What's on players' screens now, in words for the GM, or '' for nothing: the handout or board, and the in-game clock. */
 export function onScreensNow(world: World) {
-  const what = world.spread ? spreadTitle(world.spread, world.spread.items.length) : world.showing ? world.showing.title.trim() || 'Untitled' : ''
+  const shown = world.showing ? `${world.showing.title.trim() || 'Untitled'}${isLiveMap(world.showing) ? ' (live map)' : ''}` : ''
+  const what = world.spread ? spreadTitle(world.spread, world.spread.items.length) : shown
   if (!world.gameTime) return what
-  return what ? `${what} and the in-game clock` : 'the in-game clock'
+  return what ? `${what} and the in-game time` : 'the in-game time'
 }
 
 /**
@@ -406,7 +414,7 @@ export const readingOrder = <T extends Spot>(items: T[]) => [...items].sort((a, 
 export function SpreadPiece({ showing, worldId, noTitle, preview }: { showing: Showing; worldId: string; noTitle?: boolean; preview?: boolean }) {
   return (
     <>
-      <ShowingView showing={showing} worldId={worldId} big preview={preview} />
+      <ShowingView showing={showing} worldId={worldId} big fixed preview={preview} />
       {!noTitle && <div className="spread-name">{showing.title}</div>}
     </>
   )
@@ -441,23 +449,27 @@ export function SpreadView({ items, worldId, big }: { items: SpreadItem[]; world
 }
 
 /** What's being shown, as players see it: never a secret passage or a page they can't see. */
-export function ShowingView({ showing, worldId, big, preview }: { showing: Showing; worldId: string; big?: boolean; preview?: boolean }) {
+export function ShowingView({ showing, worldId, big, preview, fixed }: { showing: Showing; worldId: string; big?: boolean; preview?: boolean; /** A map keeps all of itself in view and can't be moved (the players' screen, a piece among several). */ fixed?: boolean }) {
   const entities = useVisibleEntities(worldId)
-  const image = useAssetUrl(showing.kind === 'image' ? showing.assetId : undefined)
+  const live = isLiveMap(showing)
+  const image = useAssetUrl(showing.kind === 'image' && !live ? showing.assetId : undefined)
   // preview: the GM's arranging board, showing a page not revealed yet as players will see it once it is.
   const page = showing.kind === 'page' ? entities.find((e) => e.id === showing.entityId && (preview || e.visibility === 'players')) : undefined
   const pageImage = useAssetUrl(page?.imageId)
   // A picture that never arrives says so, rather than "Loading" forever.
   const [slow, setSlow] = useState<string>()
   useEffect(() => {
-    if (showing.kind !== 'image' || image) return
+    if (showing.kind !== 'image' || live || image) return
     const t = setTimeout(() => setSlow(showing.id), 8000)
     return () => clearTimeout(t)
-  }, [showing.kind, showing.id, image])
+  }, [showing.kind, live, showing.id, image])
   return (
     <div className={`showing-view ${big ? 'big' : ''}`}>
       {showing.kind === 'image' &&
-        (image ? (
+        (live ? (
+          // A map: the players' copy, with the pins they may see, following the fog while it's up.
+          <LiveMap showing={showing} worldId={worldId} big={fixed} />
+        ) : image ? (
           <img src={image} alt={showing.title} />
         ) : (
           <p className="muted">{slow === showing.id ? 'This picture hasn’t reached this device. Ask your GM to show it again.' : 'Loading the picture…'}</p>
@@ -679,6 +691,57 @@ export function ShowButton({ worldId, what, disabled }: { worldId: string; what:
     </>
   )
 }
+
+/**
+ * "Show players" on a map: puts the map on every player's screen as players may see it (their copy
+ * of the picture: the fog kept, GM-only pieces and labels left out; and only the pins they can see),
+ * by the same road as any picture (showWithUndo), so the note, Undo and Handouts are the same. A map
+ * players can't see goes out under a name the GM gives it (asked first). While it's up it stays
+ * live (src/liveMap.tsx); the button then says so.
+ */
+export function ShowMapButton({ map, world }: { map: WorldMap; world: World | null | undefined }) {
+  const { askTitle, dialog } = usePictureTitle()
+  const [busy, setBusy] = useState(false)
+  const shown = world && !world.spread && isLiveMap(world.showing) ? world.showing! : undefined
+  const live = !!shown && (shown.mapId === map.id || (!shown.mapId && !!shown.assetId && mapPictureIds(map).includes(shown.assetId)))
+  const show = async () => {
+    setBusy(true)
+    try {
+      // The players' copy of a fogged map has to be there (and up to date) before it can go anywhere.
+      if (map.fog?.on) {
+        await renderPlayerFog(map.id).catch(() => {})
+        if (!(await db.maps.get(map.id))?.fog?.imageId) {
+          toast('The players’ copy of this map, with its fog, couldn’t be made just now, so nothing was shown. Try “Show players” again in a moment.')
+          return
+        }
+      }
+      const title = await askTitle(map.visibility === 'players' ? { title: map.name } : { title: A_MAP, secret: map.name })
+      if (title === null) return
+      // This device keeps it live (see fogChangedHere). Players are sent the map's id only if they can see the map.
+      fogChangedHere(map.id)
+      await showWithUndo(map.worldId, { kind: 'image', title, assetId: map.imageId, live: true, ...(map.visibility === 'players' ? { mapId: map.id } : {}) })
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <>
+      {live ? (
+        <span className="map-live-chip" role="status" title="This map is on players’ screens now. Fog you clear or put back, and pins you reveal, show there at once. “Stop showing” at the top takes it down.">
+          <span className="live-dot" /> On players’ screens
+        </span>
+      ) : (
+        <button type="button" disabled={busy} onClick={show} title="Put this map on every player’s screen, as players may see it: fog kept, GM-only pins and pieces left out">
+          <Ico as={Television} /> Show players
+        </button>
+      )}
+      {dialog}
+    </>
+  )
+}
+
+/** What a shown map is called when players can't see the map itself (its own name would give it away). */
+const A_MAP = 'A map'
 
 /**
  * Before showing the picture of a page or map players can't see: asks what players should see it
@@ -988,6 +1051,7 @@ export function PicturePicker({
 /** What's on players' screens now, with a big Stop: a picture's thumbnail, else an icon. */
 function NowShowing({ world }: { world: World }) {
   const showing = world.spread ? undefined : world.showing
+  const liveMap = useShownMap(world.id, showing)
   const entities = useVisibleEntities(world.id)
   const page = showing?.kind === 'page' ? entities.find((e) => e.id === showing.entityId) : undefined
   const picture = useAssetUrl(showing?.kind === 'image' ? showing.assetId : page?.imageId)
@@ -997,13 +1061,18 @@ function NowShowing({ world }: { world: World }) {
   return (
     <div className="now-showing" role="status">
       <span className="now-showing-pic" aria-hidden="true">
-        {picture ? <img src={picture} alt="" /> : <Ico as={world.spread ? SquaresFour : showing?.kind === 'text' ? Scroll : clockOnly ? Clock : Television} />}
+        {picture ? <img src={picture} alt="" /> : <Ico as={world.spread ? SquaresFour : isLiveMap(showing) ? MapTrifold : showing?.kind === 'text' ? Scroll : clockOnly ? Clock : Television} />}
       </span>
       <span className="now-showing-what">
         <span className="muted small">On players’ screens</span>
-        <strong>{clockOnly ? 'The in-game clock' : what}</strong>
+        <strong>{clockOnly ? 'The in-game time' : what}</strong>
+        {liveMap && (
+          <span className="small">
+            <Link to={`${worldPath(world.id)}/maps/${liveMap.id}`}>Open the map</Link> to clear fog: it shows there at once. <Help topic="liveMap" />
+          </span>
+        )}
       </span>
-      <button type="button" className="primary" title="Take everything off players’ screens, the in-game clock too" onClick={() => stopShowingAll(world.id)}>
+      <button type="button" className="primary" title="Take everything off players’ screens, the in-game time too" onClick={() => stopShowingAll(world.id)}>
         Stop
       </button>
     </div>
@@ -1102,6 +1171,8 @@ export function PlayersScreen({ world }: { world: World }) {
   const recording = useRecordingOnThisDevice(world.id)
   // The in-game clock fills the screen when asked to, or when it's the only thing up.
   const clockOnly = !!world.gameTime && (world.gameTime.place === 'full' || (!items.length && !showing))
+  // Turn order and the timers players may see sit beside what's shown, or in the middle when nothing else is up.
+  const nothingElse = !items.length && !showing && !world.gameTime
   // Keep the screen awake while it's up, where the browser allows it.
   useEffect(() => {
     let lock: { release: () => Promise<void> } | undefined
@@ -1112,6 +1183,7 @@ export function PlayersScreen({ world }: { world: World }) {
   return (
     <div className={`players-screen world-bare ${items.length ? 'with-spread' : ''}`}>
       {recording && <BeingRecorded />}
+      <ScreenTable world={world} alone={nothingElse} />
       {/* The in-game clock: in a corner over what's shown, or the whole screen when nothing else is up. */}
       <ScreenClock world={world} alone={clockOnly} />
       {clockOnly ? null : items.length ? (
@@ -1122,7 +1194,7 @@ export function PlayersScreen({ world }: { world: World }) {
       ) : showing ? (
         <>
           {!hiddenPage && <h1>{showing.title}</h1>}
-          <ShowingView showing={showing} worldId={world.id} big />
+          <ShowingView showing={showing} worldId={world.id} big fixed />
         </>
       ) : (
         <div className="players-screen-idle" role="status">

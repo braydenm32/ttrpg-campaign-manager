@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
 import { pagePath } from './paths'
-import { stampStart } from './sessions'
+import { campaignUnderWay, stampStart } from './sessions'
 import { blankLectern, db, saveEntity, type Entity, type PrepScene, type Session, type World } from './db'
 import { DraftText } from './components'
 import { Help } from './help'
@@ -37,7 +37,7 @@ export function cardSummary(s: PrepScene, entities: Entity[], session: Session) 
     s.readAloud?.trim() && 'read-aloud text',
     present && (present <= 3 ? `with ${here.map(name).join(', ')}` : `${present} here`),
     s.soundIds?.length && `${s.soundIds.length} sound${s.soundIds.length === 1 ? '' : 's'}`,
-    s.encounterId && `fight: ${session.prep?.encounters.find((e) => e.id === s.encounterId)?.name ?? 'an encounter'}`,
+    s.encounterId && `fight: ${session.prep?.encounters.find((e) => e.id === s.encounterId)?.name ?? 'one you prepared'}`,
     s.show && 'show players',
     reveal && `reveal ${reveal}`,
   ].filter(Boolean)
@@ -146,6 +146,7 @@ export async function startScene(world: World, session: Session, scene: PrepScen
       if (mine) mine.done = true
       stampStart(s, worldBefore?.calendar?.today)
     })
+  const backToPlanning = await campaignUnderWay(session.campaignId)
   // Through saveEntity, so the page's History keeps the version before the reveal.
   for (const e of toReveal) {
     const now = await db.entities.get(e.id)
@@ -162,6 +163,7 @@ export async function startScene(world: World, session: Session, scene: PrepScen
   }
   const shownId = shown ? (await db.worlds.get(world.id))?.showing?.id : undefined
   return async () => {
+    await backToPlanning?.()
     for (const e of toReveal) {
       const now = await db.entities.get(e.id)
       if (now?.visibility === 'players') await db.entities.update(e.id, { visibility: e.visibility, updatedAt: Date.now() })
@@ -205,7 +207,8 @@ export const clearSceneToast = () => {
  * and pages it added, the pages it revealed and what was on players' screens.
  */
 export async function goToScene(world: World, session: Session, scene: PrepScene, ask: (r: Review) => Promise<string | null>) {
-  const before = sceneSnapshot(session)
+  // The session as it is saved now, not as the screen last drew it: text typed a moment ago must be in what Undo puts back.
+  const before = sceneSnapshot((await db.sessions.get(session.id)) ?? session)
   const undoShown = await startScene(world, session, scene, ask)
   if (!undoShown) return
   const n = (session.prep?.scenes ?? []).findIndex((x) => x.id === scene.id) + 1
@@ -221,7 +224,8 @@ export async function goToScene(world: World, session: Session, scene: PrepScene
  * so last scene's text can't be read out by mistake. Undo puts it back.
  */
 export async function changePlace(session: Session, placeId: string | undefined, placeName?: string) {
-  const before = sceneSnapshot(session)
+  // The session as it is saved now, not as the screen last drew it: text typed a moment ago must be in what Undo puts back.
+  const before = sceneSnapshot((await db.sessions.get(session.id)) ?? session)
   const planned = placeId ? session.prep?.scenes.find((x) => x.placeId === placeId && !x.done) ?? session.prep?.scenes.find((x) => x.placeId === placeId) : undefined
   await db.sessions
     .where('id')

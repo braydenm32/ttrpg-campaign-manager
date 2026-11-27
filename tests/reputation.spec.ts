@@ -19,7 +19,7 @@ async function change(page: Page, button: string, reason: string, playersSeeWhy 
   await page.getByRole('button', { name: button, exact: true }).first().click()
   const form = page.locator('form.rep-change')
   await form.getByLabel('What happened?').fill(reason)
-  if (playersSeeWhy) await form.getByLabel('Players can see why').check()
+  if (playersSeeWhy) await form.getByLabel('Players know why').check()
   await form.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(form).toHaveCount(0)
 }
@@ -29,7 +29,7 @@ async function addNote(page: Page, place: string, text: string, forPlayers: bool
   const form = page.locator('form.rep-add-note')
   await form.getByLabel('Place', { exact: true }).fill(place)
   await form.getByLabel('How they see the party').fill(text)
-  if (forPlayers) await form.getByLabel('Players can see this').check()
+  if (forPlayers) await form.getByLabel('Players know', { exact: true }).check()
   await form.getByRole('button', { name: 'Add', exact: true }).click()
   await expect(form).toHaveCount(0)
 }

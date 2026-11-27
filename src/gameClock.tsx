@@ -12,7 +12,7 @@ import { toast } from './undo'
 import './gameClock.css'
 
 /**
- * The in-game clock: the time of day in the world, on the Clocks page and at the Lectern. The GM sets
+ * The in-game clock: the time of day in the world, on Date and time and at the Lectern. The GM sets
  * it and lets it run at any speed (or "reach 21:00 in 1½ real hours"), and can show it on players'
  * screens as a clock face or 24-hour digital. Only a starting point is saved (World.gmScreen.gameClock,
  * see GameTime), so every screen works the time out for itself and nothing needs saving each second.
@@ -209,7 +209,7 @@ export function GameClockWatcher({ world }: { world: World }) {
         if (rang) {
           beep()
           toast(`In-game alarm: it’s ${hhmm(rang.secs)}${rang.label ? `. ${rang.label}` : ''}`)
-        } else if (reached !== undefined) toast(`The in-game clock reached ${hhmm(reached)} and stopped.`)
+        } else if (reached !== undefined) toast(`The in-game time reached ${hhmm(reached)} and stopped.`)
       })
       .finally(() => (busy.current = false))
   }, [due, world.id])
@@ -281,7 +281,7 @@ export function ScreenClock({ world, alone }: { world: World; alone: boolean }) 
   return <GameTimeView time={time} world={world} size="clamp(110px, 14vw, 240px)" className={`screen-clock-corner at-${time.place}`} />
 }
 
-/** For players (the Common Room, the Clocks page): the time in the world, while the GM shows it. */
+/** For players (the Common Room, Date and time): the time in the world, while the GM shows it. */
 export function GameTimeBar({ world }: { world: World }) {
   const time = readTime(world.gameTime)
   if (!time) return null
@@ -290,7 +290,7 @@ export function GameTimeBar({ world }: { world: World }) {
       <GameTimeView time={time} world={world} size={56} noDate />
       <span className="game-time-words">
         <span className="small muted">
-          The time in the world <Help topic="gameTimePlayers" />
+          In-game time <Help topic="gameTimePlayers" />
         </span>
         <BarDate world={world} time={time} />
       </span>
@@ -383,10 +383,10 @@ function ShowToggle({ worldId, c }: { worldId: string; c: GameClock }) {
     <button
       className={c.shown ? 'on' : ''}
       aria-pressed={!!c.shown}
-      title={c.shown ? 'Players see the clock on the players’ screen and their phones' : 'Put the clock on the players’ screen and their phones'}
+      title={c.shown ? 'The in-game time is on the players’ screen and their phones now. Press to take it off.' : 'Put the in-game time on the players’ screen and their phones'}
       onClick={() => editClock(worldId, (x) => ({ ...x, shown: !x.shown || undefined }))}
     >
-      <Ico as={c.shown ? EyeSlash : Eye} /> {c.shown ? 'Hide from players' : 'Show players'}
+      <Ico as={c.shown ? EyeSlash : Eye} /> {c.shown ? 'Stop showing' : 'Show players'}
     </button>
   )
 }
@@ -406,7 +406,7 @@ function Heading({ worldId, c }: { worldId: string; c: GameClock }) {
   )
 }
 
-/** The GM's clock on the Clocks page: everything. */
+/** The GM's clock on Date and time (the date in the top bar): everything. */
 export function GameClockCard({ world }: { world: World }) {
   const c = readClock(world.gmScreen?.gameClock) ?? fresh()
   const secs = useTicking(c)
@@ -553,7 +553,7 @@ export function GameClockPanel({ world }: { world: World }) {
       sectionId="lectern-gametime"
       name="In-game time"
       keywords="clock time hour day night speed alarm"
-      title={<><Ico as={Clock} /> <Link to={`${worldPath(world.id)}/clocks`}>In-game time</Link> <Help topic="gameClock" /></>}
+      title={<><Ico as={Clock} /> <Link to={`${worldPath(world.id)}/date`}>In-game time</Link> <Help topic="gameClock" /></>}
     >
       <div className="game-clock-strip">
         <span className="game-clock-mini">

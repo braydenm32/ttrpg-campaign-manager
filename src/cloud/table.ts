@@ -777,9 +777,20 @@ const liveKey = (worldId: string) => `codex.liveSession.${worldId}`
 const liveListeners = new Set<() => void>()
 const memory = new Map<string, string | undefined>()
 
+/**
+ * Sessions whose live link ended in this tab (Stop, "End the live session", another session going
+ * live). The live link belongs to one tab, so this is how Wrap up tells "ended here" from "live
+ * from another device or tab" (Session.liveAt only says it went live somewhere).
+ */
+const endedHere = new Set<string>()
+export const liveEndedHere = (sessionId: string) => endedHere.has(sessionId)
+
 /** The session the GM has gone live with in this world (from its Lectern), kept until they stop or end it. */
 export function setLiveSession(worldId: string, sessionId: string | undefined) {
   if (memory.get(worldId) === sessionId && memory.has(worldId)) return
+  const was = liveSessionOf(worldId)
+  if (was && was !== sessionId) endedHere.add(was)
+  if (sessionId) endedHere.delete(sessionId)
   memory.set(worldId, sessionId)
   try {
     // Kept for this tab, so a reload doesn't stop the table link.
@@ -791,20 +802,41 @@ export function setLiveSession(worldId: string, sessionId: string | undefined) {
   liveListeners.forEach((l) => l())
 }
 
+/**
+ * Goes live to players with a session: their Common Room starts showing it as being played (and any
+ * other session of the world stops being live). The Lectern's switch and the "Start playing" box both
+ * go through here. The session notes when (Session.liveAt).
+ */
+export function goLiveWith(worldId: string, session: Pick<Session, 'id'>) {
+  setLiveSession(worldId, session.id)
+  return db.sessions
+    .where('id')
+    .equals(session.id)
+    .modify((s) => {
+      // Noted on the session, so Wrap up knows there is a live session to end.
+      s.liveAt = Date.now()
+      // Older sessions could be set to share nothing; going live means sharing.
+      if (s.lectern?.share?.off) s.lectern.share = { ...s.lectern.share, off: undefined }
+    })
+}
+
+/** The session the GM is live with in this world right now, if any (for code that isn't drawing a screen). */
+export function liveSessionOf(worldId: string) {
+  if (memory.has(worldId)) return memory.get(worldId)
+  try {
+    return sessionStorage.getItem(liveKey(worldId)) ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
 export function useLiveSession(worldId: string) {
   return useSyncExternalStore(
     (l) => {
       liveListeners.add(l)
       return () => liveListeners.delete(l)
     },
-    () => {
-      if (memory.has(worldId)) return memory.get(worldId)
-      try {
-        return sessionStorage.getItem(liveKey(worldId)) ?? undefined
-      } catch {
-        return undefined
-      }
-    },
+    () => liveSessionOf(worldId),
   )
 }
 

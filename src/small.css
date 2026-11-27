@@ -105,7 +105,7 @@
 :is(.print-sheet, .players-screen) .wikilink.missing::after { content: none; }
 .wikilink.still { text-decoration: none; }
 @media print {
-  .print-missing .button { display: none; }
+  .print-missing .button, .print-map-note { display: none; }
 }
 /* The "?" by a heading on the invite card sits beside its words, not over them. */
 @media (pointer: coarse) {

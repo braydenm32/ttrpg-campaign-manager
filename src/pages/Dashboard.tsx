@@ -1,7 +1,7 @@
 import { Help, HELP } from '../help'
 import { WorldCover } from '../WorldCover'
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useState, useSyncExternalStore, type ReactNode } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Modal, useMenu } from '../components'
 import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel, type Campaign, type Entity, type Session, type World } from '../db'
@@ -9,7 +9,7 @@ import { useCreatePage } from '../NewPage'
 import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
 import { initials, showDay } from '../text'
 import { useFinish } from '../EndSession'
-import { nextSessions, useCampaigns, useWorldSessions } from '../threads'
+import { campaignsOnDesk, isRunning, nextSessions, useCampaigns, useWorldSessions } from '../threads'
 import { WantedPages, wantedPages } from '../wanted'
 import { useViewMode } from '../viewMode'
 import { BackupButton, useBackupDue, useRecordingsOnlyHere } from '../BackupReminder'
@@ -46,15 +46,16 @@ import {
   type Icon,
 } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { createNextSession, isOverdue, isPlayed, localDate, partyOf, sessionStage, startAndTell, type SessionStage } from '../sessions'
+import { createNextSession, isOverdue, isPlayed, localDate, partyOf, sessionStage, type SessionStage } from '../sessions'
+import { StartPlayingButton } from '../startPlaying'
 import { StageChip, usePlayingNow } from '../stage'
 import { detailOf } from '../partyGlance'
 import { toast } from '../undo'
-import { endLiveSession } from '../EndSession'
-import { useLiveSession } from '../cloud/table'
 import { RecentlyOpenedRow } from '../RecentlyOpened'
-import { ImportPages } from '../ImportPages'
-import { ExampleStartHere, SeeTheExampleButton } from '../firstSteps'
+import { ExampleStartHere } from '../firstSteps'
+import { GettingStarted } from '../gettingStarted'
+import { gameSystemOf } from '../gameSystem'
+import { PausedCampaigns } from '../pausedCampaigns'
 import { OneShotDesk } from '../oneShotPanel'
 import '../desk.css'
 
@@ -90,15 +91,17 @@ function Today({ world }: { world: World }) {
   const cards = nextSessions(campaigns, sessions, playing)
   const inHand = cards[0]
   const stage = inHand && sessionStage(inHand.session, playing.includes(inHand.session.id))
-  const fresh = entities.length < 3 && campaigns.length === 0
 
   return (
     <div className="page home-page desk-today">
-      <WorldCover world={world} compact>
+      {/* The game named on the cover is the one being played: the campaign in hand's, else the world's. */}
+      <WorldCover world={world} compact system={gameSystemOf(world, campaigns, sessions, playing)}>
         <NewPageMenu world={world} />
       </WorldCover>
       <ExampleStartHere world={world} entities={entities} />
       <SessionStrip world={world} inHand={inHand} stage={stage} campaigns={campaigns} onNewCampaign={() => setNewCampaign(true)} />
+      {/* With nothing on the Desk, the finished ones are offered too, so there's always a way back. */}
+      <PausedCampaigns world={world} campaigns={campaigns} finishedToo={!inHand && !campaigns.some(isRunning)} />
       <OneShotDesk world={world} />
       <RecentlyOpenedRow world={world} entities={entities} />
       <div className="desk-cols">
@@ -106,7 +109,7 @@ function Today({ world }: { world: World }) {
         <DeskClocks world={world} entities={entities} />
       </div>
       {/* After what's waiting: a new world can already have players writing in. */}
-      {fresh && <GettingStarted world={world} onNewCampaign={() => setNewCampaign(true)} />}
+      <GettingStarted world={world} entities={entities} campaigns={campaigns} onNewCampaign={() => setNewCampaign(true)} />
       <div className="desk-cols">
         <DeskParty world={world} entities={entities} campaignId={inHand?.campaign.id ?? campaigns[0]?.id} />
         <ComingUp world={world} campaigns={campaigns} sessions={sessions} playing={playing} onNewCampaign={() => setNewCampaign(true)} />
@@ -184,17 +187,22 @@ function SessionStrip({
 }) {
   const navigate = useNavigate()
   const w = worldPath(world.id)
-  const live = useLiveSession(world.id)
   if (!inHand || !stage) {
     // No session yet: a campaign to make, or a first session to plan.
-    const first = campaigns.find((c) => c.status !== 'finished')
+    const first = campaigns.find(isRunning)
     return (
       <section className="desk-strip next-sessions" aria-label="Next session">
         <div className="strip-title">
-          <span className="desk-strip-name">{first ? 'No session planned yet' : 'No campaign yet'}</span>
+          <span className="desk-strip-name">{first ? 'No session planned yet' : campaigns.length ? 'No campaign being run' : 'No campaign yet'}</span>
           <Help topic="nextSession" />
         </div>
-        <span className="muted small">{first ? `${first.name} has no sessions.` : 'A campaign is one group’s story in this world. Make one, then plan its first session.'}</span>
+        <span className="muted small">
+          {first
+            ? `${first.name} has no sessions.`
+            : campaigns.length
+              ? 'Your campaigns are paused or finished. Pick one up again below, or make a new one.'
+              : 'A campaign is one group’s story in this world. Make one, then plan its first session.'}
+        </span>
         <span className="grow" />
         {first ? (
           <button
@@ -227,22 +235,11 @@ function SessionStrip({
         <Ico as={ListChecks} /> {next.label}
       </Link>
     ),
-    preparing: (
-      <button
-        className="primary"
-        data-next={next.id}
-        title={HELP.startPlaying}
-        onClick={async () => {
-          await startAndTell(s)
-          navigate(`${w}/s/${s.id}/lectern`)
-        }}
-      >
-        <Ico as={Play} weight="fill" /> {next.label}
-      </button>
-    ),
+    // One "Start playing" everywhere: a small box with "Go live to players" and "Record" (src/startPlaying.tsx).
+    preparing: <StartPlayingButton session={s} dataNext={next.id} />,
     playing: (
-      // Ends the live link and clears players' screens, as the Lectern's Wrap up does.
-      <Link className="button primary" data-next={next.id} to={`${w}/s/${s.id}?end=1`} onClick={() => live === s.id && void endLiveSession(world.id, s.id)}>
+      // Only opens the Wrap up checklist, like every "Wrap up": ending the live session is its first step.
+      <Link className="button primary" data-next={next.id} to={`${w}/s/${s.id}?end=1`} title="Opens the Wrap up checklist and changes nothing by itself. Its first step ends the live session for players.">
         <Ico as={FlagCheckered} /> {next.label}
       </Link>
     ),
@@ -268,8 +265,8 @@ function SessionStrip({
       </Link>
     ),
     playing: (
-      <Link className="button" to={`${w}/s/${s.id}/lectern`} title={HELP.lectern}>
-        <Ico as={Play} /> Back to the table
+      <Link className="button" to={`${w}/s/${s.id}/lectern`} title={HELP.continuePlaying}>
+        <Ico as={Play} /> Continue
       </Link>
     ),
     played: (
@@ -642,7 +639,7 @@ const recapSkipped = (sessionId: string) => {
 
 /**
  * The session just played, when players have no recap for it yet: none written ("Write it"), or one
- * written but still GM only ("Show to players", with Undo). "Skip" quiets it on this device.
+ * written but still GM only ("Reveal to players", with Undo). "Skip" quiets it on this device.
  */
 function recapRow(world: World, sessions: Session[], inHand: InHand | undefined, skip: (id: string) => void): Need | undefined {
   if (!inHand) return undefined
@@ -683,7 +680,7 @@ function recapRow(world: World, sessions: Session[], inHand: InHand | undefined,
       <span className="row">
         {/* The same "Players will see" review as on the session, opened there, before anything is shown. */}
         <Link className="button small" to={`${worldPath(world.id)}/s/${last.id}?tab=recap&show=1`}>
-          Show to players…
+          Reveal to players…
         </Link>
         {skipButton}
       </span>
@@ -828,7 +825,8 @@ function ComingUp({
   onNewCampaign: () => void
 }) {
   const w = worldPath(world.id)
-  const running = campaigns.filter((c) => c.status !== 'finished')
+  // The running campaigns, and a paused or finished one while a session of it is still being played.
+  const running = campaignsOnDesk(campaigns, sessions, playing)
   const next = sessions
     .filter((s) => running.some((c) => c.id === s.campaignId) && (!isPlayed(s) || playing.includes(s.id)))
     .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || a.number - b.number)
@@ -997,88 +995,3 @@ export function NewCampaign({
   )
 }
 
-const hideKey = (worldId: string) => `gettingStarted.hidden.${worldId}`
-
-/** First steps for a new, nearly empty world, each with its button. Hide puts it away for good on this device. */
-function GettingStarted({ world, onNewCampaign }: { world: World; onNewCampaign: () => void }) {
-  const create = useCreatePage(world)
-  const w = worldPath(world.id)
-  // "Start from an export…" in the New world dialog lands here with ?import=1: the importer open.
-  const [search] = useSearchParams()
-  const [importing, setImporting] = useState(() => search.get('import') === '1')
-  useEffect(() => {
-    if (search.get('import') === '1') document.getElementById('getting-started-import')?.scrollIntoView({ block: 'center' })
-  }, [search])
-  const [hidden, setHidden] = useState(() => {
-    try {
-      return localStorage.getItem(hideKey(world.id)) === '1'
-    } catch {
-      return false
-    }
-  })
-  if (hidden) return null
-  const steps: [string, string, string, ReactNode][] = [
-    [
-      '📥',
-      'Already have notes? Bring them in',
-      'Photos of your notebook, Obsidian or a Markdown folder, Kanka or World Anvil. Everything comes in GM only.',
-      <button key="import" className="small" aria-expanded={importing} onClick={() => setImporting(!importing)}>
-        {importing ? 'Close' : 'Import notes'}
-      </button>,
-    ],
-    ['🎲', 'Make a campaign', 'One group’s story in this world.', <button key="campaign" className="small" onClick={onNewCampaign}>Make a campaign</button>],
-    [
-      '🧑',
-      'Add a few people and places',
-      'Link pages to each other by writing [[Name]].',
-      <span key="pages" className="row">
-        <button className="small" onClick={() => create('npc')}>New NPC</button>
-        <button className="small" onClick={() => create('location')}>New place</button>
-      </span>,
-    ],
-    ['🗺️', 'Add a map', 'Upload one or draw it, then pin your places on it.', <Link key="maps" className="button small" to={`${w}/maps`}>Maps</Link>],
-    ['🔒', 'Keep secrets', 'Pages start GM only. Reveal them when the players find out.', null],
-    ['☁️', 'Invite your players (optional)', 'Turn on cloud sync, then send invite links.', <Link key="players" className="button small" to={`${w}/settings?tab=players`}>Players</Link>],
-    ['📖', 'See how a finished campaign looks', 'Vael Ardith, the full example, starting at its Start Here guide.', <SeeTheExampleButton key="example" />],
-  ]
-  return (
-    <section className="card getting-started">
-      <div className="card-head">
-        <h2>
-          Getting started <Help topic="gettingStarted" />
-        </h2>
-        <button
-          className="small ghost"
-          onClick={() => {
-            try {
-              localStorage.setItem(hideKey(world.id), '1')
-            } catch {
-              // Private window: it hides for now.
-            }
-            setHidden(true)
-          }}
-        >
-          Hide
-        </button>
-      </div>
-      <ol>
-        {steps.map(([icon, title, text, action], i) => (
-          <li key={title}>
-            <span>
-              {icon} <strong>{title}.</strong> <span className="muted">{text}</span>
-            </span>
-            {action}
-            {i === 0 && importing && (
-              <div className="getting-started-import" id="getting-started-import">
-                <ImportPages worldId={world.id} system={world.system} compact />
-              </div>
-            )}
-          </li>
-        ))}
-      </ol>
-      <p className="small muted">
-        Every ? button explains the thing next to it. <Link to={`${w}/settings`}>World settings</Link> can turn them off.
-      </p>
-    </section>
-  )
-}

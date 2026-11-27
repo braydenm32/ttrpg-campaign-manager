@@ -1,10 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect } from 'react'
 import type { Table } from 'dexie'
-import { BIN_KEEP_FOR, db, newId, type Asset, type BinItem, type Board, type Campaign, type Session, type Sound, type WorldMap } from './db'
+import { toast } from './undo'
+import { BIN_KEEP_FOR, db, newId, type Asset, type BinItem, type Board, type Campaign, type Pin, type Session, type Sound, type WorldMap } from './db'
 
 /**
- * The recently deleted bin: sessions, campaigns, files, maps, boards and sounds deleted on this
+ * The recently deleted bin: sessions, campaigns, files, maps, map pins, boards and sounds deleted on this
  * device are kept for a month, so a slip of the finger can be undone. (Pages have their own history.)
  * Deleting still reaches other devices through sync; restoring puts the rows back, and sync sends
  * them out again. Things deleted on another device land here too, so a co-GM's slip can be undone.
@@ -18,13 +19,16 @@ const linkTable = (l: Relinks[number]) => db[l.table] as unknown as Table<Record
 
 const BIN_TABLES = [db.bin, db.worlds, db.campaigns, db.sessions, db.assets, db.boards, db.sounds, db.maps, db.pins, db.entities, db.reputation]
 
+/** Moves the rows to the bin as one item, and returns its id (for an Undo note's restoreFromBin). */
 async function moveToBin(worldId: string, kind: BinItem['kind'], label: string, rows: Rows, relinks: Relinks = []) {
+  const id = newId()
   await db.transaction('rw', BIN_TABLES, async () => {
     const links = relinks.filter((l) => l.ids.length)
-    await db.bin.add({ id: newId(), worldId, at: Date.now(), kind, label, rows: rows.filter((r) => r.rows.length), ...(links.length ? { relinks: links } : {}) })
+    await db.bin.add({ id, worldId, at: Date.now(), kind, label, rows: rows.filter((r) => r.rows.length), ...(links.length ? { relinks: links } : {}) })
     for (const l of links) await linkTable(l).where(':id').anyOf(l.ids).modify({ [l.field]: undefined })
     for (const r of rows) await (db[r.table] as unknown as Table<unknown, string>).bulkDelete((r.rows as { id: string }[]).map((x) => x.id))
   })
+  return id
 }
 
 const present = <T>(xs: (T | undefined)[]) => xs.filter((x): x is T => !!x)
@@ -33,7 +37,7 @@ export async function binSession(id: string) {
   const s = await db.sessions.get(id)
   if (!s) return
   const recordings = present(await db.assets.bulkGet(s.recordings.map((r) => r.assetId)))
-  await moveToBin(s.worldId, 'session', `#${s.number} ${s.title}`.trim(), [
+  return moveToBin(s.worldId, 'session', `#${s.number} ${s.title}`.trim(), [
     { table: 'sessions', rows: [s] },
     { table: 'assets', rows: recordings },
   ])
@@ -46,7 +50,7 @@ export async function binCampaign(id: string) {
   const recordings = present(await db.assets.bulkGet(sessions.flatMap((s) => s.recordings.map((r) => r.assetId))))
   // Its characters would otherwise belong to a campaign that's gone, and drop out of every party.
   const pcs = await db.entities.where({ worldId: c.worldId }).filter((e) => e.campaignId === id).primaryKeys()
-  await moveToBin(
+  return moveToBin(
     c.worldId,
     'campaign',
     c.name,
@@ -61,7 +65,7 @@ export async function binCampaign(id: string) {
 
 export async function binFile(id: string) {
   const a = await db.assets.get(id)
-  if (a) await moveToBin(a.worldId, 'file', a.name, [{ table: 'assets', rows: [a] }])
+  if (a) return moveToBin(a.worldId, 'file', a.name, [{ table: 'assets', rows: [a] }])
 }
 
 export async function binBoard(id: string) {
@@ -92,7 +96,7 @@ export async function binMap(id: string) {
   const files = present(await db.assets.bulkGet([usedElsewhere ? undefined : m.imageId, m.fog?.imageId, m.playerImageId].filter((x): x is string => !!x)))
   // Pins on other maps that led into this one stop leading anywhere; restoring it puts them back.
   const ways = await db.pins.where({ worldId: m.worldId }).filter((p) => p.childMapId === id && p.mapId !== id).primaryKeys()
-  await moveToBin(
+  return moveToBin(
     m.worldId,
     'map',
     m.name,
@@ -103,6 +107,24 @@ export async function binMap(id: string) {
     ],
     [{ table: 'pins', field: 'childMapId', value: id, ids: ways }],
   )
+}
+
+/** What a pin is called: its label, or the page it opens. */
+export async function pinName(p: Pin) {
+  return p.label.trim() || (p.entityId ? (await db.entities.get(p.entityId))?.name : undefined) || 'Unnamed pin'
+}
+
+/**
+ * Deletes one pin (or region) from its map. Restoring puts it back on the same spot of the same
+ * map, linked as it was. Returns the bin item's id and what to call the pin.
+ */
+export async function binPin(id: string) {
+  const p = await db.pins.get(id)
+  if (!p) return
+  const name = await pinName(p)
+  const map = await db.maps.get(p.mapId)
+  const bin = await moveToBin(p.worldId, 'pin', `“${name}” on the map “${map?.name ?? 'a map'}”`, [{ table: 'pins', rows: [p] }])
+  return { bin, name }
 }
 
 type Removed = { table: BinItem['rows'][number]['table']; row: Record<string, unknown> }
@@ -134,9 +156,23 @@ export async function binRemovedElsewhere(worldId: string, removed: Removed[]) {
   await db.bin.add({ id: newId(), worldId, at: Date.now(), kind: 'elsewhere', label, rows })
 }
 
-export async function restoreFromBin(id: string) {
+/**
+ * Puts a bin item back. A pin whose map is gone can't go back on its own, and nothing changes: it
+ * says "no map" when the map is in the bin too (restore the map first), or "map gone" when the map
+ * was deleted for good.
+ */
+export async function restoreFromBin(id: string): Promise<'no map' | 'map gone' | void> {
   const item = await db.bin.get(id)
   if (!item) return
+  if (item.kind === 'pin') {
+    const mapIds = item.rows.flatMap((r) => (r.table === 'pins' ? (r.rows as Pin[]).map((p) => p.mapId) : []))
+    const maps = await db.maps.bulkGet(mapIds)
+    const missing = mapIds.filter((_, i) => !maps[i])
+    if (missing.length) {
+      const binned = new Set((await db.bin.where({ worldId: item.worldId }).toArray()).flatMap((b) => b.rows.flatMap((r) => (r.table === 'maps' ? (r.rows as WorldMap[]).map((m) => m.id) : []))))
+      return missing.every((m) => binned.has(m)) ? 'no map' : 'map gone'
+    }
+  }
   await db.transaction('rw', BIN_TABLES, async () => {
     // Another device's version kept after a clash: only the parts that clashed go back, on top of the row as it is now.
     if (item.fields)
@@ -176,4 +212,13 @@ export function useBin(worldId: string) {
     db.bin.where('at').below(Date.now() - BIN_KEEP_FOR).delete()
   }, [])
   return useLiveQuery(() => db.bin.where({ worldId }).reverse().sortBy('at'), [worldId]) ?? []
+}
+
+/**
+ * The note after something goes to the bin, with Undo that puts it back at once: `text` says what
+ * went (“Map “Brindlemark” deleted, with its 12 pins.”), and the note adds where to find it later.
+ */
+export function deletedNote(text: string, binId: string | undefined) {
+  if (binId) toast(`${text} It’s in More → Recently deleted.`, () => restoreFromBin(binId))
+  else toast(text)
 }

@@ -122,15 +122,113 @@ export async function fogKey(map: WorldMap) {
   return `${id}:${base?.updatedAt ?? base?.createdAt ?? 0}:${base?.size ?? 0}:${h}`
 }
 
+/** The picture players get of a map right now: the fogged copy when fog is on (nothing until it's been made), else as playersImageId. */
+export const playersCopyId = (map: WorldMap) => (map.fog?.on ? map.fog.imageId : playersImageId(map))
+
+/** Every picture of a map: the GM's, the players' copy of a drawn map with secrets, and the fogged copy. */
+export const mapPictureIds = (m: Pick<WorldMap, 'imageId' | 'playerImageId' | 'fog'>) => [m.imageId, m.playerImageId, m.fog?.imageId].filter((x): x is string => !!x)
+
+// ---------- which device keeps a shown map live ----------
+//
+// While a map is on players' screens, one device makes its players' copy at once and tells players
+// what changed (src/liveMap.tsx): the one where the GM pressed "Show players" or last changed the fog.
+// Any other device with the world open (the GM's own second device, a co-GM's) leaves it be, so two
+// never make and upload the same copy at once. Kept on this device only (never in the world), so a
+// reload or a second tab here carries on.
+
+const hostKey = (mapId: string) => `atlas.liveMapHost.${mapId}`
+const hostMemory = new Map<string, number>()
+const hostListeners = new Set<() => void>()
+const tellHosts = () => hostListeners.forEach((l) => l())
+if (typeof window !== 'undefined') window.addEventListener('storage', (e) => e.key?.startsWith('atlas.liveMapHost.') && tellHosts())
+
+/** This device showed the map, or just changed its fog: it keeps the map live from now on. */
+export function fogChangedHere(mapId: string) {
+  const now = Date.now()
+  hostMemory.set(mapId, now)
+  try {
+    localStorage.setItem(hostKey(mapId), String(now))
+  } catch {
+    // Storage blocked: this tab keeps it live until it's left.
+  }
+  tellHosts()
+}
+
+/** When this device last showed the map or changed its fog, or undefined if it isn't the one keeping it live. */
+export function fogHereSince(mapId: string): number | undefined {
+  try {
+    const v = Number(localStorage.getItem(hostKey(mapId)))
+    if (v > 0) return v
+  } catch {
+    // Storage blocked: what this tab remembers.
+  }
+  return hostMemory.get(mapId)
+}
+
+/** The fog was changed somewhere else: that device keeps the map live now, not this one. */
+export function fogChangedElsewhere(mapId: string) {
+  hostMemory.delete(mapId)
+  try {
+    localStorage.removeItem(hostKey(mapId))
+  } catch {
+    // Storage blocked: nothing kept there.
+  }
+  tellHosts()
+}
+
+/** Calls fn when which device keeps a map live may have changed. */
+export function onFogHostChange(fn: () => void) {
+  hostListeners.add(fn)
+  return () => void hostListeners.delete(fn)
+}
+
+/** A players' copy that was just made: what a live map (src/liveMap.tsx) needs to send players only the part that changed. */
+export interface FogRendered {
+  mapId: string
+  /** The players' copy (an asset). */
+  imageId: string
+  /** Its version now and before (the asset's updatedAt; 0 when it's brand new). */
+  version: number
+  prev: number
+  /** The copy itself, as drawn: the map with the fog painted on. Only ever read from, straight away. */
+  canvas: HTMLCanvasElement
+  /** Canvas pixels per map unit. */
+  scale: number
+  /** The fog shapes painted on it. */
+  shapes: FogShape[]
+  /** What it was made from apart from the shapes (the map picture and its version). */
+  base: string
+}
+
+const renderedListeners = new Set<(r: FogRendered) => void>()
+
+/** Calls fn each time this tab makes a players' copy of a fogged map. Returns a function that stops it. */
+export function onPlayerFogRendered(fn: (r: FogRendered) => void) {
+  renderedListeners.add(fn)
+  return () => void renderedListeners.delete(fn)
+}
+
+/** One at a time per map, across this device's tabs too, so two never make the same copy at once. */
+const rendering = new Map<string, Promise<unknown>>()
+function oneAtATime<T>(mapId: string, fn: () => Promise<T>): Promise<T> {
+  if (typeof navigator !== 'undefined' && navigator.locks) return navigator.locks.request(`atlas-fog:${mapId}`, fn) as Promise<T>
+  const next = (rendering.get(mapId) ?? Promise.resolve()).then(fn, fn)
+  rendering.set(mapId, next.catch(() => undefined))
+  return next
+}
+
 /**
  * Makes (or remakes) the players' copy of a fogged map: the map picture with the fog painted on.
  * Does nothing when the copy is already up to date.
  */
-export async function renderPlayerFog(mapId: string) {
+export const renderPlayerFog = (mapId: string) => oneAtATime(mapId, () => renderFogNow(mapId))
+
+async function renderFogNow(mapId: string) {
   const map = await db.maps.get(mapId)
   if (!map?.fog?.on) return
   const key = await fogKey(map)
-  if (map.fog.renderedFrom === key && map.fog.imageId && (await db.assets.get(map.fog.imageId))) return
+  const had = map.fog.imageId ? await db.assets.get(map.fog.imageId) : undefined
+  if (map.fog.renderedFrom === key && had) return
   const base = await db.assets.get(playersImageId(map))
   if (!base) return
   const img = await loadImage(base.blob)
@@ -141,7 +239,8 @@ export async function renderPlayerFog(mapId: string) {
     paintFog(fog.ctx, map, map.fog.shapes, scale)
     ctx.drawImage(fog.canvas, 0, 0)
     const blob = await toBlob(canvas, 'image/jpeg', 0.85)
-    const now = Date.now()
+    // Each copy is newer than the last, even on a clock that was put back.
+    const now = Math.max(Date.now(), (had?.updatedAt ?? 0) + 1)
     const latest = await db.maps.get(mapId)
     if (!latest?.fog) return
     let imageId = latest.fog.imageId
@@ -164,6 +263,14 @@ export async function renderPlayerFog(mapId: string) {
       })
     }
     await db.maps.update(mapId, { fog: { ...latest.fog, imageId, renderedFrom: key } })
+    const rendered: FogRendered = { mapId, imageId, version: now, prev: imageId === had?.id ? (had.updatedAt ?? 0) : 0, canvas, scale, shapes: map.fog.shapes, base: key.slice(0, key.lastIndexOf(':')) }
+    for (const fn of [...renderedListeners]) {
+      try {
+        fn(rendered)
+      } catch (e) {
+        console.error(e)
+      }
+    }
   } finally {
     URL.revokeObjectURL(img.src)
   }

@@ -3,13 +3,14 @@ import { Help } from '../help'
 import '../more.css'
 import { AccountModal, useAuthSession } from '../cloud/auth'
 import { createShareLink, getShareToken, revokeShareLink, shareUrl } from '../cloud/share'
-import { deleteCloudCopy, disableCloud, enableCloud, syncNow, syncStore, wouldOverwriteCloud } from '../cloud/sync'
+import { disableCloud, enableCloud, syncNow, syncStore, wouldOverwriteCloud } from '../cloud/sync'
 import type { World } from '../db'
 import { myRole } from '../cloud/players'
 import { cloudErrorMessage } from '../cloud/client'
 import { CoGmSettings, PlayersSettings } from '../players/PlayersSettings'
 import { Ico } from '../icons'
 import { BookOpen, Cloud, Scroll } from '@phosphor-icons/react'
+import { DeleteCloudCopyButton } from '../worldDelete'
 
 /** World settings section: turn on sync, and manage the player share link. */
 export default function CloudSettings({ world }: { world: World }) {
@@ -70,7 +71,7 @@ export default function CloudSettings({ world }: { world: World }) {
             </li>
             <li>
               <strong>Invite your players.</strong> You get an invite link to send them. Each player signs in, joins, and claims their character.
-              They see only what you reveal: GM-only pages, GM notes and secret passages never leave your devices.
+              They see only what you reveal: GM-only pages, GM notes and GM-only passages never leave your devices.
             </li>
             <li>
               <strong>Or share a read-only wiki link</strong> with anyone, no account needed. It shows only what’s revealed to the whole table.
@@ -153,17 +154,7 @@ export default function CloudSettings({ world }: { world: World }) {
               Stop syncing on this device
             </button>
             {!coGM && (
-            <button
-              className="danger"
-              onClick={() =>
-                confirm(
-                  'Delete the cloud copy of this world?\n\nThis device keeps its copy of the world. Deleted for good: every player and co-GM is taken out of the world, and the players’ notes, group notes, questions and your answers, downtime, date answers, stars and wishes and their claims on characters all go. The wiki, invite and co-GM links stop working, and your other devices stop updating.\n\nTurning sync back on later doesn’t bring any of this back.',
-                ) &&
-                run(() => deleteCloudCopy(world.id))
-              }
-            >
-              Delete cloud copy
-            </button>
+            <DeleteCloudCopyButton world={world} run={run} />
             )}
           </div>
           {!coGM && (
@@ -174,7 +165,7 @@ export default function CloudSettings({ world }: { world: World }) {
           </h3>
           <p className="muted">
             A read-only wiki of your world for anyone with the link, no account needed: friends outside the group, or a player before
-            they sign up. It shows only what you've revealed to the whole table. GM-only pages, pins, maps, sessions, secret passages,
+            they sign up. It shows only what you've revealed to the whole table. GM-only pages, pins, maps, sessions, GM-only passages,
             GM notes and anything revealed to just one player are removed on the server before anything is sent. It updates as you sync.
             To bring players into the game, use the invite link below instead.
           </p>

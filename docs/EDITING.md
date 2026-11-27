@@ -134,7 +134,7 @@ Everything is in the folder **`worlds/vael-ardith/`**. Each page in the app is o
 | --- | --- |
 | The world's name, the blurb on its book, the game system | `world.md` |
 | The calendar (months, weekdays, moons, holidays, today's date), the history ages on the timeline | `world.md` |
-| Safety tools (lines, veils, X-card) and the party's starting coin | `world.md` |
+| Table rules (safety tools: lines, veils, X-card) and the party's starting coin | `world.md` |
 | The campaign's name and description | `world.md` |
 | Player characters and NPCs | `people/` (PCs: `varra.md`, `ysse.md`, `borrin.md`, `tick.md`, `quorl.md`) |
 | The continent, nations, regions, towns, buildings, taverns, shops, dungeons | `places/` |
@@ -148,7 +148,7 @@ Everything is in the folder **`worlds/vael-ardith/`**. Each page in the app is o
 | Handouts | `campaign/handouts/` |
 | The three endings | `campaign/endings/` |
 | Events that happen during play | `campaign/events/` |
-| Sessions 1 to 8: GM notes, recap, prep, encounters, the Lectern | `sessions/session-1.md` … `session-8.md` |
+| Sessions 1 to 8: the plan (GM notes), what happened, recap, prep, fights (`encounters`), the Lectern | `sessions/session-1.md` … `session-8.md` |
 | The GM's "Start here" tour, the GM's chapter and the Player's Guide | `guides/guide-start.md`, `guide-running.md`, `guide-players.md` |
 | Page templates | `templates/` |
 
@@ -212,7 +212,7 @@ Only `type` and `name` are required. Leave out anything you don't need.
 | `name` | The page's title | `name: The Last Candle` |
 | `players` | `true` reveals it to every player. Without it, the page is GM only | `players: true` |
 | `summary` | The one-line description under the title | `summary: A tavern with one candle.` |
-| `parent` | The page this one sits inside (a tavern in a town, an NPC in a tavern), by key | `parent: cinderford` |
+| `parent` | The page this one sits inside (a tavern in a town, an NPC in a tavern), or the page of its own kind it is part of (a faction under a faction, lore under lore), by key | `parent: cinderford` |
 | `aliases` | Other names `[[links]]` can use (GM only) | `aliases: [ The Captain, Ilse ]` |
 | `tags` | Tags players can see (if the page is revealed) | `tags: [ tavern, cinderford ]` |
 | `gmTags` | Tags only the GM sees | `gmTags: [ traitor ]` |
@@ -326,6 +326,7 @@ Every `:::gm` or `:::for` needs its closing `:::` line. If one is missing, every
 
 - **In the text**, link by name: `[[Lantern Keep]]`, or with different words: `[[Lantern Keep|the Keep]]`. A link to a page that doesn't exist yet is allowed (it shows as a "no page yet" link), and the checker mentions it as a warning in case it's a typo.
 - **"Located in"** is `parent:` with the key of the place.
+- **"Part of"** is `parent:` too, with the key of a page of the same type (a smaller faction under its faction: `parent: f-barge-clans`). A page has one `parent`, so a page that is part of another sits wherever that one is.
 - **Relationships** (for the relationship web) are a list under `relations:`, each pointing at a key:
 
   ```
@@ -395,7 +396,11 @@ lectern:
   present: [ kettle ]
 ---
 
-The GM's notes for the session (the main text).
+The GM's plan for the session (the main text). It shows under "Plan".
+
+== What happened ==
+
+The GM's own notes on what happened, for a session already played. It shows under "What happened".
 
 == Recap ==
 
@@ -425,6 +430,7 @@ What the Lectern shows as the current scene.
 ```
 
 - `players: true` means the session has been played and players can see it (and its recap).
+- The main text is the session's **Plan**: what you wrote before the game. `== What happened ==` is the second notes box, for what happened at the table. Both are GM only; players never get either. None of the eight sessions uses `== What happened ==` yet.
 - `pages` are the pages involved, by key.
 - Each foe needs a `name`, a `count` and a `side` (`foe`, `ally` or `pc`). `hp`, `ac` and `page` (the foe's page, by key) are optional. `ac` can be a number or text like `"15 (chain)"`.
 - **Scene cards.** The lines indented two spaces under a scene are its scene card: what **▶ Start**, **First scene** and **Next scene** at the Lectern put on screen. Each one is optional, and a scene with nothing under it is just a line in the plan, as before.
@@ -437,7 +443,7 @@ What the Lectern shows as the current scene.
   - The first scene's card should match `lectern:` and `== Lectern ==` (the Lectern's opening), so **First scene** doesn't change what's already on screen.
 - Leave out any part you don't use.
 
-The session notes follow one pattern, so a GM always knows where to look. Keep it when you edit or add a session:
+The session's plan (its main text) follows one pattern, so a GM always knows where to look. Keep it when you edit or add a session:
 - A short header (level, date, sky, weather, *Touch these*, *In between*, *Level-up*, *If the party…*), then **Goal**.
 - `### Running this session`: **Last time** (a recap to read aloud), **Where the PCs are**, **The party should have**, **If they missed something** (a way back in for each clue they could miss) and **The session at a glance** (the order of scenes and when they happen).
 - One `### Scene` heading per scene. Each scene ends with **Development** (what happens next, with "if they do this, then that", and which scene comes next) and, when there's something to find, **Treasure**.

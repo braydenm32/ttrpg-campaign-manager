@@ -31,7 +31,7 @@ test('Now answers next session, last time and what we’re doing first, and chan
   // Nothing booked and no recap revealed in the example: it says so rather than showing an empty box.
   await expect(answers(page)).toContainText('Next session')
   await expect(answers(page)).toContainText('Not set yet')
-  await expect(answers(page)).toContainText('Last time')
+  await expect(answers(page)).toContainText('Recap')
   await expect(answers(page)).toContainText('Nothing yet')
   // What we're doing: the leads under way first, three of them, and a way to the rest.
   await expect(doing(page).locator('.lead-row')).toHaveCount(3)
@@ -82,7 +82,8 @@ test('Now answers next session, last time and what we’re doing first, and chan
     await expect(page.getByRole('heading', { level: 1, name: /After the game/ })).toBeVisible()
     const recap = page.locator('.room-recap')
     await expect(recap).toContainText('They ended the night in the Last Candle')
-    expect((await recap.boundingBox())!.y).toBeLessThan((await answers(page).boundingBox())!.y)
+    // Asked until it holds: the two cards settle into their order a moment after the heading changes.
+    await expect.poll(async () => (await recap.boundingBox())!.y - (await answers(page).boundingBox())!.y).toBeLessThan(0)
     await expect(page.locator('body')).not.toContainText('ROOM-TEST-GM-SECRET')
   } finally {
     await putBack(page, 'sessions', [[s1.id, before.session]])
@@ -159,6 +160,13 @@ test('Table rules: from the foot of Now and from the frame', async ({ page, worl
     await areas.getByRole('link', { name: 'Table rules' }).click()
   }
   await expect.poll(() => here(page)).toBe(`${w}/safety`)
+})
+
+test('Notes: the downtime card is called Downtime, whether or not you have a character', async ({ page, world }) => {
+  await open(page, `/w/${world.slug}?tab=notes`)
+  const card = page.locator('#downtime')
+  await expect(card.getByRole('heading')).toContainText('Downtime')
+  await expect(card).not.toContainText('Between sessions')
 })
 
 test('Me: previewing as one character shows them, and nothing GM-only', async ({ page, world }) => {

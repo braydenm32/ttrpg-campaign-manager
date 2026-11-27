@@ -1,5 +1,4 @@
-import { toast } from './undo'
-import { blankLectern, blankPrep, db, newId, type CalDate, type CheckItem, type Entity, type PrepScene, type Session } from './db'
+import { blankLectern, blankPrep, db, newId, type CalDate, type Campaign, type CheckItem, type Entity, type PrepScene, type Session } from './db'
 
 /** Today's date on this device, "2026-10-26" (not UTC, which is a day off in the evening or morning in many places). */
 export function localDate(t: number | Date = new Date()) {
@@ -80,6 +79,8 @@ export async function createNextSession(worldId: string, campaignId: string, dat
     title: `Session ${number}`,
     date,
     notes: '',
+    // Set from the start, so the session never counts as one from before the two boxes (notesFromPlay).
+    happened: '',
     recap: '',
     visibility: 'gm',
     entityIds: [],
@@ -118,7 +119,7 @@ export const STAGES: Record<SessionStage, { label: string; tone: string }> = {
   played: { label: 'Played', tone: 'done' },
 }
 
-type StageFacts = Pick<Session, 'recap' | 'date' | 'notes' | 'prep' | 'startedAt' | 'playedAt'> & { createdAt?: number }
+type StageFacts = Pick<Session, 'recap' | 'date' | 'notes' | 'prep' | 'startedAt' | 'playedAt'> & { happened?: string; createdAt?: number }
 
 /**
  * Sessions made from this day on are only played once "Mark as played" says so (or a recap is
@@ -146,7 +147,7 @@ export const isOverdue = (s: Pick<Session, 'recap' | 'date' | 'playedAt'> & { st
 /** Whether there's any plan for a session yet. */
 const hasPlan = (s: StageFacts) => {
   const p = s.prep
-  return !!(s.notes.trim() || p?.strongStart.trim() || p?.scenes.length || p?.clues.length || p?.encounters.length)
+  return !!(s.notes.trim() || s.happened?.trim() || p?.strongStart.trim() || p?.scenes.length || p?.clues.length || p?.encounters.length)
 }
 
 /** A session's stage. `live` says it's being played right now (live to players, or recording on this device). */
@@ -168,7 +169,8 @@ export const playedAlready = isPlayed
  * "Start playing": the session is under way (the first time only, so the start time stays the real
  * one). It also notes the world's date as the day the session starts in the world, if the session
  * has none yet. Gives back an undo that puts it back to not started, or nothing if it was already
- * under way.
+ * under way. The buttons go through the "Start playing" box (src/startPlaying.tsx, startWith), which
+ * also goes live and says what happened in the note at the bottom.
  */
 export async function startPlaying(sessionId: string) {
   const before = await db.sessions.get(sessionId)
@@ -178,19 +180,27 @@ export async function startPlaying(sessionId: string) {
     .where('id')
     .equals(sessionId)
     .modify((s) => stampStart(s, today))
-  return () => notStarted(sessionId, !!today)
+  const backToPlanning = await campaignUnderWay(before.campaignId)
+  return async () => {
+    await notStarted(sessionId, !!today)
+    await backToPlanning?.()
+  }
 }
 
 /**
- * "Start playing" as the buttons do it: starts the session and says so in the note at the bottom,
- * with a way back for a press by mistake. Mentions another session of the campaign that is still
- * being played, since two at once is nearly always a slip.
+ * A campaign still in Planning becomes Active the first time one of its sessions is started (Start
+ * playing, or starting a scene) or marked played, and starting a session in a Paused campaign
+ * carries it on (Active again). `from` is the statuses that change: marking a session played only
+ * moves Planning on, so wrapping up a paused campaign's last session leaves it paused. Gives back an
+ * undo that puts the status back as it was, or nothing if it didn't change.
  */
-export async function startAndTell(session: Pick<Session, 'id' | 'number' | 'title' | 'campaignId'>) {
-  const undo = await startPlaying(session.id)
-  if (!undo) return
-  const other = (await db.sessions.where({ campaignId: session.campaignId }).toArray()).find((s) => s.id !== session.id && s.startedAt && !s.playedAt)
-  toast(`#${session.number} ${session.title} is being played.${other ? ` #${other.number} ${other.title} is still being played too.` : ''}`, undo, 'Not started after all')
+export async function campaignUnderWay(campaignId: string, from: Campaign['status'][] = ['planning', 'paused']) {
+  const was = (await db.campaigns.get(campaignId))?.status
+  if (!was || !from.includes(was)) return undefined
+  await db.campaigns.update(campaignId, { status: 'active' })
+  return async () => {
+    if ((await db.campaigns.get(campaignId))?.status === 'active') await db.campaigns.update(campaignId, { status: was })
+  }
 }
 
 /**
@@ -214,7 +224,7 @@ export const notStarted = (sessionId: string, clearWorldDate?: boolean) =>
 export function stampStart(s: Session, worldToday?: CalDate) {
   if (s.startedAt) return
   s.startedAt = Date.now()
-  s.playStart = { notes: s.notes, entityIds: [...s.entityIds] }
+  s.playStart = { entityIds: [...s.entityIds] }
   if (worldToday && !s.worldDate) {
     s.worldDate = { ...worldToday }
     s.playStart.datedWorld = true
@@ -231,10 +241,42 @@ export function featuredInPlay(s: Pick<Session, 'entityIds' | 'lectern' | 'start
   return s.entityIds.filter((id) => !planned.has(id) || played.has(id))
 }
 
-/** What the GM wrote in the notes during play (the prep script that was there at the start left out), where that's known. */
-export function notesFromPlay(s: Pick<Session, 'notes' | 'startedAt' | 'playStart'>) {
+/**
+ * A session played before there were two notes boxes, and never started: its one box was the record
+ * of what happened, so that is what its notes count as (they still show under Plan). Sessions made
+ * since always have a "What happened" (empty to begin with), so they never count as this.
+ */
+const playedInOneBox = (s: Pick<Session, 'happened' | 'playedAt' | 'playStart'>) => !!s.playedAt && !s.playStart && s.happened === undefined
+
+/**
+ * What the GM wrote about what happened: the "What happened" box. A session started before there
+ * were two boxes kept everything in one, with a copy of it as it was at the start (playStart.notes):
+ * what was typed after that counts too (all of it, if the start of it was changed since). A session
+ * played in one box before that (see playedInOneBox) counts all its notes.
+ */
+export function notesFromPlay(s: Pick<Session, 'notes' | 'happened' | 'startedAt' | 'playedAt' | 'playStart'>) {
+  if (playedInOneBox(s)) return s.notes
   const before = s.playStart?.notes
-  return s.startedAt && before && s.notes.startsWith(before) ? s.notes.slice(before.length) : s.notes
+  const old = s.startedAt && typeof before === 'string' ? (s.notes.startsWith(before) ? s.notes.slice(before.length) : s.notes) : ''
+  return [old.trim(), s.happened?.trim() ?? ''].filter(Boolean).join('\n\n')
+}
+
+/**
+ * The plan written before the game: the "Plan" box. On a session started before there were two
+ * boxes, only what was there at the start (the rest counts as what happened, see notesFromPlay);
+ * on one played in one box before that, none (it was all what happened).
+ */
+export function planNotes(s: Pick<Session, 'notes' | 'happened' | 'startedAt' | 'playedAt' | 'playStart'>) {
+  if (playedInOneBox(s)) return ''
+  const before = s.playStart?.notes
+  if (!s.startedAt || typeof before !== 'string') return s.notes
+  return s.notes.startsWith(before) ? before : ''
+}
+
+/** Adds a line to the end of a session's "What happened" (a quick note, a roll), for Dexie's modify. */
+export function addHappened(s: Session, line: string) {
+  const was = s.happened ?? ''
+  s.happened = `${was.trimEnd()}${was.trim() ? '\n' : ''}${line}`
 }
 
 /**
@@ -260,6 +302,8 @@ export async function markPlayed(session: Session) {
   const today = localDate()
   const date = !session.date || session.date > today ? today : session.date
   await db.sessions.update(session.id, { playedAt: Date.now(), startedAt: session.startedAt ?? Date.now(), date })
+  // A campaign in Planning has now been played: it's Active (Undo puts it back).
+  const backToPlanning = await campaignUnderWay(session.campaignId, ['planning'])
   const others = (await db.sessions.where({ campaignId: session.campaignId }).toArray()).filter((s) => s.id !== session.id)
   const waiting = inHand(others, today)
   const made = waiting ? undefined : await createNextSession(session.worldId, session.campaignId)
@@ -286,6 +330,7 @@ export async function markPlayed(session: Session) {
   const undo = async () => {
     // All three go back as they were: a session that was never started isn't left "being played".
     await db.sessions.update(session.id, { playedAt: undefined, date: session.date, startedAt: session.startedAt })
+    await backToPlanning?.()
     if (made) {
       const now = await db.sessions.get(made.id)
       if (now && JSON.stringify(now) === JSON.stringify(asMade)) return void (await db.sessions.delete(made.id))

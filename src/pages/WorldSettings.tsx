@@ -6,14 +6,11 @@ import '../more.css'
 import { ThemePicker } from '../theme'
 import { RecentlyDeleted } from '../History'
 import { AiSettingsSection } from '../ai/AiSettingsSection'
-import { forgetCloudTranscripts } from '../ai/TranscriptPanel'
 import { BackupButton } from '../BackupReminder'
 import { DeviceStorage } from '../deviceStorage'
 import { backupStore } from '../backup'
 import { saveFailed, toast } from '../undo'
-import { deleteCloudCopy } from '../cloud/sync'
-import { myRole } from '../cloud/players'
-import { db, deleteWorld, GAME_SYSTEMS, newId, typeLabel, WORLD_COLORS, worldColor, type Asset, type CustomType, type World } from '../db'
+import { db, GAME_SYSTEMS, newId, typeLabel, WORLD_COLORS, worldColor, type Asset, type CustomType, type World } from '../db'
 import { saveFileAsAsset, useBlobUrl, useTemplates, useWorld } from '../hooks'
 import CloudSettings from './CloudSettings'
 import { CalendarEditor } from '../calendar'
@@ -28,6 +25,7 @@ import { useViewMode } from '../viewMode'
 import { starterTemplates } from '../prompts'
 import { WorldPacks } from '../packs/WorldPacks'
 import { OneShotSettings } from '../oneShotPanel'
+import { DeleteWorldButton } from '../worldDelete'
 
 const TABS = [
   ['world', 'World'],
@@ -81,7 +79,7 @@ export default function WorldSettings() {
   // A player's copy of someone else's world has no settings to change.
   if (world.shared) return <Navigate to={worldPath(worldId)} replace />
   // Previewing as a player: settings would show GM-only names, so switch back to change them.
-  if (!isGM) return <Empty>Switch back to the GM view to change the world's settings.</Empty>
+  if (!isGM) return <Empty>World settings are a GM tool. Switch back to the GM view to use them.</Empty>
   const update = (patch: Partial<World>) => db.worlds.update(worldId, { ...patch, updatedAt: Date.now() })
 
   return (
@@ -113,12 +111,15 @@ export default function WorldSettings() {
               <DraftText value={world.name} onCommit={(name) => update({ name })} />
             </label>
             <label>
-              Default game system
+              <span>
+                Default game system <Help topic="gameSystem" />
+              </span>
               <select value={world.system} onChange={(e) => update({ system: e.target.value })}>
                 {GAME_SYSTEMS.map((s) => (
                   <option key={s}>{s}</option>
                 ))}
               </select>
+              <small className="muted">Used where a campaign doesn’t say its own: each campaign’s game system wins (Campaign settings).</small>
             </label>
             <label>
               Description
@@ -167,7 +168,7 @@ export default function WorldSettings() {
         <>
           <section id="settings-backup">
             <h2>
-              Backup <Help topic="backup" />
+              Backups <Help topic="backup" />
             </h2>
             <p>
               {backupStore.read(worldId, 'last')
@@ -223,34 +224,7 @@ export default function WorldSettings() {
 
           <section>
             <h2>Danger zone</h2>
-            <button
-              className="danger"
-              onClick={async () => {
-                const inCloud = !!world.cloud?.enabled
-                const warning = inCloud ? ' This also deletes the cloud copy, so your players, share link and other devices lose it too.' : ''
-                if (prompt(`Type the world's name to delete it forever: ${world.name}.${warning}`) !== world.name) return
-                // Only the owner can delete the cloud copy; a co-GM just removes it from this device.
-                let forGood = !inCloud
-                if (inCloud) {
-                  const role = await myRole(worldId).catch(() => null)
-                  if (role === 'owner') {
-                    try {
-                      await deleteCloudCopy(worldId)
-                      forGood = true
-                    } catch (e) {
-                      if (!confirm(`Couldn't delete the cloud copy (${(e as Error).message}). Delete it from this device only?`)) return
-                    }
-                  } else if (!role && !confirm('You’re offline or signed out, so the cloud copy stays. Delete it from this device only?')) return
-                }
-                // Gone everywhere, so AssemblyAI's copies of transcripts still being made go too. (A world
-                // only taken off this device keeps them, as another device may still pick them up.)
-                if (forGood) await forgetCloudTranscripts(await db.sessions.where({ worldId }).toArray())
-                await deleteWorld(worldId)
-                navigate('/')
-              }}
-            >
-              Delete this world
-            </button>
+            <DeleteWorldButton world={world} />
           </section>
         </>
       )}
@@ -333,7 +307,7 @@ function CustomTypes({ world, update }: { world: World; update: (patch: Partial<
           onChange={(e) => setDraft({ ...draft, many: e.target.value })}
           placeholder={draft.one ? `${draft.one}s` : 'Plural, e.g. Ships'}
         />
-        <button disabled={!draft.one.trim()}>+ Add type</button>
+        <button disabled={!draft.one.trim()}>+ New type</button>
       </form>
     </section>
   )

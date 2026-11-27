@@ -20,7 +20,7 @@ test('a relationship’s type and “Who?”, and the editor’s “Inside” fi
   try {
     const add = page.getByRole('button', { name: 'Add a relationship' })
     if (await add.count()) await add.click()
-    else await page.locator('.relations').getByRole('button', { name: '+ Link' }).click()
+    else await page.locator('.relations').getByRole('button', { name: '+ New link' }).click()
     // The Relationship box: the arrow lists the common ones, typing suggests matches, and any words work.
     const kind = page.getByRole('combobox', { name: 'Relationship' })
     await page.getByRole('button', { name: 'Show common relationships' }).click()
@@ -76,7 +76,7 @@ test('search finds every word in any order, and says what kind of page each resu
   await box.fill('mercy fort')
   const hit = page.locator('.search-results li', { has: page.locator('strong', { hasText: /^\s*Fort Mercy\s*$/ }) }).first()
   await expect(hit).toBeVisible()
-  await expect(hit.locator('.hit-kind')).toHaveText('Location')
+  await expect(hit.locator('.hit-kind')).toHaveText('Place')
   // Words that aren't all on one page find nothing.
   await box.fill('mercy zzqx')
   await expect(page.locator('.search-results')).toContainText('Nothing matches')
@@ -401,7 +401,9 @@ test('hand-written notes: Claude’s pasted reply becomes pages to look over, pl
     expect(hermit).toMatchObject({ visibility: 'gm', type: 'npc', gmNotes: 'Was a Lantern deserter.', parentId: cinderford.id, aliases: ['Old Crowman'], gmTags: ['from my notes'], tags: [] })
     expect(gate).toMatchObject({ visibility: 'players', gmNotes: 'The toll goes to the tab-keepers.', body: 'A rusted gate on the bridge.' })
     expect(night).toMatchObject({ visibility: 'gm', date: '', entityIds: [hermit.id] })
-    expect(night.notes).toContain('12 March')
+    // Notes of a session already played are what happened, not a plan.
+    expect(night.happened).toContain('12 March')
+    expect(night.notes).toBe('')
 
     // Players can see Cinderford, so the added notes sit inside a GM-only block, and its own field isn't doubled.
     const town = await getRecord(page, 'entities', cinderford.id)

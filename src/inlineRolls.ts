@@ -1,7 +1,7 @@
 import { db, type Entity } from './db'
 import { roll } from './dice'
 import type { AppElement } from './Markdown'
-import { sessionStage } from './sessions'
+import { addHappened, sessionStage } from './sessions'
 import { listedEntries, rollOnTable } from './tables'
 
 /**
@@ -83,9 +83,9 @@ export function clickInlineRoll(target: HTMLElement, { tables, showSecrets, isGM
     db.sessions
       .where('id')
       .equals(made.session)
-      .modify((s) => void (s.notes = `${s.notes.trimEnd()}${s.notes.trim() ? '\n' : ''}- ${time} ${made.line}`))
+      .modify((s) => addHappened(s, `- ${time} ${made.line}`))
       .then(() => {
-        toNotes.textContent = '✓ In the notes'
+        toNotes.textContent = '✓ In What happened'
         toNotes.disabled = true
       })
     return true
@@ -113,7 +113,9 @@ export function clickInlineRoll(target: HTMLElement, { tables, showSecrets, isGM
       const b = document.createElement('button')
       b.type = 'button'
       b.className = 'link small roll-to-notes'
-      b.textContent = `Add to #${s.number}’s notes`
+      b.textContent = 'Add to What happened'
+      // Which session's notes, for when it isn't the one on screen.
+      b.title = `Adds it to “What happened” of #${s.number} ${s.title}, with the time`
       toNotesButtons.set(b, { session: s.id, line })
       out.append(' ', b)
     })

@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useGuardedNavigate } from './ai/leave'
-import { db, ENTITY_LABELS, PICKER_TYPES, typeLabel, type Entity, type Session, type World, type WorldMap } from './db'
+import { db, ENTITY_LABELS, newWord, PICKER_TYPES, typeLabel, type Entity, type Session, type World, type WorldMap } from './db'
 import { Help, HELP } from './help'
 import { Ico, TypeIcon } from './icons'
 import { BookOpen, Lock, MagnifyingGlass, MapTrifold, Plus, ArrowRight, Eye, Timer } from '@phosphor-icons/react'
@@ -107,7 +107,8 @@ export function searchWorld(
   for (const s of sessions) {
     const title = `#${s.number} ${s.title}`
     const recap = text(s.recap)
-    const notes = isGM ? text(s.notes) : ''
+    // Both of the GM's notes boxes, Plan and What happened.
+    const notes = isGM ? text([s.notes, s.happened].filter(Boolean).join('\n')) : ''
     const inTitle = title.toLowerCase().includes(q) || (words.length > 1 && allIn(words, [title]))
     const w = recap.toLowerCase().includes(q) || notes.toLowerCase().includes(q) ? q : words.find((x) => !title.toLowerCase().includes(x)) ?? q
     if (inTitle || recap.toLowerCase().includes(q) || notes.toLowerCase().includes(q) || allIn(words, [title, recap, notes]))
@@ -131,6 +132,13 @@ const startsWord = (text: string, q: string) => {
   return false
 }
 
+/** Other words for a kind of page in "new …": what its button says, and what it used to be called. */
+const NEW_WORDS: Partial<Record<Entity['type'], string[]>> = {
+  npc: ['person', 'character'],
+  location: ['location'],
+  shop: ['tavern', 'inn'],
+}
+
 /** Things to do rather than pages to open: "new npc", "clocks", "settings"… */
 function commandHits(
   query: string,
@@ -152,10 +160,12 @@ function commandHits(
       ...(world?.customTypes ?? []).map((c) => ['custom', c.id, c.one] as [Entity['type'], string, string]),
     ]
     for (const [type, custom, one] of types) {
-      const name = one.toLowerCase()
-      if (want && !name.includes(want) && !(type === 'npc' && 'person character'.includes(want))) continue
-      if (!wantsNew && !name.startsWith(q)) continue
-      hits.push({ key: `new:${type}:${custom ?? ''}`, to: '', icon: '+', node: <Ico as={Plus} />, title: `New ${one}`, snippet: 'Make a new page', score: wantsNew ? 120 : 55, run: () => create(type, custom) })
+      // Its name, and the other words a GM might type for it ("new tavern", "location", "person").
+      const words = [one.toLowerCase(), ...(custom ? [] : (NEW_WORDS[type] ?? []))]
+      if (want && !words.some((w) => w.includes(want))) continue
+      // Without "new", the start of its name is enough; another word for it needs three letters ("in" isn't asking for an inn).
+      if (!wantsNew && !words.some((w, i) => w.startsWith(q) && (i === 0 || q.length > 2))) continue
+      hits.push({ key: `new:${type}:${custom ?? ''}`, to: '', icon: '+', node: <Ico as={Plus} />, title: `New ${newWord(one, type)}`, snippet: 'Make a new page', score: wantsNew ? 120 : 55, run: () => create(type, custom) })
     }
   }
   // The GM's Player view switch lives in the sidebar, so search says where it is and does it.

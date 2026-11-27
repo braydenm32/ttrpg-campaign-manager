@@ -1,5 +1,5 @@
 import { ReadAloud } from '../ai/ReadAloud'
-import { binSession } from '../bin'
+import { DeleteSessionButton } from '../deleteAsk'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help, HELP } from '../help'
 import { useEffect, useRef, useState } from 'react'
@@ -8,7 +8,7 @@ import { PrepHelper } from '../ai/PrepHelper'
 import { RecapPanel } from '../ai/RecapPanel'
 import { Highlights } from '../highlights'
 import { SpotlightPanel } from '../ai/Spotlight'
-import { dropCloudTranscripts, TranscriptPanel } from '../ai/TranscriptPanel'
+import { TranscriptPanel } from '../ai/TranscriptPanel'
 import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { db, ENTITY_LABELS, THREAD_STATUS, type Campaign, type Entity, type Recording, type Session, type World } from '../db'
@@ -29,7 +29,8 @@ import { ShowToPlayers, useFinish, useNextSession, WrapProgress, WrapUpChecklist
 import { Ico, TypeIcon } from '../icons'
 import { BookBookmark, BookmarkSimple, CheckCircle, Eye, FlagCheckered, ListChecks, Lock, Microphone, PencilSimple, Play, Spiral, UsersThree, Warning, X } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { localDate, notStarted, sessionFirstTab, startAndTell, type SessionStage } from '../sessions'
+import { localDate, notStarted, sessionFirstTab, type SessionStage } from '../sessions'
+import { StartPlayingButton } from '../startPlaying'
 import { prepCounts } from '../counts'
 import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, jumpTo, useKeepScroll } from '../jump'
@@ -37,6 +38,7 @@ import { removeWithUndo, SavedMark, saving, toast } from '../undo'
 import { showDay } from '../text'
 import { PresentLine } from '../attendance'
 import { MySessionNote } from '../players/SessionNote'
+import { liveSessionOf, setLiveSession } from '../cloud/table'
 
 /**
  * A session. For the GM it's two of the Session area's three stages (the third, Play, is the
@@ -101,7 +103,7 @@ export default function SessionPage() {
   return (
     <div className={`page session-page ${view}`}>
       <SessionStrip {...props} view={view} />
-      {view === 'prep' ? <PrepareView {...props} /> : <WrapUpView {...props} focus={params.get('end') === '1' ? 'finish' : tab === 'recap' ? 'recap' : undefined} review={tab === 'recap' && params.get('show') === '1'} />}
+      {view === 'prep' ? <PrepareView {...props} /> : <WrapUpView key={session.id} {...props} focus={params.get('end') === '1' ? 'finish' : tab === 'recap' ? 'recap' : undefined} review={tab === 'recap' && params.get('show') === '1'} />}
     </div>
   )
 }
@@ -119,7 +121,6 @@ interface ViewProps {
  * saves as you type), what's planned at a glance, and one button for what comes next.
  */
 function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep' | 'wrap' }) {
-  const navigate = useNavigate()
   const w = worldPath(world.id)
   const update = (patch: Partial<Session>) => db.sessions.update(session.id, patch)
   const counts = prepCounts(session.prep)
@@ -137,22 +138,11 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
 
   let action
   if (view === 'prep' && (stage === 'planned' || stage === 'preparing'))
-    action = (
-      <button
-        className="primary"
-        title={HELP.startPlaying}
-        onClick={async () => {
-          await startAndTell(session)
-          navigate(lectern)
-        }}
-      >
-        <Ico as={Play} weight="fill" /> Start playing
-      </button>
-    )
+    action = <StartPlayingButton session={session} />
   else if (stage === 'playing' && view === 'prep')
     action = (
-      <Link className="button primary" to={lectern}>
-        <Ico as={Play} weight="fill" /> Back to the table
+      <Link className="button primary" to={lectern} title={HELP.continuePlaying}>
+        <Ico as={Play} weight="fill" /> Continue
       </Link>
     )
   else if (stage !== 'played')
@@ -212,13 +202,13 @@ function PrepareView({ session, campaign, world, entities }: ViewProps) {
           { id: 'scenes', label: 'Scenes' },
           { id: 'fights', label: 'Fights' },
           { id: 'clues', label: 'Clues' },
-          { id: 'gm-notes', label: 'Notes' },
+          { id: 'gm-notes', label: 'Plan' },
           { id: 'people', label: 'People' },
           { id: 'details', label: 'Details' },
         ]}
       />
       <PrepSheet session={session} entities={entities} worldId={world.id} />
-      <NotesCard session={session} entities={entities} worldId={world.id} id="gm-notes" />
+      <NotesCard session={session} entities={entities} worldId={world.id} id="gm-notes" box="plan" />
       <FeaturedSection session={session} entities={entities} worldId={world.id} />
       <PrepHelper world={world} session={session} entities={entities} />
       <SessionDetails session={session} campaign={campaign} world={world} entities={entities} />
@@ -234,6 +224,8 @@ function PrepareView({ session, campaign, world, entities }: ViewProps) {
 function WrapUpView({ session, campaign, world, entities, stage, focus, review }: ViewProps & { focus?: 'finish' | 'recap'; review?: boolean }) {
   const worldId = world.id
   const update = (patch: Partial<Session>) => saving(db.sessions.update(session.id, patch))
+  // The Plan shows under What happened when there is one; cleared while it's open, it stays, so it can be typed again.
+  const [hadPlan] = useState(() => !!session.notes.trim())
   // Arriving from "End session" or a recap link: go straight to that part.
   const jumped = useRef(false)
   useEffect(() => {
@@ -247,7 +239,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus, review }
         label="Parts of the wrap-up"
         className="phone-only"
         targets={[
-          { id: 'notes', label: 'Notes' },
+          { id: 'notes', label: 'What happened' },
           { id: 'recording', label: 'Recording' },
           { id: 'writeup', label: 'Write-up' },
           ...(session.ledger?.length ? [{ id: 'changed', label: 'What changed' }] : []),
@@ -260,7 +252,8 @@ function WrapUpView({ session, campaign, world, entities, stage, focus, review }
         After the game, top to bottom: your notes, the recording, the write-up, the players’ recap, then mark it played. <Help topic="wrapUp" />
       </p>
       {stage !== 'preparing' && stage !== 'planned' && <WrapProgress world={world} session={session} campaign={campaign} entities={entities} />}
-      <NotesCard session={session} entities={entities} worldId={worldId} id="notes" />
+      <NotesCard session={session} entities={entities} worldId={worldId} id="notes" box="happened" />
+      {(hadPlan || !!session.notes.trim()) && <NotesCard session={session} entities={entities} worldId={worldId} id="plan-notes" box="plan" />}
       <div id="recording">
         <Recorder session={session} />
       </div>
@@ -292,7 +285,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus, review }
               label="💬 Post recap to Discord"
               title={`Session ${session.number}: ${session.title}`}
               text={() => forDiscord(session.recap)}
-              confirmText={session.visibility === 'players' ? undefined : 'This session is still GM only. Post the player recap to Discord anyway? Secret passages are left out.'}
+              confirmText={session.visibility === 'players' ? undefined : 'This session is still GM only. Post the player recap to Discord anyway? GM-only passages are left out.'}
             />
           </div>
         )}
@@ -302,7 +295,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus, review }
             <Markdown text={session.recap} entities={entities} worldId={worldId} showSecrets />
           </details>
         )}
-        {/* From the Desk's "Show to players…" (?tab=recap&show=1): the review is already open. */}
+        {/* From the Desk's "Reveal to players…" (?tab=recap&show=1): the review is already open. */}
         <ShowToPlayers session={session} campaign={campaign} entities={entities} startOpen={review} />
       </section>
       <div id="highlights">
@@ -349,22 +342,31 @@ function WhatChanged({ session, entities, worldId }: { session: Session; entitie
 /** Notes longer than this show folded, with "Show all". */
 const LONG_NOTES = 900
 
+/** The two notes boxes on a session: what each is called, its help tip and what it asks for. */
+const NOTES_BOXES = {
+  plan: { field: 'notes', title: 'Plan', help: 'planNotes', placeholder: 'Your plan for the game: what might happen, who they could meet, what to remember… Links like [[Page name]] work. GM only.' },
+  happened: { field: 'happened', title: 'What happened', help: 'whatHappened', placeholder: 'What happened, who they met, what’s left hanging… Links like [[Page name]] work. GM only.' },
+} as const
+
 /**
- * The session's GM notes: read as a page (long ones folded), or edited in place with Edit. Empty
- * notes open ready to type. The same notes the Lectern's quick notes add to. Only the GM sees them.
+ * One of the session's two notes boxes, "Plan" (written before the game) or "What happened" (during
+ * and after it; the Lectern's quick notes add to it): read as a page (long ones folded), or edited in
+ * place with Edit. An empty box opens ready to type. Only the GM sees them.
  */
-function NotesCard({ session, entities, worldId, id }: { session: Session; entities: Entity[]; worldId: string; id: string }) {
-  const [editing, setEditing] = useState(!session.notes.trim())
+function NotesCard({ session, entities, worldId, id, box }: { session: Session; entities: Entity[]; worldId: string; id: string; box: keyof typeof NOTES_BOXES }) {
+  const { field, title, help, placeholder } = NOTES_BOXES[box]
+  const text = session[field] ?? ''
+  const [editing, setEditing] = useState(!text.trim())
   const [all, setAll] = useState(false)
-  const long = session.notes.length > LONG_NOTES
+  const long = text.length > LONG_NOTES
   return (
     <section className="card wrap-card" id={id}>
       <div className="plan-head">
         <h2>
-          <Ico as={Lock} /> GM notes <Help topic="gmNotes" />
+          <Ico as={Lock} /> {title} <Help topic={help} />
         </h2>
         <SavedMark />
-        {session.notes.trim() && (
+        {text.trim() && (
           <button type="button" className={editing ? 'primary' : ''} onClick={() => setEditing(!editing)}>
             {editing ? 'Done' : <><Ico as={PencilSimple} /> Edit</>}
           </button>
@@ -375,15 +377,15 @@ function NotesCard({ session, entities, worldId, id }: { session: Session; entit
           multiline
           grow
           className="notes-text"
-          aria-label="GM notes"
-          value={session.notes}
-          placeholder="What happened, who they met, what’s left hanging… Links like [[Page name]] work. Only you see these."
-          onCommit={(notes) => saving(db.sessions.update(session.id, { notes }))}
+          aria-label={title}
+          value={text}
+          placeholder={placeholder}
+          onCommit={(v) => saving(db.sessions.update(session.id, box === 'plan' ? { notes: v } : { happened: v }))}
         />
       ) : (
         <>
           <div className={`notes-view ${long && !all ? 'folded' : ''}`}>
-            <Markdown text={session.notes} entities={entities} worldId={worldId} showSecrets />
+            <Markdown text={text} entities={entities} worldId={worldId} showSecrets />
           </div>
           {long && (
             <button type="button" className="link show-all" onClick={() => setAll(!all)}>
@@ -442,31 +444,25 @@ function SessionDetails({ session, campaign, world, entities }: Omit<ViewProps, 
         {session.startedAt && !session.playedAt && (
           <button
             type="button"
-            title="Pressed Start playing by mistake? This puts the session back to being prepared. Nothing you wrote is lost."
+            title={live?.sessionId === session.id ? 'Stop the recording first' : 'Pressed Start playing by mistake? This puts the session back to being prepared, and stops showing it live to players. Nothing you wrote is lost.'}
             disabled={live?.sessionId === session.id}
             onClick={async () => {
               const { startedAt, playStart, worldDate } = session
+              // A session that isn't being played isn't live to players either.
+              const wasLive = liveSessionOf(world.id) === session.id
               await notStarted(session.id)
-              toast(`#${session.number} is not started any more.`, () => db.sessions.update(session.id, { startedAt, playStart, worldDate }))
+              if (wasLive) setLiveSession(world.id, undefined)
+              toast(`#${session.number} is not started any more${wasLive ? ', and no longer live to players' : ''}.`, async () => {
+                await db.sessions.update(session.id, { startedAt, playStart, worldDate })
+                if (wasLive) setLiveSession(world.id, session.id)
+              })
             }}
           >
             Not started after all
           </button>
         )}
         <span className="grow" />
-        <button
-          className="danger"
-          disabled={live?.sessionId === session.id}
-          title={live?.sessionId === session.id ? 'Stop the recording first' : undefined}
-          onClick={async () => {
-            if (!confirm('Delete this session and its recordings? You can restore it from World settings for a month.')) return
-            await dropCloudTranscripts([session])
-            await binSession(session.id)
-            navigate(campaign ? `${w}/c/${campaign.id}` : w)
-          }}
-        >
-          Delete session
-        </button>
+        <DeleteSessionButton session={session} campaign={campaign} recording={live?.sessionId === session.id} onDeleted={() => navigate(campaign ? `${w}/c/${campaign.id}` : w)} />
       </div>
     </section>
   )

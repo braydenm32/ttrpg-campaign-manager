@@ -339,7 +339,8 @@ export function mergeRows(base: Record<string, unknown>, mine: Record<string, un
 const PASSING = new Set(['lectern', 'updatedAt'])
 /** Parts of a session, board or world in plain words, for the sync note. */
 const PART_NAMES: Record<string, string> = {
-  notes: 'notes',
+  notes: 'plan',
+  happened: 'what happened',
   prep: 'prep',
   recap: 'recap',
   cards: 'cards',
@@ -968,7 +969,7 @@ async function syncAll() {
       }
     }
     const gone = (await db.worlds.toArray()).filter((w) => syncsFor(w, userId) && w.cloud!.gone)
-    for (const w of gone) notes.push(`“${w.name}”: its cloud copy is gone (deleted on another device, or you’re no longer its GM). Open its Cloud settings to decide what to do.`)
+    for (const w of gone) notes.push(`“${w.name}”: its cloud copy is gone (deleted on another device, or you’re no longer its GM). Open its World settings › Players and sharing to decide what to do.`)
     if (problems.length) throw new Error(problems.join(' '))
     retries = 0
     // Problems that don't stop syncing stay on show until they're sorted, rather than "Synced" hiding them.

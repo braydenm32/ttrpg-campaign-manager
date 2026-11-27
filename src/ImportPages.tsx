@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { markImported } from './importedMark'
 import { ENTITY_LABELS, type EntityType } from './db'
 import { Help } from './help'
 import { applyImport, exportMarkdown, planImport, readFiles, type ImportPlan, type ImportSource } from './importers'
@@ -108,8 +109,10 @@ export function ImportPages({ worldId, system, compact }: { worldId: string; sys
                 setBusy('Importing…')
                 try {
                   const n = await applyImport(worldId, plan, skipExisting)
+                  // Getting started's first step ticks on a real import.
+                  if (n > 0) markImported(worldId)
                   setDone(`✓ Added ${n} page${n === 1 ? '' : 's'}.`)
-                  // Getting started goes away once a world has pages, so say it where it stays on screen too.
+                  // In Getting started the importer may be folded away afterwards, so say it where it stays on screen too.
                   if (compact) toast(`Added ${n} page${n === 1 ? '' : 's'}. They’re GM only until you reveal them.`)
                   setPlan(undefined)
                 } catch (e) {

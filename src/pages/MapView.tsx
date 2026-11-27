@@ -1,4 +1,5 @@
-import { binMap } from '../bin'
+import { binPin, deletedNote } from '../bin'
+import { DeleteMapButton } from '../deleteAsk'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import L from 'leaflet'
@@ -6,7 +7,9 @@ import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Circle, ImageOverlay, MapContainer, Marker, Polygon, Polyline, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { DraftText, Empty, VisibilityBadge } from '../components'
+import { DraftText, Empty, Modal, VisibilityBadge } from '../components'
+import { ShowMapButton } from '../showing'
+import '../liveMap.css'
 import { SeenMark, useReview, VisibilityControl } from '../reveal'
 import { sessionInHand } from '../threads'
 import { goToScene } from '../sceneCards'
@@ -20,9 +23,9 @@ import { StatusBadge, statusIcon } from '../status'
 import { SecretTextarea } from '../SecretTextarea'
 import { SecretNamesWarning } from '../SecretNamesWarning'
 import { useViewMode } from '../viewMode'
-import { circleShape, fogOverlay, pinRevealed, playersImageId, rectShape, removeFog, renderPlayerFog } from '../fog'
+import { circleShape, fogChangedHere, fogOverlay, pinRevealed, playersImageId, rectShape, removeFog, renderPlayerFog } from '../fog'
 import { Ico, TypeIcon } from '../icons'
-import { CloudFog, Crosshair, DoorOpen, DownloadSimple, Eye, HandPalm, ListNumbers, MapPin, NavigationArrow, PencilSimple, Play, Ruler, SlidersHorizontal, Tag, Toolbox } from '@phosphor-icons/react'
+import { CloudFog, Crosshair, DoorOpen, DownloadSimple, Eye, HandPalm, ListNumbers, Lock, MapPin, NavigationArrow, PencilSimple, Play, Printer, Ruler, SlidersHorizontal, Tag, Toolbox } from '@phosphor-icons/react'
 import { MeasureBar, ScaleSetting } from '../mapMeasure'
 import { saveRoute } from '../journey'
 import { gmIdOf, sendPing, useTable, type MapPing } from '../cloud/table'
@@ -124,6 +127,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const [showSettings, setShowSettings] = useState(false)
   const [fogBar, setFogBar] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [printing, setPrinting] = useState(false)
   const exportDrawing = useMemo(() => (map.drawing ? toClassic(map.drawing) : undefined), [map.drawing])
   const [fogMode, setFogMode] = useState<'reveal' | 'hide'>('reveal')
   const [fogCorner, setFogCorner] = useState<[number, number]>()
@@ -217,6 +221,8 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const addFogShapes = (shapes: ReturnType<typeof rectShape>[]) => {
     const group = newId()
     const added = shapes.length > 1 ? shapes.map((s, i) => ({ ...s, id: `${group}:${i}` })) : shapes
+    // This device keeps the map live on players' screens while it's shown (see fogChangedHere).
+    fogChangedHere(map.id)
     return db.maps
       .where('id')
       .equals(map.id)
@@ -334,6 +340,22 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
               </button>
             )}
           </div>
+          {/* On every map: put it on players' screens (the GM), and print it (a player prints their own copy). */}
+          {isGM && !world?.shared && (
+            <>
+              <ShowMapButton map={map} world={world} />
+              <Help topic="liveMap" />
+            </>
+          )}
+          {isGM ? (
+            <button type="button" onClick={() => setPrinting(true)} title="Print this map, or save it as a PDF: your copy or the players’">
+              <Ico as={Printer} /> Print
+            </button>
+          ) : (
+            <Link className="button" to={`${worldPath(worldId)}/print/m/${map.id}?copy=players`} title="Print this map, or save it as a PDF">
+              <Ico as={Printer} /> Print
+            </Link>
+          )}
           {isGM && (
             <>
             <div className="segmented">
@@ -408,6 +430,29 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
         <div className="map-toolbar measure-bar">
           <span className="small">Click the map to point at a spot. Everyone looking at this map sees it for a few seconds.</span> <Help topic="ping" />
         </div>
+      )}
+      {isGM && printing && (
+        <Modal title="Print this map" onClose={() => setPrinting(false)}>
+          <div className="print-choice">
+            <p className="small">
+              Which copy? <Help topic="printMap" />
+            </p>
+            <Link className="button" to={`${worldPath(worldId)}/print/m/${map.id}`}>
+              <Ico as={Lock} />
+              <span>
+                GM copy
+                <small className="muted">Your own picture{map.numbers ? ', with every numbered pin and the whole key' : ''}. Not for handing out.</small>
+              </span>
+            </Link>
+            <Link className="button primary" to={`${worldPath(worldId)}/print/m/${map.id}?copy=players`}>
+              <Ico as={Eye} />
+              <span>
+                Player copy
+                <small>What players may see: {fog ? 'the fog stays on, and ' : ''}GM-only pins and pieces are left out.</small>
+              </span>
+            </Link>
+          </div>
+        </Modal>
       )}
       {isGM && exporting && exportDrawing && (
         <ExportMap
@@ -851,13 +896,15 @@ function FogBar({
   onUndoPoint: () => void
 }) {
   const fog = map.fog
-  const setFog = (patch: Partial<NonNullable<WorldMap['fog']>>) =>
-    db.maps
+  const setFog = (patch: Partial<NonNullable<WorldMap['fog']>>) => {
+    fogChangedHere(map.id)
+    return db.maps
       .where('id')
       .equals(map.id)
       .modify((m) => {
         m.fog = { on: true, shapes: [], ...m.fog, ...patch }
       })
+  }
   const all = { id: 'all', mode: 'reveal' as const, points: [[0, 0], [0, map.width], [map.height, map.width], [map.height, 0]] as [number, number][] }
   const { ask, dialog } = useReview()
   // What Undo took off, for Redo (each step one shape, or the shapes made together, like a room or a
@@ -885,14 +932,15 @@ function FogBar({
     if (!fog) return
     const was = fog.shapes
     await setFog({ shapes: [] })
-    toast('The whole map is covered again.', () =>
-      db.maps
+    toast('The whole map is covered again.', () => {
+      fogChangedHere(map.id)
+      return db.maps
         .where('id')
         .equals(map.id)
         .modify((m) => {
           if (m.fog) m.fog.shapes = [...was, ...m.fog.shapes]
-        }),
-    )
+        })
+    })
   }
   const uncoverAll = async () => {
     const ok = await ask({
@@ -904,14 +952,15 @@ function FogBar({
     if (!ok || !fog) return
     const shape = { ...all, id: newId() }
     await setFog({ shapes: [...fog.shapes, shape] })
-    toast('The whole map is uncovered.', () =>
-      db.maps
+    toast('The whole map is uncovered.', () => {
+      fogChangedHere(map.id)
+      return db.maps
         .where('id')
         .equals(map.id)
         .modify((m) => {
           if (m.fog) m.fog.shapes = m.fog.shapes.filter((s) => s.id !== shape.id)
-        }),
-    )
+        })
+    })
   }
   return (
     <div className="map-toolbar fog-bar">
@@ -1211,6 +1260,7 @@ function PinEditor({ pin, entities, maps, categories, onClose, onDone }: { pin: 
       <div className="row">
         <VisibilityControl
           compact
+          fact
           value={pin.visibility}
           onChange={(v) => update({ visibility: v })}
           name={`the pin “${pin.label || entity?.name || 'Pin'}”`}
@@ -1295,9 +1345,10 @@ function PinEditor({ pin, entities, maps, categories, onClose, onDone }: { pin: 
         <button
           className="danger"
           onClick={async () => {
-            if (!confirm('Delete this pin?')) return
-            await db.pins.delete(pin.id)
+            // Gone at once, with Undo; Recently deleted keeps it for a month, to go back on the same spot.
+            const gone = await binPin(pin.id)
             onClose()
+            if (gone) deletedNote(`${pin.kind === 'region' ? 'Region' : 'Pin'} “${gone.name}” deleted.`, gone.bin)
           }}
         >
           Delete
@@ -1354,16 +1405,7 @@ function MapSettings({ map, entities, onClose, onDeleted }: { map: WorldMap; ent
         Show numbers, with a key <Help topic="mapNumbers" />
       </label>
       <small className="muted">For dungeons and towns: each pin and linked piece gets a number on the map, and Key lists them. Players see only the ones they can see.</small>
-      <button
-        className="danger"
-        onClick={async () => {
-          if (!confirm(`Delete map "${map.name}" and all its pins?`)) return
-          await binMap(map.id)
-          onDeleted()
-        }}
-      >
-        Delete map
-      </button>
+      <DeleteMapButton map={map} onDeleted={onDeleted} />
     </div>
   )
 }

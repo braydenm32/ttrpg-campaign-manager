@@ -48,10 +48,13 @@ export default function SafetyPage() {
   return (
     <div className="page more-screen">
       <header className="page-header">
-        <h1>
-          <Ico as={Shield} /> {isGM ? 'Safety tools' : 'Table rules'} <Help topic={isGM ? 'safety' : 'tableRules'} />
-        </h1>
-        {!isGM && <p className="muted">What your table agreed before playing, so the game stays fun for everyone.</p>}
+        <div>
+          <h1>
+            <Ico as={Shield} /> Table rules <Help topic={isGM ? 'safety' : 'tableRules'} />
+          </h1>
+          <p className="muted">Safety tools: lines, veils and the X-card</p>
+          {!isGM && <p className="muted small">What your table agreed before playing, so the game stays fun for everyone.</p>}
+        </div>
       </header>
       {memberOf && safety.xcard && <XCardButton cloudId={memberOf} />}
       {!isGM && !memberOf && safety.xcard && <p className="muted small">Players who joined have an X-card button here.</p>}

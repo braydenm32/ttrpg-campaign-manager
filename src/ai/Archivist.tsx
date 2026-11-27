@@ -6,6 +6,7 @@ import { db, type Entity, type Session, type World } from '../db'
 import { Help } from '../help'
 import '../more.css'
 import { useVisibleEntities, useWorld } from '../hooks'
+import { useGameSystem } from '../gameSystem'
 import { Ico } from '../icons'
 import { Markdown, findBacklinks } from '../Markdown'
 import { worldPath } from '../paths'
@@ -32,7 +33,7 @@ export default function Archivist() {
   const [params, setParams] = useSearchParams()
   const tab = params.get('tab') === 'check' ? 'check' : 'ask'
   if (!world) return <Skeleton />
-  if (!isGM) return <Empty>The Archivist is for the GM.</Empty>
+  if (!isGM) return <Empty>The Archivist is a GM tool. Switch back to the GM view to use it.</Empty>
   return (
     <div className="page archivist more-screen">
       <header className="page-header">
@@ -56,7 +57,7 @@ export default function Archivist() {
 
 // ---------- Ask your world ----------
 
-function askSystem(world: World, entities: Entity[], sessions: Session[], copy?: { question: string }) {
+function askSystem(world: World, entities: Entity[], sessions: Session[], copy?: { question: string }, game?: string) {
   const found = copy ? findPages(copy.question, entities, 20) : []
   return `You are the Archivist for a tabletop roleplaying game master's world. The GM asks you questions about their own notes.
 
@@ -67,7 +68,7 @@ How to answer:
 - Write the name of any page you mention exactly as listed, inside double square brackets like [[Name]], so it links.
 - Say when something is a secret the players don't know.
 
-${worldHeader(world)}
+${worldHeader(world, game)}
 ${MARKUP_NOTE}
 
 Every page in the world (name, kind, other names, summary):
@@ -95,6 +96,7 @@ const NEW_CONVERSATION: Conversation = { turns: [], history: [], spent: 0 }
 const ASK_MODEL = QUICK_MODEL
 
 export function AskWorld({ world, entities, sessions }: { world: World; entities: Entity[]; sessions: Session[] }) {
+  const game = useGameSystem(world)
   const settings = useAiSettings()
   const key = settings.anthropicKey.trim()
   // The conversation and the question being typed outlive this panel, and so does a question
@@ -126,7 +128,7 @@ export function AskWorld({ world, entities, sessions }: { world: World; entities
         const res = await askClaude({
           apiKey: key,
           model: ASK_MODEL,
-          system: askSystem(world, entities, sessions),
+          system: askSystem(world, entities, sessions, undefined, game),
           messages: [...talk.history, { role: 'user', content: q }],
           tools: worldTools(world, entities, sessions),
           describe: describeStep,
@@ -148,14 +150,14 @@ export function AskWorld({ world, entities, sessions }: { world: World; entities
 
   const whole = () => {
     const q = question.trim()
-    return `${askSystem(world, entities, sessions, { question: q })}\n\nThe GM asks: ${q}`
+    return `${askSystem(world, entities, sessions, { question: q }, game)}\n\nThe GM asks: ${q}`
   }
   const onOpened = (opened: Opened) => {
     setError('')
     setCopied({ q: question.trim(), opened })
   }
 
-  const firstCost = claudeCost(ASK_MODEL, estimateTokens(askSystem(world, entities, sessions)) * 1.4, 800)
+  const firstCost = claudeCost(ASK_MODEL, estimateTokens(askSystem(world, entities, sessions, undefined, game)) * 1.4, 800)
 
   return (
     <section className="ask-world">
@@ -349,6 +351,7 @@ function neighbours(page: Entity, entities: Entity[]) {
 }
 
 function Continuity({ world, entities, sessions }: { world: World; entities: Entity[]; sessions: Session[] }) {
+  const game = useGameSystem(world)
   const [result, setResult] = useState<CheckResult | undefined>(() => loadCheck(world.id))
   const [scope, setScope] = useState<'all' | 'page'>('all')
   const [pageName, setPageName] = useState('')
@@ -369,7 +372,7 @@ Write each problem as one bullet starting with a short bold title, then say what
 
 Write the name of every page you mention inside double square brackets exactly as written, so it links. Put the most serious problems first. Write nothing before or after the list. If you find none, write exactly: ${NONE}
 
-${worldHeader(world)}
+${worldHeader(world, game)}
 ${MARKUP_NOTE}`
     const prompt = page
       ? `Check ${page.name} against the pages around it.\n\n${pages.map((e) => pageText(e, world, entities)).join('\n\n---\n\n')}\n\nThe rest of the world, for reference (read any of it with read_pages if you need to):\n${worldIndex(world, entities)}`

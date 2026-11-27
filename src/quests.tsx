@@ -80,8 +80,8 @@ function KnownToggle({ known, onChange }: { known?: boolean; onChange: (v: boole
   return (
     <button
       className={`ghost small known-toggle ${known ? 'on' : ''}`}
-      title={known ? 'Players know this. Click to hide it from them' : 'Only you know this. Click to tell the players'}
-      aria-label={known ? 'Players know this' : 'GM only'}
+      title={known ? 'Players know this. Click to make it GM only' : 'GM only. Click to reveal it to the players'}
+      aria-label={known ? 'Players know' : 'GM only'}
       onClick={() => onChange(!known)}
     >
       <Ico as={known ? Eye : EyeSlash} />
@@ -132,8 +132,8 @@ function Objectives({ quest, list, isGM }: { quest: Entity; list: QuestObjective
           }}
         >
           <input value={text} onChange={(e) => setText(e.target.value)} placeholder="A step, e.g. Find the missing caravan" aria-label="New objective" />
-          <label className="row small" title="A hidden step stays GM-only until you click its eye">
-            <input type="checkbox" checked={hidden} onChange={(e) => setHidden(e.target.checked)} /> Hidden
+          <label className="row small" title="A GM-only step stays yours until you click its eye to reveal it">
+            <input type="checkbox" checked={hidden} onChange={(e) => setHidden(e.target.checked)} /> GM only
           </label>
           <button disabled={!text.trim()}>Add</button>
         </form>
@@ -263,7 +263,7 @@ function Rewards({ quest, list, isGM, entities, worldId }: { quest: Entity; list
           <button disabled={!text.trim() && !itemId}>Add</button>
         </form>
       )}
-      {isGM && list.length > 0 && <p className="muted small">New rewards start hidden from players. Coins written like “200 gp” go into the party’s purse when you give it.</p>}
+      {isGM && list.length > 0 && <p className="muted small">New rewards start GM only. Coins written like “200 gp” go into the party’s purse when you give it.</p>}
     </div>
   )
 }

@@ -6,9 +6,9 @@ import { db, type Campaign, type Entity, type Session, type World } from './db'
 import { Help } from './help'
 import { featuredInPlay, inHand, markPlayed, notesFromPlay, unmarkPlayed } from './sessions'
 import { Ico } from './icons'
-import { CheckCircle, Eye, EyeSlash, FlagCheckered, ListChecks } from '@phosphor-icons/react'
+import { Broadcast, CheckCircle, Eye, EyeSlash, FlagCheckered, ListChecks } from '@phosphor-icons/react'
 import { worldPath } from './paths'
-import { setLiveSession, useLiveSession } from './cloud/table'
+import { liveEndedHere, liveSessionOf, setLiveSession, useLiveSession } from './cloud/table'
 import { useLiveRecording } from './recordingStore'
 import { prepCounts } from './counts'
 import { stripSecrets } from './Markdown'
@@ -18,19 +18,23 @@ import { jumpTo } from './jump'
 import { WhoWasThere } from './attendance'
 import { offerGroupPost } from './groupPost'
 import { pauseGameClock } from './gameClock'
-import { clearPlayersScreens } from './showing'
+import { clearPlayersScreens, onScreensNow } from './showing'
 import { ResetButton } from './oneShotPanel'
 import { oneShotOf } from './oneShot'
 
 /**
- * "Wrap up" while this session is live: the live link to players ends and what's on their screens
- * (the in-game clock too) comes off, with Undo. The same from the Desk and the Lectern.
+ * "End the live session", the first step of the Wrap up checklist (and the only place it happens
+ * besides "Mark as played"): the live link to players ends and what's on their screens (the in-game
+ * time too) comes off, with Undo. No button called "Wrap up" does this by itself: they only open
+ * the checklist.
  */
-export async function endLiveSession(worldId: string, sessionId: string) {
-  setLiveSession(worldId, undefined)
+async function endLiveSession(worldId: string, sessionId: string) {
+  const wasLive = liveSessionOf(worldId) === sessionId
+  if (wasLive) setLiveSession(worldId, undefined)
   const unclear = await clearPlayersScreens(worldId)
-  toast(`The live session has ended.${unclear ? ' Players’ screens are clear.' : ''}`, async () => {
-    setLiveSession(worldId, sessionId)
+  if (!wasLive && !unclear) return
+  toast(wasLive ? `The live session has ended.${unclear ? ' Players’ screens are clear.' : ''}` : 'Players’ screens are clear.', async () => {
+    if (wasLive) setLiveSession(worldId, sessionId)
     await unclear?.()
   })
 }
@@ -62,7 +66,7 @@ export function useFinish(session: Session) {
       const unclear = sure ? undefined : await clearPlayersScreens(session.worldId)
       const n = (count: number, one: string) => `${count} ${one}${count === 1 ? '' : 's'}`
       const brought = [carried.clues ? n(carried.clues, 'unfound clue') : '', carried.scenes ? n(carried.scenes, 'unplayed scene') : ''].filter(Boolean).join(' and ')
-      toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}${brought ? `, with ${brought} carried over` : ''}.${unclear ? ' Players’ screens are clear.' : ''}${paused ? ' The in-game clock is paused.' : ''}`, async () => {
+      toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}${brought ? `, with ${brought} carried over` : ''}.${unclear ? ' Players’ screens are clear.' : ''}${paused ? ' The in-game time is paused.' : ''}`, async () => {
         await undo()
         await unclear?.()
         if (wasLive) setLiveSession(session.worldId, session.id)
@@ -87,7 +91,7 @@ const words = (text: string) => text.split(/\s+/).filter(Boolean).length
 /**
  * Showing a session to players, with a short look at what they'll get first: the title, the recap
  * (secret passages left out), highlights and who featured. Hiding it again is one tap, with Undo.
- * Every "Show to players" goes through this review, the Desk's too.
+ * Every "Reveal to players" goes through this review, the Desk's too.
  */
 export function ShowToPlayers({
   session,
@@ -98,7 +102,7 @@ export function ShowToPlayers({
   session: Session
   campaign: Campaign | null | undefined
   entities: Entity[]
-  /** Open with the review already showing (the Desk's "Show to players…" lands here). */
+  /** Open with the review already showing (the Desk's "Reveal to players…" lands here). */
   startOpen?: boolean
 }) {
   const [review, setReview] = useState(startOpen)
@@ -113,7 +117,7 @@ export function ShowToPlayers({
           type="button"
           onClick={async () => {
             await set('gm')
-            toast(`#${session.number} is hidden from players again.`, () => set('players'))
+            toast(`#${session.number} is GM only again.`, () => set('players'))
           }}
         >
           <Ico as={EyeSlash} /> Hide from players
@@ -125,7 +129,7 @@ export function ShowToPlayers({
       <div className="row wrap show-players">
         <span className="chip">🔒 GM only</span>
         <button type="button" onClick={() => setReview(true)}>
-          <Ico as={Eye} /> Show to players…
+          <Ico as={Eye} /> Reveal to players…
         </button>
       </div>
     )
@@ -141,11 +145,11 @@ export function ShowToPlayers({
         <li>
           the title “#{session.number} {session.title}”{session.date && `, ${session.playedAt ? 'played' : 'on'} ${showDay(session.date)}`}
         </li>
-        <li>{recap ? `the recap, ${words(recap)} words (secret passages left out)` : 'no recap yet: it shows here once you write one'}</li>
+        <li>{recap ? `the recap, ${words(recap)} words (GM-only passages left out)` : 'no recap yet: it shows here once you write one'}</li>
         {highlights > 0 && <li>{highlights === 1 ? '1 highlight' : `${highlights} highlights`}</li>}
         {featured.length > 0 && <li>who featured, only pages they can already see: {featured.slice(0, 6).map((e) => e.name).join(', ')}{featured.length > 6 && ` and ${featured.length - 6} more`}</li>}
       </ul>
-      <p className="muted small">Your GM notes, the plan, the recording and its transcript stay yours.</p>
+      <p className="muted small">Your notes (Plan and What happened), the prep, the recording and its transcript stay yours.</p>
       {campaign?.visibility === 'gm' && (
         <p className="notice small">The campaign “{campaign.name}” is still GM only, so players won’t see this session until you reveal the campaign too (on All sessions).</p>
       )}
@@ -160,7 +164,7 @@ export function ShowToPlayers({
             offerGroupPost(await db.worlds.get(session.worldId), `The recap of #${session.number} ${session.title} is up in the Common Room.`)
           }}
         >
-          <Ico as={Eye} /> Show it to players
+          <Ico as={Eye} /> Reveal to players
         </button>
         <button type="button" onClick={() => setReview(false)}>
           Not yet
@@ -173,8 +177,47 @@ export function ShowToPlayers({
 type WrapStep = { done: boolean; label: ReactNode; detail?: ReactNode; optional?: boolean }
 type WrapProps = { world: World; session: Session; campaign: Campaign | null | undefined; entities: Entity[] }
 
-/** What's done and what's left at the end of a session, and what carries over to the next. */
-function wrapSteps({ world, session, campaign, entities }: WrapProps) {
+/**
+ * The first step, "End the live session": to do while players still see this session as being played
+ * or something is still on their screens; done once neither is so. A session that never went live
+ * (and has nothing up) has nothing to end, so the step isn't counted. Not this session's business
+ * when another one is live, or once it's been marked played. The live link belongs to the tab that
+ * went live: a session that went live (Session.liveAt) but not from this tab, and wasn't ended here,
+ * may still be live on another device, so the step says so without counting it.
+ */
+function liveStep(world: World, session: Session, live: string | undefined): WrapStep {
+  const liveNow = live === session.id
+  const up = (live && !liveNow) || session.playedAt ? '' : onScreensNow(world)
+  if (!liveNow && !up) {
+    if (!session.liveAt) return { done: true, optional: true, label: 'Not live to players this time' }
+    if (session.playedAt || liveEndedHere(session.id)) return { done: true, label: 'The live session has ended' }
+    return {
+      done: false,
+      optional: true,
+      label: 'Live from another device',
+      detail: <p>This session went live from another device or tab. If players still see it as being played, end it there: Wrap up on that device, or Stop at its Lectern.</p>,
+    }
+  }
+  const label = liveNow ? 'End the live session' : 'Clear players’ screens'
+  return {
+    done: false,
+    label,
+    detail: (
+      <>
+        <p>
+          {liveNow ? `Players’ Common Room still shows #${session.number} as being played.${up ? ` On their screens: ${up}.` : ''}` : `Still on players’ screens: ${up}.`}{' '}
+          {liveNow ? 'Ending it clears their screens too, the in-game time as well.' : 'This takes it off, the in-game time as well.'} Handouts stay in Handouts.
+        </p>
+        <button type="button" className="primary" onClick={() => endLiveSession(world.id, session.id)}>
+          <Ico as={Broadcast} /> {label}
+        </button>
+      </>
+    ),
+  }
+}
+
+/** What's done and what's left at the end of a session, and what carries over to the next. `live` is the session that's live to players now. */
+function wrapSteps({ world, session, campaign, entities, live }: WrapProps & { live: string | undefined }) {
   const recorded = session.recordings.length
   const transcribed = session.recordings.filter((r) => r.transcript && !r.transcript.pending).length
   const transcribing = session.recordings.some((r) => r.transcript?.pending)
@@ -183,7 +226,7 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
   const inPlay = new Set(featuredInPlay(session))
   const featured = entities.filter((e) => inPlay.has(e.id)).length
   const linked = entities.filter((e) => session.entityIds.includes(e.id)).length
-  // What was written once play began: the prep script in the notes doesn't count.
+  // What happened, not the plan written before the game.
   const notes = notesFromPlay(session).trim()
   const jump = (id: string, text: ReactNode) => (
     <button type="button" className="link" onClick={() => jumpTo(id)}>
@@ -191,10 +234,11 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
     </button>
   )
   const steps: WrapStep[] = [
+    liveStep(world, session, live),
     {
       done: !!notes,
-      label: notes ? 'GM notes written' : 'Jot down what happened',
-      detail: !notes && jump('notes', 'Your notes, at the top'),
+      label: notes ? 'What happened is written down' : 'Write down what happened',
+      detail: !notes && jump('notes', 'In “What happened”, at the top'),
     },
     {
       // Nothing recorded is nothing to do: it isn't counted as a step done.
@@ -253,7 +297,8 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
 
 /** “3 of 7 done” and what's next, as a slim line beside the title; the checklist itself is at the end. */
 export function WrapProgress(props: WrapProps) {
-  const steps = wrapSteps(props).steps.filter((s) => !s.optional)
+  const live = useLiveSession(props.world.id)
+  const steps = wrapSteps({ ...props, live }).steps.filter((s) => !s.optional)
   const done = steps.filter((s) => s.done).length
   const left = steps.find((s) => !s.done)
   return (
@@ -268,15 +313,17 @@ export function WrapProgress(props: WrapProps) {
 }
 
 /**
- * The end of Wrap up: what's done and what's left (each with a jump to its part of the page), then
- * "Mark as played", after which it shows the next session.
+ * The Wrap up checklist, at the end of Wrap up: what's done and what's left (each with a jump to its
+ * part of the page), from "End the live session" to "Mark as played", after which it shows the next
+ * session. Every button called "Wrap up" opens this and does nothing else.
  */
 export function WrapUpChecklist(props: WrapProps & { played: boolean }) {
   const { world, session, played } = props
   const { finish, busy, blocked } = useFinish(session)
   const next = useNextSession(session)
   const w = worldPath(world.id)
-  const { steps, carry, carryOn } = wrapSteps(props)
+  const live = useLiveSession(world.id)
+  const { steps, carry, carryOn } = wrapSteps({ ...props, live })
 
   return (
     <section className="card end-session" id="finish">

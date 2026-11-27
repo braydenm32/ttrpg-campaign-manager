@@ -1,4 +1,4 @@
-import { binFile } from '../bin'
+import { DeleteFileButton } from '../deleteAsk'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import '../more.css'
@@ -213,18 +213,7 @@ function AssetCard({
               ⬇
             </a>
           )}
-          <button
-            className="danger"
-            aria-label={`Delete ${asset.name}`}
-            title="Delete (it goes to Recently deleted for a month)"
-            onClick={async () => {
-              const usedBy = await db.maps.filter((m) => m.imageId === asset.id).count()
-              if (!confirm(usedBy ? 'This file is used as a map image. Delete anyway?' : `Delete "${asset.name}"?`)) return
-              await binFile(asset.id)
-            }}
-          >
-            🗑
-          </button>
+          <DeleteFileButton asset={asset} />
         </div>
       </div>
     </div>

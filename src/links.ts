@@ -20,6 +20,38 @@ export function nameIndex(entities: Entity[]) {
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 /**
+ * The names of GM-only pages inside a short piece of plain text players will read at once (the name
+ * of an item handed to the party, say), written as a [[link]] or not: "The Masked Duke" in "Letter
+ * from the Masked Duke". Whole names only, of three letters or more, by any of a page's names, in
+ * any capitals. Nicknames are GM only on every page, so a page players can see counts too when one
+ * of its longer nicknames is there ("The Hollow King" for Lord Varric): then the nickname is named.
+ */
+export function secretNamesInPlain(text: string, pages: Entity[]) {
+  const t = text.toLowerCase()
+  const found = new Map<string, string>()
+  for (const p of pages) {
+    if (p.template || found.has(p.id)) continue
+    const hidden = p.visibility === 'gm'
+    const own = p.name.trim().toLowerCase()
+    for (const n of hidden ? [p.name, ...(p.aliases ?? [])] : (p.aliases ?? [])) {
+      const name = n.trim().toLowerCase()
+      if (name.length < 3) continue
+      // On a page players can see, its own name is no secret, and nor is a short nickname that's a
+      // link helper ("coin", "the lantern"): like the leak check, only nicknames of two words or
+      // more and 12 letters or more count (tests/lib/secrets.ts).
+      if (!hidden && (name === own || name.length < 12 || name.split(/\s+/).length < 2)) continue
+      // Not \b: it only knows plain English letters, so "Élodie" would never match.
+      const whole = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(name)}(?![\\p{L}\\p{N}])`, 'u')
+      if (whole.test(t)) {
+        found.set(p.id, hidden ? p.name : `${n.trim()} (a nickname of ${p.name})`)
+        break
+      }
+    }
+  }
+  return [...found.values()]
+}
+
+/**
  * Rewrites [[Old]] and [[Old|label]] links (unless links is false), and a character's names in
  * :::for lines, in one piece of text. Only whole names in a :::for list change: "from" becomes
  * "to", and the first name "firstFrom" (when given) becomes "firstTo".
@@ -99,6 +131,7 @@ export async function renameLinks(worldId: string, before: Entity, after: Entity
       const next = {
         ...s,
         notes: fix(s.notes)!,
+        happened: fix(s.happened),
         recap: fix(s.recap, s.visibility !== 'gm')!,
         lectern: s.lectern && { ...s.lectern, sceneText: fix(s.lectern.sceneText)! },
         prep: s.prep && { ...s.prep, strongStart: fix(s.prep.strongStart)! },

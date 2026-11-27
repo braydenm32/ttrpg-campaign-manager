@@ -83,7 +83,7 @@ export default function Handouts() {
                         <li>the page “{e.name}”{e.summary ? ', its summary' : ''}{stripSecrets(e.body).trim() ? ' and its text' : ''}{e.imageId ? ', with its picture' : ''}</li>
                         <li>on every player’s screen now, and in their handouts afterwards</li>
                       </ul>
-                      <p className="muted small">Its GM notes and secret passages stay hidden, and so do the pages it links to unless they’re revealed already.</p>
+                      <p className="muted small">Its GM notes and GM-only passages stay GM only, and so do the pages it links to unless they’re revealed already.</p>
                       <div className="row wrap">
                         <button
                           className="primary"

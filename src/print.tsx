@@ -13,8 +13,7 @@ import { Ico, PageIcon } from './icons'
 import { ArrowLeft, Eye, Lock, Printer } from '@phosphor-icons/react'
 import { Skeleton } from './components'
 import { pagePath, worldPath } from './paths'
-import { canSeeMap } from './counts'
-import { pinRevealed, playersImageId } from './fog'
+import { pinRevealed, playersCopyId, renderPlayerFog } from './fog'
 import { mapKey } from './mapKey'
 
 /** Opens the print page for a page or a session. In the player view it opens the player copy, so a GM previewing as a player never prints secrets by surprise. */
@@ -101,7 +100,7 @@ function PrintBody({ world }: { world: World }) {
           <Ico as={Printer} /> Print or save as PDF
         </button>
         <p className="muted small print-note">
-          {playerCopy ? 'The player copy: secrets, GM notes and hidden pages are left out.' : 'Your copy, with secrets and GM notes. Choose Player copy for one to hand out.'}
+          {playerCopy ? 'The player copy: GM-only passages, GM notes and GM-only pages are left out.' : 'Your copy, with GM-only passages and GM notes. Choose Player copy for one to hand out.'}
         </p>
       </div>
       <div className="print-sheet">
@@ -173,8 +172,13 @@ function PrintSession({ world, id }: { world: World; id: string }) {
       {s.date && <div className="muted">{s.date}</div>}
       {isGM ? <PrintPrep session={s} entities={entities} worldId={world.id} /> : null}
       {isGM && s.notes.trim() && (
-        <Section title="GM notes">
+        <Section title="Plan">
           <Markdown text={s.notes} entities={entities} worldId={world.id} showSecrets stillLinks />
+        </Section>
+      )}
+      {isGM && s.happened?.trim() && (
+        <Section title="What happened">
+          <Markdown text={s.happened} entities={entities} worldId={world.id} showSecrets stillLinks />
         </Section>
       )}
       {!isGM && (s.recap ? <Markdown text={s.recap} entities={entities} worldId={world.id} showSecrets={false} stillLinks /> : <p className="muted">No recap yet.</p>)}
@@ -216,7 +220,7 @@ function PrintPrep({ session, entities, worldId }: { session: Session; entities:
       {p.scenes.length > 0 && <Section title="Scenes">{list(p.scenes)}</Section>}
       {p.clues.length > 0 && <Section title="Secrets and clues">{list(p.clues)}</Section>}
       {p.encounters.length > 0 && (
-        <Section title="Encounters">
+        <Section title="Fights">
           {p.encounters.map((enc) => (
             <div key={enc.id} className="print-encounter">
               <h3>
@@ -252,10 +256,10 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-/** Nothing to print: says why, with the way back into the world. */
 /**
  * A map with its numbered key, for running a dungeon or town from paper. The player copy prints the
- * players' picture (fog and secrets left out) with only the numbers and key entries they can see.
+ * players' picture (fog and secrets left out) with only the numbers and key entries they can see;
+ * of a map players can't see, the players' picture alone.
  */
 function PrintMap({ world, id }: { world: World; id: string }) {
   const { isGM } = useViewMode()
@@ -263,19 +267,27 @@ function PrintMap({ world, id }: { world: World; id: string }) {
   const pins = useLiveQuery(() => db.pins.where({ mapId: id }).toArray(), [id])
   const entities = useVisibleEntities(world.id)
   const fog = map?.fog?.on ? map.fog : undefined
-  const imageId = !map ? undefined : isGM ? map.imageId : fog?.imageId ?? playersImageId(map)
-  const image = useAssetUrl(map && (isGM || canSeeMap(map, false)) ? imageId : undefined)
+  // The players' copy of a fogged map is made now if it hasn't been: never the picture without its fog.
+  const foggedId = map?.fog?.on ? map.id : undefined
+  useEffect(() => {
+    if (!isGM && foggedId && !world.shared) void renderPlayerFog(foggedId).catch(() => {})
+  }, [isGM, foggedId, world.shared])
+  const imageId = !map ? undefined : isGM ? map.imageId : playersCopyId(map)
+  const image = useAssetUrl(imageId)
   if (map === undefined || !pins) return null
   if (!map || map.worldId !== world.id) return <Missing world={world}>Map not found. It may have been deleted.</Missing>
-  if (!isGM && !canSeeMap(map, false)) return <Missing world={world}>This map is GM only, so a player copy would be empty. Reveal it first, or print the GM copy.</Missing>
-  const seen = isGM ? pins : pins.filter((p) => p.visibility === 'players' && pinRevealed(fog, p))
+  // A map players can't see: its picture as players would get it, and none of its pins.
+  const pictureOnly = !isGM && map.visibility !== 'players'
+  const seen = isGM ? pins : pictureOnly ? [] : pins.filter((p) => p.visibility === 'players' && pinRevealed(fog, p))
   const key = map.numbers ? mapKey(seen, entities, map.height, isGM) : []
+  // Its name is as secret as its pins (Show players asks what to call it, for the same reason).
+  const title = pictureOnly ? 'A map' : map.name
   return (
     <article className="print-map">
       <div className="muted">Map · {world.name}</div>
-      <h1>{map.name}</h1>
+      <h1>{title}</h1>
       <div className="print-map-picture">
-        {image && <img src={image} alt={map.name} />}
+        {image ? <img src={image} alt={title} /> : <p className="muted small">Preparing the picture…</p>}
         {key.map((k) =>
           k.at ? (
             <span key={k.pin.id} className="print-map-no" style={{ left: `${(k.at[0] / map.width) * 100}%`, top: `${(k.at[1] / map.height) * 100}%` }}>
@@ -296,13 +308,16 @@ function PrintMap({ world, id }: { world: World; id: string }) {
             ))}
           </ol>
         </>
+      ) : pictureOnly ? (
+        <p className="muted small print-map-note">This map is GM only, so the player copy is its picture alone{fog ? ', under the fog' : ''}: no name, no pins and no key. (This note isn’t printed.)</p>
       ) : (
-        <p className="muted small">No numbered key: switch on “Show numbers” in the map’s settings to add one.</p>
+        isGM && <p className="muted small">No numbered key: switch on “Show numbers” in the map’s settings to add one.</p>
       )}
     </article>
   )
 }
 
+/** Nothing to print: says why, with the way back into the world. */
 function Missing({ world, children }: { world: World; children: ReactNode }) {
   return (
     <div className="print-missing">

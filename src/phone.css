@@ -92,8 +92,12 @@
   /* Text boxes are as tall as their text (where the phone can), so the page is the only thing that scrolls. */
   .content textarea { field-sizing: content; min-height: 4.5em; max-height: none; }
   /* The Lectern's notes: the latest lines, with the rest one tap away, rather than a box of their own to scroll. */
-  .lectern-notes { max-height: 16em; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; -webkit-mask-image: linear-gradient(transparent, #000 4em); mask-image: linear-gradient(transparent, #000 4em); }
+  .lectern-notes { max-height: 16em; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; }
+  /* Only long notes fade out at the top: a line or two stays fully readable. */
+  .lectern-notes.long { -webkit-mask-image: linear-gradient(transparent, #000 4em); mask-image: linear-gradient(transparent, #000 4em); }
   .lectern-notes.all { max-height: none; -webkit-mask-image: none; mask-image: none; }
+  /* The Plan, folded under them: opened, it is as long as it is. */
+  .lectern-plan-notes > div { max-height: none; overflow: visible; }
   /* Strips that scroll sideways (tabs, jump buttons) never wobble up and down too. */
   :is(.jump-row, .area-tabs, .builder-tools) { overflow-y: hidden; }
   /* Rows of pictures to pick from scroll sideways, not up and down inside the page. */

@@ -71,6 +71,11 @@ test('the strip’s main button follows the stage of the session in hand', async
     await expect(strip(page).locator('[data-stage]')).toHaveAttribute('data-stage', 'preparing')
     await expect(strip(page).locator('.primary')).toHaveAttribute('data-next', 'play')
     await expect(strip(page).locator('.primary')).toContainText('Start playing')
+    // It opens the box with the two ticks; nothing starts until the box's own button is pressed.
+    await strip(page).locator('.primary').click()
+    await expect(page.getByRole('dialog', { name: /^Start playing #1/ })).toBeVisible()
+    await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click()
+    expect((await getRecord(page, 'sessions', s1.id))?.startedAt ?? null).toBeNull()
     await expect(strip(page).getByRole('link', { name: 'Continue prep' })).toBeVisible()
 
     // Started at the table: Playing, and the main button wraps it up.
@@ -78,6 +83,8 @@ test('the strip’s main button follows the stage of the session in hand', async
     await open(page, w)
     await expect(strip(page).locator('[data-stage]')).toHaveAttribute('data-stage', 'playing')
     await expect(strip(page).locator('.primary')).toHaveAttribute('data-next', 'wrap')
+    await expect(strip(page).getByRole('link', { name: 'Continue', exact: true })).toHaveAttribute('href', new RegExp(`/s/${s1.id}/lectern$`))
+    await expect(strip(page).getByRole('button', { name: 'Start playing' })).toHaveCount(0)
     await strip(page).locator('.primary').click()
     await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}?end=1`)
 
@@ -328,15 +335,15 @@ test('Needs you asks for the last played session’s recap, and keeps pressing t
     await expect(row).toContainText('Players have no recap of #1')
     await expect(row.getByRole('link', { name: 'Write it' })).toHaveAttribute('href', new RegExp(`/s/${s1.id}\\?tab=recap`))
 
-    // A recap that is still GM only: “Show to players…” opens the session's “Players will see” review first, with Undo after.
+    // A recap that is still GM only: “Reveal to players…” opens the session's “Players will see” review first, with Undo after.
     await patchRecord(page, 'sessions', s1.id, { recap: 'The company mustered.' })
     await open(page, w)
-    await section.getByRole('link', { name: 'Show to players…' }).click()
+    await section.getByRole('link', { name: 'Reveal to players…' }).click()
     await expect(page).toHaveURL(new RegExp(`/s/${s1.id}\\?tab=recap&show=1`))
     const review = page.locator('#recap').getByRole('group', { name: 'What players will see' })
     await expect(review).toBeVisible()
     expect((await getRecord(page, 'sessions', s1.id))?.visibility).toBe('gm')
-    await review.getByRole('button', { name: 'Show it to players' }).click()
+    await review.getByRole('button', { name: 'Reveal to players', exact: true }).click()
     await expect(toast(page)).toContainText('Players can read #1 now')
     await expect.poll(async () => (await getRecord(page, 'sessions', s1.id))?.visibility).toBe('players')
     await toast(page).getByRole('button', { name: 'Undo' }).click()

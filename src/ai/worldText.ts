@@ -1,6 +1,8 @@
 import { formatDate } from '../calendar'
 import { ENTITY_LABELS, type Entity, type Session, type World } from '../db'
 import { transcriptText } from './transcript'
+import { isPartOf } from '../nesting'
+import { notesFromPlay, planNotes } from '../sessions'
 
 /**
  * The GM's world written out as plain text for Claude: a short index of every page, and the full
@@ -19,7 +21,7 @@ export function indexLine(e: Entity, world?: World, byId?: Map<string, Entity>) 
   const about = [
     kindOf(e, world),
     e.aliases?.length ? `also called ${e.aliases.map((a) => `"${a}"`).join(', ')}` : '',
-    e.parentId && byId?.get(e.parentId) ? `in ${byId.get(e.parentId)!.name}` : '',
+    e.parentId && byId?.get(e.parentId) ? `${isPartOf(byId.get(e.parentId)!, e) ? 'part of' : 'in'} ${byId.get(e.parentId)!.name}` : '',
     e.questStatus ? `quest ${e.questStatus}` : '',
     e.threadStatus ? `thread ${e.threadStatus}` : '',
     e.status && e.status !== 'alive' ? e.status : '',
@@ -43,7 +45,8 @@ export function pageText(e: Entity, world: World, entities: Entity[], { secrets 
   const name = (id?: string) => (id ? (byId.get(id)?.name ?? '') : '')
   const lines = [`# ${e.name}`, `Kind: ${kindOf(e, world)}${e.visibility === 'gm' ? ' (secret: players have not seen this page)' : ''}`]
   if (e.aliases?.length) lines.push(`Also called: ${e.aliases.join(', ')}`)
-  if (e.parentId) lines.push(`Inside: ${name(e.parentId)}`)
+  const parent = e.parentId ? byId.get(e.parentId) : undefined
+  if (parent) lines.push(`${isPartOf(parent, e) ? 'Part of' : 'Inside'}: ${parent.name}`)
   // "Players know" is stored as ticked or not there at all: anything not ticked is a secret.
   const hush = (known?: boolean) => (secrets && !known ? ' (players don’t know)' : '')
   if (e.status && (secrets || e.statusKnown)) lines.push(`Status: ${e.status}${hush(e.statusKnown)}`)
@@ -82,7 +85,10 @@ export function sessionText(s: Session, world: World, { transcript = false } = {
   if (s.date) lines.push(`Played: ${s.date}`)
   if (s.worldDate && world.calendar) lines.push(`In-world date: ${formatDate(world.calendar, s.worldDate, false)}`)
   if (s.recap.trim()) lines.push('', 'Recap the players read:', s.recap.trim())
-  if (s.notes.trim()) lines.push('', 'GM notes (secret):', s.notes.trim())
+  const plan = planNotes(s).trim()
+  const happened = notesFromPlay(s).trim()
+  if (plan) lines.push('', 'GM plan notes, written before the game (secret; a plan, not what happened):', plan)
+  if (happened) lines.push('', 'GM notes on what happened (secret):', happened)
   const prep = s.prep
   if (prep) {
     const planned = [
@@ -189,10 +195,10 @@ export function describeStep(name: string, input: Record<string, unknown>) {
   return name
 }
 
-/** The world in a nutshell, for the top of every prompt. */
-export function worldHeader(world: World) {
+/** The world in a nutshell, for the top of every prompt. `system` is the game being played (src/gameSystem.ts), the world's own by default. */
+export function worldHeader(world: World, system = world.system) {
   const today = world.calendar?.today ? formatDate(world.calendar, world.calendar.today, false) : ''
-  return [`World: ${world.name}${world.system ? ` (${world.system})` : ''}`, world.description?.trim() ? `About it: ${world.description.trim()}` : '', today ? `Today in the world: ${today}` : '']
+  return [`World: ${world.name}${system ? ` (${system})` : ''}`, world.description?.trim() ? `About it: ${world.description.trim()}` : '', today ? `Today in the world: ${today}` : '']
     .filter(Boolean)
     .join('\n')
 }

@@ -15,6 +15,15 @@ import { keyMark } from './lib/assembly'
 
 const toast = (page: Page) => page.locator('.undo-toast')
 
+/** “Start playing” on the session's strip opens the box with its two ticks; the box's own button starts. */
+async function startFromStrip(page: Page) {
+  await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+  const box = page.getByRole('dialog', { name: /^Start playing #/ })
+  await expect(box.getByText('Record', { exact: true })).toBeVisible()
+  await box.getByRole('button', { name: 'Start playing' }).click()
+  await expect(box).toHaveCount(0)
+}
+
 test('a session moves Prepare → Play → Wrap up, then the next one is up on the Desk', async ({ page, world }) => {
   const w = `/w/${world.slug}`
   const s1 = world.session(1)
@@ -27,10 +36,15 @@ test('a session moves Prepare → Play → Wrap up, then the next one is up on t
   try {
     const strip = page.locator('.session-strip')
     await expect(strip.locator('[data-stage]')).toHaveAttribute('data-stage', 'preparing')
+    // Nothing starts until the box's own button is pressed.
     await strip.getByRole('button', { name: 'Start playing' }).click()
+    await expect(page.getByRole('dialog', { name: /^Start playing #1/ })).toBeVisible()
+    expect((await getRecord(page, 'sessions', s1.id))?.startedAt ?? null).toBeNull()
+    await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click()
+    await startFromStrip(page)
 
     await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}/lectern`)
-    await expect(page.getByRole('heading', { name: /The Lectern/ })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Play: the Lectern/ })).toBeVisible()
     await expect(page.locator('.lectern-strip [data-stage]')).toHaveAttribute('data-stage', 'playing')
     // On a phone “Wrap up” sits at the foot of the page, away from a thumb.
     await page.getByRole('button', { name: 'Wrap up' }).click()
@@ -67,7 +81,7 @@ test('“Start playing” can be taken back, and a session whose date went by as
   const before2 = await getRecord(page, 'sessions', world.session(2).id)
   try {
     // A press by mistake: the note at the bottom takes it back, on the Lectern it opened.
-    await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+    await startFromStrip(page)
     await expect(toast(page)).toContainText('#1')
     await toast(page).getByRole('button', { name: 'Not started after all' }).click()
     await expect.poll(async () => (await getRecord(page, 'sessions', s1.id))?.startedAt ?? null).toBeNull()
@@ -114,7 +128,7 @@ test('typing the recap does not mark a session played; "Not played yet" takes th
   // Marking #1 played adds its leftovers to #2's plan, so #2 is put back too.
   const before2 = await getRecord(page, 'sessions', world.session(2).id)
   try {
-    await page.locator('.session-strip').getByRole('button', { name: 'Start playing' }).click()
+    await startFromStrip(page)
     await expect.poll(() => here(page)).toBe(`${w}/s/${s1.id}/lectern`)
     await open(page, `${w}/s/${s1.id}?end=1`)
 
@@ -324,7 +338,7 @@ test('nothing typed in the page editor is lost by leaving, and an untouched new 
     const pages = await count()
     const newNpc = async () => {
       await open(page, `${w}/npcs`)
-      await page.getByRole('button', { name: /^\+ New NPC/ }).first().click()
+      await page.getByRole('button', { name: /^\+ New person/ }).first().click()
       const blank = page.getByRole('menuitem', { name: 'Blank page' })
       if (await blank.isVisible()) await blank.click()
       await expect.poll(() => here(page)).toMatch(/\?edit=1&new=1$/)
@@ -594,8 +608,14 @@ test('AssemblyAI’s copies go once nothing waits on them, “not found” count
 
     // Deleting the session deletes the copy it was waiting on, and the bin's copy no longer waits on it.
     await open(page, `${w}/s/${id}?tab=prep`)
-    page.once('dialog', (d) => void d.accept())
+    // It asks first, in the app's own dialog, and says the transcript still being made would be stopped.
+    // Nothing is stopped until the GM says yes.
     await page.getByRole('button', { name: 'Delete session' }).click()
+    const ask = page.getByRole('dialog', { name: /^Delete session #98/ })
+    await expect(ask).toContainText('1 recording')
+    await expect(ask).toContainText('A transcript still being made is stopped, and would need making again.')
+    expect(deleted).not.toContain('job-waiting')
+    await ask.getByRole('button', { name: 'Delete session' }).click()
     await expect.poll(() => deleted.includes('job-waiting')).toBe(true)
     await expect.poll(noted).not.toContain('job-waiting')
     const binned = await page.evaluate(

@@ -448,7 +448,7 @@ function readPage(key: string, split: Split, report: Report, months: string[]): 
 
 function readSession(split: Split, report: Report, months: string[]): ExSession | undefined {
   const r = reader(split, report, SESSION_SETTINGS)
-  checkParts(split, report, ['recap', 'strong start', 'scenes', 'clues', 'lectern'])
+  checkParts(split, report, ['what happened', 'recap', 'strong start', 'scenes', 'clues', 'lectern'])
   const number = r.num('number', true)
   const title = r.text('title', true)
   if (number === undefined || !title) return undefined
@@ -483,6 +483,7 @@ function readSession(split: Split, report: Report, months: string[]): ExSession 
     players: r.yes('players'),
     worldDate: readDate(r.s.worldDate, months, 'worldDate', report),
     notes: split.text,
+    happened: split.parts.get('what happened'),
     recap: split.parts.get('recap'),
     pages: r.list('pages'),
     prep: hasPrep ? { strongStart: strongStart ?? '', scenes: scenes ?? [], clues: clues ?? [], encounters: encounters ?? [] } : undefined,
@@ -729,7 +730,7 @@ function checkReferences(
     }
   }
   for (const p of pages) [p.body, p.gmNotes, p.summary, ...(p.entries ?? [])].forEach((t) => linkCheck(p.file, t))
-  for (const s of sessions) [s.notes, s.recap, s.prep?.strongStart, ...(s.prep?.scenes ?? []).flatMap((sc) => [sc.text, sc.readAloud]), ...(s.prep?.clues ?? []), s.lectern?.sceneText].forEach((t) => linkCheck(s.file, t))
+  for (const s of sessions) [s.notes, s.happened, s.recap, s.prep?.strongStart, ...(s.prep?.scenes ?? []).flatMap((sc) => [sc.text, sc.readAloud]), ...(s.prep?.clues ?? []), s.lectern?.sceneText].forEach((t) => linkCheck(s.file, t))
 }
 
 /** How many letters must change to turn one word into the other, ignoring capitals. */

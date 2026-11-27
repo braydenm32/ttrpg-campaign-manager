@@ -57,4 +57,4 @@ Bring answers to these, or make them up at the table:
 
 == GM notes ==
 
-This page is open to players already: point them at it before session 1. The pay-off notes above are GM only and stay hidden. The GM's chapter is [[Running The Lantern Gutters]].
+This page is open to players already: point them at it before session 1. The pay-off notes above are GM only. The GM's chapter is [[Running The Lantern Gutters]].

@@ -1,0 +1,78 @@
+/* The formatted editor (src/editor/FormattedEditor.tsx). Loaded with it, when an editor opens. */
+.pm-editor { display: flex; flex-direction: column; gap: .35em; color: var(--text); font-size: 1rem; }
+.pm-top { display: flex; flex-direction: column; gap: .35em; position: sticky; top: calc(var(--stick-top, calc(var(--topbar-h) + env(safe-area-inset-top, 0px))) + 4px); z-index: 15; }
+.pm-toolbar { display: flex; flex-wrap: wrap; gap: .2em; align-items: center; padding: .25em .3em; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
+.pm-top > .name-suggestions, .pm-top > .pm-bar { box-shadow: var(--shadow); }
+.pm-tool { min-width: 2.3em; min-height: 2.3em; justify-content: center; padding: .25em .45em; background: transparent; border-color: transparent; }
+.pm-tool.on { background: color-mix(in srgb, var(--accent) 22%, var(--panel)); border-color: var(--accent); }
+.pm-tool.wide { border-color: var(--border); font-size: .85em; }
+label.pm-tool.disabled { opacity: .5; pointer-events: none; }
+.pm-toolbar .pm-type { width: auto; min-height: 2.3em; padding: .25em .4em; font-size: .9em; }
+.pm-bar { display: flex; flex-wrap: wrap; gap: .4em; align-items: center; padding: .35em .5em; border: 1px dashed color-mix(in srgb, var(--accent) 50%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
+.pm-top > .name-suggestions { background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
+.pm-bar input { flex: 1; width: auto; min-width: 9em; }
+.pm-bar .pm-address { overflow-wrap: anywhere; min-width: 0; }
+.pm-page { position: relative; border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); padding: .6em .8em; cursor: text; }
+.pm-page:focus-within { outline: 2px solid var(--accent); }
+.pm-placeholder { position: absolute; left: .8em; right: .8em; top: .6em; color: var(--muted); pointer-events: none; }
+
+/* What ProseMirror needs to behave (from prosemirror-view and prosemirror-gapcursor). */
+.ProseMirror { position: relative; outline: none; word-wrap: break-word; white-space: pre-wrap; white-space: break-spaces; font-variant-ligatures: none; font-feature-settings: 'liga' 0; }
+.ProseMirror pre { white-space: pre-wrap; }
+.ProseMirror li { position: relative; }
+.ProseMirror-hideselection *::selection { background: transparent; }
+.ProseMirror-hideselection { caret-color: transparent; }
+.ProseMirror-selectednode { outline: 2px solid var(--accent); outline-offset: 1px; }
+img.ProseMirror-separator { display: inline !important; border: none !important; margin: 0 !important; }
+.ProseMirror-gapcursor { display: none; pointer-events: none; position: absolute; }
+.ProseMirror-gapcursor::after { content: ''; display: block; position: absolute; top: -2px; width: 20px; border-top: 2px solid var(--accent); animation: pm-blink 1.1s steps(2, start) infinite; }
+@keyframes pm-blink { to { visibility: hidden; } }
+.ProseMirror-focused .ProseMirror-gapcursor { display: block; }
+
+/* The text itself, as the page shows it. */
+.pm-text { line-height: 1.5; min-height: 1.5em; }
+.pm-text p { margin: 0 0 .6em; }
+.pm-text > :last-child, .pm-secret-body > :last-child { margin-bottom: 0; }
+.pm-text h1, .pm-text h2, .pm-text h3, .pm-text h4, .pm-text h5, .pm-text h6 { margin: .7em 0 .35em; }
+.pm-text h1 { font-size: 1.5rem; }
+.pm-text h2 { font-size: 1.3rem; }
+.pm-text h3 { font-size: 1.15rem; }
+.pm-text h4, .pm-text h5, .pm-text h6 { font-size: 1rem; }
+.pm-text ul, .pm-text ol { margin: 0 0 .6em; padding-left: 1.6em; }
+.pm-text li > p { margin: 0; }
+.pm-text li[data-checked] { list-style: none; }
+.pm-text li[data-checked]::before { content: '☐'; position: absolute; left: -1.4em; cursor: pointer; }
+.pm-text li[data-checked='true']::before { content: '☑'; }
+.pm-text hr { border: none; border-top: 1px solid var(--border); margin: 1em 0; }
+.pm-text table { border-collapse: collapse; margin: .6em 0; max-width: 100%; }
+.pm-text th, .pm-text td { border: 1px solid var(--border); padding: .3em .6em; min-width: 3em; vertical-align: top; text-align: left; }
+.pm-text th { background: color-mix(in srgb, var(--accent) 10%, var(--panel)); }
+.pm-text pre { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: .5em .7em; margin: 0 0 .6em; font: .9em/1.45 ui-monospace, Menlo, monospace; }
+.pm-text pre.pm-raw { border-style: dashed; padding-top: 1.7em; position: relative; }
+.pm-text pre.pm-raw::before { content: 'Kept as typed (Markdown)'; position: absolute; top: .35em; left: .7em; font: 600 .7rem/1.4 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.pm-text .pm-wikilink { color: var(--link); text-decoration: underline; text-decoration-color: var(--link-line); cursor: pointer; border-radius: 3px; }
+.pm-text a { cursor: text; }
+.pm-text img.pm-picture { cursor: pointer; max-height: 40vh; }
+.pm-text .pm-picture-missing { border: 1px dashed var(--border); border-radius: 4px; padding: 0 .3em; color: var(--muted); }
+
+/* A secret passage: a box whose heading says who reads it. */
+.pm-secret { background: var(--secret-bg); border: 1px solid var(--secret-border); border-left: 3px solid var(--ward); border-radius: var(--radius); margin: .7em 0; }
+.pm-secret-head { padding: .3em .7em; border-bottom: 1px dashed var(--secret-border); color: var(--secret-ink); font: 600 .8rem/1.4 var(--font-body); user-select: none; cursor: default; }
+.pm-secret-title { display: flex; flex-wrap: wrap; gap: .4em; align-items: center; }
+.pm-secret-title strong { letter-spacing: .08em; text-transform: uppercase; }
+.pm-secret-note { font-weight: 400; }
+.pm-secret-head .chip { font-size: 1em; padding: .15em .6em; border-radius: 999px; color: var(--text); }
+.pm-secret-head .chip.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 22%, var(--panel)); }
+.pm-secret-show { margin-left: auto; color: var(--secret-ink); text-decoration: underline; }
+.pm-secret-warn { margin-top: .3em; font-weight: 400; color: var(--text); }
+.pm-secret-body { padding: .5em .9em; }
+.pm-secret.for, .pm-secret.foryou { background: color-mix(in srgb, var(--accent) 9%, var(--panel)); border-color: color-mix(in srgb, var(--accent) 45%, transparent); border-left-color: var(--accent); }
+.pm-secret.for > .pm-secret-head, .pm-secret.foryou > .pm-secret-head { color: var(--text); border-bottom-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.pm-secret.gm > .pm-secret-body > p:only-child:has(> br.ProseMirror-trailingBreak:only-child)::before { content: 'Only you can read this. Players never see it.'; color: var(--muted); float: left; height: 0; pointer-events: none; }
+.pm-secret.for > .pm-secret-body > p:only-child:has(> br.ProseMirror-trailingBreak:only-child)::before { content: 'Only the players of the characters picked above will read this.'; color: var(--muted); float: left; height: 0; pointer-events: none; }
+
+@media (max-width: 800px), (pointer: coarse) {
+  .pm-tool, .pm-toolbar .pm-type, .pm-bar button, .pm-secret-head button { min-height: 44px; min-width: 44px; }
+  .pm-toolbar .help-button { margin: 0 6px; }
+  .pm-bar input { min-height: 44px; }
+}

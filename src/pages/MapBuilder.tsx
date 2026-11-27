@@ -1585,7 +1585,7 @@ function Builder({ map }: { map: WorldMap & { drawing: Drawing } }) {
             )}
           </section>
           <details className="map-settings" open>
-            <summary>Map settings</summary>
+            <summary>Drawing settings</summary>
             <div className="form">
               <label>
                 <span>
@@ -1863,7 +1863,7 @@ function ToolOptions(p: {
           )}
           {p.roomBrush.mode === 'dig' && (
             <label className="check">
-              <input type="checkbox" checked={p.roomBrush.secret} onChange={(e) => p.setRoomBrush({ ...p.roomBrush, secret: e.target.checked })} /> Secret: only you see it <Help topic="secretRooms" />
+              <input type="checkbox" checked={p.roomBrush.secret} onChange={(e) => p.setRoomBrush({ ...p.roomBrush, secret: e.target.checked })} /> GM only: a secret room players don’t see <Help topic="secretRooms" />
             </label>
           )}
           <label>
@@ -2285,7 +2285,7 @@ function ShapeProps({ shape, drawing, pin, onLink, onChange, onReveal, onDelete,
         </>
       ) : shape.kind === 'asset' && shape.asset.startsWith('gm-') ? (
         <label className="check">
-          <input type="checkbox" checked={shape.gm === false} onChange={(e) => onChange({ gm: e.target.checked ? false : undefined })} /> Players can see this mark too
+          <input type="checkbox" checked={shape.gm !== false} onChange={(e) => onChange({ gm: e.target.checked ? undefined : false })} /> GM only: players don’t see it
         </label>
       ) : (
         <label className="check">
@@ -2477,7 +2477,7 @@ function StrokeProps({ stroke, drawing, onChange, onDelete, onClose }: {
           </div>
           {room.mode === 'dig' && (
             <label className="check">
-              <input type="checkbox" checked={!!room.gm} onChange={(e) => onChange({ gm: e.target.checked || undefined })} /> Secret: only you see it <Help topic="secretRooms" />
+              <input type="checkbox" checked={!!room.gm} onChange={(e) => onChange({ gm: e.target.checked || undefined })} /> GM only: a secret room players don’t see <Help topic="secretRooms" />
             </label>
           )}
         </>
@@ -2551,6 +2551,7 @@ function PieceLink({ shape, pin, onLink }: { shape: Extract<Shape, { kind: 'asse
             ) : (
               <VisibilityControl
                 compact
+                fact
                 value={pin.visibility}
                 onChange={(v) => db.pins.update(pin.id, { visibility: v })}
                 name={`“${pin.label || linked?.name || 'this place'}” on the map`}

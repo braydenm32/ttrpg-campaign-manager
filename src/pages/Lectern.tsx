@@ -1,6 +1,6 @@
 import { PreviouslyOn } from '../ai/ReadAloud'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { HELP, Help } from '../help'
+import { Help } from '../help'
 import { PartyGlance } from '../partyGlance'
 import { GmScreenPanel } from '../gmScreen'
 import { CallForRoll } from '../rollCallPanel'
@@ -9,7 +9,8 @@ import { NameGenerator, TreasureGenerator } from '../moreGenerators'
 import { FoldingProvider, LECTERN_PANELS, LecternPanel, useFolding } from '../lecternPanel'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { partyOf, startAndTell } from '../sessions'
+import { addHappened, partyOf } from '../sessions'
+import { StartPlayingButton } from '../startPlaying'
 import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { ENTITY_LABELS, LIFE_STATUS, blankEntity, blankLectern, db, newId, type Combatant, type Entity, type LecternState, type Session, type World } from '../db'
@@ -41,15 +42,15 @@ import { WorldToday } from '../calendar'
 import { ClocksPanel } from '../clocks'
 import { GameClockPanel } from '../gameClock'
 import { Ico, TypeIcon } from '../icons'
-import { Armchair, CastleTurret, CloudFog, Coins, Lock, DiceFive, FlagCheckered, Keyboard, MapTrifold, Microphone, NotePencil, Eye, EyeSlash, Play, Prohibit, Shield, SkipForward, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
+import { Armchair, CastleTurret, CloudFog, Coins, Lock, DiceFive, FlagCheckered, Keyboard, MapTrifold, Microphone, NotePencil, Eye, EyeSlash, Prohibit, Shield, SkipForward, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
 import { clockText, GoLive, RollDetail, RollLog, timeLeft, useNow } from '../atTheTable'
 import { shareRoll, useLiveSession, useTable } from '../cloud/table'
-import { endLiveSession } from '../EndSession'
 import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, jumpTo, useKeepScroll } from '../jump'
 import { changePlace, clearSceneToast, goToScene, plannedScenes } from '../sceneCards'
 import { useReview } from '../reveal'
+import { secretNamesInPlain } from '../links'
 import { markSaved, removeWithUndo, SavedMark, toast } from '../undo'
 import { changeCoin } from '../purse'
 import { Recorder } from './SessionPage'
@@ -120,10 +121,8 @@ export default function Lectern() {
   // Opening a folded panel before jumping to it.
   const unfold = (id: string) => () => folding.value.folded.has(id) && folding.value.toggle(id)
   const party = partyOf(entities, session.campaignId, { activeOnly: true })
-  const wrapUp = async () => {
-    if (live) await endLiveSession(worldId, session.id)
-    navigate(`${w}/s/${session.id}?end=1`)
-  }
+  // "Wrap up" only opens the checklist. Ending the live session is the checklist's first step.
+  const wrapUp = () => navigate(`${w}/s/${session.id}?end=1`)
   // The Record chip: open the Recording panel (with its consent note) and go to it.
   const openRecording = () => {
     unfold('recording')()
@@ -138,7 +137,7 @@ export default function Lectern() {
         <div className="strip-title">
           {stage && <StageChip stage={stage} help />}
           <h1 className="lectern-title">
-            The Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
+            Play: the Lectern <Help topic="lectern" /> <span className="muted">· #{session.number} {session.title}</span>
           </h1>
         </div>
         <div className="strip-facts">
@@ -152,9 +151,8 @@ export default function Lectern() {
           {world?.cloud?.enabled && <Help topic="goLive" />}
           <RecordChip onOpen={openRecording} />
           {stage !== 'playing' && stage !== 'played' ? (
-            <button className="primary" title={HELP.startPlaying} onClick={() => startAndTell(session)}>
-              <Ico as={Play} weight="fill" /> Start playing
-            </button>
+            // Already here, so nothing to open: with Record ticked, the recording panel (and its consent note) comes up.
+            <StartPlayingButton session={session} onStarted={(c) => c.record && openRecording()} />
           ) : (
             // On a phone this button moves to the foot of the page, out of the way of a thumb in mid-game.
             <button className={`wrap-up-top ${stage === 'playing' ? 'primary' : ''}`} title={WRAP_UP_TITLE} onClick={wrapUp}>
@@ -168,7 +166,7 @@ export default function Lectern() {
           <PreviouslyOn session={session} />
           {!!(world?.safety?.lines.length || world?.safety?.veils.length) && (
             <details className="small safety-reminder">
-              <summary><Ico as={Shield} /> Lines and veils</summary>
+              <summary><Ico as={Shield} /> Table rules</summary>
               {world!.safety!.lines.length > 0 && <div><Ico as={Prohibit} /> Lines: {world!.safety!.lines.join(' · ')}</div>}
               {world!.safety!.veils.length > 0 && <div><Ico as={CloudFog} /> Veils: {world!.safety!.veils.join(' · ')}</div>}
             </details>
@@ -182,7 +180,7 @@ export default function Lectern() {
           help="lecternJump"
           targets={[
             { id: 'lectern-scene', label: 'Scene', open: unfold('scene') },
-            { id: 'lectern-initiative', label: 'Fight', open: unfold('initiative') },
+            { id: 'lectern-initiative', label: 'Initiative', open: unfold('initiative') },
             { id: 'lectern-present', label: 'People', open: unfold('present') },
             { id: 'lectern-clocks', label: 'Clocks', open: unfold('clocks') },
             { id: 'lectern-show', label: 'Show', open: unfold('show') },
@@ -270,7 +268,7 @@ export default function Lectern() {
   )
 }
 
-const WRAP_UP_TITLE = 'End the session at the table: stops showing it live to players, then opens Wrap up'
+const WRAP_UP_TITLE = 'Opens the Wrap up checklist and changes nothing by itself. Its first step ends the live session for players.'
 
 /** A small “Record” chip in the strip: opens the Recording panel, where the consent note and Start are. */
 function RecordChip({ onOpen }: { onOpen: () => void }) {
@@ -282,7 +280,7 @@ function RecordChip({ onOpen }: { onOpen: () => void }) {
   )
 }
 
-/** A line for the GM notes, always in reach near the top. What's typed is kept if you leave and come back. */
+/** A line for “What happened”, always in reach near the top. What's typed is kept if you leave and come back. */
 function QuickNote({ session }: { session: Session }) {
   const key = `lectern.note.${session.id}`
   const [text, setTextState] = useState(() => {
@@ -314,7 +312,7 @@ function QuickNote({ session }: { session: Session }) {
       }}
     >
       <Ico as={NotePencil} />
-      <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Quick note… (Enter adds it to your GM notes, with the time)" aria-label="Quick note" />
+      <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Quick note… (Enter adds it to What happened, with the time)" aria-label="Quick note" />
       <SavedMark />
       <button disabled={!text.trim()}>Add</button>
       <Help topic="quickNote" />
@@ -322,18 +320,22 @@ function QuickNote({ session }: { session: Session }) {
   )
 }
 
-/** Adds a line with the time at the end of the session's GM notes. */
+/** Adds a line with the time at the end of the session's "What happened" notes. */
 const addNoteLine = (sessionId: string, line: string) => {
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   return db.sessions
     .where('id')
     .equals(sessionId)
-    .modify((s) => void (s.notes = `${s.notes.trimEnd()}${s.notes.trim() ? '\n' : ''}- ${time} ${line}`))
+    .modify((s) => addHappened(s, `- ${time} ${line}`))
 }
 
 /**
  * What the party found, as it happens: coins into the purse, or an item handed to them (a new item
- * page, GM only until you reveal it, carried by the party). Nothing random; Undo takes it back.
+ * page, carried by the party). Players see the item in their Party loot straight away, unless "Keep
+ * it secret" is ticked for that one (then it's GM only until revealed). A name that has a GM-only
+ * page's name in it, or any page's nickname (GM only too), asks first, as any reveal does. Nothing
+ * random; Undo takes it back (and sync holds a new page back while the Undo note is up, so it never
+ * reaches a player first).
  */
 function LootPanel({ world, sessionId }: { world: World; sessionId: string }) {
   const coins = (world.partyCoin ?? []).map((c) => c.name)
@@ -341,6 +343,9 @@ function LootPanel({ world, sessionId }: { world: World; sessionId: string }) {
   const [amount, setAmount] = useState('')
   const [coin, setCoin] = useState(names[0])
   const [item, setItem] = useState('')
+  // "Keep it secret" counts for the one item being given: it's unticked again afterwards.
+  const [secret, setSecret] = useState(false)
+  const { ask, dialog } = useReview()
   const w = worldPath(world.id)
   const addCoin = async () => {
     const n = Math.round(Number(amount))
@@ -353,10 +358,30 @@ function LootPanel({ world, sessionId }: { world: World; sessionId: string }) {
   const giveItem = async () => {
     const name = item.trim()
     if (!name) return
-    const e = { ...blankEntity(world.id, 'item', name), heldBy: 'party' }
+    let keep = secret
+    if (!keep) {
+      // The new page is only its name, so the name is all there is to check before players read it.
+      const pages = await db.entities.where({ worldId: world.id }).toArray()
+      const named = secretNamesInPlain(name, pages)
+      if (named.length) {
+        const answer = await ask({
+          title: `Give “${name}” to the party?`,
+          note: 'Players see what the party is given straight away, in their Party loot.',
+          see: [`a new item, “${name}”, in the party stash`],
+          // A GM-only page's name, or a nickname (nicknames are GM only on every page).
+          warn: `Its name has ${named.length === 1 ? 'a GM-only name' : 'GM-only names'} in it, so players would read ${named.length === 1 ? 'it' : 'them'}: ${named.join(', ')}.`,
+          confirm: 'Keep it secret',
+          others: [{ label: 'Give it, players can see it', value: 'show' }],
+        })
+        if (!answer) return
+        keep = answer === 'ok'
+      }
+    }
+    const e: Entity = { ...blankEntity(world.id, 'item', name), heldBy: 'party', visibility: keep ? 'gm' : 'players' }
     await db.entities.add(e)
     setItem('')
-    toast(`“${name}” given to the party (GM only until you reveal it).`, () => db.entities.delete(e.id))
+    setSecret(false)
+    toast(keep ? `“${name}” given to the party, kept secret (GM only until you reveal it).` : `“${name}” given to the party. Players can see it in Party loot now.`, () => db.entities.delete(e.id))
   }
   return (
     <LecternPanel
@@ -396,6 +421,13 @@ function LootPanel({ world, sessionId }: { world: World; sessionId: string }) {
         <input value={item} onChange={(e) => setItem(e.target.value)} placeholder="An item, e.g. Silver locket" aria-label="Item the party found" />
         <button disabled={!item.trim()}>Give to the party</button>
       </form>
+      <label className="row small loot-secret">
+        <input type="checkbox" checked={secret} onChange={(e) => setSecret(e.target.checked)} />
+        <span>
+          Keep it secret <span className="muted">(otherwise players see the item in Party loot at once)</span>
+        </span>
+      </label>
+      {dialog}
     </LecternPanel>
   )
 }
@@ -974,8 +1006,9 @@ function Dice({ lectern, edit, shareTo }: PanelProps & { shareTo?: string }) {
 }
 
 /**
- * The session's GM notes, in reach without leaving the Lectern: read them (the newest lines at the
- * bottom, in view) or edit them. Quick lines are added from the note box at the top.
+ * The session's "What happened" notes, in reach without leaving the Lectern: read them (the newest
+ * lines at the bottom, in view) or edit them. Quick lines are added from the note box at the top.
+ * The plan written before the game is folded underneath, to look at.
  */
 function SessionNotes({ session, entities, worldId }: { session: Session; entities: Entity[]; worldId: string }) {
   const [editing, setEditing] = useState(false)
@@ -985,19 +1018,20 @@ function SessionNotes({ session, entities, worldId }: { session: Session; entiti
   // Keep the newest lines in view as they're added.
   useEffect(() => {
     if (box.current) box.current.scrollTop = box.current.scrollHeight
-  }, [session.notes, editing])
+  }, [session.happened, editing])
+  const happened = session.happened ?? ''
   const setNotes = (fn: (notes: string) => string) =>
     db.sessions
       .where('id')
       .equals(session.id)
-      .modify((s) => void (s.notes = fn(s.notes)))
+      .modify((s) => void (s.happened = fn(s.happened ?? '')))
   return (
     <LecternPanel
       id="notes"
       sectionId="lectern-notes"
-      name="GM notes"
-      keywords="session notes quick note jot remember"
-      title={<><Ico as={NotePencil} /> GM notes <Help topic="lecternNotes" /></>}
+      name="What happened"
+      keywords="gm notes session notes what happened quick note jot remember plan"
+      title={<><Ico as={NotePencil} /> What happened <Help topic="lecternNotes" /></>}
       extra={
         <button className="ghost small" onClick={() => setEditing(!editing)}>
           {editing ? 'Done' : 'Edit'}
@@ -1005,20 +1039,28 @@ function SessionNotes({ session, entities, worldId }: { session: Session; entiti
       }
     >
       {editing ? (
-        <DraftText multiline grow value={session.notes} onCommit={(v) => setNotes(() => v)} placeholder="Your notes for this session…" aria-label="GM notes" />
-      ) : session.notes.trim() ? (
+        <DraftText multiline grow value={happened} onCommit={(v) => setNotes(() => v)} placeholder="What happened in play…" aria-label="What happened" />
+      ) : happened.trim() ? (
         <>
-          <div className={`lectern-notes ${all ? 'all' : ''}`} ref={box}>
-            <Markdown text={session.notes} entities={entities} worldId={worldId} showSecrets />
+          <div className={`lectern-notes ${all ? 'all' : ''} ${happened.split('\n').length > 8 ? 'long' : ''}`} ref={box}>
+            <Markdown text={happened} entities={entities} worldId={worldId} showSecrets />
           </div>
-          {session.notes.split('\n').length > 8 && (
+          {happened.split('\n').length > 8 && (
             <button className="link small phone-only notes-all" onClick={() => setAll(!all)}>
               {all ? 'Show only the newest' : 'Show all the notes'}
             </button>
           )}
         </>
       ) : (
-        <p className="muted small">No notes for this session yet. Lines from the quick note at the top land here, and on Wrap up.</p>
+        <p className="muted small">Nothing written yet. Lines from the quick note at the top land here, and on Wrap up.</p>
+      )}
+      {session.notes.trim() && (
+        <details className="lectern-plan-notes">
+          <summary>Plan (written before the game)</summary>
+          <div>
+            <Markdown text={session.notes} entities={entities} worldId={worldId} showSecrets />
+          </div>
+        </details>
       )}
     </LecternPanel>
   )
@@ -1278,15 +1320,15 @@ function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {
               >
                 +1 min
               </button>
-              {shared && (
-                <button
-                  className="ghost small"
-                  title={t.hidden ? 'Players can’t see this one. Show it to them' : 'Players see this one. Hide it from them'}
-                  onClick={() => change(t.id, (x) => void (x.hidden = !x.hidden || undefined))}
-                >
-                  <Ico as={t.hidden ? EyeSlash : Eye} />
-                </button>
-              )}
+              {/* The players' screen (a TV) shows timers with or without cloud sync, so the eye is always there. */}
+              <button
+                className="ghost small"
+                title={t.hidden ? 'GM only. Click so players see it too' : 'Players see this one. Click to make it GM only'}
+                aria-label={t.hidden ? `Show ${t.label || 'this timer'} to players` : `Hide ${t.label || 'this timer'} from players`}
+                onClick={() => change(t.id, (x) => void (x.hidden = !x.hidden || undefined))}
+              >
+                <Ico as={t.hidden ? EyeSlash : Eye} />
+              </button>
               <button
                 className="ghost small"
                 title="Remove"
@@ -1323,7 +1365,10 @@ function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {
           <button disabled={!(Number(custom) > 0)}>Start</button>
         </form>
       </div>
-      {shared && timers.length > 0 && <p className="muted small">While you’re live, players see timers in their Common Room unless you hide them.</p>}
+      {/* Said whether or not a timer is running yet: a new one is shown to players unless it's hidden. */}
+      <p className="muted small timers-shown-note">
+        Players can see every timer you start: on the Players’ screen (a TV){shared ? ' and, while you’re live, in their Common Room' : ''}. To keep one to yourself, press its eye to make it GM only.
+      </p>
     </LecternPanel>
   )
 }

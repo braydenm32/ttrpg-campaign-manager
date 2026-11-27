@@ -179,6 +179,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .area-tabs .count, .areas .count { margin-left: .2em; font-size: .72rem; line-height: 1.5; padding: 0 .5em; border-radius: 999px; background: var(--chrome-on, var(--panel-2)); color: var(--chrome-ink, var(--text)); font-weight: 600; }
 .area-tabs .count.alert, .areas .count.alert { background: var(--accent); color: var(--accent-ink); }
 .world-date { font-size: .8rem; color: var(--chrome-muted, var(--muted)); white-space: nowrap; }
+a.world-date { display: inline-flex; align-items: center; gap: .3em; min-height: 36px; padding: 0 .5em; border-radius: 999px; text-decoration: none; }
+a.world-date:hover { color: var(--chrome-ink, var(--text)); background: var(--chrome-on, var(--panel-2)); }
 /* When more tabs wait off to the right, the strip fades at its edge. */
 .area-tabs[data-more] { -webkit-mask-image: linear-gradient(to right, #000 88%, transparent); mask-image: linear-gradient(to right, #000 88%, transparent); }
 .topbar .search-button { flex: 0 1 16em; min-width: 10em; margin: 0; width: auto; background: var(--chrome-search, var(--bg)); border-color: transparent; color: var(--chrome-muted, var(--muted)); justify-content: flex-start; }
@@ -187,6 +189,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 /* A tablet held upright (801-1000 px) has the sidebar but not the room for the search words and the date. */
 @media (min-width: 801px) and (max-width: 1000px) {
   .topbar .search-button .search-label, .topbar .search-button kbd, .world-date { display: none; }
+  a.world-date { display: inline-flex; }
+  a.world-date .world-date-text { display: none; }
   .topbar .search-button { flex: none; min-width: 40px; width: 40px; padding: 0; justify-content: center; }
   .foe-table { display: block; overflow-x: auto; }
 }
@@ -261,6 +265,10 @@ a.card:hover, button.card:hover { border-color: var(--accent); text-decoration: 
 .tree { padding-left: 0; }
 .tree li { padding: .25em 0; }
 .tree ul { border-left: 1px solid var(--border); margin-left: .3em; }
+/* The fold arrow before a page with pages under it (src/nestingUi.tsx). */
+.tree .fold { padding: .1em .3em; margin: 0 .15em 0 -.3em; min-height: 0; line-height: 1; vertical-align: middle; }
+.part-of { margin: -.2em 0 .3em; }
+.under-it > button.ghost { margin-top: .4em; }
 .tags { display: flex; flex-wrap: wrap; gap: .35em; margin: .4em 0; }
 .tag { background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; padding: .1em .65em; font-size: .82em; display: inline-flex; align-items: center; gap: .3em; }
 .tag button { background: none; border: none; padding: 0; color: var(--muted); }
@@ -386,6 +394,9 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
   .back-button, .topbar .search-button { flex: none; width: 44px; height: 44px; min-width: 44px; padding: 0; justify-content: center; margin: 0; background: none; border: none; color: var(--chrome-ink, var(--text)); }
   .topbar .search-button .search-label, .topbar .search-button kbd { display: none; }
   .world-date { display: none; }
+  /* On a phone the date is a calendar button: it opens Date and time. */
+  a.world-date { display: inline-flex; justify-content: center; width: 44px; height: 44px; padding: 0; flex: none; color: var(--chrome-ink, var(--text)); }
+  a.world-date .world-date-text { display: none; }
   .area-tabs { order: 10; flex: 0 0 calc(100% + 8px); height: 44px; margin: 0 -4px; padding: 0 .5em; border-top: 1px solid var(--chrome-line, var(--border)); }
   .tabs-more { position: absolute; right: 0; bottom: 0; width: 26px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; line-height: 1; color: var(--chrome-ink, var(--text)); pointer-events: none; }
   .app-shell:not(.with-phone-tabs) .area-tabs { display: none; }
@@ -431,6 +442,9 @@ details summary { cursor: pointer; color: var(--muted); margin: .5em 0; }
   .player-banner > button { min-height: 44px; }
   /* A page's picture: Upload, Use an existing image and Remove are whole fingertips. */
   .image-actions > :is(button, .button) { min-height: 44px; }
+  /* "+ New … under it" on a page (src/nestingUi.tsx), and everything pressed in the delete dialog (src/deleteCheck.tsx). */
+  :is(.add-under, .under-it) > button.ghost { min-height: 44px; }
+  .delete-check :is(button, .button) { min-height: 44px; }
 }
 .page-header > .row { flex-wrap: wrap; justify-content: flex-end; }
 
@@ -522,6 +536,10 @@ button.social.facebook .social-icon { background: #1877f2; }
 .lectern-found h2 { margin: 0 0 .4em; }
 .lectern-found-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .8em; }
 .lectern-notes { max-height: 22em; overflow: auto; font-size: .95em; }
+/* The plan, folded under What happened at the Lectern: its own scroll, so a long plan doesn't push the panels below away. */
+.lectern-plan-notes { margin-top: .5rem; font-size: .9em; }
+.lectern-plan-notes > summary { color: var(--muted); cursor: pointer; }
+.lectern-plan-notes > div { max-height: 22em; overflow: auto; }
 .lectern-search-note { margin-top: 1em; }
 .lectern-panel .secret { margin: .4em 0; }
 .lectern-panel blockquote { margin: .3em 0; padding-left: .8em; border-left: 3px solid var(--border); font-style: italic; }
@@ -714,6 +732,14 @@ button.social.facebook .social-icon { background: #1877f2; }
 
 /* Writing secrets: the buttons under a text box and character suggestions on a ":::for" line */
 .secret-textarea { display: flex; flex-direction: column; gap: .35em; }
+/* A long text with its Formatted / Markdown switch (src/TextEditor.tsx). */
+.form .text-field { display: flex; flex-direction: column; gap: .3em; font-size: .9em; color: var(--muted); }
+.text-editor { display: flex; flex-direction: column; gap: .35em; min-width: 0; }
+.text-editor textarea { color: var(--text); font-size: 1rem; }
+.text-editor-modes { gap: .5em; }
+.text-editor-modes .segmented button { font-size: .9em; padding: .3em .8em; }
+@media (max-width: 800px) { .text-editor-modes .segmented button { min-height: 44px; } }
+.text-editor-preview { border: 1px dashed var(--border); border-radius: 8px; padding: .6em .8em; background: var(--panel); color: var(--text); font-size: 1rem; }
 .secret-textarea textarea { width: 100%; }
 .secret-buttons { gap: .4em; }
 .hp-input.scale-value { width: 6em; flex: none; }
@@ -1013,6 +1039,7 @@ label.check-item { display: flex; gap: .4em; align-items: flex-start; font-size:
 .end-steps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .6em; }
 .end-steps li { display: flex; gap: .6em; align-items: flex-start; }
 .end-steps li.done strong { color: var(--muted); }
+.end-steps li p { margin: .2em 0 .5em; }
 .end-tick { width: 1.4em; flex: none; text-align: center; color: var(--accent); font-weight: bold; }
 .recap-preview { max-height: 18em; overflow: hidden; mask-image: linear-gradient(to bottom, #000 75%, transparent); }
 .my-character { display: flex; gap: .8em; align-items: center; color: var(--text); margin-bottom: .6em; }
@@ -1530,6 +1557,10 @@ a.more-item:hover { border-color: var(--accent); }
 @media (max-width: 800px) {
   body:has(.app-shell.with-bottom-bar) .undo-toast { bottom: calc(var(--bottombar-h) + .75em); }
   .undo-toast { width: calc(100vw - 2em); }
+  .undo-toast.long-action { flex-wrap: wrap; row-gap: 0; padding-top: .6em; }
+  .undo-toast.long-action > span { flex-basis: 100%; }
+  .undo-toast.long-action .undo-button { margin-left: -.6em; }
+  .undo-toast.long-action .undo-close { margin-left: auto; }
 }
 
 /* A session's stage (src/stage.tsx): Planned, Preparing, Playing, Played. */
@@ -1806,6 +1837,11 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
 .review-step h3 { display: flex; align-items: center; gap: .35em; margin: .8em 0 .2em; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .review-step ul { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: .2em; }
 .review-step-buttons { margin-top: 1.2em; }
+/* Deleting what can't be undone (src/deleteCheck.tsx): the name to type. */
+.delete-check-name { display: flex; flex-direction: column; gap: .3em; margin-top: .9em; }
+.delete-check-name input { width: 100%; box-sizing: border-box; font-size: 1rem; }
+/* It can be restored: a plain note, not the warning a world's delete shows. */
+.delete-check .delete-check-back { margin: .9em 0 0; color: var(--muted); }
 .seen-mark { display: inline-flex; align-items: center; vertical-align: middle; font-size: .85em; margin-left: .15em; }
 .seen-mark.players { color: var(--good-text, var(--good)); }
 .seen-mark.gm { color: var(--muted); opacity: .75; }
@@ -1900,6 +1936,7 @@ textarea.scene-text { width: 100%; min-height: 4.5em; margin-top: .5em; }
   .everything-found li > a { min-height: 44px; display: inline-flex; align-items: center; gap: .35em; }
   /* A fingertip-sized link that still sits in the line of text: the padding grows the tap area, not the row. */
   .tree li > a { display: inline; padding: .88em .55em; margin: 0 -.55em; }
+  .tree .fold { min-width: 44px; min-height: 44px; margin: -.6em 0 -.6em -.6em; }
   .list-seen .help-button { min-width: 44px; min-height: 44px; }
 }
 

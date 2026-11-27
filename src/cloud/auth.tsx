@@ -432,7 +432,7 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
                     confirm(
                       `Also remove the ${joined.length === 1 ? 'world' : `${joined.length} worlds`} you joined as a player from this device?\n\n${joined
                         .map((w) => `• ${w.name}`)
-                        .join('\n')}\n\nYou stay in ${joined.length === 1 ? 'it' : 'them'}: sign in again and Home lists ${joined.length === 1 ? 'it' : 'them'} to open. Cancel keeps ${joined.length === 1 ? 'it' : 'them'} here.`,
+                        .join('\n')}\n\nYou stay in ${joined.length === 1 ? 'it' : 'them'}: sign in again and Your worlds lists ${joined.length === 1 ? 'it' : 'them'} to open. Cancel keeps ${joined.length === 1 ? 'it' : 'them'} here.`,
                     )
                   ) {
                     await removeJoinedCopies()
@@ -499,8 +499,7 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
         }}
       >
         <p className="muted small">
-          An account lets you sync worlds between devices and share a read-only player view. Without one, everything still works on
-          this device.
+          An account lets you sync worlds between devices, invite players and join worlds you play in.
         </p>
         {mode !== 'reset' && providers.length > 0 && (
           <>

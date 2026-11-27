@@ -8,6 +8,7 @@ import {
   answerCall,
   answerSignal,
   gmIdOf,
+  goLiveWith,
   linkAsHost,
   linkAsPlayer,
   publishTable,
@@ -95,11 +96,7 @@ export function GoLive({ world, session }: { world: World; session: Session }) {
   const lookup = useLiveQuery(() => (live && live !== session.id ? db.sessions.get(live) : undefined), [live, session.id])
   const other = lookup?.id === live ? lookup : undefined
   if (!world.cloud?.enabled) return null
-  const goLive = () => {
-    setLiveSession(world.id, session.id)
-    // Older sessions could be set to share nothing; going live means sharing.
-    if (session.lectern?.share?.off) db.sessions.where('id').equals(session.id).modify((s) => void (s.lectern!.share = { ...s.lectern!.share, off: undefined }))
-  }
+  const goLive = () => goLiveWith(world.id, session)
   if (live === session.id)
     return (
       <span className="live-badge" role="status">
@@ -281,7 +278,7 @@ export function TurnOrder({ combat, mine }: { combat: NonNullable<TableState['co
   const next = combat.order.length > 1 ? combat.order[(i + 1) % combat.order.length] : undefined
   return (
     <div className="turn-order">
-      <div className="muted small">Round {combat.round}</div>
+      <div className="muted small">Turn order · round {combat.round}</div>
       <ol>
         {combat.order.map((t) => {
           const you = !!t.entityId && mine.has(t.entityId)

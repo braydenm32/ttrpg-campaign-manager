@@ -149,7 +149,7 @@ export async function exportWorld(worldId: string, onProgress?: (done: number, t
   const link = document.createElement('a')
   link.href = URL.createObjectURL(file)
   // Any letters (Zoë, Ægir, 龍) stay in the name; only characters file systems refuse are swapped.
-  link.download = `${world.name.replace(/[\\/:*?"<>|\s]+/g, '_').replace(/^[._]+|_+$/g, '') || 'world'}-${backup.exportedAt.slice(0, 10)}.codex.zip`
+  link.download = `${world.name.replace(/[\\/:*?"<>|\s]+/g, '_').replace(/^[._]+|_+$/g, '') || 'world'}-${backup.exportedAt.slice(0, 10)}.warded-atlas.zip`
   link.click()
   setTimeout(() => URL.revokeObjectURL(link.href), 60_000)
   backupStore.write(worldId, 'last', Date.now())
@@ -255,8 +255,8 @@ export async function importWorld(file: File): Promise<{ id: string; name: strin
       cloud: undefined,
       shared: undefined,
       coverId: opt(b.world.coverId),
-      showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId) } : undefined,
-      handouts: b.world.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId) })),
+      showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId), mapId: opt(showing.mapId) } : undefined,
+      handouts: b.world.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId), mapId: opt(h.mapId) })),
       // The GM screen's pinned pages.
       gmScreen: b.world.gmScreen && {
         ...b.world.gmScreen,
@@ -312,6 +312,7 @@ export async function importWorld(file: File): Promise<{ id: string; name: strin
         worldId,
         campaignId: id(s.campaignId),
         notes: pics(s.notes),
+        happened: pics(s.happened),
         recap: pics(s.recap),
         entityIds: s.entityIds.map(id),
         playStart: s.playStart && { ...s.playStart, notes: pics(s.playStart.notes), entityIds: s.playStart.entityIds.map(id) },

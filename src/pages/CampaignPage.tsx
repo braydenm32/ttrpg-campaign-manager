@@ -1,5 +1,5 @@
-import { binCampaign } from '../bin'
-import { dropCloudTranscripts } from '../ai/TranscriptPanel'
+import { DeleteCampaignButton } from '../deleteAsk'
+import { setCampaignStatus, STATUS_WORDS } from '../campaignStatus'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -10,7 +10,8 @@ import { PartyGlance } from '../partyGlance'
 import { StorySoFar } from '../highlights'
 import { questProgress } from '../quests'
 import { isActiveQuest, isOpenQuest } from '../counts'
-import { bookNextSession, createNextSession, partyOf, sessionFirstTab, sessionStage, startAndTell, type SessionStage } from '../sessions'
+import { bookNextSession, createNextSession, partyOf, sessionFirstTab, sessionStage, type SessionStage } from '../sessions'
+import { StartPlayingButton } from '../startPlaying'
 import { useFromAddress, useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
 import { useViewMode } from '../viewMode'
@@ -70,6 +71,14 @@ export default function CampaignPage() {
           )}
           <div className="muted">
             {campaign.system} · {capital(campaign.status)}
+            {isGM && (campaign.status === 'paused' || campaign.status === 'finished') && (
+              <>
+                {' '}
+                <button className="small" onClick={() => setCampaignStatus(campaign, 'active')}>
+                  {campaign.status === 'paused' ? 'Carry on' : 'Back on the Desk'}
+                </button>
+              </>
+            )}
             {isGM && campaign.visibility === 'gm' && (
               <>
                 {' · '}
@@ -91,7 +100,7 @@ export default function CampaignPage() {
           All sessions <Help topic="session" />
         </h2>
         {sessions.length === 0 ? (
-          <Empty>{isGM ? 'No sessions yet.' : 'No sessions to read yet. Your GM’s write-ups will land here.'}</Empty>
+          <Empty>{isGM ? 'No sessions yet.' : 'No sessions to read yet. Your GM’s recaps will land here.'}</Empty>
         ) : (
           <ul className="session-rows">
             {[...sessions].reverse().map((s) => {
@@ -119,7 +128,7 @@ export default function CampaignPage() {
         <section>
           <h2>The party <Help topic="partyCampaign" /></h2>
           {pcs.length === 0 ? (
-            <Empty>{isGM ? 'Add Player Characters in the Atlas (People).' : 'Nobody’s in the party yet. Once your GM adds your characters, they show here.'}</Empty>
+            <Empty>{isGM ? 'Add player characters in the Atlas, under People.' : 'Nobody’s in the party yet. Once your GM adds your characters, they show here.'}</Empty>
           ) : isGM && world ? (
             <PartyGlance world={world} party={pcs} />
           ) : (
@@ -168,27 +177,31 @@ export default function CampaignPage() {
           <summary>Campaign settings</summary>
           <div className="row">
             <select aria-label="Game system" value={campaign.system} onChange={(e) => update({ system: e.target.value })}>
+              {!GAME_SYSTEMS.includes(campaign.system) && <option>{campaign.system}</option>}
               {GAME_SYSTEMS.map((s) => (
                 <option key={s}>{s}</option>
               ))}
             </select>
-            <select aria-label="Status" value={campaign.status} onChange={(e) => update({ status: e.target.value as Campaign['status'] })}>
+            <Help topic="gameSystem" />
+            <select aria-label="Status" value={campaign.status} onChange={(e) => setCampaignStatus(campaign, e.target.value as Campaign['status'])}>
               <option value="planning">Planning</option>
               <option value="active">Active</option>
               <option value="paused">Paused</option>
               <option value="finished">Finished</option>
             </select>
+            <Help topic="campaignStatus" />
             <VisibilityToggle
               value={campaign.visibility ?? 'players'}
               onChange={async (v) => {
                 const was = campaign.visibility
                 await update({ visibility: v === 'players' ? undefined : v })
-                toast(v === 'players' ? `Players can see “${campaign.name}” and the sessions you’ve shown them.` : `“${campaign.name}” is hidden from players.`, () => update({ visibility: was }))
+                toast(v === 'players' ? `Players can see “${campaign.name}” and the sessions you’ve revealed.` : `“${campaign.name}” is GM only now.`, () => update({ visibility: was }))
               }}
             />
             <Help topic="hiddenCampaign" />
             <SavedMark />
           </div>
+          <small className="muted">{STATUS_WORDS[campaign.status] ?? ''}</small>
           <DraftText
             multiline
             rows={3}
@@ -196,24 +209,9 @@ export default function CampaignPage() {
             value={campaign.description}
             onCommit={(description) => update({ description })}
           />
-          <small className="muted">{campaign.visibility === 'gm' ? 'This campaign is hidden from players.' : 'Players can see this. Keep secrets out of it.'}</small>
+          <small className="muted">{campaign.visibility === 'gm' ? 'This campaign is GM only.' : 'Players can see this. Keep GM-only things out of it.'}</small>
           <div className="row end">
-            <button
-              className="danger"
-              disabled={recording}
-              title={recording ? 'Stop the recording first' : undefined}
-              onClick={async () => {
-                if (!confirm(`Delete campaign "${campaign.name}" and its sessions? World content is kept.`)) return
-                // Characters who played only in this campaign go back to "any campaign", so they don't vanish from every party.
-                await db.entities.where({ worldId }).filter((e) => e.campaignId === campaignId).modify({ campaignId: undefined })
-                // As for one session: AssemblyAI's copies of transcripts still being made go too.
-                await dropCloudTranscripts(await db.sessions.where({ campaignId }).toArray())
-                await binCampaign(campaignId)
-                navigate(`${worldPath(worldId)}`)
-              }}
-            >
-              Delete campaign
-            </button>
+            <DeleteCampaignButton campaign={campaign} recording={recording} onDeleted={() => navigate(worldPath(worldId))} />
           </div>
         </details>
       )}
@@ -223,10 +221,9 @@ export default function CampaignPage() {
 
 /**
  * All sessions › Next session: the session in hand itself, with its stage and the one next step
- * (Prepare, Start playing, Back to the table or Wrap up), or a way to make the next one.
+ * (Prepare, Start playing, Continue or Wrap up), or a way to make the next one.
  */
 function NextUp({ worldId, next, stage, onNew }: { worldId: string; next: Session | undefined; stage: SessionStage | undefined; onNew: () => void }) {
-  const navigate = useNavigate()
   const w = worldPath(worldId)
   if (!next || !stage || stage === 'played')
     return (
@@ -259,7 +256,7 @@ function NextUp({ worldId, next, stage, onNew }: { worldId: string; next: Sessio
         {stage === 'playing' ? (
           <>
             <Link className="button primary" to={`${w}/s/${next.id}/lectern`}>
-              <Ico as={Play} weight="fill" /> Back to the table
+              <Ico as={Play} weight="fill" /> Continue
             </Link>
             <Link className="button" to={`${w}/s/${next.id}?tab=notes`}>
               <Ico as={FlagCheckered} /> Wrap up
@@ -270,14 +267,7 @@ function NextUp({ worldId, next, stage, onNew }: { worldId: string; next: Sessio
             <Link className="button primary" to={`${w}/s/${next.id}?tab=prep`}>
               <Ico as={ListChecks} /> Prepare
             </Link>
-            <button
-              onClick={async () => {
-                await startAndTell(next)
-                navigate(`${w}/s/${next.id}/lectern`)
-              }}
-            >
-              <Ico as={Play} weight="fill" /> Start playing
-            </button>
+            <StartPlayingButton session={next} className="" />
           </>
         )}
       </div>

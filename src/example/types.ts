@@ -96,8 +96,10 @@ export interface ExSession {
   players?: boolean
   /** Months count from 1 here, as on events. */
   worldDate?: CalDate
-  /** The GM's notes or outline (Markdown). */
+  /** The GM's plan for the session (Markdown): the file's main text. Shown under "Plan". */
   notes: string
+  /** The GM's notes on what happened (Markdown), for a session already played: the "== What happened ==" part. */
+  happened?: string
   recap?: string
   /** Pages involved. */
   pages?: string[]

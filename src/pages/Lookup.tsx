@@ -13,6 +13,7 @@ import { toast } from '../undo'
 import { useViewMode } from '../viewMode'
 import { LookupError, pageBody, read, search, type Found, type Hit } from '../lookup/fetch'
 import { LOOKUP_SYSTEMS, sourcesFor } from '../lookup/sources'
+import { useGameSystem, useMyCampaignId } from '../gameSystem'
 import '../more.css'
 
 /**
@@ -26,8 +27,14 @@ export default function Lookup() {
   const { isGM } = useViewMode()
   const entities = useVisibleEntities(worldId)
   const kept = `lookup:${worldId}`
-  const startSystem = world && LOOKUP_SYSTEMS.includes(world.system) ? world.system : 'D&D 5e (2024)'
-  const [system, setSystem] = useKept(`${kept}:system`, '')
+  // The game being played (the campaign in hand's, else the world's: see src/gameSystem.ts). A game
+  // picked here is kept for this tab only while that stays the same: a new campaign in hand starts on its own game.
+  // A player gets the game of the campaign their own character plays in.
+  const playing = useGameSystem(world, useMyCampaignId(world, entities))
+  // A game with no open rules of its own (Blades in the Dark, say) starts on the D&D ones.
+  const hasOwn = LOOKUP_SYSTEMS.includes(playing)
+  const startSystem = hasOwn ? playing : 'D&D 5e (2024)'
+  const [system, setSystem] = useKept(`${kept}:system:${playing}`, '')
   const game = system || startSystem
   const sources = sourcesFor(game)
   const askable = sources.filter((s) => s.kind !== 'web')
@@ -88,6 +95,11 @@ export default function Lookup() {
               ))}
             </select>
           </label>
+          {game !== startSystem && (
+            <button className="small ghost" onClick={() => (setSystem(''), setSourceId(''), fresh())} title={hasOwn ? 'Go back to the game you’re playing' : `There are no open rules for ${playing || 'your game'} to search, so Look it up starts here`}>
+              Back to {startSystem}
+            </button>
+          )}
           {askable.length > 1 && (
             <div className="segmented" role="group" aria-label="Where to look">
               {askable.map((s) => (

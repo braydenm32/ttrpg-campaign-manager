@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useGameSystem } from '../gameSystem'
+import { markImported } from '../importedMark'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { Camera, NotePencil, Question, X } from '@phosphor-icons/react'
@@ -22,6 +24,7 @@ const TYPES = (Object.keys(ENTITY_LABELS) as EntityType[]).filter((t) => t !== '
  */
 export function ImportNotes({ worldId, onClose }: { worldId: string; onClose: () => void }) {
   const world = useLiveQuery(() => db.worlds.get(worldId), [worldId])
+  const game = useGameSystem(world)
   const entities = useLiveQuery(() => db.entities.where({ worldId }).toArray(), [worldId])
   const [photos, setPhotos] = useState<NotePhoto[]>([])
   const [text, setText] = useState('')
@@ -125,7 +128,7 @@ export function ImportNotes({ worldId, onClose }: { worldId: string; onClose: ()
               jobId={`notes:${worldId}`}
               jobTitle="Reading your notes"
               label="Read my notes"
-              build={() => notesRequest({ worldName: world.name, system: world.system, entities, photos, text, hints })}
+              build={() => notesRequest({ worldName: world.name, system: game, entities, photos, text, hints })}
               priceKey={`${photos.map((p) => p.name).join('|')}:${text.length}:${hints.length}`}
               onResult={(reply) => {
                 setError('')
@@ -234,6 +237,8 @@ function NotesReview({
         pickedSessions,
         campaignId || undefined,
       )
+      // Getting started's first step ticks on a real import.
+      if (res.made || res.updated || res.sessions) markImported(worldId)
       const said = [
         res.made && `${res.made} new page${res.made === 1 ? '' : 's'}${res.shown ? ` (${res.shown} that players can see)` : ''}`,
         res.updated && `${res.updated} page${res.updated === 1 ? '' : 's'} updated`,
@@ -385,7 +390,7 @@ function NotesReview({
             ) : (
               <p className="muted small">
                 {campaigns.length
-                  ? `They go at the end of ${campaigns[0].name}, as played, with your notes as their GM notes.`
+                  ? `They go at the end of ${campaigns[0].name}, as played, with your notes under “What happened”.`
                   : 'This world has no campaign yet, so one is made for them, named after the world.'}
               </p>
             ))}
@@ -393,8 +398,8 @@ function NotesReview({
       )}
 
       <p className="muted small">
-        Pages ticked 👁 are shown to your players; the rest are 🔒 GM only. Secrets always go into GM notes, which players never see. Notes for a page you
-        already have are added under “From my notes” (GM only unless ticked), and its old version stays in its history. Sessions are kept as your GM notes.
+        Pages ticked 👁 are revealed to your players; the rest are 🔒 GM only. Secrets always go into GM notes, which players never see. Notes for a page you
+        already have are added under “From my notes” (GM only unless ticked), and its old version stays in its history. Sessions keep your notes under “What happened” (GM only).
       </p>
       {error && <p className="error small">{error}</p>}
       <div className="row end">

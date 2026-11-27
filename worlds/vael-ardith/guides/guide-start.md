@@ -23,7 +23,7 @@ Between sessions, **Story › Quests** has side quests that grow out of the town
 ### A tour of the app, using this world
 Each stop below is a real page or screen you can open now. The little **?** buttons next to headings explain any feature in a sentence or two.
 
-**Secrets on a page.** Open [[Varra Nine-Knuckles]]. Some passages show a 🔒: those are GM-only and players never see them. Others are marked for one character: only Varra's player reads that her grandmother is the Kingslayer. Every PC page has one. [[Quorl Many-Words]] is a good second look.
+**GM-only passages.** Open [[Varra Nine-Knuckles]]. Some passages show a 🔒: those are GM only and players never see them. Others are marked for one character: only Varra's player reads that her grandmother is the Kingslayer. Every PC page has one. [[Quorl Many-Words]] is a good second look.
 
 **Places inside places.** [[The Lantern Keep]] sits inside [[Lantern Hill]], inside [[Cinderford]], inside [[The March of Cinders]], inside [[The Ashenreach]]. The sidebar opens down to wherever you are, and each place lists what's inside it.
 
@@ -47,7 +47,7 @@ Each stop below is a real page or screen you can open now. The little **?** butt
 
 **Party loot.** **Session › Party loot** shows who carries what. Set "Carried by" on any item, like [[The Cut Oil Tin]], once the party finds it.
 
-**Safety tools.** **More › Safety tools** has the lines and veils for this world. Agree them with your table before session 1; every player can read them and use the X-card.
+**Table rules.** **More › Table rules** has the safety tools (lines and veils) for this world. Agree them with your table before session 1; every player can read them and use the X-card.
 
 **Templates.** Making an NPC or a place? Pick "From template: NPC (Vael Ardith style)" from the New menu and you get the headings this world uses, ready to fill.
 
@@ -57,7 +57,7 @@ Each stop below is a real page or screen you can open now. The little **?** butt
 
 **Flavour pages.** When a scene needs texture, the Lore section has it: [[Feasts, Fasts and Holy Days]], [[Songs of the March]], [[Food and Drink of the March]], [[Coins and Money Slang]], [[Signals of Cinderford]] and [[The Reckoning of Years]]. They are written to be read aloud in pieces, and most are open to players.
 
-**Preview as a player.** At the bottom of the sidebar, "Viewing as" switches to Player and shows exactly what your table sees: all the secrets vanish. Try it on [[Varra Nine-Knuckles]], then switch back.
+**Preview as a player.** At the bottom of the sidebar, "Viewing as" switches to Player and shows exactly what your table sees: everything GM only vanishes. Try it on [[Varra Nine-Knuckles]], then switch back.
 
 ### Handy numbers
 - **Money.** Ten copper (cp) make a silver (sp); ten silver make a gold (gp). An old imperial crown is one gold piece. A loft bed at the Last Candle is 1 sp, small beer 1 cp, fish stew 3 cp. Two coins matter in play: new Regency silver from the Caer Ardith mint (the Quiet Office's money) and new Concord coin from the Sevenhaven mint (the pay-wagon money).

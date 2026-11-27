@@ -86,7 +86,7 @@ export async function saveStartingPoint(worldId: string) {
  */
 export async function startingPointFromBackup(worldId: string, file: File) {
   const bytes = new Uint8Array(await file.arrayBuffer())
-  if (!(bytes[0] === 0x50 && bytes[1] === 0x4b)) throw new Error('Pick a backup of this world (a .codex.zip file).')
+  if (!(bytes[0] === 0x50 && bytes[1] === 0x4b)) throw new Error('Pick a backup of this world (a .zip file downloaded from Data and backups).')
   let b: Partial<Omit<Rows, 'assets'>> & { format?: string; exportedAt?: string; world?: World; assets?: (Omit<StartingPoint['assets'][number], 'blob'> & { data?: string })[] }
   let zip
   try {
@@ -278,7 +278,7 @@ function runRecord(run: number, now: Rows, sp: StartingPoint, players?: { member
     const before = start.get(s.id)
     if (s.recap.trim() && s.recap !== before?.recap) lines.push(s.recap.trim(), '')
     const notes = notesFromPlay(s).trim()
-    if (notes && notes !== before?.notes.trim()) lines.push('**Notes from play:**', '', notes, '')
+    if (notes && notes !== (before ? notesFromPlay(before).trim() : '')) lines.push('**Notes from play:**', '', notes, '')
     const highlights = (s.highlights ?? []).filter((h) => !before?.highlights?.some((x) => x.id === h.id))
     if (highlights.length) lines.push(`**Highlights:** ${highlights.map((h) => h.text).join(' · ')}`, '')
   }

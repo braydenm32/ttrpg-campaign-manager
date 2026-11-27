@@ -136,7 +136,7 @@ On the session page, under **Write up this session**:
 1. Press **Write it now** (Anthropic key) or **Open in Claude**. Claude reads the transcript and your GM notes. With a key, you can go to other pages while it writes: a note at the top says **Claude is writing…**, then **Claude finished**, and takes you back.
 2. Check the **GM summary**, fix anything misheard, and press **Add to GM notes**.
 3. Check the **Player recap** and press **Use as the player recap**. Players see it once you reveal the session.
-4. Under **Keep the world up to date**, go through Claude's suggestions: new NPCs and places that came up, lines for existing pages, quest progress, relationships, timeline events, deaths and captures, loot changing hands, loose threads, and things that contradict your notes. Untick or **Edit** anything wrong; tick **Players can see this line** or **Add to timeline** where you want them.
+4. Under **Keep the world up to date**, go through Claude's suggestions: new NPCs and places that came up, lines for existing pages, quest progress, relationships, timeline events, deaths and captures, loot changing hands, loose threads, and things that contradict your notes. Untick or **Edit** anything wrong; tick **Players know** or **Add to timeline** where you want them.
 5. Press **Add N changes to the world**.
 
 New pages start GM only; lines on existing pages go under a "Session log" heading. **What changed**, in each session's Wrap up, lists every change that session made, and each page's **History** can roll any one back.

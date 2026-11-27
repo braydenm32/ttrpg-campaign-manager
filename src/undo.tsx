@@ -116,7 +116,8 @@ export function ToastHost() {
       {t && (
       <div
         key={t.id}
-        className="undo-toast"
+        // A long way back ("Not started after all") goes under the words on a phone, so they keep the width.
+        className={`undo-toast${t.undo && (t.undoLabel?.length ?? 0) > 10 ? ' long-action' : ''}`}
         onMouseEnter={() => setHeld(true)}
         onMouseLeave={() => setHeld(false)}
         onFocus={() => setHeld(true)}

@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable, type Table } from 'dexie'
 import type { Drawing } from './mapDrawing'
+import { above, newHome } from './nesting'
 
 /** Who can see a piece of content. GM-only content never appears in the player view. */
 export type Visibility = 'gm' | 'players'
@@ -22,19 +23,28 @@ export const ENTITY_TYPES = [
 export type EntityType = (typeof ENTITY_TYPES)[number]
 
 export const ENTITY_LABELS: Record<EntityType, { one: string; many: string; icon: string }> = {
-  location: { one: 'Location', many: 'Locations', icon: '🏰' },
+  location: { one: 'Place', many: 'Places', icon: '🏰' },
   npc: { one: 'NPC', many: 'NPCs', icon: '🧙' },
-  pc: { one: 'Player Character', many: 'Player Characters', icon: '🛡️' },
+  pc: { one: 'Player character', many: 'Player characters', icon: '🛡️' },
   faction: { one: 'Faction', many: 'Factions', icon: '⚑' },
   item: { one: 'Item', many: 'Items', icon: '🗝️' },
   event: { one: 'Event', many: 'Events', icon: '📜' },
   quest: { one: 'Quest', many: 'Quests', icon: '🧭' },
-  shop: { one: 'Shop / Tavern', many: 'Shops & Taverns', icon: '🍺' },
+  shop: { one: 'Shop', many: 'Shops', icon: '🍺' },
   deity: { one: 'Deity', many: 'Deities', icon: '✨' },
   lore: { one: 'Lore', many: 'Lore', icon: '📚' },
   thread: { one: 'Thread', many: 'Threads', icon: '🧵' },
   table: { one: 'Random table', many: 'Random tables', icon: '🎲' },
   custom: { one: 'Page', many: 'Other pages', icon: '📄' },
+}
+
+/**
+ * The word after "+ New" on a button: People make a "person" (an NPC), and other kinds go in
+ * small letters ("+ New place") unless they're short for something ("+ New NPC" never shows).
+ */
+export function newWord(one: string, type: EntityType) {
+  if (type === 'npc') return 'person'
+  return /^[A-Z]{2}/.test(one) ? one : one.toLowerCase()
 }
 
 /** Colours a world can take for its cover and book: deep, matte cloth colours that keep gold and text readable. */
@@ -425,6 +435,15 @@ export interface Showing {
   kind: 'image' | 'page' | 'text'
   title: string
   assetId?: string
+  /**
+   * A map shown from its own "Show players" button (live): while it's up it stays live, the picture
+   * (assetId, the players' copy: fogged, without GM-only pieces) follows the fog (src/liveMap.tsx).
+   * mapId is the map, only for a map players can see (they get its revealed pins on it); a GM-only
+   * map is found by its picture instead, so players are never sent the id of a map they can't see.
+   * Neither is indexed, so neither needs a db.version.
+   */
+  live?: boolean
+  mapId?: string
   entityId?: string
   text?: string
   at: number
@@ -496,7 +515,10 @@ export interface Entity {
   /** Player copies only: this page was revealed to you alone, not to the whole table. */
   secretForYou?: boolean
   tags: string[]
-  /** For locations: the containing location (city inside a region, etc). */
+  /**
+   * Where the page sits: a place it is in (a town in a region, a person in a tavern), or a page of
+   * its own kind it is part of (a faction under a faction). See src/nesting.ts.
+   */
   parentId?: string
   /** Free-form key/value fields (stats, prices, alignment...). Keeps the core system-agnostic. gm: never shown to players. */
   fields: { key: string; value: string; gm?: boolean }[]
@@ -620,6 +642,8 @@ export interface PageRelink {
   table: 'entities' | 'pins' | 'maps'
   field: 'parentId' | 'heldBy' | 'entityId' | 'locationId'
   ids: string[]
+  /** Pages under it that moved up to another page instead of being cleared: where each went. */
+  to?: Record<string, string>
 }
 
 export interface WorldMap {
@@ -879,8 +903,18 @@ export interface Session {
   number: number
   title: string
   date: string
-  /** GM's running notes (Markdown). */
+  /**
+   * "Plan": the GM's notes written before the game (Markdown). Sessions from before there were two
+   * boxes keep all their notes here. GM-only.
+   */
   notes: string
+  /**
+   * "What happened": the GM's notes during and after the game (Markdown): the Lectern's notes and
+   * quick notes go here. Unset on sessions from before there were two boxes (src/sessions.ts,
+   * notesFromPlay); new sessions start with it empty. GM-only (player_view
+   * sends sessions from a list of player-safe fields, which leaves it out).
+   */
+  happened?: string
   /** Player-facing recap (Markdown). Shown in player view. */
   recap: string
   visibility: Visibility
@@ -907,17 +941,25 @@ export interface Session {
   startedAt?: number
   playedAt?: number
   /**
+   * When the GM last went live to players with this session (the "Start playing" box, or the
+   * Lectern's switch). Wrap up's first step, "End the live session", only counts for a session that
+   * was live at some point. Not indexed; GM-only (player_view leaves it out, like startedAt).
+   */
+  liveAt?: number
+  /**
    * Who was there: the ids of the player characters at the table (src/attendance.tsx). Unset means
    * nobody said, which counts as the whole party. Players see it with the recap (only characters
    * they can see).
    */
   present?: string[]
   /**
-   * What the session held when play began (the prep script in the GM notes, the pages already linked),
-   * so Wrap up can tell what happened in play from what was only planned. `datedWorld` says Start
-   * playing also gave the session its date in the world, so taking the start back takes that back too. GM-only.
+   * What the session held when play began (the pages already linked), so Wrap up can tell what came
+   * up in play from what was only planned. `notes` is only on sessions started before there were two
+   * notes boxes: the notes as they were at the start, so what was typed after it still counts as what
+   * happened (src/sessions.ts, notesFromPlay). `datedWorld` says Start playing also gave the session
+   * its date in the world, so taking the start back takes that back too. GM-only.
    */
-  playStart?: { notes: string; entityIds: string[]; datedWorld?: boolean }
+  playStart?: { notes?: string; entityIds: string[]; datedWorld?: boolean }
   createdAt: number
 }
 
@@ -1255,7 +1297,7 @@ export interface BinItem {
    * "conflict": another device's version of a session, board or the world's settings, kept when both
    * devices changed the same part at once and this device's version won (see `fields`).
    */
-  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map' | 'elsewhere' | 'conflict' | 'reset'
+  kind: 'session' | 'campaign' | 'file' | 'board' | 'sound' | 'map' | 'pin' | 'elsewhere' | 'conflict' | 'reset'
   /** What to call it in the list, e.g. the session's title. */
   label: string
   /** The rows that were removed, by table, so restoring puts every one back. */
@@ -1386,6 +1428,30 @@ db.version(10).stores({
   startingPoints: 'worldId',
 })
 
+// v11: a session's notes are two boxes, "Plan" (Session.notes, as before) and "What happened"
+// (Session.happened, new and not indexed). Existing notes stay in Plan, with one exception: a
+// session being played right now (started, not yet marked played) whose notes still begin with the
+// copy kept at its start (playStart.notes). What was typed after the start is what happened tonight,
+// so it moves to What happened and the Plan goes back to how it was at the start. Played sessions
+// are left as they are. A session also notes when it last went live to players (Session.liveAt, not
+// indexed either), for Wrap up's "End the live session" step.
+db.version(11)
+  .stores({})
+  .upgrade((tx) =>
+    tx
+      .table('sessions')
+      .toCollection()
+      .modify((s: Session) => {
+        const before = s.playStart?.notes
+        if (!s.startedAt || s.playedAt || typeof before !== 'string' || typeof s.notes !== 'string' || !s.notes.startsWith(before)) return
+        const tail = s.notes.slice(before.length).trim()
+        const was = s.happened?.trim() ?? ''
+        s.happened = [tail, was].filter(Boolean).join('\n\n')
+        s.notes = before
+        delete s.playStart!.notes
+      }),
+  )
+
 // The bin is cleared of anything over a month old soon after the app opens, not only when it's
 // looked at, so deleting a big recording to make room does give the space back in time.
 db.on('ready', () => {
@@ -1492,19 +1558,31 @@ export async function whatDeleteUnlinks(id: string) {
 }
 
 /**
- * Deletes a page. Links to it are cleared (places inside it move up a level, items it carried
+ * Deletes a page. Links to it are cleared (pages inside or under it move up a level, items it carried
  * belong to no one, pins and maps stop pointing at it) and remembered with the deleted version,
  * so restoring it (restoreDeletedPage) puts them back.
  */
 export async function deleteEntity(id: string) {
   return db.transaction('rw', [db.entities, db.pins, db.maps, db.history], async () => {
     const e = await db.entities.get(id)
-    const { relinks } = await whatDeleteUnlinks(id)
+    const { inside, relinks } = await whatDeleteUnlinks(id)
+    // Pages under it move up to the page above it when that can hold them (a sub-faction to the
+    // faction above, a district to the city), else to the top of their list.
+    const byId = new Map(e ? (await db.entities.where({ worldId: e.worldId }).toArray()).map((x) => [x.id, x]) : [])
+    const to: Record<string, string> = {}
+    for (const x of inside) {
+      const home = newHome(x, e?.parentId, byId, id)
+      if (home) to[x.id] = home
+    }
+    const parents = relinks.find((l) => l.field === 'parentId')
+    if (parents && Object.keys(to).length) parents.to = to
     const v = e ? await keepVersion(e, 'deleted', relinks) : undefined
     await db.entities.filter((x) => x.heldBy === id).modify({ heldBy: undefined })
     await db.pins.where({ entityId: id }).modify({ entityId: undefined })
     await db.maps.where({ locationId: id }).modify({ locationId: undefined })
-    await db.entities.where({ parentId: id }).modify({ parentId: undefined })
+    await db.entities.where({ parentId: id }).modify((x) => {
+      x.parentId = to[x.id]
+    })
     await db.entities.delete(id)
     return v
   })
@@ -1512,17 +1590,23 @@ export async function deleteEntity(id: string) {
 
 /**
  * Brings a deleted page back from its deleted version, and puts back the links to it that are
- * still empty (a place moved somewhere else since stays where it is now).
+ * still empty (a place moved somewhere else since stays where it is now). A page that used to be
+ * under it but that it now sits under (moved there since) stays where it is, so nothing loops.
  */
 export async function restoreDeletedPage(v: PageVersion) {
   await db.transaction('rw', [db.entities, db.pins, db.maps], async () => {
-    await db.entities.put({ ...v.entity, updatedAt: Date.now() })
+    const back = { ...v.entity, updatedAt: Date.now() }
+    await db.entities.put(back)
+    const byId = new Map((await db.entities.where({ worldId: back.worldId }).toArray()).map((x) => [x.id, x]))
+    const over = new Set(above(back, byId).map((x) => x.id))
     for (const l of v.relinks ?? []) {
       const table = db[l.table] as unknown as Table<Record<string, unknown>, string>
       await table
         .where(':id')
         .anyOf(l.ids)
-        .filter((x) => !x[l.field])
+        // Still where deleting it left them (cleared, or moved up a level).
+        .filter((x) => !x[l.field] || (!!l.to && x[l.field] === l.to[x.id as string]))
+        .filter((x) => l.field !== 'parentId' || !over.has(x.id as string))
         .modify({ [l.field]: v.entityId, ...(l.table === 'entities' ? { updatedAt: Date.now() } : {}) })
     }
   })

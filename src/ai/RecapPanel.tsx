@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { db, type Entity, type Session, type World } from '../db'
 import { Markdown } from '../Markdown'
 import { SecretNamesWarning } from '../SecretNamesWarning'
+import { useSessionSystem } from '../gameSystem'
 import { buildRecapPrompt, estimateTokens, parseRecap, RECAP_MODEL, recapCost, recapWithClaude } from './recap'
 import { useAiSettings } from './settings'
 import { Ico } from '../icons'
@@ -17,11 +18,12 @@ import { copyNow, OpenedNote, OpenInChat, type Opened } from './OpenInChat'
 import { moveJob, startJob, stopJob, takeFinished, useJob } from './jobs'
 
 /**
- * Turns a session's transcript (and GM notes) into a GM summary and a player recap.
+ * Turns a session's transcript (and the GM's notes: Plan and What happened) into a GM summary and a player recap.
  * Two ways: open Claude or ChatGPT with everything filled in (free with an account there),
  * or one click with the GM's own Anthropic API key. Either way, the GM reviews before anything is saved.
  */
 export function RecapPanel({ world, session, entities }: { world: World; session: Session; entities: Entity[] }) {
+  const game = useSessionSystem(world, session)
   const settings = useAiSettings()
   const [mode, setMode] = useState<'idle' | 'paste'>('idle')
   const [pasted, setPasted] = useState('')
@@ -40,8 +42,9 @@ export function RecapPanel({ world, session, entities }: { world: World; session
   }, [job, pathname, search])
 
   const transcribed = session.recordings.filter((r) => r.transcript && !r.transcript.pending).length
-  const hasMaterial = transcribed > 0 || session.notes.trim().length > 0
-  const prompt = () => buildRecapPrompt(world, session, entities)
+  // Either notes box will do: what happened, or (for a session from before there were two) the one box.
+  const hasMaterial = transcribed > 0 || session.notes.trim().length > 0 || !!session.happened?.trim()
+  const prompt = () => buildRecapPrompt(world, session, entities, game)
   const estimate = hasMaterial ? recapCost(estimateTokens(prompt()), 6000) : 0
 
   const saveDraft = (text: string, source: 'claude-api' | 'pasted') =>
@@ -79,10 +82,10 @@ export function RecapPanel({ world, session, entities }: { world: World; session
       </h2>
       <p className="muted small">
         {transcribed
-          ? `Claude reads the transcript${transcribed > 1 ? 's' : ''} and your GM notes, then drafts a GM summary, a player recap and updates for your pages, for you to check.`
+          ? `Claude reads the transcript${transcribed > 1 ? 's' : ''} and your notes (Plan and What happened), then drafts a GM summary, a player recap and updates for your pages, for you to check.`
           : session.recordings.length
-            ? 'Transcribe a recording above first (or write some GM notes), then Claude can draft a GM summary and a player recap.'
-            : 'Record the session, or write GM notes, and Claude can draft a GM summary and a player recap from them.'}
+            ? 'Transcribe a recording above first (or write down what happened), then Claude can draft a GM summary and a player recap.'
+            : 'Record the session, or write down what happened, and Claude can draft a GM summary and a player recap from them.'}
       </p>
 
       {writing ? (
@@ -196,7 +199,8 @@ function RecapDraftReview({ world, session, entities, note }: { world: World; se
   }
 
   const useGm = async () => {
-    await db.sessions.update(session.id, { notes: append(session.notes, `## Summary\n\n${gm.trim()}`) })
+    // A summary of the session belongs with what happened, not with the plan.
+    await db.sessions.update(session.id, { happened: append(session.happened ?? '', `## Summary\n\n${gm.trim()}`) })
     setDone((d) => ({ ...d, gm: true }))
   }
   const usePlayers = async () => {
@@ -225,7 +229,7 @@ function RecapDraftReview({ world, session, entities, note }: { world: World; se
       )}
       <div className="row">
         <button onClick={useGm} disabled={!gm.trim() || done.gm}>
-          {done.gm ? '✓ Added to GM notes' : 'Add to GM notes'}
+          {done.gm ? '✓ Added to What happened' : 'Add to What happened'}
         </button>
       </div>
 

@@ -7,7 +7,8 @@ import { Empty } from '../components'
 import { Help } from '../help'
 import { useWorld } from '../hooks'
 import { Ico } from '../icons'
-import { nextSessions } from '../threads'
+import { isRunning, nextSessions } from '../threads'
+import { PausedCampaigns } from '../pausedCampaigns'
 import { createNextSession, playedAlready } from '../sessions'
 import { useViewMode } from '../viewMode'
 import { useFrameContext } from '../Sidebar'
@@ -40,7 +41,7 @@ export default function SessionLanding() {
   if (home && home !== `${w}/session`) return <Navigate to={home} replace />
   const next = nextSessions(data.campaigns, data.sessions)[0]
   if (next && !playedAlready(next.session)) return <Navigate to={`${w}/s/${next.session.id}?tab=prep`} replace />
-  const campaign = next?.campaign ?? data.campaigns.find((c) => c.status !== 'finished') ?? data.campaigns[0]
+  const campaign = next?.campaign ?? data.campaigns.find(isRunning)
   const plan = async (campaignId: string) => {
     const s = await createNextSession(worldId, campaignId, '')
     navigate(`${w}/s/${s.id}?tab=prep`)
@@ -57,17 +58,20 @@ export default function SessionLanding() {
               ? `Session #${next.session.number} of ${next.campaign.name} has been played.`
               : campaign
                 ? `${campaign.name} has no sessions yet.`
-                : 'No campaign yet. A campaign is one group’s story in this world; its sessions are planned, played and wrapped up here.'}
+                : data.campaigns.length
+                  ? 'No campaign is being run just now: they’re all paused or finished. Pick one up again below, or make a new one.'
+                  : 'No campaign yet. A campaign is one group’s story in this world; its sessions are planned, played and wrapped up here.'}
           </p>
         </div>
       </header>
       <div className="row wrap">
         <button className="primary" onClick={() => (campaign ? plan(campaign.id) : setNaming(true))}>
-          <Ico as={ListChecks} /> {next ? `Plan session #${next.session.number + 1}` : 'Plan the first session'}
+          <Ico as={ListChecks} /> {next ? `Plan session #${next.session.number + 1}` : !campaign && data.campaigns.length ? 'Make a new campaign' : 'Plan the first session'}
         </button>
         {next && <Link className="button" to={`${w}/s/${next.session.id}?tab=notes`}>Wrap up #{next.session.number}</Link>}
         {campaign && <Link className="button" to={`${w}/c/${campaign.id}`}>All sessions</Link>}
       </div>
+      <PausedCampaigns world={world} campaigns={data.campaigns} finishedToo={!campaign} />
       {naming && <NewCampaign worldId={worldId} defaultSystem={world.system} onClose={() => setNaming(false)} onCreated={(id) => plan(id)} />}
     </div>
   )

@@ -227,7 +227,7 @@ test('rooms can be picked, changed and erased, Ctrl+Z works after a slider, and 
     await clickMap(page, [140, 315])
     await expect(panel(page).locator('h2')).toHaveText('Room')
     await shot(page, 'maps-room-selected')
-    await panel(page).getByLabel(/Secret/).check()
+    await panel(page).getByLabel(/GM only: a secret room/).check()
     await expect.poll(async () => (await mapNamed(page, name))?.drawing.rooms?.[0].gm).toBe(true)
     await panel(page).getByRole('button', { name: 'Fill in' }).click()
     await expect.poll(async () => (await mapNamed(page, name))?.drawing.rooms?.[0].mode).toBe('fill')

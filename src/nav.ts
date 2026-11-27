@@ -1,5 +1,6 @@
 import {
   Armchair,
+  CalendarBlank,
   Backpack,
   BookOpenText,
   Books,
@@ -102,7 +103,7 @@ export interface NavFacts {
 export interface NavTab {
   id: string
   label: string
-  /** The name in search, where the label alone is vague ("Play" is the Lectern). */
+  /** The name in search, where the label alone is vague ("Play" is "Play: the Lectern"). */
   searchTitle?: string
   icon: Icon
   /** Where it goes. Nothing means it's left out of the menus for now. */
@@ -166,7 +167,7 @@ const worldTabs: NavTab[] = [
     keywords: 'history events sessions recaps campaigns',
   },
   { id: 'everything', label: 'Everything', icon: SquaresFour, to: (f) => w(f, 'everything'), paths: ['everything', 'other/:kind'], types: ['item', 'event', 'custom', 'table'], who: readers, keywords: 'all types codex items events' },
-  { id: 'more', label: 'More', icon: DotsThreeOutline, to: (f) => w(f, 'more'), paths: ['more', 'handouts', 'web'], who: readers, keywords: 'campaigns' },
+  { id: 'more', label: 'More', icon: DotsThreeOutline, to: (f) => w(f, 'more'), paths: ['more', 'handouts', 'web', 'date'], who: readers, keywords: 'campaigns' },
 ]
 
 export const AREAS: NavArea[] = [
@@ -210,12 +211,12 @@ export const AREAS: NavArea[] = [
         to: (f) => (f.sessionId ? w(f, `s/${f.sessionId}?tab=prep`) : undefined),
         paths: ['s/:sessionId?tab=prep'],
         who: own,
-        keywords: 'prep scenes clues encounters next session',
+        keywords: 'prep scenes clues fights encounters next session',
       },
       {
         id: 'play',
         label: 'Play',
-        searchTitle: 'The Lectern',
+        searchTitle: 'Play: the Lectern',
         icon: Play,
         to: (f) => (f.sessionId ? w(f, `s/${f.sessionId}/lectern`) : undefined),
         paths: ['s/:sessionId/lectern'],
@@ -288,6 +289,15 @@ export const AREAS: NavArea[] = [
       { id: 'quests', label: 'Quests', icon: Compass, to: (f) => w(f, 'quests'), types: ['quest'], who: own, keywords: 'objectives rewards' },
       { id: 'clocks', label: 'Clocks', icon: Timer, to: (f) => w(f, 'clocks'), paths: ['clocks'], who: own, count: (f) => f.clocks || undefined, keywords: 'countdown progress' },
       { id: 'timeline', label: 'Timeline', icon: Hourglass, to: (f) => w(f, 'timeline'), paths: ['timeline'], who: own, keywords: 'history events calendar' },
+      {
+        id: 'date',
+        label: 'Date and time',
+        icon: CalendarBlank,
+        to: (f) => w(f, 'date'),
+        paths: ['date'],
+        who: own,
+        keywords: 'date today world date in-game time time of day game clock hour weather calendar move the date on',
+      },
       {
         id: 'reputation',
         label: 'Reputation',
@@ -371,10 +381,10 @@ export const MORE_GROUPS: MoreGroup[] = [
     items: [
       { id: 'handouts', label: 'Handouts', icon: Newspaper, to: (f) => w(f, 'handouts'), paths: ['handouts'], who: own, blurb: 'Pictures, pages and notes you’ve shown the players.', keywords: 'shown' },
       { id: 'sounds', label: 'Soundboard', icon: MusicNotes, to: (f) => w(f, 'sounds'), paths: ['sounds'], who: own, blurb: 'Music and ambience for the table.', keywords: 'music ambience sounds sound effects' },
-      { id: 'safety', label: 'Safety tools', icon: HandPalm, to: (f) => w(f, 'safety'), paths: ['safety'], who: own, blurb: 'Lines, veils and the X-card.', keywords: 'lines veils x-card table rules' },
+      { id: 'safety', label: 'Table rules', icon: HandPalm, to: (f) => w(f, 'safety'), paths: ['safety'], who: own, blurb: 'Safety tools: lines, veils and the X-card.', keywords: 'safety tools lines veils x-card' },
       {
         id: 'screen',
-        label: 'Players’ screen for a TV',
+        label: 'Players’ screen (for a TV)',
         icon: Television,
         to: (f) => `/screen/${worldPath(f.worldId).slice(3)}`,
         who: own,
@@ -456,7 +466,7 @@ export const MORE_GROUPS: MoreGroup[] = [
         blurb: 'Cloud sync, invites, the wiki link and who plays whom.',
         keywords: 'invite players sync share wiki link co-gm claims',
       },
-      { id: 'backups', label: 'Backups', icon: DownloadSimple, to: (f) => w(f, 'settings?tab=data'), paths: ['settings?tab=data'], who: own, blurb: 'Download the whole world as one file.', keywords: 'backup download export markdown obsidian json copy save' },
+      { id: 'backups', label: 'Data and backups', icon: DownloadSimple, to: (f) => w(f, 'settings?tab=data'), paths: ['settings?tab=data'], who: own, blurb: 'Download the whole world as one file.', keywords: 'backup download export markdown obsidian json copy save' },
       { id: 'import', label: 'Import pages and character sheets', icon: FileArrowUp, to: (f) => w(f, 'settings?tab=data&at=import'), who: own, blurb: 'Bring in pages, or a character from D&D Beyond, Foundry and others.', keywords: 'import character sheet dndbeyond d&d beyond foundry pathbuilder obsidian kanka markdown world anvil' },
       {
         id: 'oneshot',
@@ -468,6 +478,15 @@ export const MORE_GROUPS: MoreGroup[] = [
         keywords: 'one-shot oneshot one shot reset restart replay run again convention starting point fresh table',
       },
       { id: 'deleted', label: 'Recently deleted', icon: Trash, to: (f) => w(f, 'settings?tab=data&at=deleted'), who: own, blurb: 'Bring back what you deleted in the last month.', keywords: 'bin trash restore undelete' },
+      {
+        id: 'start',
+        label: 'Getting started',
+        icon: ListChecks,
+        to: (f) => `${w(f)}?start=1`,
+        who: own,
+        blurb: 'The first steps for a new world, on the Desk again if you hid them.',
+        keywords: 'getting started first steps new world checklist tutorial how to begin onboarding',
+      },
       { id: 'print', label: 'Print', icon: Printer, to: () => undefined, who: own, blurb: 'Every page and session has a Print button, for a GM copy or a player copy.', keywords: 'pdf paper' },
     ],
   },
@@ -480,11 +499,11 @@ export const PLAYER_MORE_GROUPS: MoreGroup[] = [
     label: 'At the table',
     blurb: 'For game night. Loot, clocks, Group notes and questions are on the Common Room tabs.',
     items: [
-      { id: 'rules', label: 'Table rules', icon: HandPalm, to: (f) => w(f, 'safety'), who: players, when: (f) => !!f.safety, blurb: 'Lines, veils and the X-card your table agreed on.' },
+      { id: 'rules', label: 'Table rules', icon: HandPalm, to: (f) => w(f, 'safety'), who: players, when: (f) => !!f.safety, blurb: 'Safety tools: lines, veils and the X-card your table agreed on.', keywords: 'safety tools lines veils x-card' },
       { id: 'handouts', label: 'Handouts', icon: Newspaper, to: (f) => w(f, 'handouts'), who: readers, when: (f) => !!f.handouts, blurb: 'What your GM has shown you.', keywords: 'shown' },
       {
         id: 'lookup',
-        label: 'Look up rules',
+        label: 'Look it up',
         icon: BookOpenText,
         to: (f) => w(f, 'lookup'),
         paths: ['lookup'],
@@ -502,6 +521,15 @@ export const PLAYER_MORE_GROUPS: MoreGroup[] = [
       { id: 'everything', label: 'Everything', icon: SquaresFour, to: (f) => w(f, 'everything'), who: readers, blurb: 'Every kind of page, with how many there are.' },
       { id: 'web', label: 'Relationships', icon: Graph, to: (f) => w(f, 'web'), who: readers, when: (f) => !!f.links, blurb: 'Who knows whom.', keywords: 'web family tree who knows' },
       { id: 'timeline', label: 'Timeline', icon: Hourglass, to: (f) => w(f, 'timeline'), who: readers, blurb: 'Dates, history and past sessions.' },
+      {
+        id: 'date',
+        label: 'Date and time',
+        icon: CalendarBlank,
+        to: (f) => w(f, 'date'),
+        who: players,
+        blurb: 'Today in the world, its weather, and the time of day when your GM shows it.',
+        keywords: 'date today in-game time time of day weather calendar',
+      },
       // Players have it on their Party tab; a wiki reader has no Common Room, so it's here.
       {
         id: 'reputation',
@@ -692,6 +720,8 @@ export const TOOLS: NavTool[] = [
   { id: 'golive', label: 'Go live to players', icon: Play, to: lectern(), who: own, when: (f) => !!f.cloud, where: 'the Lectern', keywords: 'go live live players common room share rolls' },
   // ——— Elsewhere for the GM ———
   { id: 'fog', label: 'Fog of war', icon: MapTrifold, to: (f) => w(f, 'maps'), who: own, where: 'Maps (open a map)', keywords: 'fog fog of war hide reveal' },
+  { id: 'showmap', label: 'Show a map to players', icon: Television, to: (f) => w(f, 'maps'), who: own, where: 'Maps (open a map)', keywords: 'show map players live map battle map tv screen fog vtt virtual tabletop' },
+  { id: 'printmap', label: 'Print a map', icon: MapTrifold, to: (f) => w(f, 'maps'), who: own, where: 'Maps (open a map)', keywords: 'print map pdf paper handout players copy' },
   { id: 'ruler', label: 'Ruler', icon: Ruler, to: (f) => w(f, 'maps'), who: own, where: 'Maps (open a map)', keywords: 'ruler measure distance scale' },
   { id: 'calendar', label: 'Calendar', icon: Hourglass, to: (f) => w(f, 'settings?at=calendar'), who: own, where: 'World settings', keywords: 'calendar date dates months weeks seasons weather climate' },
   // ——— Players, on their Now tab (the GM's turn order shows there while they run the game live) ———

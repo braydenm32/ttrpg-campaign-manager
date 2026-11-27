@@ -1,4 +1,6 @@
 import { PagePicker } from '../PagePicker'
+import { isPartOf, isPlace, placeAbove, sameKind, withBelow, afterKindChange } from '../nesting'
+import { ParentFields, UnderIt } from '../nestingUi'
 import { ImagePicker } from '../ImagePicker'
 import { PinOnMapButton } from '../pinOnMap'
 import { StockTable } from '../shopStock'
@@ -6,7 +8,7 @@ import { NpcLines } from '../ai/Flavour'
 import { renameLinks } from '../links'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Help } from '../help'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Empty, Skeleton, TagInput } from '../components'
 import { blankEntity, db, ENTITY_LABELS, ENTITY_TYPES, HAS_STATUS, LIFE_STATUS, PICKER_TYPES, saveEntity, templateOf, THREAD_STATUS, typeLabel, type Entity, type EntityType, type LifeStatus, type ThreadStatus, type World } from '../db'
@@ -15,7 +17,7 @@ import { listedEntries, TableRoller } from '../tables'
 import { newThread, threadLinks, URGENCY, useCampaigns, useWorldSessions } from '../threads'
 import { asPlayerSees, saveFileAsAsset, useAssetUrl, useFromAddress, useVisibleEntities, useWorld } from '../hooks'
 import { findBacklinks, Markdown } from '../Markdown'
-import { SecretTextarea } from '../SecretTextarea'
+import { TextEditor } from '../TextEditor'
 import { SecretNamesWarning } from '../SecretNamesWarning'
 import { CharacterOwnerBox } from '../players/Characters'
 import { NameClashNotice, nameClashes } from '../players/NewCharacters'
@@ -117,8 +119,12 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
   // A page for the whole world (named like it) is where everything sits; the breadcrumb skips it.
   if (ancestors.length > 1 && world && ancestors[0].name.trim().toLowerCase() === world.name.trim().toLowerCase()) ancestors.shift()
   const inside = entities.filter((x) => x.parentId === e.id)
+  // A page that isn't a place has pages of its own kind under it (a sub-faction), listed apart.
+  const kin = isPlace(e) ? [] : inside.filter((x) => sameKind(x, e))
+  const branch = kin.length ? [...withBelow(e.id, entities)].flatMap((id) => (id !== e.id && byId.get(id) && sameKind(byId.get(id)!, e) ? [byId.get(id)!] : [])) : []
+  const placeOf = ancestors.length && !isPlace(ancestors.at(-1)!) && isPartOf(ancestors.at(-1)!, e) ? placeAbove(e, byId) : undefined
   const backlinks = findBacklinks(e, entities, isGM)
-  const groups = ENTITY_TYPES.map((t) => [t, inside.filter((x) => x.type === t)] as const).filter(([, xs]) => xs.length)
+  const groups = ENTITY_TYPES.map((t) => [t, inside.filter((x) => x.type === t && !kin.includes(x))] as const).filter(([, xs]) => xs.length)
   const seen = HAS_STATUS.includes(e.type) ? lastSeenIn(e, sessions, isGM) : undefined
   // A player's own character: their numbers first, and a word that it's them.
   const owner = e.type === 'pc' ? owners.get(e.id) : undefined
@@ -288,6 +294,7 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
           {world && <PlayerNotesBox world={world} entityId={e.id} entities={entities} />}
           {world && <AskGmBox world={world} entityId={e.id} />}
           {isGM && e.type === 'location' && <AddInside parent={e} />}
+          {!isPlace(e) && <UnderIt page={e} kids={kin} branch={branch} world={world} isGM={isGM} worldId={worldId} />}
           {groups.map(([t, xs]) => (
             <section key={t}>
               <h2>
@@ -351,9 +358,17 @@ function EntityView({ entity: e, onEdit }: { entity: Entity; onEdit: () => void 
               )}
               {ancestors.length > 0 && (
                 <div>
-                  <dt>{e.type === 'location' ? 'Inside' : e.type === 'event' ? 'Where' : 'Located in'}</dt>
+                  <dt>{e.type === 'location' ? 'Inside' : isPartOf(ancestors.at(-1)!, e) ? 'Part of' : e.type === 'event' ? 'Where' : 'Located in'}</dt>
                   <dd>
                     <Link to={`${pagePath(worldId, ancestors.at(-1)!.id)}`}>{ancestors.at(-1)!.name}</Link>
+                  </dd>
+                </div>
+              )}
+              {placeOf && (
+                <div>
+                  <dt>{e.type === 'event' ? 'Where' : 'Located in'}</dt>
+                  <dd>
+                    <Link to={pagePath(worldId, placeOf.id)}>{placeOf.name}</Link>
                   </dd>
                 </div>
               )}
@@ -477,12 +492,35 @@ async function writeChanges(opened: Entity, d: Entity, world: World | null | und
   if ('name' in mine) merged.name = d.name.trim() || 'Untitled'
   // A new calendar date puts the event in its place on the timeline; an unchanged one keeps its order among same-day events.
   if ('eventWhen' in mine && merged.type === 'event' && merged.eventWhen && world?.calendar) merged.eventOrder = toDays(world.calendar, merged.eventWhen)
+  // A new kind: a page can only be under a page of its own kind (or in a place), so whatever no
+  // longer fits moves up a level (see afterKindChange).
+  const moved = ('type' in mine || 'customType' in mine) && !merged.template ? afterKindChange(merged, await db.entities.where({ worldId: merged.worldId }).toArray()) : []
+  const self = moved.find((m) => m.id === merged.id)
+  if (self) merged.parentId = self.to
+  const under = moved.filter((m) => m.id !== merged.id)
   await saveEntity(merged)
+  for (const m of under) await db.entities.update(m.id, { parentId: m.to, updatedAt: Date.now() })
   clearDraft(opened.id)
   dropHeldPage(opened.id)
   // Renamed: links to the old name (and :::for passages, for a player character) follow it.
   const renamed = merged.template ? '' : await renameLinks(opened.worldId, current, merged)
-  return { before, merged, renamed }
+  return { before, merged, renamed, under }
+}
+
+/**
+ * Says which pages moved up a level when a page changed kind, with Undo to put them back under it.
+ * `unsave` is for an editor left without Save: the one note then says the changes were saved too,
+ * and its Undo takes them back as well (the pages under it first, then the page itself).
+ */
+function sayMoved(merged: Entity, under: { id: string; from?: string }[], world: World | null | undefined, unsave?: () => Promise<unknown>) {
+  if (!under.length) return
+  const one = typeLabel(merged, world).one
+  const kind = /^[A-Z]{2}/.test(one) ? one : one.toLowerCase()
+  const now = `is now ${/^([aeiou]|NPC)/i.test(kind) ? 'an' : 'a'} ${kind} page, so the ${under.length === 1 ? 'page' : `${under.length} pages`} under it moved up a level.`
+  toast(unsave ? `Saved your changes to “${merged.name}”. It ${now}` : `“${merged.name}” ${now}`, async () => {
+    for (const m of under) await db.entities.update(m.id, { parentId: m.from, updatedAt: Date.now() })
+    await unsave?.()
+  })
 }
 
 /**
@@ -498,6 +536,8 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
   const [opened] = useState(entity)
   const [d, setD] = useState<Entity>(entity)
   const entities = useVisibleEntities(worldId)
+  // "As players see it" knows only the pages players can see: a link to any other is drawn as they get it.
+  const playersPages = useMemo(() => entities.filter((e) => e.visibility === 'players' && !e.template), [entities])
   const image = useAssetUrl(d.imageId)
   const set = <K extends keyof Entity>(k: K, v: Entity[K]) => setD((x) => ({ ...x, [k]: v }))
   const [holderPick, setHolderPick] = useState(false)
@@ -550,13 +590,17 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
       if (closed || !changed) return
       // Left without Save or Cancel (a link, Back, another screen): keep what was typed, with Undo.
       void writeChanges(opened, last, world).then(
-        ({ before, merged }) =>
-          toast(`Saved your changes to “${merged.name}”.`, async () => {
+        ({ before, merged, under }) => {
+          const unsave = async () => {
             if (!before) return db.entities.delete(merged.id)
             await db.entities.put(before)
             // Renamed on the way out: the links that followed the new name go back to the old one too.
             if (!merged.template && before.name.trim() !== merged.name.trim()) await renameLinks(merged.worldId, merged, before)
-          }),
+          }
+          // A new kind that moved pages up a level: one note says both, and its Undo takes both back.
+          if (under.length) sayMoved(merged, under, world, unsave)
+          else toast(`Saved your changes to “${merged.name}”.`, unsave)
+        },
         // What was typed is kept on this device (the draft), and offered next time the editor opens.
         (err) => {
           keep()
@@ -572,7 +616,9 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
     leaving.current.closed = true
     let renamed: string
     try {
-      ;({ renamed } = await writeChanges(opened, d, world))
+      let merged: Entity, under: { id: string; from?: string }[]
+      ;({ renamed, merged, under } = await writeChanges(opened, d, world))
+      sayMoved(merged, under, world)
     } catch (err) {
       // Still open, with what was typed, so Save can be pressed again once there's room.
       leaving.current.closed = false
@@ -601,17 +647,6 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
     await db.entities.add(t)
     alert(`Saved “${t.name}” as a template. Choose it next time you make a new ${typeLabel(d, world).one.toLowerCase()}. Templates are listed in World settings.`)
   }
-  // Anything can sit "inside" a location, and locations can nest, but a place can't go inside itself or anything inside it.
-  const within = new Set([d.id])
-  for (let grew = true; grew; ) {
-    grew = false
-    for (const x of entities) {
-      if (!x.parentId || !within.has(x.parentId) || within.has(x.id)) continue
-      within.add(x.id)
-      grew = true
-    }
-  }
-  const parents = entities.filter((x) => x.type === 'location' && !within.has(x.id))
 
   return (
     <div className="page">
@@ -631,7 +666,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
                 <Ico as={Lock} /> GM only
               </button>
               <button type="button" className={d.visibility === 'players' ? 'on' : ''} aria-pressed={d.visibility === 'players'} onClick={() => set('visibility', 'players')}>
-                <Ico as={Eye} /> Players can see it
+                <Ico as={Eye} /> Players can see this
               </button>
             </div>
           )}
@@ -739,11 +774,16 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
               onChange={(ev) => {
                 const v = ev.target.value
                 // A page that becomes a quest or a thread starts open, as a new one does.
-                setD((x) => ({
-                  ...(v.startsWith('custom:') ? { ...x, type: 'custom', customType: v.slice(7) } : { ...x, type: v as EntityType, customType: undefined }),
-                  ...(v === 'quest' && !x.questStatus ? { questStatus: 'open' as const } : {}),
-                  ...(v === 'thread' && !x.threadStatus ? { threadStatus: 'open' as const, threadUrgency: x.threadUrgency ?? ('normal' as const) } : {}),
-                }))
+                setD((x) => {
+                  const next: Entity = {
+                    ...(v.startsWith('custom:') ? { ...x, type: 'custom', customType: v.slice(7) } : { ...x, type: v as EntityType, customType: undefined }),
+                    ...(v === 'quest' && !x.questStatus ? { questStatus: 'open' as const } : {}),
+                    ...(v === 'thread' && !x.threadStatus ? { threadStatus: 'open' as const, threadUrgency: x.threadUrgency ?? ('normal' as const) } : {}),
+                  }
+                  // Part of a page of the old kind: it moves up to the nearest page that can hold it.
+                  const self = afterKindChange(next, entities).find((m) => m.id === x.id)
+                  return self ? { ...next, parentId: self.to } : next
+                })
               }}
             >
               {PICKER_TYPES.map((t) => (
@@ -759,10 +799,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
               {d.type === 'custom' && !world?.customTypes?.some((c) => c.id === d.customType) && <option value={`custom:${d.customType}`}>(removed type)</option>}
             </select>
           </label>
-          <label>
-            {d.type === 'event' ? 'Where it happened' : d.type === 'location' ? 'Inside' : 'Located in'}
-            <PagePicker entities={parents} value={d.parentId ?? ''} onPick={(id) => set('parentId', id || undefined)} placeholder="(none): type a place…" label={d.type === 'event' ? 'Where it happened' : d.type === 'location' ? 'Inside' : 'Located in'} recent />
-          </label>
+          <ParentFields d={d} opened={opened} entities={entities} onPick={(id) => set('parentId', id)} />
           {d.type === 'event' && (
             <>
               {world?.calendar && (
@@ -857,7 +894,7 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
               {d.status && (
                 <span className="row small">
                   <input type="checkbox" checked={!!d.statusKnown} onChange={(ev) => set('statusKnown', ev.target.checked || undefined)} />
-                  Players know this
+                  Players know
                 </span>
               )}
             </label>
@@ -915,23 +952,24 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
           Summary
           <input value={d.summary} onChange={(ev) => set('summary', ev.target.value)} placeholder="One line shown in lists and on map pins" />
         </label>
-        <label>
+        {/* Not a <label>: a click in the formatted text would count as a click on the first button in it. */}
+        <div className="text-field">
           <span>
             Description <Help topic="secrets" />
           </span>
-          <SecretTextarea worldId={worldId} rows={10} value={d.body} onChange={(v) => set('body', v)} />
+          <TextEditor worldId={worldId} label="Description" rows={10} value={d.body} onChange={(v) => set('body', v)} preview={playersPages} />
           <small className="muted">
             Link pages by typing @ or [[ and a name. The buttons hide a passage from every player, or keep it for some characters only. Write roll:1d8+3 for a dice button, or {'{{Table name}}'} to roll on one of your tables. <Help topic="inlineRolls" />
           </small>
-        </label>
+        </div>
         <PagePrompts type={d.type} body={d.body} onChange={(v) => set('body', v)} gmNotes={d.gmNotes} onGmNotesChange={(v) => set('gmNotes', v)} revealed={d.visibility === 'players'} />
         <SecretNamesWarning worldId={worldId} texts={[d.summary, d.body, d.playerBody]} show={d.visibility === 'players' && !d.template} />
-        <label className="gm-notes-field">
+        <div className="text-field gm-notes-field">
           <span>
-            <Ico as={Lock} /> GM notes: never shown to players <Help topic="gmNotes" />
+            <Ico as={Lock} /> GM notes: GM only, never sent to players <Help topic="gmNotes" />
           </span>
-          <textarea rows={4} value={d.gmNotes} onChange={(ev) => set('gmNotes', ev.target.value)} placeholder="Secrets, plans, stat lines, what they really want…" />
-        </label>
+          <TextEditor worldId={worldId} label="GM notes" rows={4} value={d.gmNotes} onChange={(v) => set('gmNotes', v)} placeholder="Secrets, plans, stat lines, what they really want…" secrets={false} />
+        </div>
         {d.type === 'pc' && (
           <label>
             <span>
@@ -965,8 +1003,8 @@ function EntityEditor({ entity, fresh, held = false, onDone }: { entity: Entity;
                 <button
                   type="button"
                   className={`ghost field-lock ${f.gm ? 'on' : ''}`}
-                  title={f.gm ? 'GM only: players never see this. Click to show it to players.' : 'Players see this once the page is revealed. Click to keep it GM only.'}
-                  aria-label={f.gm ? 'GM only' : 'Players see it'}
+                  title={f.gm ? 'GM only: players never see this. Click so players know it once the page is revealed.' : 'Players know this once the page is revealed. Click to make it GM only.'}
+                  aria-label={f.gm ? 'GM only' : 'Players know'}
                   aria-pressed={!!f.gm}
                   onClick={() => set('fields', d.fields.map((x, j) => (j === i ? { ...x, gm: !x.gm || undefined } : x)))}
                 >
@@ -1128,7 +1166,7 @@ function AddInside({ parent }: { parent: Entity }) {
       }}
     >
       <input value={name} onChange={(ev) => setName(ev.target.value)} placeholder={`Add a place inside ${parent.name}, e.g. a district or building`} />
-      <button disabled={!name.trim()}>+ Add place inside</button>
+      <button disabled={!name.trim()}>+ New place inside</button>
     </form>
   )
 }

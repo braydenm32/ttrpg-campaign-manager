@@ -94,7 +94,7 @@ export function RelationsBox({ entity, entities, isGM, worldId }: { entity: Enti
           <Link className="small" to={`${worldPath(worldId)}/web?focus=${entity.id}`}>
             See the web
           </Link>
-          {isGM && !adding && <button onClick={() => setAdding(true)}>+ Link</button>}
+          {isGM && !adding && <button onClick={() => setAdding(true)}>+ New link</button>}
         </div>
       </div>
       {links.length > 0 && (
