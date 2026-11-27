@@ -55,6 +55,8 @@ export interface SceneSnapshot {
   combatantIds: string[]
   activeId?: string
   startedAt?: number
+  /** Whether the session had its date in the world already (starting a session sets it). */
+  hadWorldDate?: boolean
 }
 
 export function sceneSnapshot(session: Session): SceneSnapshot {
@@ -69,6 +71,7 @@ export function sceneSnapshot(session: Session): SceneSnapshot {
     combatantIds: (l?.combat.combatants ?? []).map((c) => c.id),
     activeId: l?.combat.activeId,
     startedAt: session.startedAt,
+    hadWorldDate: !!session.worldDate,
   }
 }
 
@@ -94,13 +97,15 @@ export const restoreScene = (sessionId: string, snap: SceneSnapshot) =>
       else {
         delete s.startedAt
         delete s.playStart
+        if (snap.hadWorldDate === false) delete s.worldDate
       }
     })
 
 /**
  * Starts a scene: a new scene replaces the last one, so its read-aloud text and who's there take
- * the place of the old (none, if the card has none; a scene with no place of its own stays where the
- * party is). It also loads its fight, plays its sounds, reveals its pages and puts its handout on
+ * the place of the old. A scene with no place of its own stays where the party is, and one with
+ * nothing at all on its card (a plain line in the plan) leaves the text and people as they are.
+ * It also loads its fight, plays its sounds, reveals its pages and puts its handout on
  * players' screens. The scene is ticked as played, and becomes the scene "Next scene" goes on from.
  * Pages it would reveal get the same review as on the page itself (one review for all of them).
  * Gives back a function that hides those pages again and puts back what was on players' screens
@@ -125,15 +130,18 @@ export async function startScene(world: World, session: Session, scene: PrepScen
       s.lectern = { ...blankLectern(), ...s.lectern }
       const l = s.lectern
       if (scene.placeId) l.sceneId = scene.placeId
-      l.sceneText = scene.readAloud?.trim() ? scene.readAloud : ''
-      l.presentIds = [...new Set(scene.presentIds ?? [])]
+      // A scene with nothing on its card (a plain line in the plan) leaves the text and people the GM set up by hand.
+      if (scene.placeId || scene.readAloud?.trim() || scene.presentIds?.length) {
+        l.sceneText = scene.readAloud?.trim() ? scene.readAloud : ''
+        l.presentIds = [...new Set(scene.presentIds ?? [])]
+      }
       l.planSceneId = scene.id
       const fresh = l.presentIds.filter((id) => !s.entityIds.includes(id))
       if (fresh.length) s.entityIds = [...s.entityIds, ...fresh]
       if (enc) addCombatants(l, encounterCombatants(enc))
       const mine = s.prep?.scenes.find((x) => x.id === scene.id)
       if (mine) mine.done = true
-      stampStart(s)
+      stampStart(s, worldBefore?.calendar?.today)
     })
   // Through saveEntity, so the page's History keeps the version before the reveal.
   for (const e of toReveal) {

@@ -151,7 +151,7 @@ export const HELP = {
     'The quests, rumours, hooks and mysteries your GM has shared with the party that are still open, the ones under way first, and the clocks that are ticking. Done and tied-off ones are folded away at the bottom.',
   calendar:
     'Your world’s own calendar: month and day names, the year’s name (like DR) moons, leap years, festivals and holidays. Pick a ready-made one (Forgotten Realms, Golarion, Eberron, Greyhawk, Exandria) or make your own. Events can then have real dates.',
-  worldToday: 'Today’s date in your world. Move it on as time passes in the game; each session remembers the date it started on.',
+  worldToday: 'Today’s date in your world. Move it on as time passes in the game; each session remembers the date it started on (set when you press Start playing, if you haven’t set one).',
   relations:
     'How this page connects to others: family, friends, enemies, who serves whom. In the Relationship box, type any words you like (“sworn to”, “owes a life debt to”) and pick from the suggestions that pop up, or press the arrow for the common ones. Players only see a link (and its note) when you tick “Players know”. Every link shows up on both pages.',
   relationWeb:
@@ -179,9 +179,9 @@ export const HELP = {
   session:
     'One game night, in three stages along the top: Prepare (the plan), Play (the Lectern) and Wrap up (notes, the players’ recap, the recording, then “Mark as played”). Everything saves as you type.',
   stages:
-    'Where a session is: Planned (nothing written yet), Preparing (it has a plan), Playing (you pressed “Start playing”, or it’s live or recording) and Played (you marked it played in Wrap up, it has a recap, or its date has gone by). Once a session is played, the next one becomes the one the Desk and the Session area open.',
+    'Where a session is: Planned (nothing written yet), Preparing (it has a plan), Playing (you pressed “Start playing”, or it’s live or recording) and Played (you marked it played in Wrap up, or it has a recap and was never started). A date going by doesn’t mark a session played: the Desk asks whether you played it. Once a session is played, the next one becomes the one the Desk and the Session area open.',
   startPlaying:
-    'Marks the session as being played and opens the Lectern. Nothing is shown to players until you choose to (Go live, Show players).',
+    'Marks the session as being played and opens the Lectern. Nothing is shown to players until you choose to (Go live, Show players). Pressed it by mistake? The note at the bottom has “Not started after all” for a few seconds, and Session details keeps the same button for later.',
   sessionTitle: 'Click the number or the title to change it. It saves as you type.',
   sessionDetails:
     'The real date you play (leave it empty until it’s set; booking a date on the campaign page fills it in), the date in your world, and whether players can read this session’s recap. Print and Delete are here too.',
@@ -189,7 +189,7 @@ export const HELP = {
   wrapUp:
     'After play, in order: your notes, the recording and its transcript, the write-up from Claude, the players’ recap, highlights, and changes to your pages. Then “Mark as played”, and the next session is ready to prepare. The line at the top counts how many of the “Before you finish” steps are done; “who featured” and the notes only count what happened once you pressed Start playing, not the plan.',
   markPlayed:
-    'Marks this session played and moves on: the next session (made now if there isn’t one, with the clues and scenes you didn’t reach) becomes the one the Desk and the Session area open. Undo puts it back.',
+    'Marks this session played and moves on: the next session (made now if there isn’t one) becomes the one the Desk and the Session area open, and the clues and scenes you didn’t reach are added to its plan, marked “(from #1)”. A date still ahead changes to today. Undo puts it all back.',
   revealRecap:
     'Players can read the recap and the highlights, and see who featured, once the session is shown to them. GM notes, the prep, the recording and the transcript stay yours.',
   undo: 'Removed something by mistake? The note at the bottom of the screen has Undo for a few seconds.',
@@ -209,7 +209,7 @@ export const HELP = {
   lectern:
     'Play (the Lectern) is your screen while you run the session: the scene and its read-aloud text, who is there, the fight, the party, and tools (show players, dice, loot, sounds). On a computer it’s three columns; on a phone the scene comes first, Who’s here and Clocks start folded, and the row of buttons at the top jumps to each part. “Record” opens the recording panel. “Wrap up” ends the session (on a phone it sits at the bottom, away from your thumb).',
   nextScene:
-    'Goes on to the next scene you planned: ticks off this one, and puts the next one’s place, read-aloud text and people on screen (and its fight, sounds and handout, if its card has them). If it reveals pages, you see what players will get first. Undo puts it all back: the last scene, the fight and people it added, and the pages it revealed or showed.',
+    'Goes on to the next scene you planned: ticks off this one, and puts the next one’s place, read-aloud text and people on screen (and its fight, sounds and handout, if its card has them). A scene with nothing on its card leaves the text and people as you set them. If it reveals pages, you see what players will get first. Undo puts it all back: the last scene, the fight and people it added, and the pages it revealed or showed.',
   sceneChange:
     'Choosing another place starts a new scene: the read-aloud text and who’s here are replaced with what you planned for that place (or cleared). Undo puts the last scene back.',
   quickNote: 'Jot something down without stopping the game. It goes at the end of this session’s GM notes, with the time. What you’ve typed is kept if you leave the Lectern and come back.',
@@ -288,10 +288,10 @@ export const HELP = {
   coGM:
     'A co-GM sees and edits everything in this world, secrets included, from their own account. Only you can invite or remove co-GMs, manage players and links, or delete the cloud copy. Each co-GM link works once: make a new one for each co-GM.',
   schedule:
-    'Suggest a few dates for the next session. Players who joined mark each one yes, maybe or no, and you book the one that works. Booking makes the session with that date and shows it to players. Times show in each person’s own time zone.',
+    'Suggest a few dates for the next session. Players who joined mark each one yes, maybe or no, and you book the one that works. Booking puts the date on the next session you haven’t played (making one if there is none) and shows it to players. Times show in each person’s own time zone.',
   nextSession: 'The session in hand, with its stage (Planned, Preparing, Playing, Played), its date, how many scenes and clues you’ve written, and one main button for what comes next: prepare it, start playing, wrap it up, or plan the one after.',
   endSession:
-    'What’s done and what’s left before you mark the session played: the recording transcribed, the recap written, your pages updated, the session shown to players, the world’s date moved on. “Mark as played” then gets the next session ready, carrying over the clues they didn’t find, the scenes they didn’t reach, and where the party is.',
+    'What’s done and what’s left before you mark the session played: the recording transcribed, the recap written, your pages updated, the session shown to players, the world’s date moved on. “Mark as played” then gets the next session ready, carrying over the clues they didn’t find and the scenes they didn’t reach (and, for a session made now, where the party is).',
   partyNotPlaying:
     'Characters marked dead, missing or captured on their page stay out of the Lectern’s party list and “Add the party”, so the table only shows who’s playing. Tap “Show” to see them for a moment. Their pages, the Atlas and what players see are unchanged.',
   partyCampaign: 'When a world has more than one group, pick which campaign this character plays in. The campaign page and the Lectern’s “Add the party” then only show that group.',

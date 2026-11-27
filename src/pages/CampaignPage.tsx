@@ -10,7 +10,7 @@ import { PartyGlance } from '../partyGlance'
 import { StorySoFar } from '../highlights'
 import { questProgress } from '../quests'
 import { isActiveQuest, isOpenQuest } from '../counts'
-import { bookNextSession, createNextSession, partyOf, sessionFirstTab, sessionStage, startPlaying, type SessionStage } from '../sessions'
+import { bookNextSession, createNextSession, partyOf, sessionFirstTab, sessionStage, startAndTell, type SessionStage } from '../sessions'
 import { useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
 import { useViewMode } from '../viewMode'
@@ -99,7 +99,7 @@ export default function CampaignPage() {
                   <Link to={`${w}/s/${s.id}${isGM ? `?tab=${sessionFirstTab(s)}` : ''}`}>
                     <span className="session-num">#{s.number}</span>
                     <span className="session-name">{s.title}</span>
-                    <span className="muted small session-date">{s.date ? (isGM ? s.date : showDay(s.date)) : isGM ? 'no date' : ''}</span>
+                    <span className="muted small session-date">{s.date ? showDay(s.date) : isGM ? 'no date' : ''}</span>
                   </Link>
                   {isGM && <StageChip stage={stage} />}
                   {isGM && s.visibility === 'gm' && <VisibilityBadge value={s.visibility} />}
@@ -270,7 +270,7 @@ function NextUp({ worldId, next, stage, onNew }: { worldId: string; next: Sessio
             </Link>
             <button
               onClick={async () => {
-                await startPlaying(next.id)
+                await startAndTell(next)
                 navigate(`${w}/s/${next.id}/lectern`)
               }}
             >

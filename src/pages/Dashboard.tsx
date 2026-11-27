@@ -45,7 +45,7 @@ import {
   type Icon,
 } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { createNextSession, isPlayed, localDate, partyOf, sessionStage, startPlaying, type SessionStage } from '../sessions'
+import { createNextSession, isPlayed, localDate, partyOf, sessionStage, startAndTell, type SessionStage } from '../sessions'
 import { StageChip, usePlayingNow } from '../stage'
 import { detailOf } from '../partyGlance'
 import { toast } from '../undo'
@@ -229,7 +229,7 @@ function SessionStrip({
         data-next={next.id}
         title={HELP.startPlaying}
         onClick={async () => {
-          await startPlaying(s.id)
+          await startAndTell(s)
           navigate(`${w}/s/${s.id}/lectern`)
         }}
       >

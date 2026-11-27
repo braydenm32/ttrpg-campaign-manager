@@ -29,11 +29,11 @@ import { ShowToPlayers, useFinish, useNextSession, WrapProgress, WrapUpChecklist
 import { Ico, TypeIcon } from '../icons'
 import { BookBookmark, BookmarkSimple, CheckCircle, Eye, FlagCheckered, ListChecks, Lock, Microphone, PencilSimple, Play, Spiral, UsersThree, Warning, X } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { sessionFirstTab, startPlaying, type SessionStage } from '../sessions'
+import { localDate, notStarted, sessionFirstTab, startAndTell, type SessionStage } from '../sessions'
 import { prepCounts } from '../counts'
 import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, jumpTo, useKeepScroll } from '../jump'
-import { removeWithUndo, SavedMark, saving } from '../undo'
+import { removeWithUndo, SavedMark, saving, toast } from '../undo'
 import { showDay } from '../text'
 import { PresentLine } from '../attendance'
 import { MySessionNote } from '../players/SessionNote'
@@ -129,7 +129,7 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
     counts.scenes.total ? plural(counts.scenes.total, 'scene') : '',
     counts.clues.total ? plural(counts.clues.total, 'clue') : '',
     fights ? plural(fights, 'fight') : '',
-    session.date ? `played ${session.date}` : 'no date set',
+    session.date ? `${stage === 'played' ? 'played' : session.date === localDate() ? 'today,' : 'on'} ${showDay(session.date)}` : 'no date set',
   ].filter(Boolean)
   const lectern = `${w}/s/${session.id}/lectern`
 
@@ -140,7 +140,7 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
         className="primary"
         title={HELP.startPlaying}
         onClick={async () => {
-          await startPlaying(session.id)
+          await startAndTell(session)
           navigate(lectern)
         }}
       >
@@ -436,6 +436,20 @@ function SessionDetails({ session, campaign, world, entities }: Omit<ViewProps, 
       </div>
       <div className="row wrap details-actions">
         <PrintButton to={`${w}/print/s/${session.id}`} />
+        {session.startedAt && !session.playedAt && (
+          <button
+            type="button"
+            title="Pressed Start playing by mistake? This puts the session back to being prepared. Nothing you wrote is lost."
+            disabled={live?.sessionId === session.id}
+            onClick={async () => {
+              const { startedAt, playStart } = session
+              await notStarted(session.id)
+              toast(`#${session.number} is not started any more.`, () => db.sessions.update(session.id, { startedAt, playStart }))
+            }}
+          >
+            Not started after all
+          </button>
+        )}
         <span className="grow" />
         <button
           className="danger"

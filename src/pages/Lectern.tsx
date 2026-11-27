@@ -9,7 +9,7 @@ import { NameGenerator, TreasureGenerator } from '../moreGenerators'
 import { FoldingProvider, LECTERN_PANELS, LecternPanel, useFolding } from '../lecternPanel'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { partyOf, startPlaying } from '../sessions'
+import { partyOf, startAndTell } from '../sessions'
 import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { ENTITY_LABELS, LIFE_STATUS, blankEntity, blankLectern, db, newId, type Combatant, type Entity, type LecternState, type Session, type World } from '../db'
@@ -145,7 +145,7 @@ export default function Lectern() {
           {world?.cloud?.enabled && <Help topic="goLive" />}
           <RecordChip onOpen={openRecording} />
           {stage !== 'playing' && stage !== 'played' ? (
-            <button className="primary" title={HELP.startPlaying} onClick={() => startPlaying(session.id)}>
+            <button className="primary" title={HELP.startPlaying} onClick={() => startAndTell(session)}>
               <Ico as={Play} weight="fill" /> Start playing
             </button>
           ) : (

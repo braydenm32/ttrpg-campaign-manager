@@ -13,6 +13,7 @@ import { useLiveRecording } from './recordingStore'
 import { prepCounts } from './counts'
 import { stripSecrets } from './Markdown'
 import { toast } from './undo'
+import { showDay } from './text'
 import { jumpTo } from './jump'
 import { WhoWasThere } from './attendance'
 import { offerGroupPost } from './groupPost'
@@ -37,10 +38,12 @@ export function useFinish(session: Session) {
     try {
       // Players' Common Room stops showing this session as being played.
       if (live === session.id) setLiveSession(session.worldId, undefined)
-      const { next, undo } = await markPlayed(session)
+      const { next, undo, carried } = await markPlayed(session)
       // The in-game clock stops with the session, so it hasn't run on for days by next time.
       const paused = await pauseGameClock(session.worldId)
-      toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}.${paused ? ' The in-game clock is paused.' : ''}`, undo)
+      const n = (count: number, one: string) => `${count} ${one}${count === 1 ? '' : 's'}`
+      const brought = [carried.clues ? n(carried.clues, 'unfound clue') : '', carried.scenes ? n(carried.scenes, 'unplayed scene') : ''].filter(Boolean).join(' and ')
+      toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}${brought ? `, with ${brought} carried over` : ''}.${paused ? ' The in-game clock is paused.' : ''}`, undo)
     } finally {
       setBusy(false)
     }
@@ -101,7 +104,7 @@ export function ShowToPlayers({ session, campaign, entities }: { session: Sessio
       </strong>
       <ul>
         <li>
-          the title “#{session.number} {session.title}”{session.date && `, played ${session.date}`}
+          the title “#{session.number} {session.title}”{session.date && `, ${session.playedAt ? 'played' : 'on'} ${showDay(session.date)}`}
         </li>
         <li>{recap ? `the recap, ${words(recap)} words (secret passages left out)` : 'no recap yet: it shows here once you write one'}</li>
         {highlights > 0 && <li>{highlights === 1 ? '1 highlight' : `${highlights} highlights`}</li>}
