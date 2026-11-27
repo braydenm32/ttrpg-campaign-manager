@@ -50,6 +50,8 @@ import { createNextSession, isOverdue, isPlayed, localDate, partyOf, sessionStag
 import { StageChip, usePlayingNow } from '../stage'
 import { detailOf } from '../partyGlance'
 import { toast } from '../undo'
+import { endLiveSession } from '../EndSession'
+import { useLiveSession } from '../cloud/table'
 import { RecentlyOpenedRow } from '../RecentlyOpened'
 import { ImportPages } from '../ImportPages'
 import { ExampleStartHere, SeeTheExampleButton } from '../firstSteps'
@@ -182,6 +184,7 @@ function SessionStrip({
 }) {
   const navigate = useNavigate()
   const w = worldPath(world.id)
+  const live = useLiveSession(world.id)
   if (!inHand || !stage) {
     // No session yet: a campaign to make, or a first session to plan.
     const first = campaigns.find((c) => c.status !== 'finished')
@@ -238,7 +241,8 @@ function SessionStrip({
       </button>
     ),
     playing: (
-      <Link className="button primary" data-next={next.id} to={`${w}/s/${s.id}?end=1`}>
+      // Ends the live link and clears players' screens, as the Lectern's Wrap up does.
+      <Link className="button primary" data-next={next.id} to={`${w}/s/${s.id}?end=1`} onClick={() => live === s.id && void endLiveSession(world.id, s.id)}>
         <Ico as={FlagCheckered} /> {next.label}
       </Link>
     ),

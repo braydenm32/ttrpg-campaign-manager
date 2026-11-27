@@ -10,7 +10,7 @@ import { Markdown, stripSecrets } from './Markdown'
 import { schedule } from './cloud/sync'
 import { useRecordingOnThisDevice } from './cloud/table'
 import { Ico } from './icons'
-import { ArrowSquareOut, Lock, Scroll, SquaresFour, Television } from '@phosphor-icons/react'
+import { ArrowSquareOut, Clock, Lock, Scroll, SquaresFour, Television } from '@phosphor-icons/react'
 import { Modal, useDialog } from './components'
 import { worldPath } from './paths'
 import { askToReveal, useReview } from './reveal'
@@ -19,7 +19,7 @@ import { offerGroupPost } from './groupPost'
 import { saveShowBoard, showBoardsOf } from './showBoards'
 import { visibleHandouts } from './counts'
 import './spread.css'
-import { ScreenClock } from './gameClock'
+import { editClock, ScreenClock } from './gameClock'
 
 /** The arranging board for showing several at once: only loaded when the GM opens it. */
 const ArrangeBoard = lazy(() => import('./showBoard'))
@@ -239,6 +239,71 @@ export async function removeHandout(worldId: string, id: string, hidePage?: stri
 export async function stopShowing(worldId: string) {
   await db.worlds.update(worldId, { showing: null, spread: null })
   schedule(200)
+}
+
+/**
+ * Shows something (as showToPlayers) with the usual note and Undo, for a slip of the finger: Undo
+ * takes it off players' screens and out of their Handouts (unless it was there before), and puts
+ * back what was up, unless the GM has shown something else since.
+ */
+export async function showWithUndo(worldId: string, what: Omit<Showing, 'id' | 'at'>) {
+  const before = await db.worlds.get(worldId)
+  if (!(await showToPlayers(worldId, what))) return
+  const shown = (await db.worlds.get(worldId))?.showing
+  if (!shown) return
+  toast(`“${shown.title.trim() || 'Untitled'}” is on the players’ screens.`, async () => {
+    await db.worlds
+      .where('id')
+      .equals(worldId)
+      .modify((w) => {
+        if (!(w.handouts ?? []).some((h) => h.id === shown.id)) return
+        w.handouts = before?.handouts ?? (w.handouts ?? []).filter((h) => h.id !== shown.id)
+        if (w.showing?.id === shown.id) {
+          w.showing = before?.showing ?? null
+          w.spread = before?.spread ?? null
+        }
+      })
+    schedule(200)
+  })
+}
+
+/** What's on players' screens now, in words for the GM, or '' for nothing: the handout or board, and the in-game clock. */
+export function onScreensNow(world: World) {
+  const what = world.spread ? spreadTitle(world.spread, world.spread.items.length) : world.showing ? world.showing.title.trim() || 'Untitled' : ''
+  if (!world.gameTime) return what
+  return what ? `${what} and the in-game clock` : 'the in-game clock'
+}
+
+/**
+ * Takes everything off players' screens: what's shown (it stays in Handouts) and the in-game clock.
+ * Returns a function that puts it all back (for Undo), or undefined if nothing was up.
+ */
+export async function clearPlayersScreens(worldId: string) {
+  const before = await db.worlds.get(worldId)
+  const clock = !!before?.gameTime
+  if (!before || (!before.showing && !before.spread && !clock)) return undefined
+  await db.worlds.update(worldId, { showing: null, spread: null })
+  if (clock) await editClock(worldId, (c) => ({ ...c, shown: undefined }))
+  schedule(200)
+  return async () => {
+    await db.worlds
+      .where('id')
+      .equals(worldId)
+      .modify((w) => {
+        // Unless something else has gone up since.
+        if (w.showing || w.spread) return
+        w.showing = before.showing ?? null
+        w.spread = before.spread ?? null
+      })
+    if (clock) await editClock(worldId, (c) => ({ ...c, shown: true }))
+    schedule(200)
+  }
+}
+
+/** "Stop showing": clears players' screens, the in-game clock too, with Undo. */
+export async function stopShowingAll(worldId: string) {
+  const undo = await clearPlayersScreens(worldId)
+  if (undo) toast('Players’ screens are clear.', undo)
 }
 
 /** "“A”, “B” and “C”", for a note about several handouts. */
@@ -480,15 +545,15 @@ function ShowingModal({ title, close, children }: { title: string; close: () => 
 
 /** For the GM: a reminder of what players can see right now, with a way to stop. */
 export function ShowingBanner({ world }: { world: World }) {
-  const what = world.spread ? spreadTitle(world.spread, world.spread.items.length) : world.showing?.title
-  if (!world.showing && !world.spread) return null
+  const what = onScreensNow(world)
+  if (!what) return null
   return (
     <div className="player-banner showing-banner">
       <Ico as={Television} /> Showing players: <strong>{what}</strong>
       <Link className="button" to={`/screen${worldPath(world.id).slice(2)}`} target="_blank">
         Players’ screen
       </Link>
-      <button onClick={() => stopShowing(world.id)}>Stop showing</button>
+      <button onClick={() => stopShowingAll(world.id)}>Stop showing</button>
     </div>
   )
 }
@@ -601,9 +666,9 @@ export function ShowBoards({ world, sceneIds, newBoard }: { world: World; sceneI
 export function ShowButton({ worldId, what, disabled }: { worldId: string; what: Omit<Showing, 'id' | 'at'>; disabled?: string }) {
   const { askTitle, dialog } = usePictureTitle()
   const show = async () => {
-    if (what.kind !== 'image' || !what.assetId) return void showToPlayers(worldId, what)
+    if (what.kind !== 'image' || !what.assetId) return void showWithUndo(worldId, what)
     const title = await askTitle(await pictureTitleOf(worldId, what.assetId))
-    if (title !== null) await showToPlayers(worldId, { ...what, title })
+    if (title !== null) await showWithUndo(worldId, { ...what, title })
   }
   return (
     <>
@@ -704,17 +769,17 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
   // The picture of a page players can't see goes out under a name they may know (asked first).
   const showPicture = async (p: Showable) => {
     const title = await askTitle(p)
-    if (title !== null) await showToPlayers(world.id, { kind: 'image', title, assetId: p.asset.id })
+    if (title !== null) await showWithUndo(world.id, { kind: 'image', title, assetId: p.asset.id })
   }
   // A page players can't see yet gets the same review as on the page itself, then is revealed and shown (with Undo).
   const showPage = async (p: Entity) => {
-    if (p.visibility === 'players') return void showToPlayers(world.id, { kind: 'page', title: p.name, entityId: p.id })
+    if (p.visibility === 'players') return void showWithUndo(world.id, { kind: 'page', title: p.name, entityId: p.id })
     const ok = await askToReveal(ask, [p], { title: `Reveal “${p.name}” to players and show it?`, note: 'Every player can read it from now on, and it goes on their screens.', confirm: 'Reveal and show' })
     if (!ok) return
     const undo = await revealAndShow(world.id, p)
     toast(`“${p.name}” is revealed and on the players’ screens.`, undo, 'Hide it again')
   }
-  const live = !!(world.showing || world.spread)
+  const live = !!(world.showing || world.spread || world.gameTime)
   return (
     <LecternPanel
       id="show"
@@ -763,7 +828,7 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
             }
             // Called by its file's name, unless that's after a page players can't see: then asked first.
             const title = await askTitle(await pictureTitleOf(world.id, id))
-            if (title !== null) await showToPlayers(world.id, { kind: 'image', title, assetId: id })
+            if (title !== null) await showWithUndo(world.id, { kind: 'image', title, assetId: id })
           }}
         />
       )}
@@ -804,7 +869,7 @@ export function ShowPanel({ world, sceneText, sceneIds = [] }: { world: World; s
           onSubmit={(e) => {
             e.preventDefault()
             if (!text.trim()) return
-            showToPlayers(world.id, { kind: 'text', title: title.trim() || 'From your GM', text })
+            void showWithUndo(world.id, { kind: 'text', title: title.trim() || 'From your GM', text })
           }}
         >
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title, e.g. A letter sealed in red wax" />
@@ -926,17 +991,19 @@ function NowShowing({ world }: { world: World }) {
   const entities = useVisibleEntities(world.id)
   const page = showing?.kind === 'page' ? entities.find((e) => e.id === showing.entityId) : undefined
   const picture = useAssetUrl(showing?.kind === 'image' ? showing.assetId : page?.imageId)
-  const what = world.spread ? spreadTitle(world.spread, world.spread.items.length) : showing?.title
+  // Only the in-game clock is up (from its own panel): it's what players see, so it's said here too.
+  const clockOnly = !world.spread && !showing
+  const what = onScreensNow(world)
   return (
     <div className="now-showing" role="status">
       <span className="now-showing-pic" aria-hidden="true">
-        {picture ? <img src={picture} alt="" /> : <Ico as={world.spread ? SquaresFour : showing?.kind === 'text' ? Scroll : Television} />}
+        {picture ? <img src={picture} alt="" /> : <Ico as={world.spread ? SquaresFour : showing?.kind === 'text' ? Scroll : clockOnly ? Clock : Television} />}
       </span>
       <span className="now-showing-what">
         <span className="muted small">On players’ screens</span>
-        <strong>{what || 'Untitled'}</strong>
+        <strong>{clockOnly ? 'The in-game clock' : what}</strong>
       </span>
-      <button type="button" className="primary" onClick={() => stopShowing(world.id)}>
+      <button type="button" className="primary" title="Take everything off players’ screens, the in-game clock too" onClick={() => stopShowingAll(world.id)}>
         Stop
       </button>
     </div>

@@ -4,7 +4,7 @@ import type { Showing } from '../db'
 import { Help } from '../help'
 import '../more.css'
 import { useVisibleEntities, useWorld } from '../hooks'
-import { removeHandout, revealAndShow, ShowBoards, showToPlayers, ShowingView } from '../showing'
+import { removeHandout, revealAndShow, ShowBoards, ShowingView, showWithUndo } from '../showing'
 import { useViewMode } from '../viewMode'
 import { useState } from 'react'
 import { Ico } from '../icons'
@@ -131,7 +131,7 @@ export default function Handouts() {
                   {h.kind === 'page' && h.entityId && <Link to={`${pagePath(worldId, h.entityId)}`} className="small">Open page</Link>}
                   {isGM && (
                     <span className="row">
-                      <button className="small" onClick={() => showToPlayers(worldId, h)}>
+                      <button className="small" onClick={() => showWithUndo(worldId, h)}>
                         <Ico as={Television} /> Show again
                       </button>
                       <button

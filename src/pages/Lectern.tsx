@@ -39,12 +39,13 @@ import { StatusBadge } from '../status'
 import { ShowPanel } from '../showing'
 import { WorldToday } from '../calendar'
 import { ClocksPanel } from '../clocks'
-import { beep, GameClockPanel } from '../gameClock'
+import { GameClockPanel } from '../gameClock'
 import { Ico, TypeIcon } from '../icons'
 import { Armchair, CastleTurret, CloudFog, Coins, Lock, DiceFive, FlagCheckered, Keyboard, MapTrifold, Microphone, NotePencil, Eye, EyeSlash, Play, Prohibit, Shield, SkipForward, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
 import { clockText, GoLive, RollDetail, RollLog, timeLeft, useNow } from '../atTheTable'
-import { setLiveSession, shareRoll, useLiveSession, useTable } from '../cloud/table'
+import { shareRoll, useLiveSession, useTable } from '../cloud/table'
+import { endLiveSession } from '../EndSession'
 import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, jumpTo, useKeepScroll } from '../jump'
 import { changePlace, clearSceneToast, goToScene, plannedScenes } from '../sceneCards'
@@ -113,8 +114,8 @@ export default function Lectern() {
   // Opening a folded panel before jumping to it.
   const unfold = (id: string) => () => folding.value.folded.has(id) && folding.value.toggle(id)
   const party = partyOf(entities, session.campaignId, { activeOnly: true })
-  const wrapUp = () => {
-    if (live) setLiveSession(worldId, undefined)
+  const wrapUp = async () => {
+    if (live) await endLiveSession(worldId, session.id)
     navigate(`${w}/s/${session.id}?end=1`)
   }
   // The Record chip: open the Recording panel (with its consent note) and go to it.
@@ -1218,17 +1219,7 @@ function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {
   const now = useNow(500, running)
   const [label, setLabel] = useState('')
   const [custom, setCustom] = useState('')
-  // Beep once each time a timer runs out while the Lectern is open.
-  const rang = useRef(new Set<string>())
-  // (Only ones that just ran out: opening the Lectern later doesn't beep for old ones.)
-  const due = timers.filter((t) => t.endsAt !== undefined && timeLeft(t, now) === 0 && now - t.endsAt < 10_000).map((t) => `${t.id}:${t.endsAt}`)
-  const dueKey = due.join(',')
-  useEffect(() => {
-    const fresh = dueKey.split(',').filter((k) => k && !rang.current.has(k))
-    if (!fresh.length) return
-    fresh.forEach((k) => rang.current.add(k))
-    beep()
-  }, [dueKey])
+  // The beep and the note when one runs out come from TimerWatcher, wherever the GM is in the app.
   const change = (id: string, fn: (t: NonNullable<LecternState['timers']>[number]) => void) =>
     edit((l) => {
       const t = l.timers?.find((x) => x.id === id)

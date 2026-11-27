@@ -18,12 +18,26 @@ import { jumpTo } from './jump'
 import { WhoWasThere } from './attendance'
 import { offerGroupPost } from './groupPost'
 import { pauseGameClock } from './gameClock'
+import { clearPlayersScreens } from './showing'
 import { ResetButton } from './oneShotPanel'
 import { oneShotOf } from './oneShot'
 
 /**
- * Finishing a session: "Mark as played" ends the live link to players, marks it played and gets the
- * next session ready (see markPlayed), with Undo. Shared by the strip at the top of Wrap up and the
+ * "Wrap up" while this session is live: the live link to players ends and what's on their screens
+ * (the in-game clock too) comes off, with Undo. The same from the Desk and the Lectern.
+ */
+export async function endLiveSession(worldId: string, sessionId: string) {
+  setLiveSession(worldId, undefined)
+  const unclear = await clearPlayersScreens(worldId)
+  toast(`The live session has ended.${unclear ? ' Players’ screens are clear.' : ''}`, async () => {
+    setLiveSession(worldId, sessionId)
+    await unclear?.()
+  })
+}
+
+/**
+ * Finishing a session: "Mark as played" ends the live link to players, clears their screens (the
+ * in-game clock too), marks it played and gets the next session ready (see markPlayed), with Undo. Shared by the strip at the top of Wrap up and the
  * checklist at its end. Blocked while this session is still recording.
  */
 export function useFinish(session: Session) {
@@ -42,9 +56,14 @@ export function useFinish(session: Session) {
       const { next, undo, carried } = await markPlayed(session)
       // The in-game clock stops with the session, so it hasn't run on for days by next time.
       const paused = await pauseGameClock(session.worldId)
+      // The table is over: the last handout and the clock come off players' screens (Undo puts them back).
+      const unclear = await clearPlayersScreens(session.worldId)
       const n = (count: number, one: string) => `${count} ${one}${count === 1 ? '' : 's'}`
       const brought = [carried.clues ? n(carried.clues, 'unfound clue') : '', carried.scenes ? n(carried.scenes, 'unplayed scene') : ''].filter(Boolean).join(' and ')
-      toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}${brought ? `, with ${brought} carried over` : ''}.${paused ? ' The in-game clock is paused.' : ''}`, undo)
+      toast(`#${session.number} marked played. Next up: #${next.number} ${next.title}${brought ? `, with ${brought} carried over` : ''}.${unclear ? ' Players’ screens are clear.' : ''}${paused ? ' The in-game clock is paused.' : ''}`, async () => {
+        await undo()
+        await unclear?.()
+      })
     } finally {
       setBusy(false)
     }

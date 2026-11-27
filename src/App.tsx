@@ -57,7 +57,7 @@ import ClocksPage from './clocks'
 import SafetyPage, { XCardAlert } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
 import { GameClockWatcher } from './gameClock'
-import { LiveBadge, PlayerTableLink, TableHost, TableSignals } from './atTheTable'
+import { LiveBadge, PlayerTableLink, TableHost, TableSignals, TimerWatcher } from './atTheTable'
 import { DowntimeToast } from './players/Downtime'
 import { NewCharacterRequestsBanner } from './players/NewCharacters'
 import Handouts from './pages/Handouts'
@@ -416,10 +416,11 @@ function WorldShell() {
               <ShowingBanner world={world} />
             </Part>
           )}
-          {/* The in-game clock's midnight, "reach this time" and alarm, wherever the GM is (and in player preview too). */}
+          {/* The in-game clock's midnight, "reach this time" and alarm, and the Lectern's timers running out, wherever the GM is (and in player preview too). */}
           {!shared && (
             <Part>
               <GameClockWatcher world={world} />
+              <TimerWatcher worldId={world.id} />
             </Part>
           )}
           {/* The Desk lists claims and new characters itself (Needs you, Inbox). */}

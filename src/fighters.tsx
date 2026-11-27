@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { DraftText } from './components'
 import { Ico } from './icons'
 import { rollDie } from './dice'
-import { removeWithUndo } from './undo'
+import { removeWithUndo, toast } from './undo'
 import { Shield, DiceFive, Skull, CaretDown } from '@phosphor-icons/react'
 import type { Combatant, LecternState } from './db'
 
@@ -198,8 +198,40 @@ export function Fighter({
 }) {
   const tracked = c.hp != null || c.maxHp != null
   const pct = c.maxHp ? Math.max(0, Math.min(1, (c.hp ?? 0) / c.maxHp)) : 1
+  /**
+   * Changes HP. A foe brought down to 0 leaves the turn order for the Down list at once, with Undo;
+   * a player character or ally at 0 keeps their turn (they're down, not out: death saves, a healer).
+   */
+  const changeHp = async (fn: (x: Combatant) => void) => {
+    let was: { hp: Combatant['hp']; activeId?: string; round: number } | undefined
+    await edit((l) => {
+      const x = l.combat.combatants.find((y) => y.id === c.id)
+      if (!x) return
+      const before = { hp: x.hp, activeId: l.combat.activeId, round: l.combat.round }
+      fn(x)
+      if (x.side === 'foe' && x.hp === 0 && before.hp !== 0 && !x.defeated) {
+        was = before
+        removeFighter(l, x.id, 'down')
+      }
+    })
+    if (!was) return
+    const back = was
+    toast(`${c.name} is at 0 HP and down.`, () =>
+      edit((l) => {
+        const x = l.combat.combatants.find((y) => y.id === c.id)
+        if (!x) return
+        x.defeated = false
+        x.hp = back.hp
+        // It was their turn: it comes back to them.
+        if (back.activeId === c.id) {
+          l.combat.activeId = back.activeId
+          l.combat.round = back.round
+        }
+      }),
+    )
+  }
   const nudge = (d: number) =>
-    change(c.id, (x) => {
+    changeHp((x) => {
       const now = (x.hp ?? x.maxHp ?? 0) + d
       x.hp = Math.max(0, x.maxHp ? Math.min(now, x.maxHp) : now)
     })
@@ -325,7 +357,7 @@ export function Fighter({
             </span>
           </div>
           <div className="row wrap">
-            <HpControl c={c} onChange={(fn) => change(c.id, fn)} />
+            <HpControl c={c} onChange={(fn) => void changeHp(fn)} />
           </div>
           <div className="row wrap">
             <span className="tags">

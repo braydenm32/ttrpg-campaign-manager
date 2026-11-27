@@ -492,6 +492,12 @@ test('Show players at the Lectern: tabs, a picture search, what’s up with Stop
     const person = world.dump.entities.find((e) => (e as { imageId?: string }).imageId && e.type === 'npc' && e.visibility === 'players' && !e.template)!
     await panel.getByRole('searchbox', { name: 'Find a picture' }).fill(person.name)
     await panel.locator('.show-pics .show-thumb', { hasText: person.name }).first().click()
+    // A slip of the finger: the note's Undo takes it off screens and out of Handouts again.
+    await expect(toast(page)).toContainText('is on the players’ screens')
+    await toast(page).getByRole('button', { name: 'Undo' }).click()
+    await expect.poll(async () => (await getRecord(page, 'worlds', world.id))!.showing ?? null).toBeNull()
+    expect(((await getRecord(page, 'worlds', world.id))!.handouts as unknown[] | undefined)?.length ?? 0).toBe((before!.handouts as unknown[] | undefined)?.length ?? 0)
+    await panel.locator('.show-pics .show-thumb', { hasText: person.name }).first().click()
     // What's up sits at the top with Stop.
     const now = panel.locator('.now-showing')
     await expect(now).toContainText(person.name)
@@ -499,6 +505,7 @@ test('Show players at the Lectern: tabs, a picture search, what’s up with Stop
     await now.getByRole('button', { name: 'Stop' }).click()
     await expect(now).toHaveCount(0)
     await expect.poll(async () => (await getRecord(page, 'worlds', world.id))!.showing ?? null).toBeNull()
+    await expect(toast(page)).toContainText('Players’ screens are clear.')
     // Boards have a tab of their own.
     await tabs.getByRole('tab', { name: 'Several' }).click()
     await expect(panel.getByRole('button', { name: '+ New board' })).toBeVisible()

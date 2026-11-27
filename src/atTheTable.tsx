@@ -25,6 +25,8 @@ import { playingUnsaved, usePlaying } from './sound/player'
 import { Ico } from './icons'
 import { Broadcast, Coffee, DiceFive, HandWaving, Megaphone, Sparkle, Sword, Timer } from '@phosphor-icons/react'
 import { worldPath } from './paths'
+import { beep } from './gameClock'
+import { toast } from './undo'
 
 /**
  * The live table, both ends: the GM's app tells players what's happening (TableHost) and hears
@@ -171,11 +173,12 @@ export function useMe(world: World) {
 export function PlayerTableLink({ world }: { world: World }) {
   const cloudId = world.shared!.memberOf!
   useEffect(() => linkAsPlayer(cloudId), [cloudId])
+  // One stack at the top of the screen, so neither box hides the other's buttons.
   return (
-    <>
-      <YourTurn world={world} cloudId={cloudId} />
+    <div className="table-prompts">
       <RollCallPrompt world={world} cloudId={cloudId} />
-    </>
+      <YourTurn world={world} cloudId={cloudId} />
+    </div>
   )
 }
 
@@ -409,6 +412,40 @@ export function useNow(every = 1000, on = true) {
     return () => clearInterval(t)
   }, [every, on])
   return now
+}
+
+/** Timers already rung (id and end time), so a second watcher or a remount doesn't ring them again. */
+const rungTimers = new Set<string>()
+
+/**
+ * On the GM's own device, wherever they are in the app: when a Lectern timer runs out, it beeps and
+ * says so in a note. Only timers that run out while the app is open: one found long finished later
+ * stays quiet (its row just says "Time's up").
+ */
+export function TimerWatcher({ worldId }: { worldId: string }) {
+  const running = useLiveQuery(
+    async () =>
+      (await db.sessions.where({ worldId }).toArray()).flatMap((s) => (s.lectern?.timers ?? []).flatMap((t) => (t.endsAt !== undefined ? [{ key: `${t.id}:${t.endsAt}`, label: t.label, endsAt: t.endsAt }] : []))),
+    [worldId],
+  )
+  const key = (running ?? []).map((t) => t.key).join(',')
+  useEffect(() => {
+    const now = Date.now()
+    const waits = (running ?? [])
+      .filter((t) => !rungTimers.has(t.key) && t.endsAt > now - 10_000)
+      .map((t) =>
+        setTimeout(() => {
+          if (rungTimers.has(t.key)) return
+          rungTimers.add(t.key)
+          beep()
+          toast(`Timer “${t.label || 'Timer'}”: time’s up.`)
+        }, Math.max(0, t.endsAt - now)),
+      )
+    return () => waits.forEach(clearTimeout)
+    // The list is read again only when a timer starts, stops or changes (key).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+  return null
 }
 
 /** Milliseconds left on a timer: counting down while running, frozen while paused. */

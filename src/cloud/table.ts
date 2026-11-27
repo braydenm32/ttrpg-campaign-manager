@@ -142,7 +142,38 @@ const stores = new Map<string, TableStore>()
 const listeners = new Map<string, Set<() => void>>()
 const links = new Map<string, { members: LiveRoom; table: LiveRoom; host: boolean }>()
 
-const get = (cloudId: string) => stores.get(cloudId) ?? empty
+/** Where a player's device keeps the roll calls it answered, so a reload doesn't ask (and let them roll) again. */
+const answeredKey = (cloudId: string) => `answeredCalls.${cloudId}`
+const ANSWERS_KEPT = 20
+
+function storedAnswers(cloudId: string): Record<string, number> {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(answeredKey(cloudId)) ?? '{}')
+    if (!v || typeof v !== 'object') return {}
+    return Object.fromEntries(Object.entries(v).filter(([, n]) => typeof n === 'number' && Number.isFinite(n)))
+  } catch {
+    return {}
+  }
+}
+
+function keepAnswers(cloudId: string, answered: Record<string, number>) {
+  try {
+    // The latest few are plenty: an old call never comes back.
+    localStorage.setItem(answeredKey(cloudId), JSON.stringify(Object.fromEntries(Object.entries(answered).slice(-ANSWERS_KEPT))))
+  } catch {
+    // Storage blocked: it's remembered until the page reloads.
+  }
+}
+
+/** A world's live table as this device knows it; a player's answered roll calls come back from storage. */
+function get(cloudId: string) {
+  let s = stores.get(cloudId)
+  if (!s) {
+    s = { ...empty, answered: storedAnswers(cloudId) }
+    stores.set(cloudId, s)
+  }
+  return s
+}
 function update(cloudId: string, fn: (s: TableStore) => TableStore) {
   stores.set(cloudId, fn(get(cloudId)))
   listeners.get(cloudId)?.forEach((l) => l())
@@ -491,6 +522,7 @@ export async function sendSignal(cloudId: string, kind: SignalKind, who: string,
 export async function answerCall(cloudId: string, a: Omit<CallAnswer, 'id'>, secret: boolean) {
   const answer = { ...a, id: newId() }
   update(cloudId, (s) => ({ ...s, answered: { ...s.answered, [a.callId]: a.total } }))
+  keepAnswers(cloudId, get(cloudId).answered)
   const ok = await sendToGM(cloudId, 'call-answer', answer)
   if (!secret) await shareRoll(cloudId, { who: a.who, expr: a.expr, total: a.total, detail: a.detail, crit: a.crit })
   return ok

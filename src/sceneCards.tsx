@@ -195,7 +195,7 @@ export function plannedScenes(session: Session) {
 /** The note shown for the last scene change, so leaving the Lectern can take it away (it would mean nothing on another screen). */
 let sceneToast: number | undefined
 export const clearSceneToast = () => {
-  // Only the scene's own note: with none to name, dismissToast() would take away whatever note is showing.
+  // Only the scene's own note: with none to name, dismissToast() would take away whatever note is showing (Wrap up's, say).
   if (sceneToast !== undefined) dismissToast(sceneToast)
   sceneToast = undefined
 }
