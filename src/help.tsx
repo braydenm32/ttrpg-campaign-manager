@@ -236,7 +236,7 @@ export const HELP = {
   quickNote: 'Jot something down without stopping the game. It goes at the end of this session’s “What happened”, with the time. What you’ve typed is kept if you leave the Lectern and come back.',
   lecternJump: 'Jumps to that part of the Lectern. Back brings you to the same place again.',
   partyFound:
-    'What the party actually found: add coins to the purse, or give them an item (a new item page, GM only until you reveal it, carried by the party). Nothing random.',
+    'What the party actually found: add coins to the purse, or give them an item (a new item page, carried by the party). Players see the item in their Party loot straight away. Tick “Keep it secret” to hold that one back: it stays GM only until you reveal it. If the item’s name has a GM-only page’s name in it, you’re asked first. Players only ever get the item’s name and what you write for them: its GM notes and GM-only passages stay yours. Undo takes a gift back before any player gets it. Nothing random.',
   prep:
     'Plan the session: a strong start, the scenes you expect, secrets and clues, and fights ready to run. At the Lectern you tick scenes and clues off as they happen. Removed something by mistake? The note at the bottom of the screen has Undo for a few seconds.',
   strongStart: 'How the session opens. Starting in the middle of something happening gets the table going fast.',
@@ -273,7 +273,7 @@ export const HELP = {
   assets:
     'Every file in this world: map images, portraits and handouts. Each one says whether players can see it, and why. Players get a file when something they can see uses it: the world’s cover, the picture on a page they can read, a map they can see, a picture in text they read (not in a GM-only passage), a handout, or what’s on their screens. Hide that and the file goes with it. A file nothing like that uses goes to players only if you mark it “Players can see this”. The full picture of a fogged map, and your copy of a map with secrets on it, never go to players.',
   loot:
-    'What the party has: the stash, what each player character carries and the party’s coin. Set "Carried by" on any item page. Players see the revealed items and the coins in the purse; things an NPC, shop or place holds are listed only for you.',
+    'What the party has: the stash, what each player character carries and the party’s coin. Set "Carried by" on any item page. Players see the items they can see (one given at the Lectern shows at once, unless you ticked “Keep it secret”) and the coins in the purse; things an NPC, shop or place holds are listed only for you.',
   lootSteps: 'Use − and + to take coins out of the purse or put them in, by the amount in the box (1 to start with). Click the number to type a new total instead. What other people carry, and items nobody does, are folded under “Everything else in the world”.',
   importPages:
     'Bring pages in from Obsidian (or any folder of plain-text notes), a Kanka export or a World Anvil export. Everything arrives as 🔒 GM only, so you can tidy up before revealing anything.',

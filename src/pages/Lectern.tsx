@@ -50,6 +50,7 @@ import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, jumpTo, useKeepScroll } from '../jump'
 import { changePlace, clearSceneToast, goToScene, plannedScenes } from '../sceneCards'
 import { useReview } from '../reveal'
+import { secretNamesInPlain } from '../links'
 import { markSaved, removeWithUndo, SavedMark, toast } from '../undo'
 import { changeCoin } from '../purse'
 import { Recorder } from './SessionPage'
@@ -330,7 +331,10 @@ const addNoteLine = (sessionId: string, line: string) => {
 
 /**
  * What the party found, as it happens: coins into the purse, or an item handed to them (a new item
- * page, GM only until you reveal it, carried by the party). Nothing random; Undo takes it back.
+ * page, carried by the party). Players see the item in their Party loot straight away, unless "Keep
+ * it secret" is ticked for that one (then it's GM only until revealed). A name that has a GM-only
+ * page's name in it asks first, as any reveal does. Nothing random; Undo takes it back (and sync
+ * holds a new page back while the Undo note is up, so it never reaches a player first).
  */
 function LootPanel({ world, sessionId }: { world: World; sessionId: string }) {
   const coins = (world.partyCoin ?? []).map((c) => c.name)
@@ -338,6 +342,9 @@ function LootPanel({ world, sessionId }: { world: World; sessionId: string }) {
   const [amount, setAmount] = useState('')
   const [coin, setCoin] = useState(names[0])
   const [item, setItem] = useState('')
+  // "Keep it secret" counts for the one item being given: it's unticked again afterwards.
+  const [secret, setSecret] = useState(false)
+  const { ask, dialog } = useReview()
   const w = worldPath(world.id)
   const addCoin = async () => {
     const n = Math.round(Number(amount))
@@ -350,10 +357,29 @@ function LootPanel({ world, sessionId }: { world: World; sessionId: string }) {
   const giveItem = async () => {
     const name = item.trim()
     if (!name) return
-    const e = { ...blankEntity(world.id, 'item', name), heldBy: 'party' }
+    let keep = secret
+    if (!keep) {
+      // The new page is only its name, so the name is all there is to check before players read it.
+      const pages = await db.entities.where({ worldId: world.id }).toArray()
+      const named = secretNamesInPlain(name, pages)
+      if (named.length) {
+        const answer = await ask({
+          title: `Give “${name}” to the party?`,
+          note: 'Players see what the party is given straight away, in their Party loot.',
+          see: [`a new item, “${name}”, in the party stash`],
+          warn: `Its name has the name of ${named.length === 1 ? 'a GM-only page' : 'GM-only pages'} in it, so players would read ${named.length === 1 ? 'it' : 'them'}: ${named.join(', ')}.`,
+          confirm: 'Keep it secret',
+          others: [{ label: 'Give it, players can see it', value: 'show' }],
+        })
+        if (!answer) return
+        keep = answer === 'ok'
+      }
+    }
+    const e: Entity = { ...blankEntity(world.id, 'item', name), heldBy: 'party', visibility: keep ? 'gm' : 'players' }
     await db.entities.add(e)
     setItem('')
-    toast(`“${name}” given to the party (GM only until you reveal it).`, () => db.entities.delete(e.id))
+    setSecret(false)
+    toast(keep ? `“${name}” given to the party, kept secret (GM only until you reveal it).` : `“${name}” given to the party. Players can see it in Party loot now.`, () => db.entities.delete(e.id))
   }
   return (
     <LecternPanel
@@ -393,6 +419,13 @@ function LootPanel({ world, sessionId }: { world: World; sessionId: string }) {
         <input value={item} onChange={(e) => setItem(e.target.value)} placeholder="An item, e.g. Silver locket" aria-label="Item the party found" />
         <button disabled={!item.trim()}>Give to the party</button>
       </form>
+      <label className="row small loot-secret">
+        <input type="checkbox" checked={secret} onChange={(e) => setSecret(e.target.checked)} />
+        <span>
+          Keep it secret <span className="muted">(otherwise players see the item in Party loot at once)</span>
+        </span>
+      </label>
+      {dialog}
     </LecternPanel>
   )
 }

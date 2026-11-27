@@ -20,6 +20,30 @@ export function nameIndex(entities: Entity[]) {
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 /**
+ * The names of GM-only pages inside a short piece of plain text players will read at once (the name
+ * of an item handed to the party, say), written as a [[link]] or not: "The Masked Duke" in "Letter
+ * from the Masked Duke". Whole names only, of three letters or more, by any of a page's names.
+ */
+export function secretNamesInPlain(text: string, pages: Entity[]) {
+  const t = text.toLowerCase()
+  const found = new Map<string, string>()
+  for (const p of pages) {
+    if (p.visibility !== 'gm' || p.template || found.has(p.id)) continue
+    for (const n of [p.name, ...(p.aliases ?? [])]) {
+      const name = n.trim().toLowerCase()
+      if (name.length < 3) continue
+      // Not \b: it only knows plain English letters, so "Élodie" would never match.
+      const whole = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(name)}(?![\\p{L}\\p{N}])`, 'u')
+      if (whole.test(t)) {
+        found.set(p.id, p.name)
+        break
+      }
+    }
+  }
+  return [...found.values()]
+}
+
+/**
  * Rewrites [[Old]] and [[Old|label]] links (unless links is false), and a character's names in
  * :::for lines, in one piece of text. Only whole names in a :::for list change: "from" becomes
  * "to", and the first name "firstFrom" (when given) becomes "firstTo".
