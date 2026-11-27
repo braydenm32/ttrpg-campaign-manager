@@ -31,9 +31,10 @@ export function useFinish(session: Session) {
   const recording = useLiveRecording()
   const [busy, setBusy] = useState(false)
   const blocked = recording?.sessionId === session.id ? 'Stop the recording first' : undefined
-  const finish = async () => {
+  /** `sure`: the GM has just said they played it (the Desk's "Did you play it?"), so there's nothing to ask. */
+  const finish = async ({ sure = false } = {}) => {
     if (blocked || busy) return
-    if (!session.startedAt && live !== session.id && !confirm('You haven’t started playing this one. Mark it played anyway?')) return
+    if (!sure && !session.startedAt && live !== session.id && !confirm('You haven’t started playing this one. Mark it played anyway?')) return
     setBusy(true)
     try {
       // Players' Common Room stops showing this session as being played.
@@ -147,6 +148,7 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
   // Pages that came up in play (not just the ones linked while planning), and only ones still there: a page deleted since keeps its id in the session.
   const inPlay = new Set(featuredInPlay(session))
   const featured = entities.filter((e) => inPlay.has(e.id)).length
+  const linked = entities.filter((e) => session.entityIds.includes(e.id)).length
   // What was written once play began: the prep script in the notes doesn't count.
   const notes = notesFromPlay(session).trim()
   const jump = (id: string, text: ReactNode) => (
@@ -161,7 +163,9 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
       detail: !notes && jump('notes', 'Your notes, at the top'),
     },
     {
-      done: !recorded || transcribed === recorded,
+      // Nothing recorded is nothing to do: it isn't counted as a step done.
+      done: recorded > 0 && transcribed === recorded,
+      optional: !recorded,
       label: recorded ? (transcribed === recorded ? `Recording transcribed${recorded > 1 ? ` (${recorded})` : ''}` : 'Transcribe the recording') : 'No recording this time',
       detail: recorded > transcribed && (transcribing ? 'Transcribing now…' : jump('recording', 'Transcribe it (on this device, or with AssemblyAI)')),
     },
@@ -180,14 +184,18 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
       detail: !session.ledger?.length && jump('writeup', session.recapDraft?.updates?.length ? 'Tick the ones you want' : 'Claude suggests them along with the write-up'),
     },
     {
-      done: true,
+      // A check, not a job: unticked, the whole party counts as there.
+      done: !!session.present,
+      optional: true,
       label: 'Who was there',
       detail: <WhoWasThere session={session} entities={entities} />,
     },
     {
       done: featured > 0,
-      label: featured ? `${featured} featured in this session` : 'Nobody featured yet',
-      detail: !featured && 'People you put in a scene at the Lectern are added by themselves. Add others under “Featured in this session”.',
+      label: featured ? `${featured} came up in play` : 'Nobody has come up in play yet',
+      detail:
+        !featured &&
+        `${linked ? `The ${linked} under “Featured in this session” ${linked === 1 ? 'was' : 'were'} linked while planning, so ${linked === 1 ? 'it isn’t' : 'they aren’t'} counted here. ` : ''}People you put in a scene at the Lectern are added by themselves. Add others under “Featured in this session”.`,
     },
     {
       done: session.visibility === 'players',
@@ -245,7 +253,7 @@ export function WrapUpChecklist(props: WrapProps & { played: boolean }) {
         {steps.map((s, i) => (
           <li key={i} className={s.done ? 'done' : ''}>
             <span className="end-tick" aria-hidden>
-              {s.done ? '✓' : '○'}
+              {s.done ? '✓' : s.optional ? '·' : '○'}
             </span>
             <div>
               <strong>{s.label}</strong>
@@ -293,7 +301,7 @@ export function WrapUpChecklist(props: WrapProps & { played: boolean }) {
               {next ? `Then #${next.number} ${next.title} becomes the next session.` : `Then session #${session.number + 1} is made, ready to prepare.`}{' '}
               {!next && carry && `${carry[0].toUpperCase()}${carry.slice(1)} carry over.`}
             </p>
-            <button type="button" className="primary big" disabled={busy || !!blocked} title={blocked} onClick={finish}>
+            <button type="button" className="primary big" disabled={busy || !!blocked} title={blocked} onClick={() => finish()}>
               <Ico as={CheckCircle} /> Mark as played
             </button>
             <Help topic="markPlayed" />

@@ -155,7 +155,7 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
     )
   else if (stage !== 'played')
     action = (
-      <button className="primary" onClick={finish} disabled={busy || !!blocked} title={blocked ?? HELP.markPlayed}>
+      <button className="primary" onClick={() => finish()} disabled={busy || !!blocked} title={blocked ?? HELP.markPlayed}>
         <Ico as={CheckCircle} /> Mark as played
       </button>
     )

@@ -15,7 +15,7 @@ export const HELP = {
     'Everything about this world in four tabs: the world itself (name, cover, calendar, your own page types, templates), players and sharing (sync, invite links, the wiki link, co-GMs), this device (look, help tips, Discord, AI keys) and data (backups, importing, recently deleted). Each tab is a step in Back.',
   everything:
     'Every kind of page in this world with how many there are, your own kinds included. Maps, places (shops and taverns too), people, factions and lore (deities too) have tabs of their own; items, events and your own kinds are only here.',
-  needsYou: 'Everything waiting on you before the next session, each with one button: what players sent (questions, downtime, claims, new characters, the same as the Inbox), a session with no date or no plan yet, a recap for the session you just played, a few pressing threads (reminders, not counted in the red number), a backup that’s due, characters nobody plays yet and pages you’ve linked but not written. When it’s empty you’re all caught up.',
+  needsYou: 'Everything waiting on you before the next session, each with one button: what players sent (questions, downtime, claims, new characters, the same as the Inbox), a session with no date or no plan yet, a recap for the session you just played, a session whose date went by without being played (“Did you play it?”), a backup that’s due and characters nobody plays yet. Under “Keep in mind” come reminders that aren’t counted in the red number: a few pressing threads and pages you’ve linked but not written. When nothing is waiting you’re all caught up.',
   sampleWorld:
     'A small, simple world for a first look: a coast, a town, a handful of people and two drawn maps with pins. Good for learning the basics in a few minutes. Vael Ardith is the full example with a campaign ready to run.',
   exampleWorld:
@@ -187,7 +187,7 @@ export const HELP = {
     'The real date you play (leave it empty until it’s set; booking a date on the campaign page fills it in), the date in your world, and whether players can read this session’s recap. Print and Delete are here too.',
   featured: 'The pages this session is about. People you put in a scene at the Lectern are added by themselves.',
   wrapUp:
-    'After play, in order: your notes, the recording and its transcript, the write-up from Claude, the players’ recap, highlights, and changes to your pages. Then “Mark as played”, and the next session is ready to prepare. The line at the top counts how many of the “Before you finish” steps are done; “who featured” and the notes only count what happened once you pressed Start playing, not the plan.',
+    'After play, in order: your notes, the recording and its transcript, the write-up from Claude, the players’ recap, highlights, and changes to your pages. Then “Mark as played”, and the next session is ready to prepare. The line at the top counts how many of the “Before you finish” steps are done (a session with no recording has no recording step to count, and “Who was there” is a check, not a step); “who featured” and the notes only count what happened once you pressed Start playing, not the plan.',
   markPlayed:
     'Marks this session played and moves on: the next session (made now if there isn’t one) becomes the one the Desk and the Session area open, and the clues and scenes you didn’t reach are added to its plan, marked “(from #1)”. A date still ahead changes to today. Undo puts it all back.',
   revealRecap:
@@ -222,7 +222,7 @@ export const HELP = {
   clues:
     'Things the players could learn, not tied to any one scene. Drop each one wherever it fits and tick it off when they find it; leftovers carry into your next prep.',
   encounters:
-    'Build a fight ahead of time: who’s in it, how many, HP and AC. Pick NPC pages to read their HP and AC from their details. "Run" adds everyone to the Lectern’s initiative tracker.',
+    'Build a fight ahead of time: who’s in it, how many, HP and AC. Pick NPC pages to read their HP and AC from their details. “Fight it at the Lectern” adds everyone to the Lectern’s initiative list, once: pressing it again only opens the Lectern, unless you ask for another set.',
   soundboard:
     'Buttons for ambience, music and sound effects. Upload your own audio files, pick a soundset from your Syrinscape library and play its moods, or add Syrinscape moods and elements as buttons. Tap to play, tap again to stop. Sounds keep playing as you move around the app.',
   syrinscape:

@@ -105,7 +105,7 @@ type StageFacts = Pick<Session, 'recap' | 'date' | 'notes' | 'prep' | 'startedAt
  * written on one never started). Older ones, from before there was such a mark, also count as
  * played once their date has gone by, as they always did.
  */
-const MARK_NEEDED_SINCE = new Date(2026, 10, 28).getTime()
+const MARK_NEEDED_SINCE = new Date(2026, 10, 27).getTime()
 
 /** Whether a date that has gone by is enough to call a session played: only for sessions from before "Mark as played". */
 const datePlays = (s: { date: string; createdAt?: number }, today: string) => !!s.date && s.date < today && (s.createdAt ?? 0) < MARK_NEEDED_SINCE

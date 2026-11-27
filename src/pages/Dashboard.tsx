@@ -7,7 +7,8 @@ import { Modal, useMenu } from '../components'
 import { db, ENTITY_LABELS, GAME_SYSTEMS, newId, PICKER_TYPES, typeLabel, type Campaign, type Entity, type Session, type World } from '../db'
 import { useCreatePage } from '../NewPage'
 import { formatBytes, useAssetUrl, useVisibleEntities, useWorld } from '../hooks'
-import { initials } from '../text'
+import { initials, showDay } from '../text'
+import { useFinish } from '../EndSession'
 import { nextSessions, useCampaigns, useWorldSessions } from '../threads'
 import { WantedPages, wantedPages } from '../wanted'
 import { useViewMode } from '../viewMode'
@@ -45,7 +46,7 @@ import {
   type Icon,
 } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { createNextSession, isPlayed, localDate, partyOf, sessionStage, startAndTell, type SessionStage } from '../sessions'
+import { createNextSession, isOverdue, isPlayed, localDate, partyOf, sessionStage, startAndTell, type SessionStage } from '../sessions'
 import { StageChip, usePlayingNow } from '../stage'
 import { detailOf } from '../partyGlance'
 import { toast } from '../undo'
@@ -411,6 +412,20 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
     .map((n) => ({ ...n, inbox: true }))
 
   const needs: Need[] = fromPlayers.slice(0, INBOX_ROWS)
+  // Its date went by and it was never started: ask, don't guess that it was played.
+  if (s && isOverdue(s))
+    needs.push({
+      key: 'overdue',
+      chip: 'Overdue',
+      icon: CalendarBlank,
+      tone: 'warn',
+      text: (
+        <>
+          #{s.number} {s.title} was due on {showDay(s.date)}. Did you play it?
+        </>
+      ),
+      action: <Overdue session={s} />,
+    })
   if (s && upcomingStage && !s.date && inHand && !upcoming(inHand.campaign))
     needs.push({ key: 'date', chip: 'No date', icon: CalendarBlank, tone: 'warn', text: <>#{s.number} {s.title} has no date yet</>, action: <SetDate session={s} /> })
   if (s && stage === 'planned')
@@ -561,7 +576,19 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
       ),
     })
   const more = fromPlayers.length - INBOX_ROWS
-  const waiting = needs.filter((n) => n.tone !== 'quiet' && !n.reminder).length + Math.max(0, more)
+  // What's waiting on the GM (the red number), and the reminders listed apart beneath it.
+  const asks = needs.filter((n) => n.tone !== 'quiet' && !n.reminder)
+  const mind = needs.filter((n) => n.tone === 'quiet' || n.reminder)
+  const waiting = asks.length + Math.max(0, more)
+  const row = (n: Need) => (
+    <li key={n.key} className={`need ${n.tone ?? ''}`} {...(n.inbox ? { 'data-inbox-item': '' } : {})}>
+      <span className={`chip need-chip ${n.tone ?? ''}`}>
+        <Ico as={n.icon} /> {n.chip}
+      </span>
+      <span className="need-text">{n.text}</span>
+      {n.action && <span className="need-action">{n.action}</span>}
+    </li>
+  )
 
   return (
     <section className="card needs-you" data-inbox-total={inbox.total}>
@@ -575,25 +602,25 @@ function NeedsYou({ world, entities, sessions, inHand, stage }: { world: World; 
       </div>
       {waiting === 0 && (
         <p className="muted small all-caught-up">
-          <Ico as={CheckCircle} /> All caught up.
+          <Ico as={CheckCircle} /> {mind.length ? 'Nothing is waiting on you.' : 'All caught up.'}
         </p>
       )}
-      <ul className="needs">
-        {needs.map((n) => (
-          <li key={n.key} className={`need ${n.tone ?? ''}`} {...(n.inbox ? { 'data-inbox-item': '' } : {})}>
-            <span className={`chip need-chip ${n.tone ?? ''}`}>
-              <Ico as={n.icon} /> {n.chip}
-            </span>
-            <span className="need-text">{n.text}</span>
-            {n.action && <span className="need-action">{n.action}</span>}
-          </li>
-        ))}
-        {more > 0 && (
-          <li className="need" data-inbox-more={more}>
-            <Link to={`${w}/questions`}>…and {more} more in the Inbox</Link>
-          </li>
-        )}
-      </ul>
+      {(asks.length > 0 || more > 0) && (
+        <ul className="needs">
+          {asks.map(row)}
+          {more > 0 && (
+            <li className="need" data-inbox-more={more}>
+              <Link to={`${w}/questions`}>…and {more} more in the Inbox</Link>
+            </li>
+          )}
+        </ul>
+      )}
+      {mind.length > 0 && (
+        <>
+          <p className="muted small keep-in-mind">Keep in mind (not counted above)</p>
+          <ul className="needs">{mind.map(row)}</ul>
+        </>
+      )}
       {wantedOpen && <WantedPages worldId={world.id} entities={entities} sessions={sessions} />}
       {reading && <ReviewCharacter world={world} request={reading} player={inbox.nameOf(reading.userId)} onClose={() => setReading(undefined)} onDone={inbox.reload} />}
     </section>
@@ -666,13 +693,13 @@ function recapRow(world: World, sessions: Session[], inHand: InHand | undefined,
 }
 
 /** "Set a date": a date box in place; the session takes the day you pick (today or later). */
-function SetDate({ session }: { session: Session }) {
+function SetDate({ session, label = 'Set a date' }: { session: Session; label?: string }) {
   const [open, setOpen] = useState(false)
   const [min] = useState(() => localDate())
   if (!open)
     return (
       <button className="small" onClick={() => setOpen(true)}>
-        Set a date
+        {label}
       </button>
     )
   return (
@@ -684,10 +711,24 @@ function SetDate({ session }: { session: Session }) {
       onChange={async (e) => {
         const date = e.target.value
         if (!date || date < min) return
+        const before = session.date
         await db.sessions.update(session.id, { date })
-        toast(`#${session.number} is on ${new Date(`${date}T12:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}.`, () => db.sessions.update(session.id, { date: '' }))
+        toast(`#${session.number} is on ${new Date(`${date}T12:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}.`, () => db.sessions.update(session.id, { date: before }))
       }}
     />
+  )
+}
+
+/** The answers to "Did you play it?" for a session whose date went by: yes (mark it played), or a new date. */
+function Overdue({ session }: { session: Session }) {
+  const { finish, busy, blocked } = useFinish(session)
+  return (
+    <span className="row">
+      <button className="small" disabled={busy || !!blocked} title={blocked} onClick={() => finish({ sure: true })}>
+        Yes, mark as played
+      </button>
+      <SetDate session={session} label="Pick a new date" />
+    </span>
   )
 }
 
