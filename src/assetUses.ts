@@ -49,7 +49,7 @@ export async function assetUses(worldId: string) {
     const name = `Session ${s.number}: ${s.title}`
     for (const r of s.recordings ?? []) add(r.assetId, `${name} (recording)`)
     for (const sc of s.prep?.scenes ?? []) if (sc.show?.kind === 'image') add(sc.show.assetId, name)
-    for (const t of [s.notes, s.recap]) inText(t, name)
+    for (const t of [s.notes, s.happened, s.recap]) inText(t, name)
   }
   return uses
 }

@@ -44,7 +44,7 @@ export function wantedPages(entities: Entity[], sessions: Session[]): Wanted[] {
   }
   for (const s of sessions) {
     const where = { kind: 'session' as const, id: s.id, title: `#${s.number} ${s.title}` }
-    for (const t of [s.notes, s.recap, s.lectern?.sceneText]) scan(t, where)
+    for (const t of [s.notes, s.happened, s.recap, s.lectern?.sceneText]) scan(t, where)
   }
   return [...found.values()].sort((a, b) => b.in.length - a.in.length || a.name.localeCompare(b.name))
 }

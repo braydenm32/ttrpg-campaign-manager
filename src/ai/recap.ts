@@ -6,6 +6,7 @@ import { UNTRUSTED_NOTE, untrusted } from './worldText'
 import { readUpdates, UPDATES_HEADING, updatesInstructions } from './worldUpdates'
 import { claudeCost, CUT_OFF, friendly, MODEL } from './claude'
 import { presentLine } from '../attendance'
+import { notesFromPlay, planNotes } from '../sessions'
 import { HIGHLIGHTS_HEADING, highlightsInstructions, parseHighlights } from '../highlights'
 
 export const GM_HEADING = '## GM summary'
@@ -53,6 +54,9 @@ export function buildRecapPrompt(world: World, session: Session, entities: Entit
   const threads = entities
     .filter(isOpenThread)
     .map((e) => `- ${e.name}`)
+  // The GM's two notes boxes, kept apart so a plan is never taken for what happened.
+  const plan = planNotes(session).trim()
+  const happened = notesFromPlay(session).trim()
 
   return `You are helping the game master of a tabletop roleplaying campaign write up a session.
 
@@ -76,8 +80,8 @@ ${UPDATES_HEADING}
 ${updatesInstructions()}
 
 When you mention a person, place, faction or thing from the list of known pages in the GM summary or the player recap, write it exactly as listed inside double square brackets, like [[Name]], so it links to its page. Only link names from the list. Use Markdown. Pages marked "secret" are hidden from the players: leave them out of the player recap unless the players actually met or learned about them at the table.
-${names.length ? `\nKnown pages in the world (name, kind, other names, summary):\n${names.join('\n')}\n` : ''}${threads.length ? `\nLoose threads the GM is tracking (mention any that moved):\n${threads.join('\n')}\n` : ''}${bookmarks.length ? `\nMoments the GM bookmarked while recording:\n${bookmarks.join('\n')}\n` : ''}${planned.length ? `\nThe GM's prep for this session (secret, for the GM summary only; say which unfound clues are still in play):\n<gm_prep>\n${planned.join('\n')}\n</gm_prep>\n` : ''}${session.notes.trim() ? `\nThe GM's own notes for this session (secret, for the GM summary only):\n<gm_notes>\n${session.notes.trim()}\n</gm_notes>\n` : ''}
-${untrusted('transcript', transcripts.join('\n\n') || '(No transcript. Work from the GM notes.)')}`
+${names.length ? `\nKnown pages in the world (name, kind, other names, summary):\n${names.join('\n')}\n` : ''}${threads.length ? `\nLoose threads the GM is tracking (mention any that moved):\n${threads.join('\n')}\n` : ''}${bookmarks.length ? `\nMoments the GM bookmarked while recording:\n${bookmarks.join('\n')}\n` : ''}${planned.length ? `\nThe GM's prep for this session (secret, for the GM summary only; say which unfound clues are still in play):\n<gm_prep>\n${planned.join('\n')}\n</gm_prep>\n` : ''}${plan ? `\nThe GM's plan notes, written before the game (secret, for the GM summary only; they say what was planned, not what happened):\n<gm_plan_notes>\n${plan}\n</gm_plan_notes>\n` : ''}${happened ? `\nThe GM's own notes on what happened, written during and after the game (secret, for the GM summary only):\n<gm_notes>\n${happened}\n</gm_notes>\n` : ''}
+${untrusted('transcript', transcripts.join('\n\n') || '(No transcript. Work from the GM’s notes on what happened.)')}`
 }
 
 /** Splits Claude's reply into the GM summary, the player recap and the suggested world updates. */

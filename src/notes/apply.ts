@@ -112,12 +112,13 @@ export async function applyNotes(worldId: string, picks: NotePick[], sessions: N
         number,
         title: s.title || `Session ${number}`,
         date: iso,
-        notes: s.date && !iso ? `*Date in my notes: ${s.date}*\n\n${s.notes}` : s.notes,
+        notes: '',
+        // These are notes of sessions already played: they go under “What happened”, not “Plan”.
+        happened: s.date && !iso ? `*Date in my notes: ${s.date}*\n\n${s.notes}` : s.notes,
         recap: '',
         visibility: 'gm',
         entityIds: [...new Set(linked)],
         recordings: [],
-        // Already played: these are notes of what happened.
         playedAt: now,
         createdAt: now + number,
       }

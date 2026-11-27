@@ -118,7 +118,7 @@ export const STAGES: Record<SessionStage, { label: string; tone: string }> = {
   played: { label: 'Played', tone: 'done' },
 }
 
-type StageFacts = Pick<Session, 'recap' | 'date' | 'notes' | 'prep' | 'startedAt' | 'playedAt'> & { createdAt?: number }
+type StageFacts = Pick<Session, 'recap' | 'date' | 'notes' | 'prep' | 'startedAt' | 'playedAt'> & { happened?: string; createdAt?: number }
 
 /**
  * Sessions made from this day on are only played once "Mark as played" says so (or a recap is
@@ -146,7 +146,7 @@ export const isOverdue = (s: Pick<Session, 'recap' | 'date' | 'playedAt'> & { st
 /** Whether there's any plan for a session yet. */
 const hasPlan = (s: StageFacts) => {
   const p = s.prep
-  return !!(s.notes.trim() || p?.strongStart.trim() || p?.scenes.length || p?.clues.length || p?.encounters.length)
+  return !!(s.notes.trim() || s.happened?.trim() || p?.strongStart.trim() || p?.scenes.length || p?.clues.length || p?.encounters.length)
 }
 
 /** A session's stage. `live` says it's being played right now (live to players, or recording on this device). */
@@ -234,7 +234,7 @@ export const notStarted = (sessionId: string, clearWorldDate?: boolean) =>
 export function stampStart(s: Session, worldToday?: CalDate) {
   if (s.startedAt) return
   s.startedAt = Date.now()
-  s.playStart = { notes: s.notes, entityIds: [...s.entityIds] }
+  s.playStart = { entityIds: [...s.entityIds] }
   if (worldToday && !s.worldDate) {
     s.worldDate = { ...worldToday }
     s.playStart.datedWorld = true
@@ -251,10 +251,31 @@ export function featuredInPlay(s: Pick<Session, 'entityIds' | 'lectern' | 'start
   return s.entityIds.filter((id) => !planned.has(id) || played.has(id))
 }
 
-/** What the GM wrote in the notes during play (the prep script that was there at the start left out), where that's known. */
-export function notesFromPlay(s: Pick<Session, 'notes' | 'startedAt' | 'playStart'>) {
+/**
+ * What the GM wrote about what happened: the "What happened" box. A session started before there
+ * were two boxes kept everything in one, with a copy of it as it was at the start (playStart.notes):
+ * what was typed after that counts too (all of it, if the start of it was changed since).
+ */
+export function notesFromPlay(s: Pick<Session, 'notes' | 'happened' | 'startedAt' | 'playStart'>) {
   const before = s.playStart?.notes
-  return s.startedAt && before && s.notes.startsWith(before) ? s.notes.slice(before.length) : s.notes
+  const old = s.startedAt && typeof before === 'string' ? (s.notes.startsWith(before) ? s.notes.slice(before.length) : s.notes) : ''
+  return [old.trim(), s.happened?.trim() ?? ''].filter(Boolean).join('\n\n')
+}
+
+/**
+ * The plan written before the game: the "Plan" box. On a session started before there were two
+ * boxes, only what was there at the start (the rest counts as what happened, see notesFromPlay).
+ */
+export function planNotes(s: Pick<Session, 'notes' | 'startedAt' | 'playStart'>) {
+  const before = s.playStart?.notes
+  if (!s.startedAt || typeof before !== 'string') return s.notes
+  return s.notes.startsWith(before) ? before : ''
+}
+
+/** Adds a line to the end of a session's "What happened" (a quick note, a roll), for Dexie's modify. */
+export function addHappened(s: Session, line: string) {
+  const was = s.happened ?? ''
+  s.happened = `${was.trimEnd()}${was.trim() ? '\n' : ''}${line}`
 }
 
 /**

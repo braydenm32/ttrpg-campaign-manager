@@ -903,8 +903,17 @@ export interface Session {
   number: number
   title: string
   date: string
-  /** GM's running notes (Markdown). */
+  /**
+   * "Plan": the GM's notes written before the game (Markdown). Sessions from before there were two
+   * boxes keep all their notes here. GM-only.
+   */
   notes: string
+  /**
+   * "What happened": the GM's notes during and after the game (Markdown): the Lectern's notes and
+   * quick notes go here. Unset on sessions from before there were two boxes. GM-only (player_view
+   * sends sessions from a list of player-safe fields, which leaves it out).
+   */
+  happened?: string
   /** Player-facing recap (Markdown). Shown in player view. */
   recap: string
   visibility: Visibility
@@ -937,11 +946,13 @@ export interface Session {
    */
   present?: string[]
   /**
-   * What the session held when play began (the prep script in the GM notes, the pages already linked),
-   * so Wrap up can tell what happened in play from what was only planned. `datedWorld` says Start
-   * playing also gave the session its date in the world, so taking the start back takes that back too. GM-only.
+   * What the session held when play began (the pages already linked), so Wrap up can tell what came
+   * up in play from what was only planned. `notes` is only on sessions started before there were two
+   * notes boxes: the notes as they were at the start, so what was typed after it still counts as what
+   * happened (src/sessions.ts, notesFromPlay). `datedWorld` says Start playing also gave the session
+   * its date in the world, so taking the start back takes that back too. GM-only.
    */
-  playStart?: { notes: string; entityIds: string[]; datedWorld?: boolean }
+  playStart?: { notes?: string; entityIds: string[]; datedWorld?: boolean }
   createdAt: number
 }
 
@@ -1409,6 +1420,13 @@ db.version(9).stores({
 db.version(10).stores({
   startingPoints: 'worldId',
 })
+
+// v11: a session's notes are two boxes, "Plan" (Session.notes, as before) and "What happened"
+// (Session.happened, new and not indexed). Existing notes stay in Plan, so nothing moves: the
+// upgrade is here only so the change of shape is recorded.
+db.version(11)
+  .stores({})
+  .upgrade(() => {})
 
 // The bin is cleared of anything over a month old soon after the app opens, not only when it's
 // looked at, so deleting a big recording to make room does give the space back in time.

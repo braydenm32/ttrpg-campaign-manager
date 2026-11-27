@@ -278,7 +278,7 @@ function runRecord(run: number, now: Rows, sp: StartingPoint, players?: { member
     const before = start.get(s.id)
     if (s.recap.trim() && s.recap !== before?.recap) lines.push(s.recap.trim(), '')
     const notes = notesFromPlay(s).trim()
-    if (notes && notes !== before?.notes.trim()) lines.push('**Notes from play:**', '', notes, '')
+    if (notes && notes !== (before ? notesFromPlay(before).trim() : '')) lines.push('**Notes from play:**', '', notes, '')
     const highlights = (s.highlights ?? []).filter((h) => !before?.highlights?.some((x) => x.id === h.id))
     if (highlights.length) lines.push(`**Highlights:** ${highlights.map((h) => h.text).join(' · ')}`, '')
   }

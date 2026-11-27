@@ -162,7 +162,8 @@ export function secretsOf(dump: Dump): Secret[] {
   for (const m of dump.maps) if (m.visibility === 'gm') add(m.name, `name of the GM-only map “${m.name}”`, { minWords: 2, minLength: 12 })
   for (const s of dump.sessions) {
     if (s.visibility === 'gm') add(s.title, `title of the GM-only session #${s.number}`, { minWords: 2, minLength: 12 })
-    for (const p of phrases(s.notes ?? '')) add(p, `GM notes of session #${s.number}`)
+    for (const p of phrases(s.notes ?? '')) add(p, `Plan notes of session #${s.number}`)
+    for (const p of phrases(s.happened ?? '')) add(p, `“What happened” notes of session #${s.number}`)
   }
   for (const b of dump.boards) add(b.name, `name of the corkboard “${b.name}” (corkboards are GM-only)`, { minWords: 2, minLength: 12 })
   // Sorted, so the same secrets are picked in every run (the database hands pages back in id order, and ids differ each time).

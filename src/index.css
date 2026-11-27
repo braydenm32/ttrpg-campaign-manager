@@ -536,6 +536,10 @@ button.social.facebook .social-icon { background: #1877f2; }
 .lectern-found h2 { margin: 0 0 .4em; }
 .lectern-found-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .8em; }
 .lectern-notes { max-height: 22em; overflow: auto; font-size: .95em; }
+/* The plan, folded under What happened at the Lectern: its own scroll, so a long plan doesn't push the panels below away. */
+.lectern-plan-notes { margin-top: .5rem; font-size: .9em; }
+.lectern-plan-notes > summary { color: var(--muted); cursor: pointer; }
+.lectern-plan-notes > div { max-height: 22em; overflow: auto; }
 .lectern-search-note { margin-top: 1em; }
 .lectern-panel .secret { margin: .4em 0; }
 .lectern-panel blockquote { margin: .3em 0; padding-left: .8em; border-left: 3px solid var(--border); font-style: italic; }

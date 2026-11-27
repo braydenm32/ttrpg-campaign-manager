@@ -107,7 +107,8 @@ export function searchWorld(
   for (const s of sessions) {
     const title = `#${s.number} ${s.title}`
     const recap = text(s.recap)
-    const notes = isGM ? text(s.notes) : ''
+    // Both of the GM's notes boxes, Plan and What happened.
+    const notes = isGM ? text([s.notes, s.happened].filter(Boolean).join('\n')) : ''
     const inTitle = title.toLowerCase().includes(q) || (words.length > 1 && allIn(words, [title]))
     const w = recap.toLowerCase().includes(q) || notes.toLowerCase().includes(q) ? q : words.find((x) => !title.toLowerCase().includes(x)) ?? q
     if (inTitle || recap.toLowerCase().includes(q) || notes.toLowerCase().includes(q) || allIn(words, [title, recap, notes]))

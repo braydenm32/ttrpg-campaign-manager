@@ -145,7 +145,7 @@ export function ShowToPlayers({
         {highlights > 0 && <li>{highlights === 1 ? '1 highlight' : `${highlights} highlights`}</li>}
         {featured.length > 0 && <li>who featured, only pages they can already see: {featured.slice(0, 6).map((e) => e.name).join(', ')}{featured.length > 6 && ` and ${featured.length - 6} more`}</li>}
       </ul>
-      <p className="muted small">Your GM notes, the plan, the recording and its transcript stay yours.</p>
+      <p className="muted small">Your notes (Plan and What happened), the prep, the recording and its transcript stay yours.</p>
       {campaign?.visibility === 'gm' && (
         <p className="notice small">The campaign “{campaign.name}” is still GM only, so players won’t see this session until you reveal the campaign too (on All sessions).</p>
       )}
@@ -183,7 +183,7 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
   const inPlay = new Set(featuredInPlay(session))
   const featured = entities.filter((e) => inPlay.has(e.id)).length
   const linked = entities.filter((e) => session.entityIds.includes(e.id)).length
-  // What was written once play began: the prep script in the notes doesn't count.
+  // What happened, not the plan written before the game.
   const notes = notesFromPlay(session).trim()
   const jump = (id: string, text: ReactNode) => (
     <button type="button" className="link" onClick={() => jumpTo(id)}>
@@ -193,8 +193,8 @@ function wrapSteps({ world, session, campaign, entities }: WrapProps) {
   const steps: WrapStep[] = [
     {
       done: !!notes,
-      label: notes ? 'GM notes written' : 'Jot down what happened',
-      detail: !notes && jump('notes', 'Your notes, at the top'),
+      label: notes ? 'What happened is written down' : 'Write down what happened',
+      detail: !notes && jump('notes', 'In “What happened”, at the top'),
     },
     {
       // Nothing recorded is nothing to do: it isn't counted as a step done.

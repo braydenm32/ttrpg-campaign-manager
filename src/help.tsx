@@ -207,7 +207,7 @@ export const HELP = {
     'The real date you play (leave it empty until it’s set; booking a date on the campaign page fills it in), the date in your world, and whether players can read this session’s recap. Print and Delete are here too.',
   featured: 'The pages this session is about. People you put in a scene at the Lectern are added by themselves.',
   wrapUp:
-    'After play, in order: your notes, the recording and its transcript, the write-up from Claude, the players’ recap, highlights, and changes to your pages. Then “Mark as played”, and the next session is ready to prepare. The line at the top counts how many of the “Before you finish” steps are done (a session with no recording has no recording step to count, and “Who was there” is a check, not a step); “who featured” and the notes only count what happened once you pressed Start playing, not the plan.',
+    'After play, in order: what happened (your plan is underneath to look at), the recording and its transcript, the write-up from Claude, the players’ recap, highlights, and changes to your pages. Then “Mark as played”, and the next session is ready to prepare. The line at the top counts how many of the “Before you finish” steps are done (a session with no recording has no recording step to count, and “Who was there” is a check, not a step); “who featured” only counts who came up once you pressed Start playing, and the notes step looks at “What happened”, not at your plan.',
   markPlayed:
     'Marks this session played and moves on: the next session (made now if there isn’t one) becomes the one the Desk and the Session area open, and the clues and scenes you didn’t reach are added to its plan, marked “(from #1)”. A date still ahead changes to today. Whatever is on players’ screens, the in-game time too, comes down (handouts stay in Handouts). Undo puts it all back.',
   revealRecap:
@@ -232,7 +232,7 @@ export const HELP = {
     'Goes on to the next scene you planned: ticks off this one, and puts the next one’s place, read-aloud text and people on screen (and its fight, sounds and handout, if its card has them). A scene with nothing on its card leaves the text and people as you set them. If it reveals pages, you see what players will get first. Undo puts it all back: the last scene, the fight and people it added, and the pages it revealed or showed.',
   sceneChange:
     'Choosing another place starts a new scene: the read-aloud text and who’s here are replaced with what you planned for that place (or cleared). Undo puts the last scene back.',
-  quickNote: 'Jot something down without stopping the game. It goes at the end of this session’s GM notes, with the time. What you’ve typed is kept if you leave the Lectern and come back.',
+  quickNote: 'Jot something down without stopping the game. It goes at the end of this session’s “What happened”, with the time. What you’ve typed is kept if you leave the Lectern and come back.',
   lecternJump: 'Jumps to that part of the Lectern. Back brings you to the same place again.',
   partyFound:
     'What the party actually found: add coins to the purse, or give them an item (a new item page, GM only until you reveal it, carried by the party). Nothing random.',
@@ -444,7 +444,11 @@ export const HELP = {
   storySoFar:
     'A catch-up of the whole campaign, for players before a session and for anyone joining late. Write it yourself, or have Claude write it from the player recaps (never from your GM notes). Players also get every session’s recap underneath, in order.',
   lecternNotes:
-    'This session’s GM notes, the same ones as on the session page. Add a line with the time from the box (it goes at the end), or press Edit to change them.',
+    'What happened in this session, the same box as on Wrap up. Add a line with the time from the quick note at the top (it goes at the end), or press Edit to change it. Your plan, written before the game, is folded underneath to read. Both are GM only.',
+  planNotes:
+    'Your plan for this session, written before the game: what might happen, who they could meet, what to remember. It stays as you wrote it once you play; what really happened goes in “What happened”. Notes from before there were two boxes are all here. GM only: players never get it.',
+  whatHappened:
+    'What really happened at the table: who they met, what they chose, what’s left hanging. The Lectern’s quick notes land here as you play, and a summary from Claude is added here. This is the box Wrap up means by “write down what happened”. GM only: players never get it (they read the recap).',
   inspirationPlayer:
     'Inspiration or hero points your GM has given you. Tap “Use one” to ask to spend one: your GM gets a pop-up and says yes at the table.',
   // The first ten minutes, and between sessions

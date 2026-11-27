@@ -339,7 +339,8 @@ export function mergeRows(base: Record<string, unknown>, mine: Record<string, un
 const PASSING = new Set(['lectern', 'updatedAt'])
 /** Parts of a session, board or world in plain words, for the sync note. */
 const PART_NAMES: Record<string, string> = {
-  notes: 'notes',
+  notes: 'plan',
+  happened: 'what happened',
   prep: 'prep',
   recap: 'recap',
   cards: 'cards',

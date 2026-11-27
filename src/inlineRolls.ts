@@ -1,7 +1,7 @@
 import { db, type Entity } from './db'
 import { roll } from './dice'
 import type { AppElement } from './Markdown'
-import { sessionStage } from './sessions'
+import { addHappened, sessionStage } from './sessions'
 import { listedEntries, rollOnTable } from './tables'
 
 /**
@@ -83,7 +83,7 @@ export function clickInlineRoll(target: HTMLElement, { tables, showSecrets, isGM
     db.sessions
       .where('id')
       .equals(made.session)
-      .modify((s) => void (s.notes = `${s.notes.trimEnd()}${s.notes.trim() ? '\n' : ''}- ${time} ${made.line}`))
+      .modify((s) => addHappened(s, `- ${time} ${made.line}`))
       .then(() => {
         toNotes.textContent = '✓ In the notes'
         toNotes.disabled = true

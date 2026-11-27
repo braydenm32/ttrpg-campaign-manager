@@ -19,12 +19,12 @@ function spokenNames(e: Entity) {
   return [...new Set(names)]
 }
 
-/** Sessions whose notes (GM only) or recap link to this page. */
+/** Sessions whose notes (Plan or What happened, both GM only) or recap link to this page. */
 function linkingSessions(e: Entity, sessions: Session[], isGM: boolean) {
   const needles = new Set(namesOf(e))
   const links = (text: string) => [...text.matchAll(/\[\[([^\]|]+)/g)].some((m) => needles.has(m[1].trim().toLowerCase()))
   // In the GM's player preview, hidden passages of a recap don't count.
-  return sessions.filter((s) => links(isGM ? s.recap : stripSecrets(s.recap)) || (isGM && links(s.notes)))
+  return sessions.filter((s) => links(isGM ? s.recap : stripSecrets(s.recap)) || (isGM && (links(s.notes) || links(s.happened ?? ''))))
 }
 
 /** Lines in session transcripts where the page's name was said. Names are matched as written (capitalised). */

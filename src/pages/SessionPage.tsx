@@ -212,13 +212,13 @@ function PrepareView({ session, campaign, world, entities }: ViewProps) {
           { id: 'scenes', label: 'Scenes' },
           { id: 'fights', label: 'Fights' },
           { id: 'clues', label: 'Clues' },
-          { id: 'gm-notes', label: 'Notes' },
+          { id: 'gm-notes', label: 'Plan' },
           { id: 'people', label: 'People' },
           { id: 'details', label: 'Details' },
         ]}
       />
       <PrepSheet session={session} entities={entities} worldId={world.id} />
-      <NotesCard session={session} entities={entities} worldId={world.id} id="gm-notes" />
+      <NotesCard session={session} entities={entities} worldId={world.id} id="gm-notes" box="plan" />
       <FeaturedSection session={session} entities={entities} worldId={world.id} />
       <PrepHelper world={world} session={session} entities={entities} />
       <SessionDetails session={session} campaign={campaign} world={world} entities={entities} />
@@ -247,7 +247,7 @@ function WrapUpView({ session, campaign, world, entities, stage, focus, review }
         label="Parts of the wrap-up"
         className="phone-only"
         targets={[
-          { id: 'notes', label: 'Notes' },
+          { id: 'notes', label: 'What happened' },
           { id: 'recording', label: 'Recording' },
           { id: 'writeup', label: 'Write-up' },
           ...(session.ledger?.length ? [{ id: 'changed', label: 'What changed' }] : []),
@@ -260,7 +260,8 @@ function WrapUpView({ session, campaign, world, entities, stage, focus, review }
         After the game, top to bottom: your notes, the recording, the write-up, the players’ recap, then mark it played. <Help topic="wrapUp" />
       </p>
       {stage !== 'preparing' && stage !== 'planned' && <WrapProgress world={world} session={session} campaign={campaign} entities={entities} />}
-      <NotesCard session={session} entities={entities} worldId={worldId} id="notes" />
+      <NotesCard session={session} entities={entities} worldId={worldId} id="notes" box="happened" />
+      {session.notes.trim() && <NotesCard session={session} entities={entities} worldId={worldId} id="plan-notes" box="plan" />}
       <div id="recording">
         <Recorder session={session} />
       </div>
@@ -349,22 +350,31 @@ function WhatChanged({ session, entities, worldId }: { session: Session; entitie
 /** Notes longer than this show folded, with "Show all". */
 const LONG_NOTES = 900
 
+/** The two notes boxes on a session: what each is called, its help tip and what it asks for. */
+const NOTES_BOXES = {
+  plan: { field: 'notes', title: 'Plan', help: 'planNotes', placeholder: 'Your plan for the game: what might happen, who they could meet, what to remember… Links like [[Page name]] work. GM only.' },
+  happened: { field: 'happened', title: 'What happened', help: 'whatHappened', placeholder: 'What happened, who they met, what’s left hanging… Links like [[Page name]] work. GM only.' },
+} as const
+
 /**
- * The session's GM notes: read as a page (long ones folded), or edited in place with Edit. Empty
- * notes open ready to type. The same notes the Lectern's quick notes add to. Only the GM sees them.
+ * One of the session's two notes boxes, "Plan" (written before the game) or "What happened" (during
+ * and after it; the Lectern's quick notes add to it): read as a page (long ones folded), or edited in
+ * place with Edit. An empty box opens ready to type. Only the GM sees them.
  */
-function NotesCard({ session, entities, worldId, id }: { session: Session; entities: Entity[]; worldId: string; id: string }) {
-  const [editing, setEditing] = useState(!session.notes.trim())
+function NotesCard({ session, entities, worldId, id, box }: { session: Session; entities: Entity[]; worldId: string; id: string; box: keyof typeof NOTES_BOXES }) {
+  const { field, title, help, placeholder } = NOTES_BOXES[box]
+  const text = session[field] ?? ''
+  const [editing, setEditing] = useState(!text.trim())
   const [all, setAll] = useState(false)
-  const long = session.notes.length > LONG_NOTES
+  const long = text.length > LONG_NOTES
   return (
     <section className="card wrap-card" id={id}>
       <div className="plan-head">
         <h2>
-          <Ico as={Lock} /> GM notes <Help topic="gmNotes" />
+          <Ico as={Lock} /> {title} <Help topic={help} />
         </h2>
         <SavedMark />
-        {session.notes.trim() && (
+        {text.trim() && (
           <button type="button" className={editing ? 'primary' : ''} onClick={() => setEditing(!editing)}>
             {editing ? 'Done' : <><Ico as={PencilSimple} /> Edit</>}
           </button>
@@ -375,15 +385,15 @@ function NotesCard({ session, entities, worldId, id }: { session: Session; entit
           multiline
           grow
           className="notes-text"
-          aria-label="GM notes"
-          value={session.notes}
-          placeholder="What happened, who they met, what’s left hanging… Links like [[Page name]] work. GM only."
-          onCommit={(notes) => saving(db.sessions.update(session.id, { notes }))}
+          aria-label={title}
+          value={text}
+          placeholder={placeholder}
+          onCommit={(v) => saving(db.sessions.update(session.id, box === 'plan' ? { notes: v } : { happened: v }))}
         />
       ) : (
         <>
           <div className={`notes-view ${long && !all ? 'folded' : ''}`}>
-            <Markdown text={session.notes} entities={entities} worldId={worldId} showSecrets />
+            <Markdown text={text} entities={entities} worldId={worldId} showSecrets />
           </div>
           {long && (
             <button type="button" className="link show-all" onClick={() => setAll(!all)}>

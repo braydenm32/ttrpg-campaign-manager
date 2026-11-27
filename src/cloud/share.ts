@@ -229,7 +229,7 @@ export async function storePlayerCopy(
       p.pins.map((pin) => ({ ...pin, id: id(pin.id), worldId, mapId: id(pin.mapId), entityId: opt(pin.entityId), childMapId: opt(pin.childMapId) })),
     )
     await db.sessions.bulkPut(
-      p.sessions.map((s) => ({ ...s, id: id(s.id), worldId, campaignId: id(s.campaignId), entityIds: s.entityIds.map(id), present: s.present?.map(id), notes: '', recordings: [], lectern: undefined })),
+      p.sessions.map((s) => ({ ...s, id: id(s.id), worldId, campaignId: id(s.campaignId), entityIds: s.entityIds.map(id), present: s.present?.map(id), notes: '', happened: undefined, playStart: undefined, recordings: [], lectern: undefined })),
     )
     await db.reputation.bulkPut(
       (Array.isArray(p.reputation) ? p.reputation : []).map((r) => ({

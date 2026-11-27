@@ -2,6 +2,7 @@ import { formatDate } from '../calendar'
 import { ENTITY_LABELS, type Entity, type Session, type World } from '../db'
 import { transcriptText } from './transcript'
 import { isPartOf } from '../nesting'
+import { notesFromPlay, planNotes } from '../sessions'
 
 /**
  * The GM's world written out as plain text for Claude: a short index of every page, and the full
@@ -84,7 +85,10 @@ export function sessionText(s: Session, world: World, { transcript = false } = {
   if (s.date) lines.push(`Played: ${s.date}`)
   if (s.worldDate && world.calendar) lines.push(`In-world date: ${formatDate(world.calendar, s.worldDate, false)}`)
   if (s.recap.trim()) lines.push('', 'Recap the players read:', s.recap.trim())
-  if (s.notes.trim()) lines.push('', 'GM notes (secret):', s.notes.trim())
+  const plan = planNotes(s).trim()
+  const happened = notesFromPlay(s).trim()
+  if (plan) lines.push('', 'GM plan notes, written before the game (secret; a plan, not what happened):', plan)
+  if (happened) lines.push('', 'GM notes on what happened (secret):', happened)
   const prep = s.prep
   if (prep) {
     const planned = [

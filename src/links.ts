@@ -99,6 +99,7 @@ export async function renameLinks(worldId: string, before: Entity, after: Entity
       const next = {
         ...s,
         notes: fix(s.notes)!,
+        happened: fix(s.happened),
         recap: fix(s.recap, s.visibility !== 'gm')!,
         lectern: s.lectern && { ...s.lectern, sceneText: fix(s.lectern.sceneText)! },
         prep: s.prep && { ...s.prep, strongStart: fix(s.prep.strongStart)! },

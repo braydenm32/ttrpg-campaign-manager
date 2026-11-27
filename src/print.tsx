@@ -172,8 +172,13 @@ function PrintSession({ world, id }: { world: World; id: string }) {
       {s.date && <div className="muted">{s.date}</div>}
       {isGM ? <PrintPrep session={s} entities={entities} worldId={world.id} /> : null}
       {isGM && s.notes.trim() && (
-        <Section title="GM notes">
+        <Section title="Plan">
           <Markdown text={s.notes} entities={entities} worldId={world.id} showSecrets stillLinks />
+        </Section>
+      )}
+      {isGM && s.happened?.trim() && (
+        <Section title="What happened">
+          <Markdown text={s.happened} entities={entities} worldId={world.id} showSecrets stillLinks />
         </Section>
       )}
       {!isGM && (s.recap ? <Markdown text={s.recap} entities={entities} worldId={world.id} showSecrets={false} stillLinks /> : <p className="muted">No recap yet.</p>)}

@@ -390,7 +390,7 @@ function NotesReview({
             ) : (
               <p className="muted small">
                 {campaigns.length
-                  ? `They go at the end of ${campaigns[0].name}, as played, with your notes as their GM notes.`
+                  ? `They go at the end of ${campaigns[0].name}, as played, with your notes under “What happened”.`
                   : 'This world has no campaign yet, so one is made for them, named after the world.'}
               </p>
             ))}
@@ -399,7 +399,7 @@ function NotesReview({
 
       <p className="muted small">
         Pages ticked 👁 are revealed to your players; the rest are 🔒 GM only. Secrets always go into GM notes, which players never see. Notes for a page you
-        already have are added under “From my notes” (GM only unless ticked), and its old version stays in its history. Sessions are kept as your GM notes.
+        already have are added under “From my notes” (GM only unless ticked), and its old version stays in its history. Sessions keep your notes under “What happened” (GM only).
       </p>
       {error && <p className="error small">{error}</p>}
       <div className="row end">

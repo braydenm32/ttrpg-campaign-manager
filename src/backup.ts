@@ -312,6 +312,7 @@ export async function importWorld(file: File): Promise<{ id: string; name: strin
         worldId,
         campaignId: id(s.campaignId),
         notes: pics(s.notes),
+        happened: pics(s.happened),
         recap: pics(s.recap),
         entityIds: s.entityIds.map(id),
         playStart: s.playStart && { ...s.playStart, notes: pics(s.playStart.notes), entityIds: s.playStart.entityIds.map(id) },

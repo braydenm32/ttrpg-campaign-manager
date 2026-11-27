@@ -9,7 +9,7 @@ import { NameGenerator, TreasureGenerator } from '../moreGenerators'
 import { FoldingProvider, LECTERN_PANELS, LecternPanel, useFolding } from '../lecternPanel'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { partyOf, startAndTell } from '../sessions'
+import { addHappened, partyOf, startAndTell } from '../sessions'
 import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { ENTITY_LABELS, LIFE_STATUS, blankEntity, blankLectern, db, newId, type Combatant, type Entity, type LecternState, type Session, type World } from '../db'
@@ -282,7 +282,7 @@ function RecordChip({ onOpen }: { onOpen: () => void }) {
   )
 }
 
-/** A line for the GM notes, always in reach near the top. What's typed is kept if you leave and come back. */
+/** A line for “What happened”, always in reach near the top. What's typed is kept if you leave and come back. */
 function QuickNote({ session }: { session: Session }) {
   const key = `lectern.note.${session.id}`
   const [text, setTextState] = useState(() => {
@@ -314,7 +314,7 @@ function QuickNote({ session }: { session: Session }) {
       }}
     >
       <Ico as={NotePencil} />
-      <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Quick note… (Enter adds it to your GM notes, with the time)" aria-label="Quick note" />
+      <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Quick note… (Enter adds it to What happened, with the time)" aria-label="Quick note" />
       <SavedMark />
       <button disabled={!text.trim()}>Add</button>
       <Help topic="quickNote" />
@@ -322,13 +322,13 @@ function QuickNote({ session }: { session: Session }) {
   )
 }
 
-/** Adds a line with the time at the end of the session's GM notes. */
+/** Adds a line with the time at the end of the session's "What happened" notes. */
 const addNoteLine = (sessionId: string, line: string) => {
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   return db.sessions
     .where('id')
     .equals(sessionId)
-    .modify((s) => void (s.notes = `${s.notes.trimEnd()}${s.notes.trim() ? '\n' : ''}- ${time} ${line}`))
+    .modify((s) => addHappened(s, `- ${time} ${line}`))
 }
 
 /**
@@ -974,8 +974,9 @@ function Dice({ lectern, edit, shareTo }: PanelProps & { shareTo?: string }) {
 }
 
 /**
- * The session's GM notes, in reach without leaving the Lectern: read them (the newest lines at the
- * bottom, in view) or edit them. Quick lines are added from the note box at the top.
+ * The session's "What happened" notes, in reach without leaving the Lectern: read them (the newest
+ * lines at the bottom, in view) or edit them. Quick lines are added from the note box at the top.
+ * The plan written before the game is folded underneath, to look at.
  */
 function SessionNotes({ session, entities, worldId }: { session: Session; entities: Entity[]; worldId: string }) {
   const [editing, setEditing] = useState(false)
@@ -985,19 +986,20 @@ function SessionNotes({ session, entities, worldId }: { session: Session; entiti
   // Keep the newest lines in view as they're added.
   useEffect(() => {
     if (box.current) box.current.scrollTop = box.current.scrollHeight
-  }, [session.notes, editing])
+  }, [session.happened, editing])
+  const happened = session.happened ?? ''
   const setNotes = (fn: (notes: string) => string) =>
     db.sessions
       .where('id')
       .equals(session.id)
-      .modify((s) => void (s.notes = fn(s.notes)))
+      .modify((s) => void (s.happened = fn(s.happened ?? '')))
   return (
     <LecternPanel
       id="notes"
       sectionId="lectern-notes"
-      name="GM notes"
-      keywords="session notes quick note jot remember"
-      title={<><Ico as={NotePencil} /> GM notes <Help topic="lecternNotes" /></>}
+      name="What happened"
+      keywords="gm notes session notes what happened quick note jot remember plan"
+      title={<><Ico as={NotePencil} /> What happened <Help topic="lecternNotes" /></>}
       extra={
         <button className="ghost small" onClick={() => setEditing(!editing)}>
           {editing ? 'Done' : 'Edit'}
@@ -1005,20 +1007,28 @@ function SessionNotes({ session, entities, worldId }: { session: Session; entiti
       }
     >
       {editing ? (
-        <DraftText multiline grow value={session.notes} onCommit={(v) => setNotes(() => v)} placeholder="Your notes for this session…" aria-label="GM notes" />
-      ) : session.notes.trim() ? (
+        <DraftText multiline grow value={happened} onCommit={(v) => setNotes(() => v)} placeholder="What happened in play…" aria-label="What happened" />
+      ) : happened.trim() ? (
         <>
-          <div className={`lectern-notes ${all ? 'all' : ''}`} ref={box}>
-            <Markdown text={session.notes} entities={entities} worldId={worldId} showSecrets />
+          <div className={`lectern-notes ${all ? 'all' : ''} ${happened.split('\n').length > 8 ? 'long' : ''}`} ref={box}>
+            <Markdown text={happened} entities={entities} worldId={worldId} showSecrets />
           </div>
-          {session.notes.split('\n').length > 8 && (
+          {happened.split('\n').length > 8 && (
             <button className="link small phone-only notes-all" onClick={() => setAll(!all)}>
               {all ? 'Show only the newest' : 'Show all the notes'}
             </button>
           )}
         </>
       ) : (
-        <p className="muted small">No notes for this session yet. Lines from the quick note at the top land here, and on Wrap up.</p>
+        <p className="muted small">Nothing written yet. Lines from the quick note at the top land here, and on Wrap up.</p>
+      )}
+      {session.notes.trim() && (
+        <details className="lectern-plan-notes">
+          <summary>Plan (written before the game)</summary>
+          <div>
+            <Markdown text={session.notes} entities={entities} worldId={worldId} showSecrets />
+          </div>
+        </details>
       )}
     </LecternPanel>
   )

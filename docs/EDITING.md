@@ -148,7 +148,7 @@ Everything is in the folder **`worlds/vael-ardith/`**. Each page in the app is o
 | Handouts | `campaign/handouts/` |
 | The three endings | `campaign/endings/` |
 | Events that happen during play | `campaign/events/` |
-| Sessions 1 to 8: GM notes, recap, prep, fights (`encounters`), the Lectern | `sessions/session-1.md` … `session-8.md` |
+| Sessions 1 to 8: the plan (GM notes), what happened, recap, prep, fights (`encounters`), the Lectern | `sessions/session-1.md` … `session-8.md` |
 | The GM's "Start here" tour, the GM's chapter and the Player's Guide | `guides/guide-start.md`, `guide-running.md`, `guide-players.md` |
 | Page templates | `templates/` |
 
@@ -396,7 +396,11 @@ lectern:
   present: [ kettle ]
 ---
 
-The GM's notes for the session (the main text).
+The GM's plan for the session (the main text). It shows under "Plan".
+
+== What happened ==
+
+The GM's own notes on what happened, for a session already played. It shows under "What happened".
 
 == Recap ==
 
@@ -426,6 +430,7 @@ What the Lectern shows as the current scene.
 ```
 
 - `players: true` means the session has been played and players can see it (and its recap).
+- The main text is the session's **Plan**: what you wrote before the game. `== What happened ==` is the second notes box, for what happened at the table. Both are GM only; players never get either. None of the eight sessions uses `== What happened ==` yet.
 - `pages` are the pages involved, by key.
 - Each foe needs a `name`, a `count` and a `side` (`foe`, `ally` or `pc`). `hp`, `ac` and `page` (the foe's page, by key) are optional. `ac` can be a number or text like `"15 (chain)"`.
 - **Scene cards.** The lines indented two spaces under a scene are its scene card: what **▶ Start**, **First scene** and **Next scene** at the Lectern put on screen. Each one is optional, and a scene with nothing under it is just a line in the plan, as before.
@@ -438,7 +443,7 @@ What the Lectern shows as the current scene.
   - The first scene's card should match `lectern:` and `== Lectern ==` (the Lectern's opening), so **First scene** doesn't change what's already on screen.
 - Leave out any part you don't use.
 
-The session notes follow one pattern, so a GM always knows where to look. Keep it when you edit or add a session:
+The session's plan (its main text) follows one pattern, so a GM always knows where to look. Keep it when you edit or add a session:
 - A short header (level, date, sky, weather, *Touch these*, *In between*, *Level-up*, *If the party…*), then **Goal**.
 - `### Running this session`: **Last time** (a recap to read aloud), **Where the PCs are**, **The party should have**, **If they missed something** (a way back in for each clue they could miss) and **The session at a glance** (the order of scenes and when they happen).
 - One `### Scene` heading per scene. Each scene ends with **Development** (what happens next, with "if they do this, then that", and which scene comes next) and, when there's something to find, **Treasure**.
