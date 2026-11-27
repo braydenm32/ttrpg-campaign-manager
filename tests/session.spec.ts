@@ -155,10 +155,14 @@ test('changing the scene at the Lectern replaces the read-aloud text and who’s
 
     // "Next scene" goes through the planned scenes in order.
     await scene.getByRole('button', { name: 'First scene' }).click()
+    // The example's scenes carry scene cards: each brings its own read-aloud text and people.
     await expect(scene.locator('h2')).toContainText('Scene 1 of')
-    await expect(text).toHaveValue('')
+    await expect(text).toHaveValue(/^The handbell on Lantern Hill/)
+    await expect(present).toContainText('Ilse Marrow')
     await scene.getByRole('button', { name: 'Next scene' }).click()
     await expect(scene.locator('h2')).toContainText('Scene 2 of')
+    await expect(text).toHaveValue(/^The Last Candle is a long, low room/)
+    await expect(present).toContainText('Mother Hennet')
   } finally {
     await putBack(page, 'sessions', [[s1.id, before]])
   }
@@ -389,7 +393,13 @@ test('on the Lectern: Wrap up sits at the foot on a phone, Record opens the cons
   await open(page, `${w}/s/${s1.id}/lectern`)
   const before = await getRecord(page, 'sessions', s1.id)
   try {
-    await patchRecord(page, 'sessions', s1.id, { startedAt: Date.now() - 1000 })
+    // The example's first scene card reads out the Strong start itself (and the Lectern doesn't show
+    // the same text twice), so its read-aloud is left out here to see the folded Strong start.
+    const prep = before!.prep as { scenes: Record<string, unknown>[] }
+    await patchRecord(page, 'sessions', s1.id, {
+      startedAt: Date.now() - 1000,
+      prep: { ...prep, scenes: prep.scenes.map((x, i) => (i === 0 ? { ...x, readAloud: undefined } : x)) },
+    })
     await open(page, `${w}/s/${s1.id}/lectern`)
     const top = page.locator('.lectern-strip .wrap-up-top')
     const foot = page.locator('.wrap-up-foot')

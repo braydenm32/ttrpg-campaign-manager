@@ -408,7 +408,12 @@ How the session opens.
 == Scenes ==
 
 - One scene per line.
-- Another scene.
+- Another scene, with its scene card under it.
+  where: glass-barrow
+  who: [ kettle, dannic-rook ]
+  fight: Glassers at the sluice
+  > Read-aloud text, one paragraph per line.
+  > A second paragraph.
 
 == Clues ==
 
@@ -422,6 +427,14 @@ What the Lectern shows as the current scene.
 - `players: true` means the session has been played and players can see it (and its recap).
 - `pages` are the pages involved, by key.
 - Each foe needs a `name`, a `count` and a `side` (`foe`, `ally` or `pc`). `hp`, `ac` and `page` (the foe's page, by key) are optional. `ac` can be a number or text like `"15 (chain)"`.
+- **Scene cards.** The lines indented two spaces under a scene are its scene card: what **▶ Start**, **First scene** and **Next scene** at the Lectern put on screen. Each one is optional, and a scene with nothing under it is just a line in the plan, as before.
+  - `where:` the place it happens, by key. It becomes the Lectern's scene.
+  - `who:` who's there, by key, in square brackets. They fill "Who's here".
+  - `fight:` one of the session's `encounters`, by its name. Its fighters go into the initiative list, ready (the fight doesn't start by itself).
+  - `show:` a page to put on players' screens, by key, like a handout. If the page is GM only, starting the scene reveals it to players (the app asks first), so only use it for pages players may read.
+  - `reveal:` GM-only pages to reveal to everyone when the scene starts, by key, in square brackets. Same warning.
+  - `>` lines are the read-aloud text. Each `>` line is one paragraph; a `>` on its own is ignored, so read-aloud copied from the GM notes works as it is. Players hear this, so no secrets.
+  - The first scene's card should match `lectern:` and `== Lectern ==` (the Lectern's opening), so **First scene** doesn't change what's already on screen.
 - Leave out any part you don't use.
 
 The session notes follow one pattern, so a GM always knows where to look. Keep it when you edit or add a session:

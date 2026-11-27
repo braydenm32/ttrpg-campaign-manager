@@ -161,12 +161,30 @@ The funeral is going beautifully. The Ravelers are singing, the salt is on the s
 == Scenes ==
 
 - Pike sits up at his own funeral and confesses: the deserter, the cookfire with a stone in it, the soup-pot. Hathe's Door-Key opens the door; his last words: "The lamp is the lock."
+  where: corvel-rise
+  who: [ npc-halloran-pike, mother-corvane, npc-skrell ]
+  > The funeral is going beautifully. The Ravelers are singing, the salt is on the step, the coin is on old Pike's tongue. Then Pike spits out the coin, sits up on the bier, and says, with great dignity, "I'm terribly sorry. The door's locked." Two mourners faint. Mother Corvane closes her eyes and says, "Not again."
 - Reading the Rook-Court's ledger of last words with Mother Corvane. She says the fifth word aloud.
+  where: corvel-rise
+  who: [ mother-corvane ]
+  > Mother Corvane takes you into the bone-library at the heart of the roosts. Forty narrow books stand on its shelves: every dying sentence a Raveler has heard in the March since 3002. She opens one, and begins to read.
 - The Weeping Orchard under a waning red moon: beads of set sap, the Sleepless scraping them, the dead in the grave rows.
+  where: weeping-orchard
+  fight: Orchard pilgrims
+  > The lane runs between dry-stone walls that have not fallen, and at its end the orchard begins, and it is still an orchard. Row on row of pear trees, old and well-pruned, in full leaf. Then you are among them and see that every leaf is grey stone, every twig, every fruit, and that the ground under them is not grass but ash with a crust on it, and that the fruit, when you touch it, is warm.
 - The fire-pit at the cooks' camp: glass, a soup-pot ring, an empty lantern-pole grave.
+  where: weeping-orchard
+  > At the orchard's heart is the cooks' camp: a ring of stone-fused cookpots, and a fire-pit with glass in its ashes. Burnt into the stone beside the pit is a ring the exact size of a soup-pot's foot. Along the north wall, in the grave rows, one grave holds a lantern-pole and no body.
 - The Candle shut for the first time: Hennet, "Took you long enough."
+  where: last-candle
+  who: [ npc-mother-hennet ]
+  > The Last Candle is shut, for the first time since it was built. Mother Hennet lets you in by the kitchen door. On the slate, Pike's name is chalked fresh, with nothing owing, and in the cold corner of the kitchen a soup-pot hangs on its hook, black, dented and scrubbed dry.
 - Brother Tallow: the shard is under the cage, seen through the oil-port.
+  where: lantern-keep
+  who: [ brother-tallow ]
 - Optional: the Treaty Stone, and the clause scratched in its glass.
+  where: treaty-stone
+  > The road's last stake has a scrap of red on it, and beyond it the plain is unmarked to the sky except for one thing: a stone the size of a hay-wain, standing alone, sheathed in dark glass that has run down its sides and set in ropes. Around its foot, trodden into the ash, a ring of offerings: bootlaces, ribbons, badges, a wedding ring on a nail, a tin plate with a name scratched on it. The glass is scratched too, everywhere a hand can reach, and the scratches are words.
 
 == Clues ==
 

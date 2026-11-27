@@ -47,12 +47,29 @@ Only the GM sees this passage.
 Notes players never see.
 ```
 
-- The **file name is the page's key** (`fennick.md` is `fennick`). Other files point at pages by key: `parent`, `relations`, `heldBy`, session `pages`.
+- The **file name is the page's key** (`fennick.md` is `fennick`). Other files point at pages by key: `parent`, `relations`, `heldBy`, session `pages` and scene cards.
 - Text links use the page's **name** instead: `[[Fennick Bottlebrook]]`, or `[[Fennick Bottlebrook|the quartermaster]]`.
 - Pages are **GM only** unless they say `players: true`.
 - Secrets go in a `:::gm` block (closed with `:::`) or under `== GM notes ==`. **Rumour lists are player-visible**: write the rumours plain and put the truth key in a `:::gm` block straight after the list ("Which are true: 1. … 2. …").
 - A link from player text to a GM-only page shows players a locked name. Use it only for places they will find; otherwise write the name as plain text.
 - `type` is one of: location, npc, pc, faction, item, event, quest, shop, deity, lore, thread, table, custom.
+
+## A scene and its scene card
+
+In a session file, each scene under `== Scenes ==` is one line starting with `- `. The lines indented two spaces under it are its scene card, which **First scene** and **Next scene** at the Lectern put on screen:
+
+```
+- Noon at the Ford: Dannic Rook climbs out of the river.
+  where: the-ford
+  who: [ npc-gerda-hollin, dannic-rook ]
+  fight: The drowned walk
+  > Down at the Ford the bell-ward's mallet strikes three, then three again.
+```
+
+- `where` (the place) and `who` (who's there) are page **keys**. `fight` is the **name** of one of the session's `encounters`.
+- `>` lines are the read-aloud text, one paragraph per line. Players hear it: no secrets.
+- `show: <key>` puts a page on players' screens and `reveal: [ … ]` reveals GM-only pages, both when the scene starts. Only use them for pages players may read in full.
+- Every part is optional. A scene with nothing under it still works. More in [docs/EDITING.md](../../docs/EDITING.md#6f-sessions-quests-and-loose-threads).
 
 ## The five rules that stop mistakes
 

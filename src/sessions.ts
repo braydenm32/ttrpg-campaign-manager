@@ -1,5 +1,5 @@
 import { toast } from './undo'
-import { blankLectern, blankPrep, db, newId, type CalDate, type CheckItem, type Entity, type Session } from './db'
+import { blankLectern, blankPrep, db, newId, type CalDate, type CheckItem, type Entity, type PrepScene, type Session } from './db'
 
 /** Today's date on this device, "2026-10-26" (not UTC, which is a day off in the evening or morning in many places). */
 export function localDate(t: number | Date = new Date()) {
@@ -8,8 +8,18 @@ export function localDate(t: number | Date = new Date()) {
 }
 
 /** A leftover from session #n, tagged so the GM can see where it came from. */
-const carried = (items: CheckItem[] | undefined, n: number) =>
+const carried = <T extends CheckItem>(items: T[] | undefined, n: number) =>
   (items ?? []).filter((x) => !x.done && x.text.trim()).map((x) => ({ id: newId(), done: false, text: /\(from #\d+\)$/.test(x.text) ? x.text : `${x.text} (from #${n})` }))
+
+/** An unplayed scene from session #n, with its scene card (all but its fight, which belongs to that session's plan). */
+const carriedScenes = (scenes: PrepScene[] | undefined, n: number): PrepScene[] => {
+  const left = (scenes ?? []).filter((x) => !x.done && x.text.trim())
+  return carried(left, n).map((c, i) => {
+    const card = { ...left[i] }
+    delete card.encounterId
+    return { ...card, ...c }
+  })
+}
 
 /**
  * The session a campaign plays next, for booking a date and for carrying leftovers on: the first one
@@ -44,7 +54,7 @@ export async function createNextSession(worldId: string, campaignId: string, dat
   const prep = blankPrep()
   if (prev?.prep) {
     prep.clues = carried(prev.prep.clues, prev.number)
-    prep.scenes = carried(prev.prep.scenes, prev.number)
+    prep.scenes = carriedScenes(prev.prep.scenes, prev.number)
   }
   const lectern = blankLectern()
   if (prev?.lectern) {
@@ -238,12 +248,12 @@ export async function markPlayed(session: Session) {
   const made = later.length ? undefined : await createNextSession(session.worldId, session.campaignId)
   const next = later[0] ?? made!
   // Leftovers go into a next session that was already written, unless they're there from an earlier go.
-  const fresh = (items: CheckItem[] | undefined, have: CheckItem[] | undefined) => {
+  const fresh = <T extends CheckItem>(items: T[], have: CheckItem[] | undefined) => {
     const texts = new Set((have ?? []).map((x) => x.text))
-    return carried(items, session.number).filter((x) => !texts.has(x.text))
+    return items.filter((x) => !texts.has(x.text))
   }
-  const clues = made ? [] : fresh(session.prep?.clues, next.prep?.clues)
-  const scenes = made ? [] : fresh(session.prep?.scenes, next.prep?.scenes)
+  const clues = made ? [] : fresh(carried(session.prep?.clues, session.number), next.prep?.clues)
+  const scenes = made ? [] : fresh(carriedScenes(session.prep?.scenes, session.number), next.prep?.scenes)
   const added = new Set<string>([...clues, ...scenes].map((x) => x.id))
   if (added.size)
     await db.sessions

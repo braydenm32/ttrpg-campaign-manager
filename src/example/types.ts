@@ -70,6 +70,25 @@ export interface ExFoe {
   page?: string
 }
 
+/**
+ * A planned scene: its line in the plan, and its scene card (what "Start" at the Lectern puts on
+ * screen). Pages are by key; the fight is one of the session's encounters, by name.
+ */
+export interface ExScene {
+  text: string
+  /** The place it happens. */
+  where?: string
+  /** Who's there. */
+  who?: string[]
+  /** Read-aloud text, one paragraph per line. */
+  readAloud?: string
+  fight?: string
+  /** A page put on players' screens (revealing it first if it's GM only). */
+  show?: string
+  /** GM-only pages revealed to everyone when it starts. */
+  reveal?: string[]
+}
+
 export interface ExSession {
   number: number
   title: string
@@ -84,7 +103,7 @@ export interface ExSession {
   pages?: string[]
   prep?: {
     strongStart: string
-    scenes: string[]
+    scenes: ExScene[]
     clues: string[]
     encounters: { name: string; notes: string; foes: ExFoe[] }[]
   }

@@ -147,12 +147,33 @@ A small girl in a clean white smock stands at the Keep gate with a letter held i
 == Scenes ==
 
 - The perfumed letter arrives by child messenger; the Keep argues; Tallow warns Ysse.
+  where: lantern-keep
+  who: [ brother-tallow, mirrel-vosk, ilse-marrow, garrick-sallow ]
+  show: h-letter
+  > A small girl in a clean white smock stands at the Keep gate with a letter held in both hands. She has been told to wait for an answer. She has a smudge of honey on her chin and a very serious face, and she is not going anywhere. The letter smells of warm resin and rain.
 - An evening at the House of Unburnt Light: Seraphine's offer, and each PC's private temptation.
+  where: house-unburnt-light
+  who: [ seraphine-ashe ]
+  > A mile out on the Ash Road a wall rises on the right, whitewashed, the only white thing between here and the sky, and over it the tops of trees. Green trees. Through the gate a courtyard swept clean of ash, a fountain running, a long low house with a lamp burning in every window in daylight, and the smell of bread.
 - Sorrel, at the House supper, tells Seraphine to her face that she is Marrow's lover.
+  where: house-unburnt-light
+  who: [ seraphine-ashe, sorrel-vey ]
+  > Supper at the House runs late: hot bread, Halcyran wine, a lutenist in the corner. Halfway through, a woman dressed all in black takes the chair across the table from Seraphine.
 - Trading secrets with Sorrel Vey at the Velvet Ledger; Aelith on the balcony; Tesh calls a name in the Sleeper's voice.
+  where: velvet-ledger
+  who: [ sorrel-vey, npc-mourn, aelith-sorn, npc-tesh ]
+  > The red door opens on warmth and a smell of black resin and oranges. Lamps in red glass. Rugs on a floor that is, under them, the same grey stone as everywhere else. A long low room with couches, a lute, and a dozen people in good cloth and bad, talking quietly. Behind a desk by the stair sits a tall elf with ink on every inch of visible skin, writing in a ledger with a very fine pen, and she looks up at you as if she has been expecting you and is pleased, on the whole, that you came.
 - Sorrel shows the oldest tattoos, down her spine.
+  who: [ sorrel-vey ]
 - Marrow arrests Sallow at muster in front of the company, or the party fights Bray for him.
+  where: lantern-keep
+  who: [ ilse-marrow, garrick-sallow, brother-tallow ]
+  > The company stands in its files in the yard. Brother Tallow is at the foot of the ladder on Ysse's arm, because he wanted to hear it. Captain Marrow walks out in front of them all and reads the charge herself.
 - The garden door at night: the dead among the pears; Seraphine prays in two voices.
+  where: house-unburnt-light
+  who: [ seraphine-ashe ]
+  fight: The Lamp-Wardens
+  > The garden wall is lower at the bottom, where the pears are, and the door in it is open, as it always is. No lock; there has never been a lock. Inside, the pear trees stand very still, and between them, just at the edge of the lamplight, there are more people than there should be: standing, facing the house, not talking. In the Lamp Hall a single voice is praying, and then, under it, answering it, a second.
 
 == Clues ==
 

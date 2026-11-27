@@ -296,13 +296,54 @@ Captain Ilse Marrow walks out of the Keep with a letter in her hand. It has a Re
 == Scenes ==
 
 - Cinders morning on Lantern Hill: Marrow holds the letter; the veterans touch the cage; Tallow lights the five wicks' lamps; Marrow reads the pay notice. 0 silver, and no wagon. The Orchard muster is cancelled.
+  where: lantern-hill
+  who: [ ilse-marrow, mirrel-vosk, fennick, garrick-sallow, brother-tallow ]
+  > The handbell on Lantern Hill clanks for muster, dented and tinny, the way it has every morning for nine years. Ash is coming down soft as the first snow of winter, settling on helmets and shoulders and on the iron cage high in its niche on the Keep's east wall, where a small flame burns behind the bars without a flicker.
+  >
+  > A hundred and forty soldiers stand in the drill yard in four ragged files. Their boots have been mended with tent canvas. Their breath smokes. Somewhere at the back, a corporal is taking bets.
+  >
+  > Captain Ilse Marrow walks out of the Keep with a letter in her hand. It has a Regency seal on it. She does not open it. "Cinders first," she says. "Then the post."
 - The Last Candle: Hennet's slate with Dannic crossed off; Sallow buys a round with new silver; Spoons's pool on the lantern; the wrong poster; Bray starts a brawl and Hennet ends it with a ladle.
+  where: last-candle
+  who: [ npc-mother-hennet, garrick-sallow, spoons, npc-halloran-pike, npc-dunstan-bray ]
+  > The Last Candle is a long, low room that smells of wet wool, cheap ale and the pipe-smoke of men who can't afford pipe-weed. Over the bar hangs a dark lantern draped in black, and under it a slate the size of a door, chalked edge to edge with tabs, none of them ever rubbed out. This morning someone has drawn a fresh line across the top of it, nine short strokes, one for each year. On a shelf a stuffed crow in an old sergeant-major's hat faces the door. The woman behind the bar has one arm and uses it to pour, point and keep order, apparently at once. Beside the crow, someone has nailed up a poster.
 - Noon at the Ford: the mallet strikes three and three; Dannic Rook and two half-made dead climb out of the river. Fight: the drowned walk, with Gerda Hollin.
+  where: the-ford
+  who: [ npc-gerda-hollin, dannic-rook, npc-dunny-pike ]
+  fight: The drowned walk
+  > Down at the Ford the bell-ward's mallet strikes three, then three again: someone in the water. Every soldier in the Candle knows the stroke.
+  >
+  > By the time you reach the shingle under the bridge, the ford-watch have him out: hooked from the shallows under the third pier by his coat. They are standing back from him in a ragged half-circle. One of them is being sick into the reeds. On the bell-house stair a boy of twelve is still holding the mallet in both hands. On the grey stones lies a man in a company coat, swollen and pale, an eel still caught in his collar. His eyes are open. As you arrive, his fingers start to move in the ash, slowly, like someone feeling for a dropped coin in the dark.
+  >
+  > Then he sits up. Behind him, two more shapes rise out of the river.
 - Last words ("It's cold under the glass"), Quorl's rite, Skrell and Corvane's message, and Marla pointing at the culvert.
+  where: the-ford
+  who: [ dannic-rook, npc-skrell, marla-marlowe ]
+  > His jaw works, grinding grit. His voice comes up from somewhere much further down than his lungs. "It's cold," he says. "It's cold under the glass." Then he's only a dead man, and the river is only a river.
 - The trail: Kettle on the Low Quay (the clerk with inky cuffs, the wagon "turned off by the mill"), the Keep's oil ledger, Hesk's order-book.
+  where: low-quay
+  who: [ kettle ]
+  > Below the bridge the bank drops to a strip of mud and planking crowded with barges, long and low and painted every colour the ash has not yet got to. Halflings move between them on gangplanks without looking down. A floating market of punts and rafts is tied up along the outside, selling river-fish, Fallowden wine, Concord salt, Grimmark wool and things in sacks. A woman the height of your elbow is explaining to a soldier that no, the price is the price, and yes, she knows who his captain is, and she liked her better before she was broke.
 - Into the Glass Barrow at dusk: the flooded street, the fused chapel, the spiders in the bakery, the cold stair.
+  where: glass-barrow
+  fight: Glass-spiders
+  > The culvert is ankle-deep and black and colder than it should be. Twenty paces in, the brick walls turn to glass: a whole street fused by the fire of Cinders, the doorways still open, the shutters melted into curtains of grey and green. Your little lamps go into the walls and come back wrong, a hundred small copies of you moving a beat behind. Somewhere ahead, glass ticks as if something is walking on it.
 - The Cold Room: the Cold Captain of the Seventh, "Which lantern is lit?", Dannic's stash and the Cut Oil Tin.
+  where: glass-barrow
+  fight: The Cold Captain of the Seventh
+  > At the bottom of the stair is a round room of black glass, and it is cold enough that your breath hangs in front of you and doesn't fall. Frost feathers the walls. In the middle, on a plain stone chair, sits a soldier in a captain's coat that has fused to his body, a lantern-pole without a lantern across his knees. On his breast, cast in the glass, is a company badge, and the lantern on it is dark. His eyes are open and white with frost.
+  >
+  > Around his chair, in a careful ring, as if he had arranged them: a bundle in a grey company blanket, and three tins.
 - Back up Lantern Hill towards midnight: the lantern gutters for the first time in nine years, and every wick-lamp with it. Tallow: "Someone has been feeding my flame ash."
+  where: lantern-hill
+  who: [ brother-tallow, ilse-marrow, garrick-sallow, spoons ]
+  > Halfway up Lantern Hill, the light changes. It takes you a moment to understand why. It's the lantern. Up in its iron cage, the flame that has burned without a flicker for nine years is shrinking: yellow, then white, then a bead of blue no bigger than a fingernail. At your belts, the little tin lamps shrink with it.
+  >
+  > All over the hill, doors are opening. Soldiers in their shirts, barefoot in the ash, are coming out to look. Nobody says anything. On the ladder under the niche, Brother Tallow has both hands on the bars of the cage, as if he could hold it up by himself.
+  >
+  > For the length of one long breath, the flame is gone. Every lamp on the hill goes with it.
+  >
+  > Then it comes back.
 
 == Clues ==
 

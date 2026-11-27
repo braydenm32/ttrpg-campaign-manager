@@ -170,11 +170,24 @@ The lantern is lashed to a handcart, and the flame inside the cage is the size o
 == Scenes ==
 
 - Before dawn on the 7th: the cage lifted down from the Keep's wall; Dunny pulls the tenth ring, and makes it four.
+  where: ash-road
+  who: [ ilse-marrow, mirrel-vosk, pell-quillon ]
+  > The lantern is lashed to a handcart, and the flame inside the cage is the size of a fingernail and blue at the root. Ysse walks beside it with one hand on the bars. Behind you, what is left of the company. Ahead, three days of ash and then the Rent. Down in the west the Ember is setting, nearly full, low and red, so close it seems you could hear it breathing. Back at the Ford, the Treaty Bell is still ringing: four, the end of the world. Everyone who has ever wanted this flame is on the road behind you.
 - The road east with the failing lantern under a swelling red moon.
+  where: ash-road
+  > Two nights out on the ash, under a red moon that gets bigger every night. The veterans sing The Eight Lanterns, which is sung on this road and no other. In its cage on the handcart the flame is failing fast.
 - The gauntlet: one or two factions come for the lantern on the way, and each costs something.
 - The priests at the lip, each with a reason to let it crack; Mother Corvane is the friend.
+  where: the-rent
+  who: [ mother-corvane, seraphine-ashe, npc-brother-audit, odile-fairweather, npc-mourn, npc-mother-brisk, dreaming-widow ]
+  > At the northern lip, above the Stone, the priests are waiting, every one of them with a reason to let it crack, and all of them talking at once. At the very edge, near the top of the rope steps, a girl in a grey dress stands barefoot, with sixty people behind her, singing.
 - The flame speaks aloud: "Keep me."
+  where: the-rent
+  > As the Ember tops the sky, the flame speaks aloud for the first time, in a warm voice, to whoever holds it: "Keep me." Everyone hears it.
 - The choice at the Ninth Stone with Warden Uthrem: a willing heart, the crack, or the keeping.
+  where: ninth-stone
+  who: [ warden-uthrem, ilse-marrow ]
+  > The Warden's Shelf, by Ember-light. At the foot of the Stone, in the red glow of its crack, Warden Uthrem is waiting.
 - Dawn and the epilogue.
 
 == Clues ==

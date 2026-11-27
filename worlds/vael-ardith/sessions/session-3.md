@@ -162,12 +162,32 @@ Every PC wakes at the same moment, gasping, from the same dream: a warm dark, a 
 == Scenes ==
 
 - The shared dream in the small hours at Fort Mercy; the whole yard wakes at once.
+  where: fort-mercy
+  who: [ vexa-glassjaw, npc-mardle-ock, npc-ottoline-crane, npc-skelt ]
+  > Every PC wakes at the same moment, gasping, from the same dream: a warm dark, a door with no handle, a voice saying "nearly". It is the middle of the night in the Glassers' yard at Fort Mercy. All around you, in the light of two moons, diggers are standing in their tent-mouths in their shirts, looking at each other. Nobody needs to ask.
 - The ride home: all Cinderford had the dream. Fennick counts the box: 4,800 gold owed. Marrow is out of money. Tallow: "Tonight."
+  where: lantern-keep
+  who: [ odile-fairweather, fennick, ilse-marrow, brother-tallow ]
+  > Cinderford has had the dream too. When you ride in, late in the morning, a third of the town is still standing about in the street. On the doors of the Smokes, overnight, someone has chalked an open eye behind a closed lid.
 - The Sleepless march out of the Smokes and sit in vigil around Lantern Hill. Vosk holds the gate; Seraphine walks the Smokes; Hennet sends soup.
+  where: lantern-hill
+  who: [ dreaming-widow, mirrel-vosk ]
+  > At dusk the Sleepless come out of the Smokes in a long, quiet procession, carrying unlit candles: tanners, widows, children holding their parents' belts. Half the town walks behind them in its sleep. They climb to Lantern Hill, sit down all the way around it, and wait for the dark.
 - The Dreaming Widow asks for Tick; Marla stands between them; Quorl has Marla's last words.
+  where: lantern-hill
+  who: [ dreaming-widow, marla-marlowe ]
+  > A child walks up from the circle of the Sleepless to the gate, holding an unlit candle. She asks the soldiers, very politely, for Tibbet.
 - Midnight under the full Ember: the lantern gutters, Tallow collapses, Marrow gives Ysse his key, Ysse tends the flame.
+  where: lantern-hill
+  who: [ brother-tallow, ilse-marrow ]
+  > Midnight, and the Ember is full. Up in its iron cage the lantern gutters again, worse than before, and every wick-lamp on the hill shrinks to a blue bead. On the ladder below the cage, Brother Tallow collapses.
 - Someone breaks into the oil store with Stillwater ash, to meet Bray. Dannic may be standing at the door.
+  where: lantern-keep
+  > While every eye on the hill is on the cage, glass breaks at the foot of the tower. The sound comes from round the side, out of sight of the ladder.
 - Spoons gives up Sallow, or Bray does, or Sallow's room does.
+  where: lantern-keep
+  who: [ spoons ]
+  > Spoons sits in the Keep yard by the hall door, with his pool board turned to the wall. He closed his book tonight, of all nights.
 
 == Clues ==
 

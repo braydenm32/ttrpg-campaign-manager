@@ -149,13 +149,32 @@ Dawn. Hammering at the Keep gate. A thin, stooped man in a black coat gone green
 == Scenes ==
 
 - Pell Quillon nails the tax notice to the gate while Mote holds the nails; Marrow asks the party to deal with him; Pell has lost Form 9-K.
+  where: lantern-keep
+  who: [ pell-quillon, ansel-mote, ilse-marrow, garrick-sallow ]
+  show: h-tax-notice
+  > Dawn. Hammering at the Keep gate. A thin, stooped man in a black coat gone green at the seams is nailing a notice to the door, saying "Sorry, so sorry" to the wood with every blow. A smaller man in spectacles and a scarf holds the nails and passes them up one at a time, sniffing. The notice is in triplicate. It demands three thousand, eight hundred and eighty-two silver from a company that was paid nothing yesterday.
 - Mote's signature matches the hand on the wanted poster. Pell sees the PAID IN FULL chit and goes pale.
+  who: [ pell-quillon, ansel-mote ]
 - Kettle (or Hebbe's toll-log): a sealed House cart crossed the bridge at dawn on the 7th and turned off at the Burned Mill.
 - Tracking the cart from the mill to Fort Mercy before the greywind buries the ruts, with the Dunmore twins.
+  where: burned-mill
+  who: [ npc-jory-dunmore, npc-jessom-dunmore, npc-nance-oddy ]
+  > Past the Burned Mill the glassland track runs south toward Fort Mercy, sixteen miles of it. The greywind is building from the east, lifting the ash off the plain, and every hour it fills the cart's ruts a little more.
 - Fort Mercy at dusk: talk, sneak or fight Vexa for the strongbox. Skelt's confession.
+  where: fort-mercy
+  who: [ vexa-glassjaw, npc-skelt, npc-ottoline-crane, npc-mardle-ock ]
+  fight: Glassers at Fort Mercy
+  > The fort stands on the only rise for ten miles, a square of blackened Regency stone with one tower still roofed and the others open to the sky, and around it, like a skirt, the Glassers' town: tents, lean-tos, carts, a windmill made of shield-boards, and dig-pits going down into the glass in every direction, each with its windlass and its rope and its bucket. Smoke from a dozen fires. A dog barks. From the tower a woman's voice, carrying: "If that's the company, tell them the toll's doubled and I still don't want them."
 - The strongbox: Concord coin, Tollamund's mark, a loan-chit in the company's name.
+  where: fort-mercy
+  show: h-loan-chit
+  > Down a stair of Regency brick into a vault that is cool and dry and smells of nothing at all, which after the yard is a kind of shock. A dozen lamps stand on the floor in a half-ring, burned low, the way you leave lamps round a sick person. In the far wall the Glassers' pick-marks end and something older begins: a panel of grey stone, smooth as a plate, cut edge to edge with writing too regular to be scratches and too strange to be letters. One corner of it has been pulled a finger's breadth out of true. The cold that comes from the gap does not move the lamp flames. Somebody has chalked a tally on the floor in front of it and stopped.
 - Vexa's Lithic wall, read aloud, traded for the Glasser's chart. The Cold Seam, if they dare.
+  where: fort-mercy
+  who: [ vexa-glassjaw, npc-ottoline-crane ]
 - A night in the Glassers' yard under two moons.
+  where: fort-mercy
+  > Vexa gives you the corner of the yard by the windmill and a fire, and tells you to sleep in your boots. The greywind hisses over the glass. Two moons are up, one white and one red, and everything in the yard throws two shadows.
 
 == Clues ==
 

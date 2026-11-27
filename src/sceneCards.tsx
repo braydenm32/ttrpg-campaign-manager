@@ -351,16 +351,24 @@ export function SceneCardEditor({ scene, session, entities, onChange }: { scene:
             }}
           >
             <option value="">No pin</option>
-            {mapPins.map((g) => (
-              <optgroup key={g.map.id} label={g.map.name}>
-                {g.pins.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.number ? `${p.number}. ` : ''}
-                    {p.label || byId.get(p.entityId ?? '')?.name || 'Pin'}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
+            {mapPins.map((g) => {
+              const label = (p: (typeof g.pins)[number]) => `${p.number ? `${p.number}. ` : ''}${p.label || byId.get(p.entityId ?? '')?.name || 'Pin'}`
+              // Pins with the same name on one map (eight wards on one page) are counted, so they can be told apart.
+              const same = (p: (typeof g.pins)[number]) => g.pins.filter((q) => label(q) === label(p))
+              return (
+                <optgroup key={g.map.id} label={g.map.name}>
+                  {g.pins.map((p) => {
+                    const twins = same(p)
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {label(p)}
+                        {twins.length > 1 ? ` (${twins.indexOf(p) + 1} of ${twins.length})` : ''}
+                      </option>
+                    )
+                  })}
+                </optgroup>
+              )
+            })}
           </select>
         </label>
       )}
