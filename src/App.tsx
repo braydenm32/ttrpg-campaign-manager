@@ -57,6 +57,7 @@ import ClocksPage from './clocks'
 import DateTime from './pages/DateTime'
 import SafetyPage, { XCardAlert } from './pages/Safety'
 import { PlayersScreen, ShowingBanner, ShowingPopup } from './showing'
+import { LiveMapHost } from './liveMap'
 import { GameClockWatcher } from './gameClock'
 import { LiveBadge, PlayerTableLink, TableHost, TableSignals, TimerWatcher } from './atTheTable'
 import { DowntimeToast } from './players/Downtime'
@@ -468,6 +469,12 @@ function WorldShell() {
           {!shared && world.cloud?.enabled && (
             <Part>
               <TableHost world={world} />
+            </Part>
+          )}
+          {/* A map on players' screens follows its fog and pins while it's up (the TV here; joined players too, with cloud sync). */}
+          {!shared && (
+            <Part>
+              <LiveMapHost world={world} />
             </Part>
           )}
           {isGM && !shared && world.cloud?.enabled && (

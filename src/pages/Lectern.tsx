@@ -1278,15 +1278,15 @@ function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {
               >
                 +1 min
               </button>
-              {shared && (
-                <button
-                  className="ghost small"
-                  title={t.hidden ? 'GM only. Click so players see it too' : 'Players see this one. Click to make it GM only'}
-                  onClick={() => change(t.id, (x) => void (x.hidden = !x.hidden || undefined))}
-                >
-                  <Ico as={t.hidden ? EyeSlash : Eye} />
-                </button>
-              )}
+              {/* The players' screen (a TV) shows timers with or without cloud sync, so the eye is always there. */}
+              <button
+                className="ghost small"
+                title={t.hidden ? 'GM only. Click so players see it too' : 'Players see this one. Click to make it GM only'}
+                aria-label={t.hidden ? `Show ${t.label || 'this timer'} to players` : `Hide ${t.label || 'this timer'} from players`}
+                onClick={() => change(t.id, (x) => void (x.hidden = !x.hidden || undefined))}
+              >
+                <Ico as={t.hidden ? EyeSlash : Eye} />
+              </button>
               <button
                 className="ghost small"
                 title="Remove"
@@ -1323,7 +1323,11 @@ function Timers({ lectern, edit, shared }: PanelProps & { shared: boolean }) {
           <button disabled={!(Number(custom) > 0)}>Start</button>
         </form>
       </div>
-      {shared && timers.length > 0 && <p className="muted small">While you’re live, players see timers in their Common Room unless you hide them.</p>}
+      {timers.length > 0 && (
+        <p className="muted small">
+          Players see timers on the Players’ screen (a TV){shared ? ', and in their Common Room while you’re live,' : ''} unless you hide one with the eye.
+        </p>
+      )}
     </LecternPanel>
   )
 }

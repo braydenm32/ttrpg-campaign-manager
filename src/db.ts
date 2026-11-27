@@ -435,6 +435,13 @@ export interface Showing {
   kind: 'image' | 'page' | 'text'
   title: string
   assetId?: string
+  /**
+   * A map shown from its own "Show players" button: the map this picture is of (assetId is the
+   * players' copy of it: fogged, without GM-only pieces). While it's up it stays live: the picture
+   * follows the fog, and players who can see the map get its revealed pins on it (src/liveMap.tsx).
+   * Players are sent this id; it tells them nothing of a map they can't see.
+   */
+  mapId?: string
   entityId?: string
   text?: string
   at: number

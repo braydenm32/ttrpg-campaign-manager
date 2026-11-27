@@ -212,8 +212,8 @@ export async function storePlayerCopy(
     const showing = p.world?.showing
     await db.worlds.put({
       ...(p.world ?? { name: 'Shared world', description: '', system: '', createdAt: now }),
-      showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId) } : null,
-      handouts: p.world?.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId) })),
+      showing: showing ? { ...showing, assetId: opt(showing.assetId), entityId: opt(showing.entityId), ...(showing.mapId ? { mapId: id(showing.mapId) } : {}) } : null,
+      handouts: p.world?.handouts?.map((h) => ({ ...h, assetId: opt(h.assetId), entityId: opt(h.entityId), ...(h.mapId ? { mapId: id(h.mapId) } : {}) })),
       id: worldId,
       updatedAt: now,
       cloud: undefined,
@@ -332,6 +332,15 @@ const REFRESH_GAP = 30_000
 /** A copy fetched less than this long ago is fresh enough when the app opens or comes back to the front. */
 const FRESH_FOR = 60_000
 
+/** Open copies of joined worlds (by the GM's world id), each with its way to fetch again at once. */
+const fetchNow = new Map<string, () => void>()
+
+/**
+ * Fetches a joined world's copy again now, not at the next slow turn: for a live map whose sharp
+ * picture has just reached the cloud (src/liveMap.tsx). Does nothing if the world isn't open here.
+ */
+export const refreshJoinedWorldNow = (cloudId: string) => fetchNow.get(cloudId)?.()
+
 /**
  * Keeps a read-only copy fresh while it's open: a refresh when the world opens (unless it was
  * fetched a moment ago, as the join and wiki links do), when the GM syncs, when the tab comes back
@@ -343,6 +352,7 @@ const FRESH_FOR = 60_000
 export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void, onFresh?: () => void) {
   let busy = false
   let pending = false
+  let urgent = false
   let stopped = false
   // When the copy was last fetched (or tried). Read from the copy itself when the watch starts.
   let last = info.fetchedAt
@@ -366,6 +376,9 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void, 
       busy = false
       if (pending) {
         pending = false
+        // Asked for at once while this one was under way: the next doesn't wait its turn either.
+        if (urgent) last = 0
+        urgent = false
         refresh()
       }
     }
@@ -392,6 +405,15 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void, 
     missed = false
     refresh()
   }
+  const now = () => {
+    if (stopped || document.hidden) return
+    clearTimeout(timer)
+    timer = undefined
+    last = 0
+    urgent = busy
+    refresh()
+  }
+  if (info.memberOf) fetchNow.set(info.memberOf, now)
   const name = info.token ? `share:${info.token}` : `members:${info.memberOf}`
   const room = joinRoom(name)
   room.on('changed', refresh)
@@ -420,6 +442,7 @@ export function watchPlayerCopy(info: SharedInfo, onError?: (e: Error) => void, 
   return () => {
     stopped = true
     clearTimeout(timer)
+    if (info.memberOf && fetchNow.get(info.memberOf) === now) fetchNow.delete(info.memberOf)
     room.leave()
     clearInterval(poll)
     window.removeEventListener('online', refresh)

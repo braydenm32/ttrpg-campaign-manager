@@ -1,0 +1,59 @@
+/* A map shown to players (src/liveMap.tsx): on a phone, a box to drag and pinch; on the players' TV screen, the whole map. */
+.live-map-wrap { display: flex; flex-direction: column; gap: .4em; width: 100%; }
+.live-map { flex: none; width: 100%; height: auto; min-height: 11rem; max-height: min(62vh, 32rem); border-radius: var(--radius); background: #0d0d12 !important; z-index: 0; }
+.live-map-foot { margin: 0; }
+.live-map .live-patch, .live-map .live-picture { image-rendering: auto; }
+/* Pins here are only looked at: the map under them takes the drag. */
+.live-map .leaflet-marker-icon, .live-map .leaflet-tooltip { pointer-events: none; }
+/* A name with no room (another name is already there) waits until there is: zoom in on a phone. */
+.live-map .leaflet-tooltip.crowded { visibility: hidden; }
+.showing-modal .live-map { max-height: min(64vh, 36rem); }
+.handout-paper .live-map-foot { font-family: var(--font); font-size: .82rem; }
+
+/* The players' screen: as much of the window as there is, under the heading. */
+.players-screen .showing-view:has(.live-map-wrap) { width: 100%; flex: 1; }
+.players-screen .live-map.big { height: calc(100dvh - 7.5rem - clamp(2em, 6vw, 6em)); max-height: none; border-radius: 0; background: transparent !important; }
+.players-screen .live-map.big .leaflet-tooltip.pin-name { font-size: clamp(.8rem, .55rem + .7vw, 1.5rem); padding: .1em .5em; }
+
+/* One of several things up at once: the map fills its piece, and (on the GM's arranging board) the piece is what's dragged. */
+.spread-item .live-map-wrap { flex: 1; min-height: 0; }
+.spread-item .live-map.big, .players-screen .spread-item .live-map.big { height: 100%; min-height: 0; max-height: none; border-radius: 4px; background: transparent !important; pointer-events: none; }
+
+/* On the map's own toolbar, while it's on players' screens. */
+.map-live-chip { display: inline-flex; align-items: center; gap: .35em; padding: .2em .7em; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent-text, var(--accent)); font-size: .85rem; white-space: nowrap; }
+.print-choice { display: flex; flex-direction: column; gap: .6em; }
+.print-choice .button, .print-choice button { justify-content: flex-start; text-align: left; white-space: normal; min-height: 44px; }
+.print-choice small { display: block; font-weight: 400; }
+
+/* Turn order and timers on the players' screen (src/screenTable.tsx): beside what's shown, big enough to read across a room. */
+.screen-table { --screen-table-w: clamp(15rem, 24vw, 30rem); position: fixed; z-index: 15; top: 1rem; right: 1rem; width: var(--screen-table-w); max-height: calc(100dvh - 2rem); display: flex; flex-direction: column; gap: .6em; padding: .7em .8em; border-radius: var(--radius); background: rgb(13 13 18 / .88); color: #f3e7cc; font-size: clamp(1.05rem, .7rem + 1.15vw, 2.1rem); line-height: 1.25; box-shadow: 0 6px 24px rgb(0 0 0 / .45); }
+.screen-table h2 { margin: 0; font-size: .8em; letter-spacing: .08em; text-transform: uppercase; color: #d8ccb3; display: flex; justify-content: space-between; gap: .6em; align-items: baseline; }
+.screen-table h2 span { text-transform: none; letter-spacing: 0; }
+.screen-table .turn-order { min-height: 0; overflow: hidden auto; scrollbar-width: none; }
+.screen-table .turn-order > .muted { display: none; }
+.screen-table .turn-order ol { margin: 0; gap: .25em; }
+.screen-table .turn-order li { background: rgb(255 255 255 / .08); color: inherit; padding: .3em .6em; border-left-width: .3em; }
+.screen-table .turn-order li.active { background: #f3e7cc; color: #1b1508; outline: none; font-weight: 700; }
+.screen-table .turn-order li .small { font-size: .7em; text-transform: uppercase; letter-spacing: .06em; }
+.screen-table .turn-order li .muted { color: #d8ccb3; }
+.screen-table .timer-list { margin: 0; gap: .25em; }
+.screen-table .timer-list li { background: rgb(255 255 255 / .08); padding: .3em .6em; }
+.screen-table .timer-time { font-size: 1.35em; }
+.screen-table .timer-list li.done { background: color-mix(in srgb, var(--danger) 45%, transparent); }
+.screen-table .timer-list li.done .timer-time { color: #fff; }
+.screen-table .timer-list .muted { color: #d8ccb3; }
+/* What's shown moves over rather than sitting under it; the in-game clock steps aside too. */
+.players-screen:has(.screen-table), .players-screen.with-spread:has(.screen-table) { padding-right: calc(clamp(15rem, 24vw, 30rem) + 2rem); }
+.players-screen:has(.screen-table) .screen-clock-corner:is(.at-tr, .at-br) { right: calc(clamp(15rem, 24vw, 30rem) + 2rem); }
+/* Nothing else up: turn order and timers take the middle of the screen, in place of "Nothing on screen yet". */
+.players-screen:has(.screen-table.alone) .players-screen-idle { display: none; }
+.screen-table.alone { position: static; margin: auto; width: min(92vw, 34rem); max-height: calc(100dvh - 2 * clamp(1em, 3vw, 3em)); font-size: clamp(1.2rem, .9rem + 1.3vw, 2.4rem); }
+.players-screen:has(.screen-table.alone) { padding-right: clamp(1em, 3vw, 3em); }
+/* A narrow or upright window (a phone propped up, half a laptop screen): a strip along the top instead. */
+@media (max-width: 760px), (max-aspect-ratio: 1/1) {
+  .screen-table { position: static; order: -1; width: 100%; max-height: 40dvh; }
+  .players-screen:has(.screen-table) { padding-right: clamp(1em, 3vw, 3em); }
+  .players-screen.with-spread:has(.screen-table) { padding-right: 1.5vw; justify-content: flex-start; }
+  .players-screen:has(.screen-table) .screen-clock-corner:is(.at-tr, .at-br) { right: 1rem; }
+  .players-screen:has(.screen-table) .live-map.big { height: calc(60dvh - 6rem); }
+}

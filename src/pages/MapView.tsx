@@ -7,7 +7,9 @@ import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Circle, ImageOverlay, MapContainer, Marker, Polygon, Polyline, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { DraftText, Empty, VisibilityBadge } from '../components'
+import { DraftText, Empty, Modal, VisibilityBadge } from '../components'
+import { ShowMapButton } from '../showing'
+import '../liveMap.css'
 import { SeenMark, useReview, VisibilityControl } from '../reveal'
 import { sessionInHand } from '../threads'
 import { goToScene } from '../sceneCards'
@@ -23,7 +25,7 @@ import { SecretNamesWarning } from '../SecretNamesWarning'
 import { useViewMode } from '../viewMode'
 import { circleShape, fogOverlay, pinRevealed, playersImageId, rectShape, removeFog, renderPlayerFog } from '../fog'
 import { Ico, TypeIcon } from '../icons'
-import { CloudFog, Crosshair, DoorOpen, DownloadSimple, Eye, HandPalm, ListNumbers, MapPin, NavigationArrow, PencilSimple, Play, Ruler, SlidersHorizontal, Tag, Toolbox } from '@phosphor-icons/react'
+import { CloudFog, Crosshair, DoorOpen, DownloadSimple, Eye, HandPalm, ListNumbers, Lock, MapPin, NavigationArrow, PencilSimple, Play, Printer, Ruler, SlidersHorizontal, Tag, Toolbox } from '@phosphor-icons/react'
 import { MeasureBar, ScaleSetting } from '../mapMeasure'
 import { saveRoute } from '../journey'
 import { gmIdOf, sendPing, useTable, type MapPing } from '../cloud/table'
@@ -125,6 +127,7 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
   const [showSettings, setShowSettings] = useState(false)
   const [fogBar, setFogBar] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [printing, setPrinting] = useState(false)
   const exportDrawing = useMemo(() => (map.drawing ? toClassic(map.drawing) : undefined), [map.drawing])
   const [fogMode, setFogMode] = useState<'reveal' | 'hide'>('reveal')
   const [fogCorner, setFogCorner] = useState<[number, number]>()
@@ -335,6 +338,22 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
               </button>
             )}
           </div>
+          {/* On every map: put it on players' screens (the GM), and print it (a player prints their own copy). */}
+          {isGM && !world?.shared && (
+            <>
+              <ShowMapButton map={map} world={world} />
+              <Help topic="liveMap" />
+            </>
+          )}
+          {isGM ? (
+            <button type="button" onClick={() => setPrinting(true)} title="Print this map, or save it as a PDF: your copy or the players’">
+              <Ico as={Printer} /> Print
+            </button>
+          ) : (
+            <Link className="button" to={`${worldPath(worldId)}/print/m/${map.id}?copy=players`} title="Print this map, or save it as a PDF">
+              <Ico as={Printer} /> Print
+            </Link>
+          )}
           {isGM && (
             <>
             <div className="segmented">
@@ -409,6 +428,29 @@ function MapEditor({ map, url }: { map: WorldMap; url: string }) {
         <div className="map-toolbar measure-bar">
           <span className="small">Click the map to point at a spot. Everyone looking at this map sees it for a few seconds.</span> <Help topic="ping" />
         </div>
+      )}
+      {isGM && printing && (
+        <Modal title="Print this map" onClose={() => setPrinting(false)}>
+          <div className="print-choice">
+            <p className="small">
+              Which copy? <Help topic="printMap" />
+            </p>
+            <Link className="button" to={`${worldPath(worldId)}/print/m/${map.id}`}>
+              <Ico as={Lock} />
+              <span>
+                GM copy
+                <small className="muted">Your own picture{map.numbers ? ', with every numbered pin and the whole key' : ''}. Not for handing out.</small>
+              </span>
+            </Link>
+            <Link className="button primary" to={`${worldPath(worldId)}/print/m/${map.id}?copy=players`}>
+              <Ico as={Eye} />
+              <span>
+                Player copy
+                <small>What players may see: {fog ? 'the fog stays on, and ' : ''}GM-only pins and pieces are left out.</small>
+              </span>
+            </Link>
+          </div>
+        </Modal>
       )}
       {isGM && exporting && exportDrawing && (
         <ExportMap

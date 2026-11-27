@@ -720,6 +720,8 @@ export const TOOLS: NavTool[] = [
   { id: 'golive', label: 'Go live to players', icon: Play, to: lectern(), who: own, when: (f) => !!f.cloud, where: 'the Lectern', keywords: 'go live live players common room share rolls' },
   // ——— Elsewhere for the GM ———
   { id: 'fog', label: 'Fog of war', icon: MapTrifold, to: (f) => w(f, 'maps'), who: own, where: 'Maps (open a map)', keywords: 'fog fog of war hide reveal' },
+  { id: 'showmap', label: 'Show a map to players', icon: Television, to: (f) => w(f, 'maps'), who: own, where: 'Maps (open a map)', keywords: 'show map players live map battle map tv screen fog vtt virtual tabletop' },
+  { id: 'printmap', label: 'Print a map', icon: MapTrifold, to: (f) => w(f, 'maps'), who: own, where: 'Maps (open a map)', keywords: 'print map pdf paper handout players copy' },
   { id: 'ruler', label: 'Ruler', icon: Ruler, to: (f) => w(f, 'maps'), who: own, where: 'Maps (open a map)', keywords: 'ruler measure distance scale' },
   { id: 'calendar', label: 'Calendar', icon: Hourglass, to: (f) => w(f, 'settings?at=calendar'), who: own, where: 'World settings', keywords: 'calendar date dates months weeks seasons weather climate' },
   // ——— Players, on their Now tab (the GM's turn order shows there while they run the game live) ———
