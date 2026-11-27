@@ -8,7 +8,7 @@ import { featuredInPlay, inHand, markPlayed, notesFromPlay, unmarkPlayed } from 
 import { Ico } from './icons'
 import { Broadcast, CheckCircle, Eye, EyeSlash, FlagCheckered, ListChecks } from '@phosphor-icons/react'
 import { worldPath } from './paths'
-import { liveSessionOf, setLiveSession, useLiveSession } from './cloud/table'
+import { liveEndedHere, liveSessionOf, setLiveSession, useLiveSession } from './cloud/table'
 import { useLiveRecording } from './recordingStore'
 import { prepCounts } from './counts'
 import { stripSecrets } from './Markdown'
@@ -181,12 +181,23 @@ type WrapProps = { world: World; session: Session; campaign: Campaign | null | u
  * The first step, "End the live session": to do while players still see this session as being played
  * or something is still on their screens; done once neither is so. A session that never went live
  * (and has nothing up) has nothing to end, so the step isn't counted. Not this session's business
- * when another one is live, or once it's been marked played.
+ * when another one is live, or once it's been marked played. The live link belongs to the tab that
+ * went live: a session that went live (Session.liveAt) but not from this tab, and wasn't ended here,
+ * may still be live on another device, so the step says so without counting it.
  */
 function liveStep(world: World, session: Session, live: string | undefined): WrapStep {
   const liveNow = live === session.id
   const up = (live && !liveNow) || session.playedAt ? '' : onScreensNow(world)
-  if (!liveNow && !up) return session.liveAt ? { done: true, label: 'The live session has ended' } : { done: true, optional: true, label: 'Not live to players this time' }
+  if (!liveNow && !up) {
+    if (!session.liveAt) return { done: true, optional: true, label: 'Not live to players this time' }
+    if (session.playedAt || liveEndedHere(session.id)) return { done: true, label: 'The live session has ended' }
+    return {
+      done: false,
+      optional: true,
+      label: 'Live from another device',
+      detail: <p>This session went live from another device or tab. If players still see it as being played, end it there: Wrap up on that device, or Stop at its Lectern.</p>,
+    }
+  }
   const label = liveNow ? 'End the live session' : 'Clear players’ screens'
   return {
     done: false,

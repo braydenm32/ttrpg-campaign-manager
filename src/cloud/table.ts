@@ -777,9 +777,20 @@ const liveKey = (worldId: string) => `codex.liveSession.${worldId}`
 const liveListeners = new Set<() => void>()
 const memory = new Map<string, string | undefined>()
 
+/**
+ * Sessions whose live link ended in this tab (Stop, "End the live session", another session going
+ * live). The live link belongs to one tab, so this is how Wrap up tells "ended here" from "live
+ * from another device or tab" (Session.liveAt only says it went live somewhere).
+ */
+const endedHere = new Set<string>()
+export const liveEndedHere = (sessionId: string) => endedHere.has(sessionId)
+
 /** The session the GM has gone live with in this world (from its Lectern), kept until they stop or end it. */
 export function setLiveSession(worldId: string, sessionId: string | undefined) {
   if (memory.get(worldId) === sessionId && memory.has(worldId)) return
+  const was = liveSessionOf(worldId)
+  if (was && was !== sessionId) endedHere.add(was)
+  if (sessionId) endedHere.delete(sessionId)
   memory.set(worldId, sessionId)
   try {
     // Kept for this tab, so a reload doesn't stop the table link.
