@@ -544,7 +544,7 @@ test.describe('a world from before the two notes boxes', () => {
   let context: BrowserContext
   test.afterEach(async () => context?.close())
 
-  test('opens after the upgrade with its old notes under Plan and “What happened” empty', async ({ browser, device }) => {
+  test('opens after the update with its old notes under Plan and “What happened” empty, even with an older tab asleep', async ({ browser, device }) => {
     context = await freshContext(browser, device)
     const page = await context.newPage()
     const { w, row } = await newWorld(page, 'Old Notes')
@@ -645,8 +645,25 @@ test.describe('a world from before the two notes boxes', () => {
     )
     expect(was).toBe(100)
 
-    // The app opens it and brings it up to date; nothing is moved or lost.
+    // An older tab of the app is asleep in the background, as phones leave them: it has the database
+    // open and never answers the browser. (It once left the updated app on its opening page for good.)
+    const asleep = await context.newPage()
+    await asleep.goto('/terms.html')
+    await asleep.evaluate(
+      () =>
+        new Promise<void>((resolve, reject) => {
+          const held = indexedDB.open('ttrpg-campaign-manager')
+          held.onerror = () => reject(held.error)
+          held.onsuccess = () => {
+            ;(window as unknown as { held: IDBDatabase }).held = held.result
+            resolve()
+          }
+        }),
+    )
+
+    // The app opens all the same, at once, and stays at the version it found; nothing is moved or lost.
     await open(page, `${w}/s/old-1?tab=prep`)
+    await expect(page.locator('.start-note')).toHaveCount(0)
     const version = await page.evaluate(
       () =>
         new Promise<number>((resolve) => {
@@ -658,7 +675,7 @@ test.describe('a world from before the two notes boxes', () => {
           }
         }),
     )
-    expect(version).toBeGreaterThanOrEqual(110)
+    expect(version).toBe(100)
     const kept = await getRecord(page, 'sessions', 'old-1')
     expect(kept?.notes).toBe('Flowold notes written before the two boxes.')
     expect(kept?.happened ?? '').toBe('')
@@ -702,5 +719,35 @@ test.describe('a world from before the two notes boxes', () => {
     expect(five.notes).toBe('Flowold a new plan.\n\nFlowold five typed.')
     expect(five.happened).toBeUndefined()
     expect(five.playStart).toEqual({ notes: 'Flowold the old plan.', entityIds: [] })
+
+    // A browser that won't say which version it has saved gets the ordinary step up to version 11,
+    // which does have to wait for the sleeping tab. The opening page then says so, with what to do,
+    // and the app carries on by itself the moment that tab lets go.
+    await page.close()
+    const waiting = await context.newPage()
+    await waiting.addInitScript(() => {
+      delete (IDBFactory.prototype as unknown as { databases?: unknown }).databases
+    })
+    await waiting.goto(`${w}/s/old-1?tab=prep`)
+    const note = waiting.locator('.start-note')
+    await expect(note).toContainText('another tab of it on this device is still open with the older version')
+    await expect(note).toContainText('Your worlds are safe')
+    await expect(note.getByRole('button', { name: 'Try again' })).toBeVisible()
+    await shot(waiting, `start-waiting-${device}`)
+    await asleep.evaluate(() => (window as unknown as { held: IDBDatabase }).held.close())
+    await expect(note).toHaveCount(0)
+    await expect(waiting.locator('#gm-notes')).toContainText('Flowold notes written before the two boxes.')
+    const after = await waiting.evaluate(
+      () =>
+        new Promise<number>((resolve) => {
+          const req = indexedDB.open('ttrpg-campaign-manager')
+          req.onsuccess = () => {
+            const v = req.result.version
+            req.result.close()
+            resolve(v)
+          }
+        }),
+    )
+    expect(after).toBe(110)
   })
 })

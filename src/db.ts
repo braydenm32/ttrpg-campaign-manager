@@ -1435,22 +1435,91 @@ db.version(10).stores({
 // so it moves to What happened and the Plan goes back to how it was at the start. Played sessions
 // are left as they are. A session also notes when it last went live to players (Session.liveAt, not
 // indexed either), for Wrap up's "End the live session" step.
-db.version(11)
-  .stores({})
-  .upgrade((tx) =>
-    tx
-      .table('sessions')
-      .toCollection()
-      .modify((s: Session) => {
-        const before = s.playStart?.notes
-        if (!s.startedAt || s.playedAt || typeof before !== 'string' || typeof s.notes !== 'string' || !s.notes.startsWith(before)) return
-        const tail = s.notes.slice(before.length).trim()
-        const was = s.happened?.trim() ?? ''
-        s.happened = [tail, was].filter(Boolean).join('\n\n')
-        s.notes = before
-        delete s.playStart!.notes
-      }),
-  )
+//
+// Version 11 changes no table and no index, and that matters: a browser will not bring a database
+// up a version while any other tab still has it open, and a tab asleep in the background on a phone
+// never lets go. When version 11 first went out as an ordinary step, the app sat on its opening
+// page for good on phones with an older tab asleep. So a database that is still at version 10 is
+// opened as it is, with no step up and nothing to wait for, and the one piece of tidying is done as
+// an ordinary save once it is open (below). A new database, or one already at 11, is version 11.
+// settleDbVersion() decides which, and src/main.tsx waits for it before anything reads the database.
+//
+// When version 12 comes with a real change to tables, declare 11 for everyone again (delete the
+// "stay on ten" branch): by then every tab runs code that lets go of the database when it sleeps.
+function splitNotesInPlay(s: Session) {
+  const before = s.playStart?.notes
+  if (!s.startedAt || s.playedAt || typeof before !== 'string' || typeof s.notes !== 'string' || !s.notes.startsWith(before)) return
+  const tail = s.notes.slice(before.length).trim()
+  const was = s.happened?.trim() ?? ''
+  s.happened = [tail, was].filter(Boolean).join('\n\n')
+  s.notes = before
+  delete s.playStart!.notes
+}
+
+let stayOnTen = false
+let settled: Promise<void> | undefined
+
+/** The version the browser has saved for this database (Dexie's version × 10), if it will say. */
+async function versionOnDisk(): Promise<number | undefined> {
+  try {
+    if (typeof indexedDB === 'undefined' || !indexedDB.databases) return undefined
+    // Some browsers have been known never to answer this: don't wait long.
+    const list = await Promise.race([indexedDB.databases(), new Promise<undefined>((done) => setTimeout(() => done(undefined), 1500))])
+    return list?.find((d) => d.name === db.name)?.version
+  } catch {
+    return undefined
+  }
+}
+
+/** Decides, once, whether this device's database stays at version 10 or is version 11. Call before the first read. */
+export const settleDbVersion = () =>
+  (settled ??= (async () => {
+    stayOnTen = (await versionOnDisk()) === 100
+    if (stayOnTen) return
+    db.version(11)
+      .stores({})
+      .upgrade((tx) => tx.table('sessions').toCollection().modify(splitNotesInPlay))
+  })())
+
+// The tidying of version 11, for a database left at version 10: an ordinary save, each time it opens
+// (it finds nothing to do the second time).
+db.on('ready', (vip) => {
+  if (!stayOnTen) return
+  return (vip as typeof db).sessions
+    .toCollection()
+    .modify(splitNotesInPlay)
+    .then(
+      () => {},
+      () => {},
+    )
+})
+
+// A tab that is put to sleep lets go of the database first, so it can never hold up a newer tab's
+// update of it. The next read after waking opens it again.
+if (typeof document !== 'undefined') {
+  document.addEventListener('freeze', () => db.close({ disableAutoOpen: false }))
+}
+
+// Another tab is bringing the database up a version: let go at once, then load the new app here too,
+// now if this tab is being looked at, or when it next is. (Without this the tab would carry on with
+// old code over a newer database and show an error.) Not more than once in ten seconds, so two tabs
+// can never send each other round in circles.
+db.on('versionchange', () => {
+  db.close({ disableAutoOpen: false })
+  if (typeof document === 'undefined') return
+  const reload = () => {
+    try {
+      const last = Number(sessionStorage.getItem('atlas.versionReload') ?? 0)
+      if (Date.now() - last < 10_000) return
+      sessionStorage.setItem('atlas.versionReload', String(Date.now()))
+    } catch {
+      // No session storage: reload anyway.
+    }
+    window.location.reload()
+  }
+  if (document.visibilityState === 'visible') reload()
+  else document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && reload())
+})
 
 // The bin is cleared of anything over a month old soon after the app opens, not only when it's
 // looked at, so deleting a big recording to make room does give the space back in time.
