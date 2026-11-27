@@ -1,4 +1,3 @@
-import { toast } from './undo'
 import { blankLectern, blankPrep, db, newId, type CalDate, type Campaign, type CheckItem, type Entity, type PrepScene, type Session } from './db'
 
 /** Today's date on this device, "2026-10-26" (not UTC, which is a day off in the evening or morning in many places). */
@@ -168,7 +167,8 @@ export const playedAlready = isPlayed
  * "Start playing": the session is under way (the first time only, so the start time stays the real
  * one). It also notes the world's date as the day the session starts in the world, if the session
  * has none yet. Gives back an undo that puts it back to not started, or nothing if it was already
- * under way.
+ * under way. The buttons go through the "Start playing" box (src/startPlaying.tsx, startWith), which
+ * also goes live and says what happened in the note at the bottom.
  */
 export async function startPlaying(sessionId: string) {
   const before = await db.sessions.get(sessionId)
@@ -199,18 +199,6 @@ export async function campaignUnderWay(campaignId: string, from: Campaign['statu
   return async () => {
     if ((await db.campaigns.get(campaignId))?.status === 'active') await db.campaigns.update(campaignId, { status: was })
   }
-}
-
-/**
- * "Start playing" as the buttons do it: starts the session and says so in the note at the bottom,
- * with a way back for a press by mistake. Mentions another session of the campaign that is still
- * being played, since two at once is nearly always a slip.
- */
-export async function startAndTell(session: Pick<Session, 'id' | 'number' | 'title' | 'campaignId'>) {
-  const undo = await startPlaying(session.id)
-  if (!undo) return
-  const other = (await db.sessions.where({ campaignId: session.campaignId }).toArray()).find((s) => s.id !== session.id && s.startedAt && !s.playedAt)
-  toast(`#${session.number} ${session.title} is being played.${other ? ` #${other.number} ${other.title} is still being played too.` : ''}`, undo, 'Not started after all')
 }
 
 /**

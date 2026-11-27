@@ -791,20 +791,23 @@ export function setLiveSession(worldId: string, sessionId: string | undefined) {
   liveListeners.forEach((l) => l())
 }
 
+/** The session the GM is live with in this world right now, if any (for code that isn't drawing a screen). */
+export function liveSessionOf(worldId: string) {
+  if (memory.has(worldId)) return memory.get(worldId)
+  try {
+    return sessionStorage.getItem(liveKey(worldId)) ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
 export function useLiveSession(worldId: string) {
   return useSyncExternalStore(
     (l) => {
       liveListeners.add(l)
       return () => liveListeners.delete(l)
     },
-    () => {
-      if (memory.has(worldId)) return memory.get(worldId)
-      try {
-        return sessionStorage.getItem(liveKey(worldId)) ?? undefined
-      } catch {
-        return undefined
-      }
-    },
+    () => liveSessionOf(worldId),
   )
 }
 

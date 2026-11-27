@@ -246,16 +246,18 @@ test('an “Add to notes” button the app didn’t make does nothing, and the a
     await text.getByRole('button', { name: 'Injected add to notes' }).click()
     await page.waitForTimeout(500)
     expect((await getRecord(page, 'sessions', s.id))?.notes).toBe(beforeSession.notes)
+    expect((await getRecord(page, 'sessions', s.id))?.happened).toBe(beforeSession.happened)
 
-    // The app's own button, made after a real roll, adds the roll to the notes once.
+    // The app's own button, made after a real roll, adds the roll to “What happened” once (the plan is left alone).
     const roll = text.locator('.inline-roll-wrap', { hasText: '2d6+1' })
     await roll.locator('button.inline-roll').click()
     const add = roll.locator('button.roll-to-notes')
     await expect(add).toHaveText(`Add to #${s.number}’s notes`)
     await add.click()
     await expect(add).toHaveText('✓ In the notes')
-    await expect.poll(async () => String((await getRecord(page, 'sessions', s.id))?.notes)).toMatch(/Rolled 2d6\+1: \d+$/)
-    expect(String((await getRecord(page, 'sessions', s.id))?.notes)).not.toContain('Forged')
+    await expect.poll(async () => String((await getRecord(page, 'sessions', s.id))?.happened)).toMatch(/Rolled 2d6\+1: \d+$/)
+    expect(String((await getRecord(page, 'sessions', s.id))?.happened)).not.toContain('Forged')
+    expect((await getRecord(page, 'sessions', s.id))?.notes).toBe(beforeSession.notes)
   } finally {
     await putBack(page, 'sessions', [[s.id, beforeSession]])
     await putBack(page, 'entities', [[p.id, beforePage]])

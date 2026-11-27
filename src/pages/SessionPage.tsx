@@ -29,7 +29,8 @@ import { ShowToPlayers, useFinish, useNextSession, WrapProgress, WrapUpChecklist
 import { Ico, TypeIcon } from '../icons'
 import { BookBookmark, BookmarkSimple, CheckCircle, Eye, FlagCheckered, ListChecks, Lock, Microphone, PencilSimple, Play, Spiral, UsersThree, Warning, X } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { localDate, notStarted, sessionFirstTab, startAndTell, type SessionStage } from '../sessions'
+import { localDate, notStarted, sessionFirstTab, type SessionStage } from '../sessions'
+import { StartPlayingButton } from '../startPlaying'
 import { prepCounts } from '../counts'
 import { StageChip, useSessionStage } from '../stage'
 import { JumpRow, jumpTo, useKeepScroll } from '../jump'
@@ -37,6 +38,7 @@ import { removeWithUndo, SavedMark, saving, toast } from '../undo'
 import { showDay } from '../text'
 import { PresentLine } from '../attendance'
 import { MySessionNote } from '../players/SessionNote'
+import { liveSessionOf, setLiveSession } from '../cloud/table'
 
 /**
  * A session. For the GM it's two of the Session area's three stages (the third, Play, is the
@@ -119,7 +121,6 @@ interface ViewProps {
  * saves as you type), what's planned at a glance, and one button for what comes next.
  */
 function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep' | 'wrap' }) {
-  const navigate = useNavigate()
   const w = worldPath(world.id)
   const update = (patch: Partial<Session>) => db.sessions.update(session.id, patch)
   const counts = prepCounts(session.prep)
@@ -137,22 +138,11 @@ function SessionStrip({ session, stage, world, view }: ViewProps & { view: 'prep
 
   let action
   if (view === 'prep' && (stage === 'planned' || stage === 'preparing'))
-    action = (
-      <button
-        className="primary"
-        title={HELP.startPlaying}
-        onClick={async () => {
-          await startAndTell(session)
-          navigate(lectern)
-        }}
-      >
-        <Ico as={Play} weight="fill" /> Start playing
-      </button>
-    )
+    action = <StartPlayingButton session={session} />
   else if (stage === 'playing' && view === 'prep')
     action = (
-      <Link className="button primary" to={lectern}>
-        <Ico as={Play} weight="fill" /> Back to the table
+      <Link className="button primary" to={lectern} title={HELP.continuePlaying}>
+        <Ico as={Play} weight="fill" /> Continue
       </Link>
     )
   else if (stage !== 'played')
@@ -452,12 +442,18 @@ function SessionDetails({ session, campaign, world, entities }: Omit<ViewProps, 
         {session.startedAt && !session.playedAt && (
           <button
             type="button"
-            title="Pressed Start playing by mistake? This puts the session back to being prepared. Nothing you wrote is lost."
+            title={live?.sessionId === session.id ? 'Stop the recording first' : 'Pressed Start playing by mistake? This puts the session back to being prepared, and stops showing it live to players. Nothing you wrote is lost.'}
             disabled={live?.sessionId === session.id}
             onClick={async () => {
               const { startedAt, playStart, worldDate } = session
+              // A session that isn't being played isn't live to players either.
+              const wasLive = liveSessionOf(world.id) === session.id
               await notStarted(session.id)
-              toast(`#${session.number} is not started any more.`, () => db.sessions.update(session.id, { startedAt, playStart, worldDate }))
+              if (wasLive) setLiveSession(world.id, undefined)
+              toast(`#${session.number} is not started any more${wasLive ? ', and no longer live to players' : ''}.`, async () => {
+                await db.sessions.update(session.id, { startedAt, playStart, worldDate })
+                if (wasLive) setLiveSession(world.id, session.id)
+              })
             }}
           >
             Not started after all

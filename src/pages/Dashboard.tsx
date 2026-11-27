@@ -46,7 +46,8 @@ import {
   type Icon,
 } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
-import { createNextSession, isOverdue, isPlayed, localDate, partyOf, sessionStage, startAndTell, type SessionStage } from '../sessions'
+import { createNextSession, isOverdue, isPlayed, localDate, partyOf, sessionStage, type SessionStage } from '../sessions'
+import { StartPlayingButton } from '../startPlaying'
 import { StageChip, usePlayingNow } from '../stage'
 import { detailOf } from '../partyGlance'
 import { toast } from '../undo'
@@ -237,19 +238,8 @@ function SessionStrip({
         <Ico as={ListChecks} /> {next.label}
       </Link>
     ),
-    preparing: (
-      <button
-        className="primary"
-        data-next={next.id}
-        title={HELP.startPlaying}
-        onClick={async () => {
-          await startAndTell(s)
-          navigate(`${w}/s/${s.id}/lectern`)
-        }}
-      >
-        <Ico as={Play} weight="fill" /> {next.label}
-      </button>
-    ),
+    // One "Start playing" everywhere: a small box with "Go live to players" and "Record" (src/startPlaying.tsx).
+    preparing: <StartPlayingButton session={s} dataNext={next.id} />,
     playing: (
       // Ends the live link and clears players' screens, as the Lectern's Wrap up does.
       <Link className="button primary" data-next={next.id} to={`${w}/s/${s.id}?end=1`} onClick={() => live === s.id && void endLiveSession(world.id, s.id)}>
@@ -278,8 +268,8 @@ function SessionStrip({
       </Link>
     ),
     playing: (
-      <Link className="button" to={`${w}/s/${s.id}/lectern`} title={HELP.lectern}>
-        <Ico as={Play} /> Back to the table
+      <Link className="button" to={`${w}/s/${s.id}/lectern`} title={HELP.continuePlaying}>
+        <Ico as={Play} /> Continue
       </Link>
     ),
     played: (

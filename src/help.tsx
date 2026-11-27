@@ -201,7 +201,8 @@ export const HELP = {
   stages:
     'Where a session is: Planned (nothing written yet), Preparing (it has a plan), Playing (you pressed “Start playing”, or it’s live or recording) and Played (you marked it played in Wrap up, or it has a recap and was never started). A date going by doesn’t mark a session played: the Desk asks whether you played it. Once a session is played, the next one becomes the one the Desk and the Session area open.',
   startPlaying:
-    'Marks the session as being played and opens the Lectern. Nothing is shown to players until you choose to (Go live, Show players). Pressed it by mistake? The note at the bottom has “Not started after all” for a few seconds, and Session details keeps the same button for later.',
+    'One press to start the night. A small box asks two things: “Go live to players” (their Common Room shows the session as being played; only offered when the world is shared with players) and “Record” (opens the recording panel, where you ask everyone and press Start recording: nothing is recorded before that). Your ticks are remembered on this device. Then the session is marked as being played and the Lectern opens. Pressed it by mistake? The note at the bottom has “Not started after all” for a few seconds: it takes back the start and the live link (a recording you have started carries on until you stop it). Session details keeps the same button for later. Both can still be switched on or off at the Lectern while you play.',
+  continuePlaying: 'This session is already under way: goes back to Play: the Lectern, where you left it. Nothing is started again.',
   sessionTitle: 'Click the number or the title to change it. It saves as you type.',
   sessionDetails:
     'The real date you play (leave it empty until it’s set; booking a date on the campaign page fills it in), the date in your world, and whether players can read this session’s recap. Print and Delete are here too.',

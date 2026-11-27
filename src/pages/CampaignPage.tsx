@@ -10,7 +10,8 @@ import { PartyGlance } from '../partyGlance'
 import { StorySoFar } from '../highlights'
 import { questProgress } from '../quests'
 import { isActiveQuest, isOpenQuest } from '../counts'
-import { bookNextSession, createNextSession, partyOf, sessionFirstTab, sessionStage, startAndTell, type SessionStage } from '../sessions'
+import { bookNextSession, createNextSession, partyOf, sessionFirstTab, sessionStage, type SessionStage } from '../sessions'
+import { StartPlayingButton } from '../startPlaying'
 import { useFromAddress, useVisibleEntities, useWorld } from '../hooks'
 import { SessionScheduler } from '../players/Schedule'
 import { useViewMode } from '../viewMode'
@@ -220,10 +221,9 @@ export default function CampaignPage() {
 
 /**
  * All sessions › Next session: the session in hand itself, with its stage and the one next step
- * (Prepare, Start playing, Back to the table or Wrap up), or a way to make the next one.
+ * (Prepare, Start playing, Continue or Wrap up), or a way to make the next one.
  */
 function NextUp({ worldId, next, stage, onNew }: { worldId: string; next: Session | undefined; stage: SessionStage | undefined; onNew: () => void }) {
-  const navigate = useNavigate()
   const w = worldPath(worldId)
   if (!next || !stage || stage === 'played')
     return (
@@ -256,7 +256,7 @@ function NextUp({ worldId, next, stage, onNew }: { worldId: string; next: Sessio
         {stage === 'playing' ? (
           <>
             <Link className="button primary" to={`${w}/s/${next.id}/lectern`}>
-              <Ico as={Play} weight="fill" /> Back to the table
+              <Ico as={Play} weight="fill" /> Continue
             </Link>
             <Link className="button" to={`${w}/s/${next.id}?tab=notes`}>
               <Ico as={FlagCheckered} /> Wrap up
@@ -267,14 +267,7 @@ function NextUp({ worldId, next, stage, onNew }: { worldId: string; next: Sessio
             <Link className="button primary" to={`${w}/s/${next.id}?tab=prep`}>
               <Ico as={ListChecks} /> Prepare
             </Link>
-            <button
-              onClick={async () => {
-                await startAndTell(next)
-                navigate(`${w}/s/${next.id}/lectern`)
-              }}
-            >
-              <Ico as={Play} weight="fill" /> Start playing
-            </button>
+            <StartPlayingButton session={next} className="" />
           </>
         )}
       </div>

@@ -1,6 +1,6 @@
 import { PreviouslyOn } from '../ai/ReadAloud'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { HELP, Help } from '../help'
+import { Help } from '../help'
 import { PartyGlance } from '../partyGlance'
 import { GmScreenPanel } from '../gmScreen'
 import { CallForRoll } from '../rollCallPanel'
@@ -9,7 +9,8 @@ import { NameGenerator, TreasureGenerator } from '../moreGenerators'
 import { FoldingProvider, LECTERN_PANELS, LecternPanel, useFolding } from '../lecternPanel'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { addHappened, partyOf, startAndTell } from '../sessions'
+import { addHappened, partyOf } from '../sessions'
+import { StartPlayingButton } from '../startPlaying'
 import { DraftText, Empty, Skeleton } from '../components'
 import { PagePicker } from '../PagePicker'
 import { ENTITY_LABELS, LIFE_STATUS, blankEntity, blankLectern, db, newId, type Combatant, type Entity, type LecternState, type Session, type World } from '../db'
@@ -41,7 +42,7 @@ import { WorldToday } from '../calendar'
 import { ClocksPanel } from '../clocks'
 import { GameClockPanel } from '../gameClock'
 import { Ico, TypeIcon } from '../icons'
-import { Armchair, CastleTurret, CloudFog, Coins, Lock, DiceFive, FlagCheckered, Keyboard, MapTrifold, Microphone, NotePencil, Eye, EyeSlash, Play, Prohibit, Shield, SkipForward, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
+import { Armchair, CastleTurret, CloudFog, Coins, Lock, DiceFive, FlagCheckered, Keyboard, MapTrifold, Microphone, NotePencil, Eye, EyeSlash, Prohibit, Shield, SkipForward, Sparkle, Spiral, Sword, Timer, User } from '@phosphor-icons/react'
 import { pagePath, worldPath } from '../paths'
 import { clockText, GoLive, RollDetail, RollLog, timeLeft, useNow } from '../atTheTable'
 import { shareRoll, useLiveSession, useTable } from '../cloud/table'
@@ -152,9 +153,8 @@ export default function Lectern() {
           {world?.cloud?.enabled && <Help topic="goLive" />}
           <RecordChip onOpen={openRecording} />
           {stage !== 'playing' && stage !== 'played' ? (
-            <button className="primary" title={HELP.startPlaying} onClick={() => startAndTell(session)}>
-              <Ico as={Play} weight="fill" /> Start playing
-            </button>
+            // Already here, so nothing to open: with Record ticked, the recording panel (and its consent note) comes up.
+            <StartPlayingButton session={session} onStarted={(c) => c.record && openRecording()} />
           ) : (
             // On a phone this button moves to the foot of the page, out of the way of a thumb in mid-game.
             <button className={`wrap-up-top ${stage === 'playing' ? 'primary' : ''}`} title={WRAP_UP_TITLE} onClick={wrapUp}>

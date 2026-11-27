@@ -1,0 +1,13 @@
+/* The "Start playing" box (src/startPlaying.tsx): two ticks, each a whole row that can be tapped. */
+.start-box { display: flex; flex-direction: column; gap: .7rem; margin-top: .6rem; }
+.start-box p { margin: 0; }
+.start-tick { display: flex; align-items: flex-start; gap: .7rem; padding: .7rem .8rem; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; }
+.start-tick:has(input:checked) { border-color: var(--accent); }
+.start-tick input { flex: none; width: 1.25rem; height: 1.25rem; margin: .15rem 0 0; }
+.start-tick > span { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.start-absent { padding: 0 .1rem; }
+.start-buttons { margin-top: .3rem; }
+@media (max-width: 720px) {
+  .start-tick { min-height: 44px; }
+  .start-buttons button { min-height: 44px; }
+}

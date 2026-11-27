@@ -401,7 +401,9 @@ test('hand-written notes: Claude’s pasted reply becomes pages to look over, pl
     expect(hermit).toMatchObject({ visibility: 'gm', type: 'npc', gmNotes: 'Was a Lantern deserter.', parentId: cinderford.id, aliases: ['Old Crowman'], gmTags: ['from my notes'], tags: [] })
     expect(gate).toMatchObject({ visibility: 'players', gmNotes: 'The toll goes to the tab-keepers.', body: 'A rusted gate on the bridge.' })
     expect(night).toMatchObject({ visibility: 'gm', date: '', entityIds: [hermit.id] })
-    expect(night.notes).toContain('12 March')
+    // Notes of a session already played are what happened, not a plan.
+    expect(night.happened).toContain('12 March')
+    expect(night.notes).toBe('')
 
     // Players can see Cinderford, so the added notes sit inside a GM-only block, and its own field isn't doubled.
     const town = await getRecord(page, 'entities', cinderford.id)
